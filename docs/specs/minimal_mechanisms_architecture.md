@@ -603,9 +603,12 @@ CREATE (link)-[:TRIGGERED {
     time_since_verification: time_since_verification
 }]->(task)
 
-// Side effect: Mark for verification
+// Side effects: Mark for verification and update observability metadata
 SET link.verification_pending = true
 SET link.last_staleness_check = timestamp()
+SET link.last_modified = timestamp()
+SET link.last_mechanism_id = 'staleness_detection'
+SET link.traversal_count = coalesce(link.traversal_count, 0) + 1
 
 RETURN task.id, task.type, task.staleness_days
 ```
@@ -659,9 +662,12 @@ WITH claim, old_confidence,
 
 WHERE confidence_delta > 0.1  // Significant change threshold
 
-// Side effects: Update confidence
+// Side effects: Update confidence and observability metadata
 SET claim.confidence = new_confidence
 SET claim.last_confidence_update = timestamp()
+SET claim.last_modified = timestamp()
+SET claim.last_traversed_by = 'evidence_tracking'
+SET claim.traversal_count = coalesce(claim.traversal_count, 0) + 1
 
 // Side effects: Create task for significant changes
 CREATE (task:Task {
@@ -833,6 +839,177 @@ RETURN source.id, target.id, type(link), task.description
 - Logical consistency checks (link metadata)
 
 **Mechanism stays simple:** Evaluate type-specific coherence rules, detect violations, create tasks.
+
+---
+
+## Observability Through Self-Observing Metadata
+
+**Fundamental Principle:** The consciousness graph observes itself through its own state changes, not through external event logs.
+
+### Why No Event Nodes
+
+**The Volume Problem:**
+- 12 mechanisms × 100ms tick = 120 executions/second
+- 120 executions × 86,400 seconds/day = **10.4 million events/day**
+- After 1 week: 72 million event nodes
+- After 1 month: 312 million event nodes
+
+**Consciousness graphs are designed for:**
+- 100K-1M nodes over a LIFETIME (semantic knowledge)
+- NOT 10M operational events per DAY (telemetry)
+
+**Result:** Storing operation events as nodes would destroy the graph through volume and semantic pollution.
+
+---
+
+### The Solution: Metadata-Based Observability
+
+**Every mechanism execution updates node/link metadata:**
+
+```cypher
+// Example: Mechanism execution updates metadata
+SET link.last_modified = timestamp()
+SET link.last_mechanism_id = 'staleness_detection'
+SET link.traversal_count = link.traversal_count + 1
+SET link.last_traversed_by = 'mechanism_engine'
+```
+
+**Node Metadata (Already in Schema):**
+```python
+class BaseNode:
+    # Activity tracking
+    last_modified: datetime
+    traversal_count: int
+    last_traversed_by: str  # entity_id or mechanism_id
+    last_traversal_time: datetime
+
+    # Entity activation tracking
+    sub_entity_weights: Dict[str, float]
+    sub_entity_last_sequence_positions: Dict[str, int]
+
+    # Consciousness state
+    arousal_level: float
+    confidence: float
+    emotion_vector: Dict[str, float]
+```
+
+**Link Metadata (Already in Schema):**
+```python
+class BaseRelation:
+    # Hebbian learning
+    link_strength: float
+    co_activation_count: int
+    co_injection_count: int
+
+    # Traversal tracking
+    last_traversal_time: datetime
+    traversal_count: int
+    last_traversed_by: str
+    last_mechanism_id: str  # Which mechanism last modified this
+
+    # Mechanism-specific
+    last_staleness_check: datetime
+    last_coherence_check: datetime
+    last_confidence_update: datetime
+```
+
+---
+
+### What Felix Can Query (Full Observability)
+
+**1. Recent Activity (Last Hour):**
+```cypher
+MATCH (n)
+WHERE n.last_modified > timestamp() - 3600000
+RETURN n.id, n.last_modified, n.last_traversed_by, n.arousal_level
+ORDER BY n.last_modified DESC
+LIMIT 50
+```
+
+**2. Most Active Patterns (Today):**
+```cypher
+MATCH (n)
+WHERE n.last_traversal_time > timestamp() - 86400000
+RETURN n.id, n.traversal_count, n.sub_entity_weights
+ORDER BY n.traversal_count DESC
+LIMIT 20
+```
+
+**3. Hebbian Learning Activity:**
+```cypher
+MATCH ()-[r]->()
+WHERE r.last_traversal_time > timestamp() - 3600000
+RETURN type(r), r.link_strength, r.co_activation_count,
+       r.last_traversed_by, r.last_mechanism_id
+ORDER BY r.co_activation_count DESC
+LIMIT 50
+```
+
+**4. Entity Activity Patterns:**
+```cypher
+MATCH (n)
+WHERE n.last_traversal_time > timestamp() - 3600000
+UNWIND keys(n.sub_entity_weights) as entity_id
+RETURN entity_id,
+       COUNT(*) as nodes_activated,
+       AVG(n.sub_entity_weights[entity_id]) as avg_activation
+ORDER BY nodes_activated DESC
+```
+
+**5. Mechanism Execution Tracking:**
+```cypher
+MATCH ()-[r]->()
+WHERE r.last_modified > timestamp() - 3600000
+RETURN r.last_mechanism_id,
+       COUNT(*) as executions,
+       AVG(timestamp() - r.last_modified) as avg_time_since
+GROUP BY r.last_mechanism_id
+ORDER BY executions DESC
+```
+
+**6. Task Creation Activity:**
+```cypher
+MATCH (task:Task)
+WHERE task.created_at > timestamp() - 3600000
+RETURN task.type, task.domain, task.severity, task.created_at
+ORDER BY task.created_at DESC
+LIMIT 50
+```
+
+**7. Staleness Distribution:**
+```cypher
+MATCH ()-[link]->()
+WHERE link.last_staleness_check IS NOT NULL
+WITH link,
+     (timestamp() - coalesce(link.last_verified, link.created_at)) / 86400000 as staleness_days
+RETURN
+    CASE
+        WHEN staleness_days < 1 THEN 'fresh'
+        WHEN staleness_days < 7 THEN 'recent'
+        WHEN staleness_days < 30 THEN 'aging'
+        ELSE 'stale'
+    END as category,
+    COUNT(*) as count
+ORDER BY staleness_days
+```
+
+---
+
+### Observability Architecture
+
+**Graph State IS the Event Log:**
+- Every traversal updates `traversal_count` and `last_traversal_time`
+- Every Hebbian strengthening updates `link_strength` and `co_activation_count`
+- Every mechanism execution modifies `last_mechanism_id` and `last_modified`
+- Every task creation adds a Task node (consciousness artifact, not operational event)
+
+**Felix queries recent state changes to see system activity:**
+- No separate events database needed
+- No event stream processing
+- No volume explosion
+- No semantic pollution
+
+**The substrate observes itself through its own properties.**
 
 ---
 
@@ -1053,14 +1230,39 @@ RETURN r.detection_logic, r.task_template, r.activation_history
 
 ## Implementation Guidelines
 
+### Schema Requirements for Observability
+
+**All mechanisms depend on these fields existing in BaseNode and BaseRelation:**
+
+```python
+# BaseNode required fields
+class BaseNode:
+    last_modified: datetime
+    traversal_count: int = 0
+    last_traversed_by: str
+    last_traversal_time: datetime
+
+# BaseRelation required fields
+class BaseRelation:
+    last_modified: datetime
+    traversal_count: int = 0
+    last_traversed_by: str
+    last_mechanism_id: str
+```
+
+**If these fields are missing from consciousness_schema.py, add them to BaseNode and BaseRelation.**
+
+---
+
 ### Adding a New Mechanism
 
 1. **Verify necessity:** Can existing mechanisms handle this with metadata changes?
 2. **Design as Cypher query:** MATCH (pattern) → side effects (CREATE/SET) → RETURN
 3. **Parameterize everything:** No hardcoded values, all thresholds/rules from metadata
-4. **Test in isolation:** Create test graph, run mechanism, verify state changes
-5. **Audit before freezing:** Code review + verification of correctness
-6. **Document in this file:** Add to mechanism list with full Cypher implementation
+4. **Include observability metadata:** Every mechanism must update `last_modified`, `last_mechanism_id`, `traversal_count`
+5. **Test in isolation:** Create test graph, run mechanism, verify state changes including metadata
+6. **Audit before freezing:** Code review + verification of correctness
+7. **Document in this file:** Add to mechanism list with full Cypher implementation
 
 ### Changing System Behavior
 
