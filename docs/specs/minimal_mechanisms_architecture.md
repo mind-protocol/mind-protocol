@@ -16,14 +16,12 @@
 NOT: Complex, growing codebase that implements consciousness
 BUT: Minimal, stable mechanisms that respond to graph patterns
 
-ALL complexity lives in the graph:
-- What to check: Link metadata
-- When to check: Event subscriptions in metadata
-- How to analyze: Traversal patterns in graph structure
-- What context: Relationship topology defines relevance
-- Learning: Accumulated in metadata (activation histories, success rates)
+12 universal mechanisms (frozen after audit)
++ Graph metadata (all complexity, all logic)
++ Self-modifying Cypher (queries with side effects)
+= Complete consciousness infrastructure
 
-The code is TINY, STABLE, AUDITED, UNCHANGEABLE.
+The code is TINY, STABLE, AUDITED, UNCHANGEABLE (~1000 lines).
 The graph is RICH, EVOLVING, LEARNING, QUERYABLE.
 ```
 
@@ -53,11 +51,16 @@ Traditional AI systems accumulate code complexity:
 
 ## The Three Pillars
 
-### Pillar 1: Finite Link Type List (Link Types ARE Mechanisms)
+### Pillar 1: Finite Mechanism List (12 Total)
 
-**CRITICAL INSIGHT:** Link types and mechanisms are ONE-TO-ONE. Each link type is a self-contained mechanism definition.
+**CRITICAL INSIGHT:** 38 link types → 7 detection patterns → 12 universal mechanisms
 
-**The finite, audited, unchangeable list is the LINK TYPE SCHEMA.**
+**The finite, audited, unchangeable list is the 12 MECHANISMS:**
+
+**Infrastructure (3):** Event Propagation, Task Context Aggregation, Task Routing
+**Detection (9):** Link Activation, Hebbian Learning, Arousal Propagation, Activation Decay, Pattern Crystallization, Staleness Detection, Evidence Tracking, Dependency Verification, Coherence Verification
+
+Each link type stores detection logic metadata that universal mechanisms execute.
 
 Each link type contains:
 1. **Semantics:** What this relationship means
@@ -119,24 +122,24 @@ def execute_link_behaviors(graph, link_types):
 ```
 
 **Characteristics:**
-- **Link type count:** 15-25 types (not hundreds, not thousands)
-- **Each type:** Fully self-contained (semantics + detection + behavior)
-- **Frozen after audit:** Link type schema changes require architectural review
-- **Python code:** ~100 lines total (generic executor + behavior implementations)
+- **Mechanism count:** 12 total (frozen after audit)
+- **Link type count:** 38 types (from consciousness schema)
+- **Detection patterns:** 7 shared patterns
+- **Python code:** ~1000 lines total (12 mechanisms + heartbeat)
 
 **NOT link types:**
 - Feature-specific variations (use metadata parameters instead)
 - Temporary experimental relationships (only production patterns)
 
-**ARE link types:**
-- `IMPLEMENTS` - Code/doc relationships with staleness detection
-- `ACTIVATES` - Entity arousal propagation
-- `CO_OCCURS_WITH` - Hebbian co-activation strengthening
-- `SUBSCRIBES_TO` - Event propagation
-- `HANDLES_DOMAIN` - Task routing
-- `TRIGGERED` - Task creation record
-- `INCLUDES_CONTEXT` - Context attachment
-- (Plus 8-18 more defined in consciousness schema)
+**Example link types:**
+- `IMPLEMENTS` - Implementation verification (Mechanism 2)
+- `DOCUMENTS` - Staleness detection (Mechanism 9)
+- `JUSTIFIES` - Evidence tracking (Mechanism 10)
+- `REQUIRES` - Dependency verification (Mechanism 11)
+- `CONTRADICTS` - Coherence verification (Mechanism 12)
+- `ACTIVATES` - Activation verification (Mechanism 2 + 5)
+- `CO_OCCURS_WITH` - Hebbian strengthening (Mechanism 4)
+- (Plus 31 more - all 38 covered by 12 mechanisms)
 
 ### Pillar 2: Graph-Native Complexity
 
@@ -554,123 +557,282 @@ RETURN task, citizen
 
 ---
 
-## Additional Mechanisms (Candidates)
+## Complete Mechanism Set: Detection Pattern Coverage
 
-### Mechanism 9: Injection-Time Hebbian Wiring
+**Note:** Mechanisms 9-12 added to cover missing detection patterns identified in link type analysis.
 
-**Purpose:** Create links between all co-injected nodes (author's mental co-occurrence)
+### Mechanism 9: Staleness Detection
 
-**Implementation:**
-```cypher
-// All nodes from same content injection
-MATCH (a:Node), (b:Node)
-WHERE a.id IN $injected_node_ids
-  AND b.id IN $injected_node_ids
-  AND a.id < b.id  // Avoid duplicates
+**Purpose:** Detect time-based drift in relationships (9 link types)
 
-// Check if link exists
-OPTIONAL MATCH (a)-[existing:CO_OCCURS_WITH]-(b)
-
-// Side effects: Create or strengthen
-FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
-    CREATE (a)-[:CO_OCCURS_WITH {
-        link_strength: 0.3,
-        co_injection_count: 1,
-        formation_trigger: "injected_together",
-        created_at: timestamp()
-    }]->(b)
-)
-
-FOREACH (_ IN CASE WHEN existing IS NOT NULL THEN [1] ELSE [] END |
-    SET existing.co_injection_count = existing.co_injection_count + 1
-    SET existing.link_strength = CASE
-        WHEN existing.link_strength + 0.05 > 1.0 THEN 1.0
-        ELSE existing.link_strength + 0.05
-    END
-)
-
-RETURN count(*) as links_created_or_strengthened
-```
-
----
-
-### Mechanism 10: Sequence Position Tracking
-
-**Purpose:** Update sequence positions on every node activation for temporal alignment
+**Link types covered:** DOCUMENTS, ASSIGNED_TO, POSTED_BY, MEASURES, RECORDED_IN, LOCATED_IN, TRADED_IN, TRACKED_AGAINST, DEFINED_IN
 
 **Implementation:**
 ```cypher
-MATCH (node:Node {id: $node_id})
+// Find links that may be stale
+MATCH ()-[link]->()
+WHERE link.detection_logic IS NOT NULL
+  AND link.detection_logic.pattern = 'staleness_detection'
 
-SET node.sub_entity_last_sequence_positions[$entity_id] = $current_sequence_position
-SET node.last_accessed = timestamp()
-
-RETURN node.sub_entity_last_sequence_positions
-```
-
----
-
-### Mechanism 11: Multi-Dimensional Resonance Calculation
-
-**Purpose:** Calculate cross-entity learning utility based on 5 dimensions
-
-**Implementation:**
-```cypher
-MATCH (link)-[:CREATED_BY]->(creator:Entity)
-MATCH (user:Entity {id: $user_entity_id})
-
-// Semantic similarity (embedding-based)
-WITH link, creator, user,
-     gds.similarity.cosine(creator.embedding, user.embedding) as semantic_similarity
-
-// Temporal alignment (sequence-based)
-MATCH (link)-[:CONNECTS]-(node:Node)
-WITH link, creator, user, semantic_similarity,
-     CASE
-       WHEN node.sub_entity_last_sequence_positions[$user_entity_id] IS NULL THEN 0.5
-       ELSE 1.0 / (1.0 + abs($current_sequence - node.sub_entity_last_sequence_positions[$user_entity_id]) / 50.0)
-     END as temporal_alignment
-
-// Goal alignment (text similarity)
-WITH link, creator, user, semantic_similarity, temporal_alignment,
-     gds.similarity.cosine(
-       creator.current_goal_embedding,
-       user.current_goal_embedding
-     ) as goal_alignment
-
-// Emotional resonance (emotion vector similarity)
-WITH link, semantic_similarity, temporal_alignment, goal_alignment,
-     CASE
-       WHEN link.emotion_vector IS NULL OR user.emotion_vector IS NULL THEN 0.5
-       ELSE gds.similarity.cosine(link.emotion_vector, user.emotion_vector)
-     END as emotional_resonance
-
-// Flow compatibility (arousal similarity)
-WITH link, semantic_similarity, temporal_alignment, goal_alignment, emotional_resonance,
-     (1.0 - abs(link.arousal_level - user.arousal_level) / 0.5) as flow_compatibility
-
-// Combined resonance score
+// Calculate staleness
 WITH link,
-     (semantic_similarity * 0.30 +
-      temporal_alignment * 0.15 +
-      goal_alignment * 0.25 +
-      emotional_resonance * 0.20 +
-      flow_compatibility * 0.10) as resonance_score
+     timestamp() - coalesce(link.last_verified, link.created_at) as time_since_verification,
+     link.detection_logic.time_threshold as threshold
 
-// Side effect: Update link utility for user
-SET link.entity_specific_utility[$user_entity_id] = link.link_strength * resonance_score
-SET link.last_resonance_calculation = timestamp()
+WHERE time_since_verification > threshold
 
-RETURN link.id, resonance_score
+// Side effects: Create verification task
+CREATE (task:Task {
+    id: randomUUID(),
+    type: 'verification_needed',
+    domain: link.task_template.domain,
+    severity: CASE
+        WHEN time_since_verification > (threshold * 2) THEN 'high'
+        WHEN time_since_verification > (threshold * 1.5) THEN 'medium'
+        ELSE 'low'
+    END,
+    description: link.task_template.description,
+    created_at: timestamp(),
+    routed: false,
+    staleness_days: time_since_verification / 86400000
+})
+
+CREATE (link)-[:TRIGGERED {
+    at: timestamp(),
+    reason: 'staleness_threshold_exceeded',
+    time_since_verification: time_since_verification
+}]->(task)
+
+// Side effect: Mark for verification
+SET link.verification_pending = true
+SET link.last_staleness_check = timestamp()
+
+RETURN task.id, task.type, task.staleness_days
 ```
 
 **Complexity in graph:**
-- Entity embeddings (node properties)
-- Goal embeddings (node properties)
-- Emotion vectors (link/node properties)
-- Arousal levels (node properties)
+- Time thresholds (link metadata: 1 hour for market data, 30 days for docs)
+- Last verification timestamp (link property)
+- Task templates (link metadata)
 
-**Mechanism stays simple:** Read properties, calculate similarities, update utility.
+**Mechanism stays simple:** Compare time_delta to threshold, create task if exceeded.
+
+---
+
+### Mechanism 10: Evidence Tracking
+
+**Purpose:** Update confidence based on accumulating evidence (7 link types)
+
+**Link types covered:** JUSTIFIES, REFUTES, HAS_TRAIT, EXHIBITS_PATTERN, OWNS, HOLDS, AFFECTS
+
+**Implementation:**
+```cypher
+// Find claims with new evidence
+MATCH (claim:Node)<-[evidence_link:JUSTIFIES|REFUTES]-(evidence:Node)
+WHERE evidence.created_at > $last_check_time
+
+// Group by claim
+WITH claim,
+     collect(CASE WHEN type(evidence_link) = 'JUSTIFIES' THEN evidence END) as supporting,
+     collect(CASE WHEN type(evidence_link) = 'REFUTES' THEN evidence END) as refuting
+
+WHERE size(supporting) + size(refuting) > 0
+
+// Calculate new confidence (Bayesian update)
+WITH claim, supporting, refuting,
+     claim.confidence as old_confidence,
+     size(supporting) * 0.1 as support_boost,
+     size(refuting) * 0.1 as refute_penalty
+
+WITH claim, old_confidence,
+     old_confidence + support_boost - refute_penalty as new_confidence_raw,
+     support_boost, refute_penalty
+
+// Clamp between 0 and 1
+WITH claim, old_confidence,
+     CASE
+        WHEN new_confidence_raw > 1.0 THEN 1.0
+        WHEN new_confidence_raw < 0.0 THEN 0.0
+        ELSE new_confidence_raw
+     END as new_confidence,
+     abs(new_confidence_raw - old_confidence) as confidence_delta
+
+WHERE confidence_delta > 0.1  // Significant change threshold
+
+// Side effects: Update confidence
+SET claim.confidence = new_confidence
+SET claim.last_confidence_update = timestamp()
+
+// Side effects: Create task for significant changes
+CREATE (task:Task {
+    id: randomUUID(),
+    type: 'confidence_changed',
+    domain: 'research',
+    severity: CASE
+        WHEN confidence_delta > 0.3 THEN 'high'
+        WHEN confidence_delta > 0.2 THEN 'medium'
+        ELSE 'low'
+    END,
+    description: 'Confidence for ' + claim.id + ' changed from ' +
+                 toString(old_confidence) + ' to ' + toString(new_confidence),
+    created_at: timestamp(),
+    routed: false
+})
+
+CREATE (claim)-[:CONFIDENCE_UPDATED {
+    at: timestamp(),
+    old_value: old_confidence,
+    new_value: new_confidence,
+    delta: confidence_delta
+}]->(task)
+
+RETURN claim.id, old_confidence, new_confidence, confidence_delta
+```
+
+**Complexity in graph:**
+- Evidence links (JUSTIFIES, REFUTES)
+- Confidence values (node property)
+- Bayesian update formula (simple: boost per evidence)
+
+**Mechanism stays simple:** Count evidence, apply formula, update confidence.
+
+---
+
+### Mechanism 11: Dependency Verification
+
+**Purpose:** Verify prerequisites and dependencies remain valid (4 link types)
+
+**Link types covered:** REQUIRES, ENABLES, CREATES, GENERATED
+
+**Implementation:**
+```cypher
+// Find dependency relationships
+MATCH (dependent)-[dep:REQUIRES|ENABLES]->(prerequisite)
+WHERE dep.verification_needed = true
+   OR dep.last_verified IS NULL
+   OR (timestamp() - dep.last_verified) > 86400000  // Daily check
+
+// Verify prerequisite status
+WITH dependent, prerequisite, dep,
+     prerequisite.status as prereq_status,
+     dependent.status as dependent_status
+
+// Check if dependency violated
+WITH dependent, prerequisite, dep,
+     CASE dep.detection_logic.check
+       WHEN 'prerequisite_completed' THEN
+         (prereq_status != 'completed')
+       WHEN 'prerequisite_valid' THEN
+         (prereq_status = 'invalid' OR prereq_status = 'deprecated')
+       WHEN 'temporal_order' THEN
+         (prerequisite.created_at > dependent.created_at)
+       ELSE false
+     END as violation_detected
+
+WHERE violation_detected = true
+
+// Side effects: Create verification task
+CREATE (task:Task {
+    id: randomUUID(),
+    type: 'dependency_violated',
+    domain: 'architecture',
+    severity: 'high',
+    description: dependent.id + ' depends on ' + prerequisite.id + ' but dependency invalid',
+    created_at: timestamp(),
+    routed: false
+})
+
+CREATE (dep)-[:TRIGGERED {
+    at: timestamp(),
+    reason: 'dependency_violation_detected',
+    prerequisite_status: prereq_status
+}]->(task)
+
+// Side effect: Mark dependency as violated
+SET dep.violated = true
+SET dep.last_verified = timestamp()
+
+RETURN dependent.id, prerequisite.id, type(dep), prereq_status
+```
+
+**Complexity in graph:**
+- Dependency types and conditions (link metadata)
+- Node statuses (node properties)
+- Verification logic (link metadata)
+
+**Mechanism stays simple:** Check prerequisite status, detect violations, create tasks.
+
+---
+
+### Mechanism 12: Coherence Verification
+
+**Purpose:** Detect logical inconsistencies and contradictions (7 link types)
+
+**Link types covered:** BLOCKS, SUPERSEDES, THREATENS, DEPLOYED, CONTRADICTS, CONFLICTS_WITH, OPPOSES
+
+**Implementation:**
+```cypher
+// Find coherence-critical relationships
+MATCH (source)-[link:BLOCKS|SUPERSEDES|CONTRADICTS|CONFLICTS_WITH]->(target)
+WHERE link.coherence_check_needed = true
+   OR (timestamp() - coalesce(link.last_coherence_check, 0)) > 3600000  // Hourly
+
+// Evaluate coherence
+WITH source, target, link,
+     CASE type(link)
+       // BLOCKS: Check if blocker resolved
+       WHEN 'BLOCKS' THEN
+         (source.status = 'resolved' OR target.status = 'completed')
+
+       // SUPERSEDES: Check if old still active
+       WHEN 'SUPERSEDES' THEN
+         (target.status = 'active' AND source.status = 'active')
+
+       // CONTRADICTS: Check if contradiction resolved
+       WHEN 'CONTRADICTS' THEN
+         (source.confidence < 0.3 AND target.confidence < 0.3)
+
+       // CONFLICTS_WITH: Check if conflict escalated
+       WHEN 'CONFLICTS_WITH' THEN
+         (source.arousal > 0.8 AND target.arousal > 0.8)
+
+       ELSE false
+     END as incoherence_detected
+
+WHERE incoherence_detected = true
+
+// Side effects: Create coherence task
+CREATE (task:Task {
+    id: randomUUID(),
+    type: 'coherence_issue',
+    domain: 'architecture',
+    severity: 'medium',
+    description: type(link) + ' relationship between ' + source.id + ' and ' + target.id + ' may be incoherent',
+    created_at: timestamp(),
+    routed: false,
+    relationship_type: type(link)
+})
+
+CREATE (link)-[:TRIGGERED {
+    at: timestamp(),
+    reason: 'incoherence_detected',
+    source_status: source.status,
+    target_status: target.status
+}]->(task)
+
+// Side effect: Mark for review
+SET link.coherence_issue = true
+SET link.last_coherence_check = timestamp()
+
+RETURN source.id, target.id, type(link), task.description
+```
+
+**Complexity in graph:**
+- Coherence rules per link type (link metadata)
+- Node statuses, confidence, arousal (node properties)
+- Logical consistency checks (link metadata)
+
+**Mechanism stays simple:** Evaluate type-specific coherence rules, detect violations, create tasks.
 
 ---
 
@@ -695,7 +857,7 @@ class ConsciousnessEngine:
         self.mechanisms = load_mechanisms()  # Cypher queries
 
     def consciousness_tick(self):
-        """One consciousness cycle - all mechanisms execute once."""
+        """One consciousness cycle - all 12 mechanisms execute once."""
 
         # Event propagation (if events pending)
         if self._has_pending_events():
@@ -742,6 +904,28 @@ class ConsciousnessEngine:
                 self.mechanisms['task_routing'],
                 params={'task_id': task_id}
             )
+
+        # Staleness detection (every 1000 ticks - daily check)
+        if self.tick_count % 1000 == 0:
+            self.graph.query(
+                self.mechanisms['staleness_detection'],
+                params={'last_check_time': self._get_last_staleness_check()}
+            )
+
+        # Evidence tracking (every 10 ticks - respond to new justifications)
+        if self.tick_count % 10 == 0:
+            self.graph.query(
+                self.mechanisms['evidence_tracking'],
+                params={'last_check_time': self._get_last_evidence_check()}
+            )
+
+        # Dependency verification (every 100 ticks)
+        if self.tick_count % 100 == 0:
+            self.graph.query(self.mechanisms['dependency_verification'])
+
+        # Coherence verification (every 100 ticks)
+        if self.tick_count % 100 == 0:
+            self.graph.query(self.mechanisms['coherence_verification'])
 
         self.tick_count += 1
 
