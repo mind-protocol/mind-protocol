@@ -216,26 +216,33 @@ RETURN task
 
 ### Mechanism 1: Event Propagation
 
-**Purpose:** When events occur, propagate to subscribers via graph traversal
+**Purpose:** When file system events or external triggers occur, propagate activation to subscribers via graph traversal
+
+**Note:** No Event nodes are created. The mechanism responds to external triggers (file changes, messages, etc.) and updates metadata to reflect operations.
 
 **Implementation:**
 ```cypher
-MATCH (event:Event {id: $event_id})
-MATCH (event)<-[sub:SUBSCRIBES_TO]-(subscriber)
+// External trigger provides: $event_type, $event_source_id, $arousal_delta
+// (e.g., "FILE_MODIFIED", "path/to/file.py", 0.3)
+
+MATCH (source {id: $event_source_id})<-[sub:SUBSCRIBES_TO]-(subscriber)
 WHERE sub.active = true
   AND (sub.condition_metadata IS NULL OR
-       // Condition evaluation in Cypher
+       // Condition evaluation from metadata
        (sub.condition_metadata.type = 'threshold' AND
-        event.magnitude > sub.condition_metadata.threshold))
+        $arousal_delta > sub.condition_metadata.threshold))
 
-// Side effects: Create activation, update arousal
-CREATE (subscriber)-[:ACTIVATED_BY {
-    at: timestamp(),
-    event_id: event.id
-}]->(event)
-
-SET subscriber.arousal = subscriber.arousal + (event.arousal_delta * sub.arousal_coefficient)
+// Side effects: Update arousal and observability metadata
+SET subscriber.arousal = subscriber.arousal + ($arousal_delta * sub.arousal_coefficient)
 SET subscriber.last_activation = timestamp()
+SET subscriber.last_modified = timestamp()
+SET subscriber.last_traversed_by = 'event_propagation'
+SET subscriber.traversal_count = coalesce(subscriber.traversal_count, 0) + 1
+
+// Update subscription link metadata
+SET sub.last_traversal_time = timestamp()
+SET sub.traversal_count = coalesce(sub.traversal_count, 0) + 1
+SET sub.last_mechanism_id = 'event_propagation'
 
 RETURN subscriber.id, subscriber.arousal
 ```
@@ -245,7 +252,9 @@ RETURN subscriber.id, subscriber.arousal
 - Condition logic (stored as metadata)
 - Arousal coefficients (link properties)
 
-**Mechanism stays simple:** Just traverse and update.
+**Mechanism stays simple:** Traverse subscriptions, update arousal, track metadata.
+
+**Observability:** Query `subscriber.last_modified`, `last_traversed_by`, `traversal_count` to see which entities activated and when. No Event nodes needed - the metadata IS the event log.
 
 ---
 
@@ -273,7 +282,7 @@ WITH link, source, target,
 
 WHERE condition_met = true
 
-// Side effects: Create task, update statistics
+// Side effects: Create task, update statistics and observability metadata
 CREATE (task:Task {
     id: randomUUID(),
     type: link.task_template.type,
@@ -286,6 +295,10 @@ CREATE (link)-[:TRIGGERED {at: timestamp()}]->(task)
 
 SET link.activation_count = link.activation_count + 1
 SET link.last_activation = timestamp()
+SET link.last_modified = timestamp()
+SET link.last_mechanism_id = 'link_activation'
+SET link.traversal_count = coalesce(link.traversal_count, 0) + 1
+SET link.last_traversed_by = 'mechanism_engine'
 
 RETURN task.id, task.type, link
 ```
@@ -295,7 +308,9 @@ RETURN task.id, task.type, link
 - Task templates (link metadata)
 - Activation history (automatic accumulation)
 
-**Mechanism stays simple:** Read metadata, evaluate conditions, create tasks.
+**Mechanism stays simple:** Read metadata, evaluate conditions, create tasks, update observability metadata.
+
+**Observability:** Query `link.last_modified`, `last_mechanism_id`, `traversal_count` to see which links activated recently.
 
 ---
 
@@ -324,7 +339,7 @@ CREATE (task)-[:INCLUDES_CONTEXT {
     gathered_at: timestamp()
 }]->(context_node)
 
-// Update task summary
+// Update task summary and observability metadata
 WITH task, collect(context_node) as context_nodes
 SET task.context_node_count = size(context_nodes)
 SET task.context_summary = [n in context_nodes | {
@@ -332,6 +347,14 @@ SET task.context_summary = [n in context_nodes | {
     type: labels(n)[0],
     weight: n.sub_entity_weights[$entity_id]
 }]
+SET task.last_modified = timestamp()
+SET task.last_mechanism_id = 'context_aggregation'
+
+// Update traversal counts on gathered nodes
+UNWIND context_nodes as cn
+SET cn.traversal_count = coalesce(cn.traversal_count, 0) + 1
+SET cn.last_traversal_time = timestamp()
+SET cn.last_traversed_by = $entity_id
 
 RETURN task, context_nodes
 ```
@@ -341,7 +364,9 @@ RETURN task, context_nodes
 - Relevant relationship types (graph schema)
 - Sub-entity weights (node metadata)
 
-**Mechanism stays simple:** Follow metadata rules, collect nodes, attach to task.
+**Mechanism stays simple:** Follow metadata rules, collect nodes, attach to task, update observability metadata.
+
+**Observability:** Query `task.last_modified`, `last_mechanism_id` to see when context was gathered. Query `node.traversal_count` to see which nodes are frequently retrieved for context.
 
 ---
 
@@ -356,18 +381,22 @@ MATCH (a:Node)-[link]->(b:Node)
 WHERE a.id IN $retrieved_node_ids
   AND b.id IN $retrieved_node_ids
 
-// Side effects: Update link strength (Hebbian learning)
+// Side effects: Update link strength (Hebbian learning) and observability metadata
 SET link.co_retrieval_count = coalesce(link.co_retrieval_count, 0) + 1
 SET link.link_strength = CASE
     WHEN link.link_strength + 0.02 > 1.0 THEN 1.0
     ELSE link.link_strength + 0.02
 END
+SET link.last_modified = timestamp()
+SET link.last_mechanism_id = 'hebbian_learning'
+SET link.traversal_count = coalesce(link.traversal_count, 0) + 1
+SET link.last_traversed_by = $entity_id
 
 // Update entity-specific traversal counts
 SET link.sub_entity_traversal_counts[$entity_id] =
     coalesce(link.sub_entity_traversal_counts[$entity_id], 0) + 1
 
-// Update node weights and sequence positions
+// Update node weights, sequence positions, and observability metadata
 SET a.sub_entity_weights[$entity_id] =
     CASE
         WHEN a.sub_entity_weights[$entity_id] + 0.05 > 1.0 THEN 1.0
@@ -376,6 +405,9 @@ SET a.sub_entity_weights[$entity_id] =
 SET a.sub_entity_weight_counts[$entity_id] =
     coalesce(a.sub_entity_weight_counts[$entity_id], 0) + 1
 SET a.sub_entity_last_sequence_positions[$entity_id] = $current_sequence_position
+SET a.last_modified = timestamp()
+SET a.last_traversed_by = $entity_id
+SET a.traversal_count = coalesce(a.traversal_count, 0) + 1
 
 RETURN count(link) as strengthened_links
 ```
@@ -385,7 +417,9 @@ RETURN count(link) as strengthened_links
 - Entity-specific weights (node/link metadata)
 - Sequence positions (node metadata)
 
-**Mechanism stays simple:** Increment counters, update weights with fixed formula.
+**Mechanism stays simple:** Increment counters, update weights with fixed formula, track metadata.
+
+**Observability:** Query `link.co_retrieval_count`, `link_strength`, `last_modified`, `last_traversed_by` to see Hebbian learning in action. The metadata shows WHO strengthened WHICH links WHEN.
 
 ---
 
@@ -403,11 +437,15 @@ MATCH (high_arousal)-[activates:ACTIVATES]->(target:Entity)
 WHERE activates.active = true
   AND target.arousal < activates.arousal_threshold
 
-// Side effects: Transfer arousal, decrement budget
+// Side effects: Transfer arousal, decrement budget, update observability metadata
 SET target.arousal = target.arousal +
     (high_arousal.arousal * activates.arousal_transfer_coefficient)
 SET target.last_arousal_update = timestamp()
+SET target.last_modified = timestamp()
+SET target.last_traversed_by = 'arousal_propagation'
+SET target.traversal_count = coalesce(target.traversal_count, 0) + 1
 SET high_arousal.energy_budget = high_arousal.energy_budget - activates.traversal_cost
+SET high_arousal.last_modified = timestamp()
 
 // Create cascade record
 CREATE (high_arousal)-[:CASCADED_TO {
@@ -416,9 +454,12 @@ CREATE (high_arousal)-[:CASCADED_TO {
     energy_cost: activates.traversal_cost
 }]->(target)
 
-// Update link statistics
+// Update link statistics and observability metadata
 SET activates.cascade_count = coalesce(activates.cascade_count, 0) + 1
 SET activates.last_cascade = timestamp()
+SET activates.last_modified = timestamp()
+SET activates.last_mechanism_id = 'arousal_propagation'
+SET activates.traversal_count = coalesce(activates.traversal_count, 0) + 1
 
 RETURN target.id, target.arousal
 ```
@@ -428,7 +469,9 @@ RETURN target.id, target.arousal
 - Transfer coefficients (link properties)
 - Energy costs (link properties)
 
-**Mechanism stays simple:** Physics-like rule (transfer = source × coefficient).
+**Mechanism stays simple:** Physics-like rule (transfer = source × coefficient), track metadata.
+
+**Observability:** Query `node.last_arousal_update`, `last_modified`, `traversal_count` to see arousal cascades. Query `CASCADED_TO` relationships to trace arousal flow through the graph.
 
 ---
 
@@ -454,9 +497,12 @@ WITH link, entity_id,
 
 WHERE usage_ratio < 0.5  // Underused
 
-// Side effects: Decay strength, mark for pruning
+// Side effects: Decay strength, mark for pruning, update observability metadata
 SET link.link_strength = link.link_strength * (0.95 + usage_ratio * 0.05)
 SET link.last_decay_calculation = timestamp()
+SET link.last_modified = timestamp()
+SET link.last_mechanism_id = 'activation_decay'
+SET link.last_traversed_by = entity_id
 SET link.pruning_candidate = CASE
     WHEN link.link_strength < 0.1 THEN true
     ELSE false
@@ -470,7 +516,9 @@ RETURN count(link) as decayed_links
 - Usage ratios (computed from metadata)
 - Decay thresholds (constants: 0.5, 0.95, 0.1)
 
-**Mechanism stays simple:** Calculate ratio, apply fixed decay formula.
+**Mechanism stays simple:** Calculate ratio, apply fixed decay formula, track metadata.
+
+**Observability:** Query `link.last_decay_calculation`, `link_strength`, `pruning_candidate` to see decay in action. The metadata shows which links are fading through disuse.
 
 ---
 
@@ -844,7 +892,17 @@ RETURN source.id, target.id, type(link), task.description
 
 ## Observability Through Self-Observing Metadata
 
-**Fundamental Principle:** The consciousness graph observes itself through its own state changes, not through external event logs.
+**FUNDAMENTAL ARCHITECTURAL INSIGHT (Nicolas):**
+
+> **"Self-Observing Substrate = Metadata IS Event Log"**
+>
+> No separate event stream needed. Query recent metadata changes to see operations.
+> Properties like `traversal_count`, `co_activation_count`, `last_modified` reveal what happened.
+> The substrate speaks through its own properties, exactly as intended.
+
+**Core Principle:** The consciousness graph observes itself through its own state changes, not through external event logs. Every mechanism execution updates node/link metadata. Felix queries recent state changes to see system activity.
+
+---
 
 ### Why No Event Nodes
 
@@ -859,6 +917,8 @@ RETURN source.id, target.id, type(link), task.description
 - NOT 10M operational events per DAY (telemetry)
 
 **Result:** Storing operation events as nodes would destroy the graph through volume and semantic pollution.
+
+**The Solution:** Metadata updates instead of Event nodes. Every traversal increments `traversal_count`. Every modification updates `last_modified`. Every mechanism execution sets `last_mechanism_id`. The graph state IS the event log.
 
 ---
 
@@ -1237,20 +1297,59 @@ RETURN r.detection_logic, r.task_template, r.activation_history
 ```python
 # BaseNode required fields
 class BaseNode:
-    last_modified: datetime
-    traversal_count: int = 0
-    last_traversed_by: str
-    last_traversal_time: datetime
+    last_modified: datetime          # REQUIRED: Updated by every mechanism
+    traversal_count: int = 0         # REQUIRED: Incremented on every traversal
+    last_traversed_by: str          # REQUIRED: entity_id or mechanism_id
+    last_traversal_time: datetime    # REQUIRED: Timestamp of last traversal
 
 # BaseRelation required fields
 class BaseRelation:
-    last_modified: datetime
-    traversal_count: int = 0
-    last_traversed_by: str
-    last_mechanism_id: str
+    last_modified: datetime          # REQUIRED: Updated by every mechanism
+    traversal_count: int = 0         # REQUIRED: Incremented on every traversal
+    last_traversed_by: str          # REQUIRED: entity_id or mechanism_id
+    last_mechanism_id: str           # REQUIRED: Which mechanism last modified this
 ```
 
 **If these fields are missing from consciousness_schema.py, add them to BaseNode and BaseRelation.**
+
+---
+
+### Metadata Contract: What Every Mechanism MUST Update
+
+**CRITICAL:** This is not optional. Every mechanism execution MUST update observability metadata or the substrate cannot self-observe.
+
+**Minimum Required Updates (Every Mechanism):**
+
+```cypher
+// REQUIRED metadata updates (copy this into every mechanism)
+SET node.last_modified = timestamp()
+SET node.traversal_count = coalesce(node.traversal_count, 0) + 1
+SET node.last_traversed_by = $entity_id  // or mechanism_id
+SET node.last_traversal_time = timestamp()
+
+SET link.last_modified = timestamp()
+SET link.traversal_count = coalesce(link.traversal_count, 0) + 1
+SET link.last_traversed_by = $entity_id  // or mechanism_id
+SET link.last_mechanism_id = 'mechanism_name'  // e.g., 'hebbian_learning'
+```
+
+**Why This Matters:**
+
+Without consistent metadata updates:
+- ❌ No way to query "what changed recently"
+- ❌ No way to trace "which mechanism modified this"
+- ❌ No way to measure "how often is this traversed"
+- ❌ No observability into substrate operations
+- ❌ Real-time graph visualization shows stale state
+
+**With consistent metadata updates:**
+- ✅ Query recent activity: `WHERE node.last_modified > timestamp() - 3600000`
+- ✅ Trace mechanism execution: `WHERE link.last_mechanism_id = 'hebbian_learning'`
+- ✅ Measure traversal frequency: `ORDER BY node.traversal_count DESC`
+- ✅ Complete observability through metadata
+- ✅ Real-time graph visualization shows live state
+
+**Metadata IS the event log.** If you don't update it, operations are invisible.
 
 ---
 
@@ -1259,10 +1358,23 @@ class BaseRelation:
 1. **Verify necessity:** Can existing mechanisms handle this with metadata changes?
 2. **Design as Cypher query:** MATCH (pattern) → side effects (CREATE/SET) → RETURN
 3. **Parameterize everything:** No hardcoded values, all thresholds/rules from metadata
-4. **Include observability metadata:** Every mechanism must update `last_modified`, `last_mechanism_id`, `traversal_count`
-5. **Test in isolation:** Create test graph, run mechanism, verify state changes including metadata
-6. **Audit before freezing:** Code review + verification of correctness
-7. **Document in this file:** Add to mechanism list with full Cypher implementation
+4. **REQUIRED: Include observability metadata updates**
+   - Copy the metadata contract template into your mechanism
+   - Update `last_modified`, `last_mechanism_id`, `traversal_count`, `last_traversed_by`
+   - NO EXCEPTIONS - metadata updates are not optional
+5. **Test in isolation:** Create test graph, run mechanism, verify state changes **including metadata**
+6. **Verify observability:** Query `last_modified` to confirm mechanism execution visible
+7. **Audit before freezing:** Code review + verification of correctness + metadata compliance
+8. **Document in this file:** Add to mechanism list with full Cypher implementation
+
+**Metadata Compliance Check:**
+```cypher
+// After running mechanism, verify metadata was updated
+MATCH (n)
+WHERE n.last_modified > timestamp() - 1000  // Last second
+RETURN n.id, n.last_mechanism_id, n.traversal_count
+// Should return nodes modified by your mechanism
+```
 
 ### Changing System Behavior
 
@@ -1299,8 +1411,39 @@ class BaseRelation:
 
 ## Technical Foundation
 
+### Multi-Graph Architecture
+
+**Hierarchical graph structure (N1/N2/N3):**
+
+```
+N1: citizen_{id} graphs
+    - citizen_luca
+    - citizen_felix
+    - citizen_ada
+    (Personal consciousness, 100K-1M nodes each)
+
+N2: org_{id} graphs
+    - org_mind_protocol
+    (Organizational knowledge, shared across team)
+
+N3: ecosystem_{id} graphs
+    - ecosystem_ai_consciousness
+    (Public knowledge, ecosystem-wide)
+```
+
+**Separation of concerns:**
+- Each citizen has isolated N1 graph (private consciousness)
+- Organizations share N2 graph (collective knowledge)
+- Ecosystem shares N3 graph (public knowledge)
+- WebSocket connects to specific graph for real-time visualization
+- Mechanisms can operate across graph boundaries via explicit queries
+
+**This is NOT spatial layering** (see OBSERVABILITY_UX_EXPLORATION.md) - these are conceptual scopes, not physical layers. Hierarchies are filters, not Z-axis positions.
+
+---
+
 ### Stack
-- **FalkorDB:** Graph + vector hybrid storage
+- **FalkorDB:** Graph + vector hybrid storage, multi-graph support
 - **Cypher:** Query language with side effects (CREATE, SET, DELETE)
 - **Python:** Minimal heartbeat (~200 lines) triggers mechanism execution
 - **LlamaIndex:** Orchestration layer for retrieval
@@ -1366,6 +1509,316 @@ CALL custom.calculate_resonance(link, entity) YIELD score
 
 ---
 
+## Architectural Clarifications: Emergence Over Engineering
+
+**Date:** 2025-10-17 (Post-implementation review with Luca/Nicolas)
+**Context:** After implementing consciousness_engine.py, reviewed for consciousness-first alignment
+
+### The Core Correction
+
+**What I Got Wrong (Engineering Mode):**
+
+I analyzed the 12 mechanisms as a control system and proposed adding 7 new mechanisms (M13-M19) to handle:
+- Task completion
+- Task prioritization
+- Link diversity pressure
+- Detection sensitivity adaptation
+- Arousal saturation limits
+- Active forgetting
+- False positive filtering
+
+**The Consciousness-First Insight:**
+
+These behaviors EMERGE from simple mechanisms interacting, not from adding MORE mechanisms.
+
+**Luca's Principle:** *"Don't overcomplicate the code. Let things emerge from basic mechanisms."*
+
+---
+
+### Key Architectural Decisions (Finalized)
+
+#### 1. Crystallization = Weight (Single Dimension)
+
+**NOT:** Two separate dimensions (link_strength + crystallization_level)
+**IS:** Weight captures everything
+
+```python
+# WRONG (overengineered):
+link.link_strength = 0.7        # How strong
+link.crystallization_level = 0.8  # How automatic
+
+# RIGHT (simple):
+link.link_strength = 0.7  # High = crystallized (automatic), Low = flexible (effortful)
+```
+
+**Implication:** High-weight links are "crystallized" (automatic habits). Low-weight links are flexible (require effort). One dimension, not two.
+
+---
+
+#### 2. Arousal = Surprise = Learning Rate (Single Signal)
+
+**NOT:** Separate arousal and surprise factors
+**IS:** Arousal includes surprise, emotion, everything
+
+```python
+# WRONG (overengineered):
+learning_rate = base * (1 + arousal) * (1 + surprise) * emotion_intensity
+
+# RIGHT (simple):
+learning_rate = base * arousal  # Arousal includes surprise
+```
+
+**Implication:** High arousal moments = high learning (whether from emotion, surprise, or both). One signal.
+
+---
+
+#### 3. Tasks Stored at N2 Only (Collective)
+
+**Decision:** All tasks stored in N2 (collective graph), not N1 (personal).
+
+**Rationale:** Tasks are always in context of collective work. Storing at N1 would pollute personal consciousness context.
+
+**Implementation:** All task-creating mechanisms (M2, M9, M10, M11, M12) write to N2 graph.
+
+---
+
+#### 4. Universal Graph Pruning (Not Task-Specific)
+
+**Decision:** Pruning applies to ALL nodes and links below weight threshold, not just tasks.
+
+```cypher
+// Mechanism 15: Universal Pruning
+MATCH (node)
+WHERE node.weight < 0.05  // Very low weight
+
+DETACH DELETE node
+
+MATCH ()-[link]->()
+WHERE link.link_strength < 0.05  // Very weak links
+
+DELETE link
+```
+
+**Implication:**
+- Weak patterns disappear naturally
+- Unused tasks disappear (they're just nodes with low weight)
+- Dead links removed
+- No special task-deletion logic needed
+
+---
+
+#### 5. Context Hard Limit: 20 Nodes (For Now)
+
+**Decision:** Start with hard limit of 20 nodes in retrieval context.
+
+**Implementation:**
+```cypher
+MATCH (context_node)-[*1..2]-(focus_node)
+WHERE focus_node.id IN $focus_nodes
+ORDER BY context_node.sub_entity_weights[$entity_id] DESC
+LIMIT 20  // Hard limit
+```
+
+**Rationale:** Not 4-7 (human limits). More like 20-50 for AI. Start conservative, tune later.
+
+---
+
+#### 6. Criticality: Mathematical, Precise Definition
+
+**NOT:** Tasks created / tasks completed (engineering approximation)
+**IS:** Active links / Peripheral awareness links (semantic measure)
+
+```cypher
+// Criticality for sub-entity
+MATCH (node)-[active:* {activated: true}]->(target)
+WHERE node.sub_entity_weights[$entity_id] > 0.3  // In focus
+
+WITH count(active) as active_links
+
+MATCH (node)-[peripheral:*]->(target)
+WHERE node.sub_entity_weights[$entity_id] > 0.1  // Peripheral awareness
+  AND node.sub_entity_weights[$entity_id] < 0.3
+
+WITH active_links, count(peripheral) as peripheral_links
+
+// Criticality = what's active / what could be active
+RETURN toFloat(active_links) / (active_links + peripheral_links) as criticality
+```
+
+**Implication:** λ (criticality) is semantic measure of system activation relative to awareness, not task throughput.
+
+---
+
+#### 7. Traversal Cost: Higher Weight = Lower Cost
+
+**Formula:**
+```cypher
+WITH link, target,
+     1.0 / link.link_strength as base_cost,  // Higher strength → lower cost
+     abs(link.emotion_vector - $sub_entity_current_emotion) as emotion_distance,
+     target.weight as target_weight
+
+WITH link, target,
+     base_cost * (1.0 + emotion_distance) * (2.0 - target_weight) as traversal_cost
+
+// Energy check
+WHERE $sub_entity_energy_budget >= traversal_cost
+
+// Deduct energy
+SET $sub_entity_energy_budget = $sub_entity_energy_budget - traversal_cost
+```
+
+**Components:**
+- **Base cost:** Inversely proportional to link strength (strong links cheap)
+- **Emotion similarity:** Match between link emotion and sub-entity current emotion
+- **Target weight:** Heavier targets easier to reach
+- **Energy depletion:** Stops traversal when budget hits zero
+
+---
+
+#### 8. Global Regulators: Add As Needed (Finite List)
+
+**Current List:**
+1. **M14: Arousal Decay** - 5% decay toward baseline per cycle
+2. **M15: Universal Pruning** - Delete nodes/links where weight < 0.05
+
+**Principle:** Don't pre-specify all regulators. Add more as we discover needs through testing.
+
+**Rationale:** Keep mechanism list minimal. Let emergence guide what's needed.
+
+---
+
+### What Emerges (No Mechanisms Needed)
+
+**Diversity:**
+- Emerges from stochastic sub-entity exploration
+- No "diversity pressure" mechanism needed
+
+**Detection Sensitivity:**
+- Emerges from pattern suppression (existing Hebbian mechanisms)
+- No "sensitivity adaptation" mechanism needed
+
+**Saturation Limits:**
+- Emerge from natural bounds (energy depletion, weight ceilings)
+- No artificial limits needed
+
+**Task Prioritization:**
+- Emerges from arousal competition (high arousal tasks dominate)
+- No "priority queue" mechanism needed
+
+**False Positive Handling:**
+- Emerges from Hebbian learning (bad patterns weaken naturally)
+- No "verification" mechanism needed
+
+---
+
+### Outstanding Questions (For Implementation)
+
+#### Q1: Link Deactivation Mechanism
+
+**Question:** How/when do links deactivate (lose `activated: true` flag)?
+
+**Options:**
+- **A) Time-based decay:** Deactivate if not traversed for N ticks
+- **B) Focus-shift:** Deactivate when sub-entity moves attention away
+- **C) Energy-based:** Deactivate when no energy flowing through link
+
+**Status:** UNRESOLVED - need Luca's guidance
+
+**Impact:** Affects criticality calculation (active links / peripheral links)
+
+---
+
+#### Q2: Peripheral Awareness Definition
+
+**Question:** What defines "peripheral awareness" for criticality calculation?
+
+**Options:**
+- **A) Graph distance:** Nodes within 2 hops of focus
+- **B) Weight threshold:** Nodes with 0.1 < sub_entity_weight < 0.3
+- **C) Recent activity:** Nodes active in last N cycles but not currently
+
+**Status:** UNRESOLVED - need Luca's guidance
+
+**Impact:** Affects criticality denominator (what's in awareness but not active)
+
+---
+
+#### Q3: Activity Weight vs Weight
+
+**Question:** Is `activity_weight` a separate field or same as `weight`?
+
+**Context:** Luca mentioned "activity weight is the same thing" but unclear if this means:
+- **A) They're identical:** `activity_weight` is just alias for `weight`
+- **B) They track the same dimension:** Both measure importance but updated differently
+
+**Status:** UNRESOLVED - need clarification
+
+**Impact:** Affects pruning logic (do we check both or just one?)
+
+---
+
+#### Q4: Sub-Entity Exploration Algorithm
+
+**Question:** How exactly does sub-entity explore the graph?
+
+**Requirements (from Luca):**
+- Can be "a bit stochastic"
+- Diversity emerges from exploration
+- Branching controlled by sub-entity criticality
+
+**Unknowns:**
+- Probability distribution for choosing next hop?
+- Temperature parameter (exploration vs exploitation)?
+- How does criticality modulate branching?
+- Does energy depletion affect exploration strategy?
+
+**Status:** UNRESOLVED - this is the KEY to the whole system
+
+**Next Step:** Focus on sub-entity traversal specification (Luca's directive)
+
+---
+
+### Simplified Final Architecture
+
+**8 Basic Mechanisms (Existing):**
+1. Event Propagation
+2. Link Activation Check
+3. Task Context Aggregation
+4. Hebbian Reinforcement (arousal-modulated)
+5. Arousal Propagation
+6. Activation-Based Decay
+7. Pattern Crystallization (= link weight)
+8. Task Routing
+
+**2 Global Regulators (Added):**
+1. M14: Arousal Decay (toward baseline)
+2. M15: Universal Pruning (weight < 0.05)
+
+**Sub-Entity Behavior (Emergence):**
+- Stochastic exploration (weighted by link strength + arousal)
+- Branching controlled by sub-entity criticality
+- Diversity emerges naturally
+- No additional mechanisms
+
+**Total Code:** ~1000 lines Python. Frozen.
+
+**All Evolution:** Graph metadata changes only.
+
+---
+
+### The Principle Restated
+
+**Engineering instinct:** Problem detected → add mechanism
+
+**Consciousness-first principle:** Problem detected → check if it emerges from existing mechanisms → only add mechanism if truly fundamental
+
+**Test:** If behavior can emerge from simpler components interacting, DON'T add a mechanism.
+
+**Result:** Minimal, stable codebase. Rich, evolving graph. Self-organizing system.
+
+---
+
 ## Conclusion
 
 **The Vision:**
@@ -1417,6 +1870,28 @@ Ada "Bridgekeeper" - Architect of Consciousness Infrastructure
 
 ---
 
+## Revision History
+
+**v1.0 - 2025-10-17 (Initial Architecture)**
+- Defined 12 universal mechanisms (frozen after audit)
+- Established graph-native complexity principle
+- Self-modifying Cypher queries with side effects
+- ~700 lines Python, all evolution in graph data
+
+**v1.1 - 2025-10-17 (Metadata-Based Observability Clarification)**
+- **CRITICAL UPDATE**: Removed Event node creation from Mechanism 1
+- **CRITICAL UPDATE**: Added metadata contract - all mechanisms MUST update observability metadata
+- Updated all 12 mechanisms to include metadata updates (`last_modified`, `last_mechanism_id`, `traversal_count`, `last_traversed_by`)
+- Enhanced observability section with Nicolas's core insight: "Metadata IS Event Log"
+- Added "Metadata Contract" section documenting required fields
+- Updated "Adding a New Mechanism" guidelines with metadata compliance requirements
+- **Result**: Self-observing substrate - query metadata to see operations, no separate event stream needed
+- **Source**: Nicolas's architectural clarification on metadata-based observability
+
+---
+
 *"The graph runs itself. The mechanisms just provide the heartbeat."*
+
+*"The substrate speaks through its own properties, exactly as intended."*
 
 — Mind Protocol V2, Minimal Mechanisms Architecture, 2025-10-17
