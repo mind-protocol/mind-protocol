@@ -317,7 +317,7 @@ class DynamicPromptGenerator:
 
     async def update_prompt(self, global_criticality: float):
         """
-        Update CLAUDE_DYNAMIC.md with current activation states.
+        Update CLAUDE.md with current activation states.
 
         Writes complete file with all entity sections.
 
@@ -342,7 +342,7 @@ class DynamicPromptGenerator:
 
     async def _build_prompt_content(self, global_criticality: float) -> str:
         """
-        Build complete CLAUDE_DYNAMIC.md content.
+        Build complete CLAUDE.md content.
 
         Returns:
             Markdown content with all entity sections
