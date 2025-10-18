@@ -478,13 +478,13 @@ class SubEntity:
             """
             result = self.graph.query(cypher)
 
-            if result and len(result) > 0:
-                return str(result[0][0])
+            if result and result.result_set and len(result.result_set) > 0:
+                return str(result.result_set[0][0])
 
             # Fallback: any node
             cypher_fallback = "MATCH (n) RETURN id(n) LIMIT 1"
             result = self.graph.query(cypher_fallback)
-            return str(result[0][0]) if result and len(result) > 0 else None
+            return str(result.result_set[0][0]) if result and result.result_set and len(result.result_set) > 0 else None
 
         except Exception as e:
             logger.error(f"[SubEntity:{self.entity_id}] Failed to find start node: {e}")
@@ -515,7 +515,7 @@ class SubEntity:
 
             result = self.graph.query(cypher, {"focus_id": self.current_node_id})
 
-            self.peripheral_nodes = [str(row[0]) for row in result] if result else []
+            self.peripheral_nodes = [str(row[0]) for row in result.result_set] if result and result.result_set else []
             self.current_focus_nodes = [self.current_node_id]
 
         except Exception as e:
@@ -542,11 +542,11 @@ class SubEntity:
 
             result = self.graph.query(cypher, {"node_id": node_id})
 
-            if not result:
+            if not result or not result.result_set:
                 return []
 
             links = []
-            for row in result:
+            for row in result.result_set:
                 links.append({
                     'source_id': str(row[0]),
                     'target_id': str(row[1]),
