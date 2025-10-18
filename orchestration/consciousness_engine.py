@@ -1172,8 +1172,11 @@ class ConsciousnessEngine:
 
             result = self.graph.query(cypher, params={"network_id": self.network_id})
 
-            if result and result[0][0] is not None:
-                return result[0][0]
+            # FalkorDB returns iterable rows with dict-like access
+            if result:
+                for row in result:
+                    if row['global_arousal'] is not None:
+                        return row['global_arousal']
 
             return 0.5  # Default moderate criticality
 

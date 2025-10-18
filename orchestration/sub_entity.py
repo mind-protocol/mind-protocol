@@ -215,6 +215,7 @@ class SubEntity:
                 need.current_satisfaction = 1.0
                 return
             self.current_node_id = start_node
+            logger.debug(f"[SubEntity:{self.entity_id}] START NODE FOUND: {start_node}")
             await self._traverse_to(start_node, need)
             return
 
@@ -223,6 +224,7 @@ class SubEntity:
 
         # Get candidate links from current node
         candidate_links = await self._get_outgoing_links(self.current_node_id)
+        logger.debug(f"[SubEntity:{self.entity_id}] Got {len(candidate_links)} candidate links from {self.current_node_id}")
 
         if not candidate_links:
             logger.debug(f"[SubEntity:{self.entity_id}] No outgoing links from {self.current_node_id}")
@@ -236,9 +238,11 @@ class SubEntity:
         for link_data in candidate_links:
             score = await self._calculate_link_score(link_data, need)
             scored_links.append((link_data, score))
+            logger.debug(f"[SubEntity:{self.entity_id}] Link {link_data.get('target_id')} scored: {score:.3f}")
 
         # Stochastic selection (temperature-modulated probability)
         selected_link = await self._select_link_stochastically(scored_links)
+        logger.debug(f"[SubEntity:{self.entity_id}] Selected link: {selected_link.get('target_id') if selected_link else 'None'}")
 
         if not selected_link:
             logger.debug(f"[SubEntity:{self.entity_id}] No link selected (low scores)")
@@ -523,6 +527,7 @@ class SubEntity:
         Get all outgoing links from a node with metadata for scoring.
 
         Returns list of dicts with: source_id, target_id, link_strength, target_arousal
+        Energy-first architecture - arousal is deprecated.
         """
         try:
             cypher = """
@@ -559,46 +564,37 @@ class SubEntity:
         """
         Calculate link traversal score using multi-dimensional weighted sum.
 
-        MULTI-DIMENSIONAL SCORING (Critical Traversal - Phase 2):
+        ENERGY-FIRST ARCHITECTURE (Critical Traversal - Phase 2):
+        Arousal is deprecated. Scoring based on link strength and target importance.
+
         Formula (weighted sum to avoid zero-outs):
-          score = 0.4*strength + 0.2*arousal + 0.2*emotion + 0.2*target
+          score = 0.7*link_strength + 0.3*target_weight (energy-only model)
 
         If goal_embedding present:
-          score = 0.3*strength + 0.15*arousal + 0.15*emotion + 0.15*target + 0.25*goal
+          score = 0.5*link_strength + 0.2*target_weight + 0.3*goal
 
         Spec: sub_entity_traversal_validation.md lines 152-219
         """
         # Component 1: Link strength (0-1, already normalized)
         strength_component = link_data.get('link_strength', 0.5)
 
-        # Component 2: Arousal (0-1, already normalized)
-        arousal_component = min(1.0, link_data.get('target_arousal', 0.5))
+        # Component 2: Target weight/importance (0-1, already normalized)
+        target_component = link_data.get('target_weight', 0.5)
 
-        # Component 3: Emotion match (NOT IMPLEMENTED YET - using neutral 0.5)
-        # TODO: Implement cosine similarity with current_emotion_vector
-        emotion_component = 0.5
-
-        # Component 4: Target importance (using arousal as proxy)
-        target_component = arousal_component  # Same as arousal in simplified model
-
-        # Weighted sum (no goal embedding yet, use base weights)
+        # Weighted sum (energy-first: no arousal, no emotion for now)
         if self.goal_embedding is not None:
             # TODO: Implement goal relevance via cosine similarity
             goal_component = 0.5  # Neutral for now
             score = (
-                0.3 * strength_component +
-                0.15 * arousal_component +
-                0.15 * emotion_component +
-                0.15 * target_component +
-                0.25 * goal_component
+                0.5 * strength_component +
+                0.2 * target_component +
+                0.3 * goal_component
             )
         else:
-            # No goal - use base weights
+            # No goal - simplified energy-first weights
             score = (
-                0.4 * strength_component +
-                0.2 * arousal_component +
-                0.2 * emotion_component +
-                0.2 * target_component
+                0.7 * strength_component +
+                0.3 * target_component
             )
 
         return max(0.0, min(1.0, score))  # Clamp to [0, 1]
