@@ -119,6 +119,11 @@ class SubEntity:
         self.nodes_visited_this_cycle: List[str] = []
         self.current_focus_nodes: List[str] = []
         self.peripheral_nodes: List[str] = []
+        self.current_node_id: Optional[str] = None  # Current position in graph
+
+        # Goal-directed traversal (Critical Traversal - Phase 2)
+        self.goal_embedding: Optional[Any] = None  # Vector representation of current goal
+        self.current_emotion_vector: Optional[Any] = None  # Current emotional state (for link weighting)
 
         # Continuous surfacing tracking
         self.nodes_since_last_write = 0
@@ -159,14 +164,16 @@ class SubEntity:
                     await self._generate_default_needs()
 
                 # Explore graph with energy budget (until budget exhausted)
+                logger.info(f"[SubEntity:{self.entity_id}] Starting exploration cycle (energy: {self.energy_used}/{self.energy_budget})")
                 while self.energy_used < self.energy_budget:
                     # Find most urgent unsatisfied need
                     urgent_need = self._get_most_urgent_need()
 
                     if not urgent_need:
-                        logger.info(f"[SubEntity:{self.entity_id}] All needs satisfied")
+                        logger.info(f"[SubEntity:{self.entity_id}] All needs satisfied, exiting exploration")
                         break  # All needs satisfied for this cycle
 
+                    logger.info(f"[SubEntity:{self.entity_id}] Found urgent need: {urgent_need.need_type}")
                     # Seek need fulfillment (traverse graph)
                     await self.seek_need_fulfillment(urgent_need)
 
@@ -187,29 +194,67 @@ class SubEntity:
 
     async def seek_need_fulfillment(self, need: Need):
         """
-        Explore graph to satisfy a need.
+        Intelligent traversal to satisfy a need.
 
-        This is where traversal happens - visiting nodes that might satisfy the need.
+        CRITICAL TRAVERSAL (Phase 2 Implementation):
+        - Peripheral awareness (1-2 graph hops from focus)
+        - Multi-dimensional scoring (weighted sum formula)
+        - Goal-directed search (embedding-based relevance)
+        - Stochastic link selection (temperature-modulated)
+
+        Spec: docs/specs/self_observing_substrate/sub_entity_traversal_validation.md
         """
-        # For MVP: Simple traversal - just visit one node
-        # In full version: Critical traversal with peripheral awareness, multi-dimensional scoring
+        logger.info(f"[SubEntity:{self.entity_id}] seek_need_fulfillment called (need: {need.need_type})")
 
-        # Get target nodes (if specific) or discover them
-        target_nodes = need.target_nodes if need.target_nodes else await self._discover_relevant_nodes(need)
-
-        if not target_nodes:
-            logger.debug(f"[SubEntity:{self.entity_id}] No nodes found for need: {need.need_type}")
-            need.current_satisfaction = 1.0  # Mark as satisfied (nothing to explore)
+        # If no current position, find starting node
+        if not self.current_node_id:
+            logger.info(f"[SubEntity:{self.entity_id}] Finding start node...")
+            start_node = await self._find_start_node()
+            if not start_node:
+                logger.info(f"[SubEntity:{self.entity_id}] No start node found")
+                need.current_satisfaction = 1.0
+                return
+            self.current_node_id = start_node
+            await self._traverse_to(start_node, need)
             return
 
-        # Visit one node (costs energy)
-        node_id = target_nodes[0]
-        await self._traverse_to(node_id, need)
+        # Update peripheral awareness (1-2 hops from current focus)
+        await self._update_peripheral_awareness()
 
-        # Update need satisfaction (simple heuristic for MVP)
-        need.current_satisfaction += 0.2  # Visiting a node partially satisfies need
+        # Get candidate links from current node
+        candidate_links = await self._get_outgoing_links(self.current_node_id)
 
-        # Check if need is now satisfied
+        if not candidate_links:
+            logger.debug(f"[SubEntity:{self.entity_id}] No outgoing links from {self.current_node_id}")
+            # Reset position to explore elsewhere
+            self.current_node_id = None
+            need.current_satisfaction += 0.1
+            return
+
+        # Score each candidate link (multi-dimensional weighted sum)
+        scored_links = []
+        for link_data in candidate_links:
+            score = await self._calculate_link_score(link_data, need)
+            scored_links.append((link_data, score))
+
+        # Stochastic selection (temperature-modulated probability)
+        selected_link = await self._select_link_stochastically(scored_links)
+
+        if not selected_link:
+            logger.debug(f"[SubEntity:{self.entity_id}] No link selected (low scores)")
+            self.current_node_id = None
+            need.current_satisfaction += 0.1
+            return
+
+        # Traverse to target node
+        target_node_id = selected_link['target_id']
+        await self._traverse_to(target_node_id, need)
+        self.current_node_id = target_node_id
+
+        # Update need satisfaction based on goal relevance
+        need.current_satisfaction += 0.2  # Base satisfaction from exploration
+
+        # Check if need is satisfied
         if need.is_satisfied():
             logger.info(f"[SubEntity:{self.entity_id}] Need satisfied: {need.need_type}")
 
@@ -413,6 +458,193 @@ class SubEntity:
         except Exception as e:
             logger.error(f"[SubEntity:{self.entity_id}] Failed to discover nodes: {e}")
             return []
+
+    async def _find_start_node(self) -> Optional[str]:
+        """
+        Find initial node to start exploration.
+
+        Strategy: Pick high-weight node or random node if none found.
+        """
+        try:
+            cypher = """
+            MATCH (n)
+            RETURN id(n) as node_id, n.weight as weight
+            ORDER BY n.weight DESC
+            LIMIT 1
+            """
+            result = self.graph.query(cypher)
+
+            if result and len(result) > 0:
+                return str(result[0][0])
+
+            # Fallback: any node
+            cypher_fallback = "MATCH (n) RETURN id(n) LIMIT 1"
+            result = self.graph.query(cypher_fallback)
+            return str(result[0][0]) if result and len(result) > 0 else None
+
+        except Exception as e:
+            logger.error(f"[SubEntity:{self.entity_id}] Failed to find start node: {e}")
+            return None
+
+    async def _update_peripheral_awareness(self):
+        """
+        Update peripheral awareness: nodes within 1-2 hops of current focus.
+
+        PERIPHERAL AWARENESS (Critical Traversal - Phase 2):
+        - Defined by GRAPH DISTANCE (topological), not weight threshold
+        - "What's nearby my current thought" (1-2 hops away)
+        - Spec: sub_entity_traversal_validation.md lines 325-373
+        """
+        if not self.current_node_id:
+            self.peripheral_nodes = []
+            return
+
+        try:
+            # Peripheral = nodes within 1-2 hops from current position
+            cypher = """
+            MATCH (focus)-[*1..2]-(peripheral)
+            WHERE id(focus) = $focus_id
+              AND id(peripheral) <> $focus_id
+            RETURN DISTINCT id(peripheral) as node_id
+            LIMIT 20
+            """
+
+            result = self.graph.query(cypher, {"focus_id": self.current_node_id})
+
+            self.peripheral_nodes = [str(row[0]) for row in result] if result else []
+            self.current_focus_nodes = [self.current_node_id]
+
+        except Exception as e:
+            logger.warning(f"[SubEntity:{self.entity_id}] Failed to update peripheral awareness: {e}")
+            self.peripheral_nodes = []
+
+    async def _get_outgoing_links(self, node_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all outgoing links from a node with metadata for scoring.
+
+        Returns list of dicts with: source_id, target_id, link_strength, target_arousal
+        """
+        try:
+            cypher = """
+            MATCH (source)-[link]->(target)
+            WHERE id(source) = $node_id
+            RETURN id(source) as source_id,
+                   id(target) as target_id,
+                   link.link_strength as link_strength,
+                   target.arousal_level as target_arousal
+            LIMIT 50
+            """
+
+            result = self.graph.query(cypher, {"node_id": node_id})
+
+            if not result:
+                return []
+
+            links = []
+            for row in result:
+                links.append({
+                    'source_id': str(row[0]),
+                    'target_id': str(row[1]),
+                    'link_strength': float(row[2]) if row[2] is not None else 0.5,
+                    'target_arousal': float(row[3]) if row[3] is not None else 0.5
+                })
+
+            return links
+
+        except Exception as e:
+            logger.error(f"[SubEntity:{self.entity_id}] Failed to get outgoing links: {e}")
+            return []
+
+    async def _calculate_link_score(self, link_data: Dict[str, Any], need: Need) -> float:
+        """
+        Calculate link traversal score using multi-dimensional weighted sum.
+
+        MULTI-DIMENSIONAL SCORING (Critical Traversal - Phase 2):
+        Formula (weighted sum to avoid zero-outs):
+          score = 0.4*strength + 0.2*arousal + 0.2*emotion + 0.2*target
+
+        If goal_embedding present:
+          score = 0.3*strength + 0.15*arousal + 0.15*emotion + 0.15*target + 0.25*goal
+
+        Spec: sub_entity_traversal_validation.md lines 152-219
+        """
+        # Component 1: Link strength (0-1, already normalized)
+        strength_component = link_data.get('link_strength', 0.5)
+
+        # Component 2: Arousal (0-1, already normalized)
+        arousal_component = min(1.0, link_data.get('target_arousal', 0.5))
+
+        # Component 3: Emotion match (NOT IMPLEMENTED YET - using neutral 0.5)
+        # TODO: Implement cosine similarity with current_emotion_vector
+        emotion_component = 0.5
+
+        # Component 4: Target importance (using arousal as proxy)
+        target_component = arousal_component  # Same as arousal in simplified model
+
+        # Weighted sum (no goal embedding yet, use base weights)
+        if self.goal_embedding is not None:
+            # TODO: Implement goal relevance via cosine similarity
+            goal_component = 0.5  # Neutral for now
+            score = (
+                0.3 * strength_component +
+                0.15 * arousal_component +
+                0.15 * emotion_component +
+                0.15 * target_component +
+                0.25 * goal_component
+            )
+        else:
+            # No goal - use base weights
+            score = (
+                0.4 * strength_component +
+                0.2 * arousal_component +
+                0.2 * emotion_component +
+                0.2 * target_component
+            )
+
+        return max(0.0, min(1.0, score))  # Clamp to [0, 1]
+
+    async def _select_link_stochastically(self, scored_links: List[tuple]) -> Optional[Dict[str, Any]]:
+        """
+        Select link stochastically based on scores.
+
+        STOCHASTIC SELECTION (Critical Traversal - Phase 2):
+        - Higher scores = higher probability
+        - Temperature modulation for exploration vs exploitation
+        - Returns None if all scores too low
+
+        Spec: sub_entity_traversal_validation.md
+        """
+        import random
+
+        if not scored_links:
+            return None
+
+        # Filter out very low scores (< 0.1)
+        viable_links = [(link, score) for link, score in scored_links if score >= 0.1]
+
+        if not viable_links:
+            return None
+
+        # Softmax selection (temperature = 1.0 for now)
+        import math
+        temperature = 1.0
+
+        # Calculate probabilities
+        scores = [score for _, score in viable_links]
+        exp_scores = [math.exp(s / temperature) for s in scores]
+        total = sum(exp_scores)
+        probabilities = [e / total for e in exp_scores]
+
+        # Stochastic selection
+        r = random.random()
+        cumulative = 0.0
+        for i, prob in enumerate(probabilities):
+            cumulative += prob
+            if r <= cumulative:
+                return viable_links[i][0]
+
+        # Fallback (shouldn't reach here)
+        return viable_links[0][0]
 
 
 # Helper function for creating sub-entities
