@@ -9,11 +9,12 @@ Architecture:
 - BaseNode: Foundation for all 29 node types
 - BaseRelation: Foundation for all 23 relation types
 - Bitemporal fields: Track both fact validity and knowledge acquisition
-- Consciousness metadata: Arousal, emotion, mindstate on every relation
+- Consciousness metadata: Goal, mindstate, confidence on every relation
+- Energy-only model: activity_level + weight (no arousal)
 
 Designer: Ada "Bridgekeeper" (Architect)
 Phase: 1 - Foundation & Schema
-Date: 2025-10-16
+Updated: Energy-Only Model implemented by Felix "Ironhand" - 2025-10-17
 """
 
 from datetime import datetime
@@ -127,6 +128,49 @@ class BaseNode(BaseModel):
         description="When this node was last traversed"
     )
 
+    # Self-Observing Substrate Fields (Phase 2 - Subconscious Entities)
+    # Per-Sub-Entity Weight Tracking (Learned Importance)
+    sub_entity_weights: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+    )
+    sub_entity_weight_counts: Dict[str, int] = Field(
+        default_factory=dict,
+        description="How many times each sub-entity accessed this node (for decay calculation)"
+    )
+
+    # Sequence-Based Temporal Tracking (NOT timestamps - activation proximity)
+    sub_entity_last_sequence_positions: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Most recent activation sequence position for each sub-entity"
+    )
+
+    # Hebbian Learning (Co-Activation Tracking)
+    co_activated_with: Optional[Dict[str, int]] = Field(
+        default=None,
+        description="Which nodes co-activated with this one, with frequency counts"
+    )
+
+    # Visualization Fields (for dashboard glow effect)
+    last_active: Optional[datetime] = Field(
+        default=None,
+        description="Last time this node was active (for 2-min glow effect visualization)"
+    )
+
+    # Dynamic Activity vs Static Importance (SEPARATE dimensions)
+    activity_level: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Current/recent activation level (dynamic, decays through disuse)"
+    )
+    weight: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Static global importance (how central is this pattern, independent of recent activity)"
+    )
+
     class Config:
         use_enum_values = True
 
@@ -141,9 +185,13 @@ class BaseRelation(BaseModel):
     Required consciousness metadata:
     - goal: WHY this link exists
     - mindstate: WHAT internal state formed it
-    - arousal_level: HOW intense the formation was
     - confidence: HOW certain we are
     - formation_trigger: HOW we discovered this link
+
+    Energy-Only Model:
+    - Activation/intensity tracked through activity_level on nodes
+    - Weight modulates traversal cost (replaces arousal multiplier)
+    - No separate arousal variable (simplified substrate dynamics)
     """
 
     # Required Consciousness Metadata (ENFORCED)
@@ -152,11 +200,6 @@ class BaseRelation(BaseModel):
     )
     mindstate: str = Field(
         description="Internal entity coalition active during formation (e.g., 'Builder + Skeptic')"
-    )
-    arousal_level: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Emotional intensity/urgency during link formation (0.0=calm, 1.0=critical)"
     )
     confidence: float = Field(
         ge=0.0,
@@ -237,6 +280,69 @@ class BaseRelation(BaseModel):
     last_mechanism_id: Optional[str] = Field(
         default=None,
         description="Which mechanism last modified this relation (e.g., 'hebbian_learning', 'staleness_detection')"
+    )
+
+    # Self-Observing Substrate Fields (Phase 2 - Subconscious Entities)
+    # Per-Sub-Entity Weight Tracking (Learned Importance)
+    sub_entity_weights: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+    )
+    sub_entity_traversal_counts: Dict[str, int] = Field(
+        default_factory=dict,
+        description="How many times each sub-entity traversed this link (for decay calculation)"
+    )
+
+    # Hebbian Learning (Fire Together, Wire Together)
+    link_strength: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Connection strength (0.0-1.0). Increases with co-activation. Higher = more automatic/crystallized."
+    )
+    co_activation_count: int = Field(
+        default=1,
+        description="How many times nodes at both ends activated together (Hebbian learning counter)"
+    )
+    last_co_activation: Optional[datetime] = Field(
+        default=None,
+        description="When nodes at both ends last co-activated"
+    )
+
+    # Injection-Time Hebbian Learning (Primary)
+    co_injection_count: int = Field(
+        default=1,
+        description="How many times this link was created/strengthened by co-injection (author's mental co-occurrence)"
+    )
+    last_co_injection: Optional[datetime] = Field(
+        default=None,
+        description="When this link was last strengthened by co-injection"
+    )
+
+    # Retrieval-Time Hebbian Learning (Secondary)
+    co_retrieval_count: Dict[str, int] = Field(
+        default_factory=dict,
+        description="How many times co-retrieved per sub-entity (validates usefulness): {sub_entity_id: count}"
+    )
+
+    # Per-Sub-Entity Subjective Experience
+    sub_entity_valences: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Subjective link experience per sub-entity (-1.0=aversive, 0.0=neutral, +1.0=attractive): {sub_entity_id: valence}"
+    )
+    sub_entity_emotion_vectors: Dict[str, Dict[str, float]] = Field(
+        default_factory=dict,
+        description="Emotion vectors per sub-entity during traversal: {sub_entity_id: {emotion: intensity (0.0-1.0)}}"
+    )
+
+    # Activation State (Dynamic)
+    activated: bool = Field(
+        default=False,
+        description="Currently active in working memory? (True = energized for easy re-access)"
+    )
+    last_activation: Optional[datetime] = Field(
+        default=None,
+        description="When this link was last activated"
     )
 
     @validator('emotion_vector')

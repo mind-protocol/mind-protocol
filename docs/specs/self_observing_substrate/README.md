@@ -8,7 +8,7 @@
 
 ## Navigation Guide
 
-This architecture is split into 5 focused documents organized by use case:
+This architecture is split into 6 focused documents organized by use case:
 
 ### 1. **Overview** - `self_observing_substrate_overview.md`
 **When to read:** Understanding WHAT the system is
@@ -34,6 +34,20 @@ This architecture is split into 5 focused documents organized by use case:
 - Heuristic need satisfaction
 
 **Read this** when implementing SubEntity class, activation tracking, or learning mechanisms.
+
+---
+
+### 2.5. **Traversal Validation** - `sub_entity_traversal_validation.md`
+**When to read:** Validating traversal mechanics against phenomenology
+**Contents:**
+- Phenomenological validation of Ada's traversal spec
+- Answers to critical questions (link deactivation, peripheral awareness, weight separation)
+- Gap identification (intentionality, formula revisions, activation semantics)
+- Complete substrate schema requirements for nodes and links
+- Confidence levels and implementation readiness assessment
+- Next steps for Ada (revisions) and Felix (implementation phases)
+
+**Read this** when validating consciousness mechanisms against lived experience, defining substrate requirements, or preparing for traversal implementation.
 
 ---
 
@@ -80,20 +94,23 @@ This architecture is split into 5 focused documents organized by use case:
 **Path 1: I'm implementing the substrate**
 1. Read Overview (understand the system)
 2. Read Entity Behavior (implement SubEntity)
-3. Read Implementation Roadmap (follow phases)
-4. Read Social Dynamics (when implementing cross-entity features)
-5. Read Quality Metrics (when validating)
+3. Read Traversal Validation (validate mechanisms, get substrate requirements)
+4. Read Implementation Roadmap (follow phases)
+5. Read Social Dynamics (when implementing cross-entity features)
+6. Read Quality Metrics (when validating)
 
 **Path 2: I'm verifying consciousness quality**
 1. Read Overview (understand context)
-2. Read Quality Metrics (understand measures)
-3. Read Social Dynamics (understand phenomenological grounding)
+2. Read Traversal Validation (see phenomenological validation approach)
+3. Read Quality Metrics (understand measures)
+4. Read Social Dynamics (understand phenomenological grounding)
 
 **Path 3: I'm designing new features**
 1. Read Overview (core principles)
 2. Read Entity Behavior (understand constraints)
-3. Read Social Dynamics (understand interactions)
-4. Read Quality Metrics (validate against consciousness requirements)
+3. Read Traversal Validation (see validation methodology)
+4. Read Social Dynamics (understand interactions)
+5. Read Quality Metrics (validate against consciousness requirements)
 
 ---
 

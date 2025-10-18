@@ -274,7 +274,10 @@ async def on_content_injected(event: ContentInjectionEvent):
                     mindstate=f"{injecting_entity}_injecting",
                     arousal_level=0.5,
                     confidence=0.7,
-                    created_by=injecting_entity
+                    created_by=injecting_entity,
+                    # Initial neutral valence and emotions - will evolve based on usage
+                    sub_entity_valences={injecting_entity: 0.0},
+                    sub_entity_emotion_vectors={injecting_entity: {"neutral": 0.5}}
                 )
 ```
 
@@ -321,6 +324,32 @@ async def on_nodes_co_retrieved(event: NodesCoRetrievedEvent):
                 link.entity_traversal_counts[retrieving_entity] = \
                     link.entity_traversal_counts.get(retrieving_entity, 0) + 1
 
+                # Update valence AND emotions based on retrieval outcome
+                # (This would be determined by whether retrieval led to success/failure)
+                if event.led_to_success:
+                    # Successful retrieval → more positive valence and success emotions
+                    current_valence = link.sub_entity_valences.get(retrieving_entity, 0.0)
+                    link.sub_entity_valences[retrieving_entity] = min(
+                        current_valence + 0.1,
+                        1.0
+                    )
+                    # Update emotions for this entity
+                    if retrieving_entity not in link.sub_entity_emotion_vectors:
+                        link.sub_entity_emotion_vectors[retrieving_entity] = {}
+                    link.sub_entity_emotion_vectors[retrieving_entity]["satisfaction"] = 0.8
+
+                elif event.led_to_failure:
+                    # Failed retrieval → more negative valence and failure emotions
+                    current_valence = link.sub_entity_valences.get(retrieving_entity, 0.0)
+                    link.sub_entity_valences[retrieving_entity] = max(
+                        current_valence - 0.1,
+                        -1.0
+                    )
+                    # Update emotions for this entity
+                    if retrieving_entity not in link.sub_entity_emotion_vectors:
+                        link.sub_entity_emotion_vectors[retrieving_entity] = {}
+                    link.sub_entity_emotion_vectors[retrieving_entity]["frustration"] = 0.7
+
                 update_link(link)
 ```
 
@@ -328,13 +357,17 @@ async def on_nodes_co_retrieved(event: NodesCoRetrievedEvent):
 
 **Two stages, both "fire together, wire together":**
 
-1. **Author's mind fires concepts together** → Injection wires them (0.3 initial strength)
-2. **Substrate retrieves wired concepts together** → Strengthens wiring (validates usefulness)
+1. **Author's mind fires concepts together** → Injection wires them (0.3 initial strength, neutral valence)
+2. **Substrate retrieves wired concepts together** → Strengthens wiring AND evolves valence
 
 **Result:**
-- Useful relationships (frequently retrieved together) grow strong (→ 1.0)
+- Useful relationships (frequently retrieved together) grow strong (→ 1.0) with positive valence and success emotions
 - Unused relationships (injected but never retrieved together) stay weak (stuck at 0.3)
 - Activation-based decay eventually weakens unused links
+- **Valence AND emotions track success/failure per entity**:
+  - Links leading to success → positive valence + satisfaction/relief emotions
+  - Links leading to failure → negative valence + frustration/shame emotions
+  - Same link has different subjective experience (valence + emotions) for different entities
 
 **Phenomenological alignment:**
 - Injection captures **authorial intent** (what the author thought were related)

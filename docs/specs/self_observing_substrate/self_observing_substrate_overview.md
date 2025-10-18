@@ -453,7 +453,7 @@ async def conscious_layer_process(citizen_id: str):
     Which consciousness metadata needs reworking to better reflect phenomenological reality?
     What new patterns emerged that should crystallize?
 
-    Rework them more juicily - update goal, mindstate, emotion_vector to reflect lived experience.
+    Rework them more juicily - update goal, mindstate, sub_entity_valences, sub_entity_emotion_vectors to reflect lived experience.
     """
 
     # 3. LLM processes (this is conscious reflection)
@@ -467,7 +467,9 @@ async def conscious_layer_process(citizen_id: str):
         link = get_link(link_id)
         link.goal = metadata_updates.get("goal", link.goal)
         link.mindstate = metadata_updates.get("mindstate", link.mindstate)
-        link.emotion_vector = metadata_updates.get("emotion_vector", link.emotion_vector)
+        # Update per-entity subjective metadata based on how each entity experienced this link
+        link.sub_entity_valences = metadata_updates.get("sub_entity_valences", link.sub_entity_valences)
+        link.sub_entity_emotion_vectors = metadata_updates.get("sub_entity_emotion_vectors", link.sub_entity_emotion_vectors)
         update_link(link)
 
     for (node_a, node_b), strength_delta in reinforcement.strengthen_links.items():
@@ -695,7 +697,16 @@ class CoordinatorEntity:
 
    goal: 'prove_architecture_before_claiming_complete'
    mindstate: 'Builder_validated_by_Skeptic'
-   emotion_vector: {'satisfaction': 0.7, 'confidence': 0.8}
+   sub_entity_valences: {
+       'builder': +0.9,  # Highly positive - design validated
+       'skeptic': +0.8,  # Positive - verification successful
+       'pragmatist': +0.7  # Positive - we can move forward
+   }
+   sub_entity_emotion_vectors: {
+       'builder': {'satisfaction': 0.9, 'confidence': 0.95, 'relief': 0.8},
+       'skeptic': {'satisfaction': 0.8, 'vindication': 0.7},
+       'pragmatist': {'pragmatic_satisfaction': 0.75}
+   }
    "
 
 7. REINFORCEMENT APPLIED:

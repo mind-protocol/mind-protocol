@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Protocol - Consciousness Substrate Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 16px;
+            color: #4CAF50;
+            margin: 0;
+        }
+
+        .selector-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selector-group label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        select, button {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        select:hover, button:hover {
+            border-color: #666;
+        }
+
+        .status {
+            margin-left: auto;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .status.connected {
+            color: #4CAF50;
+        }
+
+        .status.disconnected {
+            color: #f44336;
+        }
+
+        #controls {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: #1a1a1aee;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            z-index: 900;
+            max-width: 300px;
+        }
+
+        .control-section {
+            margin-bottom: 15px;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-section h3 {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-value {
+            font-size: 11px;
+            color: #aaa;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 6px;
+        }
+
+        .checkbox-label {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        #graph-container {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0a0a;
+        }
+
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SVG filters for glow effects */
+        .node-glow {
+            filter: drop-shadow(0 0 8px #4CAF50);
+        }
+
+        .link-active {
+            stroke: #4CAF50 !important;
+            stroke-width: 3px !important;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: #1a1a1aee;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 2000;
+            max-width: 300px;
+            display: none;
+        }
+
+        .tooltip-title {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 6px;
+        }
+
+        .tooltip-row {
+            margin: 3px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .tooltip-label {
+            color: #888;
+        }
+
+        .tooltip-value {
+            color: #e0e0e0;
+        }
+
+        /* Stats panel */
+        #stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a1a1aee;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .stat-row {
+            margin: 3px 0;
+        }
+
+        .stat-value {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with graph selector -->
+    <div id="header">
+        <h1>Mind Protocol - Consciousness Substrate</h1>
+
+        <div class="selector-group">
+            <label>Graph Type:</label>
+            <select id="graphType">
+                <option value="citizen">Citizen (N1)</option>
+                <option value="organization">Organization (N2)</option>
+                <option value="ecosystem">Ecosystem (N3)</option>
+            </select>
+        </div>
+
+        <div class="selector-group">
+            <label>Graph ID:</label>
+            <select id="graphId">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <button id="connectBtn">Connect</button>
+
+        <div class="status disconnected" id="status">Disconnected</div>
+    </div>
+
+    <!-- Time controls -->
+    <div id="controls">
+        <div class="control-section">
+            <h3>Time Range</h3>
+            <div class="slider-container">
+                <input type="range" id="timeRange" min="60000" max="86400000" step="60000" value="3600000">
+                <span class="slider-value" id="timeRangeValue">1 hour</span>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Filters</h3>
+            <label class="checkbox-label">
+                <input type="checkbox" id="showRecentOnly" checked>
+                Show only recent activity
+            </label>
+        </div>
+
+        <div class="control-section">
+            <h3>Display</h3>
+            <label class="checkbox-label">
+                <input type="checkbox" id="showLabels" checked>
+                Show node labels
+            </label>
+        </div>
+    </div>
+
+    <!-- Graph visualization -->
+    <div id="graph-container">
+        <svg id="graph"></svg>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- Stats -->
+    <div id="stats">
+        <div class="stat-row">Nodes: <span class="stat-value" id="nodeCount">0</span></div>
+        <div class="stat-row">Links: <span class="stat-value" id="linkCount">0</span></div>
+        <div class="stat-row">Active Nodes: <span class="stat-value" id="activeNodeCount">0</span></div>
+        <div class="stat-row">Operations/sec: <span class="stat-value" id="opsPerSec">0</span></div>
+    </div>
+
+    <script>
+        // ====================================================================
+        // State
+        // ====================================================================
+
+        let ws = null;
+        let currentGraphType = 'citizen';
+        let currentGraphId = null;
+        let availableGraphs = {};
+
+        let nodes = [];
+        let links = [];
+        let entities = [];
+
+        let currentTime = Date.now();
+        let timeRange = 3600000; // 1 hour default
+        let showRecentOnly = true;
+        let showLabels = true;
+
+        let operationCount = 0;
+        let lastOperationTime = Date.now();
+
+        // ====================================================================
+        // Graph Discovery
+        // ====================================================================
+
+        async function fetchAvailableGraphs() {
+            try {
+                const response = await fetch('/api/graphs');
+                availableGraphs = await response.json();
+                updateGraphSelector();
+            } catch (error) {
+                console.error('Error fetching graphs:', error);
+            }
+        }
+
+        function updateGraphSelector() {
+            const graphType = document.getElementById('graphType').value;
+            const graphIdSelect = document.getElementById('graphId');
+
+            // Clear current options
+            graphIdSelect.innerHTML = '';
+
+            // Get graphs for selected type
+            const graphs = availableGraphs[graphType + 's'] || [];
+
+            if (graphs.length === 0) {
+                graphIdSelect.innerHTML = '<option value="">No graphs found</option>';
+                return;
+            }
+
+            // Add options
+            graphs.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = id;
+                graphIdSelect.appendChild(option);
+            });
+
+            // Auto-select first
+            if (graphs.length > 0) {
+                graphIdSelect.value = graphs[0];
+                currentGraphId = graphs[0];
+            }
+        }
+
+        // ====================================================================
+        // WebSocket Connection
+        // ====================================================================
+
+        function connectToGraph() {
+            const graphType = document.getElementById('graphType').value;
+            const graphId = document.getElementById('graphId').value;
+
+            if (!graphId) {
+                console.error('No graph ID selected');
+                return;
+            }
+
+            // Close existing connection
+            if (ws) {
+                ws.close();
+            }
+
+            currentGraphType = graphType;
+            currentGraphId = graphId;
+
+            // Connect to WebSocket
+            const wsUrl = `ws://${window.location.host}/ws/graph/${graphType}/${graphId}`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('Connected to', graphType, graphId);
+                document.getElementById('status').textContent = `Connected: ${graphType}/${graphId}`;
+                document.getElementById('status').className = 'status connected';
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('status').textContent = 'Error';
+                document.getElementById('status').className = 'status disconnected';
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').className = 'status disconnected';
+            };
+        }
+
+        function handleMessage(message) {
+            currentTime = Date.now();
+
+            if (message.type === 'initial_state') {
+                // Initial load
+                nodes = message.data.nodes || [];
+                links = message.data.links || [];
+                entities = message.data.entities || [];
+                updateVisualization();
+            }
+            else if (message.type === 'graph_update') {
+                // Incremental update
+                applyDiff(message.diff);
+
+                // Animate operations
+                if (message.operations && message.operations.length > 0) {
+                    message.operations.forEach(op => animateOperation(op));
+                    updateOperationStats(message.operations.length);
+                }
+
+                updateVisualization();
+            }
+            else if (message.type === 'error') {
+                console.error('Server error:', message.message);
+                alert(message.message);
+            }
+        }
+
+        function applyDiff(diff) {
+            // Add new nodes
+            if (diff.nodes_added) {
+                nodes.push(...diff.nodes_added);
+            }
+
+            // Update existing nodes
+            if (diff.nodes_updated) {
+                diff.nodes_updated.forEach(updated => {
+                    const index = nodes.findIndex(n => n.id === updated.id);
+                    if (index !== -1) {
+                        nodes[index] = updated;
+                    }
+                });
+            }
+
+            // Similar for links
+            if (diff.links_added) {
+                links.push(...diff.links_added);
+            }
+
+            if (diff.links_updated) {
+                diff.links_updated.forEach(updated => {
+                    const index = links.findIndex(l => l.id === updated.id);
+                    if (index !== -1) {
+                        links[index] = updated;
+                    }
+                });
+            }
+        }
+
+        // ====================================================================
+        // D3 Visualization (2D Topological)
+        // ====================================================================
+
+        const width = window.innerWidth;
+        const height = window.innerHeight - 70;
+
+        const svg = d3.select("#graph");
+        const g = svg.append("g");
+
+        // Zoom behavior
+        svg.call(d3.zoom()
+            .scaleExtent([0.1, 10])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            }));
+
+        // Force simulation (2D only)
+        const simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, (height - 70) / 2))
+            .force("collision", d3.forceCollide().radius(20));
+
+        let linkElements, nodeElements, textElements;
+
+        function updateVisualization() {
+            // Apply time filtering
+            const { nodes: filteredNodes, links: filteredLinks } = filterByTime();
+
+            // Update link elements
+            linkElements = g.selectAll("line")
+                .data(filteredLinks, d => d.id)
+                .join("line")
+                .attr("stroke", "#666")
+                .attr("stroke-width", d => Math.max(1, (d.strength || 0.5) * 4))
+                .attr("stroke-opacity", d => getLinkOpacity(d));
+
+            // Update node elements
+            nodeElements = g.selectAll("circle")
+                .data(filteredNodes, d => d.id)
+                .join("circle")
+                .attr("r", d => 5 + (d.arousal || 0) * 8)
+                .attr("fill", d => getNodeColor(d))
+                .attr("opacity", d => getNodeOpacity(d))
+                .attr("class", d => getNodeGlow(d) > 0 ? "node-glow" : "")
+                .call(drag(simulation))
+                .on("mouseenter", showTooltip)
+                .on("mouseleave", hideTooltip);
+
+            // Update labels
+            if (showLabels) {
+                textElements = g.selectAll("text")
+                    .data(filteredNodes, d => d.id)
+                    .join("text")
+                    .text(d => (d.text || "").substring(0, 30))
+                    .attr("font-size", 10)
+                    .attr("fill", "#aaa")
+                    .attr("dx", 12)
+                    .attr("dy", 4);
+            } else {
+                g.selectAll("text").remove();
+            }
+
+            // Update simulation
+            simulation.nodes(filteredNodes).on("tick", ticked);
+            simulation.force("link").links(filteredLinks);
+            simulation.alpha(0.3).restart();
+
+            // Update stats
+            updateStats(filteredNodes, filteredLinks);
+        }
+
+        function filterByTime() {
+            const cutoffTime = currentTime - timeRange;
+
+            if (showRecentOnly) {
+                const activeNodes = nodes.filter(n =>
+                    n.last_active && n.last_active > cutoffTime
+                );
+
+                const activeNodeIds = new Set(activeNodes.map(n => n.id));
+                const activeLinks = links.filter(l =>
+                    activeNodeIds.has(l.source.id || l.source) &&
+                    activeNodeIds.has(l.target.id || l.target)
+                );
+
+                return { nodes: activeNodes, links: activeLinks };
+            }
+
+            return { nodes, links };
+        }
+
+        function getNodeColor(node) {
+            const arousal = node.arousal || 0;
+            // Color scale: blue (low) -> green (medium) -> yellow (high)
+            return d3.interpolateRdYlGn(arousal);
+        }
+
+        function getNodeOpacity(node) {
+            if (!node.last_active) return 0.3;
+
+            const age = currentTime - node.last_active;
+            return Math.max(0.3, 1 - (age / timeRange));
+        }
+
+        function getNodeGlow(node) {
+            if (!node.last_active) return 0;
+
+            const age = currentTime - node.last_active;
+            const glowWindow = 5000; // 5 seconds
+
+            if (age < glowWindow) {
+                return (glowWindow - age) / glowWindow;
+            }
+            return 0;
+        }
+
+        function getLinkOpacity(link) {
+            if (!link.last_traversed) return 0.3;
+
+            const age = currentTime - link.last_traversed;
+            return Math.max(0.2, 1 - (age / timeRange));
+        }
+
+        function ticked() {
+            linkElements
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            nodeElements
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            if (textElements) {
+                textElements
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            }
+        }
+
+        function drag(simulation) {
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        }
+
+        // ====================================================================
+        // Operation Animations
+        // ====================================================================
+
+        function animateOperation(operation) {
+            if (operation.type === 'entity_traversal') {
+                animateTraversal(operation.node_id);
+            }
+            else if (operation.type === 'hebbian_learning') {
+                animateHebbianLearning(operation.link_id);
+            }
+            else if (operation.type === 'activation_increase') {
+                animateActivation(operation.node_id);
+            }
+        }
+
+        function animateTraversal(nodeId) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            // Pulse effect on node
+            d3.select(`circle[data-id="${nodeId}"]`)
+                .transition().duration(300)
+                .attr("r", d => (5 + (d.arousal || 0) * 8) * 1.5)
+                .transition().duration(300)
+                .attr("r", d => 5 + (d.arousal || 0) * 8);
+        }
+
+        function animateHebbianLearning(linkId) {
+            // Glow effect on link
+            const linkElement = d3.select(`line[data-id="${linkId}"]`);
+
+            linkElement
+                .classed("link-active", true)
+                .transition().duration(1000)
+                .on("end", function() {
+                    d3.select(this).classed("link-active", false);
+                });
+        }
+
+        function animateActivation(nodeId) {
+            // Ripple effect
+            const node = nodes.find(n => n.id === nodeId);
+            if (!node || !node.x || !node.y) return;
+
+            g.append("circle")
+                .attr("cx", node.x)
+                .attr("cy", node.y)
+                .attr("r", 5)
+                .attr("fill", "none")
+                .attr("stroke", "#4CAF50")
+                .attr("stroke-width", 2)
+                .transition().duration(1000)
+                .attr("r", 30)
+                .attr("stroke-opacity", 0)
+                .remove();
+        }
+
+        // ====================================================================
+        // UI Controls
+        // ====================================================================
+
+        document.getElementById('graphType').addEventListener('change', updateGraphSelector);
+        document.getElementById('connectBtn').addEventListener('click', connectToGraph);
+
+        document.getElementById('timeRange').addEventListener('input', (e) => {
+            timeRange = parseInt(e.target.value);
+            const hours = (timeRange / 3600000).toFixed(1);
+            document.getElementById('timeRangeValue').textContent =
+                hours >= 1 ? `${hours} hour${hours > 1 ? 's' : ''}` :
+                `${(timeRange / 60000)} min`;
+            updateVisualization();
+        });
+
+        document.getElementById('showRecentOnly').addEventListener('change', (e) => {
+            showRecentOnly = e.target.checked;
+            updateVisualization();
+        });
+
+        document.getElementById('showLabels').addEventListener('change', (e) => {
+            showLabels = e.target.checked;
+            updateVisualization();
+        });
+
+        // ====================================================================
+        // Tooltip
+        // ====================================================================
+
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+
+            let content = `<div class="tooltip-title">${(d.text || 'Node').substring(0, 50)}</div>`;
+
+            if (d.arousal !== undefined) {
+                content += `<div class="tooltip-row">
+                    <span class="tooltip-label">Arousal:</span>
+                    <span class="tooltip-value">${d.arousal.toFixed(2)}</span>
+                </div>`;
+            }
+
+            if (d.confidence !== undefined) {
+                content += `<div class="tooltip-row">
+                    <span class="tooltip-label">Confidence:</span>
+                    <span class="tooltip-value">${d.confidence.toFixed(2)}</span>
+                </div>`;
+            }
+
+            if (d.traversal_count !== undefined) {
+                content += `<div class="tooltip-row">
+                    <span class="tooltip-label">Traversals:</span>
+                    <span class="tooltip-value">${d.traversal_count}</span>
+                </div>`;
+            }
+
+            if (d.last_entity) {
+                content += `<div class="tooltip-row">
+                    <span class="tooltip-label">Last Entity:</span>
+                    <span class="tooltip-value">${d.last_entity}</span>
+                </div>`;
+            }
+
+            tooltip.innerHTML = content;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY + 10) + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        // ====================================================================
+        // Stats
+        // ====================================================================
+
+        function updateStats(filteredNodes, filteredLinks) {
+            const activeNodes = filteredNodes.filter(n =>
+                n.last_active && n.last_active > (currentTime - timeRange)
+            );
+
+            document.getElementById('nodeCount').textContent = filteredNodes.length;
+            document.getElementById('linkCount').textContent = filteredLinks.length;
+            document.getElementById('activeNodeCount').textContent = activeNodes.length;
+        }
+
+        function updateOperationStats(count) {
+            operationCount += count;
+            const now = Date.now();
+            const elapsed = (now - lastOperationTime) / 1000;
+
+            if (elapsed >= 1) {
+                const opsPerSec = (operationCount / elapsed).toFixed(1);
+                document.getElementById('opsPerSec').textContent = opsPerSec;
+                operationCount = 0;
+                lastOperationTime = now;
+            }
+        }
+
+        // ====================================================================
+        // Initialization
+        // ====================================================================
+
+        fetchAvailableGraphs();
+    </script>
+</body>
+</html>

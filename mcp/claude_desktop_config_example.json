@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "consciousness": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\reyno\\mind-protocol\\mcp\\consciousness_server.py"
+      ]
+    }
+  }
+}

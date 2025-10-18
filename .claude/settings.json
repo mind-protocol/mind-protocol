@@ -1,0 +1,12 @@
+{
+  "env": {
+    "MAX_THINKING_TOKENS": 40000
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+  },
+  "forceLoginMethod": "claudeai",
+  "enableAllProjectMcpServers": true
+}

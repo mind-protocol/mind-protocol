@@ -1,0 +1,64 @@
+{
+  "citizen_name": "Jake_Martinez",
+  "session_id": "20251006_211206",
+  "total_turns": 1,
+  "extraction_stats": {
+    "total_patterns_extracted": 0,
+    "total_links_created": 0
+  },
+  "retrieval_stats": {
+    "total_traversals": 0,
+    "total_activations": 0,
+    "total_suppressions": 0
+  },
+  "learning_stats": {
+    "total_learning_events": 0
+  },
+  "turns": [
+    {
+      "turn_number": 1,
+      "timestamp": "2025-10-06T21:12:06.571906",
+      "full_input_text": "\nGot a Telegram DM from @DegenAlpha pitching \"SolAI Protocol\" - AI agents that trade Solana memecoins.\nJoin their private alpha group at t.me/solai_alpha for early access before public launch.\nThey claim 21K users already, AI makes 10-50% daily returns automatically.\nToken launches next week on PumpFun. Want $5 SOL to join the alpha group for \"feedback and testing\".\nThe pitch deck looks slick AF - professional design, tokenomics diagram, roadmap to Q3 2025.\n@CryptoWhaleInsider retweeted them yesterday with \"This could be the next TAO\".\nThey have a website: solai-protocol.io with live trading stats dashboard.\nTeam is \"doxxed to partners\" but not publicly. CTO worked at Solana Foundation (they claim).\nFeels like FOMO but also screams rug. The $5 SOL ask is sus but not huge.\nWhat if this actually is the AI narrative play and I'm being too paranoid from past rugs?\n",
+      "full_response_text": "Extremely suspicious. Classic rug pull pattern with AI narrative wrapper...",
+      "input_text": "\nGot a Telegram DM from @DegenAlpha pitching \"SolAI Protocol\" - AI agents that trade Solana memecoins.\nJoin their private alpha group at t.me/solai_alpha for early access before public launch.\nThey cl",
+      "response_text": "Extremely suspicious. Classic rug pull pattern with AI narrative wrapper...",
+      "total_patterns_activated": 5,
+      "total_links_traversed": 0,
+      "exploration_rate": 0.009823182711198428,
+      "dominant_entity": "Philosopher",
+      "entity_energies": {
+        "Cynic": 3.578689001693445,
+        "Gambler": 2.7996445986966694,
+        "Philosopher": 4.649087845339386
+      },
+      "top_patterns": [
+        {
+          "name": "INFO_entire_system_organized_around",
+          "energy": 2.473557636825449,
+          "type": "INFORMATION"
+        },
+        {
+          "name": "wasted_potential_Current_Activation",
+          "energy": 2.204704606990556,
+          "type": "ENTITY"
+        },
+        {
+          "name": "DOLLAR_JUP",
+          "energy": 2.1915673593678204,
+          "type": "ENTITY"
+        },
+        {
+          "name": "Sold_ETH",
+          "energy": 2.120125597843499,
+          "type": "ENTITY"
+        },
+        {
+          "name": "global_workspace_Recent",
+          "energy": 2.0374662447021747,
+          "type": "ENTITY"
+        }
+      ],
+      "injection_text": "[Philosopher dominates] Crypto scam recognition nodes activated"
+    }
+  ]
+}

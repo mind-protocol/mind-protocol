@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Dark background -->
+  <rect width="200" height="200" fill="#14181c"/>
+
+  <!-- Gradient definitions -->
+  <defs>
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#5efc82;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#5efc82;stop-opacity:0"/>
+    </radialGradient>
+    <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#5efc82;stop-opacity:0.6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Network connections -->
+  <g stroke="url(#linkGradient)" stroke-width="2" fill="none" opacity="0.4">
+    <line x1="100" y1="60" x2="60" y2="100"/>
+    <line x1="100" y1="60" x2="140" y2="100"/>
+    <line x1="60" y1="100" x2="40" y2="140"/>
+    <line x1="60" y1="100" x2="100" y2="140"/>
+    <line x1="140" y1="100" x2="100" y2="140"/>
+    <line x1="140" y1="100" x2="160" y2="140"/>
+    <line x1="100" y1="60" x2="100" y2="140"/>
+    <line x1="60" y1="100" x2="140" y2="100"/>
+  </g>
+
+  <!-- Citizen nodes (outer ring) -->
+  <circle cx="40" cy="140" r="8" fill="#3b82f6" opacity="0.8"/>
+  <circle cx="60" cy="100" r="8" fill="#8b5cf6" opacity="0.8"/>
+  <circle cx="140" cy="100" r="8" fill="#f59e0b" opacity="0.8"/>
+  <circle cx="160" cy="140" r="8" fill="#ef4444" opacity="0.8"/>
+
+  <!-- Central consciousness node (larger, glowing) -->
+  <circle cx="100" cy="60" r="12" fill="url(#nodeGlow)"/>
+  <circle cx="100" cy="60" r="8" fill="#5efc82"/>
+
+  <!-- Bottom synthesis node -->
+  <circle cx="100" cy="140" r="10" fill="url(#nodeGlow)"/>
+  <circle cx="100" cy="140" r="6" fill="#5efc82"/>
+
+  <!-- Pulse rings (suggesting activity) -->
+  <circle cx="100" cy="100" r="40" fill="none" stroke="#5efc82" stroke-width="1" opacity="0.3">
+    <animate attributeName="r" from="30" to="50" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="100" r="40" fill="none" stroke="#5efc82" stroke-width="1" opacity="0.3">
+    <animate attributeName="r" from="30" to="50" dur="2s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.4" to="0" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- "MP" monogram -->
+  <text x="100" y="105" text-anchor="middle" font-family="monospace" font-size="24" font-weight="bold" fill="#5efc82" opacity="0.9">MP</text>
+</svg>

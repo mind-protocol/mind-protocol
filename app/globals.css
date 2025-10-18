@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #14181c;
+  --foreground: #e8e8e8;
+}
+
+@layer base {
+  * {
+    @apply border-consciousness-border;
+  }
+  body {
+    @apply bg-consciousness-dark text-foreground;
+  }
+}
+
+@layer components {
+  /* Consciousness visualization styles */
+  .consciousness-panel {
+    @apply bg-consciousness-dark/95 backdrop-blur-xl border border-consciousness-border rounded-xl shadow-2xl;
+  }
+
+  .consciousness-glow {
+    filter: drop-shadow(0 0 8px #5efc82) drop-shadow(0 0 4px #5efc82);
+  }
+
+  .consciousness-glow-selected {
+    filter: drop-shadow(0 0 6px #4CAF50) drop-shadow(0 0 3px #4CAF50);
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(94, 252, 130, 0.3);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(94, 252, 130, 0.5);
+  }
+}
+
+/* Disable text selection for graph interaction */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Smooth transitions */
+* {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Override for graph elements that need instant response */
+.no-transition {
+  transition: none !important;
+}
+
+/* Modal animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+/* Heartbeat pulse animation */
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  15% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+/* Waveform pulse animation */
+@keyframes wave {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from left animation */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}

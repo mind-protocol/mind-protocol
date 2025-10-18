@@ -1,0 +1,41 @@
+# ----------------------------------------------------------------------
+# Couche 1: Substrate (Database)
+# ----------------------------------------------------------------------
+# Python client for FalkorDB.
+# We chose FalkorDB for its 10k+ multi-tenant graph support in Community Edition.
+falkordb
+
+# FalkorDB runs as a Redis module, so the core Redis client is required.
+redis
+
+# ----------------------------------------------------------------------    
+# Couche 2: Orchestration (Piping)
+# ----------------------------------------------------------------------
+# The core LlamaIndex library for orchestration.
+# This package INCLUDES the core components (like CustomLLM) needed
+# to build our shell command wrapper.
+llama-index
+
+# LlamaIndex integration for our chosen graph database, FalkorDB.
+llama-index-graph-stores-falkordb
+
+# ----------------------------------------------------------------------
+# Utilities
+# ----------------------------------------------------------------------
+# Used to load environment variables (like CLAUDE_CODE_WORKING_DIR)
+# from the .env file.
+python-dotenv
+
+# Used for any direct HTTP calls, if our hooks or services need them.
+httpx
+# ----------------------------------------------------------------------
+# Visualization Server
+# ----------------------------------------------------------------------
+# FastAPI for WebSocket-based visualization server
+fastapi
+
+# ASGI server for running FastAPI
+uvicorn[standard]
+
+# WebSocket support
+websockets

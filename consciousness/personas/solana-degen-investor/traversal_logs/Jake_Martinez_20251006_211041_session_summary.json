@@ -1,0 +1,139 @@
+{
+  "citizen_name": "Jake_Martinez",
+  "session_id": "20251006_211041",
+  "total_turns": 1,
+  "extraction_stats": {
+    "total_patterns_extracted": 0,
+    "total_links_created": 0
+  },
+  "retrieval_stats": {
+    "total_traversals": 66,
+    "total_activations": 0,
+    "total_suppressions": 0
+  },
+  "learning_stats": {
+    "total_learning_events": 0
+  },
+  "turns": [
+    {
+      "turn_number": 1,
+      "timestamp": "2025-10-06T21:10:41.341613",
+      "full_input_text": "\nGot a Telegram DM from @DegenAlpha pitching \"SolAI Protocol\" - AI agents that trade Solana memecoins.\nJoin their private alpha group at t.me/solai_alpha for early access before public launch.\nThey claim 21K users already, AI makes 10-50% daily returns automatically.\nToken launches next week on PumpFun. Want $5 SOL to join the alpha group for \"feedback and testing\".\nThe pitch deck looks slick AF - professional design, tokenomics diagram, roadmap to Q3 2025.\n@CryptoWhaleInsider retweeted them yesterday with \"This could be the next TAO\".\nThey have a website: solai-protocol.io with live trading stats dashboard.\nTeam is \"doxxed to partners\" but not publicly. CTO worked at Solana Foundation (they claim).\nFeels like FOMO but also screams rug. The $5 SOL ask is sus but not huge.\nWhat if this actually is the AI narrative play and I'm being too paranoid from past rugs?\n",
+      "full_response_text": "Extremely suspicious. Classic rug pull pattern with AI narrative wrapper...",
+      "input_text": "\nGot a Telegram DM from @DegenAlpha pitching \"SolAI Protocol\" - AI agents that trade Solana memecoins.\nJoin their private alpha group at t.me/solai_alpha for early access before public launch.\nThey cl",
+      "response_text": "Extremely suspicious. Classic rug pull pattern with AI narrative wrapper...",
+      "total_patterns_activated": 54,
+      "total_links_traversed": 66,
+      "exploration_rate": 0.10609037328094302,
+      "dominant_entity": "Gambler",
+      "entity_energies": {
+        "Cynic": -5.625604546907316,
+        "Gambler": 2.410143808740119,
+        "Philosopher": -25.63347242037042
+      },
+      "top_patterns": [
+        {
+          "name": "DOLLAR_USDC",
+          "energy": 2.475149768031395,
+          "type": "ENTITY"
+        },
+        {
+          "name": "Trading_Frequency",
+          "energy": 2.132226551762267,
+          "type": "ENTITY"
+        },
+        {
+          "name": "degen_gambler_Never*",
+          "energy": 2.0874594798274595,
+          "type": "ENTITY"
+        },
+        {
+          "name": "Risk",
+          "energy": 1.7333955998640693,
+          "type": "ENTITY"
+        },
+        {
+          "name": "HANDLE_MustStopMurad",
+          "energy": 0.2727926287767097,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_SolanaFloor",
+          "energy": 0.27253920519328223,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_BullX_io",
+          "energy": 0.26088363690402505,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_0xRacer",
+          "energy": 0.25971362983282054,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_solana_tracker",
+          "energy": 0.2591851103204375,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_entities",
+          "energy": 0.257697974864024,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_degentradingLDN",
+          "energy": 0.25282735002645984,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_theunipcs",
+          "energy": 0.2513359505474554,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_AltcoinPsycho",
+          "energy": 0.25084292916942796,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_CryptoCobain",
+          "energy": 0.2507337699277896,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_intotheblock",
+          "energy": 0.2507246551649602,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_jakey",
+          "energy": 0.25021804223278693,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_JupiterExchange",
+          "energy": 0.24996812717064498,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_cielo_finance",
+          "energy": 0.24804039719914545,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_SOLBigBrain",
+          "energy": 0.2457771193559068,
+          "type": "CONTACT"
+        },
+        {
+          "name": "HANDLE_birdeye_so",
+          "energy": 0.24374316963938303,
+          "type": "CONTACT"
+        }
+      ],
+      "injection_text": "[Gambler dominates] Crypto scam recognition nodes activated"
+    }
+  ]
+}
