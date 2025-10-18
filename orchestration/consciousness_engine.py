@@ -1172,11 +1172,11 @@ class ConsciousnessEngine:
 
             result = self.graph.query(cypher, params={"network_id": self.network_id})
 
-            # FalkorDB returns iterable rows with dict-like access
+            # LlamaIndex wrapper returns list of lists, not dicts
             if result:
                 for row in result:
-                    if row['global_arousal'] is not None:
-                        return row['global_arousal']
+                    if row[0] is not None:
+                        return float(row[0])
 
             return 0.5  # Default moderate criticality
 

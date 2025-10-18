@@ -477,14 +477,26 @@ class SubEntity:
             LIMIT 1
             """
             result = self.graph.query(cypher)
+            logger.debug(f"[SubEntity:{self.entity_id}] _find_start_node query result: {result}")
 
-            if result and result.result_set and len(result.result_set) > 0:
-                return str(result.result_set[0][0])
+            # LlamaIndex wrapper returns plain list, not QueryResult
+            if result and len(result) > 0:
+                node_id = str(result[0][0])
+                logger.info(f"[SubEntity:{self.entity_id}] Found start node: {node_id}")
+                return node_id
 
             # Fallback: any node
+            logger.debug(f"[SubEntity:{self.entity_id}] No high-weight node, trying fallback")
             cypher_fallback = "MATCH (n) RETURN id(n) LIMIT 1"
             result = self.graph.query(cypher_fallback)
-            return str(result.result_set[0][0]) if result and result.result_set and len(result.result_set) > 0 else None
+            logger.debug(f"[SubEntity:{self.entity_id}] Fallback query result: {result}")
+            if result and len(result) > 0:
+                node_id = str(result[0][0])
+                logger.info(f"[SubEntity:{self.entity_id}] Found fallback start node: {node_id}")
+                return node_id
+
+            logger.warning(f"[SubEntity:{self.entity_id}] No nodes found in graph - result was: {result}")
+            return None
 
         except Exception as e:
             logger.error(f"[SubEntity:{self.entity_id}] Failed to find start node: {e}")
@@ -515,8 +527,11 @@ class SubEntity:
 
             result = self.graph.query(cypher, {"focus_id": self.current_node_id})
 
-            self.peripheral_nodes = [str(row[0]) for row in result.result_set] if result and result.result_set else []
+            # LlamaIndex wrapper returns plain list
+            self.peripheral_nodes = [str(row[0]) for row in result] if result else []
             self.current_focus_nodes = [self.current_node_id]
+
+            logger.debug(f"[SubEntity:{self.entity_id}] Peripheral awareness: {len(self.peripheral_nodes)} nodes")
 
         except Exception as e:
             logger.warning(f"[SubEntity:{self.entity_id}] Failed to update peripheral awareness: {e}")
@@ -542,11 +557,13 @@ class SubEntity:
 
             result = self.graph.query(cypher, {"node_id": node_id})
 
-            if not result or not result.result_set:
+            # LlamaIndex wrapper returns plain list
+            if not result:
+                logger.debug(f"[SubEntity:{self.entity_id}] No outgoing links from node {node_id}")
                 return []
 
             links = []
-            for row in result.result_set:
+            for row in result:
                 links.append({
                     'source_id': str(row[0]),
                     'target_id': str(row[1]),
@@ -554,6 +571,7 @@ class SubEntity:
                     'target_arousal': float(row[3]) if row[3] is not None else 0.5
                 })
 
+            logger.debug(f"[SubEntity:{self.entity_id}] Found {len(links)} outgoing links from node {node_id}")
             return links
 
         except Exception as e:

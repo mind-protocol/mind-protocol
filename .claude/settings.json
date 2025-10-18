@@ -1,6 +1,7 @@
 {
   "env": {
-    "MAX_THINKING_TOKENS": 40000
+    "MAX_THINKING_TOKENS": 40000,
+    "MAX_MCP_OUTPUT_TOKENS": 500000
   },
   "permissions": {
     "defaultMode": "bypassPermissions"

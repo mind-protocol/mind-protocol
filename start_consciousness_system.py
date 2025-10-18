@@ -200,7 +200,7 @@ async def start_citizen_consciousness(
 
     logger.info(f"[N1:{citizen_id}] Consciousness engine ready")
     logger.info(f"[N1:{citizen_id}]   Entities: {entities}")
-    logger.info(f"[N1:{citizen_id}]   Output: consciousness/citizens/{citizen_id}/CLAUDE_DYNAMIC.md")
+    logger.info(f"[N1:{citizen_id}]   Output: consciousness/citizens/{citizen_id}/CLAUDE.md")
 
     return engine
 
@@ -244,7 +244,7 @@ async def start_organizational_consciousness(
             write_batch_size=5
         )
 
-    # Enable dynamic prompts (writes to consciousness/collective/{org_id}/CLAUDE_DYNAMIC.md)
+    # Enable dynamic prompts (writes to consciousness/collective/{org_id}/CLAUDE.md)
     engine.enable_dynamic_prompts(
         citizen_id=org_id,
         entity_ids=entities
@@ -252,7 +252,7 @@ async def start_organizational_consciousness(
 
     logger.info(f"[N2:{org_id}] Organizational consciousness engine ready")
     logger.info(f"[N2:{org_id}]   Entities: {entities}")
-    logger.info(f"[N2:{org_id}]   Output: consciousness/collective/{org_id}/CLAUDE_DYNAMIC.md")
+    logger.info(f"[N2:{org_id}]   Output: consciousness/collective/{org_id}/CLAUDE.md")
 
     return engine
 

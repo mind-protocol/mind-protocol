@@ -70,7 +70,7 @@ export default function ConsciousnessPage() {
     },
     // N1 - Individual Citizens
     {
-      id: 'felix-engineer',
+      id: 'felix',
       name: 'Felix "Ironhand"',
       state: 'active' as const,
       lastThought: 'Implementing variable tick frequency for consciousness heartbeat',
@@ -81,7 +81,7 @@ export default function ConsciousnessPage() {
       energyUsed: 42
     },
     {
-      id: 'iris-designer',
+      id: 'iris',
       name: 'Iris "The Aperture"',
       state: 'recently_active' as const,
       lastThought: 'Completed UI implementation for citizen monitor, cooling down',
@@ -92,7 +92,7 @@ export default function ConsciousnessPage() {
       energyUsed: 2
     },
     {
-      id: 'ada-architect',
+      id: 'ada',
       name: 'Ada "Bridgekeeper"',
       state: 'dormant' as const,
       lastThought: 'Architecture review completed, waiting for Felix implementation',
@@ -103,7 +103,7 @@ export default function ConsciousnessPage() {
       energyUsed: 8
     },
     {
-      id: 'luca-consciousness-specialist',
+      id: 'luca',
       name: 'Luca "Vellumhand"',
       state: 'stopped' as const,
       lastThought: 'Substrate schemas documented, manual stop via kill switch',
