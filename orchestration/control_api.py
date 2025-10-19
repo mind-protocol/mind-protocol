@@ -184,6 +184,251 @@ async def resume_all_endpoint():
     return resume_all()
 
 
+@router.get("/graphs")
+async def get_available_graphs():
+    """
+    List all consciousness graphs in FalkorDB.
+
+    Returns graphs organized by niveau:
+        {
+            "citizens": [
+                {"id": "citizen_felix", "name": "Felix", "type": "personal"},
+                {"id": "citizen_ada", "name": "Ada", "type": "personal"}
+            ],
+            "organizations": [
+                {"id": "org_mind_protocol", "name": "Mind Protocol", "type": "organizational"}
+            ],
+            "ecosystems": [
+                {"id": "ecosystem_public", "name": "Public Ecosystem", "type": "ecosystem"}
+            ]
+        }
+    """
+    import redis
+
+    try:
+        # Connect to FalkorDB
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+        # Get all graph names: GRAPH.LIST returns array of graph names
+        graphs = r.execute_command("GRAPH.LIST")
+
+        # Organize by prefix
+        result = {
+            "citizens": [],
+            "organizations": [],
+            "ecosystems": []
+        }
+
+        for graph_name in graphs:
+            if graph_name.startswith("citizen_"):
+                citizen_id = graph_name.replace("citizen_", "")
+                result["citizens"].append({
+                    "id": graph_name,
+                    "name": citizen_id.title(),
+                    "type": "personal"
+                })
+            elif graph_name.startswith("org_"):
+                org_id = graph_name.replace("org_", "")
+                result["organizations"].append({
+                    "id": graph_name,
+                    "name": org_id.replace("_", " ").title(),
+                    "type": "organizational"
+                })
+            elif graph_name.startswith("ecosystem_"):
+                eco_id = graph_name.replace("ecosystem_", "")
+                result["ecosystems"].append({
+                    "id": graph_name,
+                    "name": eco_id.title(),
+                    "type": "ecosystem"
+                })
+
+        return result
+
+    except Exception as e:
+        logger.error(f"[API] Failed to list graphs: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to query FalkorDB: {str(e)}")
+
+
+@router.get("/graph/{graph_type}/{graph_id}")
+async def get_graph_data(graph_type: str, graph_id: str):
+    """
+    Fetch initial graph snapshot from FalkorDB for dashboard visualization.
+
+    This endpoint provides the initial state. Real-time updates come via /api/ws WebSocket.
+
+    Args:
+        graph_type: Type of graph (citizen, organization, ecosystem)
+        graph_id: Full graph ID (e.g., "citizen_felix", "org_mind_protocol")
+
+    Returns:
+        {
+            "graph_id": "citizen_felix",
+            "graph_type": "citizen",
+            "nodes": [
+                {
+                    "id": "node_123",
+                    "node_id": "node_123",
+                    "labels": ["Realization", "Personal"],
+                    "node_type": "Realization",
+                    "text": "System infrastructure proving itself",
+                    "arousal": 0.8,
+                    "confidence": 0.9,
+                    "entity_activations": {"builder": {"energy": 0.85}},
+                    "last_active": 1697732400,
+                    "traversal_count": 42
+                }
+            ],
+            "links": [
+                {
+                    "id": "link_456",
+                    "source": "node_123",
+                    "target": "node_789",
+                    "type": "ENABLES",
+                    "strength": 0.75,
+                    "last_traversed": 1697732450,
+                    "entity_activations": {"builder": {"energy": 0.7}}
+                }
+            ],
+            "metadata": {
+                "node_count": 150,
+                "link_count": 320,
+                "last_updated": "2025-10-19T05:30:00Z"
+            }
+        }
+
+    Architecture:
+        - This REST endpoint loads initial snapshot
+        - WebSocket at /api/ws provides real-time updates
+        - Dashboard combines both for live visualization
+    """
+    import redis
+    from datetime import datetime, timezone
+
+    try:
+        # Connect to FalkorDB
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+        # Verify graph exists
+        all_graphs = r.execute_command("GRAPH.LIST")
+        if graph_id not in all_graphs:
+            raise HTTPException(status_code=404, detail=f"Graph not found: {graph_id}")
+
+        # Query all nodes
+        # Return node properties we care about for visualization
+        # NOTE: BaseNode uses 'name' not 'node_id', and node_type comes from labels
+        node_query = """
+        MATCH (n)
+        RETURN
+            id(n) AS id,
+            n.name AS node_id,
+            labels(n) AS labels,
+            CASE
+                WHEN size(labels(n)) > 0 THEN labels(n)[0]
+                ELSE null
+            END AS node_type,
+            n.description AS text,
+            n.confidence AS confidence,
+            n.last_active AS last_active,
+            n.traversal_count AS traversal_count
+        LIMIT 1000
+        """
+
+        node_result = r.execute_command("GRAPH.QUERY", graph_id, node_query)
+
+        # FalkorDB returns: [header, rows, metadata]
+        # header = list of column names
+        # rows = list of row data (each row is list of values)
+        nodes = []
+        if node_result and len(node_result) > 1:
+            header = node_result[0]  # Column names
+            rows = node_result[1]     # Data rows
+
+            for row in rows:
+                # Build dict from header and row
+                node_dict = {}
+                for i, col_name in enumerate(header):
+                    # Convert bytes column names to strings
+                    col_str = col_name.decode('utf-8') if isinstance(col_name, bytes) else col_name
+                    value = row[i]
+
+                    # Handle None/null values
+                    if value is None:
+                        node_dict[col_str] = None
+                    # Handle list values (labels)
+                    elif isinstance(value, list):
+                        node_dict[col_str] = [v.decode('utf-8') if isinstance(v, bytes) else v for v in value]
+                    # Handle byte strings
+                    elif isinstance(value, bytes):
+                        node_dict[col_str] = value.decode('utf-8')
+                    else:
+                        node_dict[col_str] = value
+
+                # Ensure id is string for frontend
+                if 'id' in node_dict:
+                    node_dict['id'] = str(node_dict['id'])
+
+                nodes.append(node_dict)
+
+        # Query all links
+        # NOTE: Nodes use 'name' not 'node_id' for identification
+        link_query = """
+        MATCH (a)-[r]->(b)
+        RETURN
+            id(r) AS id,
+            a.name AS source,
+            b.name AS target,
+            type(r) AS type,
+            r.confidence AS strength,
+            r.last_traversed AS last_traversed
+        LIMIT 5000
+        """
+
+        link_result = r.execute_command("GRAPH.QUERY", graph_id, link_query)
+
+        links = []
+        if link_result and len(link_result) > 1:
+            header = link_result[0]
+            rows = link_result[1]
+
+            for row in rows:
+                link_dict = {}
+                for i, col_name in enumerate(header):
+                    col_str = col_name.decode('utf-8') if isinstance(col_name, bytes) else col_name
+                    value = row[i]
+
+                    if value is None:
+                        link_dict[col_str] = None
+                    elif isinstance(value, bytes):
+                        link_dict[col_str] = value.decode('utf-8')
+                    else:
+                        link_dict[col_str] = value
+
+                # Ensure id is string
+                if 'id' in link_dict:
+                    link_dict['id'] = str(link_dict['id'])
+
+                links.append(link_dict)
+
+        # Build response
+        return {
+            "graph_id": graph_id,
+            "graph_type": graph_type,
+            "nodes": nodes,
+            "links": links,
+            "metadata": {
+                "node_count": len(nodes),
+                "link_count": len(links),
+                "last_updated": datetime.now(timezone.utc).isoformat()
+            }
+        }
+
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions (like 404)
+    except Exception as e:
+        logger.error(f"[API] Failed to fetch graph {graph_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to query graph: {str(e)}")
+
+
 # === Per-Citizen Endpoints ===
 
 
