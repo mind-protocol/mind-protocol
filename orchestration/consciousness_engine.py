@@ -199,7 +199,7 @@ class ConsciousnessEngine:
                        (sub.condition_metadata.type = 'threshold' AND
                         $activity_delta > sub.condition_metadata.threshold))
 
-                SET subscriber.activity_level = subscriber.activity_level + ($activity_delta * sub.activity_coefficient)
+                SET subscriber.energy = subscriber.energy + ($activity_delta * sub.activity_coefficient)
                 SET subscriber.last_activation = timestamp()
                 SET subscriber.last_modified = timestamp()
                 SET subscriber.last_traversed_by = 'event_propagation'
@@ -209,7 +209,7 @@ class ConsciousnessEngine:
                 SET sub.traversal_count = coalesce(sub.traversal_count, 0) + 1
                 SET sub.last_mechanism_id = 'event_propagation'
 
-                RETURN subscriber.id, subscriber.activity_level
+                RETURN subscriber.id, subscriber.energy
             """,
 
             'link_activation': """
@@ -222,8 +222,8 @@ class ConsciousnessEngine:
                      CASE link.detection_logic.condition
                        WHEN 'age_threshold' THEN
                          (timestamp() - target.last_modified) > link.detection_logic.max_age_ms
-                       WHEN 'activity_threshold' THEN
-                         source.activity_level > link.detection_logic.min_activity
+                       WHEN 'energy_threshold' THEN
+                         source.energy > link.detection_logic.min_activity
                        ELSE false
                      END as condition_met
 
@@ -318,7 +318,7 @@ class ConsciousnessEngine:
                 // COMPETITION-BASED TRAVERSAL COSTS IMPLEMENTATION:
                 //
                 // Current State (Single-Entity Architecture):
-                //   - Each node has one entity with activity_level and energy_budget
+                //   - Each node has one entity with energy and energy_budget
                 //   - Competition factors set to 1.0 (no competition yet)
                 //   - Weight factor already reduces cost for important patterns
                 //
@@ -334,12 +334,12 @@ class ConsciousnessEngine:
                 // Date: 2025-10-17
 
                 MATCH (high_activity:Entity)
-                WHERE high_activity.activity_level > $activity_threshold
+                WHERE high_activity.energy > $energy_threshold
                   AND high_activity.energy_budget > 0
 
                 MATCH (high_activity)-[activates:ACTIVATES]->(target:Entity)
                 WHERE activates.active = true
-                  AND target.activity_level < activates.activity_threshold
+                  AND target.energy < activates.energy_threshold
 
                 // Calculate competition-based traversal cost
                 WITH high_activity, activates, target,
@@ -362,8 +362,8 @@ class ConsciousnessEngine:
                 // Only traverse if affordable
                 WHERE high_activity.energy_budget >= traversal_cost
 
-                SET target.activity_level = target.activity_level +
-                    (high_activity.activity_level * activates.activity_transfer_coefficient)
+                SET target.energy = target.energy +
+                    (high_activity.energy * activates.activity_transfer_coefficient)
                 SET target.last_activity_update = timestamp()
                 SET target.last_modified = timestamp()
                 SET target.last_traversed_by = 'energy_propagation'
@@ -373,7 +373,7 @@ class ConsciousnessEngine:
 
                 CREATE (high_activity)-[:CASCADED_TO {
                     at: timestamp(),
-                    activity_transferred: (high_activity.activity_level * activates.activity_transfer_coefficient),
+                    activity_transferred: (high_activity.energy * activates.activity_transfer_coefficient),
                     energy_cost: traversal_cost,
                     link_competition: link_competition,
                     node_competition: node_competition,
@@ -386,18 +386,18 @@ class ConsciousnessEngine:
                 SET activates.last_mechanism_id = 'energy_propagation'
                 SET activates.traversal_count = coalesce(activates.traversal_count, 0) + 1
 
-                RETURN target.id, target.activity_level, traversal_cost
+                RETURN target.id, target.energy, traversal_cost
             """,
 
             'energy_decay': """
                 // Mechanism 6a: Energy Decay (Energy-Only Model)
-                // Automatically decay activity_level for nodes not recently activated
+                // Automatically decay energy for nodes not recently activated
                 MATCH (node)
-                WHERE node.activity_level IS NOT NULL
-                  AND node.activity_level > 0
+                WHERE node.energy IS NOT NULL
+                  AND node.energy > 0
                   AND (timestamp() - coalesce(node.last_activation, 0)) > 300000
 
-                SET node.activity_level = node.activity_level * 0.9
+                SET node.energy = node.energy * 0.9
                 SET node.last_decay_time = timestamp()
                 SET node.last_modified = timestamp()
 

@@ -61,12 +61,12 @@ def calculate_ai_agent_total_energy(
     Formula: total_energy = Σ(pattern_energy * link_strength * pattern_weight)
 
     Connected patterns contribute energy proportional to:
-    - Their own energy level (activity_level)
+    - Their own energy level (energy)
     - Link strength (how strong is ASSIGNED_TO/REQUIRES/etc)
     - Pattern importance (weight)
 
     Args:
-        connected_patterns: List of (node_id, activity_level, weight, node_type)
+        connected_patterns: List of (node_id, energy, weight, node_type)
         link_strengths: List of link strengths corresponding to patterns
 
     Returns:
@@ -76,9 +76,9 @@ def calculate_ai_agent_total_energy(
         return 0.0
 
     total = 0.0
-    for (node_id, activity_level, weight, node_type), link_strength in zip(connected_patterns, link_strengths):
+    for (node_id, energy, weight, node_type), link_strength in zip(connected_patterns, link_strengths):
         # Energy contribution = pattern_activity * link_strength * pattern_weight
-        contribution = activity_level * link_strength * weight
+        contribution = energy * link_strength * weight
         total += contribution
 
     # Normalize by number of connections (prevents inflation with many weak links)
@@ -193,15 +193,15 @@ class N2ActivationMonitor:
             cypher = """
             MATCH (agent:AI_Agent)
             OPTIONAL MATCH (pattern)-[link]->(agent)
-            WHERE pattern.activity_level IS NOT NULL
-              AND pattern.activity_level > 0
+            WHERE pattern.energy IS NOT NULL
+              AND pattern.energy > 0
             WITH agent, pattern, link
             RETURN
                 id(agent) AS agent_id,
                 agent.name AS citizen_id,
                 collect([
                     id(pattern),
-                    pattern.activity_level,
+                    pattern.energy,
                     coalesce(pattern.weight, 0.5),
                     labels(pattern)[0]
                 ]) AS connected_patterns,
@@ -293,7 +293,7 @@ class N2ActivationMonitor:
                 n.name AS name,
                 labels(n)[0] AS node_type,
                 n.description AS description,
-                n.activity_level AS activity_level,
+                n.energy AS energy,
                 n.weight AS weight
             """
 
@@ -304,18 +304,18 @@ class N2ActivationMonitor:
 
             patterns = []
             for row in result:
-                node_id, name, node_type, description, activity_level, weight = row
+                node_id, name, node_type, description, energy, weight = row
                 patterns.append({
                     "node_id": str(node_id),
                     "name": name or "unknown",
                     "node_type": node_type or "unknown",
                     "description": description or "",
-                    "activity_level": activity_level or 0.0,
+                    "energy": energy or 0.0,
                     "weight": weight or 0.5
                 })
 
-            # Sort by activity_level descending
-            patterns.sort(key=lambda p: p["activity_level"], reverse=True)
+            # Sort by energy descending
+            patterns.sort(key=lambda p: p["energy"], reverse=True)
 
             return patterns
 
@@ -365,7 +365,7 @@ class N2ActivationMonitor:
         # List active patterns
         for i, pattern in enumerate(context.active_patterns[:10], 1):  # Top 10
             message += f"{i}. **{pattern['node_type']}: {pattern['name']}**\n"
-            message += f"   - Energy: {pattern['activity_level']:.2f}\n"
+            message += f"   - Energy: {pattern['energy']:.2f}\n"
             message += f"   - Importance: {pattern['weight']:.2f}\n"
             if pattern['description']:
                 message += f"   - Description: {pattern['description']}\n"

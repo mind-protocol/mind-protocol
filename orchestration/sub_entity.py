@@ -551,7 +551,7 @@ class SubEntity:
             RETURN id(source) as source_id,
                    id(target) as target_id,
                    link.link_strength as link_strength,
-                   target.arousal_level as target_arousal
+                   target.energy as target_arousal
             LIMIT 50
             """
 

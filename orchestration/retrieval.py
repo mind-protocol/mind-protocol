@@ -107,7 +107,7 @@ class ConsciousnessNode(BaseModel):
     expired_at: Optional[datetime] = None
 
     # Consciousness metadata (from consciousness_schema.py - energy-only model)
-    activity_level: float = Field(ge=0.0, le=1.0, default=0.0, description="Current activation energy (dynamic, decays)")
+    energy: float = Field(ge=0.0, le=1.0, default=0.0, description="Current activation energy (dynamic, decays)")
     weight: float = Field(ge=0.0, le=1.0, default=0.5, description="Static importance (how central this pattern is)")
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
     emotion_vector: Optional[Dict[str, float]] = None
@@ -134,7 +134,7 @@ class ConsciousnessRelationship(BaseModel):
     formation_trigger: str
     emotion_vector: Optional[Dict[str, float]] = None
 
-    # Note: Energy tracked on nodes (activity_level), not relations
+    # Note: Energy tracked on nodes (energy), not relations
 
     # Temporal
     valid_at: datetime
@@ -311,7 +311,7 @@ async def vector_search(
             node.invalid_at AS invalid_at,
             node.created_at AS created_at,
             node.expired_at AS expired_at,
-            node.activity_level AS activity_level,
+            node.energy AS energy,
             node.weight AS weight,
             node.confidence AS confidence,
             node.emotion_vector AS emotion_vector,
@@ -330,7 +330,7 @@ async def vector_search(
         field_names = [
             "node_id", "name", "description", "node_type",
             "valid_at", "invalid_at", "created_at", "expired_at",
-            "activity_level", "weight", "confidence", "emotion_vector",
+            "energy", "weight", "confidence", "emotion_vector",
             "felt_quality", "body_sensation", "score"
         ]
 
@@ -466,7 +466,7 @@ async def graph_traversal(
         // Rank by relationship strength and consciousness metadata (energy-only model)
         WITH connected, path,
              // Energy contribution: node activity + weight
-             COALESCE(connected.activity_level, 0.0) AS node_activity,
+             COALESCE(connected.energy, 0.0) AS node_activity,
              COALESCE(connected.weight, 0.5) AS node_weight,
              // Confidence contribution from relationships
              reduce(conf = 0.0, rel IN relationships(path) | conf + COALESCE(rel.confidence, 0.5)) AS path_confidence,
@@ -482,7 +482,7 @@ async def graph_traversal(
             connected.invalid_at AS invalid_at,
             connected.created_at AS created_at,
             connected.expired_at AS expired_at,
-            connected.activity_level AS activity_level,
+            connected.energy AS energy,
             connected.weight AS weight,
             connected.confidence AS confidence,
             connected.emotion_vector AS emotion_vector,
@@ -509,7 +509,7 @@ async def graph_traversal(
         node_field_names = [
             "node_id", "name", "description", "node_type",
             "valid_at", "invalid_at", "created_at", "expired_at",
-            "activity_level", "weight", "confidence", "emotion_vector",
+            "energy", "weight", "confidence", "emotion_vector",
             "felt_quality", "body_sensation",
             "node_activity", "node_weight", "path_confidence", "depth"
         ]
@@ -602,8 +602,8 @@ def enrich_with_consciousness_metadata(
             node_id_value = deserialized_result.get("node_id", "")
             node_id_str = str(node_id_value) if node_id_value is not None else ""
 
-            # Energy-only model: activity_level + weight (no arousal)
-            activity = deserialized_result.get("activity_level")
+            # Energy-only model: energy + weight (no arousal)
+            activity = deserialized_result.get("energy")
             activity_value = float(activity) if activity is not None else 0.0
 
             weight = deserialized_result.get("weight")
@@ -625,7 +625,7 @@ def enrich_with_consciousness_metadata(
                 expired_at=deserialized_result.get("expired_at"),
 
                 # Consciousness (energy-only model - properly deserialized)
-                activity_level=activity_value,
+                energy=activity_value,
                 weight=weight_value,
                 confidence=confidence_value,
                 emotion_vector=deserialized_result.get("emotion_vector"),
@@ -718,7 +718,7 @@ def generate_consciousness_summary(
         )
 
     # Calculate aggregate consciousness metrics (energy-only model)
-    avg_activity = sum(n.activity_level for n in all_nodes) / len(all_nodes)
+    avg_activity = sum(n.energy for n in all_nodes) / len(all_nodes)
     avg_confidence = sum(n.confidence for n in all_nodes) / len(all_nodes)
 
     # Extract emotional themes

@@ -51,7 +51,7 @@ class ActivationChange:
     node_name: str
     entity_id: str
     became_active: bool  # True = activated, False = deactivated
-    activity_level: float
+    energy: float
     threshold: float
     timestamp: datetime
 
@@ -208,16 +208,16 @@ class DynamicPromptGenerator:
         Get current activation state of all nodes.
 
         Returns:
-            Dict mapping node_id -> (node_name, activity_level, sub_entity_weights)
+            Dict mapping node_id -> (node_name, energy, sub_entity_weights)
         """
         try:
             cypher = """
             MATCH (n)
-            WHERE n.activity_level IS NOT NULL
+            WHERE n.energy IS NOT NULL
             RETURN
                 id(n) AS node_id,
                 n.name AS node_name,
-                n.activity_level AS activity_level,
+                n.energy AS energy,
                 n.sub_entity_weights AS sub_entity_weights
             """
 
@@ -228,10 +228,10 @@ class DynamicPromptGenerator:
 
             node_states = {}
             for row in result:
-                node_id, node_name, activity_level, sub_entity_weights = row
+                node_id, node_name, energy, sub_entity_weights = row
                 node_states[str(node_id)] = (
                     node_name or "unknown",
-                    activity_level or 0.0,
+                    energy or 0.0,
                     sub_entity_weights or {}
                 )
 
@@ -266,13 +266,13 @@ class DynamicPromptGenerator:
 
         previous_states = self.activation_states[entity_id]
 
-        for node_id, (node_name, activity_level, sub_entity_weights) in node_states.items():
+        for node_id, (node_name, energy, sub_entity_weights) in node_states.items():
             # Per-entity activity level (use sub_entity_weights if available)
-            entity_activity = activity_level
+            entity_activity = energy
             if entity_id in sub_entity_weights:
                 # Entity-specific weight modulates activity
                 entity_weight = sub_entity_weights[entity_id]
-                entity_activity = activity_level * entity_weight
+                entity_activity = energy * entity_weight
 
             # Check if crosses threshold
             is_active = entity_activity >= threshold
@@ -285,7 +285,7 @@ class DynamicPromptGenerator:
                     node_name=node_name,
                     entity_id=entity_id,
                     became_active=is_active,
-                    activity_level=entity_activity,
+                    energy=entity_activity,
                     threshold=threshold,
                     timestamp=datetime.now(timezone.utc)
                 )
@@ -396,7 +396,7 @@ class DynamicPromptGenerator:
         if recent_changes:
             for change in reversed(recent_changes):  # Most recent first
                 action = "ACTIVATED" if change.became_active else "deactivated"
-                section += f"- {change.node_name}: {action} (activity={change.activity_level:.2f})\n"
+                section += f"- {change.node_name}: {action} (activity={change.energy:.2f})\n"
         else:
             section += "- No recent changes\n"
 
@@ -405,8 +405,8 @@ class DynamicPromptGenerator:
         if active_nodes:
             # Get node details for active nodes
             node_details = await self._get_node_details(active_nodes[:10])  # Top 10
-            for node_id, node_name, activity_level in node_details:
-                section += f"- {node_name} (activity={activity_level:.2f})\n"
+            for node_id, node_name, energy in node_details:
+                section += f"- {node_name} (activity={energy:.2f})\n"
         else:
             section += "- No active nodes currently\n"
 
@@ -418,7 +418,7 @@ class DynamicPromptGenerator:
             cypher = """
             MATCH (n)
             WHERE id(n) IN $node_ids
-            RETURN id(n) AS node_id, n.name AS node_name, n.activity_level AS activity_level
+            RETURN id(n) AS node_id, n.name AS node_name, n.energy AS energy
             """
 
             result = self.graph.query(cypher, params={"node_ids": [int(nid) for nid in node_ids]})

@@ -45,7 +45,7 @@ Extract nodes (entities) and relations (connections) that match our consciousnes
 - confidence (float 0.0-1.0): Logical certainty
 - formation_trigger (enum): How discovered (direct_experience, inference, systematic_analysis, etc.)
 
-Note: Energy-only model - no arousal_level field
+Note: Energy-only model - no energy field
 
 **Input Text:**
 {text}

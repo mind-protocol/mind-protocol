@@ -296,7 +296,7 @@ class ConversationWatcher(FileSystemEventHandler):
             nodes_result = r.execute_command(
                 "GRAPH.QUERY",
                 graph_name,
-                "MATCH (n) RETURN id(n), n.id, n.name, n.node_type, n.description, n.weight, n.arousal_level"
+                "MATCH (n) RETURN id(n), n.id, n.name, n.node_type, n.description, n.weight, n.energy"
             )
 
             # Fetch all links
@@ -321,7 +321,7 @@ class ConversationWatcher(FileSystemEventHandler):
                         'node_type': row[3] if len(row) > 3 else None,
                         'description': row[4] if len(row) > 4 else None,
                         'weight': float(weight) if weight is not None else 0.5,
-                        'arousal_level': float(arousal) if arousal is not None else None
+                        'energy': float(arousal) if arousal is not None else None
                     }
                     nodes.append(node_data)
 
