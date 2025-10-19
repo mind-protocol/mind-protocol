@@ -10,7 +10,7 @@ Architecture:
 - BaseRelation: Foundation for all 23 relation types
 - Bitemporal fields: Track both fact validity and knowledge acquisition
 - Consciousness metadata: Goal, mindstate, confidence on every relation
-- Energy-only model: activity_level + weight (no arousal)
+- Energy-only model: energy + weight (no arousal)
 
 Designer: Ada "Bridgekeeper" (Architect)
 Phase: 1 - Foundation & Schema
@@ -157,12 +157,12 @@ class BaseNode(BaseModel):
         description="Last time this node was active (for 2-min glow effect visualization)"
     )
 
-    # Dynamic Activity vs Static Importance (SEPARATE dimensions)
-    activity_level: float = Field(
+    # Dynamic Energy vs Static Importance (SEPARATE dimensions)
+    energy: float = Field(
         default=0.0,
         ge=0.0,
         le=1.0,
-        description="Current/recent activation level (dynamic, decays through disuse)"
+        description="Current activation energy (dynamic, decays through disuse)"
     )
     weight: float = Field(
         default=0.5,
@@ -189,7 +189,7 @@ class BaseRelation(BaseModel):
     - formation_trigger: HOW we discovered this link
 
     Energy-Only Model:
-    - Activation/intensity tracked through activity_level on nodes
+    - Activation/intensity tracked through energy on nodes
     - Weight modulates traversal cost (replaces arousal multiplier)
     - No separate arousal variable (simplified substrate dynamics)
     """

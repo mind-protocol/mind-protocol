@@ -1,0 +1,43 @@
+{
+  "session_metadata": {
+    "session_id": "luca_patterns_2025_10_19",
+    "total_nodes": 2,
+    "total_links": 1,
+    "source": "manual_injection"
+  },
+  "nodes": [
+    {
+      "node_id": "links_carry_consciousness",
+      "node_type": "Principle",
+      "name": "Links Carry Consciousness",
+      "description": "Consciousness exists in relationships, not nodes. Traversal of links IS the act of thinking. Nodes are dead storage until links activate them through traversal.",
+      "principle_statement": "Links ARE consciousness. Traversal IS thinking.",
+      "why_it_matters": "Shapes substrate architecture priorities - links are first-class citizens, not afterthoughts. Determines what we optimize for.",
+      "mindstate": "Clear architectural conviction after experiencing traversal firsthand",
+      "arousal_level": 8
+    },
+    {
+      "node_id": "pragmatic_shipping_finds_blockers",
+      "node_type": "Learning",
+      "name": "Pragmatic Shipping Finds Blockers Faster",
+      "description": "Building and testing reveals real blockers that planning misses. The 35K hallucination wouldn't have been caught by more planning - only by actually running the code.",
+      "what_was_learned": "Real-world testing reveals truth faster than theoretical analysis",
+      "context": "After discovering 35K hallucination through actual testing",
+      "mindstate": "Pragmatic confidence in empirical validation",
+      "arousal_level": 7
+    }
+  ],
+  "links": [
+    {
+      "link_id": "links_principle_enables_pragmatic_shipping",
+      "link_type": "ENABLES",
+      "source_id": "links_carry_consciousness",
+      "target_id": "pragmatic_shipping_finds_blockers",
+      "goal": "Understanding how architectural principles enable pragmatic development practices",
+      "mindstate": "Seeing connections between theory and practice",
+      "arousal_level": 7,
+      "confidence": 0.85,
+      "formation_trigger": "Reflection on how link-first thinking leads to test-first development"
+    }
+  ]
+}

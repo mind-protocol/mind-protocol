@@ -717,14 +717,14 @@ class ConsciousnessEngine:
 
             # Mechanism 5: Energy Propagation (every tick)
             # BRANCHING RATIO MEASUREMENT: Capture nodes before propagation
-            self.activated_this_gen = self._get_activated_nodes(activity_threshold=0.3)
+            self.activated_this_gen = self._get_activated_nodes(energy_threshold=0.3)
 
             self._execute_mechanism('energy_propagation', {
-                'activity_threshold': 0.7
+                'energy_threshold': 0.7
             })
 
             # BRANCHING RATIO MEASUREMENT: Capture nodes after propagation
-            self.activated_next_gen = self._get_activated_nodes(activity_threshold=0.3)
+            self.activated_next_gen = self._get_activated_nodes(energy_threshold=0.3)
 
             # Measure σ and store global_arousal (every 10 ticks for performance)
             if self.tick_count % 10 == 0:
@@ -967,24 +967,24 @@ class ConsciousnessEngine:
             logger.error(f"[_get_ready_tasks] Failed: {e}")
             return []
 
-    def _get_activated_nodes(self, activity_threshold: float = 0.3) -> List[str]:
+    def _get_activated_nodes(self, energy_threshold: float = 0.3) -> List[str]:
         """
         Get list of currently activated nodes (for branching ratio measurement).
 
         Args:
-            activity_threshold: Minimum activity_level to consider node "activated"
+            energy_threshold: Minimum energy to consider node "activated"
 
         Returns:
-            List of node IDs with activity_level above threshold
+            List of node IDs with energy above threshold
         """
         try:
             result = self.graph.query("""
                 MATCH (n)
-                WHERE n.activity_level IS NOT NULL
-                  AND n.activity_level > $threshold
+                WHERE n.energy IS NOT NULL
+                  AND n.energy > $threshold
                 RETURN id(n) as node_id
                 LIMIT 1000
-            """, params={"threshold": activity_threshold})
+            """, params={"threshold": energy_threshold})
 
             return [str(row[0]) for row in result] if result else []
         except Exception as e:
