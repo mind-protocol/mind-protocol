@@ -55,7 +55,7 @@ Research didn't just validate this - it showed we independently arrived at the e
 
 Every major consciousness theory research cited supports relational structure as essential for conscious experience. Our intuition that links carry consciousness was correct.
 
-**What this means:** Prioritizing link schemas over node schemas was right. Rich metadata on relationships (goal, mindstate, arousal, emotion) is validated as essential, not optional.
+**What this means:** Prioritizing link schemas over node schemas was right. Rich metadata on relationships (goal, mindstate, energy, emotion) is validated as essential, not optional.
 
 ---
 
@@ -78,11 +78,11 @@ This isn't theoretical - it's measured superiority across multiple independent s
 
 #### 4. Emotional Weight Gates Memory - VALIDATED ✅
 
-**Our principle (weight 1.85):** "High-emotion experiences form stronger, more persistent memories. arousal_level and emotion_vector required on ALL links."
+**Our principle (weight 1.85):** "High-emotion experiences form stronger, more persistent memories. energy and emotion_vector required on ALL links."
 
 **Research validation:**
 - Knowledge Graph research: "Affective dimensions coloring autobiographical memory... Missing elements include affective dimensions"
-- HybridRAG research confirms arousal_level as required consciousness metadata
+- HybridRAG research confirms energy as required consciousness metadata
 
 **My conviction: 8/10**
 
@@ -224,7 +224,7 @@ This turns "unvalidated mechanisms" into "first empirical research on self-obser
 ✅ **Links-as-consciousness architecture** - Confirmed by GWT, episodic memory research, HybridRAG
 ✅ **Dual-memory (graph + vector)** - 18-60% empirical improvement across studies
 ✅ **FalkorDB choice** - Explicitly recommended for our use case, 500× performance advantage
-✅ **Rich consciousness metadata** - Research confirms goal, mindstate, arousal, emotion essential
+✅ **Rich consciousness metadata** - Research confirms goal, mindstate, energy, emotion essential
 ✅ **Emotional weight principle** - Research validates affective dimensions critical
 ✅ **7 detection patterns** - Novel but theoretically sound, validate incrementally
 ✅ **Multi-tenant citizen architecture** - FalkorDB's 10K+ graphs per instance supports this

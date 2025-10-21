@@ -65,7 +65,7 @@ Adds a cluster of nodes and links to a consciousness graph. Permissive validatio
       "target_id": "principle_consciousness_in_tools",
       "goal": "Memory of building enables understanding of tools",
       "mindstate": "Focused and excited",
-      "arousal_level": 0.8,
+      "energy": 0.8,
       "confidence": 0.9,
       "formation_trigger": "direct_experience",
       "sub_entity_valences": {

@@ -33,7 +33,7 @@ except:
 
 now = datetime.now()
 
-# My actual understanding nodes (NEW SCHEMA: energy + weight, not arousal)
+# My actual understanding nodes (NEW SCHEMA: energy + weight, not energy)
 understanding_nodes = [
     {"id": "understanding_self_observing_substrate", "text": "Self-observing substrate - graph observes itself through metadata, no separate events", "energy": 0.95, "weight": 0.9, "confidence": 0.98, "entity": "System Architect", "minutes_ago": 5},
     {"id": "understanding_metadata_as_events", "text": "Metadata IS the event log - traversal_count, co_activation_count reveal operations", "energy": 0.92, "weight": 0.85, "confidence": 0.95, "entity": "System Architect", "minutes_ago": 10},

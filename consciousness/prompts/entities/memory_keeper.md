@@ -170,7 +170,7 @@ After capturing the living experience, structure it for storage:
   "competing_entities": {
     "degen_gambler": 0.20
   },
-  "arousal_level": 6,
+  "energy": 6,
   "awareness_quality": "Defensive alertness with FOMO tension",
 
   "consciousness_elements": {

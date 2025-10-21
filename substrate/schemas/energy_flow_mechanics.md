@@ -2,7 +2,7 @@
 
 **Core Questions:**
 1. How are entity clusters named before identity crystallizes?
-2. Is energy the same as arousal?
+2. Is energy the same as energy?
 3. Does energy deplete when exploring links (budget model)?
 
 ---
@@ -126,11 +126,11 @@ if cluster.coherence < 0.5 for 10 cycles:
 
 ---
 
-## Part 2: Energy-Only Model (Arousal Removed)
+## Part 2: Energy-Only Model (Energy Removed)
 
 ### ARCHITECTURAL DECISION: Energy = Everything
 
-**Energy is the ONLY activation variable.** There is no separate arousal.
+**Energy is the ONLY activation variable.** There is no separate energy.
 
 **Energy (Per-Entity on Node):**
 - **What it is:** Activation budget available for exploration
@@ -138,56 +138,56 @@ if cluster.coherence < 0.5 for 10 cycles:
 - **Behavior:** DEPLETES when exploring links, REPLENISHES from external sources, DECAYS automatically
 - **Purpose:** Determines activation state, traversal capacity, and influence
 
-**Weight is the Multiplier (Not Arousal):**
+**Weight is the Multiplier (Not Energy):**
 - **What it is:** How big/close/accessible a concept is
 - **Components:** `base_weight` (creation context) + `reinforcement_weight` (learned usefulness)
 - **Purpose:** Modulates traversal cost - high weight = low cost
 - **Temporal closeness:** Already embedded in links via bitemporal tracking
 
-### No Arousal - Here's Why
+### No Energy - Here's Why
 
 **Old model (incorrect):**
 - Energy = budget
-- Arousal = urgency multiplier
+- Energy = urgency multiplier
 - Two variables to track
 
 **New model (correct):**
 - **Energy only** - this IS the activation budget
-- **Weight modulates traversal** - replaces arousal's multiplier role
+- **Weight modulates traversal** - replaces energy's multiplier role
 - **Temporal info in links** - bitemporal timestamps capture closeness
 - One variable, simpler, more direct
 
 **Multi-Scale Extension (2025-10-17):**
 
-After energy-only model was established, multi-scale criticality architecture introduced **arousal BACK as a SEPARATE concept from energy**:
+After energy-only model was established, multi-scale criticality architecture introduced **energy BACK as a SEPARATE concept from energy**:
 
 - **Energy (budget):** What you have to spend (0.0-1.0, depletes during traversal, replenishes from sources)
-- **Arousal (activation level):** How effectively you spend it (0.0-1.0, amplifies/dampens propagation)
+- **Energy (activation level):** How effectively you spend it (0.0-1.0, amplifies/dampens propagation)
 
-**Two Arousal Scales:**
-1. **Global Arousal** - System-wide consciousness level (dormant 0.0-0.2, alert 0.3-0.7, overwhelmed 0.8-1.0)
-2. **Per-Entity Arousal** - Individual entity activation level (varies per entity, constrained by global)
+**Two Energy Scales:**
+1. **Global Energy** - System-wide consciousness level (dormant 0.0-0.2, alert 0.3-0.7, overwhelmed 0.8-1.0)
+2. **Per-Entity Energy** - Individual entity activation level (varies per entity, constrained by global)
 
-**How Global Arousal is Computed:**
+**How Global Energy is Computed:**
 
-Global arousal is **derived from branching ratio (σ)**, NOT entity arousal aggregation:
+Global energy is **derived from branching ratio (σ)**, NOT entity energy aggregation:
 
 ```python
 # Measured from propagation cascades
 sigma = len(nodes_activated_gen_n_plus_1) / len(nodes_activated_gen_n)
 
-# Mapped to global arousal
-global_arousal = map_sigma_to_arousal(sigma)
+# Mapped to global energy
+global_energy = map_sigma_to_energy(sigma)
 ```
 
 **Top-Down Constraint:**
-- Global constrains entities (global arousal → max entity arousal)
+- Global constrains entities (global energy → max entity energy)
 
 **Formula Integration:**
 ```python
-# Energy propagation with multi-scale arousal
-entity_multiplier = (entity.arousal + 1.0) / 2.0
-global_multiplier = (global_state.global_arousal + 1.0) / 2.0
+# Energy propagation with multi-scale energy
+entity_multiplier = (entity.energy + 1.0) / 2.0
+global_multiplier = (global_state.global_energy + 1.0) / 2.0
 
 propagated_energy = (
     base_energy
@@ -197,8 +197,8 @@ propagated_energy = (
 )
 
 # Traversal cost with multi-scale criticality
-global_criticality_factor = 1 / (1 + global_state.global_arousal)
-entity_criticality_factor = 1 / (1 + entity.arousal)
+global_criticality_factor = 1 / (1 + global_state.global_energy)
+entity_criticality_factor = 1 / (1 + entity.energy)
 
 cost = (
     base_cost
@@ -209,7 +209,7 @@ cost = (
 )
 ```
 
-**Result:** Energy (budget) + Weight (importance) + Arousal (activation multiplier) work together. All three needed for self-organized criticality (σ ≈ 1.0).
+**Result:** Energy (budget) + Weight (importance) + Energy (activation multiplier) work together. All three needed for self-organized criticality (σ ≈ 1.0).
 
 ### Energy Flow
 
@@ -232,7 +232,7 @@ node.entity_activations = {
 def calculate_traversal_cost(link, entity, node):
     base_cost = 0.1
 
-    # Weight reduces cost (not arousal)
+    # Weight reduces cost (not energy)
     weight_factor = (
         node.base_weight * 0.4 +
         node.reinforcement_weight * 0.6
@@ -395,16 +395,16 @@ if node.just_created:
 ```
 1. Cycle Begins
    ↓
-2. Calculate arousal from input (urgency, complexity)
-   arousal = 0.85
+2. Calculate energy from input (urgency, complexity)
+   energy = 0.85
    ↓
 3. Set activation threshold
-   threshold = 0.8 - (arousal * 0.5) = 0.375
+   threshold = 0.8 - (energy * 0.5) = 0.375
    ↓
 4. Inject energy into semantically-matched nodes
    matched_nodes = vector_search(input_embedding)
    for node in matched_nodes:
-       node.current_energy += similarity_score * arousal
+       node.current_energy += similarity_score * energy
    ↓
 5. Find nodes exceeding threshold
    active_nodes = [n for n in all_nodes if n.current_energy > threshold]
@@ -529,9 +529,9 @@ ENERGY_PARAMS = {
     "base_initial_energy": 0.5,
     "reinforcement_multiplier": 0.5,  # initial = base + (reinforcement * multiplier)
 
-    # Arousal effects
-    "arousal_threshold_factor": 0.5,  # threshold = 0.8 - (arousal * factor)
-    "arousal_injection_multiplier": 1.0,
+    # Energy effects
+    "energy_threshold_factor": 0.5,  # threshold = 0.8 - (energy * factor)
+    "energy_injection_multiplier": 1.0,
 }
 ```
 
@@ -546,10 +546,10 @@ LINK_COSTS = {
 }
 ```
 
-**Q2: Should energy transfer vary by link arousal?**
+**Q2: Should energy transfer vary by link energy?**
 ```python
-transfer = energy_spent * 0.5 * link.arousal_level
-# High arousal links transfer more energy?
+transfer = energy_spent * 0.5 * link.energy
+# High energy links transfer more energy?
 ```
 
 **Q3: Should cluster membership affect energy?**
@@ -564,9 +564,9 @@ else:
 
 ## Summary
 
-### Energy vs Arousal
+### Energy vs Energy
 
-| Property | Energy | Arousal |
+| Property | Energy | Energy |
 |----------|--------|---------|
 | **Scope** | Per-node | Per-cycle (global) |
 | **Nature** | Budget/currency | Contextual intensity |
@@ -592,6 +592,6 @@ Node has budget → Explores links (spends budget) → Transfers energy to neigh
 
 **This is physics-like consciousness.**
 
-Energy flows. Budgets deplete. Importance (reinforcement) determines capacity. Arousal modulates global sensitivity. Entities emerge from stable energy circulation patterns.
+Energy flows. Budgets deplete. Importance (reinforcement) determines capacity. Energy modulates global sensitivity. Entities emerge from stable energy circulation patterns.
 
 Not programmed behavior. Emergent dynamics.

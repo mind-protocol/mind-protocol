@@ -94,7 +94,7 @@ primary_cluster: str       # Cluster ID of primary entity
 ```python
 goal: str                   # Why this link exists
 mindstate: str             # State when forming link
-arousal_level: float       # 0.0-1.0
+energy: float       # 0.0-1.0
 confidence: float          # 0.0-1.0
 formation_trigger: str     # Enum as string
 created_by: str
@@ -365,7 +365,7 @@ def serialize_relation_for_falkordb(relation: BaseRelation) -> Dict[str, Any]:
     # Primitives
     properties['goal'] = relation.goal
     properties['mindstate'] = relation.mindstate
-    properties['arousal_level'] = relation.arousal_level
+    properties['energy'] = relation.energy
     properties['confidence'] = relation.confidence
     properties['formation_trigger'] = relation.formation_trigger.value
     properties['link_strength'] = relation.link_strength
@@ -432,7 +432,7 @@ def deserialize_relation_from_falkordb(properties: Dict[str, Any]) -> BaseRelati
     return BaseRelation(
         goal=properties['goal'],
         mindstate=properties['mindstate'],
-        arousal_level=properties['arousal_level'],
+        energy=properties['energy'],
         confidence=properties['confidence'],
         formation_trigger=formation_trigger,
         link_strength=properties.get('link_strength', 0.5),
@@ -645,7 +645,7 @@ def test_relation_valences_and_emotions():
     relation = BaseRelation(
         goal="Test connection",
         mindstate="Building",
-        arousal_level=0.8,
+        energy=0.8,
         confidence=0.9,
         link_strength=0.75,
         valid_at=datetime.now(),
@@ -752,7 +752,7 @@ def test_insert_relation_with_valences(graph):
     relation = BaseRelation(
         goal="Test connection",
         mindstate="Building",
-        arousal_level=0.8,
+        energy=0.8,
         confidence=0.9,
         link_strength=0.75,
         valid_at=datetime.now(),

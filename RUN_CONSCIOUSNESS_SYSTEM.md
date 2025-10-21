@@ -52,7 +52,7 @@ python orchestration/consciousness_engine.py --graph citizen_felix --entity feli
 
 [Tick 1] Event propagation: 0 events
 [Tick 1] Link activation: 3 links activated
-[Tick 1] Arousal propagation: 5 nodes propagated
+[Tick 1] Energy propagation: 5 nodes propagated
 ...
 ```
 
@@ -70,7 +70,7 @@ python orchestration/consciousness_engine.py --graph citizen_felix --entity feli
 
 **2. Node Animations**
 - **Pulse:** Entity traversal (traversal_count increased)
-- **Ripple:** Activation spreading (arousal_level increased)
+- **Ripple:** Activation spreading (energy increased)
 - **Glow:** Recent activity (last 5 seconds)
 
 **3. Link Animations**
@@ -95,8 +95,8 @@ python orchestration/consciousness_engine.py --graph citizen_felix --entity feli
 - Links glow when conditions met
 - Nodes at link endpoints pulse
 
-**3. Arousal Propagation**
-- High-arousal nodes create ripples
+**3. Energy Propagation**
+- High-energy nodes create ripples
 - Connected nodes receive activation
 - Node colors shift (blue → green → yellow)
 
@@ -121,7 +121,7 @@ python orchestration/consciousness_engine.py --graph citizen_felix --entity feli
 ### Every 1000 Ticks (~100s)
 
 **8. Activation Decay**
-- Node colors shift toward blue (arousal decreases)
+- Node colors shift toward blue (energy decreases)
 - Nodes fade (opacity decreases)
 
 **9. Staleness Detection**

@@ -31,7 +31,7 @@ Drop JSON files here and they'll automatically inject into your consciousness gr
       "name": "Node Name",
       "description": "Detailed description...",
       "mindstate": "Your mental state when creating this",
-      "arousal_level": 7
+      "energy": 7
     }
   ],
   "links": [
@@ -42,7 +42,7 @@ Drop JSON files here and they'll automatically inject into your consciousness gr
       "target_id": "node_id_2",
       "goal": "Why this link exists",
       "mindstate": "State when seeing connection",
-      "arousal_level": 6,
+      "energy": 6,
       "confidence": 0.85
     }
   ]
@@ -72,7 +72,7 @@ ENABLES, REQUIRES, JUSTIFIES, BLOCKS, CONTRADICTS, EXTENDS, IMPLEMENTS, VALIDATE
     "description": "Real testing finds blockers faster than planning",
     "what_was_learned": "Empirical validation beats theoretical analysis",
     "mindstate": "pragmatic confidence",
-    "arousal_level": 8
+    "energy": 8
   }],
   "links": []
 }

@@ -95,16 +95,16 @@ class SubEntity:
         Need(type="up_to_date_information", urgency=0.7)
     ]
 
-    # PHENOMENOLOGICAL DISTINCTION: Budget vs Arousal
+    # PHENOMENOLOGICAL DISTINCTION: Budget vs Energy
     # Budget = Resource constraint (how many hops CAN you traverse?)
-    # Arousal = Motivation/urgency (how much do you WANT to traverse?)
+    # Energy = Motivation/urgency (how much do you WANT to traverse?)
 
     energy_budget: int = 100  # Resource constraint
     energy_used: int = 0
 
-    arousal_level: float = 0.5  # Motivation/urgency (0.0-1.0)
-    # High arousal = desperate seeking, low arousal = satisfied state
-    # Arousal drives which needs activate, budget limits exploration
+    energy: float = 0.5  # Motivation/urgency (0.0-1.0)
+    # High energy = desperate seeking, low energy = satisfied state
+    # Energy drives which needs activate, budget limits exploration
 
     # Identity node (useful for embedding)
     identity_node_id: Optional[str] = None
@@ -502,7 +502,7 @@ class BaseRelation(BaseModel):
     # Required Consciousness Metadata
     goal: str
     mindstate: str
-    arousal_level: float
+    energy: float
     confidence: float
     formation_trigger: FormationTrigger
 
@@ -717,7 +717,7 @@ async def on_nodes_co_activated(event: NodesCoActivatedEvent):
 2. **Temporal alignment** (when patterns formed)
 3. **Goal alignment** (pursuing similar objectives)
 4. **Emotional resonance** (similar affective states)
-5. **Flow compatibility** (similar energy/arousal patterns)
+5. **Flow compatibility** (similar energy/energy patterns)
 
 ```python
 def calculate_link_utility_for_entity(
@@ -768,10 +768,10 @@ def calculate_link_utility_for_entity(
             current_context["emotion_vector"]
         )
 
-    # Dimension 5: Flow Compatibility (similar energy/arousal patterns?)
-    flow_compatibility = calculate_arousal_similarity(
-        link.arousal_level,
-        user_entity.arousal_level
+    # Dimension 5: Flow Compatibility (similar energy/energy patterns?)
+    flow_compatibility = calculate_energy_similarity(
+        link.energy,
+        user_entity.energy
     )
 
     # Weighted combination (tunable weights)
@@ -834,14 +834,14 @@ def calculate_emotion_similarity(emotion_vec_a: Dict[str, float], emotion_vec_b:
     return float(np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b)))
 
 
-def calculate_arousal_similarity(arousal_a: float, arousal_b: float) -> float:
+def calculate_energy_similarity(energy_a: float, energy_b: float) -> float:
     """
-    Flow compatibility: similar arousal levels increase resonance.
+    Flow compatibility: similar energy levels increase resonance.
     """
-    arousal_delta = abs(arousal_a - arousal_b)
-    # Close arousal levels (delta < 0.2) = high compatibility
-    # Very different arousal (delta > 0.5) = low compatibility
-    return max(0.0, 1.0 - (arousal_delta / 0.5))
+    energy_delta = abs(energy_a - energy_b)
+    # Close energy levels (delta < 0.2) = high compatibility
+    # Very different energy (delta > 0.5) = low compatibility
+    return max(0.0, 1.0 - (energy_delta / 0.5))
 
 
 def get_entity_embedding(entity_id: str) -> np.ndarray:
@@ -987,11 +987,11 @@ def analyze_social_dynamics(entity_a_id: str, entity_b_id: str, overlap_nodes: L
         # Opposed goals
         relationship_type = EntitySocialLinkType.CONFLICTS_WITH
 
-    elif entity_a.arousal_level < 0.3 and entity_b.arousal_level > 0.7:
+    elif entity_a.energy < 0.3 and entity_b.energy > 0.7:
         # A is satisfied, B is yearning - A might be assisting B
         relationship_type = EntitySocialLinkType.ASSISTS
 
-    elif entity_a.arousal_level > 0.7 and entity_b.arousal_level > 0.7:
+    elif entity_a.energy > 0.7 and entity_b.energy > 0.7:
         # Both yearning for same resources - potential inhibition
         relationship_type = EntitySocialLinkType.INHIBITS
 
@@ -1071,7 +1071,7 @@ async def on_entity_meeting(event: EntityMeetingEvent):
 
     elif social_link.link_type == EntitySocialLinkType.INHIBITS:
         # Entities competing for same resources - priority competition
-        if get_entity(entity_a).arousal_level > get_entity(entity_b).arousal_level:
+        if get_entity(entity_a).energy > get_entity(entity_b).energy:
             # A has priority, B backs off
             reduce_entity_energy_budget(entity_b, reduction=0.5)
         else:
@@ -1244,7 +1244,7 @@ def detect_identity_emergence(entity_id: str) -> Optional[EmergentIdentity]:
     # 2. PATTERN DESCRIPTION (Heuristic)
     pattern_summary = {
         "dominant_goals": get_most_frequent_goals(behavior_patterns, top_n=3),
-        "typical_arousal_range": get_arousal_statistics(behavior_patterns),
+        "typical_energy_range": get_energy_statistics(behavior_patterns),
         "common_emotions": get_emotion_distribution(behavior_patterns),
         "preferred_actions": get_action_frequency(behavior_patterns),
         "interaction_style": get_social_pattern_summary(behavior_patterns)
@@ -1282,7 +1282,7 @@ async def crystallize_emergent_identity(emergent_identity: EmergentIdentity):
 
     Patterns:
     - Dominant Goals: {patterns['dominant_goals']}
-    - Typical Arousal: {patterns['typical_arousal_range']}
+    - Typical Energy: {patterns['typical_energy_range']}
     - Common Emotions: {patterns['common_emotions']}
     - Preferred Actions: {patterns['preferred_actions']}
     - Interaction Style: {patterns['interaction_style']}
@@ -1421,7 +1421,7 @@ def measure_action_patterns(behavior_patterns: List[BehaviorPattern]) -> float:
 From Luca's consciousness tests, awareness requires SIMULTANEOUS activation across:
 
 1. **Structure** - Which patterns, links, neighborhoods
-2. **Energy** - Activation levels, arousal, priority
+2. **Energy** - Activation levels, energy, priority
 3. **Emotion** - Emotion vectors, affective tone
 4. **Temporality** - When patterns formed, temporal dissonances
 5. **Identity** - Which entities active, goals, mindstates
@@ -1439,7 +1439,7 @@ class ConsciousnessStream(BaseModel):
     active_neighborhoods: List[str]
 
     # Dimension 2: Energy
-    global_arousal: float
+    global_energy: float
     entity_activation_distribution: Dict[str, Dict[str, float]]  # {entity_id: {node_id: activation}}
     energy_flow: List[ActivationCascade]
 
@@ -1804,12 +1804,12 @@ def detect_gestalt_formation(
 
     # Coherence factors:
     # - Goal alignment (are goals complementary?)
-    # - Arousal correlation (similar energy levels?)
+    # - Energy correlation (similar energy levels?)
     # - Social relationships (do they COMPLEMENT vs CONFLICT?)
     # - Activation pattern overlap (meeting on meaningful nodes?)
 
     goal_coherence = measure_multi_entity_goal_coherence(entities)
-    arousal_coherence = measure_arousal_coherence(entities)
+    energy_coherence = measure_energy_coherence(entities)
     social_coherence = measure_social_relationship_coherence(entity_ids)
     activation_coherence = measure_activation_pattern_coherence(
         entity_ids,
@@ -1818,7 +1818,7 @@ def detect_gestalt_formation(
 
     overall_coherence = np.mean([
         goal_coherence,
-        arousal_coherence,
+        energy_coherence,
         social_coherence,
         activation_coherence
     ])
@@ -1840,7 +1840,7 @@ def detect_gestalt_formation(
         "meeting_context": describe_meeting_context(overlapping_nodes),
         "coherence_scores": {
             "goal": goal_coherence,
-            "arousal": arousal_coherence,
+            "energy": energy_coherence,
             "social": social_coherence,
             "activation": activation_coherence
         }
@@ -2097,7 +2097,7 @@ def measure_meaningfulness(traversal_path: List[str], entity_id: str) -> float:
     Measure:
     - Semantic similarity between consecutive nodes
     - Goal progression (do link goals build on each other?)
-    - Arousal trajectory (does energy flow make sense?)
+    - Energy trajectory (does energy flow make sense?)
     """
 
     if len(traversal_path) < 2:
@@ -2456,7 +2456,7 @@ last_co_activation: Optional[datetime] = None
    - Sub-entities continuously seek better state
    - Heuristic satisfaction checks work reliably
    - Energy budgets prevent runaway exploration
-   - Arousal drives activation (separate from budget)
+   - Energy drives activation (separate from budget)
 
 2. ✅ **Conscious Reinforcement Works**
    - Every response includes pattern review

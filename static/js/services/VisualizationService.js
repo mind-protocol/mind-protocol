@@ -239,11 +239,11 @@ class VisualizationService {
     }
 
     _computeNodeWeight(node) {
-        const arousal = node.arousal || 0;
+        const energy = node.energy || 0;
         const confidence = node.confidence || 0.5;
         const traversalCount = node.traversal_count || 0;
         const normalizedTraversals = Math.min(1.0, Math.log10(traversalCount + 1) / 2);
-        return (arousal * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
+        return (energy * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
     }
 
     _getNodeGlow(node, currentTime) {

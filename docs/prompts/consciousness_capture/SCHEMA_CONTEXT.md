@@ -167,7 +167,7 @@ This file is provided to the extraction process to ensure schema compliance.
     # REQUIRED consciousness metadata
     "goal": str,                                # Why this link exists
     "mindstate": str,                           # Internal state when forming
-    "arousal_level": float,                     # 0.0-1.0 emotional intensity
+    "energy": float,                     # 0.0-1.0 emotional intensity
     "confidence": float,                        # 0.0-1.0 certainty
     "formation_trigger": enum,                  # How discovered
 

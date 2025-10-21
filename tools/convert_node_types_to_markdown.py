@@ -10,7 +10,7 @@ Usage:
 NODE_TYPES = {
     "N1_Personal": {
         "description": "Individual subjective experience - exists in citizen graphs (e.g., citizen_luca)",
-        "design_philosophy": "Models the phenomenological texture of lived experience - memories, wounds, coping patterns. High arousal, high emotion_vector usage.",
+        "design_philosophy": "Models the phenomenological texture of lived experience - memories, wounds, coping patterns. High energy, high emotion_vector usage.",
         "types": [
             {
                 "name": "Memory",
@@ -64,7 +64,7 @@ NODE_TYPES = {
                 "name": "Wound",
                 "purpose": "Personal scar or trauma",
                 "required_attrs": ["what_happened", "emotional_impact (string)"],
-                "mechanism": "High-arousal suppression node"
+                "mechanism": "High-energy suppression node"
             },
             {
                 "name": "Coping_Mechanism",
@@ -83,7 +83,7 @@ NODE_TYPES = {
 
     "N2_Organizational": {
         "description": "Collective intelligence and coordination - exists in organizational graphs (e.g., org_mind_protocol)",
-        "design_philosophy": "Models team cognition - decisions, coordination, collective learning. Medium arousal, emphasis on validation_status tracking.",
+        "design_philosophy": "Models team cognition - decisions, coordination, collective learning. Medium energy, emphasis on validation_status tracking.",
         "types": [
             {
                 "name": "Human",
@@ -345,7 +345,7 @@ def generate_markdown():
     md.append("- `entity_activations` (Dict[str, EntityActivationState]) - Per-entity energy budgets")
     md.append("  - `energy` (float 0.0-1.0) - This entity's activation budget on this node")
     md.append("  - `last_activated` (datetime) - When this entity last activated")
-    md.append("  - **Note:** Energy IS everything (no separate arousal). Weight is the multiplier.")
+    md.append("  - **Note:** Energy IS everything (no separate energy). Weight is the multiplier.")
     md.append("")
     md.append("**Static Properties:**")
     md.append("- `base_weight` (float 0.0-1.0) - Base importance from creation")
@@ -500,9 +500,9 @@ def generate_markdown():
     md.append("")
     md.append("**Key Principles:**")
     md.append("- All nodes inherit universal base attributes (bitemporal, multi-entity, consciousness metadata)")
-    md.append("- Energy-only model: no separate arousal, weight is the multiplier")
-    md.append("- N1: High arousal, phenomenological texture")
-    md.append("- N2: Medium arousal, validation tracking")
+    md.append("- Energy-only model: no separate energy, weight is the multiplier")
+    md.append("- N1: High energy, phenomenological texture")
+    md.append("- N2: Medium energy, validation tracking")
     md.append("- N3: Evidence-driven, all claims justified by concrete sources")
     md.append("- Multi-entity: Same node can have different energy/clusters per entity")
     md.append("- Dynamic citizen prompts: Identity emerges from active clusters")

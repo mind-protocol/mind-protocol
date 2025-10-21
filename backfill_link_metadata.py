@@ -35,29 +35,29 @@ def backfill_felix_links():
             goal = "Shared alignment on technical direction"
             valence = 0.8
             emotions = '{"confidence": 0.8, "focus": 0.7}'
-            arousal = 0.6
+            energy = 0.6
         elif link_type == "COLLABORATIVE_BUILD":
             goal = "Building together towards shared outcome"
             valence = 0.85
             emotions = '{"momentum": 0.9, "satisfaction": 0.8}'
-            arousal = 0.7
+            energy = 0.7
         elif link_type == "REQUIRES":
             goal = "Dependency relationship for implementation"
             valence = 0.5
             emotions = '{"focus": 0.7, "pressure": 0.6}'
-            arousal = 0.6
+            energy = 0.6
         else:
             # Default consciousness metadata
             goal = f"Connection of type {link_type}"
             valence = 0.6
             emotions = '{"neutral": 0.5}'
-            arousal = 0.5
+            energy = 0.5
 
         # Build update query - use JSON strings for nested dicts
         query = f"""
         MATCH ()-[r]->() WHERE id(r) = {link_id}
         SET r.goal = '{goal}',
-            r.arousal = {arousal},
+            r.energy = {energy},
             r.sub_entity_valences = '{{"felix_builder": {valence}}}',
             r.sub_entity_emotion_vectors = '{{"felix_builder": {emotions}}}'
         RETURN id(r)
@@ -77,14 +77,14 @@ def backfill_felix_links():
     print("\nVerifying metadata...")
     result = graph.query("""
         MATCH ()-[r]->()
-        RETURN type(r), r.link_strength, r.arousal, r.goal, r.sub_entity_valences
+        RETURN type(r), r.link_strength, r.energy, r.goal, r.sub_entity_valences
         LIMIT 5
     """)
 
     print("\nSample links after backfill:")
     for record in result.result_set:
         print(f"  {record[0]}")
-        print(f"    strength={record[1]}, arousal={record[2]}")
+        print(f"    strength={record[1]}, energy={record[2]}")
         print(f"    goal={record[3]}")
         print(f"    valences={record[4]}")
 

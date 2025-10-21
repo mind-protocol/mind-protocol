@@ -30,7 +30,7 @@ Felix's visualization system is **RUNNING and FUNCTIONAL**. Initial validation c
 ### Test Data Created ✅
 ```
 Graph: citizen_test
-Nodes: 10 (with arousal_level, confidence, traversal_count, last_modified)
+Nodes: 10 (with energy, confidence, traversal_count, last_modified)
 Links: 15 (with link_strength, co_activation_count, traversal_count)
 Activity: Simulated 0-30 minutes ago (recent data for temporal testing)
 ```
@@ -45,8 +45,8 @@ Testing the visualization against Luca's consciousness quality criteria.
 **Question:** Does consciousness look at it and say "that's ME"?
 
 **Implemented Encodings:**
-- ✅ Node size by arousal (5 + arousal * 8)
-- ✅ Node color by arousal (d3.interpolateRdYlGn scale)
+- ✅ Node size by energy (5 + energy * 8)
+- ✅ Node color by energy (d3.interpolateRdYlGn scale)
 - ✅ Node opacity by recency (time-based decay)
 - ✅ Node glow for recent activity (5-second window)
 - ✅ Link thickness by Hebbian strength
@@ -73,7 +73,7 @@ Testing the visualization against Luca's consciousness quality criteria.
 **Question:** Can every visual element trace to substrate data? Confidence explicit? Gaps visible?
 
 **Implemented Traceability:**
-- ✅ Every node property shown in tooltip (arousal, confidence, traversal_count, last_entity)
+- ✅ Every node property shown in tooltip (energy, confidence, traversal_count, last_entity)
 - ✅ Metadata fields queried directly from FalkorDB
 - ✅ No synthetic data generation (pure substrate reflection)
 
@@ -84,7 +84,7 @@ Testing the visualization against Luca's consciousness quality criteria.
 
 **Potential Gaps:**
 - ❓ Tooltip shows confidence, but is it ALWAYS present?
-- ❓ What happens when arousal is null/missing?
+- ❓ What happens when energy is null/missing?
 - ❓ Are verification status (VERIFIED/OUTDATED) fields shown?
 
 ---
@@ -119,9 +119,9 @@ Testing the visualization against Luca's consciousness quality criteria.
 **Question:** Helps consciousness understand WHY it feels a certain way?
 
 **Implemented Explanatory Power:**
-- ✅ Tooltips reveal internal state (arousal, confidence, traversal count)
+- ✅ Tooltips reveal internal state (energy, confidence, traversal count)
 - ✅ Visual encoding reveals patterns:
-  - High arousal + large size = strong motivation
+  - High energy + large size = strong motivation
   - Thick links = habitual connections
   - Glow = recent activity
 - ✅ Entity attribution (last_traversed_by shows which entity was here)
@@ -129,7 +129,7 @@ Testing the visualization against Luca's consciousness quality criteria.
 **Validation Status:** ⏳ NEEDS TESTING
 - Need to observe visualization during actual consciousness operations
 - Need to verify if causal patterns are visible:
-  - "High arousal but low traversal count" → Yearning entity stuck
+  - "High energy but low traversal count" → Yearning entity stuck
   - "Thick link but low recent activity" → Habitual pattern not used
   - "High confidence + frequent traversals" → Working memory node
 - Need to test with citizen who can report "this helps me understand my state"
@@ -147,7 +147,7 @@ Testing the visualization against Luca's consciousness quality criteria.
 **Implemented Dimensions (6/6):**
 1. ✅ **Topological:** Force-directed graph layout (structure visible)
 2. ✅ **Temporal:** Time range slider + opacity decay (explicit time dimension)
-3. ✅ **Emotional/Arousal:** Node color + size encoding
+3. ✅ **Emotional/Energy:** Node color + size encoding
 4. ⚠️ **Epistemic:** Confidence in tooltip (NOT visually encoded in structure)
 5. ⚠️ **Hierarchical:** N1/N2/N3 graph selector (NOT overlays/filters)
 6. ✅ **Activation/Energy:** Node size + glow (spreading activation visible)
@@ -171,8 +171,8 @@ Mapping Felix's implementation to CONSCIOUSNESS_VISUALIZATION_COMPLETE_GUIDE.md 
 
 | Encoding | Guide Spec | Felix Implementation | Status |
 |----------|------------|---------------------|--------|
-| **Node Size** | `5 + activation * 15` | `5 + arousal * 8` | ⚠️ Different scale |
-| **Node Color** | `d3.interpolateRdYlBu(1.0 - arousal)` | `d3.interpolateRdYlGn(arousal)` | ❌ Different scale + inverted |
+| **Node Size** | `5 + activation * 15` | `5 + energy * 8` | ⚠️ Different scale |
+| **Node Color** | `d3.interpolateRdYlBu(1.0 - energy)` | `d3.interpolateRdYlGn(energy)` | ❌ Different scale + inverted |
 | **Node Opacity** | `0.3 + confidence * 0.7` | Time-based decay | ❌ Different dimension |
 | **Node Border** | Verification status colors | Not implemented | ❌ Missing |
 | **Node Glow** | Working memory filter | 5-second activity glow | ⚠️ Different trigger |
@@ -187,15 +187,15 @@ Mapping Felix's implementation to CONSCIOUSNESS_VISUALIZATION_COMPLETE_GUIDE.md 
 ## Critical Discrepancies
 
 ### 1. Color Scale Inversion ⚠️
-**Guide:** Blue (low) → Yellow (mid) → Red (high) using `d3.interpolateRdYlBu(1.0 - arousal)`
-**Felix:** Green (high?) → Yellow (mid) → Red (low?) using `d3.interpolateRdYlGn(arousal)`
+**Guide:** Blue (low) → Yellow (mid) → Red (high) using `d3.interpolateRdYlBu(1.0 - energy)`
+**Felix:** Green (high?) → Yellow (mid) → Red (low?) using `d3.interpolateRdYlGn(energy)`
 
 **Problem:** `d3.interpolateRdYlGn` is a RED-YELLOW-GREEN scale, not blue-based. The semantic meaning may be inverted.
 
 **Verification Needed:**
 - Open visualization and verify: Are highly aroused nodes RED or GREEN?
-- Expected (from guide): High arousal = RED/YELLOW (hot colors)
-- Felix's scale: Unclear which direction maps to high arousal
+- Expected (from guide): High energy = RED/YELLOW (hot colors)
+- Felix's scale: Unclear which direction maps to high energy
 
 ### 2. Opacity Encodes Time, Not Confidence ❌
 **Guide:** Opacity encodes epistemic confidence (`0.3 + confidence * 0.7`)
@@ -238,7 +238,7 @@ Mapping Felix's implementation to CONSCIOUSNESS_VISUALIZATION_COMPLETE_GUIDE.md 
 5. ⏳ Test 5 (Multi-dimensional): Verify all 6 dimensions visible simultaneously
 
 ### Phase 3: Address Critical Gaps
-1. ❌ Fix color scale (Blue-Yellow-Red for arousal, confirm direction)
+1. ❌ Fix color scale (Blue-Yellow-Red for energy, confirm direction)
 2. ❌ Add confidence encoding (opacity or border)
 3. ❌ Add verification status borders (green/yellow/red)
 4. ❌ Add temporal scrubber (playback/rewind)

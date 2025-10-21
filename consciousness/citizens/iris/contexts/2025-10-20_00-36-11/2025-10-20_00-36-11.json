@@ -1,0 +1,10 @@
+{
+  "context_id": "2025-10-20_00-36-11",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-19T22:36:11.557085+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-19T22:36:11.557085+00:00",
+      "content": 

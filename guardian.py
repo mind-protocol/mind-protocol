@@ -12,6 +12,18 @@ Usage:
 Author: Ada "Bridgekeeper"
 Date: 2025-10-19
 Pattern: Self-healing infrastructure - makes the system bulletproof
+
+FIXED VERSION - Victor "The Resurrector" 2025-10-20
+Fixes:
+  - Removed capture_output=True to prevent pipe buffer deadlock
+  - Removed premature break after stderr logging to enable retry logic
+
+RESILIENCE UPDATE - Victor "The Resurrector" 2025-10-21
+Circuit breaker with degraded mode:
+  - Never gives up (removed 10-crash limit)
+  - Switches to --core-only after 3 consecutive failures
+  - Tracks failure timestamps for pattern detection
+  - Logs chronic failure warnings
 """
 
 import subprocess
@@ -19,7 +31,10 @@ import sys
 import time
 import logging
 import os
+import ctypes
 from pathlib import Path
+from datetime import datetime, timedelta
+from collections import deque
 
 # Setup logging to both console and file
 MIND_PROTOCOL_ROOT = Path(__file__).parent
@@ -44,6 +59,46 @@ logger.addHandler(console_handler)
 
 LAUNCHER_SCRIPT = MIND_PROTOCOL_ROOT / "start_mind_protocol.py"
 TASK_NAME = "MindProtocolGuardian"
+
+
+def is_admin():
+    """Check if running with administrator privileges."""
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+
+def run_as_admin():
+    """Relaunch this script with administrator privileges using UAC."""
+    try:
+        if sys.platform != 'win32':
+            logger.error("Admin elevation only supported on Windows")
+            return False
+
+        script = os.path.abspath(sys.argv[0])
+        params = ' '.join([script] + sys.argv[1:])
+
+        # Use ShellExecuteEx with runas verb to trigger UAC
+        ret = ctypes.windll.shell32.ShellExecuteW(
+            None,           # parent window
+            "runas",        # operation (triggers UAC)
+            sys.executable, # executable (python.exe)
+            params,         # parameters (script path + args)
+            None,           # working directory
+            1               # show command (SW_NORMAL)
+        )
+
+        if ret > 32:  # Success
+            logger.info("✅ Relaunched with administrator privileges")
+            return True
+        else:
+            logger.error(f"❌ Failed to elevate privileges (error code: {ret})")
+            return False
+
+    except Exception as e:
+        logger.error(f"❌ Elevation error: {e}")
+        return False
 
 
 def is_installed_as_task():
@@ -132,8 +187,52 @@ def uninstall_scheduled_task():
         logger.error(f"Uninstall error: {e}")
 
 
+def check_launcher_already_running():
+    """Check if launcher is already running by reading lock file."""
+    try:
+        lock = MIND_PROTOCOL_ROOT / ".launcher.lock"
+        if not lock.exists():
+            return False
+
+        # Read PID from lock file
+        pid = int(lock.read_text().strip())
+
+        # Check if process with that PID exists
+        result = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}"],
+            capture_output=True,
+            text=True,
+            timeout=2
+        )
+
+        # If PID appears in output, process is alive
+        return str(pid) in result.stdout
+
+    except Exception:
+        return False
+
+
 def main():
-    """Forever loop that restarts launcher on crash."""
+    """Forever loop that monitors launcher and restarts on crash with circuit breaker."""
+
+    # Check if running as administrator
+    if not is_admin():
+        logger.warning("⚠️  Guardian not running as administrator")
+        logger.warning("⚠️  Will not be able to kill protected processes")
+        logger.info("Attempting to elevate privileges...")
+
+        if run_as_admin():
+            # Successfully relaunched with admin rights, exit this instance
+            logger.info("Exiting non-admin instance...")
+            return 0
+        else:
+            logger.error("❌ Failed to obtain administrator privileges")
+            logger.error("Guardian will run with limited capabilities")
+            logger.error("May not be able to kill all blocking processes")
+            input("Press Enter to continue anyway (not recommended)...")
+
+    else:
+        logger.info("✅ Running with administrator privileges")
 
     # Check if we need to auto-install
     if not is_installed_as_task():
@@ -150,63 +249,126 @@ def main():
     logger.info(f"📋 Log file: {LOG_FILE}")
     logger.info("   Monitor with: tail -f guardian.log")
     logger.info("")
+    logger.info("Restart Policy:")
+    logger.info("  - Exponential backoff (1s, 2s, 4s, 8s, 16s, 32s max)")
+    logger.info("  - Never gives up (will retry forever)")
+    logger.info("  - Chronic failure logging after 10 failures in 10 min")
+    logger.info("")
     logger.info("Press Ctrl+C to stop guardian (will restart on next boot)")
     logger.info("To permanently uninstall: python guardian.py --uninstall")
     logger.info("=" * 70)
 
     restart_count = 0
+    failure_timestamps = deque(maxlen=20)  # Track last 20 failures
+    launcher_process = None
+    launcher_log_file = None  # Track log file handle
+    last_chronic_warning = None
 
-    while True:
-        # Defensive: clean up stale launcher lock if present
-        try:
-            lock = MIND_PROTOCOL_ROOT / ".launcher.lock"
-            if lock.exists():
-                lock.unlink()
-                logger.info("Removed stale .launcher.lock before launch")
-        except Exception as e:
-            logger.warning(f"Could not remove .launcher.lock: {e}")
+    try:
+        while True:
+            # Check if launcher is already running from another guardian
+            if check_launcher_already_running():
+                logger.info("Launcher already running (detected via lock file)")
+                logger.info("Guardian entering monitor-only mode (will restart if crashes)")
 
-        if restart_count == 0:
-            logger.info("Starting Mind Protocol launcher...")
-        else:
-            logger.info(f"Restarting launcher (crash #{restart_count})...")
+                # Monitor existing launcher without starting new one
+                while check_launcher_already_running():
+                    time.sleep(5)  # Check every 5 seconds
 
-        try:
-            # Start launcher with pinned WS_PORT for uvicorn
-            env = os.environ.copy()
-            env.setdefault("WS_PORT", "8000")  # Pin WS server port
-            env.setdefault("DASHBOARD_PORT", "3000")  # Pin dashboard port
-
-            process = subprocess.run(
-                [sys.executable, str(LAUNCHER_SCRIPT)],
-                check=False,  # Don't raise on non-zero exit
-                env=env
-            )
-
-            exit_code = process.returncode
-
-            if exit_code == 0:
-                logger.info("Launcher exited cleanly (exit code 0)")
-                logger.info("Guardian stopping (clean shutdown)")
-                break  # Clean exit, don't restart
-            else:
-                logger.error(f"Launcher crashed (exit code {exit_code})")
+                logger.warning("Launcher died - will restart it")
                 restart_count += 1
+                failure_timestamps.append(datetime.now())
 
-                # Exponential backoff to prevent rapid restart loops
-                wait_time = min(30, 2 ** min(restart_count, 5))
-                logger.warning(f"Waiting {wait_time}s before restart...")
-                time.sleep(wait_time)
+            else:
+                # No launcher running - start it
+                if restart_count == 0:
+                    logger.info("Starting Mind Protocol launcher...")
+                else:
+                    logger.info(f"Restarting launcher (crash #{restart_count})...")
 
-        except KeyboardInterrupt:
-            logger.info("")
-            logger.info("Guardian shutdown requested (Ctrl+C)")
-            logger.info("Note: Guardian will restart on next system boot")
-            break
+                # Start launcher with Popen (non-blocking)
+                env = os.environ.copy()
+                env.setdefault("WS_PORT", "8000")  # Pin WS server port
+                env.setdefault("DASHBOARD_PORT", "3000")  # Pin dashboard port
 
-        except Exception as e:
-            logger.error(f"Guardian error: {e}")
-            time.sleep(10)
+                # Open log file for launcher output
+                launcher_log_path = MIND_PROTOCOL_ROOT / "launcher.log"
+                launcher_log_file = open(launcher_log_path, 'a', encoding='utf-8', buffering=1)  # Line buffered
+
+                launcher_process = subprocess.Popen(
+                    [sys.executable, str(LAUNCHER_SCRIPT)],
+                    env=env,
+                    stdout=launcher_log_file,  # Log to file for debugging
+                    stderr=subprocess.STDOUT  # Merge stderr into stdout
+                )
+
+                logger.info(f"Launcher started (PID {launcher_process.pid})")
+
+                # Monitor launcher process
+                while True:
+                    time.sleep(5)  # Poll every 5 seconds
+
+                    exit_code = launcher_process.poll()
+
+                    if exit_code is None:
+                        # Still running
+                        continue
+                    elif exit_code == 0:
+                        logger.info("Launcher exited cleanly (exit code 0)")
+                        logger.info("Guardian stopping (clean shutdown)")
+                        return 0
+                    else:
+                        # Crashed
+                        logger.error(f"Launcher crashed (exit code {exit_code})")
+                        restart_count += 1
+                        failure_timestamps.append(datetime.now())
+
+                        # Check for chronic failures (>10 failures in last 10 minutes)
+                        now = datetime.now()
+                        recent_failures = [t for t in failure_timestamps if now - t < timedelta(minutes=10)]
+
+                        if len(recent_failures) >= 10:
+                            # Chronic failure detected
+                            if last_chronic_warning is None or now - last_chronic_warning > timedelta(minutes=30):
+                                logger.error("🚨 CHRONIC FAILURE DETECTED")
+                                logger.error(f"🚨 {len(recent_failures)} failures in last 10 minutes")
+                                logger.error("🚨 Check: FalkorDB health, adapter.load_graph() hang, port conflicts")
+                                logger.error("🚨 Guardian will keep trying with exponential backoff...")
+                                last_chronic_warning = now
+
+                        # Exponential backoff
+                        wait_time = min(30, 2 ** min(restart_count, 5))
+                        logger.warning(f"Waiting {wait_time}s before restart...")
+
+                        # Close log file before restart
+                        if launcher_log_file and not launcher_log_file.closed:
+                            launcher_log_file.close()
+                            launcher_log_file = None
+
+                        time.sleep(wait_time)
+                        break  # Exit monitor loop to restart
+
+    except KeyboardInterrupt:
+        logger.info("")
+        logger.info("Guardian shutdown requested (Ctrl+C)")
+        if launcher_process and launcher_process.poll() is None:
+            logger.info("Terminating launcher...")
+            launcher_process.terminate()
+            time.sleep(2)
+            if launcher_process.poll() is None:
+                logger.warning("Launcher didn't terminate, killing it...")
+                launcher_process.kill()
+
+        # Close log file on shutdown
+        if launcher_log_file and not launcher_log_file.closed:
+            launcher_log_file.close()
+
+        logger.info("Note: Guardian will restart on next system boot")
+        return 0
+
+    except Exception as e:
+        logger.error(f"Guardian error: {e}")
+        return 1
 
     logger.info("Guardian exiting")
     return 0

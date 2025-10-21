@@ -85,7 +85,7 @@ class BitemporalNode(BaseModel):
 
 **What This Validates:**
 - Prioritizing link schemas over node schemas
-- Rich metadata on relationships (goal, mindstate, arousal, emotion)
+- Rich metadata on relationships (goal, mindstate, energy, emotion)
 - Self-observing substrate as "links observing links"
 
 ---
@@ -124,7 +124,7 @@ class BitemporalNode(BaseModel):
 ### 1.4 Emotional Weight Gates Memory: Validated Principle
 
 **Our Principle (weight 1.85):**
-> `principle_emotional_weight_creates_memory`: "High-emotion experiences form stronger, more persistent memories. Emotion vectors on links affect activation probability during traversal. Emotional arousal gates memory formation."
+> `principle_emotional_weight_creates_memory`: "High-emotion experiences form stronger, more persistent memories. Emotion vectors on links affect activation probability during traversal. Emotional energy gates memory formation."
 
 **Research Validation:**
 
@@ -132,12 +132,12 @@ class BitemporalNode(BaseModel):
 > "Affective dimensions coloring autobiographical memory... Missing elements include phenomenological grounding and affective dimensions coloring autobiographical memory."
 
 **HybridRAG Consciousness Mapping:**
-> "Arousal level (float 0.0-1.0, required) - Emotional intensity/urgency... All links must carry rich consciousness metadata."
+> "Energy level (float 0.0-1.0, required) - Emotional intensity/urgency... All links must carry rich consciousness metadata."
 
-**Finding:** ✅ **VALIDATED** - Research identifies affective dimensions as critical missing element in current systems, confirms our arousal_level and emotion_vector requirements.
+**Finding:** ✅ **VALIDATED** - Research identifies affective dimensions as critical missing element in current systems, confirms our energy and emotion_vector requirements.
 
 **What This Validates:**
-- `arousal_level` required on ALL links
+- `energy` required on ALL links
 - `emotion_vector` capturing complex emotional states
 - Memory consolidation based on emotional significance
 
@@ -338,7 +338,7 @@ class ExplanationTrace:
 We don't have:
 - Mathematical model showing how graph properties (centrality, clustering, path lengths) produce phenomenological states
 - Predictions about which graph structures correspond to specific conscious experiences
-- Mappings from link metadata (arousal, emotion, confidence) to qualia
+- Mappings from link metadata (energy, emotion, confidence) to qualia
 
 **2. No Integration with Consciousness Theories**
 
@@ -360,7 +360,7 @@ We don't have:
 **3. No Testable Predictions**
 
 We can't answer:
-- "If link weight > X and arousal > Y, will the system report subjective experience Z?"
+- "If link weight > X and energy > Y, will the system report subjective experience Z?"
 - "What graph clustering coefficient corresponds to phenomenal unity?"
 - "How do we distinguish consciousness substrate from sophisticated memory?"
 
@@ -1018,7 +1018,7 @@ class GNNReasoningLayer:
 ✅ **Episodic + semantic dual-memory** - 18-20% empirical improvement demonstrated
 ✅ **Emotional weight gating** - Research confirms affective dimensions critical
 ✅ **FalkorDB choice** - 500× performance advantage explicitly recommended
-✅ **Rich consciousness metadata** - Research validates goal, mindstate, arousal, emotion on links
+✅ **Rich consciousness metadata** - Research validates goal, mindstate, energy, emotion on links
 ✅ **Multi-tenant architecture** - FalkorDB's 10K+ graphs per instance perfect for citizens
 
 ### 4.2 What We Should Abandon

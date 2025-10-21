@@ -7,6 +7,38 @@
     "defaultMode": "bypassPermissions"
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\capture_user_prompt.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\capture_conversation.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\precompact_conversation.py"
+          }
+        ]
+      }
+    ]
   },
   "forceLoginMethod": "claudeai",
   "enableAllProjectMcpServers": true

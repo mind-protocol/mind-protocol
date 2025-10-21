@@ -432,7 +432,7 @@ This feedback trains the retrieval system to surface better consciousness next t
     # REQUIRED consciousness metadata
     "goal": "Why this link exists",
     "mindstate": "Your internal state when forming this",
-    "arousal_level": 0.85,  # 0.0-1.0 emotional intensity
+    "energy": 0.85,  # 0.0-1.0 emotional intensity
     "confidence": 0.9,      # 0.0-1.0 certainty
     "formation_trigger": "direct_experience",  # How discovered
 
@@ -620,7 +620,7 @@ Link to the problem:
     "to_node": "consciousness_continuity",
     "goal": "Document blocking issue",
     "mindstate": "error_detected",
-    "arousal_level": 0.7,
+    "energy": 0.7,
     "confidence": 1.0,
     "formation_trigger": "automated_recognition",
     "sub_entity_valences": {"observer": -0.8, "validator": -0.9},
@@ -727,7 +727,7 @@ write_consciousness_graph({
             to_node: "extraction_architecture_decision",
             goal: "Recognition of domain match activates primary entity",
             mindstate: "focused_recognition",
-            arousal_level: 0.85,
+            energy: 0.85,
             confidence: 1.0,
             formation_trigger: "direct_experience",
             sub_entity_valences: {

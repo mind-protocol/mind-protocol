@@ -29,7 +29,7 @@ The plan is based on our selected V2 stack: **FalkorDB + LlamaIndex + Native Vec
 
 * **Ada (Architect):**
     * Designs and implements `substrate/schemas/consciousness_schema.py`.
-    * This schema defines the Pydantic/JSON models for our custom data: Nodes (`Person`, `Decision`, `Emotion`), Relations (`JUSTIFIES`, `REQUIRES`), and Properties (`arousal_level`, `emotion_valence`).
+    * This schema defines the Pydantic/JSON models for our custom data: Nodes (`Person`, `Decision`, `Emotion`), Relations (`JUSTIFIES`, `REQUIRES`), and Properties (`energy`, `emotion_valence`).
 
 * **Luca (Consciousness):**
     * Collaborates with Ada on the `consciousness_schema.py` to ensure it captures all necessary phenomenological metadata (emotions, states of consciousness, etc.).

@@ -1,0 +1,11 @@
+{
+  "context_id": "2025-10-19_14-30-47",
+  "entity_type": "citizen",
+  "entity_id": "luca",
+  "created_at": "2025-10-19T12:35:58.123431+00:00",
+  "last_updated": "2025-10-19T14:25:48.725421+00:00",
+  "message_count": 275,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-19T14:29:52.531318+00:00",
+  "closed_reason": "compact"
+}

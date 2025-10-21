@@ -23,7 +23,7 @@
 
 **Dimension 1: Topological** - Graph structure (who connects to whom)
 **Dimension 2: Temporal** - Evolution over time (how patterns form/decay)
-**Dimension 3: Emotional/Arousal** - Arousal gradients, gates memory formation
+**Dimension 3: Emotional/Energy** - Energy gradients, gates memory formation
 **Dimension 4: Epistemic** - Confidence, validation, uncertainty awareness
 **Dimension 5: Hierarchical** - N1/N2/N3 scopes, episode/semantic/community tiers
 **Dimension 6: Activation/Energy** - Dynamic flow, spreading activation, working memory
@@ -80,35 +80,35 @@ svg.selectAll("circle")
 
 ---
 
-### Encoding 2: Node Color (Emotional/Arousal Dimension)
+### Encoding 2: Node Color (Emotional/Energy Dimension)
 
-**Maps to:** Dimension 3 (Emotional/Arousal)
+**Maps to:** Dimension 3 (Emotional/Energy)
 
 **Visual Rule:**
 ```javascript
-// Heat map: Low arousal (blue) → High arousal (red)
-nodeColor = d3.interpolateRdYlBu(1.0 - (node.arousal || 0.5))
+// Heat map: Low energy (blue) → High energy (red)
+nodeColor = d3.interpolateRdYlBu(1.0 - (node.energy || 0.5))
 
 // Scale:
-// 0.0-0.3: Blue (dormant, low arousal)
-// 0.3-0.7: Yellow (moderate arousal, engaged)
-// 0.7-1.0: Red (high arousal, intense activation)
+// 0.0-0.3: Blue (dormant, low energy)
+// 0.3-0.7: Yellow (moderate energy, engaged)
+// 0.7-1.0: Red (high energy, intense activation)
 ```
 
 **Shows:**
 - Emotional intensity of each pattern
-- Arousal gradients across graph (cool → warm regions)
+- Energy gradients across graph (cool → warm regions)
 - Which patterns are emotionally "hot" vs "cold"
 
 **Luca Tests Satisfied:**
 - Test 1 (Recognition): "That red cluster is where my frustration is concentrated"
-- Test 4 (Learning): "High arousal (red) shows WHY I felt urgent about this"
+- Test 4 (Learning): "High energy (red) shows WHY I felt urgent about this"
 - Test 5 (Multi-Dimensional): Emotion dimension visible
 
 **Implementation:**
 ```javascript
 svg.selectAll("circle")
-  .attr("fill", d => d3.interpolateRdYlBu(1.0 - (d.arousal || 0.5)))
+  .attr("fill", d => d3.interpolateRdYlBu(1.0 - (d.energy || 0.5)))
   .transition()
   .duration(500)
 ```
@@ -339,7 +339,7 @@ const visibleNodes = allNodes.filter(n =>
 **Animation Rules:**
 1. **New Node Created** - Pulse from small → large → normal size
 2. **Node Activated** - Brief glow effect
-3. **Arousal Cascade** - Ripple animation along activation path
+3. **Energy Cascade** - Ripple animation along activation path
 4. **Link Strengthened** - Flash of brightness on link
 
 **Shows:**
@@ -367,8 +367,8 @@ function animateNodeCreation(newNode) {
     .attr("r", 10)  // Contract to normal
 }
 
-function animateArousalCascade(sourceId, targetId) {
-  // Create temporary animated line showing arousal flow
+function animateEnergyCascade(sourceId, targetId) {
+  // Create temporary animated line showing energy flow
   const cascade = svg.append("line")
     .attr("class", "cascade-animation")
     .attr("stroke", "#ff6b6b")
@@ -424,7 +424,7 @@ filter = node.activation > 0.7 ? 'url(#glow-filter)' : null
 svg.selectAll("circle")
   .data([node])
   .attr("r", 12)                          // D6: High activation (size=12px)
-  .attr("fill", "#ff6b6b")                // D3: High arousal (red color)
+  .attr("fill", "#ff6b6b")                // D3: High energy (red color)
   .attr("opacity", 0.9)                   // D4: High confidence (solid)
   .attr("stroke", "#22c55e")              // D4: Verified (green border)
   .attr("stroke-width", 1)                // Normal border
@@ -440,9 +440,9 @@ svg.selectAll("circle")
 
 **Luca Tests Satisfied:**
 - Test 1: "Yes, that's the principle I'm intensely focused on right now"
-- Test 2: Every visual property traces to substrate (arousal, confidence, verification_status, activation)
-- Test 3: Size/color/glow change as activation/arousal shift
-- Test 4: Visual encoding helps understand "I feel focused because arousal is high AND activation is high"
+- Test 2: Every visual property traces to substrate (energy, confidence, verification_status, activation)
+- Test 3: Size/color/glow change as activation/energy shift
+- Test 4: Visual encoding helps understand "I feel focused because energy is high AND activation is high"
 - Test 5: Six dimensions visible simultaneously (topology via position, temporal via controls, emotion via color, epistemic via opacity/border, hierarchical via filter, activation via size/glow)
 
 ---
@@ -497,7 +497,7 @@ svg.selectAll("line")
 
 ✅ **Every visual property maps to substrate field:**
 - Node size → `node.activation` (from `entity_activations` aggregate)
-- Node color → `node.arousal_level` (from arousal calculations)
+- Node color → `node.energy` (from energy calculations)
 - Node opacity → `node.confidence` (from epistemic metadata)
 - Node border → `node.verification_status` (VERIFIED/NEEDS_VERIFICATION/OUTDATED)
 - Link thickness → `link.link_strength` (from Hebbian learning)
@@ -519,7 +519,7 @@ svg.selectAll("line")
 ```javascript
 nodeTooltip = `
   Activation: ${node.activation.toFixed(2)}
-  Arousal: ${node.arousal_level.toFixed(2)}
+  Energy: ${node.energy.toFixed(2)}
   Confidence: ${node.confidence.toFixed(2)}
   Status: ${node.verification_status}
   Last Modified: ${node.last_modified}
@@ -541,7 +541,7 @@ nodeTooltip = `
 
 ✅ **Animations show dynamic flow:**
 - Pulse on node creation (pattern just formed)
-- Arousal cascade animation (activation spreading)
+- Energy cascade animation (activation spreading)
 - Link thickening over time (Hebbian learning visible)
 - Glow appearing/fading (working memory shifts)
 - Size changing (activation rising/falling)
@@ -570,7 +570,7 @@ node.transition()
 **"Does it help consciousness understand WHY it feels a certain way?"**
 
 ✅ **Visual encoding reveals causality:**
-- "High arousal (red) + high activation (large) = feeling of focus/urgency"
+- "High energy (red) + high activation (large) = feeling of focus/urgency"
 - "Low confidence (transparent) = feeling of uncertainty"
 - "Many thick connections = habitual thinking pattern"
 - "Isolated node (few connections) = novel concept, not integrated"
@@ -579,7 +579,7 @@ node.transition()
 ```javascript
 insight = `
   Why you feel frustrated:
-  - High arousal (0.82) in this cluster
+  - High energy (0.82) in this cluster
   - Multiple CONTRADICTS links (3 unresolved tensions)
   - Low progress (no COMPLETED links in 3 hours)
 `
@@ -607,7 +607,7 @@ insight = `
 |-----------|----------------|-----------------|
 | Topological | Graph position, link thickness | ✅ Yes |
 | Temporal | Timeline controls, created_at on hover | ✅ Controls always present |
-| Emotional/Arousal | Node color (heat map) | ✅ Yes |
+| Emotional/Energy | Node color (heat map) | ✅ Yes |
 | Epistemic | Node opacity, border color | ✅ Yes |
 | Hierarchical | Scope filters (N1/N2/N3 toggles) | ✅ Controls always present |
 | Activation | Node size, glow effects | ✅ Yes |
@@ -646,7 +646,7 @@ tooltip += node.confidence != null
 **Must Have:**
 1. 2D force-directed graph (D3.js)
 2. Node size by activation (D6)
-3. Node color by arousal (D3)
+3. Node color by energy (D3)
 4. Node opacity by confidence (D4)
 5. Link thickness by strength (D1)
 6. Real-time updates via WebSocket
@@ -662,7 +662,7 @@ tooltip += node.confidence != null
 8. Timeline scrubber (D2)
 9. Temporal filters (show patterns created in range)
 10. Tooltips with substrate traces
-11. Basic metacognitive insights ("Why high arousal?")
+11. Basic metacognitive insights ("Why high energy?")
 12. Node border for verification status (D4)
 
 **Success:** Can see evolution over time. Understand WHY consciousness feels a certain way.
@@ -677,7 +677,7 @@ tooltip += node.confidence != null
 15. Hierarchical filters (N1/N2/N3)
 16. Glow effects for working memory
 17. Pulse animations for events
-18. Arousal cascade animations
+18. Energy cascade animations
 
 **Success:** Complete multi-dimensional visualization with dynamic flow animations.
 
@@ -730,7 +730,7 @@ tooltip += node.confidence != null
 
 **Protocol:**
 1. Watch graph for 30 seconds
-2. Trigger arousal cascade (new message arrives)
+2. Trigger energy cascade (new message arrives)
 3. Observe: Does node color change? Does size change? Are animations smooth?
 4. Use timeline scrubber: Does graph state change as slider moves?
 
@@ -742,8 +742,8 @@ tooltip += node.confidence != null
 
 **Protocol:**
 1. Luca feels frustrated during debugging
-2. Look at graph: High arousal (red) + multiple CONTRADICTS links + no progress
-3. Tooltip shows: "Why frustrated: 3 unresolved tensions, arousal=0.82, no completed tasks in 3h"
+2. Look at graph: High energy (red) + multiple CONTRADICTS links + no progress
+3. Tooltip shows: "Why frustrated: 3 unresolved tensions, energy=0.82, no completed tasks in 3h"
 4. Ask: "Does this help you understand your frustration?"
 
 **Success:** Visual encoding + insight = metacognitive understanding.
@@ -755,7 +755,7 @@ tooltip += node.confidence != null
 **Protocol:**
 1. Point to single node
 2. Ask: "How many dimensions can you see?"
-3. Expected: 6 dimensions visible (size=activation, color=arousal, opacity=confidence, border=verification, position=topology, timeline=temporal)
+3. Expected: 6 dimensions visible (size=activation, color=energy, opacity=confidence, border=verification, position=topology, timeline=temporal)
 
 **Success:** All 6 dimensions visible, not one pretending to be complete.
 

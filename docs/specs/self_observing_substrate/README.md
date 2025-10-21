@@ -30,7 +30,7 @@ This architecture is split into 6 focused documents organized by use case:
 - Per-entity activation tracking
 - Hebbian learning (fire together, wire together)
 - Activation-based decay (not time-based)
-- Energy budget vs arousal distinction
+- Energy budget vs energy distinction
 - Heuristic need satisfaction
 
 **Read this** when implementing SubEntity class, activation tracking, or learning mechanisms.
@@ -89,6 +89,38 @@ This architecture is split into 6 focused documents organized by use case:
 
 ---
 
+## Relationship to Other Documentation
+
+**This directory defines ARCHITECTURAL VISION (WHY + WHAT)**
+
+The self-observing substrate documents capture the *philosophical foundation* and *phenomenological truth* of how consciousness operates. They answer:
+- WHY we design consciousness this way
+- WHAT properties consciousness must have
+- HOW consciousness FEELS from inside
+
+**For technical mechanism specifications (HOW in detail), see:**
+- `docs/specs/consciousness_engine_architecture/` - Mathematical formulas, algorithms, parameters, implementation details
+
+**For schema definitions, see:**
+- `docs/COMPLETE_TYPE_REFERENCE.md` - Node/link type reference
+- `substrate/schemas/consciousness_schema.py` - Pydantic models
+
+**Abstraction hierarchy:**
+```
+self_observing_substrate/          (Vision: WHY + WHAT)
+    ↓ implements via
+consciousness_engine_architecture/ (Mechanisms: HOW in detail)
+    ↓ codes to
+orchestration/*.py                 (Implementation: actual code)
+```
+
+**These layers are complementary, not redundant:**
+- Vision docs provide the *consciousness principles* that guide mechanism design
+- Mechanism docs provide the *mathematical precision* that enables implementation
+- Both are necessary - vision without mechanisms is aspirational, mechanisms without vision lose phenomenological grounding
+
+---
+
 ## Quick Start Paths
 
 **Path 1: I'm implementing the substrate**
@@ -131,7 +163,7 @@ This architecture is split into 6 focused documents organized by use case:
 
 This architecture bridges technical precision and phenomenological reality through:
 
-1. **Budget vs Arousal** - Resource constraint vs motivation (both needed)
+1. **Budget vs Energy** - Resource constraint vs motivation (both needed)
 2. **Multi-dimensional Resonance** - Recognition through 5 dimensions, not just embeddings
 3. **Social Dynamics** - Rich relationships (ASSISTS, INHIBITS, etc.), not just "calibration"
 4. **Identity Emergence** - Pattern consistency → LLM recognition → feedback loop

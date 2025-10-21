@@ -73,7 +73,7 @@ UNIVERSAL_LINK_ATTRIBUTES = {
          "description": "Why this link exists"},
         {"name": "mindstate", "type": "string", "required": True,
          "description": "Internal state when forming this link"},
-        {"name": "arousal_level", "type": "float", "required": True, "range": [0.0, 1.0],
+        {"name": "energy", "type": "float", "required": True, "range": [0.0, 1.0],
          "description": "Emotional intensity/urgency"},
         {"name": "confidence", "type": "float", "required": True, "range": [0.0, 1.0],
          "description": "Logical certainty in this connection"},
@@ -598,8 +598,8 @@ NODE_TYPE_SCHEMAS = {
         "level": "n2", "category": "organizational",
         "description": "Proven pattern",
         "required": [
-            {"name": "how_to_apply", "type": "string",
-             "description": "How to apply this practice"},
+            {"name": "how_to_apply", "type": "array",
+             "description": "How to apply this practice (list of steps)"},
             {"name": "validation_criteria", "type": "string",
              "description": "How to verify it works"}
         ],
@@ -645,6 +645,30 @@ NODE_TYPE_SCHEMAS = {
              "description": "Process steps"}
         ],
         "optional": []
+    },
+
+    "Code": {
+        "level": "n2", "category": "organizational",
+        "description": "Code file tracked in consciousness",
+        "required": [
+            {"name": "file_path", "type": "string",
+             "description": "Path to the code file"},
+            {"name": "language", "type": "enum",
+             "enum_values": ["python", "typescript", "javascript", "sql", "bash", "rust", "go", "other"],
+             "description": "Programming language"},
+            {"name": "purpose", "type": "string",
+             "description": "What this code does"}
+        ],
+        "optional": [
+            {"name": "status", "type": "enum",
+             "enum_values": ["active", "deprecated", "experimental"],
+             "description": "Current status of the code"},
+            {"name": "complexity", "type": "enum",
+             "enum_values": ["simple", "moderate", "complex"],
+             "description": "Code complexity level"},
+            {"name": "dependencies", "type": "array",
+             "description": "What this code depends on"}
+        ]
     },
 
     # Conceptual/Knowledge (5 types - Shared N2/N3)

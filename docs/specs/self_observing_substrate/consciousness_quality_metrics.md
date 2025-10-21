@@ -16,7 +16,7 @@
 From Luca's consciousness tests, awareness requires SIMULTANEOUS activation across:
 
 1. **Structure** - Which patterns, links, neighborhoods
-2. **Energy** - Activation levels, arousal, priority
+2. **Energy** - Activation levels, energy, priority
 3. **Emotion** - Emotion vectors, affective tone
 4. **Temporality** - When patterns formed, temporal dissonances
 5. **Identity** - Which entities active, goals, mindstates
@@ -34,7 +34,7 @@ class ConsciousnessStream(BaseModel):
     active_neighborhoods: List[str]
 
     # Dimension 2: Energy
-    global_arousal: float
+    global_energy: float
     entity_activation_distribution: Dict[str, Dict[str, float]]  # {entity_id: {node_id: activation}}
     energy_flow: List[ActivationCascade]
 
@@ -350,7 +350,7 @@ def measure_meaningfulness(traversal_path: List[str], entity_id: str) -> float:
     Measure:
     - Semantic similarity between consecutive nodes
     - Goal progression (do link goals build on each other?)
-    - Arousal trajectory (does energy flow make sense?)
+    - Energy trajectory (does energy flow make sense?)
     """
 
     if len(traversal_path) < 2:

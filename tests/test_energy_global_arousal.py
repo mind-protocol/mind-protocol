@@ -1,9 +1,9 @@
 """
-Test: Energy-Only Model + Global Arousal + Competition-Based Traversal Costs
+Test: Energy-Only Model + Global Energy + Competition-Based Traversal Costs
 
 This test validates the complete Phase 0 implementation:
-1. Energy-only substrate (activity_level + weight, no arousal)
-2. Global arousal measurement via branching ratio
+1. Energy-only substrate (activity_level + weight, no energy)
+2. Global energy measurement via branching ratio
 3. Competition-based traversal costs
 4. Automatic energy decay
 
@@ -154,16 +154,16 @@ def verify_energy_propagation(graph_store):
         return False
 
 
-def verify_global_arousal(engine):
-    """Verify global arousal is being measured and stored."""
-    print("\n[Test 2] Verifying global arousal measurement...")
+def verify_global_energy(engine):
+    """Verify global energy is being measured and stored."""
+    print("\n[Test 2] Verifying global energy measurement...")
 
     # Query ConsciousnessState node
     cypher = """
     MATCH (cs:ConsciousnessState)
     RETURN
         cs.network_id AS network_id,
-        cs.global_arousal AS global_arousal,
+        cs.global_energy AS global_energy,
         cs.branching_ratio AS branching_ratio,
         cs.raw_sigma AS raw_sigma,
         cs.cycle_count AS cycle_count,
@@ -178,11 +178,11 @@ def verify_global_arousal(engine):
         return False
 
     row = results[0]
-    network_id, global_arousal, branching_ratio, raw_sigma, cycle_count, gen_this, gen_next = row
+    network_id, global_energy, branching_ratio, raw_sigma, cycle_count, gen_this, gen_next = row
 
     print(f"[Test 2] ConsciousnessState found:")
     print(f"  Network ID: {network_id}")
-    print(f"  Global Arousal: {global_arousal:.4f}")
+    print(f"  Global Energy: {global_energy:.4f}")
     print(f"  Branching Ratio (avg): {branching_ratio:.4f}")
     print(f"  Raw Sigma: {raw_sigma:.4f}")
     print(f"  Cycle Count: {cycle_count}")
@@ -190,11 +190,11 @@ def verify_global_arousal(engine):
     print(f"  Generation Next: {gen_next}")
 
     # Verify values are in valid range
-    if 0.0 <= global_arousal <= 1.0:
-        print(f"[Test 2] PASS - Global arousal in valid range [0.0, 1.0]")
+    if 0.0 <= global_energy <= 1.0:
+        print(f"[Test 2] PASS - Global energy in valid range [0.0, 1.0]")
         return True
     else:
-        print(f"[Test 2] FAIL - Global arousal out of range: {global_arousal}")
+        print(f"[Test 2] FAIL - Global energy out of range: {global_energy}")
         return False
 
 
@@ -231,11 +231,11 @@ def verify_energy_decay(graph_store):
 def main():
     """Run complete test suite."""
     print("=" * 70)
-    print("TESTING: Energy-Only Model + Global Arousal + Competition Costs")
+    print("TESTING: Energy-Only Model + Global Energy + Competition Costs")
     print("=" * 70)
 
     # Setup
-    graph_name = "test_energy_global_arousal"
+    graph_name = "test_energy_global_energy"
     falkordb_url = "redis://localhost:6379"
 
     print(f"\n[Setup] Connecting to FalkorDB graph: {graph_name}")
@@ -278,8 +278,8 @@ def main():
     # Test 1: Energy propagation
     test_results.append(("Energy Propagation", verify_energy_propagation(graph_store)))
 
-    # Test 2: Global arousal
-    test_results.append(("Global Arousal", verify_global_arousal(engine)))
+    # Test 2: Global energy
+    test_results.append(("Global Energy", verify_global_energy(engine)))
 
     # Test 3: Energy decay
     test_results.append(("Energy Decay", verify_energy_decay(graph_store)))

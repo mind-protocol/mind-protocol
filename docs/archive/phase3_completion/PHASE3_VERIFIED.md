@@ -33,7 +33,7 @@ The Read Flux (Blue Arrow) successfully retrieves consciousness context from mul
 **Metadata Preservation:**
 - ✅ Node IDs preserved
 - ✅ Node types preserved (Decision, Project, Anti_Pattern, Human)
-- ✅ Arousal levels valid (0.50 default, range 0-1)
+- ✅ Energy levels valid (0.50 default, range 0-1)
 - ✅ Confidence scores valid (0.50-1.00 range)
 - ✅ Temporal tracking valid (valid_at, created_at)
 - ✅ Relevance scoring working (vector similarity scores)
@@ -45,7 +45,7 @@ Name: Phase_2_Bitemporal_Logic
 Type: Project
 Source: N1_vector
 Relevance: 1.306 (vector similarity)
-Arousal: 0.50
+Energy: 0.50
 Confidence: 1.00
 Valid at: 2025-10-17 00:29:44
 Created at: 2025-10-17 00:29:44
@@ -88,7 +88,7 @@ Created at: 2025-10-17 00:29:44
 ### Issue 6: Type Validation Errors
 **Problem:** node_id returned as int, ConsciousnessNode expects string
 **Root cause:** FalkorDB id() returns integers
-**Solution:** Convert node_id to string, ensure arousal/confidence are floats
+**Solution:** Convert node_id to string, ensure energy/confidence are floats
 **Result:** All 30 nodes successfully validated and enriched
 
 ---

@@ -28,7 +28,7 @@ JSON Structure Expected:
       "target_id": "...",
       "goal": "...",
       "mindstate": "...",
-      "arousal_level": 0.0-1.0,
+      "energy": 0.0-1.0,
       "confidence": 0.0-1.0,
       ... type-specific attributes ...
     }
@@ -136,9 +136,10 @@ def inject_json_to_graph(json_path: str, graph_name: str, clear_existing: bool =
             if 'last_modified' not in props:
                 props['last_modified'] = current_time
 
-            if 'arousal_level' not in props:
-                # Default arousal: 0.5 (neutral)
-                props['arousal_level'] = 0.5
+            if 'energy' not in props:
+                # Default energy: dict with default entity (per multi-energy spec)
+                import json
+                props['energy'] = json.dumps({"consciousness_engine": 0.0})
 
             # Create node with label = node_type
             g.query(f"""

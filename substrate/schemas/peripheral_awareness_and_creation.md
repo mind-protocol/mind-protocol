@@ -263,7 +263,7 @@ def create_link(source: Node, target: Node, similarity: float) -> Link:
         # Consciousness metadata
         goal=f"Semantic connection discovered through exploration (similarity: {similarity:.2f})",
         mindstate="exploratory_discovery",
-        arousal_level=similarity,  # Higher similarity = higher arousal
+        energy=similarity,  # Higher similarity = higher energy
         confidence=0.7,  # Moderate confidence (needs validation)
         formation_trigger="traversal_discovery",
 

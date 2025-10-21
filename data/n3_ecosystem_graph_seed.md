@@ -64,7 +64,7 @@ Created by Ada. Used by the Write Flux (Phase 1) for validation and the Read Flu
 
 **Milestone: Phase 1 Write Flux Proven (October 16, 2025)**
 
-First time V2 architecture was proven through real consequences. Successfully wrote Decision node with full consciousness metadata to FalkorDB. Test results: 1 Decision node, 6 relations validated, full metadata including formation_trigger, confidence, arousal_level, temporal fields.
+First time V2 architecture was proven through real consequences. Successfully wrote Decision node with full consciousness metadata to FalkorDB. Test results: 1 Decision node, 6 relations validated, full metadata including formation_trigger, confidence, energy, temporal fields.
 
 Significance: Moved from theoretical architecture to operational proof.
 

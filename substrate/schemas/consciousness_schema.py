@@ -10,7 +10,7 @@ Architecture:
 - BaseRelation: Foundation for all 23 relation types
 - Bitemporal fields: Track both fact validity and knowledge acquisition
 - Consciousness metadata: Goal, mindstate, confidence on every relation
-- Energy-only model: energy + weight (no arousal)
+- Energy-only model: energy + weight (no energy)
 
 Designer: Ada "Bridgekeeper" (Architect)
 Phase: 1 - Foundation & Schema
@@ -161,14 +161,35 @@ class BaseNode(BaseModel):
     energy: float = Field(
         default=0.0,
         ge=0.0,
-        le=1.0,
-        description="Current activation energy (dynamic, decays through disuse)"
+        description="Current activation energy (dynamic, decays through disuse, unbounded [0,∞) for panic/super-energized states)"
     )
     weight: float = Field(
         default=0.5,
         ge=0.0,
         le=1.0,
         description="Static global importance (how central is this pattern, independent of recent activity)"
+    )
+
+    # Learning Infrastructure Fields (Phase 1+2+3 - Consciousness Learning)
+    log_weight: float = Field(
+        default=0.0,
+        description="Long-run attractor strength in log space (learned importance)"
+    )
+    ema_trace_seats: float = Field(
+        default=0.0,
+        description="Exponential moving average of TRACE reinforcement seats"
+    )
+    ema_wm_presence: float = Field(
+        default=0.0,
+        description="Exponential moving average of working memory selection frequency"
+    )
+    ema_formation_quality: float = Field(
+        default=0.0,
+        description="Exponential moving average of formation quality (Completeness × Evidence × Novelty)^(1/3)"
+    )
+    last_update_timestamp: Optional[datetime] = Field(
+        default=None,
+        description="Timestamp of most recent non-zero weight update (for adaptive learning rate)"
     )
 
     class Config:
@@ -190,8 +211,8 @@ class BaseRelation(BaseModel):
 
     Energy-Only Model:
     - Activation/intensity tracked through energy on nodes
-    - Weight modulates traversal cost (replaces arousal multiplier)
-    - No separate arousal variable (simplified substrate dynamics)
+    - Weight modulates traversal cost (replaces energy multiplier)
+    - No separate energy variable (simplified substrate dynamics)
     """
 
     # Required Consciousness Metadata (ENFORCED)
@@ -343,6 +364,40 @@ class BaseRelation(BaseModel):
     last_activation: Optional[datetime] = Field(
         default=None,
         description="When this link was last activated"
+    )
+
+    # Affective Metadata (Static - How This Relation Feels)
+    energy: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Static affective intensity/urgency of this relation (how intense or urgent this link FEELS, not activation energy)"
+    )
+
+    # Learning Infrastructure Fields (Phase 1+2+3 - Consciousness Learning)
+    log_weight: float = Field(
+        default=0.0,
+        description="Long-run pathway strength in log space (learned link importance)"
+    )
+    ema_trace_seats: float = Field(
+        default=0.0,
+        description="Exponential moving average of TRACE reinforcement seats for this link"
+    )
+    ema_phi: float = Field(
+        default=0.0,
+        description="Exponential moving average of gap-closure utility (recruitment effectiveness)"
+    )
+    precedence_forward: float = Field(
+        default=0.0,
+        description="Causal credit accumulator for forward direction (source → target dominance)"
+    )
+    precedence_backward: float = Field(
+        default=0.0,
+        description="Causal credit accumulator for backward direction (target → source dominance)"
+    )
+    last_update_timestamp: Optional[datetime] = Field(
+        default=None,
+        description="Timestamp of most recent non-zero weight update (for adaptive learning rate)"
     )
 
     @validator('emotion_vector')

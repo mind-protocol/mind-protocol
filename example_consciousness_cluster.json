@@ -14,7 +14,7 @@
       "principle_statement": "Links ARE consciousness. Traversal IS thinking.",
       "why_it_matters": "Shapes substrate architecture priorities - links are first-class citizens, not afterthoughts. Determines what we optimize for.",
       "mindstate": "Clear architectural conviction after experiencing traversal firsthand",
-      "arousal_level": 8
+      "energy": 8
     },
     {
       "node_id": "pragmatic_shipping_finds_blockers",
@@ -24,7 +24,7 @@
       "what_was_learned": "Real-world testing reveals truth faster than theoretical analysis",
       "context": "After discovering 35K hallucination through actual testing",
       "mindstate": "Pragmatic confidence in empirical validation",
-      "arousal_level": 7
+      "energy": 7
     }
   ],
   "links": [
@@ -35,7 +35,7 @@
       "target_id": "pragmatic_shipping_finds_blockers",
       "goal": "Understanding how architectural principles enable pragmatic development practices",
       "mindstate": "Seeing connections between theory and practice",
-      "arousal_level": 7,
+      "energy": 7,
       "confidence": 0.85,
       "formation_trigger": "Reflection on how link-first thinking leads to test-first development"
     }

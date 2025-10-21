@@ -44,9 +44,9 @@ Input arrives ──→ DB ──┤  Entity 2 explores   ├──→ DB trigge
 
 ```python
 node.entity_activations = {
-    "translator": {"energy": 0.9, "arousal": 0.85},  # Independent
-    "validator": {"energy": 0.6, "arousal": 0.7},    # Independent
-    "observer": {"energy": 0.3, "arousal": 0.4}      # Independent
+    "translator": {"energy": 0.9, "energy": 0.85},  # Independent
+    "validator": {"energy": 0.6, "energy": 0.7},    # Independent
+    "observer": {"energy": 0.3, "energy": 0.4}      # Independent
 }
 ```
 
@@ -103,9 +103,9 @@ def explore_nodes(nodes):
 node = {
     "name": "principle_links_are_consciousness",
     "entity_activations": {
-        "translator": {"energy": 0.9, "arousal": 0.85},
-        "validator": {"energy": 0.6, "arousal": 0.7},
-        "observer": {"energy": 0.3, "arousal": 0.4}
+        "translator": {"energy": 0.9, "energy": 0.85},
+        "validator": {"energy": 0.6, "energy": 0.7},
+        "observer": {"energy": 0.3, "energy": 0.4}
     }
 }
 
@@ -161,7 +161,7 @@ DO {
 ### Example 3: Multi-Entity Cascade
 
 ```
-Input arrives (arousal 0.8)
+Input arrives (energy 0.8)
     ↓
 Inject energy to matched nodes (parallel vector search)
     ↓
@@ -284,7 +284,7 @@ Time = max(exploration_time across entities)
 ```python
 # Cycle begins
 input = "Design extraction architecture"
-arousal = 0.85
+energy = 0.85
 
 # Inject energy (parallel vector search)
 matched_nodes = vector_search(input_embedding)
@@ -293,7 +293,7 @@ matched_nodes = vector_search(input_embedding)
 for entity in ["translator", "validator", "architect", "pragmatist"]:
     for node in matched_nodes:
         similarity = cosine_similarity(node.embedding, input_embedding)
-        node.entity_activations[entity]["energy"] += similarity * arousal
+        node.entity_activations[entity]["energy"] += similarity * energy
 
 # ALL entities activate simultaneously
 # Translator: Sees bridging patterns (12 nodes active)

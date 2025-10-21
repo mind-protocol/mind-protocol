@@ -413,7 +413,7 @@ CREATE ()-[r:LINK_TYPE {
     // Standard link metadata
     goal: "...",
     mindstate: "...",
-    arousal_level: 0.8,
+    energy: 0.8,
 
     // Energy (NEW)
     current_energy: 0.0,
@@ -556,18 +556,18 @@ ORDER BY n.max_energy DESC
 
 ```python
 def calculate_activation_threshold(
-    input_arousal: float,
+    input_energy: float,
     current_active_count: int
 ) -> float:
     """
     Threshold varies by cycle based on:
-    1. Input arousal (urgency/complexity)
+    1. Input energy (urgency/complexity)
     2. How many nodes already active
     """
-    # Base threshold from arousal
-    base_threshold = 0.8 - (input_arousal * 0.5)
-    # High arousal (0.9) → low threshold (0.35) → more nodes activate
-    # Low arousal (0.2) → high threshold (0.7) → fewer nodes activate
+    # Base threshold from energy
+    base_threshold = 0.8 - (input_energy * 0.5)
+    # High energy (0.9) → low threshold (0.35) → more nodes activate
+    # Low energy (0.2) → high threshold (0.7) → fewer nodes activate
 
     # Adjustment for current activity
     if current_active_count > 50:
@@ -583,8 +583,8 @@ def calculate_activation_threshold(
 **Example Cycle:**
 
 ```python
-# Cycle 1: High arousal input
-arousal = 0.85
+# Cycle 1: High energy input
+energy = 0.85
 threshold = 0.8 - (0.85 * 0.5) = 0.375
 
 # 45 nodes cross threshold (energy > 0.375)
@@ -596,15 +596,15 @@ active_nodes = 45
 dormant_nodes_receiving_energy = 200 - 15 = 185
 # Only 15 neighbors crossed threshold in Cycle 1
 
-# Cycle 2: Normal arousal
-arousal = 0.5
+# Cycle 2: Normal energy
+energy = 0.5
 threshold = 0.8 - (0.5 * 0.5) = 0.55
 
 # Some Cycle 1 nodes exhausted, some dormant nodes now cross threshold
 active_nodes = 38
 
-# Cycle 3: Low arousal
-arousal = 0.2
+# Cycle 3: Low energy
+energy = 0.2
 threshold = 0.8 - (0.2 * 0.5) = 0.7
 
 # High threshold - only strongest nodes active

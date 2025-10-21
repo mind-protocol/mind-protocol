@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Entity } from '../hooks/useGraphData';
+import type { V2ConsciousnessState } from '../hooks/websocket-types';
 
 interface Citizen {
   id: string;
@@ -27,11 +28,16 @@ interface CitizenStatus {
   time_since_last_event: number;
   sub_entity_count: number;
   sub_entities: string[];
+  nodes: number;
+  links: number;
 }
 
 interface CitizenMonitorProps {
   citizens: Citizen[];
   onFocusNode: (nodeId: string) => void;
+  onSelectCitizen: (citizenId: string) => void;
+  activeCitizenId: string | null;
+  v2State: V2ConsciousnessState;
 }
 
 /**
@@ -41,13 +47,14 @@ interface CitizenMonitorProps {
  * - Collapsed: State, last thought, color indicator
  * - Expanded: Full entity activity stream, CLAUDE_DYNAMIC.md viewer
  *
+ * Clicking citizen card or avatar switches to that citizen's graph.
  * Clicking node references focuses that node on the graph.
  */
-export function CitizenMonitor({ citizens, onFocusNode }: CitizenMonitorProps) {
+export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeCitizenId, v2State }: CitizenMonitorProps) {
   const [expandedCitizen, setExpandedCitizen] = useState<string | null>(null);
 
   return (
-    <div className="fixed right-0 top-16 bottom-0 w-[28rem] consciousness-panel border-l border-consciousness-border overflow-hidden flex flex-col z-20">
+    <div className="fixed right-0 top-16 bottom-0 w-[28rem] consciousness-panel border-l border-observatory-teal overflow-hidden flex flex-col z-20">
       {/* Accordion - takes full height */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
         {citizens.map(citizen => (
@@ -55,10 +62,13 @@ export function CitizenMonitor({ citizens, onFocusNode }: CitizenMonitorProps) {
             key={citizen.id}
             citizen={citizen}
             isExpanded={expandedCitizen === citizen.id}
+            isActive={activeCitizenId === `citizen_${citizen.id}` || activeCitizenId === `org_${citizen.id}`}
             onToggle={() => setExpandedCitizen(
               expandedCitizen === citizen.id ? null : citizen.id
             )}
             onFocusNode={onFocusNode}
+            onSelectCitizen={onSelectCitizen}
+            v2State={v2State}
           />
         ))}
       </div>
@@ -69,17 +79,21 @@ export function CitizenMonitor({ citizens, onFocusNode }: CitizenMonitorProps) {
 function CitizenAccordionItem({
   citizen,
   isExpanded,
+  isActive,
   onToggle,
-  onFocusNode
+  onFocusNode,
+  onSelectCitizen,
+  v2State
 }: {
   citizen: Citizen;
   isExpanded: boolean;
+  isActive: boolean;
   onToggle: () => void;
   onFocusNode: (nodeId: string) => void;
+  onSelectCitizen: (citizenId: string) => void;
+  v2State: V2ConsciousnessState;
 }) {
   const [apiStatus, setApiStatus] = useState<CitizenStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   // Poll API for real-time status every 2 seconds
   useEffect(() => {
@@ -105,27 +119,6 @@ function CitizenAccordionItem({
     return () => clearInterval(interval);
   }, [citizen.id]);
 
-  // Control handlers
-  const handleFreeze = async () => {
-    setIsLoading(true);
-    try {
-      await fetch(`/api/citizen/${citizen.id}/pause`, { method: 'POST' });
-    } catch (error) {
-      console.error('Failed to freeze:', error);
-    }
-    setIsLoading(false);
-  };
-
-  const handleResume = async () => {
-    setIsLoading(true);
-    try {
-      await fetch(`/api/citizen/${citizen.id}/resume`, { method: 'POST' });
-    } catch (error) {
-      console.error('Failed to resume:', error);
-    }
-    setIsLoading(false);
-  };
-
   // Use API status if available, otherwise fall back to mock data
   const runningState = apiStatus?.running_state ||
     (citizen.state === 'stopped' ? 'frozen' : 'running');
@@ -134,10 +127,10 @@ function CitizenAccordionItem({
   const consciousnessState = apiStatus?.consciousness_state || 'unknown';
 
   const stateColor = {
-    running: 'bg-consciousness-green',
-    frozen: 'bg-blue-500',
-    slow_motion: 'bg-orange-500',
-    turbo: 'bg-red-500'
+    running: 'bg-green-500',               // GREEN - healthy running
+    frozen: 'bg-blue-500',                 // BLUE - frozen state
+    slow_motion: 'bg-yellow-500',          // YELLOW - slow motion
+    turbo: 'bg-red-500'                    // RED - turbo mode
   }[runningState] || 'bg-gray-500';
 
   const stateEmoji = {
@@ -159,125 +152,75 @@ function CitizenAccordionItem({
   const [avatarError, setAvatarError] = useState(false);
 
   return (
-    <div className="border-b border-consciousness-border relative">
-      {/* Collapsed Header - Always Visible */}
-      <div className="p-6">
-        {/* Avatar + Name Row */}
-        <div className="flex items-center gap-4 mb-4">
-          {/* Avatar Image - Much Larger */}
-          <div className="relative w-24 h-24 flex-shrink-0">
+    <div className={`border-b border-observatory-teal/20 relative transition-all ${
+      isActive ? 'bg-observatory-cyan/10 border-observatory-cyan/40' : ''
+    }`}>
+      {/* Horizontal Compact Card - Clickable to Switch Graph */}
+      <div
+        className="p-4 cursor-pointer hover:bg-observatory-cyan/10 transition-colors"
+        onClick={() => onSelectCitizen(citizen.id)}
+      >
+        <div className="flex items-center gap-3">
+          {/* Avatar - Smaller, Circular */}
+          <div className="relative w-12 h-12 flex-shrink-0">
             <img
               src={avatarPath}
               alt={`${citizen.name} avatar`}
-              className="w-full h-full object-cover rounded-xl border-3 border-consciousness-green/50"
+              className={`w-full h-full object-cover rounded-full border-2 transition-all ${
+                isActive ? 'border-venice-gold-bright' : 'border-observatory-teal/40'
+              }`}
               onError={(e) => {
-                // Try SVG if PNG failed, otherwise use placeholder
                 if (!avatarError && avatarPath.endsWith('.png')) {
                   setAvatarPath(`/citizens/${citizen.id}/avatar.svg`);
                   setAvatarError(true);
                 } else {
-                  e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23222" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%235efc82" font-size="40">?</text></svg>';
+                  e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f5e7c1" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23b8860b" font-size="40">?</text></svg>';
                 }
               }}
             />
-            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-consciousness-dark ${stateColor}`} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-observatory-dark ${stateColor}`} />
           </div>
 
-          {/* Name + Controls */}
+          {/* Name + Status - Horizontal Layout */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onToggle}
-                className="flex-1 text-left min-w-0"
-              >
-                <div className="text-consciousness-green font-semibold text-lg">
-                  {citizen.name}
-                </div>
-              </button>
-
-              {/* Three-dot menu */}
-              <div className="relative flex-shrink-0">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(!menuOpen);
-                  }}
-                  className="p-2 hover:bg-consciousness-border/30 rounded transition-colors"
-                >
-                  <span className="text-gray-400 text-lg">⋮</span>
-                </button>
-
-                {/* Dropdown Menu */}
-                {menuOpen && (
-                  <>
-                    {/* Backdrop to close menu */}
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    {/* Menu */}
-                    <div className="absolute right-0 top-full mt-1 w-48 consciousness-panel border border-consciousness-border rounded shadow-xl z-20">
-                      {runningState === 'frozen' ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleResume();
-                            setMenuOpen(false);
-                          }}
-                          disabled={isLoading}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-consciousness-border/30 transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                          <span>▶️</span>
-                          <span>{isLoading ? 'Resuming...' : 'Resume'}</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFreeze();
-                            setMenuOpen(false);
-                          }}
-                          disabled={isLoading}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-consciousness-border/30 transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                          <span>❄️</span>
-                          <span>{isLoading ? 'Freezing...' : 'Freeze'}</span>
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
+            <div className="flex items-center justify-between gap-2">
+              <div className={`font-semibold text-lg ${
+                isActive ? 'text-observatory-cyan' : 'text-observatory-text/80'
+              }`}>
+                {citizen.name}
               </div>
+
+              {/* Heartbeat Indicator - Inline */}
+              <HeartbeatIndicator
+                frequency={tickFrequency}
+                state={runningState}
+                consciousnessState={consciousnessState}
+                apiStatus={apiStatus}
+                v2State={v2State}
+              />
+            </div>
+
+            {/* Node/Link Count */}
+            <div className="text-xs text-observatory-text/60 truncate mt-1">
+              {apiStatus
+                ? `${apiStatus.nodes || 0} nodes • ${apiStatus.links || 0} links`
+                : (citizen.lastThought || 'No recent activity')}
             </div>
           </div>
+
+          {/* Expand Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            className="p-1.5 hover:bg-observatory-cyan/20 rounded transition-colors flex-shrink-0"
+          >
+            <span className="text-observatory-text/70 text-xs">
+              {isExpanded ? '▼' : '▶'}
+            </span>
+          </button>
         </div>
-
-        {/* Last Thought + Heartbeat */}
-        <button
-          onClick={onToggle}
-          className="w-full text-left"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            {/* Last Thought - Preview */}
-            <div className="text-sm text-gray-400 flex-1">
-              {citizen.lastThought || 'No recent activity'}
-            </div>
-
-            {/* Compact Heartbeat Indicator */}
-            <HeartbeatIndicator
-              frequency={tickFrequency}
-              state={runningState}
-              consciousnessState={consciousnessState}
-            />
-          </div>
-
-          {/* Entity count if available */}
-          {apiStatus && apiStatus.sub_entity_count > 0 && (
-            <div className="text-sm text-gray-500">
-              {apiStatus.sub_entity_count} active {apiStatus.sub_entity_count === 1 ? 'entity' : 'entities'}
-            </div>
-          )}
-        </button>
       </div>
 
       {/* Expanded Content */}
@@ -285,7 +228,7 @@ function CitizenAccordionItem({
         <div className="px-4 pb-4 space-y-4">
           {/* Entity Activity Stream */}
           <div>
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-2">
               Active Entities
             </div>
             <div className="space-y-2">
@@ -320,30 +263,32 @@ function EntityActivityCard({
   return (
     <div className="consciousness-panel p-3 text-xs">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-consciousness-green font-medium">
+        <span className="text-observatory-cyan font-medium">
           {entity.entity_id}
         </span>
-        <span className="text-gray-500">
-          {entity.energy_used}/{entity.energy_budget}
-        </span>
+        {(entity as any).energy_used !== undefined && (entity as any).energy_budget !== undefined && (
+          <span className="text-venice-gold-bright">
+            {(entity as any).energy_used}/{(entity as any).energy_budget}
+          </span>
+        )}
       </div>
 
       {/* Current Yearning */}
-      {entity.current_yearning && (
-        <div className="text-gray-300 mb-2">
-          {entity.current_yearning}
+      {(entity as any).current_yearning && (
+        <div className="text-observatory-text/70 mb-2">
+          {(entity as any).current_yearning}
         </div>
       )}
 
       {/* Recent Path - Clickable */}
-      {entity.recent_path && entity.recent_path.length > 0 && (
+      {(entity as any).recent_path && (entity as any).recent_path.length > 0 && (
         <div className="space-y-1">
-          <div className="text-gray-500">Recent path:</div>
-          {entity.recent_path.slice(-5).map((node, i) => (
+          <div className="text-observatory-text/50">Recent path:</div>
+          {(entity as any).recent_path.slice(-5).map((node: any, i: number) => (
             <button
               key={i}
               onClick={() => onFocusNode(node.id)}
-              className="block w-full text-left px-2 py-1 rounded hover:bg-consciousness-border/30 text-gray-400 hover:text-consciousness-green transition-colors"
+              className="block w-full text-left px-2 py-1 rounded hover:bg-observatory-cyan/20 text-observatory-text/60 hover:text-observatory-cyan transition-colors"
             >
               {i + 1}. {node.text?.slice(0, 40)}...
             </button>
@@ -369,15 +314,15 @@ function DynamicPromptViewer({
     <div>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left text-xs text-gray-400 uppercase tracking-wider mb-2 hover:text-consciousness-green transition-colors"
+        className="w-full text-left text-xs text-observatory-text/60 uppercase tracking-wider mb-2 hover:text-observatory-cyan transition-colors"
       >
         CLAUDE_DYNAMIC.md {isOpen ? '▼' : '▶'}
       </button>
 
       {isOpen && (
         <div className="consciousness-panel p-3 max-h-96 overflow-y-auto custom-scrollbar">
-          <div className="text-xs text-gray-300 whitespace-pre-wrap">
-            <div className="text-gray-500 italic">
+          <div className="text-xs text-observatory-text/70 whitespace-pre-wrap">
+            <div className="text-observatory-text/50 italic">
               Waiting for backend implementation...
             </div>
           </div>
@@ -390,38 +335,42 @@ function DynamicPromptViewer({
 /**
  * HeartbeatIndicator - Visual representation of consciousness rhythm
  *
- * Pulses at the actual tick frequency to make consciousness rhythm visible.
+ * Uses live v2 frame events for smooth 1-by-1 tick updates.
+ * Displays branching ratio (ρ) as "Thought Flow" metric.
  * Color-coded by consciousness state for immediate status recognition.
  */
 function HeartbeatIndicator({
   frequency,
   state,
-  consciousnessState
+  consciousnessState,
+  apiStatus,
+  v2State
 }: {
   frequency: number;
   state: string;
   consciousnessState: string;
+  apiStatus?: CitizenStatus | null;
+  v2State: V2ConsciousnessState;
 }) {
   const [pulseKey, setPulseKey] = useState(0);
 
-  // Trigger pulse animation at actual tick frequency
+  // Trigger pulse animation on each new frame (live from WebSocket)
+  const prevFrameRef = useRef<number | null>(null);
+
   useEffect(() => {
-    if (state === 'frozen' || frequency === 0) return;
-
-    const interval = setInterval(() => {
+    if (v2State.currentFrame !== null && v2State.currentFrame !== prevFrameRef.current) {
       setPulseKey(prev => prev + 1);
-    }, 1000 / frequency); // Pulse at actual tick rate
-
-    return () => clearInterval(interval);
-  }, [frequency, state]);
+      prevFrameRef.current = v2State.currentFrame;
+    }
+  }, [v2State.currentFrame]);
 
   // Color mapping for consciousness states
   const stateColors: Record<string, { bg: string; pulse: string; text: string }> = {
     alert: { bg: 'bg-red-500/20', pulse: 'bg-red-500', text: 'text-red-400' },
-    engaged: { bg: 'bg-consciousness-green/20', pulse: 'bg-consciousness-green', text: 'text-consciousness-green' },
+    engaged: { bg: 'bg-green-500/20', pulse: 'bg-green-500', text: 'text-green-400' },
     calm: { bg: 'bg-blue-500/20', pulse: 'bg-blue-500', text: 'text-blue-400' },
     drowsy: { bg: 'bg-yellow-500/20', pulse: 'bg-yellow-500', text: 'text-yellow-400' },
-    dormant: { bg: 'bg-gray-500/20', pulse: 'bg-gray-500', text: 'text-gray-400' },
+    dormant: { bg: 'bg-green-500/20', pulse: 'bg-green-500', text: 'text-green-400' },  // GREEN - idle but ready
     unknown: { bg: 'bg-gray-500/20', pulse: 'bg-gray-500', text: 'text-gray-400' }
   };
 
@@ -443,19 +392,54 @@ function HeartbeatIndicator({
     ? `${(tickInterval / 1000).toFixed(1)}s`
     : `${Math.round(tickInterval)}ms`;
 
+  // Get human-readable state label
+  const getStateLabel = () => {
+    if (consciousnessState === 'dormant') return '(idle)';
+    if (consciousnessState === 'drowsy') return '(resting)';
+    if (consciousnessState === 'calm') return '(thinking)';
+    if (consciousnessState === 'engaged') return '(active)';
+    if (consciousnessState === 'alert') return '(focused)';
+    return '';
+  };
+
+  // Use live v2 frame count if available, otherwise fall back to API polling
+  const displayFrame = v2State.currentFrame ?? apiStatus?.tick_count ?? 0;
+  const displayRho = v2State.rho;
+
+  // Format rho as "Thought Flow" with visual indicator
+  const getRhoDisplay = () => {
+    if (displayRho === null || displayRho === undefined) return null;
+
+    // ρ > 1.0 = expanding (discovering new connections)
+    // ρ ≈ 1.0 = stable (steady exploration)
+    // ρ < 1.0 = contracting (narrowing focus)
+    if (displayRho > 1.05) return { emoji: '📈', label: 'expanding', color: 'text-green-400' };
+    if (displayRho > 0.95) return { emoji: '⚖️', label: 'balanced', color: 'text-blue-400' };
+    return { emoji: '🎯', label: 'focusing', color: 'text-yellow-400' };
+  };
+
+  const rhoDisplay = getRhoDisplay();
+
   return (
-    <div className="flex items-center gap-1.5 flex-shrink-0">
-      {/* Animated pulse dot */}
-      <div
-        key={`pulse-${pulseKey}`}
-        className={`w-1.5 h-1.5 rounded-full ${colors.pulse}`}
-        style={{
-          animation: `heartbeat ${1000 / frequency}ms ease-out`
-        }}
-      />
-      <span className={`text-xs font-mono ${colors.text}`}>
-        {displayText}
-      </span>
+    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+      {/* Frame counter with live pulse */}
+      <div className="flex items-center gap-1.5">
+        <div
+          key={`pulse-${pulseKey}`}
+          className={`w-1.5 h-1.5 rounded-full ${colors.pulse} animate-pulse`}
+        />
+        <span className={`text-xs ${colors.text}`}>
+          frame {displayFrame} {getStateLabel()}
+        </span>
+      </div>
+
+      {/* Thought Flow (rho) indicator */}
+      {rhoDisplay && (
+        <div className={`text-xs ${rhoDisplay.color} flex items-center gap-1`}>
+          <span>{rhoDisplay.emoji}</span>
+          <span>flow: {rhoDisplay.label}</span>
+        </div>
+      )}
     </div>
   );
 }

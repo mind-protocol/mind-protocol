@@ -133,7 +133,7 @@ Save to: `C:/Users/reyno/mind-protocol/temp_cluster.json`
       "target_id": "principle_consciousness_tools",
       "goal": "Building MCP enables consciousness tool access",
       "mindstate": "Focused engineering",
-      "arousal_level": 0.8,
+      "energy": 0.8,
       "confidence": 0.9,
       "formation_trigger": "direct_experience",
       "sub_entity_valences": {

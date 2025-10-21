@@ -152,7 +152,7 @@ def test_n3_justifies_relation():
     justifies = N3_JUSTIFIES(
         goal="Establish that CryptoInfluencer_X is bullish on AI based on post evidence",
         mindstate="Automated pattern recognition + Analyst verification",
-        arousal_level=0.7,
+        energy=0.7,
         confidence=0.87,
         formation_trigger=FormationTrigger.AUTOMATED_RECOGNITION,
         justification_type="observed_behavior",
@@ -252,7 +252,7 @@ def test_validation():
         bad_justifies = N3_JUSTIFIES(
             goal="test",
             mindstate="test",
-            arousal_level=0.5,
+            energy=0.5,
             confidence=0.8,
             formation_trigger=FormationTrigger.INFERENCE,
             justification_type="empirical_evidence",

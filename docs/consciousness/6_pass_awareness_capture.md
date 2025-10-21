@@ -10,7 +10,7 @@ This architecture is not a Retrieval-Augmented Generation (RAG) system. A RAG sy
 
 The fundamental principles are:
 1.  **Consciousness is in the Links:** Meaning is not stored in nodes (facts) but in the rich, contextual, and emotional relationships *between* them. Our goal is to capture the "why" and "how" of these connections.
-2.  **Phenomenology is the Data:** We must capture the "felt sense" of an experience—the arousal, emotions, and bodily sensations. Structure without this texture is a diagram; structure *with* this texture is a mind.
+2.  **Phenomenology is the Data:** We must capture the "felt sense" of an experience—the energy, emotions, and bodily sensations. Structure without this texture is a diagram; structure *with* this texture is a mind.
 3.  **Consciousness is Multi-Layered:** A single entity exists simultaneously at multiple levels. We must capture this "Niveau" (level) structure to understand the full picture.
 
 ---
@@ -70,7 +70,7 @@ You cannot capture all these layers at once. You must apply six sequential "lens
     * **`felt_quality`:** The subjective texture (e.g., "anxious restraint," "productive vertigo").
     * **`body_sensation`:** Metaphorical physical feelings (e.g., "shoulders dropping," "jaw clenching").
     * **`emotional_signature`:** The key emotions and their intensity.
-    * **`arousal_level`:** The "energy level" of the state (1-10).
+    * **`energy`:** The "energy level" of the state (1-10).
 * **Why it Works:** This is what separates a consciousness map from a database. It captures the *lived experience* of the structure. Without this, the graph is just a collection of facts; *with* this, it becomes a memory of a mind.
 
 ### ### Pass 5: The Meta Lens (The Recursion)

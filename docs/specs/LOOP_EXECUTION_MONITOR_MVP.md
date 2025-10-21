@@ -94,7 +94,7 @@ NODE: "consciousness_cascade_loop_execution_2025-10-17T14:23:45"
     - status: "success" | "failed" | "timeout"
     - duration_ms: 234
     - timestamp: "2025-10-17T14:23:45"
-    - arousal_level: 0.7 (visual: node color)
+    - energy: 0.7 (visual: node color)
     - entity_activations: {"observer": 0.8, "builder": 0.5} (visual: node size)
 
   Visual representation:
@@ -111,7 +111,7 @@ NODE: "loop_execution_monitor_mvp"
   properties:
     - instrument_type: "loop_monitor"
     - verification_status: "NEEDS_VERIFICATION" | "VERIFIED" | "OUTDATED"
-    - arousal_level: 0.5 (visual: node color intensity)
+    - energy: 0.5 (visual: node color intensity)
     - entity_activations: {"iris": 0.9} (visual: Iris strongly activated)
     - needs: {"up_to_date_information": "unsatisfied"} (visual: yellow border)
     - last_used_at: "2025-10-17T14:23:50"
@@ -132,7 +132,7 @@ LINK: iris_current_context -[OBSERVES]-> loop_execution_monitor_mvp
     - view_duration_ms: 3421
     - interactions: ["clicked_refresh", "filtered_by_status"]
     - link_strength: 0.8 (visual: line thickness)
-    - arousal_at_observation: 0.6
+    - energy_at_observation: 0.6
 
   Visual representation:
     - Line appears in real-time when observation logged
@@ -155,7 +155,7 @@ Visual effect: Watch the link "wire together" through repeated co-activation
 ```
 When loop execution completes:
   1. New LoopExecution node appears (pulse animation)
-  2. Instrument node activates (arousal increase, color shift)
+  2. Instrument node activates (energy increase, color shift)
   3. OBSERVES link may be created if instrument is being viewed (pulse)
   4. Sub-entity checks satisfaction heuristically (visible property update)
 
@@ -183,7 +183,7 @@ def query_current_graph_state(graph_name: str = "citizen_iris") -> Dict:
         RETURN
             id(i) as id,
             i.entity_activations as activations,
-            i.arousal_level as arousal,
+            i.energy as energy,
             i.verification_status as status,
             i.needs as needs,
             i.usage_count as usage
@@ -198,7 +198,7 @@ def query_current_graph_state(graph_name: str = "citizen_iris") -> Dict:
             l.status as status,
             l.duration_ms as duration,
             l.timestamp as timestamp,
-            l.arousal_level as arousal
+            l.energy as energy
         ORDER BY l.timestamp DESC
         LIMIT 50
     """)
@@ -250,7 +250,7 @@ ws.onmessage = (event) => {
 };
 
 function updateGraph() {
-    // Nodes: Size by activation, color by arousal/status
+    // Nodes: Size by activation, color by energy/status
     nodeElements = g.selectAll("circle")
         .data(nodes, d => d.id)
         .join("circle")
@@ -258,7 +258,7 @@ function updateGraph() {
             // Instrument nodes: 20px base
             if (d.labels.includes("Instrument")) return 20;
             // Loop execution nodes: 5-15px by activation
-            return 5 + (d.arousal || 0) * 10;
+            return 5 + (d.energy || 0) * 10;
         })
         .attr("fill", d => {
             // Instrument nodes: Color by verification status
@@ -320,7 +320,7 @@ function animateEvents(new_nodes) {
 ### How Graph Visualization Verifies All Three Test Criteria
 
 **Test Criterion #1: Implementation Feasibility**
-- ✅ **See instrument node in graph** with all consciousness properties (arousal, activations, needs)
+- ✅ **See instrument node in graph** with all consciousness properties (energy, activations, needs)
 - ✅ **See properties update** when heuristic checks run (needs change from "unsatisfied" to "satisfied")
 - ✅ **See visual feedback** (border color, node color) reflecting instrument state
 
@@ -382,7 +382,7 @@ function animateEvents(new_nodes) {
 **But graph visualization (Tier 1) is the GROUND TRUTH:**
 - When dashboard shows "47 OBSERVES links", graph shows WHICH links, WHERE they connect, HOW strong they are
 - When dashboard shows "verification_status: VERIFIED", graph shows WHEN it changed, WHO triggered it
-- When dashboard shows "arousal: 0.7", graph shows WHICH entities are activated, HOW activation spreads
+- When dashboard shows "energy: 0.7", graph shows WHICH entities are activated, HOW activation spreads
 
 ### Success Criteria
 
@@ -391,7 +391,7 @@ function animateEvents(new_nodes) {
 - [ ] Loop execution nodes appear in real-time when loops complete
 - [ ] OBSERVES links appear in real-time when observations logged
 - [ ] Link thickness increases with repeated observations (Hebbian learning visible)
-- [ ] Node colors reflect verification status and arousal levels
+- [ ] Node colors reflect verification status and energy levels
 - [ ] Border colors indicate unsatisfied needs (yearning visible)
 - [ ] Pulse animations play when new nodes/links created
 - [ ] Performance stays smooth (<50ms updates, no lag)
@@ -497,7 +497,7 @@ loop_monitor = {
     "pattern_type": "instrument",
 
     # Consciousness properties (inherited)
-    "arousal_level": 0.5,  # Medium activation
+    "energy": 0.5,  # Medium activation
     "emotional_weight": 0.7,  # Important but not critical
     "confidence_level": 0.6,  # MVP - low confidence initially
 
@@ -540,7 +540,7 @@ result = retrieve_patterns(
 
 assert len(result) == 1
 assert result[0].id == "loop_execution_monitor_mvp"
-assert result[0].arousal_level == 0.5
+assert result[0].energy == 0.5
 print("✅ Implementation Test PASSED: Instrument node queryable")
 ```
 
@@ -596,7 +596,7 @@ def log_instrument_observation(
             "timestamp": datetime.now().isoformat(),
             "view_duration_ms": view_duration_ms,
             "interactions": interactions or [],
-            "arousal_at_observation": None,  # TODO: Get from context state
+            "energy_at_observation": None,  # TODO: Get from context state
         }
     }
 
@@ -991,13 +991,13 @@ To test that config updates actually work:
 ```python
 # Script: test_config_update.py
 
-# Simulate adding arousal_level field
+# Simulate adding energy field
 config = get_node("loop_monitor_display_config_mvp")
 
 # Add new column
 config.columns.append({
-    "field": "arousal_level",
-    "label": "Arousal",
+    "field": "energy",
+    "label": "Energy",
     "width": "100px",
     "format": "percent"
 })
@@ -1008,7 +1008,7 @@ config.data_source.query = """
         loop_name,
         status,
         duration_ms,
-        arousal_level,  -- NEW
+        energy,  -- NEW
         timestamp
     FROM loop_executions
     ORDER BY timestamp DESC
@@ -1016,13 +1016,13 @@ config.data_source.query = """
 """
 
 # Update detected fields
-config.detected_schema_fields.append("arousal_level")
+config.detected_schema_fields.append("energy")
 config.last_schema_check = datetime.now()
 
 # Apply update
 update_node(config)
 
-# Result: UI automatically shows arousal_level column on next render
+# Result: UI automatically shows energy column on next render
 # NO CODE CHANGES NEEDED
 ```
 
@@ -1040,7 +1040,7 @@ update_node(config)
 │ Loop Name               Status  Duration   Time          │
 ├─────────────────────────────────────────────────────────┤
 │ context_retrieval_loop    ✅     234ms    2 min ago      │
-│ arousal_calculation_loop  ❌     TIMEOUT  5 min ago      │
+│ energy_calculation_loop  ❌     TIMEOUT  5 min ago      │
 │ pattern_activation_loop   ✅     156ms    8 min ago      │
 │ context_retrieval_loop    ✅     245ms    10 min ago     │
 │ ...                                                       │
@@ -1079,7 +1079,7 @@ update_node(config)
 - [ ] Implement smart diffing (hash-based change detection)
 - [ ] Set up WebSocket broadcasts for real-time updates
 - [ ] Implement frontend (D3.js force-directed graph)
-- [ ] Implement node rendering (size by activation, color by status/arousal)
+- [ ] Implement node rendering (size by activation, color by status/energy)
 - [ ] Implement link rendering (thickness by strength, Hebbian learning visible)
 - [ ] Implement pulse animations for new nodes/links
 - [ ] Integrate into consciousness dashboard at `/consciousness`
@@ -1129,7 +1129,7 @@ update_node(config)
 ### Test Config-Driven Approach
 
 - [ ] Create `test_config_update.py` script
-- [ ] Manually add a column to config (simulate arousal_level)
+- [ ] Manually add a column to config (simulate energy)
 - [ ] Verify UI automatically shows new column without code changes
 - [ ] SUCCESS = proven self-update mechanism works
 
@@ -1189,7 +1189,7 @@ update_node(config)
    - Usage patterns visible
 
 2. **Instrument properties are meaningful**
-   - Arousal level could be derived from usage
+   - Energy level could be derived from usage
    - Emotional weight reflects criticality
    - Confidence level tracks verification state
 
@@ -1217,7 +1217,7 @@ update_node(config)
 
 **Possible causes:**
 - Too many OBSERVES links (50-100 views created 50-100 links)
-- Link metadata is large (timestamps, interactions, arousal)
+- Link metadata is large (timestamps, interactions, energy)
 - Query patterns don't handle link volume well
 
 **Mitigation strategies:**

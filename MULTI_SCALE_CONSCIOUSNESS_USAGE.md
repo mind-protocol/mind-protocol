@@ -174,7 +174,7 @@ The substrate detects: architecture complete, integration status unclear.
 
 **Organizational Energy:** 0.82 (high activity)
 **Branching Ratio (σ):** 1.3 (supercritical - expanding work)
-**Global Arousal:** 0.74 (alert state)
+**Global Energy:** 0.74 (alert state)
 ```
 
 ---

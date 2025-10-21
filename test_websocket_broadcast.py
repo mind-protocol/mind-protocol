@@ -55,7 +55,7 @@ async def test_broadcast():
     state_event = {
         "type": "consciousness_state",
         "network_id": "N1",
-        "global_arousal": 0.67,
+        "global_energy": 0.67,
         "branching_ratio": 1.2,
         "raw_sigma": 1.15,
         "tick_interval_ms": 150,

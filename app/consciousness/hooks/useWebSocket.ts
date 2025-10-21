@@ -6,7 +6,13 @@ import type {
   EntityActivityEvent,
   ThresholdCrossingEvent,
   ConsciousnessStateEvent,
-  WebSocketStreams
+  WebSocketStreams,
+  V2ConsciousnessState,
+  FrameStartEvent,
+  WmEmitEvent,
+  NodeFlipEvent,
+  LinkFlowSummaryEvent,
+  FrameEndEvent
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 
@@ -14,6 +20,7 @@ const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
 const RECONNECT_DELAY = 3000; // 3 seconds
 const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 entity activities
 const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
+const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
 
 /**
  * useWebSocket Hook
@@ -38,10 +45,19 @@ export function useWebSocket(): WebSocketStreams {
   const [connectionState, setConnectionState] = useState<WebSocketState>(WebSocketState.CONNECTING);
   const [error, setError] = useState<string | null>(null);
 
-  // Event streams
+  // Event streams (v1 legacy)
   const [entityActivity, setEntityActivity] = useState<EntityActivityEvent[]>([]);
   const [thresholdCrossings, setThresholdCrossings] = useState<ThresholdCrossingEvent[]>([]);
   const [consciousnessState, setConsciousnessState] = useState<ConsciousnessStateEvent | null>(null);
+
+  // V2 consciousness state (frame-based)
+  const [v2State, setV2State] = useState<V2ConsciousnessState>({
+    currentFrame: null,
+    rho: null,
+    workingMemory: new Set<string>(),
+    recentFlips: [],
+    linkFlows: new Map<string, number>()
+  });
 
   // WebSocket reference (persists across renders)
   const wsRef = useRef<WebSocket | null>(null);
@@ -56,10 +72,10 @@ export function useWebSocket(): WebSocketStreams {
       const data: WebSocketEvent = JSON.parse(event.data);
 
       switch (data.type) {
+        // V1 events (legacy)
         case 'entity_activity':
           setEntityActivity(prev => {
             const updated = [...prev, data];
-            // Keep only the last N activities to prevent memory issues
             return updated.slice(-MAX_ENTITY_ACTIVITIES);
           });
           break;
@@ -67,14 +83,96 @@ export function useWebSocket(): WebSocketStreams {
         case 'threshold_crossing':
           setThresholdCrossings(prev => {
             const updated = [...prev, data];
-            // Keep only the last N crossings
             return updated.slice(-MAX_THRESHOLD_CROSSINGS);
           });
           break;
 
         case 'consciousness_state':
-          // Only keep the latest consciousness state
           setConsciousnessState(data);
+          break;
+
+        // V2 events (frame-based)
+        case 'frame.start': {
+          const frameEvent = data as FrameStartEvent;
+          setV2State(prev => {
+            // Only update if frame actually changed
+            if (prev.currentFrame === frameEvent.frame_id) return prev;
+
+            return {
+              ...prev,
+              currentFrame: frameEvent.frame_id,
+              rho: frameEvent.rho ?? prev.rho,
+              // Clear link flows at frame start
+              linkFlows: new Map<string, number>()
+            };
+          });
+          break;
+        }
+
+        case 'wm.emit': {
+          const wmEvent = data as WmEmitEvent;
+          setV2State(prev => {
+            // Only update if working memory content changed
+            const newNodeIds = new Set(wmEvent.node_ids);
+            if (prev.workingMemory.size === newNodeIds.size &&
+                [...newNodeIds].every(id => prev.workingMemory.has(id))) {
+              return prev; // No change, return same object
+            }
+            return {
+              ...prev,
+              workingMemory: newNodeIds
+            };
+          });
+          break;
+        }
+
+        case 'node.flip': {
+          setV2State(prev => {
+            const updated = [...prev.recentFlips, data as NodeFlipEvent];
+            return {
+              ...prev,
+              recentFlips: updated.slice(-MAX_NODE_FLIPS)
+            };
+          });
+          break;
+        }
+
+        case 'link.flow.summary': {
+          const flowEvent = data as LinkFlowSummaryEvent;
+          setV2State(prev => {
+            // Guard: Check if flows array exists
+            if (!flowEvent.flows || !Array.isArray(flowEvent.flows)) {
+              console.warn('[useWebSocket] link.flow.summary event missing flows array:', flowEvent);
+              return prev;
+            }
+
+            // Check if any flow values actually changed
+            let hasChanges = false;
+            for (const flow of flowEvent.flows) {
+              if (prev.linkFlows.get(flow.link_id) !== flow.count) {
+                hasChanges = true;
+                break;
+              }
+            }
+
+            if (!hasChanges) {
+              return prev; // No changes, return same object
+            }
+
+            const newFlows = new Map(prev.linkFlows);
+            flowEvent.flows.forEach(flow => {
+              newFlows.set(flow.link_id, flow.count);
+            });
+            return {
+              ...prev,
+              linkFlows: newFlows
+            };
+          });
+          break;
+        }
+
+        case 'frame.end':
+          // Frame end is just a marker - no state update needed
           break;
 
         default:
@@ -179,9 +277,15 @@ export function useWebSocket(): WebSocketStreams {
   }, [connect, disconnect]);
 
   return {
+    // V1 events
     entityActivity,
     thresholdCrossings,
     consciousnessState,
+
+    // V2 events
+    v2State,
+
+    // Connection
     connectionState,
     error
   };

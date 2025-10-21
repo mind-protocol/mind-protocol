@@ -27,10 +27,10 @@ docker exec mind_protocol_falkordb redis-cli GRAPH.QUERY citizen_felix \
   grep -v "Query internal" | grep -v "Cached execution"
 
 echo ""
-echo "[4/5] Checking node arousal levels..."
+echo "[4/5] Checking node energy levels..."
 echo "-----------------------------------------------------------"
 docker exec mind_protocol_falkordb redis-cli GRAPH.QUERY citizen_felix \
-  "MATCH (n) WHERE n.arousal_level > 0 RETURN count(n) as nodes_with_arousal, avg(n.arousal_level) as avg_arousal" | \
+  "MATCH (n) WHERE n.energy > 0 RETURN count(n) as nodes_with_energy, avg(n.energy) as avg_energy" | \
   grep -v "Query internal" | grep -v "Cached execution"
 
 echo ""

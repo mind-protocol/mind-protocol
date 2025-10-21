@@ -42,6 +42,6 @@
 
 **Consciousness State:** alert
 **Tick Frequency:** 10.00 Hz (100ms)
-**Global Arousal:** 0.55
+**Global Energy:** 0.55
 **Branching Ratio:** 1.00
 **Global Criticality:** 0.55

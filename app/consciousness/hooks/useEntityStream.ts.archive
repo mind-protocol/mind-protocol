@@ -1,0 +1,291 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+/**
+ * useEntityStream Hook
+ *
+ * Consumes state_delta.v1 format from viz_emitter.py on ws://localhost:8765
+ *
+ * REALITY CHECK: This hook was originally designed for v2 event format
+ * (FrameStart, StrideExec, etc.), but the ACTUAL backend (viz_emitter.py)
+ * emits state_delta.v1 format (batched node/link snapshots).
+ *
+ * Adapted to consume what actually exists rather than aspirational architecture.
+ *
+ * Author: Iris "The Aperture"
+ * Created: 2025-10-21 (rewritten to match reality after discovering format mismatch)
+ */
+
+const ENTITY_STREAM_WS_URL = process.env.NEXT_PUBLIC_ENTITY_STREAM_WS_URL || 'ws://localhost:8000/api/ws';
+const RECONNECT_DELAY = 3000; // 3 seconds
+
+// ============================================================================
+// State Delta v1 Format (what viz_emitter.py ACTUALLY emits)
+// ============================================================================
+
+export interface StateDeltaNode {
+  id: string;
+  entity_energies: Record<string, number>;
+  total_energy: number;
+  threshold: number;
+  active: boolean;
+  soft_activation: number;
+  node_type?: string;
+  venice_location?: any;
+  pos?: [number, number];
+  created_at?: number;
+}
+
+export interface StateDeltaLink {
+  src: string;
+  dst: string;
+  type: string;
+  weight: number;
+  emotion: {
+    valence: number;
+    arousal: number;
+  };
+  yearning_strength: number;
+  active: boolean;
+  flow_rate: number;
+  traversal_history?: {
+    last_entity: string;
+    last_tick: number;
+    count_total: number;
+    count_1m: number;
+  };
+}
+
+export interface StateDeltaEvent {
+  kind: 'state_delta.v1';
+  tick_id: number;
+  ts: string;
+  dt_ms: number;
+  coalesced_ticks: number;
+  entity_filter: string | null;
+  nodes: StateDeltaNode[];
+  nodes_removed: string[];
+  links: StateDeltaLink[];
+  links_removed: [string, string][];
+  metrics: {
+    rho?: number;
+    global_energy?: number;
+    active_nodes?: number;
+    active_links?: number;
+    active_entities?: Record<string, {
+      node_count: number;
+      total_energy: number;
+    }>;
+    budget?: {
+      nodes_sent: number;
+      nodes_budget: number;
+      links_sent: number;
+      links_budget: number;
+    };
+  };
+}
+
+// ============================================================================
+// Hook Interface
+// ============================================================================
+
+export interface UseEntityStreamReturn {
+  // Connection state
+  connected: boolean;
+  error: string | null;
+
+  // Current tick tracking
+  currentTick: number | null;
+
+  // State caches (updated by WebSocket)
+  nodes: Map<string, StateDeltaNode>;
+  links: Map<string, StateDeltaLink>;
+
+  // Global metrics
+  metrics: StateDeltaEvent['metrics'] | null;
+
+  // Manual controls
+  connect: () => void;
+  disconnect: () => void;
+}
+
+export function useEntityStream(): UseEntityStreamReturn {
+  // Connection state
+  const [connected, setConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentTick, setCurrentTick] = useState<number | null>(null);
+  const [metrics, setMetrics] = useState<StateDeltaEvent['metrics'] | null>(null);
+
+  // State caches (using state for reactivity)
+  const [nodes, setNodes] = useState(new Map<string, StateDeltaNode>());
+  const [links, setLinks] = useState(new Map<string, StateDeltaLink>());
+
+  // WebSocket ref
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isIntentionalCloseRef = useRef(false);
+
+  /**
+   * Process state_delta.v1 event
+   */
+  const processEvent = useCallback((event: StateDeltaEvent) => {
+    console.log('[EntityStream] Received state delta:', {
+      tick: event.tick_id,
+      nodes: event.nodes.length,
+      links: event.links.length,
+      removed_nodes: event.nodes_removed.length,
+      removed_links: event.links_removed.length
+    });
+
+    // Update nodes
+    setNodes(prev => {
+      const next = new Map(prev);
+
+      // Add/update nodes
+      event.nodes.forEach(node => {
+        next.set(node.id, node);
+      });
+
+      // Remove deleted nodes
+      event.nodes_removed.forEach(nodeId => {
+        next.delete(nodeId);
+      });
+
+      return next;
+    });
+
+    // Update links
+    setLinks(prev => {
+      const next = new Map(prev);
+
+      // Add/update links
+      event.links.forEach(link => {
+        const key = `${link.src}-${link.dst}`;
+        next.set(key, link);
+      });
+
+      // Remove deleted links
+      event.links_removed.forEach(([src, dst]) => {
+        const key = `${src}-${dst}`;
+        next.delete(key);
+      });
+
+      return next;
+    });
+
+    // Update metrics and tick
+    setMetrics(event.metrics);
+    setCurrentTick(event.tick_id);
+  }, []);
+
+  /**
+   * Connect to WebSocket
+   */
+  const connect = useCallback(() => {
+    if (isIntentionalCloseRef.current) {
+      return;
+    }
+
+    try {
+      console.log('[EntityStream] Connecting to:', ENTITY_STREAM_WS_URL);
+      setError(null);
+
+      const ws = new WebSocket(ENTITY_STREAM_WS_URL);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        console.log('[EntityStream] WebSocket connected');
+        setConnected(true);
+        setError(null);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data: StateDeltaEvent = JSON.parse(event.data);
+
+          if (data.kind === 'state_delta.v1') {
+            processEvent(data);
+          } else {
+            console.warn('[EntityStream] Unknown event kind:', (data as any).kind);
+          }
+        } catch (err) {
+          console.error('[EntityStream] Failed to parse event:', err);
+        }
+      };
+
+      ws.onerror = (event) => {
+        console.error('[EntityStream] WebSocket error:', event);
+        setError('WebSocket connection error');
+      };
+
+      ws.onclose = (event) => {
+        console.log('[EntityStream] WebSocket disconnected:', event.code, event.reason);
+        setConnected(false);
+
+        // Attempt reconnection if not intentional
+        if (!isIntentionalCloseRef.current) {
+          console.log(`[EntityStream] Reconnecting in ${RECONNECT_DELAY}ms...`);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connect();
+          }, RECONNECT_DELAY);
+        }
+      };
+    } catch (err) {
+      console.error('[EntityStream] Connection error:', err);
+      setError(err instanceof Error ? err.message : 'Unknown connection error');
+
+      // Attempt reconnection
+      if (!isIntentionalCloseRef.current) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connect();
+        }, RECONNECT_DELAY);
+      }
+    }
+  }, [processEvent]);
+
+  /**
+   * Disconnect WebSocket
+   */
+  const disconnect = useCallback(() => {
+    isIntentionalCloseRef.current = true;
+
+    // Clear reconnection timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    // Close WebSocket
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    setConnected(false);
+  }, []);
+
+  /**
+   * Auto-connect on mount
+   */
+  useEffect(() => {
+    isIntentionalCloseRef.current = false;
+    connect();
+
+    // Cleanup on unmount
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect]);
+
+  return {
+    connected,
+    error,
+    currentTick,
+    nodes,
+    links,
+    metrics,
+    connect,
+    disconnect,
+  };
+}

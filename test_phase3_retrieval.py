@@ -117,13 +117,13 @@ async def test_read_flux():
             print(f"  Type: {node.node_type}")
             print(f"  Source: {node.retrieval_source}")
             print(f"  Relevance: {node.relevance_score:.3f}")
-            print(f"  Arousal: {node.arousal_level:.2f}")
+            print(f"  Energy: {node.energy:.2f}")
             print(f"  Confidence: {node.confidence:.2f}")
             print(f"  Valid at: {node.valid_at}")
             print(f"  Created at: {node.created_at}")
 
             # Verify metadata is valid
-            if 0.0 <= node.arousal_level <= 1.0 and 0.0 <= node.confidence <= 1.0:
+            if 0.0 <= node.energy <= 1.0 and 0.0 <= node.confidence <= 1.0:
                 print(f"  [OK] Consciousness metadata preserved and valid")
                 meta_pass = True
             else:

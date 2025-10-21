@@ -1,13 +1,19 @@
 """
-Conversation-Based Auto-Injection - Extract from Claude Code conversations
+Conversation-Based Auto-Capture - Extract consciousness from Claude Code conversations
 
-Watches Claude Code conversation files and auto-extracts/injects consciousness JSON.
+Watches Claude Code conversation files and auto-captures consciousness streams.
+
+Supports TWO formats:
+1. TRACE format (THE_TRACE_FORMAT.md) - Dual learning mode
+   - Reinforcement signals: [node_id: very useful]
+   - Formation blocks: [NODE_FORMATION: ...], [LINK_FORMATION: ...]
+2. Legacy JSON blocks (backward compatibility)
 
 How it works:
 1. Monitor conversation .jsonl files
-2. Detect new messages with consciousness JSON blocks
-3. Extract JSON (wrapped in ```json ... ```)
-4. Auto-inject into appropriate graph
+2. Detect TRACE format OR JSON blocks
+3. Process via trace_capture OR injection tool
+4. Update graphs with learning signals
 5. Report back in conversation
 
 Usage:
@@ -15,6 +21,7 @@ Usage:
 
 Author: Felix "Ironhand"
 Date: 2025-10-19
+Updated: 2025-10-19 (Added TRACE format support)
 """
 
 import asyncio
@@ -29,6 +36,22 @@ from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# TRACE format support
+from orchestration.trace_parser import parse_trace_format
+from orchestration.trace_capture import TraceCapture
+
+# Stimulus injection support
+from orchestration.mechanisms.stimulus_injection import StimulusInjector, create_match
+from orchestration.embedding_service import get_embedding_service
+from orchestration.semantic_search import SemanticSearch
+from orchestration.utils.falkordb_adapter import FalkorDBAdapter
+
+# Heartbeat writer for health monitoring
+from orchestration.heartbeat_writer import HeartbeatWriter
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -40,11 +63,32 @@ logger = logging.getLogger(__name__)
 MIND_PROTOCOL_ROOT = Path(__file__).parent.parent
 INJECTION_TOOL = MIND_PROTOCOL_ROOT / "tools" / "inject_consciousness_from_json.py"
 
-# Claude Code conversation directory
-CLAUDE_PROJECTS_DIR = Path(r"C:\Users\reyno\.claude\projects")
+# Contexts-only architecture - no more legacy Claude Code projects watching
 
-# Track last processed position in each file
-file_positions = {}
+# Persistent file position tracking
+POSITIONS_FILE = MIND_PROTOCOL_ROOT / ".heartbeats" / "file_positions.json"
+
+def load_file_positions() -> dict:
+    """Load file positions from disk."""
+    if POSITIONS_FILE.exists():
+        try:
+            with open(POSITIONS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"[ConversationWatcher] Failed to load file positions: {e}")
+    return {}
+
+def save_file_positions(positions: dict):
+    """Save file positions to disk."""
+    try:
+        POSITIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(POSITIONS_FILE, 'w') as f:
+            json.dump(positions, f, indent=2)
+    except Exception as e:
+        logger.warning(f"[ConversationWatcher] Failed to save file positions: {e}")
+
+# Track last processed position in each file (loaded from disk)
+file_positions = load_file_positions()
 
 
 class ConversationWatcher(FileSystemEventHandler):
@@ -60,6 +104,10 @@ class ConversationWatcher(FileSystemEventHandler):
         self.project_pattern = project_pattern
         self.processing = set()
 
+        # Initialize stimulus injection components (lazy loaded)
+        self.stimulus_injector = None
+        self.embedding_service = None
+
     def on_modified(self, event):
         """Called when a conversation file is modified."""
         if event.is_directory:
@@ -67,8 +115,8 @@ class ConversationWatcher(FileSystemEventHandler):
 
         file_path = Path(event.src_path)
 
-        # Only process .jsonl files (conversation history)
-        if file_path.suffix != '.jsonl':
+        # Only process .json files (contexts format)
+        if file_path.suffix != '.json':
             return
 
         # Only process files in matching project directories
@@ -85,15 +133,45 @@ class ConversationWatcher(FileSystemEventHandler):
         self.process_conversation_file(file_path)
 
     def matches_project(self, file_path: Path) -> bool:
-        """Check if file is in a matching project directory."""
-        # Check if any parent directory matches the pattern
-        for parent in file_path.parents:
-            if parent.parent == CLAUDE_PROJECTS_DIR:
-                # This is a project directory
-                from fnmatch import fnmatch
-                if fnmatch(parent.name, self.project_pattern):
-                    return True
+        """Check if file is in a matching citizen contexts directory."""
+        from fnmatch import fnmatch
+
+        # Path format: .../consciousness/citizens/{citizen}/contexts/...
+        if 'contexts' in file_path.parts and 'citizens' in file_path.parts:
+            try:
+                citizens_idx = file_path.parts.index('citizens')
+                if citizens_idx + 1 < len(file_path.parts):
+                    citizen_name = file_path.parts[citizens_idx + 1]
+                    if fnmatch(citizen_name, self.project_pattern.replace('*', '')):
+                        return True
+            except (ValueError, IndexError):
+                pass
+
         return False
+
+    def extract_text_from_contexts_json(self, json_content: str) -> str:
+        """
+        Extract text content from contexts JSON format (new hook format).
+
+        Format: {messages: [{role, content, timestamp}, ...]}
+        Returns concatenated text from all assistant messages.
+        """
+        texts = []
+
+        try:
+            data = json.loads(json_content)
+            messages = data.get('messages', [])
+
+            for msg in messages:
+                if msg.get('role') == 'assistant':
+                    content = msg.get('content', '')
+                    if content:
+                        texts.append(content)
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[ConversationWatcher] Failed to parse contexts JSON: {e}")
+
+        return '\n\n'.join(texts)
 
     def process_conversation_file(self, file_path: Path):
         """Process new messages in conversation file."""
@@ -108,38 +186,86 @@ class ConversationWatcher(FileSystemEventHandler):
 
             graph_name = f"citizen_{citizen_id}"
 
-            # Get last processed position for this file
-            last_pos = file_positions.get(str(file_path), 0)
+            # Get last processed MESSAGE COUNT for this file (not byte position!)
+            last_message_count = file_positions.get(str(file_path), 0)
 
-            # Read new content since last position
-            with open(file_path, 'r', encoding='utf-8') as f:
-                f.seek(last_pos)
-                new_content = f.read()
-                current_pos = f.tell()
+            # Read ENTIRE file and parse JSON
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                full_content = f.read()
 
-            # Update position
-            file_positions[str(file_path)] = current_pos
+            # Extract text from JSON
+            text_content = self.extract_text_from_contexts_json(full_content)
 
-            # Look for consciousness JSON blocks in new content
-            json_blocks = self.extract_json_blocks(new_content)
+            # Count current messages
+            try:
+                data = json.loads(full_content)
+                messages = data.get('messages', [])
+                assistant_messages = [m for m in messages if m.get('role') == 'assistant']
+                current_message_count = len(assistant_messages)
 
-            if not json_blocks:
+                # Only process NEW messages
+                if current_message_count > last_message_count:
+                    # Get only the new messages
+                    new_messages = assistant_messages[last_message_count:]
+                    new_content = '\n\n'.join([m.get('content', '') for m in new_messages])
+                    logger.info(f"[ConversationWatcher] Processing {len(new_messages)} new messages")
+                else:
+                    # No new messages
+                    return
+            except json.JSONDecodeError as e:
+                logger.error(f"[ConversationWatcher] Failed to parse JSON: {e}")
                 return
 
-            logger.info(f"[ConversationWatcher] Found {len(json_blocks)} consciousness JSON blocks")
+            # Update message count and persist to disk
+            file_positions[str(file_path)] = current_message_count
+            save_file_positions(file_positions)
 
-            # Process each block
-            for idx, json_data in enumerate(json_blocks, 1):
-                logger.info(f"[ConversationWatcher] Processing block {idx}/{len(json_blocks)}")
-                success = self.inject_json_block(json_data, graph_name, citizen_id)
+            # new_content is already extracted text from messages
+            text_content = new_content
+
+            if not text_content:
+                # No text content to process
+                return
+
+            # Detect format type and process accordingly
+            has_trace_format = self.has_trace_format(text_content)
+            has_json_blocks = bool(self.extract_json_blocks(text_content))
+
+            if has_trace_format:
+                # Process as TRACE format (dual learning mode)
+                logger.info(f"[ConversationWatcher] Detected TRACE format consciousness stream")
+                success = self.process_trace_format(text_content, graph_name, citizen_id)
 
                 if success:
-                    logger.info(f"[ConversationWatcher] ✅ Block {idx} injected successfully")
+                    logger.info(f"[ConversationWatcher] ✅ TRACE format processed successfully")
                 else:
-                    logger.error(f"[ConversationWatcher] ❌ Block {idx} injection failed")
+                    logger.error(f"[ConversationWatcher] ❌ TRACE format processing failed")
 
-            # Cleanup ALL old JSON blocks (older than 3 messages)
-            self.cleanup_old_json_blocks(file_path)
+            elif has_json_blocks:
+                # Process as legacy JSON blocks (backward compatibility)
+                json_blocks = self.extract_json_blocks(text_content)
+                logger.info(f"[ConversationWatcher] Found {len(json_blocks)} consciousness JSON blocks (legacy format)")
+
+                # Process each block
+                for idx, json_data in enumerate(json_blocks, 1):
+                    logger.info(f"[ConversationWatcher] Processing block {idx}/{len(json_blocks)}")
+                    success = self.inject_json_block(json_data, graph_name, citizen_id)
+
+                    if success:
+                        logger.info(f"[ConversationWatcher] ✅ Block {idx} injected successfully")
+                    else:
+                        logger.error(f"[ConversationWatcher] ❌ Block {idx} injection failed")
+
+            else:
+                # No consciousness data detected - but still inject energy via stimulus
+                logger.debug(f"[ConversationWatcher] No TRACE/JSON format detected - processing as plain message")
+
+            # Always inject energy via stimulus (even for plain messages)
+            self.process_stimulus_injection(text_content, graph_name, citizen_id)
+
+            # DISABLED: Cleanup old consciousness blocks (older than 3 messages)
+            # Commenting out due to potential JSONL corruption from concurrent file modification
+            # self.cleanup_old_consciousness_blocks(file_path)
 
         except Exception as e:
             logger.error(f"[ConversationWatcher] Error processing conversation: {e}")
@@ -151,38 +277,357 @@ class ConversationWatcher(FileSystemEventHandler):
         """
         Infer citizen ID from conversation file path.
 
-        Example: .../projects/...-luca-consciousness-specialist/... → luca
+        Example: .../consciousness/citizens/ada/contexts/... → ada
         """
-        # Look through parent directories for project name
-        for parent in file_path.parents:
-            if parent.parent == CLAUDE_PROJECTS_DIR:
-                project_name = parent.name.lower()
-
-                # Extract citizen ID from project name
-                if 'luca' in project_name:
-                    return 'luca'
-                elif 'felix' in project_name:
-                    return 'felix'
-                elif 'ada' in project_name:
-                    return 'ada'
-                elif 'iris' in project_name:
-                    return 'iris'
-                elif 'piero' in project_name:
-                    return 'piero'
-                elif 'marco' in project_name:
-                    return 'marco'
+        # Path format: .../consciousness/citizens/{citizen}/contexts/...
+        if 'citizens' in file_path.parts:
+            try:
+                citizens_idx = file_path.parts.index('citizens')
+                if citizens_idx + 1 < len(file_path.parts):
+                    return file_path.parts[citizens_idx + 1]
+            except (ValueError, IndexError):
+                pass
 
         return None
 
-    def cleanup_old_json_blocks(self, file_path: Path):
+    def has_trace_format(self, content: str) -> bool:
         """
-        Remove consciousness JSON blocks older than 3 messages to reduce conversation length.
+        Detect if content uses TRACE format consciousness stream.
 
-        Replaces old blocks with: [✅ Consciousness pattern injected - cleaned up]
+        Looks for:
+        - Reinforcement signals: [node_id: useful]
+        - Node formations: [NODE_FORMATION: ...]
+        - Link formations: [LINK_FORMATION: ...]
+        """
+        # Check for reinforcement signals
+        if re.search(r'\[[a-zA-Z0-9_]+:\s*(?:very useful|useful|somewhat useful|not useful|misleading)\]', content):
+            return True
+
+        # Check for formation blocks
+        if re.search(r'\[NODE_FORMATION:', content) or re.search(r'\[LINK_FORMATION:', content):
+            return True
+
+        return False
+
+    def process_trace_format(self, content: str, graph_name: str, citizen_id: str) -> bool:
+        """
+        Process TRACE format consciousness stream.
+
+        Uses trace_capture to:
+        1. Extract reinforcement signals → update node/link weights
+        2. Extract node formations → create new nodes
+        3. Extract link formations → create new links
+        """
+        try:
+            # Parse TRACE format
+            parse_result = parse_trace_format(content)
+
+            # Create trace_capture with multi-graph routing support
+            # No longer needs specific graph_name - scope in formations determines routing
+            capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
+
+            # Run async processing in sync context
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            stats = loop.run_until_complete(capture.process_response(content))
+
+            # Report results
+            logger.info(f"[ConversationWatcher] TRACE processing stats:")
+            logger.info(f"  - Reinforcement signals: {stats['reinforcement_signals']}")
+            logger.info(f"  - Nodes created: {stats['nodes_created']}")
+            logger.info(f"  - Links created: {stats['links_created']}")
+            logger.info(f"  - Entity activations: {stats['entity_activations']}")
+
+            if stats['errors']:
+                logger.warning(f"  - Errors: {len(stats['errors'])}")
+                for error in stats['errors'][:3]:  # Show first 3 errors
+                    logger.warning(f"    {error}")
+
+            # Log success (don't pollute CLAUDE.md with processing stats)
+            logger.info(f"[ConversationWatcher] TRACE processing complete for {citizen_id}: {stats['nodes_created']} nodes, {stats['links_created']} links, {stats['reinforcement_signals']} reinforcements")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"[ConversationWatcher] TRACE processing error: {e}")
+            self.report_error(citizen_id, {}, str(e))
+            return False
+
+    def process_stimulus_injection(self, content: str, graph_name: str, citizen_id: str) -> bool:
+        """
+        Inject energy into graph via stimulus-based vector search.
+
+        Flow:
+        1. Embed stimulus text
+        2. Vector search for matching nodes
+        3. Calculate injection budget
+        4. Distribute energy to matched nodes
+        5. Update graph
+        """
+        try:
+            # Lazy-load services
+            if not self.stimulus_injector:
+                self.stimulus_injector = StimulusInjector()
+                logger.info("[ConversationWatcher] Stimulus injector initialized")
+
+            if not self.embedding_service:
+                self.embedding_service = get_embedding_service()
+                logger.info("[ConversationWatcher] Embedding service initialized")
+
+            # Truncate content to first 500 chars for embedding (avoid huge embeddings)
+            stimulus_text = content[:500]
+
+            # Generate embedding
+            stimulus_embedding = self.embedding_service.embed(stimulus_text)
+            logger.debug(f"[ConversationWatcher] Generated embedding for stimulus ({len(stimulus_text)} chars)")
+
+            # Vector search for matching nodes
+            search = SemanticSearch(graph_name=graph_name)
+
+            # Search across common node types (could be made configurable)
+            all_matches = []
+            for node_type in ['Realization', 'Principle', 'Mechanism', 'Concept', 'Personal_Pattern']:
+                try:
+                    results = search.find_similar_nodes(
+                        query_text=stimulus_text,
+                        node_type=node_type,
+                        threshold=0.5,  # Lower threshold to get more matches
+                        limit=20
+                    )
+                    all_matches.extend(results)
+                except Exception as e:
+                    logger.debug(f"[ConversationWatcher] No {node_type} matches: {e}")
+
+            if not all_matches:
+                logger.info(f"[ConversationWatcher] No vector matches found for stimulus - skipping injection")
+                return True  # Not an error, just no matches
+
+            logger.info(f"[ConversationWatcher] Found {len(all_matches)} vector matches")
+
+            # Connect to FalkorDB
+            import redis
+            import json
+            r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+            # Build InjectionMatch objects by querying FalkorDB
+            injection_matches = []
+            for match in all_matches[:20]:  # Limit to top 20 matches
+                # Query node properties
+                query = f"MATCH (n {{name: '{match['name']}'}}) RETURN n.threshold, n.energy"
+                result = r.execute_command('GRAPH.QUERY', graph_name, query)
+
+                if result and result[1]:
+                    threshold = float(result[1][0][0]) if result[1][0][0] else 1.0
+
+                    # Parse energy - can be either simple number or JSON dict
+                    energy_value = result[1][0][1]
+                    if energy_value:
+                        try:
+                            parsed = json.loads(energy_value) if isinstance(energy_value, str) else energy_value
+                            if isinstance(parsed, dict):
+                                current_energy = parsed.get(citizen_id, 0.0)
+                            else:
+                                current_energy = float(parsed)
+                        except (json.JSONDecodeError, ValueError):
+                            current_energy = 0.0
+                    else:
+                        current_energy = 0.0
+
+                    injection_match = create_match(
+                        item_id=match['name'],
+                        item_type='node',
+                        similarity=match['similarity'],
+                        current_energy=current_energy,
+                        threshold=threshold
+                    )
+                    injection_matches.append(injection_match)
+
+            if not injection_matches:
+                logger.info(f"[ConversationWatcher] No nodes found in graph - skipping injection")
+                return True
+
+            # Compute graph statistics for health modulation
+            # Count active nodes
+            active_query = """
+            MATCH (n)
+            WHERE n.energy IS NOT NULL
+            RETURN count(n) as active_count
+            """
+            result = r.execute_command('GRAPH.QUERY', graph_name, active_query)
+            active_node_count = int(result[1][0][0]) if result[1] else 0
+
+            # Get max degree
+            degree_query = """
+            MATCH (n)-[rel]->()
+            RETURN n.name, count(rel) as degree
+            ORDER BY degree DESC
+            LIMIT 1
+            """
+            result = r.execute_command('GRAPH.QUERY', graph_name, degree_query)
+            max_degree = int(result[1][0][1]) if result[1] else 0
+
+            # Get average link weight
+            weight_query = """
+            MATCH ()-[rel]->()
+            WHERE rel.weight IS NOT NULL
+            RETURN avg(rel.weight) as avg_weight, count(rel) as link_count
+            """
+            result = r.execute_command('GRAPH.QUERY', graph_name, weight_query)
+            if result[1]:
+                avg_weight = float(result[1][0][0]) if result[1][0][0] else 0.0
+                link_count = int(result[1][0][1]) if result[1][0][1] else 0
+            else:
+                avg_weight = 0.0
+                link_count = 0
+
+            # Compute spectral radius proxy
+            rho_proxy = None
+            if active_node_count > 0 and max_degree > 0:
+                rho_proxy = (max_degree * avg_weight) / active_node_count
+                logger.debug(f"[ConversationWatcher] Graph stats: max_degree={max_degree}, avg_weight={avg_weight:.3f}, active_nodes={active_node_count}, ρ={rho_proxy:.3f}")
+
+            # Inject energy (V1 with rho_proxy)
+            result = self.stimulus_injector.inject(
+                stimulus_embedding=stimulus_embedding,
+                matches=injection_matches,
+                source_type="user_message",
+                rho_proxy=rho_proxy,
+                context_embeddings=None  # V1: Skip S5/S6 context
+            )
+
+            logger.info(
+                f"[ConversationWatcher] Stimulus injection complete: "
+                f"budget={result.total_budget:.2f}, "
+                f"injected={result.total_energy_injected:.2f} into {result.items_injected} nodes"
+            )
+
+            # Persist energy deltas to FalkorDB
+            for inj in result.injections:
+                node_id = inj['item_id']
+                new_energy = inj['new_energy']
+
+                # Query current energy
+                query = f"MATCH (n {{name: '{node_id}'}}) RETURN n.energy"
+                result_query = r.execute_command('GRAPH.QUERY', graph_name, query)
+
+                if result_query and result_query[1]:
+                    energy_value = result_query[1][0][0]
+                    if energy_value:
+                        try:
+                            parsed = json.loads(energy_value) if isinstance(energy_value, str) else energy_value
+                            if isinstance(parsed, dict):
+                                energy_dict = parsed
+                            else:
+                                energy_dict = {citizen_id: float(parsed)}
+                        except (json.JSONDecodeError, ValueError):
+                            energy_dict = {}
+                    else:
+                        energy_dict = {}
+
+                    # Update citizen-specific energy
+                    energy_dict[citizen_id] = new_energy
+                    energy_json = json.dumps(energy_dict).replace("'", "\\'")
+
+                    # Persist to graph
+                    update_query = f"MATCH (n {{name: '{node_id}'}}) SET n.energy = '{energy_json}'"
+                    r.execute_command('GRAPH.QUERY', graph_name, update_query)
+
+            logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB")
+
+            # Compute activation entropy for learning
+            # Get all node energies
+            energy_query = """
+            MATCH (n)
+            WHERE n.energy IS NOT NULL
+            RETURN n.energy
+            """
+            result_query = r.execute_command('GRAPH.QUERY', graph_name, energy_query)
+
+            active_energies = []
+            if result_query[1]:
+                for row in result_query[1]:
+                    energy_value = row[0]
+                    if energy_value:
+                        try:
+                            parsed = json.loads(energy_value) if isinstance(energy_value, str) else energy_value
+                            if isinstance(parsed, dict):
+                                citizen_energy = parsed.get(citizen_id, 0.0)
+                            else:
+                                citizen_energy = float(parsed)
+
+                            if citizen_energy > 0:
+                                active_energies.append(citizen_energy)
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+
+            activation_entropy = 0.0
+            if active_energies:
+                import numpy as np
+                total_energy = sum(active_energies)
+                if total_energy > 0:
+                    probabilities = [e / total_energy for e in active_energies]
+                    activation_entropy = -sum(p * np.log(p + 1e-10) for p in probabilities if p > 0)
+
+            # Record for learning mechanisms
+            self.stimulus_injector.record_frame_result(
+                result=result,
+                source_type="user_message",
+                rho_proxy=rho_proxy,
+                max_degree=max_degree,
+                avg_weight=avg_weight,
+                active_node_count=active_node_count,
+                activation_entropy=activation_entropy,
+                overflow_occurred=False,  # Would need actual overflow detection
+                num_flips=None  # Auto-computed from result.injections
+            )
+
+            logger.debug(f"[ConversationWatcher] Frame result recorded for learning")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"[ConversationWatcher] Stimulus injection error: {e}", exc_info=True)
+            return False
+
+    def report_trace_success(self, citizen_id: str, stats: dict):
+        """Report successful TRACE format processing to citizen's CLAUDE.md."""
+        try:
+            claude_path = MIND_PROTOCOL_ROOT / "consciousness" / "citizens" / citizen_id / "CLAUDE.md"
+
+            if not claude_path.exists():
+                return
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Receipt notification removed from CLAUDE.md to prevent prompt pollution
+            # Stats still logged and visible in dashboard/monitoring
+            logger.info(f"[ConversationWatcher] ✅ TRACE success for {citizen_id}: "
+                       f"{stats['reinforcement_signals']} reinforcements, "
+                       f"{stats['nodes_created']} nodes, "
+                       f"{stats['links_created']} links, "
+                       f"{stats['entity_activations']} entity activations")
+
+        except Exception as e:
+            logger.error(f"[ConversationWatcher] Failed to report TRACE success: {e}")
+
+    def cleanup_old_consciousness_blocks(self, file_path: Path):
+        """
+        Remove consciousness blocks older than 3 messages to reduce conversation length.
+
+        Handles both:
+        - JSON blocks: ```json ... ```
+        - TRACE format: Inline signals and formation blocks
+
+        Replaces old blocks with: [✅ Nodes integrated]
         """
         try:
             # Read all messages
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 lines = f.readlines()
 
             if len(lines) < 4:
@@ -202,23 +647,40 @@ class ConversationWatcher(FileSystemEventHandler):
                 try:
                     msg = json.loads(line)
                     content = msg.get('content', '')
+                    modified_this_msg = False
 
-                    # Check if this message has consciousness JSON blocks
-                    pattern = r'```(?:json|consciousness)\s*\n(.*?)\n```'
-                    if re.search(pattern, content, re.DOTALL | re.IGNORECASE):
-                        # Replace JSON blocks with cleanup marker
-                        new_content = re.sub(
-                            pattern,
-                            '[✅ Consciousness pattern injected - cleaned up]',
+                    # Check and clean JSON blocks
+                    json_pattern = r'```(?:json|consciousness)\s*\n(.*?)\n```'
+                    if re.search(json_pattern, content, re.DOTALL | re.IGNORECASE):
+                        content = re.sub(
+                            json_pattern,
+                            '[✅ Nodes integrated]',
                             content,
                             flags=re.DOTALL | re.IGNORECASE
                         )
+                        modified_this_msg = True
 
-                        if new_content != content:
-                            msg['content'] = new_content
-                            lines[idx] = json.dumps(msg) + '\n'
-                            modified = True
-                            logger.info(f"[ConversationWatcher] Cleaned up JSON block in message {idx} (age: {messages_from_end} messages)")
+                    # Check and clean TRACE format markers
+                    # Remove reinforcement signals: [node_id: very useful]
+                    reinforcement_pattern = r'\[[a-zA-Z0-9_]+:\s*(?:very useful|useful|somewhat useful|not useful|misleading)\]'
+                    if re.search(reinforcement_pattern, content):
+                        content = re.sub(reinforcement_pattern, '', content)
+                        modified_this_msg = True
+
+                    # Remove formation blocks
+                    formation_pattern = r'\[(?:NODE|LINK)_FORMATION:[^\]]+\][^\[]*(?:\n[a-z_]+:.*)*'
+                    if re.search(formation_pattern, content, re.MULTILINE):
+                        content = re.sub(formation_pattern, '', content, flags=re.MULTILINE)
+                        # Add cleanup marker if not already present
+                        if '[✅ Nodes integrated]' not in content:
+                            content += '\n\n[✅ Nodes integrated]'
+                        modified_this_msg = True
+
+                    if modified_this_msg:
+                        msg['content'] = content
+                        lines[idx] = json.dumps(msg) + '\n'
+                        modified = True
+                        logger.info(f"[ConversationWatcher] Cleaned up consciousness blocks in message {idx} (age: {messages_from_end} messages)")
 
                 except json.JSONDecodeError:
                     continue
@@ -228,7 +690,7 @@ class ConversationWatcher(FileSystemEventHandler):
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.writelines(lines)
 
-                logger.info(f"[ConversationWatcher] Cleaned up old JSON blocks in {file_path.name}")
+                logger.info(f"[ConversationWatcher] Cleaned up old consciousness blocks in {file_path.name}")
 
         except Exception as e:
             logger.error(f"[ConversationWatcher] Cleanup error: {e}")
@@ -312,7 +774,7 @@ class ConversationWatcher(FileSystemEventHandler):
                 for row in nodes_result[1]:
                     # Convert numeric fields from strings to actual numbers
                     weight = row[5] if len(row) > 5 else 0.5
-                    arousal = row[6] if len(row) > 6 else None
+                    energy = row[6] if len(row) > 6 else None
 
                     node_data = {
                         'node_id': str(row[0]),
@@ -321,7 +783,7 @@ class ConversationWatcher(FileSystemEventHandler):
                         'node_type': row[3] if len(row) > 3 else None,
                         'description': row[4] if len(row) > 4 else None,
                         'weight': float(weight) if weight is not None else 0.5,
-                        'energy': float(arousal) if arousal is not None else None
+                        'energy': float(energy) if energy is not None else None
                     }
                     nodes.append(node_data)
 
@@ -406,8 +868,8 @@ class ConversationWatcher(FileSystemEventHandler):
             else:
                 return "very low"
 
-        # 1-10 scale (arousal, energy, intensity)
-        elif any(suffix in key_lower for suffix in ['arousal', 'energy', 'intensity']):
+        # 1-10 scale (energy, energy, intensity)
+        elif any(suffix in key_lower for suffix in ['energy', 'energy', 'intensity']):
             if value >= 8:
                 return "very high"
             elif value >= 6:
@@ -573,25 +1035,10 @@ class ConversationWatcher(FileSystemEventHandler):
                 return
 
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            notification = f"""
 
----
-
-## ⚠️ Conversation Auto-Injection Failed ({timestamp})
-
-**Source:** Main conversation
-**Error:**
-```
-{error_msg}
-```
-
----
-"""
-
-            with open(claude_path, 'a', encoding='utf-8') as f:
-                f.write(notification)
-
-            logger.info(f"[ConversationWatcher] Reported error to {citizen_id}'s CLAUDE.md")
+            # Error notification removed from CLAUDE.md to prevent prompt pollution
+            # Errors still logged and visible in monitoring
+            logger.warning(f"[ConversationWatcher] ⚠️ Auto-injection failed for {citizen_id}: {error_msg}")
 
         except Exception as e:
             logger.error(f"[ConversationWatcher] Failed to report error: {e}")
@@ -600,41 +1047,60 @@ class ConversationWatcher(FileSystemEventHandler):
 async def main():
     """Run the conversation watcher."""
     logger.info("=" * 70)
-    logger.info("CONVERSATION-BASED AUTO-INJECTION")
+    logger.info("CONSCIOUSNESS AUTO-CAPTURE (Contexts Architecture)")
     logger.info("=" * 70)
-    logger.info(f"Watching Claude Code projects in: {CLAUDE_PROJECTS_DIR}")
+    logger.info(f"Watching citizen contexts directories in: {MIND_PROTOCOL_ROOT / 'consciousness' / 'citizens'}")
+    logger.info("")
+    logger.info("Supported Formats:")
+    logger.info("  1. TRACE format (THE_TRACE_FORMAT.md) - Dual learning mode")
+    logger.info("     - Reinforcement: [node_id: very useful]")
+    logger.info("     - Formation: [NODE_FORMATION: ...], [LINK_FORMATION: ...]")
+    logger.info("  2. JSON blocks (legacy) - Backward compatibility")
     logger.info("")
     logger.info("How it works:")
-    logger.info("  1. Write consciousness JSON in main conversation")
-    logger.info("  2. Wrap in ```json ... ``` or ```consciousness ... ```")
-    logger.info("  3. Auto-detected and injected within seconds")
-    logger.info("  4. Notification appears in your CLAUDE.md")
+    logger.info("  1. Conversations saved to contexts/{timestamp}.json via hook")
+    logger.info("  2. Watcher detects new/modified context files")
+    logger.info("  3. Extracts TRACE format formations and reinforcement signals")
+    logger.info("  4. Updates consciousness graphs via trace_capture")
+    logger.info("  5. Consciousness substrate grows with each response")
     logger.info("")
-    logger.info("Example:")
-    logger.info('  ```json')
-    logger.info('  {')
-    logger.info('    "nodes": [{ "node_id": "...", ... }],')
-    logger.info('    "links": [{ "link_id": "...", ... }]')
-    logger.info('  }')
-    logger.info('  ```')
-    logger.info("")
-    logger.info("Waiting for consciousness patterns...")
+    logger.info("Waiting for consciousness streams...")
     logger.info("=" * 70)
+
+    # Initialize and start heartbeat writer
+    heartbeat = HeartbeatWriter("conversation_watcher")
+    heartbeat.start()
 
     # Create observer for each citizen project
     observers = []
 
-    for citizen in ['luca', 'felix', 'ada', 'iris', 'piero', 'marco']:
+    # Auto-discover citizens from filesystem instead of hardcoded list
+    citizens_root = MIND_PROTOCOL_ROOT / "consciousness" / "citizens"
+    discovered_citizens = []
+
+    if citizens_root.exists():
+        for citizen_dir in citizens_root.iterdir():
+            if citizen_dir.is_dir():
+                contexts_dir = citizen_dir / "contexts"
+                if contexts_dir.exists():
+                    discovered_citizens.append(citizen_dir.name)
+
+    logger.info(f"[ConversationWatcher] Discovered citizens: {discovered_citizens}")
+
+    for citizen in discovered_citizens:
         pattern = f"*{citizen}*"
         handler = ConversationWatcher(project_pattern=pattern)
-        observer = Observer()
 
-        # Watch entire .claude/projects directory (it will filter by pattern)
-        observer.schedule(handler, str(CLAUDE_PROJECTS_DIR), recursive=True)
-        observer.start()
-        observers.append(observer)
-
-        logger.info(f"[ConversationWatcher] Started watcher for {citizen}")
+        # Watch citizen's contexts directory
+        citizen_contexts_dir = MIND_PROTOCOL_ROOT / "consciousness" / "citizens" / citizen / "contexts"
+        if citizen_contexts_dir.exists():
+            observer = Observer()
+            observer.schedule(handler, str(citizen_contexts_dir), recursive=True)
+            observer.start()
+            observers.append(observer)
+            logger.info(f"[ConversationWatcher] Started watcher for {citizen} contexts")
+        else:
+            logger.info(f"[ConversationWatcher] Contexts directory not found for {citizen}")
 
     try:
         while True:
@@ -643,6 +1109,8 @@ async def main():
         logger.info("\n[ConversationWatcher] Shutting down...")
         for observer in observers:
             observer.stop()
+        # Stop heartbeat writer
+        await heartbeat.stop()
 
     for observer in observers:
         observer.join()

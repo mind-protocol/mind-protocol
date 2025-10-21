@@ -51,14 +51,14 @@ export interface ThresholdCrossingEvent {
 /**
  * Consciousness State Event
  *
- * Emitted after global arousal measurement.
+ * Emitted after global energy measurement.
  * Frequency: After each tick (variable frequency based on system state)
  * Source: orchestration/consciousness_engine.py
  */
 export interface ConsciousnessStateEvent {
   type: 'consciousness_state';
   network_id: string;              // e.g., "N1", "N2", "N3"
-  global_arousal: number;          // System-wide arousal (0-1)
+  global_energy: number;          // System-wide energy (0-1)
   branching_ratio: number;         // Mapped branching ratio (0-1)
   raw_sigma: number;               // Raw branching ratio σ (unbounded)
   tick_interval_ms: number;        // Current tick interval in milliseconds
@@ -69,12 +69,102 @@ export interface ConsciousnessStateEvent {
 }
 
 /**
+ * V2 Event Format - Frame-based consciousness streaming
+ * Source: orchestration/consciousness_engine_v2.py
+ *
+ * These events provide frame-by-frame consciousness updates with
+ * working memory tracking and link flow visualization.
+ */
+
+/**
+ * Frame Start Event (v2)
+ *
+ * Marks the beginning of a consciousness frame.
+ * Contains branching ratio (ρ) and entity palette.
+ */
+export interface FrameStartEvent {
+  type: 'frame.start';
+  v: '2';
+  kind: 'frame.start';
+  frame_id: number;
+  rho?: number;                    // Branching ratio (expansion metric)
+  entity_palette?: Array<{
+    id: string;
+    name?: string;
+    color: string;
+  }>;
+}
+
+/**
+ * Working Memory Emission Event (v2)
+ *
+ * Lists all nodes currently in working memory.
+ * Working memory = set of active nodes in consciousness.
+ */
+export interface WmEmitEvent {
+  type: 'wm.emit';
+  v: '2';
+  kind: 'wm.emit';
+  frame_id: number;
+  node_ids: string[];              // Node IDs in working memory
+}
+
+/**
+ * Node Flip Event (v2)
+ *
+ * Emitted when a node crosses activation threshold.
+ */
+export interface NodeFlipEvent {
+  type: 'node.flip';
+  v: '2';
+  kind: 'node.flip';
+  frame_id: number;
+  node_id: string;
+  direction: 'on' | 'off';         // Activated or deactivated
+  entity_id?: string;              // Which entity caused the flip
+}
+
+/**
+ * Link Flow Summary Event (v2)
+ *
+ * Aggregated link traversal statistics for visualization.
+ */
+export interface LinkFlowSummaryEvent {
+  type: 'link.flow.summary';
+  v: '2';
+  kind: 'link.flow.summary';
+  frame_id: number;
+  flows: Array<{
+    link_id: string;
+    count: number;                 // Number of traversals this frame
+    entity_ids: string[];          // Which entities traversed
+  }>;
+}
+
+/**
+ * Frame End Event (v2)
+ *
+ * Marks the end of a consciousness frame.
+ */
+export interface FrameEndEvent {
+  type: 'frame.end';
+  v: '2';
+  kind: 'frame.end';
+  frame_id: number;
+}
+
+/**
  * Union type of all WebSocket events
  */
 export type WebSocketEvent =
   | EntityActivityEvent
   | ThresholdCrossingEvent
-  | ConsciousnessStateEvent;
+  | ConsciousnessStateEvent
+  | FrameStartEvent
+  | WmEmitEvent
+  | NodeFlipEvent
+  | LinkFlowSummaryEvent
+  | FrameEndEvent;
 
 /**
  * WebSocket connection state
@@ -82,8 +172,22 @@ export type WebSocketEvent =
 export enum WebSocketState {
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
+  RECONNECTING = 'reconnecting',
   DISCONNECTED = 'disconnected',
   ERROR = 'error'
+}
+
+/**
+ * V2 Consciousness State
+ *
+ * Live frame-by-frame consciousness metrics for real-time visualization.
+ */
+export interface V2ConsciousnessState {
+  currentFrame: number | null;     // Current frame ID
+  rho: number | null;               // Branching ratio (ρ) - thought expansion metric
+  workingMemory: Set<string>;       // Node IDs currently in working memory
+  recentFlips: NodeFlipEvent[];     // Recent threshold crossings (last 20)
+  linkFlows: Map<string, number>;   // Link ID -> traversal count this frame
 }
 
 /**
@@ -93,9 +197,15 @@ export enum WebSocketState {
  * separate arrays for each event type for easy consumption.
  */
 export interface WebSocketStreams {
+  // V1 events (legacy)
   entityActivity: EntityActivityEvent[];
   thresholdCrossings: ThresholdCrossingEvent[];
   consciousnessState: ConsciousnessStateEvent | null;
+
+  // V2 events (frame-based)
+  v2State: V2ConsciousnessState;
+
+  // Connection state
   connectionState: WebSocketState;
   error: string | null;
 }

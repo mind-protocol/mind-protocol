@@ -512,7 +512,7 @@ All N3 links inherit from `BaseRelation` (consciousness substrate metadata):
 **Required Consciousness Metadata:**
 - `goal` (string) - Why this link exists
 - `mindstate` (string) - State when forming link
-- `arousal_level` (number 0-1) - Intensity
+- `energy` (number 0-1) - Intensity
 - `confidence` (number 0-1) - Certainty
 - `formation_trigger` (enum) - How discovered
 - Bitemporal fields (valid_at, invalid_at, created_at, expired_at)

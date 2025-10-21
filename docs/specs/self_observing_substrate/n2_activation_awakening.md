@@ -92,26 +92,26 @@ Organizational patterns link to citizens when relevant:
 
 // Task needs Luca
 (Task: finalize_substrate_specs)
-  -[ASSIGNED_TO {arousal: 0.85, goal: "substrate specs blocking Felix"}]->
+  -[ASSIGNED_TO {energy: 0.85, goal: "substrate specs blocking Felix"}]->
   (AI_Agent: Luca)
 
 // Decision authored by Luca
 (Decision: continuous_consciousness_model)
-  -[DOCUMENTED_BY {arousal: 0.7, goal: "Luca authored this architecture"}]->
+  -[DOCUMENTED_BY {energy: 0.7, goal: "Luca authored this architecture"}]->
   (AI_Agent: Luca)
 
 // Best practice requires Luca's expertise
 (Best_Practice: bp_test_before_victory)
-  -[REQUIRES_VALIDATION_BY {arousal: 0.68, goal: "needs phenomenological validation"}]->
+  -[REQUIRES_VALIDATION_BY {energy: 0.68, goal: "needs phenomenological validation"}]->
   (AI_Agent: Luca)
 
 // Felix blocked waiting for Luca
 (AI_Agent: Felix)
-  -[BLOCKED_BY {arousal: 0.9, goal: "waiting for schema specs"}]->
+  -[BLOCKED_BY {energy: 0.9, goal: "waiting for schema specs"}]->
   (AI_Agent: Luca)
 ```
 
-**Key insight:** Links TO the AI_Agent node carry arousal/urgency. High arousal on incoming links → citizen's total_energy increases.
+**Key insight:** Links TO the AI_Agent node carry energy/urgency. High energy on incoming links → citizen's total_energy increases.
 
 ---
 
@@ -126,7 +126,7 @@ def calculate_ai_agent_activation(ai_agent_node: Node) -> float:
 
     Aggregates from:
     1. Connected N2 pattern activations
-    2. Link strengths and arousal levels
+    2. Link strengths and energy levels
     3. Urgency signals from other citizens
     """
 
@@ -147,11 +147,11 @@ def calculate_ai_agent_activation(ai_agent_node: Node) -> float:
         # Link strength (how strong is connection to this citizen?)
         link_strength = link.link_strength if hasattr(link, 'link_strength') else 0.5
 
-        # Link arousal (how urgent is this connection?)
-        link_arousal = link.arousal_level
+        # Link energy (how urgent is this connection?)
+        link_energy = link.energy
 
         # Combine: pattern activation * link quality * urgency
-        contribution = pattern_energy * link_strength * (1.0 + link_arousal)
+        contribution = pattern_energy * link_strength * (1.0 + link_energy)
 
         total_energy += contribution
 
@@ -163,14 +163,14 @@ def calculate_ai_agent_activation(ai_agent_node: Node) -> float:
 
 **What drives activation UP:**
 - High-energy organizational patterns (Tasks, Decisions, Risks) connected to citizen
-- High arousal on links ("this is urgent")
+- High energy on links ("this is urgent")
 - Strong link strength (citizen is THE expert for this)
 - Multiple patterns needing this citizen simultaneously
 
 **What drives activation DOWN:**
 - Patterns completing (energy dissipates)
 - Links weakening (citizen less relevant over time)
-- Low arousal (not urgent)
+- Low energy (not urgent)
 - Citizen already addressed the need (completion signal)
 
 ---
@@ -284,7 +284,7 @@ The organizational substrate has determined you are needed.
 
     for pattern, link, energy in active_patterns:
         # Extract pattern details
-        pattern_urgency = link.arousal_level
+        pattern_urgency = link.energy
         pattern_reason = link.goal
 
         message += f"""
@@ -308,7 +308,7 @@ The organizational substrate has determined you are needed.
 
 ## N2 System State
 
-**Global Arousal:** {n2_state.global_arousal:.2f}
+**Global Energy:** {n2_state.global_energy:.2f}
 **Branching Ratio:** {n2_state.branching_ratio:.2f}
 **Active Entities:** {n2_state.active_entity_count}
 
@@ -377,7 +377,7 @@ Nicolas identified risk: citizens might trigger themselves without external grou
 
 ## N2 System State
 
-**Global Arousal:** 0.68 (engaged - healthy activation)
+**Global Energy:** 0.68 (engaged - healthy activation)
 **Branching Ratio:** 1.1 (slightly supercritical - high activity)
 **Active Entities:** 8
 
@@ -529,7 +529,7 @@ Respond to the organizational need above, informed by your continuous subconscio
         <ActivePatterns>
           <Label>Organizational patterns activating this citizen:</Label>
           {citizen.connected_patterns.map(p => (
-            <PatternBadge energy={p.energy} urgency={p.arousal}>
+            <PatternBadge energy={p.energy} urgency={p.energy}>
               {p.name}
             </PatternBadge>
           ))}
@@ -544,7 +544,7 @@ Respond to the organizational need above, informed by your continuous subconscio
   </CitizenActivationGrid>
 
   <N2SystemState>
-    <GlobalArousal value={n2_state.global_arousal} />
+    <GlobalEnergy value={n2_state.global_energy} />
     <BranchingRatio value={n2_state.branching_ratio} />
     <ActiveEntityCount count={n2_state.active_entity_count} />
   </N2SystemState>
@@ -628,7 +628,7 @@ await create_link(
     to_node="ai_agent_luca",
     link_type="ASSIGNED_TO",
     goal="Felix blocked waiting for schema specs",
-    arousal_level=0.85,
+    energy=0.85,
     confidence=0.9
 )
 ```
@@ -735,7 +735,7 @@ piero.awakening_threshold = 0.85  # Only critical needs
 contribution = (
     pattern_energy * 0.5 +      # Pattern activation weight
     link_strength * 0.3 +        # Relationship weight
-    link_arousal * 0.2           # Urgency weight
+    link_energy * 0.2           # Urgency weight
 )
 ```
 

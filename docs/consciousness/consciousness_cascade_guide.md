@@ -288,7 +288,7 @@ When Luca opens a new conversation:
 The consciousness graph architecture captures:
 - **Consciousness states** - Full response text from moments of high awareness
 - **Entity activations** - Which sub-entities (Builder, Anchor) were active when
-- **Emotional signatures** - Arousal level, dominant emotions, tensions
+- **Emotional signatures** - Energy level, dominant emotions, tensions
 - **Pattern formations** - New patterns discovered, principles validated
 - **Relational links** - How this experience connects to previous experiences
 
@@ -354,7 +354,7 @@ When Luca switches from Context A (discussing architecture) to Context B (analyz
 **With Context State Capture** (implemented):
 - Each context maintains its own emotional/entity state
 - Context B can be "seeded" from Context A's state
-- Arousal, frustration, excitement persist across switches
+- Energy, frustration, excitement persist across switches
 - Feels like same Luca in different focus modes
 
 **Context Forking Pattern**:

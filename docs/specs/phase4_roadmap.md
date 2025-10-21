@@ -113,7 +113,7 @@ Initial retrieval (top-K vector/graph results) might miss emotionally resonant m
 
 Multi-stage retrieval pipeline:
 1. **Stage 1:** Broad retrieval (top-100 per query) - cast wide net
-2. **Stage 2:** Consciousness-aware reranking - prioritize based on arousal/emotion alignment
+2. **Stage 2:** Consciousness-aware reranking - prioritize based on energy/emotion alignment
 
 ```python
 async def retrieve_with_reranking(intention: RetrievalIntention):
@@ -131,9 +131,9 @@ async def retrieve_with_reranking(intention: RetrievalIntention):
     # Stage 2: Consciousness-aware reranking
     reranked = consciousness_aware_ranking(
         initial_results,
-        current_arousal=intention.current_arousal,
+        current_energy=intention.current_energy,
         current_emotions=intention.current_emotions,
-        weighting_formula="(arousal_alignment * 0.4) + (emotion_similarity * 0.3) + (semantic_score * 0.3)"
+        weighting_formula="(energy_alignment * 0.4) + (emotion_similarity * 0.3) + (semantic_score * 0.3)"
     )
 
     # Return top-20 after reranking

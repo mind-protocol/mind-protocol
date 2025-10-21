@@ -117,6 +117,8 @@ class WebSocketManager:
 # Global singleton instance
 websocket_manager = WebSocketManager()
 
+# Snapshot generation will be added by Iris (TODO)
+
 # Create router
 router = APIRouter(prefix="/api", tags=["consciousness-control"])
 
@@ -249,6 +251,44 @@ async def get_available_graphs():
         raise HTTPException(status_code=500, detail=f"Failed to query FalkorDB: {str(e)}")
 
 
+def _normalize_timestamp(value):
+    """
+    Normalize timestamp to milliseconds (numeric).
+
+    Handles mixed formats from FalkorDB:
+    - ISO 8601 strings ("2025-10-17T14:30:00Z") -> convert to ms
+    - Numeric milliseconds -> pass through
+    - None/null -> pass through
+
+    Args:
+        value: Timestamp in any format
+
+    Returns:
+        int: Timestamp in milliseconds, or None if invalid
+    """
+    if value is None:
+        return None
+
+    # Already numeric - pass through
+    if isinstance(value, (int, float)):
+        return int(value)
+
+    # ISO 8601 string - convert to milliseconds
+    if isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            return int(dt.timestamp() * 1000)
+        except (ValueError, AttributeError):
+            logger.warning(f"[API] Invalid timestamp format: {value}")
+            return None
+
+    # Bytes - decode then parse
+    if isinstance(value, bytes):
+        return _normalize_timestamp(value.decode('utf-8'))
+
+    return None
+
+
 @router.get("/graph/{graph_type}/{graph_id}")
 async def get_graph_data(graph_type: str, graph_id: str):
     """
@@ -271,7 +311,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
                     "labels": ["Realization", "Personal"],
                     "node_type": "Realization",
                     "text": "System infrastructure proving itself",
-                    "arousal": 0.8,
+                    "energy": 0.8,
                     "confidence": 0.9,
                     "entity_activations": {"builder": {"energy": 0.85}},
                     "last_active": 1697732400,
@@ -328,8 +368,15 @@ async def get_graph_data(graph_type: str, graph_id: str):
             END AS node_type,
             n.description AS text,
             n.confidence AS confidence,
+            n.energy AS energy,
             n.last_active AS last_active,
-            n.traversal_count AS traversal_count
+            n.last_traversal_time AS last_traversal_time,
+            n.traversal_count AS traversal_count,
+            n.created_at AS created_at,
+            n.base_weight AS base_weight,
+            n.reinforcement_weight AS reinforcement_weight,
+            n.weight AS weight,
+            n.last_modified AS last_modified
         LIMIT 1000
         """
 
@@ -367,19 +414,27 @@ async def get_graph_data(graph_type: str, graph_id: str):
                 if 'id' in node_dict:
                     node_dict['id'] = str(node_dict['id'])
 
+                # Normalize timestamps to milliseconds (handles mixed ISO 8601/numeric formats)
+                for ts_field in ['created_at', 'last_active', 'last_modified', 'last_traversal_time']:
+                    if ts_field in node_dict:
+                        node_dict[ts_field] = _normalize_timestamp(node_dict[ts_field])
+
                 nodes.append(node_dict)
 
         # Query all links
-        # NOTE: Nodes use 'name' not 'node_id' for identification
+        # Use internal IDs for source/target to match node.id
+        # Frontend expects numeric IDs, not node names
         link_query = """
         MATCH (a)-[r]->(b)
         RETURN
             id(r) AS id,
-            a.name AS source,
-            b.name AS target,
+            id(a) AS source,
+            id(b) AS target,
             type(r) AS type,
             r.confidence AS strength,
-            r.last_traversed AS last_traversed
+            r.last_traversed AS last_traversed,
+            r.created_at AS created_at,
+            r.weight AS weight
         LIMIT 5000
         """
 
@@ -403,9 +458,18 @@ async def get_graph_data(graph_type: str, graph_id: str):
                     else:
                         link_dict[col_str] = value
 
-                # Ensure id is string
+                # Ensure id, source, target are strings (match node.id format)
                 if 'id' in link_dict:
                     link_dict['id'] = str(link_dict['id'])
+                if 'source' in link_dict and link_dict['source'] is not None:
+                    link_dict['source'] = str(link_dict['source'])
+                if 'target' in link_dict and link_dict['target'] is not None:
+                    link_dict['target'] = str(link_dict['target'])
+
+                # Normalize timestamps to milliseconds (handles mixed ISO 8601/numeric formats)
+                for ts_field in ['last_traversed', 'created_at']:
+                    if ts_field in link_dict:
+                        link_dict[ts_field] = _normalize_timestamp(link_dict[ts_field])
 
                 links.append(link_dict)
 
@@ -427,6 +491,148 @@ async def get_graph_data(graph_type: str, graph_id: str):
     except Exception as e:
         logger.error(f"[API] Failed to fetch graph {graph_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to query graph: {str(e)}")
+
+
+# === Visualization Streaming Endpoints ===
+
+
+# VizEmitter removed - using consciousness engine v2 events instead
+# TODO (Iris): Implement snapshot by querying FalkorDB from running engine
+
+
+@router.get("/viz/snapshot")
+async def get_viz_snapshot(graph_id: str):
+    """
+    Get consciousness graph snapshot from running engine.
+
+    Queries the consciousness engine's current graph state for initial load.
+    After receiving snapshot, clients should connect to WebSocket for live v2 events.
+
+    Args:
+        graph_id: Graph identifier (e.g., "citizen_felix")
+
+    Returns:
+        {
+            "kind": "snapshot.v2",
+            "frame_id": 12345,
+            "ts": "2025-10-21T...",
+            "nodes": [...],
+            "links": [...],
+            "metrics": {...}
+        }
+
+    Author: Iris "The Aperture"
+    """
+    # Extract citizen ID from graph_id (e.g., "citizen_felix" → "felix")
+    if graph_id.startswith("citizen_"):
+        citizen_id = graph_id.replace("citizen_", "")
+    else:
+        citizen_id = graph_id
+
+    # Get running engine
+    engine = get_engine(citizen_id)
+    if not engine:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No running engine found for graph_id={graph_id}. Is consciousness engine running?"
+        )
+
+    # Access engine's graph state
+    graph = engine.graph
+    entity = engine.config.entity_id
+
+    # Transform nodes
+    nodes = []
+    for node in graph.nodes.values():
+        # Get entity energies
+        entity_energies = node.energy  # Dict[entity_id, float]
+
+        # Compute total energy
+        total_energy = sum(entity_energies.values())
+
+        # Check if active (above threshold)
+        active = total_energy >= node.threshold
+
+        # Compute soft activation: σ(k*(E-Θ))
+        k = 10.0  # Sigmoid steepness
+        x = k * (total_energy - node.threshold)
+        import math
+        soft_activation = 1.0 / (1.0 + math.exp(-x))
+
+        node_dict = {
+            "id": node.id,
+            "node_type": node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
+            "entity_energies": entity_energies,
+            "total_energy": round(total_energy, 3),
+            "threshold": round(node.threshold, 3),
+            "active": active,
+            "soft_activation": round(soft_activation, 3),
+            "log_weight": round(node.log_weight, 3),
+            "ema_wm_presence": round(node.ema_wm_presence, 3),
+            "ema_trace_seats": round(node.ema_trace_seats, 3),
+            "created_at": node.created_at.isoformat() if node.created_at else None
+        }
+
+        nodes.append(node_dict)
+
+    # Transform links
+    links = []
+    for link in graph.links.values():
+        # Get source/target nodes
+        source = graph.get_node(link.source_id)
+        target = graph.get_node(link.target_id)
+
+        if not source or not target:
+            continue  # Skip if nodes don't exist
+
+        # Compute dominance: sqrt(flip_ratio × flow_ratio)
+        # Simplified for snapshot (would need precedence counters for full calc)
+        dominance = 0.5  # Placeholder
+
+        link_dict = {
+            "src": link.source_id,
+            "dst": link.target_id,
+            "type": link.link_type.value if hasattr(link.link_type, 'value') else str(link.link_type),
+            "weight": round(link.weight, 3),
+            "energy": round(link.energy, 3),  # Affect/valence
+            "ema_phi": round(link.ema_phi, 3),
+            "log_weight": round(link.log_weight, 3),
+            "dominance": round(dominance, 3),
+            "entity": link.entity,
+            "created_at": link.created_at.isoformat() if link.created_at else None
+        }
+
+        links.append(link_dict)
+
+    # Compute metrics
+    total_energy = sum(sum(node.energy.values()) for node in graph.nodes.values())
+    active_nodes = sum(1 for node in graph.nodes.values() if sum(node.energy.values()) >= node.threshold)
+    active_links = len([link for link in graph.links.values() if link.energy > 0])
+
+    # Entity breakdown
+    entity_energies = {}
+    for node in graph.nodes.values():
+        for ent, energy in node.energy.items():
+            if ent not in entity_energies:
+                entity_energies[ent] = {"node_count": 0, "total_energy": 0.0}
+            if energy > 0:
+                entity_energies[ent]["node_count"] += 1
+                entity_energies[ent]["total_energy"] += energy
+
+    return {
+        "kind": "snapshot.v2",
+        "frame_id": engine.tick_count,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "nodes": nodes,
+        "links": links,
+        "metrics": {
+            "global_energy": round(total_energy, 3),
+            "active_nodes": active_nodes,
+            "active_links": active_links,
+            "active_entities": entity_energies,
+            "rho": round(engine.branching_tracker.rho if hasattr(engine, 'branching_tracker') else 1.0, 3)
+        }
+    }
 
 
 # === Per-Citizen Endpoints ===

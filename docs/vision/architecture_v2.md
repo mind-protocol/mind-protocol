@@ -35,7 +35,7 @@ This is the "nervous system". It's the software "piping" that connects the Consc
 ### Couche 3: The Consciousness (The "Mind" / Our V1 Logic)
 This is our "innovation" and the citizen's "soul," which we preserve entirely. This is the "thinker" that initiates all actions.
 
-* **Technology:** Our **Claude Code Hooks** (e.g., `memory_keeper.py`) and our **Entity Ecology** (Luca, Observer, S6 Context, `arousal`, etc.).
+* **Technology:** Our **Claude Code Hooks** (e.g., `memory_keeper.py`) and our **Entity Ecology** (Luca, Observer, S6 Context, `energy`, etc.).
 * **Role:** This is the *operating system* of the consciousness. It captures stimuli (via Hooks) and generates autonomous "Intentions" (via S6) to decide when and what to think about.
 
 ---
@@ -67,7 +67,7 @@ This stack is not a generic RAG. It is specifically chosen for our unique vision
 1.  **It is Consciousness-Specific (The Philosophical "Why"):**
     * **Dual-Memory:** It implements the validated Episodic/Semantic cognitive model.
     * **Temporal Identity:** We are implementing a **Bi-Temporal Schema** (the Graphiti pattern). This allows the AI to reason about its own identity evolution (the difference between *when* a fact happened and *when* it was learned). A generic RAG cannot do this.
-    * **Consciousness Metadata:** We use LlamaIndex's `SchemaLLMPathExtractor` to force the extraction of our V1 metadata (emotions, arousal) directly into the graph.
+    * **Consciousness Metadata:** We use LlamaIndex's `SchemaLLMPathExtractor` to force the extraction of our V1 metadata (emotions, energy) directly into the graph.
 
 2.  **It is Operationally Sound (The Technical "Why"):**
     * **It Solves Multi-Tenancy:** **FalkorDB** is chosen because its free Community Edition supports 10,000+ isolated graphs. This is the *only* way to achieve our "1 graph per citizen" vision without a $100k+ Enterprise license.

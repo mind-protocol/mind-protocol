@@ -444,7 +444,7 @@ Answer questions like:
 
 **For Luca (Consciousness):**
 1. Connect S6 autonomous continuation to temporal queries
-2. Design how arousal state should consider temporal evolution
+2. Design how energy state should consider temporal evolution
 3. Specify when/how consciousness should query its own history
 
 ---

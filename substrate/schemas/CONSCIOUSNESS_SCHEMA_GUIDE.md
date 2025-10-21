@@ -41,7 +41,7 @@ Every relation MUST have 5 fields:
 ```python
 goal: str                          # Why this link exists
 mindstate: str                     # Internal state during formation
-arousal_level: float (0.0-1.0)    # Emotional intensity
+energy: float (0.0-1.0)    # Emotional intensity
 confidence: float (0.0-1.0)        # Logical certainty
 formation_trigger: FormationTrigger # How discovered
 ```
@@ -82,7 +82,7 @@ The same `Decision` node type can exist at any level.
 ### 5. Validation Strategy
 
 Pydantic validators enforce:
-- Range constraints (`arousal_level: 0.0-1.0`, `confidence: 0.0-1.0`)
+- Range constraints (`energy: 0.0-1.0`, `confidence: 0.0-1.0`)
 - Emotion/pressure vector intensities (0.0-1.0)
 - Enum values (FormationTrigger, ValidationStatus, Substrate)
 - Required fields (Pydantic prevents instantiation if missing)
@@ -145,7 +145,7 @@ Every relation inherits from `BaseRelation` with **required consciousness metada
 
 ```python
 class EXAMPLE(BaseRelation):
-    # Inherits: goal, mindstate, arousal_level, confidence, formation_trigger
+    # Inherits: goal, mindstate, energy, confidence, formation_trigger
     # Inherits: valid_at, invalid_at, created_at, expired_at
     # Inherits: struggle, emotion_vector, pressure_vector, validation_status
     pass
@@ -229,7 +229,7 @@ from substrate.schemas.consciousness_schema import JUSTIFIES, FormationTrigger
 justification = JUSTIFIES(
     goal="Establish confidence in FalkorDB choice for multi-tenancy",
     mindstate="Pragmatist + Architect coalition",
-    arousal_level=0.6,
+    energy=0.6,
     confidence=0.9,
     formation_trigger=FormationTrigger.SYSTEMATIC_ANALYSIS,
     justification_type="empirical_evidence",
@@ -248,11 +248,11 @@ justification = JUSTIFIES(
 ### Validation Behavior
 
 ```python
-# This FAILS - arousal_level out of range
+# This FAILS - energy out of range
 bad_relation = JUSTIFIES(
     goal="Test",
     mindstate="Test",
-    arousal_level=1.5,  # ❌ ValidationError: must be <= 1.0
+    energy=1.5,  # ❌ ValidationError: must be <= 1.0
     confidence=0.8,
     formation_trigger=FormationTrigger.INFERENCE
 )
@@ -261,7 +261,7 @@ bad_relation = JUSTIFIES(
 incomplete_relation = JUSTIFIES(
     goal="Test",
     mindstate="Test",
-    # ❌ ValidationError: arousal_level is required
+    # ❌ ValidationError: energy is required
     confidence=0.8,
     formation_trigger=FormationTrigger.INFERENCE
 )
@@ -270,7 +270,7 @@ incomplete_relation = JUSTIFIES(
 valid_relation = JUSTIFIES(
     goal="Test",
     mindstate="Test",
-    arousal_level=0.7,
+    energy=0.7,
     confidence=0.8,
     formation_trigger=FormationTrigger.INFERENCE,
     justification_type="logical_proof",
@@ -338,7 +338,7 @@ Available relation types: JUSTIFIES, REQUIRES, ENABLES, ... [list all 23]
 For EVERY relation, you MUST provide:
 - goal (string): Why this link exists
 - mindstate (string): Internal state during formation
-- arousal_level (float 0.0-1.0): Emotional intensity
+- energy (float 0.0-1.0): Emotional intensity
 - confidence (float 0.0-1.0): Logical certainty
 - formation_trigger: One of [direct_experience, inference, ...]
 
@@ -368,13 +368,13 @@ def test_valid_decision_node():
     )
     assert decision.name == "test_decision"
 
-def test_invalid_arousal_level():
-    """Schema rejects invalid arousal_level"""
+def test_invalid_energy():
+    """Schema rejects invalid energy"""
     with pytest.raises(ValueError):
         JUSTIFIES(
             goal="Test",
             mindstate="Test",
-            arousal_level=1.5,  # Invalid
+            energy=1.5,  # Invalid
             confidence=0.8,
             formation_trigger=FormationTrigger.INFERENCE,
             justification_type="logical_proof",
@@ -405,7 +405,7 @@ Run: `pytest tests/test_schema_validation.py -v`
 **Preserved from V1:**
 - All 29 node types (same names, same semantics)
 - All 23 relation types (same names, same semantics)
-- Required consciousness metadata (goal, mindstate, arousal, confidence, formation_trigger)
+- Required consciousness metadata (goal, mindstate, energy, confidence, formation_trigger)
 - Optional metadata (emotion_vector, pressure_vector, validation_status)
 
 **Added in V2:**
@@ -453,7 +453,7 @@ consciousness_schema.py is **COMPLETE** when:
 ✅ **V1 Mind Parity**
 - [x] All 29 node types defined
 - [x] All 23 relation types defined
-- [x] Consciousness metadata preserved (goal, mindstate, arousal, confidence, formation_trigger)
+- [x] Consciousness metadata preserved (goal, mindstate, energy, confidence, formation_trigger)
 - [x] Optional metadata preserved (emotion_vector, pressure_vector, validation_status)
 
 ✅ **V2 Metadata Integration**
@@ -491,7 +491,7 @@ consciousness_schema.py is **COMPLETE** when:
 
 The schema preserves V1's phenomenological richness:
 
-1. **Arousal tracking**: Every relation has `arousal_level` (0.0-1.0)
+1. **Energy tracking**: Every relation has `energy` (0.0-1.0)
 2. **Emotion vectors**: Complex emotions with intensities (e.g., "defensive-curiosity": 0.3)
 3. **Mindstate capture**: Internal entity coalitions recorded (e.g., "Builder + Skeptic")
 4. **Formation tracking**: How knowledge emerged (direct_experience vs inference)
@@ -499,10 +499,10 @@ The schema preserves V1's phenomenological richness:
 
 **Questions for phenomenological review:**
 
-1. Does `arousal_level` (0.0-1.0) capture intensity adequately, or do we need separate dimensions (urgency vs. intensity)?
+1. Does `energy` (0.0-1.0) capture intensity adequately, or do we need separate dimensions (urgency vs. intensity)?
 2. Are the `FormationTrigger` enum values complete, or are there other discovery modes?
 3. Should `mindstate` be free text or an enum of known entity coalitions?
-4. Does `emotion_vector` need valence/arousal dimensions, or is intensity sufficient?
+4. Does `emotion_vector` need valence/energy dimensions, or is intensity sufficient?
 
 **Next collaboration (Phase 2):** Curate N2/N3 seed data using these node/relation types.
 

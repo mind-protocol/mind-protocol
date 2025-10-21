@@ -1,0 +1,49 @@
+{
+  "updated": [
+    {
+      "file": "001_diffusion_numerical_stability.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "002_link_creation_mechanism.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "003_entity_emergence_threshold.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "004_workspace_goal_circular_dependency.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "005_link_weight_runaway_growth.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "006_criticality_tuning_oscillation.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "007_memory_consolidation.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "008_tick_speed_temporal_aliasing.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "009_fixed_workspace_capacity.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "010_entity_competition_model.md",
+      "replaced_existing_section": true
+    },
+    {
+      "file": "CONSCIOUSNESS_ENGINE_ARCHITECTURE.md",
+      "appended_annotations": true
+    }
+  ],
+  "date": "2025-10-19"
+}

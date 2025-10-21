@@ -39,7 +39,7 @@ The consciousness graph tracks its own operations through metadata:
 - last_traversed_by: str           # Which entity traversed
 - last_traversal_time: datetime    # When last traversed
 - sub_entity_weights: Dict         # Per-entity activation weights
-- arousal_level: float             # Node arousal (motivation)
+- energy: float             # Node energy (motivation)
 - confidence: float                # Self-assessed accuracy
 ```
 
@@ -65,7 +65,7 @@ The visualization server detects operations by comparing metadata changes:
 - Visual: Link glow animation
 
 **Activation Increase:**
-- `arousal_level` increased significantly → Node activated
+- `energy` increased significantly → Node activated
 - Visual: Ripple effect from node
 
 ### 3. Time Dimension
@@ -134,8 +134,8 @@ http://localhost:8000
 ### Visual Encoding
 
 **Nodes:**
-- **Size:** Larger = higher arousal (more motivated)
-- **Color:** Blue (low arousal) → Green (medium) → Yellow (high)
+- **Size:** Larger = higher energy (more motivated)
+- **Color:** Blue (low energy) → Green (medium) → Yellow (high)
 - **Opacity:** Faded = inactive, opaque = recently active
 - **Glow:** Recent activity (last 5 seconds)
 
@@ -160,7 +160,7 @@ http://localhost:8000
 
 Shows:
 - Node text (truncated)
-- Arousal level
+- Energy level
 - Confidence
 - Traversal count
 - Last entity that traversed
@@ -185,8 +185,8 @@ new_strength = 0.68
 # → Operation detected: Hebbian learning (strength delta: +0.03)
 
 # Example: Detect activation increase
-old_arousal = 0.3
-new_arousal = 0.75
+old_energy = 0.3
+new_energy = 0.75
 # → Operation detected: activation increase (delta: +0.45)
 ```
 
@@ -350,7 +350,7 @@ traversal_count: int = 0
 last_traversed_by: str
 last_traversal_time: datetime
 sub_entity_weights: Dict[str, float]
-arousal_level: float
+energy: float
 confidence: float
 ```
 

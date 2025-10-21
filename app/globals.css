@@ -3,8 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #14181c;
-  --foreground: #e8e8e8;
+  /* Observatory Interface - Futuristic Tool (Observer Layer) */
+  --background: #0a1628;  /* Deep space blue */
+  --foreground: #f8fafc;  /* Cool white text */
+
+  /* Legacy (keeping during transition) */
+  --background-dark: #14181c;
+  --foreground-dark: #e8e8e8;
+  --parchment-base: #f5e7c1;  /* For graph content nodes */
 }
 
 @layer base {
@@ -17,36 +23,77 @@
 }
 
 @layer components {
-  /* Consciousness visualization styles */
+  /* Venice Parchment Texture (from VENICE_DESIGN_SYSTEM_EXTRACT.md) */
+  .bg-parchment {
+    background-color: #f5e7c1;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  }
+
+  /* Venice Parchment Bubble (UI Cards) */
+  .parchment-bubble {
+    background: linear-gradient(145deg, #f97316, #fbbf24);
+    border: 1px solid #f97316;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    box-shadow:
+      0 2px 5px rgba(0, 0, 0, 0.1),
+      inset 0 1px 1px rgba(255, 255, 255, 0.7);  /* Paper highlight */
+    position: relative;
+  }
+
+  /* Paper sheen effect (add ::before in component) */
+  .parchment-bubble::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+  }
+
+  /* Observatory Panel - Futuristic Interface Component */
   .consciousness-panel {
-    @apply bg-consciousness-dark/95 backdrop-blur-xl border border-consciousness-border rounded-xl shadow-2xl;
+    background: #1a2332;  /* Observatory panel */
+    backdrop-filter: blur(12px);
+    border: 1px solid #2dd4bf;  /* Teal accent */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   }
 
   .consciousness-glow {
-    filter: drop-shadow(0 0 8px #5efc82) drop-shadow(0 0 4px #5efc82);
+    filter: drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 4px #ffd700);  /* Gold glow */
   }
 
   .consciousness-glow-selected {
-    filter: drop-shadow(0 0 6px #4CAF50) drop-shadow(0 0 3px #4CAF50);
+    filter: drop-shadow(0 0 6px #daa520) drop-shadow(0 0 3px #daa520);  /* Medium gold */
   }
 
-  /* Scrollbar styling */
+  /* Scrollbar styling - Observatory dark theme */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(45, 212, 191, 0.3) rgba(10, 22, 40, 0.5);  /* Teal on dark */
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: rgba(10, 22, 40, 0.5);  /* Observatory dark */
+    border-radius: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(94, 252, 130, 0.3);
-    border-radius: 4px;
+    background: rgba(45, 212, 191, 0.3);  /* Teal accent */
+    border-radius: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(94, 252, 130, 0.5);
+    background: rgba(45, 212, 191, 0.5);  /* Brighter teal on hover */
   }
 }
 
@@ -151,4 +198,103 @@
 
 .animate-slide-in-left {
   animation: slide-in-left 0.3s ease-out;
+}
+
+/* VENICE/SERENISSIMA ANIMATIONS (from VENICE_DESIGN_SYSTEM_EXTRACT.md) */
+
+/* Parchment bubble appearance */
+@keyframes bubbleAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-bubble-appear {
+  animation: bubbleAppear 0.3s ease-out;
+}
+
+/* Floating organic motion (gondola on water) */
+@keyframes maskFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(3deg); }
+  50% { transform: translateY(0px) rotate(0deg); }
+  75% { transform: translateY(-5px) rotate(-3deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: maskFloat 4s ease-in-out infinite;
+}
+
+/* Gold shimmer (currency/energy values) */
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.animate-gold-shine {
+  background: linear-gradient(
+    to right,
+    #b8860b, #ffd700, #daa520, #ffd700, #b8860b
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 2s linear infinite;
+  text-shadow: 0 0 3px rgba(184, 134, 11, 0.3);
+}
+
+/* Subtle pulse (gentle breathing) */
+@keyframes pulse-subtle {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s infinite ease-in-out;
+}
+
+/* Node activation (building lighting up) */
+@keyframes nodeActivate {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 10px #ffd700);
+  }
+  100% {
+    filter: brightness(1.1) drop-shadow(0 0 5px #ffd700);
+  }
+}
+
+.animate-node-activate {
+  animation: nodeActivate 0.5s ease-out forwards;
+}
+
+/* Arousal pulse (island glowing) */
+@keyframes arousalPulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+}
+
+.animate-arousal-pulse {
+  animation: arousalPulse 1.5s ease-in-out infinite;
 }

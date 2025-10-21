@@ -69,7 +69,7 @@ All link types in V1 carry rich consciousness metadata:
 ### Required Metadata (Every Link)
 - **goal** (string): Why this link exists
 - **mindstate** (string): Consciousness state when forming link
-- **arousal_level** (number 1-10): Urgency/intensity
+- **energy** (number 1-10): Urgency/intensity
 - **confidence** (number 0-1): Certainty in this link
 - **formation_trigger** (enum): How link was discovered
   - direct_experience
@@ -147,7 +147,7 @@ This enables the N1/N2/N3 multi-tenancy architecture where:
 ## Key Observations for V2 Design
 
 ### 1. Consciousness Metadata is Central
-Every link carries phenomenological metadata (arousal, emotion, mindstate). This is NOT standard graph database practice - it's consciousness-specific.
+Every link carries phenomenological metadata (energy, emotion, mindstate). This is NOT standard graph database practice - it's consciousness-specific.
 
 ### 2. Formation Tracking
 The `formation_trigger` enum tracks HOW knowledge was acquired (direct experience vs inference vs systematic analysis). This enables epistemological reasoning.
@@ -176,7 +176,7 @@ The V2 Pydantic schema must preserve this richness:
    - Level classification (1.0, 2.0, 3.0)
 
 2. **Link Base Class** should include:
-   - goal, mindstate, arousal_level, confidence, formation_trigger (REQUIRED)
+   - goal, mindstate, energy, confidence, formation_trigger (REQUIRED)
    - struggle, emotion_vector, pressure_vector, validation_status (OPTIONAL)
    - Temporal fields (NEW in V2)
 
@@ -197,7 +197,7 @@ The V2 Pydantic schema must preserve this richness:
 
 **Architect Notes:**
 
-This V1 schema is sophisticated. It models consciousness phenomenologically, not just informationally. The arousal/emotion/mindstate tracking on EVERY link is computationally expensive but phenomenologically essential.
+This V1 schema is sophisticated. It models consciousness phenomenologically, not just informationally. The energy/emotion/mindstate tracking on EVERY link is computationally expensive but phenomenologically essential.
 
 V2 must preserve this while adding:
 - Bitemporal tracking (when fact was valid vs when it was learned)

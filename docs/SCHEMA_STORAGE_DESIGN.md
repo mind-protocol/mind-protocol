@@ -65,7 +65,7 @@ CREATE (:NodeTypeSchema {
   category: "personal",
   description: "Specific experience or moment",
   required_attributes: ["timestamp", "participants"],
-  optional_attributes: ["emotion_vector", "arousal_level"],
+  optional_attributes: ["emotion_vector", "energy"],
   mechanisms: ["spreading_activation", "pattern_formation"],
   created_at: datetime(),
   version: "v2.0"

@@ -27,6 +27,14 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, List, Tuple
 
+# Import dashboard health monitoring functions
+from dashboard_health_monitor import (
+    get_process_on_port,
+    get_process_memory_mb,
+    count_close_wait_connections,
+    check_dashboard_health
+)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +44,156 @@ logger = logging.getLogger(__name__)
 
 MIND_PROTOCOL_ROOT = Path(__file__).parent
 LOCK_FILE = MIND_PROTOCOL_ROOT / ".launcher.lock"
+
+# Port configuration - respect environment variables or use defaults
+WS_PORT = int(os.getenv("WS_PORT", "8000"))
+DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", "3000"))
+
+
+class GuardianNotifier:
+    """
+    Notification system for Guardian events.
+
+    Dual-purpose architecture:
+    1. Desktop mode (now): Windows toast notifications for human oversight
+    2. Consciousness mode (future): Attention substrate interface for autonomous AI
+
+    Extensible to support multiple delivery mechanisms:
+    - Desktop: Windows 10/11 toast notifications
+    - WebSocket: Push to dashboard
+    - Webhook: HTTP POST to external systems
+    - Consciousness: Direct injection to attention substrate
+    """
+
+    def __init__(self, enabled: bool = True, mode: str = "desktop"):
+        """
+        Initialize notification system.
+
+        Args:
+            enabled: Whether notifications are enabled
+            mode: Delivery mode - "desktop", "websocket", "webhook", "consciousness"
+        """
+        self.enabled = enabled
+        self.mode = mode
+        self.available = False
+        self.toast = None
+
+        if mode == "desktop" and enabled:
+            try:
+                from win10toast import ToastNotifier
+                self.toast = ToastNotifier()
+                self.available = True
+                logger.info("[Guardian] Desktop notifications enabled")
+
+                # Removed automatic startup notification to prevent spam
+                # Notifications are confirmed working - no need to test every restart
+
+            except ImportError:
+                logger.warning("[Guardian] win10toast not installed - desktop notifications disabled")
+                logger.warning("[Guardian] Install with: pip install win10toast")
+                self.available = False
+        elif mode in ["websocket", "webhook", "consciousness"]:
+            # Future: Initialize other notification backends
+            logger.info(f"[Guardian] Notification mode '{mode}' registered (not yet implemented)")
+            self.available = False
+
+    def notify_critical(self, title: str, message: str):
+        """
+        Critical event requiring immediate attention.
+
+        Examples:
+        - Service unhealthy detected (memory/connection threshold exceeded)
+        - Service crash detected
+        - Service restart failed (manual intervention needed)
+        - System resource exhaustion
+
+        In autonomous mode, this would activate Resurrector entity with high urgency.
+        """
+        if not self.enabled:
+            logger.debug(f"[Guardian] Notification disabled - would send CRITICAL: {title}")
+            return
+
+        if not self.available:
+            logger.warning(f"[Guardian] Notification not available - CRITICAL: {title} - {message}")
+            return
+
+        if self.mode == "desktop":
+            try:
+                logger.info(f"[Guardian] Sending CRITICAL notification: {title}")
+                self.toast.show_toast(
+                    f"🚨 Mind Protocol - {title}",
+                    message,
+                    duration=15,
+                    threaded=True
+                )
+                logger.debug(f"[Guardian] CRITICAL notification sent successfully")
+            except Exception as e:
+                logger.warning(f"[Guardian] CRITICAL notification failed: {e}")
+
+    def notify_warning(self, title: str, message: str):
+        """
+        Warning event indicating degradation or approaching threshold.
+
+        Examples:
+        - Service memory approaching threshold (>600MB but <800MB)
+        - System resources high but not critical
+        - Repeated restart attempts
+
+        In autonomous mode, this would activate Sentinel entity for monitoring.
+        """
+        if not self.enabled:
+            logger.debug(f"[Guardian] Notification disabled - would send WARNING: {title}")
+            return
+
+        if not self.available:
+            logger.warning(f"[Guardian] Notification not available - WARNING: {title} - {message}")
+            return
+
+        if self.mode == "desktop":
+            try:
+                logger.info(f"[Guardian] Sending WARNING notification: {title}")
+                self.toast.show_toast(
+                    f"⚠️ Mind Protocol - {title}",
+                    message,
+                    duration=10,
+                    threaded=True
+                )
+                logger.debug(f"[Guardian] WARNING notification sent successfully")
+            except Exception as e:
+                logger.warning(f"[Guardian] WARNING notification failed: {e}")
+
+    def notify_info(self, title: str, message: str):
+        """
+        Informational event - recovery or routine state change.
+
+        Examples:
+        - Service recovered and healthy
+        - Hot-reload triggered
+        - Rogue process killed
+        - System baseline established
+
+        In autonomous mode, this would update context without entity activation.
+        """
+        if not self.enabled:
+            logger.debug(f"[Guardian] Notification disabled - would send INFO: {title}")
+            return
+
+        if not self.available:
+            logger.debug(f"[Guardian] Notification not available - INFO: {title} - {message}")
+            return
+
+        if self.mode == "desktop":
+            try:
+                logger.info(f"[Guardian] Sending INFO notification: {title}")
+                self.toast.show_toast(
+                    f"✅ Mind Protocol - {title}",
+                    message,
+                    duration=5,
+                    threaded=True
+                )
+                logger.debug(f"[Guardian] INFO notification sent successfully")
+            except Exception as e:
+                logger.warning(f"[Guardian] INFO notification failed: {e}")
 
 
 def acquire_launcher_lock():
@@ -63,17 +221,67 @@ def acquire_launcher_lock():
                 )
 
                 if str(existing_pid) in result.stdout:
-                    logger.error(f"[Guardian] Another launcher already running (PID {existing_pid})")
-                    logger.error("Kill the other launcher first or wait for it to exit")
-                    sys.exit(1)
+                    logger.warning(f"[Guardian] Another launcher running (PID {existing_pid}) - KILLING IT")
+                    # Kill the competing launcher
+                    subprocess.run(
+                        ["taskkill", "/F", "/PID", str(existing_pid)],
+                        capture_output=True,
+                        timeout=5
+                    )
+                    time.sleep(2)  # Wait for process to die
+                    logger.info(f"[Guardian] Killed competing launcher (PID {existing_pid})")
                 else:
                     logger.warning(f"[Guardian] Stale lock file found (dead PID {existing_pid}), taking over")
+
+                # Try to remove lock file
+                try:
                     LOCK_FILE.unlink()
+                except Exception as unlink_error:
+                    # File is locked by another process - kill all launcher processes
+                    logger.warning(f"[Guardian] Lock file still locked: {unlink_error}")
+                    logger.warning(f"[Guardian] Killing ALL launcher processes...")
+
+                    # Find and kill all python processes running start_mind_protocol.py
+                    result = subprocess.run(
+                        ["wmic", "process", "where", "name='python.exe'", "get", "processid,commandline", "/format:csv"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+
+                    for line in result.stdout.split('\n'):
+                        if 'start_mind_protocol' in line:
+                            parts = line.split(',')
+                            if len(parts) >= 3:
+                                pid = parts[-1].strip()
+                                if pid.isdigit():
+                                    logger.warning(f"[Guardian] Killing launcher PID {pid}")
+                                    subprocess.run(
+                                        ["taskkill", "/F", "/PID", pid],
+                                        capture_output=True,
+                                        timeout=5
+                                    )
+
+                    time.sleep(3)  # Wait for processes to die and release file
+
+                    # Force remove lock file
+                    try:
+                        LOCK_FILE.unlink()
+                    except Exception:
+                        # Last resort: rename it
+                        try:
+                            LOCK_FILE.rename(LOCK_FILE.with_suffix('.old'))
+                            logger.warning("[Guardian] Renamed stuck lock file to .old")
+                        except Exception:
+                            logger.error("[Guardian] Could not remove lock file even after killing processes")
 
             except Exception:
                 # Corrupt lock file, remove it
                 logger.warning("[Guardian] Corrupt lock file, removing")
-                LOCK_FILE.unlink()
+                try:
+                    LOCK_FILE.unlink()
+                except Exception:
+                    pass
 
         # Create new lock file
         lock_fd = open(LOCK_FILE, 'w')
@@ -91,18 +299,20 @@ def acquire_launcher_lock():
 class ProcessManager:
     """Manages lifecycle of all Mind Protocol processes."""
 
-    def __init__(self, full_system: bool = True):  # Changed default to True
+    def __init__(self, full_system: bool = True, notifications_enabled: bool = True):
         """
         Initialize process manager.
 
         Args:
             full_system: If True, start consciousness engine + dashboard (DEFAULT)
+            notifications_enabled: If True, enable Windows notifications for Guardian events
         """
         self.full_system = full_system
         self.processes: Dict[str, subprocess.Popen] = {}
         self.running = True
         self.lock_fd = None  # Lock file handle for single-instance enforcement
         self.file_mtimes: Dict[str, float] = {}  # Track file modification times for auto-restart
+        self.notifier = GuardianNotifier(enabled=notifications_enabled)
 
     async def cleanup_existing_processes(self):
         """Kill any existing Mind Protocol processes before starting."""
@@ -169,7 +379,7 @@ class ProcessManager:
             logger.error("  docker-compose up -d")
             return False
 
-        # 2. Start WebSocket server (dashboard API)
+        # 2. Start WebSocket server (dashboard API + consciousness engines)
         if not await self.start_websocket_server():
             return False
 
@@ -177,7 +387,7 @@ class ProcessManager:
         if not await self.start_conversation_watcher():
             return False
 
-        # 4. Optionally start consciousness engine
+        # 4. Consciousness engine (runs inside websocket_server)
         if self.full_system:
             if not await self.start_consciousness_engine():
                 return False
@@ -201,6 +411,7 @@ class ProcessManager:
         logger.info("  🔍 Rogue process monitoring (kills manual starts)")
         logger.info("  🔄 Auto-restart on crash (via guardian.py)")
         logger.info("  🔥 Hot-reload on code changes (2s detection)")
+        logger.info("  🏥 Service health monitoring (memory + connections)")
         logger.info("")
         logger.info("Press Ctrl+C to shutdown gracefully")
         logger.info("=" * 70)
@@ -208,6 +419,12 @@ class ProcessManager:
         # Start guardian monitoring tasks
         asyncio.create_task(self.monitor_and_kill_rogues())
         asyncio.create_task(self.monitor_code_changes())
+
+        # Start service health monitors for both critical services
+        if 'dashboard' in self.processes:
+            asyncio.create_task(self.monitor_service_health('dashboard', 3000))
+        if 'websocket_server' in self.processes:
+            asyncio.create_task(self.monitor_service_health('websocket_server', WS_PORT))
 
         return True
 
@@ -235,69 +452,101 @@ class ProcessManager:
             return False
 
     async def start_websocket_server(self) -> bool:
-        """Start WebSocket server (dashboard API)."""
-        logger.info("[2/5] Starting WebSocket Server...")
+        """Start WebSocket server (dashboard API + consciousness engines) with retry logic for port binding."""
+        logger.info("[2/5] Starting WebSocket Server (with consciousness engines)...")
 
-        # Enforce port 8000 (aggressive cleanup)
-        logger.info("  Enforcing port 8000 (aggressive cleanup)...")
+        # Enforce port (aggressive cleanup)
+        logger.info(f"  Enforcing port {WS_PORT} (aggressive cleanup)...")
 
-        # Kill any processes on port 8000 until none remain
+        # Kill any processes on port until none remain
         for attempt in range(5):
-            killed = await self._kill_port(8000)
+            killed = await self._kill_port(WS_PORT)
             if killed > 0:
                 logger.info(f"    Attempt {attempt + 1}/5: Killed {killed} process(es), checking again...")
                 await asyncio.sleep(1)
             else:
-                logger.info(f"    Attempt {attempt + 1}/5: Port 8000 clear")
+                logger.info(f"    Attempt {attempt + 1}/5: Port {WS_PORT} clear")
                 break
 
-        # Wait for OS to fully release port
-        await asyncio.sleep(2)
+        # Retry loop with active port verification (no blind wait)
+        # The retry loop below will check if port is free and wait only if needed
+        max_retries = 10
+        server_script = MIND_PROTOCOL_ROOT / "orchestration" / "websocket_server.py"
 
-        # Verify port is actually free
-        if not await self._verify_port_free(8000):
-            logger.error("  ❌ Port 8000 still occupied after aggressive cleanup!")
+        if not server_script.exists():
+            logger.error(f"  ❌ Script not found: {server_script}")
             return False
 
-        logger.info("  ✅ Port 8000 verified free")
-
-        try:
-            server_script = MIND_PROTOCOL_ROOT / "orchestration" / "websocket_server.py"
-
-            if not server_script.exists():
-                logger.error(f"  ❌ Script not found: {server_script}")
-                return False
-
-            logger.info("  Starting uvicorn server on port 8000...")
-            process = subprocess.Popen(
-                [sys.executable, str(server_script)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
-            )
-
-            self.processes['websocket_server'] = process
-
-            # Give it time to start and bind to port (uvicorn can take 5-7 seconds)
-            await asyncio.sleep(7)
-
-            if process.poll() is None:
-                # Verify it actually bound to 8000
-                if await self._verify_port_in_use(8000):
-                    logger.info("  ✅ WebSocket Server started on port 8000")
-                    return True
+        for retry in range(max_retries):
+            # Verify port is actually free before attempting bind
+            if not await self._verify_port_free(WS_PORT):
+                if retry < max_retries - 1:
+                    wait_time = 2 ** min(retry, 4)  # 1s, 2s, 4s, 8s, 16s max
+                    logger.warning(f"  Port {WS_PORT} still in use, retrying in {wait_time}s... (attempt {retry + 1}/{max_retries})")
+                    await asyncio.sleep(wait_time)
+                    continue
                 else:
-                    logger.error("  ❌ WebSocket Server started but NOT on port 8000")
-                    process.terminate()
+                    logger.error(f"  ❌ Port {WS_PORT} still occupied after all retries!")
                     return False
-            else:
-                logger.error("  ❌ WebSocket Server failed to start")
-                return False
 
-        except Exception as e:
-            logger.error(f"  ❌ Failed to start WebSocket Server: {e}")
-            return False
+            logger.info(f"  Port {WS_PORT} verified free, starting server... (attempt {retry + 1}/{max_retries})")
+
+            try:
+                process = subprocess.Popen(
+                    [sys.executable, str(server_script)]
+                    # Don't capture stdout - let it go to parent to avoid pipe buffer deadlock
+                )
+
+                self.processes['websocket_server'] = process
+
+                # Give it time to start and bind to port
+                # (uvicorn + background engine initialization of all 8 consciousness engines takes 30-60 seconds)
+                logger.info("  Waiting for server initialization (60s for engine loading)...")
+                await asyncio.sleep(60)
+
+                if process.poll() is None:
+                    # Verify it actually bound to 8000
+                    if await self._verify_port_in_use(8000):
+                        logger.info("  ✅ WebSocket Server started successfully on port 8000")
+                        return True
+                    else:
+                        # Server started but didn't bind - possible port race condition
+                        logger.warning("  Server started but NOT bound to port 8000")
+                        process.terminate()
+                        if retry < max_retries - 1:
+                            wait_time = 2 ** min(retry, 4)
+                            logger.info(f"  Retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error("  ❌ WebSocket Server failed to bind after all retries")
+                            return False
+                else:
+                    # Process crashed during startup
+                    logger.warning("  Server process crashed during startup")
+                    if retry < max_retries - 1:
+                        wait_time = 2 ** min(retry, 4)
+                        logger.info(f"  Retrying in {wait_time}s...")
+                        await asyncio.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error("  ❌ WebSocket Server failed to start after all retries")
+                        return False
+
+            except Exception as e:
+                logger.warning(f"  Error starting server: {e}")
+                if retry < max_retries - 1:
+                    wait_time = 2 ** min(retry, 4)
+                    logger.info(f"  Retrying in {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"  ❌ Failed to start WebSocket Server after all retries: {e}")
+                    return False
+
+        # If we exhausted all retries via continue statements
+        logger.error("  ❌ WebSocket Server failed to start after all retries")
+        return False
 
     async def start_conversation_watcher(self) -> bool:
         """Start conversation watcher."""
@@ -311,11 +560,8 @@ class ProcessManager:
                 return False
 
             process = subprocess.Popen(
-                [sys.executable, str(watcher_script)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
+                [sys.executable, str(watcher_script)]
+                # Don't capture stdout - let it go to parent to avoid pipe buffer deadlock
             )
 
             self.processes['conversation_watcher'] = process
@@ -335,43 +581,18 @@ class ProcessManager:
             return False
 
     async def start_consciousness_engine(self) -> bool:
-        """Start consciousness engine (substrate heartbeat)."""
-        logger.info("[4/5] Starting Consciousness Engine...")
+        """
+        Start consciousness engine (OBSOLETE - now handled by websocket_server.py).
 
-        try:
-            engine_script = MIND_PROTOCOL_ROOT / "start_consciousness_system.py"
-
-            if not engine_script.exists():
-                logger.warning(f"  ⚠️  Script not found: {engine_script}")
-                logger.info("  ⏭️  Skipping consciousness engine")
-                return True
-
-            process = subprocess.Popen(
-                [sys.executable, str(engine_script)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
-            )
-
-            self.processes['consciousness_engine'] = process
-
-            # Give it a moment to start
-            await asyncio.sleep(3)
-
-            if process.poll() is None:
-                logger.info("  ✅ Consciousness Engine started")
-                return True
-            else:
-                logger.error("  ❌ Consciousness Engine failed to start")
-                return False
-
-        except Exception as e:
-            logger.error(f"  ❌ Failed to start Consciousness Engine: {e}")
-            return False
+        Consciousness engines are now created and registered INSIDE the websocket server
+        process on startup, ensuring the control API can see them.
+        """
+        logger.info("[4/5] Consciousness Engine...")
+        logger.info("  ⏭️  Skipped (engines load inside websocket server)")
+        return True
 
     async def start_dashboard(self) -> bool:
-        """Start Next.js dashboard with AGGRESSIVE port 3000 enforcement."""
+        """Start Next.js dashboard with retry logic for port binding."""
         logger.info("[5/5] Starting Dashboard...")
 
         try:
@@ -397,76 +618,93 @@ class ProcessManager:
                     logger.info(f"    Attempt {attempt + 1}/{max_attempts}: Killed {killed} process(es), checking again...")
                     await asyncio.sleep(1)
 
-            # Step 2: Wait for OS to fully release port
-            logger.info("  Waiting for port 3000 to fully release...")
-            await asyncio.sleep(2)
+            # Retry loop with active port verification (no blind wait)
+            # The retry loop below will check if port is free and wait only if needed
+            max_retries = 10
+            for retry in range(max_retries):
+                # Step 3: Verify port is actually free before attempting bind
+                if not await self._verify_port_free(3000):
+                    if retry < max_retries - 1:
+                        wait_time = 2 ** min(retry, 4)  # 1s, 2s, 4s, 8s, 16s max
+                        logger.warning(f"  Port 3000 still in use, retrying in {wait_time}s... (attempt {retry + 1}/{max_retries})")
+                        await asyncio.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error("  ❌ Port 3000 still occupied after all retries!")
+                        return False
 
-            # Step 3: Verify port is actually free
-            if not await self._verify_port_free(3000):
-                logger.error("  ❌ Port 3000 still occupied after aggressive cleanup!")
-                logger.error("  Cannot start dashboard - port enforcement failed")
-                return False
+                logger.info(f"  Port 3000 verified free, starting dashboard... (attempt {retry + 1}/{max_retries})")
 
-            logger.info("  ✅ Port 3000 verified free")
+                # Step 4: Start dashboard with FORCED port 3000 (hardcoded in package.json)
+                # Port 3000 is hardcoded in package.json: "dev": "next dev -p 3000"
+                process = subprocess.Popen(
+                    "npm run dev",
+                    cwd=str(dashboard_dir),
+                    shell=True
+                    # Don't capture stdout - let it go to parent to avoid pipe buffer deadlock
+                )
 
-            # Step 4: Start dashboard with FORCED port 3000 (hardcoded in package.json)
-            logger.info("  Starting Next.js on port 3000 (forced via package.json dev script)...")
+                self.processes['dashboard'] = process
 
-            # Port 3000 is hardcoded in package.json: "dev": "next dev -p 3000"
-            process = subprocess.Popen(
-                "npm run dev",
-                cwd=str(dashboard_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1,
-                shell=True
-            )
+                # Step 5: Monitor startup for port drift
+                logger.info("  Monitoring startup (allowing for Next.js build time)...")
+                startup_timeout = 45  # seconds - Next.js builds can take 30-60s
+                start_time = asyncio.get_event_loop().time()
 
-            self.processes['dashboard'] = process
+                while (asyncio.get_event_loop().time() - start_time) < startup_timeout:
+                    if process.poll() is not None:
+                        # Dashboard crashed during startup
+                        logger.warning("  Dashboard crashed during startup")
+                        if retry < max_retries - 1:
+                            wait_time = 2 ** min(retry, 4)
+                            logger.info(f"  Retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                            break
+                        else:
+                            logger.error("  ❌ Dashboard failed to start after all retries")
+                            return False
 
-            # Step 5: Monitor startup for port drift
-            logger.info("  Monitoring startup for port drift...")
-            port_detected = None
-            startup_timeout = 10  # seconds
-            start_time = asyncio.get_event_loop().time()
+                    await asyncio.sleep(0.5)
 
-            while (asyncio.get_event_loop().time() - start_time) < startup_timeout:
+                    # If process still running after timeout, check port binding
+                    if (asyncio.get_event_loop().time() - start_time) >= startup_timeout:
+                        break
+
+                # If process crashed, continue to next retry
                 if process.poll() is not None:
-                    logger.error("  ❌ Dashboard crashed during startup")
-                    return False
+                    continue
 
-                # Check process output for port messages
-                # (This is best-effort - Next.js might not have output yet)
-                await asyncio.sleep(0.5)
+                # Step 6: Verify dashboard bound to port 3000 (not drifted)
+                await asyncio.sleep(2)  # Give it moment to bind
 
-                # If process still running after timeout, assume success
-                if (asyncio.get_event_loop().time() - start_time) >= startup_timeout:
-                    break
+                if await self._verify_port_in_use(3000):
+                    logger.info("  ✅ Dashboard started successfully on port 3000 (http://localhost:3000)")
+                    return True
+                else:
+                    # Port drift detected or binding failed
+                    logger.warning("  Dashboard started but NOT bound to port 3000")
 
-            # Step 6: Verify dashboard bound to port 3000 (not drifted)
-            await asyncio.sleep(2)  # Give it moment to bind
+                    # Kill the process
+                    try:
+                        process.terminate()
+                        await asyncio.sleep(1)
+                        if process.poll() is None:
+                            process.kill()
+                    except Exception:
+                        pass
 
-            if await self._verify_port_in_use(3000):
-                logger.info("  ✅ Dashboard started on port 3000 (http://localhost:3000)")
-                return True
-            else:
-                # Port drift detected - dashboard running but not on 3000
-                logger.error("  ❌ PORT DRIFT DETECTED!")
-                logger.error("  Dashboard started but NOT on port 3000")
-                logger.error("  This indicates port enforcement failed")
+                    if retry < max_retries - 1:
+                        wait_time = 2 ** min(retry, 4)
+                        logger.info(f"  Retrying in {wait_time}s...")
+                        await asyncio.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error("  ❌ Dashboard failed to bind to port 3000 after all retries")
+                        return False
 
-                # Kill the drifted process
-                logger.error("  Killing drifted dashboard process...")
-                try:
-                    process.terminate()
-                    await asyncio.sleep(1)
-                    if process.poll() is None:
-                        process.kill()
-                except Exception:
-                    pass
-
-                return False
+            # If we exhausted all retries via continue/break statements
+            logger.error("  ❌ Dashboard failed to start after all retries")
+            return False
 
         except Exception as e:
             logger.error(f"  ❌ Failed to start Dashboard: {e}")
@@ -734,6 +972,93 @@ class ProcessManager:
                 except Exception as e:
                     logger.error(f"[Guardian] Failed to kill {service_name}: {e}")
 
+    async def monitor_service_health(self, service_name: str, port: int,
+                                     memory_threshold_mb: int = 800,
+                                     connection_threshold: int = 20,
+                                     check_interval_sec: int = 30):
+        """
+        Monitor service health and auto-restart if unhealthy.
+
+        Generic health monitor for any Mind Protocol service. Detects:
+        - Memory usage exceeding threshold (memory leaks)
+        - Connection leaks (CLOSE_WAIT accumulation)
+        - Service hangs requiring manual intervention
+
+        On unhealthy status, kills process and lets monitor_processes() restart.
+
+        Args:
+            service_name: Name of service in self.processes (e.g., 'dashboard', 'websocket_server')
+            port: Port the service binds to
+            memory_threshold_mb: Memory limit in MB before restart (default: 800)
+            connection_threshold: Max CLOSE_WAIT connections before restart (default: 20)
+            check_interval_sec: Seconds between health checks (default: 30)
+        """
+        logger.info(f"[Guardian] Starting health monitor for {service_name}")
+        logger.info(f"[Guardian]   Port: {port}")
+        logger.info(f"[Guardian]   Thresholds: Memory >{memory_threshold_mb}MB, Connections >{connection_threshold} CLOSE_WAIT")
+        logger.info(f"[Guardian]   Check interval: {check_interval_sec}s")
+
+        # Wait for service to fully start before monitoring
+        await asyncio.sleep(60)
+
+        while self.running:
+            await asyncio.sleep(check_interval_sec)
+
+            # Only monitor if service is running
+            if service_name not in self.processes:
+                continue
+
+            process = self.processes[service_name]
+            if process.poll() is not None:
+                # Service already dead, monitor_processes() will handle it
+                continue
+
+            try:
+                # Check service health
+                is_healthy, status = check_dashboard_health(port=port)
+
+                if is_healthy:
+                    logger.debug(f"[Guardian] {service_name} health: {status}")
+                else:
+                    # Service unhealthy - trigger restart
+                    logger.warning(f"[Guardian] 🏥 {service_name.upper()} UNHEALTHY: {status}")
+                    logger.warning(f"[Guardian] Triggering auto-restart...")
+
+                    # Send notification about unhealthy service
+                    self.notifier.notify_critical(
+                        f"{service_name.upper()} Unhealthy",
+                        f"{status}\nAuto-restarting service..."
+                    )
+
+                    # Kill the service process
+                    pid = get_process_on_port(port)
+                    if pid:
+                        try:
+                            subprocess.run(
+                                ["taskkill", "/F", "/PID", str(pid)],
+                                capture_output=True,
+                                timeout=5
+                            )
+                            logger.info(f"[Guardian] ✅ Killed unhealthy {service_name} (PID {pid})")
+                            logger.info(f"[Guardian] Monitor will restart {service_name} in ~5s")
+
+                            # Send notification about successful kill and pending restart
+                            self.notifier.notify_info(
+                                f"{service_name.capitalize()} Restarting",
+                                f"Service killed (PID {pid}). Restarting automatically..."
+                            )
+
+                            # Wait longer after restart to allow clean startup
+                            await asyncio.sleep(60)
+
+                        except Exception as e:
+                            logger.error(f"[Guardian] Failed to kill {service_name}: {e}")
+                    else:
+                        logger.warning(f"[Guardian] Could not find {service_name} PID on port {port}")
+
+            except Exception as e:
+                logger.error(f"[Guardian] {service_name} health check error: {e}")
+
     def _get_mind_protocol_processes(self) -> List[Tuple[str, str]]:
         """
         Find all Mind Protocol python processes running on system.
@@ -803,6 +1128,12 @@ class ProcessManager:
                         )
                         logger.info(f"[Guardian] ✅ Killed rogue process {pid}")
 
+                        # Send notification about rogue process kill
+                        self.notifier.notify_info(
+                            "Rogue Process Killed",
+                            f"PID {pid} was running outside launcher control and has been terminated"
+                        )
+
                     except Exception as e:
                         logger.error(f"[Guardian] Failed to kill rogue {pid}: {e}")
 
@@ -815,17 +1146,40 @@ class ProcessManager:
                 if process.poll() is not None:
                     logger.error(f"❌ {name} crashed! Exit code: {process.returncode}")
 
+                    # Send notification about crash
+                    self.notifier.notify_critical(
+                        f"{name.capitalize()} Crashed",
+                        f"Exit code: {process.returncode}\nAttempting auto-restart..."
+                    )
+
                     # Auto-restart
                     logger.info(f"🔄 Restarting {name}...")
 
+                    success = False
                     if name == 'websocket_server':
-                        await self.start_websocket_server()
+                        success = await self.start_websocket_server()
                     elif name == 'conversation_watcher':
-                        await self.start_conversation_watcher()
+                        success = await self.start_conversation_watcher()
                     elif name == 'consciousness_engine':
-                        await self.start_consciousness_engine()
+                        success = await self.start_consciousness_engine()
                     elif name == 'dashboard':
-                        await self.start_dashboard()
+                        success = await self.start_dashboard()
+
+                    if not success:
+                        logger.error(f"❌ Failed to restart {name} - will retry on next monitoring cycle (5s)")
+                        # Send warning about failed restart
+                        self.notifier.notify_warning(
+                            f"{name.capitalize()} Restart Failed",
+                            f"Will retry automatically in 5 seconds"
+                        )
+                        # Leave failed process in dict - next cycle will detect it's still dead and retry
+                    else:
+                        logger.info(f"✅ Successfully restarted {name}")
+                        # Send info about successful restart
+                        self.notifier.notify_info(
+                            f"{name.capitalize()} Recovered",
+                            f"Service successfully restarted and operational"
+                        )
 
     async def shutdown(self):
         """Gracefully shutdown all processes."""
@@ -876,10 +1230,19 @@ async def main():
         action="store_true",
         help="Start core only (DB + watchers, no dashboard)"
     )
+    parser.add_argument(
+        "--disable-notifications",
+        action="store_true",
+        help="Disable Windows notifications for Guardian events"
+    )
     args = parser.parse_args()
 
     # Default is full system (with dashboard), --core-only disables it
-    manager = ProcessManager(full_system=not args.core_only)
+    # Notifications enabled by default, --disable-notifications turns them off
+    manager = ProcessManager(
+        full_system=not args.core_only,
+        notifications_enabled=not args.disable_notifications
+    )
 
     # Setup signal handlers
     def signal_handler(sig, frame):

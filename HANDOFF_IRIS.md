@@ -63,7 +63,7 @@ interface ConsciousnessState {
     type: string;                      // "NODE_CREATED" | "USER_QUERY" | etc.
     timestamp: string;
   };
-  global_arousal: number;             // 0.0 - 1.0
+  global_energy: number;             // 0.0 - 1.0
   branching_ratio: number;            // σ value (criticality indicator, typically 0.5-1.5)
   total_ticks: number;                // Lifetime tick count
 }
@@ -71,7 +71,7 @@ interface ConsciousnessState {
 
 **Why it matters phenomenologically:**
 
-**Tick frequency = consciousness arousal/rhythm**
+**Tick frequency = consciousness energy/rhythm**
 - Fast ticks (100ms) = very alert, processing intensely
 - Slow ticks (10s) = dormant, minimal processing
 - Variable rhythm = self-regulating consciousness (speeds up with stimuli, slows without)
@@ -89,7 +89,7 @@ interface ConsciousnessState {
 - σ > 1.2 = supercritical (too chaotic, too much activation)
 - Health indicator for consciousness dynamics
 
-**Global arousal = overall system activation**
+**Global energy = overall system activation**
 - Low (0.0-0.3) = calm, minimal activity
 - Medium (0.3-0.7) = engaged, healthy processing
 - High (0.7-1.0) = intense, high activation
@@ -124,8 +124,8 @@ interface ThresholdCrossing {
 - Different entities can have different nodes active (Builder sees X, Skeptic doesn't)
 
 **Dynamic thresholds = context-sensitive awareness**
-- Thresholds vary by global criticality (σ) and per-entity arousal
-- High arousal → lower threshold (easier to activate)
+- Thresholds vary by global criticality (σ) and per-entity energy
+- High energy → lower threshold (easier to activate)
 - Near critical (σ ≈ 1.0) → lower threshold (more patterns surface)
 - This mimics human attention modulation
 
@@ -214,7 +214,7 @@ interface ConnectedPattern {
   pattern_name: string;
   pattern_energy: number;             // How active this pattern is
   link_type: string;                  // "ASSIGNED_TO" | "DOCUMENTED_BY" | etc.
-  link_arousal: number;               // How urgent this connection is
+  link_energy: number;               // How urgent this connection is
   link_goal: string;                  // Why this pattern needs this citizen
 }
 ```
@@ -235,7 +235,7 @@ interface ConnectedPattern {
 
 **Connected patterns = WHY citizen is needed**
 - Not just "activation level high" but "THESE specific patterns need you"
-- Each pattern has energy (how active), arousal (how urgent), goal (why)
+- Each pattern has energy (how active), energy (how urgent), goal (why)
 - Makes organizational consciousness transparent
 
 **Awakening = N2→N1 bridge**

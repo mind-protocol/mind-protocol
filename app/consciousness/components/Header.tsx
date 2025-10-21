@@ -1,16 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { AvailableGraphs, Node } from '../hooks/useGraphData';
+import type { Node } from '../hooks/useGraphData';
 import { EmergencyControls } from './EmergencyControls';
 import { SearchBar } from './SearchBar';
+import { SystemStatusIndicator } from './SystemStatusIndicator';
 
 interface HeaderProps {
-  availableGraphs: AvailableGraphs;
-  currentGraphType: string;
   currentGraphId: string | null;
-  onSelectGraph: (type: string, id: string) => void;
-  connected: boolean;
   nodeCount: number;
   linkCount: number;
   nodes: Node[];
@@ -19,15 +16,12 @@ interface HeaderProps {
 /**
  * Header Component
  *
- * Top bar with graph selector, connection status, and quick stats.
+ * Top bar with system status, search, and quick stats.
+ * Graph switching happens via clicking citizens in sidebar.
  * Includes hamburger menu with system controls.
  */
 export function Header({
-  availableGraphs,
-  currentGraphType,
   currentGraphId,
-  onSelectGraph,
-  connected,
   nodeCount,
   linkCount,
   nodes
@@ -36,114 +30,56 @@ export function Header({
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 h-16 consciousness-panel border-b border-consciousness-border z-30 flex items-center px-6">
+      <div className="fixed top-0 left-0 right-0 h-16 consciousness-panel border-b border-observatory-teal z-30 flex items-center px-6">
         {/* Left - Hamburger Menu + Title */}
         <div className="flex items-center gap-4">
           {/* Hamburger Menu Button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex flex-col gap-1 p-2 hover:bg-consciousness-border/30 rounded transition-colors"
+            className="flex flex-col gap-1 p-2 hover:bg-observatory-cyan/20 rounded transition-colors"
             aria-label="System menu"
           >
-            <div className={`w-5 h-0.5 bg-consciousness-green transition-all ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-            <div className={`w-5 h-0.5 bg-consciousness-green transition-all ${menuOpen ? 'opacity-0' : ''}`} />
-            <div className={`w-5 h-0.5 bg-consciousness-green transition-all ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
+            <div className={`w-5 h-0.5 bg-observatory-cyan transition-all ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+            <div className={`w-5 h-0.5 bg-observatory-cyan transition-all ${menuOpen ? 'opacity-0' : ''}`} />
+            <div className={`w-5 h-0.5 bg-observatory-cyan transition-all ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
           </button>
 
-          <div className="text-consciousness-green font-bold text-lg">
+          <div className="text-observatory-cyan font-bold text-lg tracking-wide">
             Mind Protocol
           </div>
         </div>
 
-        {/* Center - Search */}
-        <div className="flex-1 flex justify-center px-4 max-w-2xl">
+        {/* Center - Current Graph Name & Search */}
+        <div className="flex-1 flex items-center justify-center gap-4 px-4 max-w-3xl">
+          {currentGraphId && (
+            <>
+              <div className="text-sm text-observatory-text/70 whitespace-nowrap">
+                {currentGraphId.replace('citizen_', '').replace('org_', '').replace('_', ' ')}
+              </div>
+              <div className="h-4 w-px bg-observatory-teal/30"></div>
+            </>
+          )}
           <SearchBar nodes={nodes} />
         </div>
 
-        {/* Right - Graph selector, Stats & Status */}
+        {/* Right - Stats & System Status */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-400">Graph:</label>
-            <select
-              value={currentGraphId || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (!value) return;
-
-                // Determine type from value prefix
-                const citizen = availableGraphs.citizens.find(g => g.id === value);
-                if (citizen) {
-                  onSelectGraph('citizen', citizen.id);
-                  return;
-                }
-
-                const org = availableGraphs.organizations.find(g => g.id === value);
-                if (org) {
-                  onSelectGraph('organization', org.id);
-                  return;
-                }
-
-                const eco = availableGraphs.ecosystems.find(g => g.id === value);
-                if (eco) {
-                  onSelectGraph('ecosystem', eco.id);
-                }
-              }}
-              className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded border border-consciousness-border focus:outline-none focus:border-consciousness-green cursor-pointer"
-            >
-              {availableGraphs.citizens.length > 0 && (
-                <optgroup label="Citizens">
-                  {availableGraphs.citizens.map(graph => (
-                    <option key={`citizen-${graph.id}`} value={graph.id}>
-                      {graph.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {availableGraphs.organizations.length > 0 && (
-                <optgroup label="Organizations">
-                  {availableGraphs.organizations.map(graph => (
-                    <option key={`org-${graph.id}`} value={graph.id}>
-                      {graph.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {availableGraphs.ecosystems.length > 0 && (
-                <optgroup label="Ecosystems">
-                  {availableGraphs.ecosystems.map(graph => (
-                    <option key={`eco-${graph.id}`} value={graph.id}>
-                      {graph.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-
-          <div className="h-6 w-px bg-consciousness-border"></div>
-
           {/* Stats */}
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1.5">
-              <span className="text-gray-400">Nodes:</span>
-              <span className="text-consciousness-green font-medium">{nodeCount}</span>
+              <span className="text-observatory-text/70">Nodes:</span>
+              <span className="text-observatory-cyan font-semibold">{nodeCount}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-gray-400">Links:</span>
-              <span className="text-consciousness-green font-medium">{linkCount}</span>
+              <span className="text-observatory-text/70">Links:</span>
+              <span className="text-observatory-cyan font-semibold">{linkCount}</span>
             </div>
           </div>
 
-          <div className="h-6 w-px bg-consciousness-border"></div>
+          <div className="h-6 w-px bg-observatory-teal/30"></div>
 
-          {/* Connection Status */}
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-consciousness-green' : 'bg-red-500'}
-                            ${connected ? 'animate-pulse-glow' : ''}`} />
-            <span className="text-xs text-gray-400">
-              {connected ? 'Live' : 'Offline'}
-            </span>
-          </div>
+          {/* System Status with Hover Popup */}
+          <SystemStatusIndicator />
         </div>
       </div>
 
@@ -157,12 +93,12 @@ export function Header({
           />
 
           {/* Menu Panel */}
-          <div className="fixed top-16 left-0 bottom-0 w-80 consciousness-panel border-r border-consciousness-border z-50 overflow-y-auto custom-scrollbar animate-slide-in-left">
+          <div className="fixed top-16 left-0 bottom-0 w-80 consciousness-panel border-r border-observatory-teal z-50 overflow-y-auto custom-scrollbar animate-slide-in-left">
             {/* Menu Content */}
             <div className="p-6">
               {/* System Section */}
               <div className="mb-6">
-                <h2 className="text-consciousness-green font-semibold text-sm mb-4 flex items-center gap-2">
+                <h2 className="text-observatory-cyan font-semibold text-sm mb-4 flex items-center gap-2 uppercase tracking-wider">
                   <span>⚙️</span>
                   <span>SYSTEM</span>
                 </h2>

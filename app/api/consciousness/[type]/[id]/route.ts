@@ -17,17 +17,17 @@ import { NextResponse } from 'next/server';
  */
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     type: string;
     id: string;
-  };
+  }>;
 }
 
 export async function GET(
   request: Request,
   { params }: RouteParams
 ) {
-  const { type, id } = params;
+  const { type, id } = await params;
 
   try {
     // Proxy to Python backend

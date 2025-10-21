@@ -26,21 +26,21 @@ This document provides architectural coherence verification across all 7 substra
 
 ## 1. Architectural Coherence Verification
 
-### 1.1 Energy vs Arousal Consistency
+### 1.1 Energy vs Energy Consistency
 
-**Verification:** ALL specifications correctly distinguish energy from arousal.
+**Verification:** ALL specifications correctly distinguish energy from energy.
 
-| Specification | Energy Definition | Arousal Definition | Consistent? |
+| Specification | Energy Definition | Energy Definition | Consistent? |
 |--------------|-------------------|--------------------| ------------|
 | Substrate-first activation | Node budget (depletes) | Global criticality | ✅ |
 | Activation energy mechanism | 0.0-1.0 per node | N/A (app-level) | ✅ |
 | Energy flow mechanics | Budget/currency, depletes | Per-cycle, global multiplier | ✅ |
 | Peripheral awareness | Exploration budget | N/A | ✅ |
 | Valence-driven exploration | Budget for link traversal | Input urgency | ✅ |
-| Multi-entity activation | Per-entity budget map | Per-entity arousal map | ✅ |
-| Parallel consciousness | Independent entity budgets | Per-entity arousal | ✅ |
+| Multi-entity activation | Per-entity budget map | Per-entity energy map | ✅ |
+| Parallel consciousness | Independent entity budgets | Per-entity energy | ✅ |
 
-**Coherence Status:** ✅ **CONSISTENT** - All specs correctly model energy as node-local budget and arousal as cycle-global or entity-specific intensity.
+**Coherence Status:** ✅ **CONSISTENT** - All specs correctly model energy as node-local budget and energy as cycle-global or entity-specific intensity.
 
 ### 1.2 Entity Activation Consistency
 
@@ -136,8 +136,8 @@ node.current_energy = 0.8  # Scalar
 With this pattern:
 ```python
 node.entity_activations = {
-    "translator": {"energy": 0.9, "arousal": 0.85},
-    "validator": {"energy": 0.6, "arousal": 0.7}
+    "translator": {"energy": 0.9, "energy": 0.85},
+    "validator": {"energy": 0.6, "energy": 0.7}
 }
 ```
 
@@ -198,20 +198,20 @@ node.entity_activations = {
 ```
 Cycle Begins
     ↓
-[1] Calculate Global Arousal
+[1] Calculate Global Energy
     - Input: User message
     - Analyze: Urgency, complexity, emotional intensity
-    - Output: arousal (0.0-1.0)
+    - Output: energy (0.0-1.0)
     ↓
 [2] Calculate Activation Threshold
-    - Input: arousal
-    - Formula: threshold = 0.8 - (arousal * 0.5)
+    - Input: energy
+    - Formula: threshold = 0.8 - (energy * 0.5)
     - Output: threshold (0.2-0.8)
     ↓
 [3] Inject Energy (Application)
     - Vector search: input_embedding → matched nodes (top 50, similarity > 0.5)
     - For each matched node:
-        energy_injection = similarity * arousal
+        energy_injection = similarity * energy
         FOR each entity with affinity:
             node.entity_activations[entity]["energy"] += energy_injection
     ↓
@@ -229,7 +229,7 @@ Cycle Begins
     - For each active node:
         - For each active entity on that node:
             - Budget = node.entity_activations[entity]["energy"]
-            - Arousal = node.entity_activations[entity]["arousal"]
+            - Energy = node.entity_activations[entity]["energy"]
             - Valence = link.sub_entity_valences[entity]
 
             [6a] Exploit Phase (70% budget)
@@ -384,7 +384,7 @@ Trigger 5: BACKGROUND DECAY
     "entity_activations": {
         "translator": {
             "energy": 0.0,
-            "arousal": 0.0,
+            "energy": 0.0,
             "last_activated": "2025-10-17T...",
             "activation_count": 0
         },
@@ -402,7 +402,7 @@ Trigger 5: BACKGROUND DECAY
     "entity_activations": {
         "translator": {
             "energy": 0.0,
-            "arousal": 0.0,
+            "energy": 0.0,
             "last_traversed": "2025-10-17T...",
             "traversal_count": 0
         },
@@ -437,25 +437,25 @@ Trigger 5: BACKGROUND DECAY
 
 **Tasks:**
 
-**2.1 Implement arousal calculation:**
+**2.1 Implement energy calculation:**
 ```python
-def calculate_arousal(input_message: str) -> float:
+def calculate_energy(input_message: str) -> float:
     # Analyze urgency markers ("urgent", "now", "immediately")
     # Analyze complexity (question marks, conditional statements)
     # Analyze emotional intensity (sentiment analysis)
-    return arousal_score  # 0.0-1.0
+    return energy_score  # 0.0-1.0
 ```
 
 **2.2 Implement threshold calculation:**
 ```python
-threshold = 0.8 - (arousal * 0.5)
+threshold = 0.8 - (energy * 0.5)
 ```
 
 **2.3 Implement energy injection:**
 ```python
 # Vector search: input → matched nodes
 # For each matched node, for each entity:
-#   energy_injection = similarity * arousal
+#   energy_injection = similarity * energy
 ```
 
 **2.4 Implement active node query:**
@@ -468,7 +468,7 @@ ORDER BY n.max_energy DESC
 
 **2.5 Implement multi-entity exploration:**
 - For each active node, for each active entity:
-  - Get entity's budget and arousal
+  - Get entity's budget and energy
   - Select links by valence (positive first)
   - Traverse links (spending budget)
   - Evaluate candidates (30% budget)
@@ -636,7 +636,7 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 7. Node creation conditions and costs
 
 **Ada designs (orchestration logic):**
-1. Arousal calculation algorithm
+1. Energy calculation algorithm
 2. Threshold calculation algorithm
 3. Energy injection strategy (which entities get energy for which inputs?)
 4. Multi-entity exploration sequencing
@@ -834,8 +834,8 @@ node.current_energy = 0.8
 
 # NEW
 node.entity_activations = {
-    "translator": {"energy": 0.9, "arousal": 0.85},
-    "validator": {"energy": 0.6, "arousal": 0.7}
+    "translator": {"energy": 0.9, "energy": 0.85},
+    "validator": {"energy": 0.6, "energy": 0.7}
 }
 ```
 
@@ -864,9 +864,9 @@ node.entity_activations = {
 
 **Reasoning:**
 
-1. **Coherence:** All 7 specifications are internally consistent on core concepts (energy vs arousal, database vs application, costs, factors).
+1. **Coherence:** All 7 specifications are internally consistent on core concepts (energy vs energy, database vs application, costs, factors).
 
-2. **Completeness:** Full data flow specified from input → arousal → injection → propagation → exploration → clustering → emergence → extraction → reinforcement.
+2. **Completeness:** Full data flow specified from input → energy → injection → propagation → exploration → clustering → emergence → extraction → reinforcement.
 
 3. **Handoff Clarity:** Clear boundaries defined between Luca (substrate), Ada (orchestration), Felix (implementation).
 

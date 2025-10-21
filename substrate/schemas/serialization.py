@@ -35,7 +35,7 @@ except ImportError:
     class BaseRelation(BaseModel):
         goal: str
         mindstate: str
-        arousal_level: float
+        energy: float
         confidence: float
         formation_trigger: str
         valid_at: datetime
@@ -331,7 +331,7 @@ def serialize_relation_for_falkordb(relation: BaseRelation) -> Dict[str, Any]:
     # Category 1: Core Primitives (directly queryable)
     properties['goal'] = relation.goal
     properties['mindstate'] = relation.mindstate
-    properties['arousal_level'] = relation.arousal_level
+    properties['energy'] = relation.energy
     properties['confidence'] = relation.confidence
     properties['formation_trigger'] = relation.formation_trigger
 
@@ -418,7 +418,7 @@ def deserialize_relation_from_falkordb(properties: Dict[str, Any], relation_type
     relation_data = {
         'goal': properties['goal'],
         'mindstate': properties['mindstate'],
-        'arousal_level': properties['arousal_level'],
+        'energy': properties['energy'],
         'confidence': properties['confidence'],
         'formation_trigger': properties['formation_trigger'],
         'valid_at': valid_at,

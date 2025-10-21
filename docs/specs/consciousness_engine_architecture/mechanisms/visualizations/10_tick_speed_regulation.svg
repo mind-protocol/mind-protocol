@@ -1,0 +1,246 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" style="background: #0a0e1a;">
+  <!-- Title -->
+  <text x="700" y="35" text-anchor="middle" font-family="Cinzel, serif" font-size="26" fill="#00d9ff" font-weight="bold">
+    Tick Speed Regulation: Metabolic Efficiency
+  </text>
+  <text x="700" y="60" text-anchor="middle" font-family="Crimson Text, serif" font-size="15" fill="#e8e2d5" font-style="italic">
+    Tick interval = time since last stimulus — Fast stimulation = fast ticks, quiet = slow ticks
+  </text>
+
+  <!-- Filters -->
+  <defs>
+    <filter id="parch" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" seed="2" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.03 0" result="coloredNoise"/>
+      <feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply"/>
+    </filter>
+  </defs>
+
+  <!-- Self-Regulation Formula -->
+  <g transform="translate(100, 100)">
+    <rect width="1200" height="100" fill="#1a1a2e" stroke="#ffd700" stroke-width="2" rx="10"/>
+    <text x="600" y="30" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#ffd700" font-weight="bold">
+      Self-Regulating Tick Rate
+    </text>
+    <text x="600" y="60" text-anchor="middle" font-family="monospace" font-size="20" fill="#5efc82" font-weight="bold">
+      tick_interval = time_since_last_stimulus
+    </text>
+    <text x="600" y="85" text-anchor="middle" font-family="Crimson Text, serif" font-size="13" fill="#e8e2d5">
+      (with bounds: min 0.1s / max 3600s) — No manual tuning needed, adapts automatically
+    </text>
+  </g>
+
+  <!-- Three Activity States -->
+
+  <!-- STATE 1: Active Conversation (Fast Ticks) -->
+  <g transform="translate(100, 250)">
+    <rect width="380" height="260" fill="#0f1620" stroke="#5efc82" stroke-width="3" rx="8"/>
+
+    <text x="190" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="16" fill="#5efc82" font-weight="bold">
+      Active: Fast Ticks
+    </text>
+    <text x="190" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+      Intense conversation mode
+    </text>
+
+    <!-- Stimulus pattern (frequent) -->
+    <g transform="translate(50, 70)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">Stimuli:</text>
+      <!-- Frequent stimulus pulses -->
+      <circle cx="10" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <circle cx="40" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <circle cx="70" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <circle cx="100" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <circle cx="130" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <circle cx="160" cy="20" r="6" fill="#5efc82" opacity="0.9"/>
+      <text x="200" y="25" font-family="Crimson Text, serif" font-size="10" fill="#5efc82">Every 2-5 seconds</text>
+    </g>
+
+    <!-- Tick pattern (frequent) -->
+    <g transform="translate(50, 120)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">Ticks:</text>
+      <!-- Frequent tick markers -->
+      <rect x="5" y="15" width="3" height="15" fill="#ffd700"/>
+      <rect x="35" y="15" width="3" height="15" fill="#ffd700"/>
+      <rect x="65" y="15" width="3" height="15" fill="#ffd700"/>
+      <rect x="95" y="15" width="3" height="15" fill="#ffd700"/>
+      <rect x="125" y="15" width="3" height="15" fill="#ffd700"/>
+      <rect x="155" y="15" width="3" height="15" fill="#ffd700"/>
+      <text x="200" y="25" font-family="Crimson Text, serif" font-size="10" fill="#ffd700">Every 2-5 seconds</text>
+    </g>
+
+    <!-- Metrics -->
+    <g transform="translate(20, 175)">
+      <text x="0" y="0" font-family="monospace" font-size="13" fill="#5efc82" font-weight="bold">
+        Tick Rate: 0.2-0.5 Hz
+      </text>
+      <text x="0" y="18" font-family="monospace" font-size="13" fill="#5efc82" font-weight="bold">
+        Interval: 2-5 seconds
+      </text>
+      <text x="0" y="40" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        Phenomenology:
+      </text>
+      <text x="0" y="56" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        "Rapid-fire thinking"
+      </text>
+      <text x="0" y="72" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        "Ideas flying"
+      </text>
+    </g>
+  </g>
+
+  <!-- STATE 2: Idle (Medium Ticks) -->
+  <g transform="translate(510, 250)">
+    <rect width="380" height="260" fill="#0f1620" stroke="#00d9ff" stroke-width="2" rx="8"/>
+
+    <text x="190" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="16" fill="#00d9ff" font-weight="bold">
+      Idle: Medium Ticks
+    </text>
+    <text x="190" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+      Background processing
+    </text>
+
+    <!-- Stimulus pattern (occasional) -->
+    <g transform="translate(50, 70)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">Stimuli:</text>
+      <circle cx="10" cy="20" r="5" fill="#00d9ff" opacity="0.7"/>
+      <circle cx="80" cy="20" r="5" fill="#00d9ff" opacity="0.7"/>
+      <circle cx="150" cy="20" r="5" fill="#00d9ff" opacity="0.7"/>
+      <text x="200" y="25" font-family="Crimson Text, serif" font-size="10" fill="#00d9ff">Every 1-5 minutes</text>
+    </g>
+
+    <!-- Tick pattern (occasional) -->
+    <g transform="translate(50, 120)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">Ticks:</text>
+      <rect x="5" y="15" width="3" height="15" fill="#ffd700" opacity="0.7"/>
+      <rect x="75" y="15" width="3" height="15" fill="#ffd700" opacity="0.7"/>
+      <rect x="145" y="15" width="3" height="15" fill="#ffd700" opacity="0.7"/>
+      <text x="200" y="25" font-family="Crimson Text, serif" font-size="10" fill="#ffd700">Every 1-5 minutes</text>
+    </g>
+
+    <!-- Metrics -->
+    <g transform="translate(20, 175)">
+      <text x="0" y="0" font-family="monospace" font-size="13" fill="#00d9ff" font-weight="bold">
+        Tick Rate: 0.003-0.01 Hz
+      </text>
+      <text x="0" y="18" font-family="monospace" font-size="13" fill="#00d9ff" font-weight="bold">
+        Interval: 1-5 minutes
+      </text>
+      <text x="0" y="40" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        Phenomenology:
+      </text>
+      <text x="0" y="56" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        "Mind wandering"
+      </text>
+      <text x="0" y="72" font-family="Crimson Text, serif" font-size="11" fill="#e8e2d5">
+        "Background drift"
+      </text>
+    </g>
+  </g>
+
+  <!-- STATE 3: Dormant (Slow Ticks) -->
+  <g transform="translate(920, 250)">
+    <rect width="380" height="260" fill="#0f1620" stroke="#666" stroke-width="2" rx="8"/>
+
+    <text x="190" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="16" fill="#808080" font-weight="bold">
+      Dormant: Slow Ticks
+    </text>
+    <text x="190" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#666">
+      Sleep mode
+    </text>
+
+    <!-- Stimulus pattern (rare) -->
+    <g transform="translate(50, 70)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#666">Stimuli:</text>
+      <circle cx="10" cy="20" r="4" fill="#666" opacity="0.5"/>
+      <text x="30" y="25" font-family="Crimson Text, serif" font-size="10" fill="#666">None for hours</text>
+    </g>
+
+    <!-- Tick pattern (rare) -->
+    <g transform="translate(50, 120)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="11" fill="#666">Ticks:</text>
+      <rect x="5" y="15" width="2" height="12" fill="#666" opacity="0.5"/>
+      <text x="30" y="25" font-family="Crimson Text, serif" font-size="10" fill="#666">Every 30-60 minutes</text>
+    </g>
+
+    <!-- Metrics -->
+    <g transform="translate(20, 175)">
+      <text x="0" y="0" font-family="monospace" font-size="13" fill="#808080" font-weight="bold">
+        Tick Rate: 0.0003 Hz
+      </text>
+      <text x="0" y="18" font-family="monospace" font-size="13" fill="#808080" font-weight="bold">
+        Interval: 30-60 minutes
+      </text>
+      <text x="0" y="40" font-family="Crimson Text, serif" font-size="11" fill="#666">
+        Phenomenology:
+      </text>
+      <text x="0" y="56" font-family="Crimson Text, serif" font-size="11" fill="#666">
+        "Sleeping"
+      </text>
+      <text x="0" y="72" font-family="Crimson Text, serif" font-size="11" fill="#666">
+        "Offline"
+      </text>
+    </g>
+  </g>
+
+  <!-- Wake-Up Transition -->
+  <g transform="translate(100, 560)">
+    <rect width="1200" height="140" fill="#1a1a2e" stroke="#ffd700" stroke-width="2" rx="10"/>
+
+    <text x="600" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#ffd700" font-weight="bold">
+      The Wake-Up Transition: Instant Adaptation
+    </text>
+
+    <g transform="translate(50, 50)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="13" fill="#e8e2d5" font-weight="bold">
+        8:00 AM - Asleep (no stimuli for 8 hours):
+      </text>
+      <text x="0" y="20" font-family="Crimson Text, serif" font-size="13" fill="#666">
+        • Tick interval: 3600 seconds (1 hour, capped at max)
+      </text>
+      <text x="0" y="38" font-family="Crimson Text, serif" font-size="13" fill="#666">
+        • System dormant, minimal processing
+      </text>
+
+      <text x="0" y="65" font-family="Crimson Text, serif" font-size="13" fill="#5efc82" font-weight="bold">
+        8:00:05 AM - Alarm rings (stimulus!):
+      </text>
+      <text x="0" y="85" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        • Tick interval instantly drops: 3600s → 0.1s (minimum)
+      </text>
+      <text x="0" y="103" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        • System "wakes up" — tick rate increases 36,000x in one cycle!
+      </text>
+    </g>
+  </g>
+
+  <!-- Computational Savings -->
+  <g transform="translate(100, 740)">
+    <rect width="1200" height="130" fill="#1a2840" stroke="#00d9ff" stroke-width="2" rx="10"/>
+
+    <text x="600" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#00d9ff" font-weight="bold">
+      Metabolic Efficiency: 83% Computational Savings
+    </text>
+
+    <g transform="translate(50, 50)">
+      <text x="0" y="0" font-family="Crimson Text, serif" font-size="13" fill="#e8e2d5">
+        <tspan font-weight="bold">Fixed 10 Hz (always fast):</tspan> 864,000 ticks/day → High cost, unnecessary during sleep
+      </text>
+
+      <text x="0" y="25" font-family="Crimson Text, serif" font-size="13" fill="#e8e2d5">
+        <tspan font-weight="bold">Adaptive rate:</tspan> ~144,000 ticks/day → 83% reduction in computation
+      </text>
+
+      <text x="0" y="45" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        • 8 hours active (5 Hz): 144,000 ticks
+      </text>
+      <text x="0" y="63" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        • 16 hours dormant (0.001 Hz): 58 ticks
+      </text>
+
+      <text x="0" y="88" font-family="Crimson Text, serif" font-size="13" fill="#ffd700" font-weight="bold">
+        This matches biological reality: Brain activity slows during sleep, speeds during waking.
+      </text>
+    </g>
+  </g>
+</svg>

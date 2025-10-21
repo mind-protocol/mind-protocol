@@ -66,7 +66,7 @@ def test_valid_justifies():
     justification = JUSTIFIES(
         goal="Establish confidence in FalkorDB for multi-tenancy",
         mindstate="Pragmatist + Architect",
-        arousal_level=0.6,
+        energy=0.6,
         confidence=0.9,
         formation_trigger=FormationTrigger.SYSTEMATIC_ANALYSIS,
         justification_type="empirical_evidence",
@@ -82,7 +82,7 @@ def test_valid_justifies():
     )
 
     print(f"   [OK] Goal: {justification.goal}")
-    print(f"   [OK] Arousal: {justification.arousal_level}")
+    print(f"   [OK] Energy: {justification.energy}")
     print(f"   [OK] Emotions: {list(justification.emotion_vector.keys())}")
     return justification
 
@@ -91,21 +91,21 @@ def test_validation_enforcement():
     """Test that invalid data is rejected"""
     print("\n4. Testing validation enforcement...")
 
-    # Test 1: arousal_level out of range
+    # Test 1: energy out of range
     try:
         bad_relation = JUSTIFIES(
             goal="Test",
             mindstate="Test",
-            arousal_level=1.5,  # INVALID
+            energy=1.5,  # INVALID
             confidence=0.8,
             formation_trigger=FormationTrigger.INFERENCE,
             justification_type="logical_proof",
             justification_strength="proves"
         )
-        print("   [FAIL] FAILED: Should have rejected arousal_level=1.5")
+        print("   [FAIL] FAILED: Should have rejected energy=1.5")
         return False
     except Exception as e:
-        print(f"   [OK] Correctly rejected arousal_level=1.5")
+        print(f"   [OK] Correctly rejected energy=1.5")
 
     # Test 2: missing required field
     try:
@@ -127,7 +127,7 @@ def test_validation_enforcement():
         bad_emotion = JUSTIFIES(
             goal="Test",
             mindstate="Test",
-            arousal_level=0.5,
+            energy=0.5,
             confidence=0.8,
             formation_trigger=FormationTrigger.INFERENCE,
             justification_type="logical_proof",

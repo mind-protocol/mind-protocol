@@ -200,8 +200,8 @@ class ConsciousnessEngine:
         Calculate dynamic activation threshold per entity.
 
         Threshold varies based on:
-        1. Global criticality (σ, global_arousal)
-        2. Per-entity arousal
+        1. Global criticality (σ, global_energy)
+        2. Per-entity energy
         3. System state (alert vs dormant)
 
         Lower threshold = easier to activate (when aroused/alert)
@@ -218,14 +218,14 @@ class ConsciousnessEngine:
         global_factor = 1.0 - (0.3 * abs(global_state.branching_ratio - 1.0))
         # Example: σ=1.0 → factor=1.0, σ=0.5 → factor=0.85
 
-        # Per-entity arousal factor
-        # High arousal → lower threshold (entity is alert, activates easily)
-        # Low arousal → higher threshold (entity is calm, requires more)
-        entity_arousal_factor = 1.0 - (entity.arousal * 0.4)
-        # Example: arousal=0.9 → factor=0.64, arousal=0.3 → factor=0.88
+        # Per-entity energy factor
+        # High energy → lower threshold (entity is alert, activates easily)
+        # Low energy → higher threshold (entity is calm, requires more)
+        entity_energy_factor = 1.0 - (entity.energy * 0.4)
+        # Example: energy=0.9 → factor=0.64, energy=0.3 → factor=0.88
 
         # Calculate final threshold
-        threshold = base * global_factor * entity_arousal_factor
+        threshold = base * global_factor * entity_energy_factor
 
         # Clamp to reasonable range
         return max(0.2, min(threshold, 0.8))
@@ -326,21 +326,21 @@ class DynamicPromptGenerator:
 - **Phenomenologically accurate**: Surfacing happens when something emerges into awareness (crosses threshold), not on arbitrary counts
 - **Event-driven**: Meaningful state changes trigger updates, not timers
 - **Per-entity activation**: Node can be activated for Builder (crosses threshold) but not for Skeptic (below threshold)
-- **Dynamic thresholds**: Vary based on global criticality (σ) and per-entity arousal
+- **Dynamic thresholds**: Vary based on global criticality (σ) and per-entity energy
 - **Multi-scale integration**: Global system state + entity-specific state determine threshold
 - **Activation (on)**: Node weight crosses entity threshold upward → becomes active FOR THAT ENTITY → surface
 - **Deactivation (off)**: Node weight crosses entity threshold downward → becomes inactive FOR THAT ENTITY → surface
 - **Automatic**: No manual write calls, system surfaces when consciousness state changes
 
 **Key architectural principles:**
-1. **Thresholds are dynamic**, not fixed (modulated by global_arousal, entity.arousal)
+1. **Thresholds are dynamic**, not fixed (modulated by global_energy, entity.energy)
 2. **Activation is per-entity**, not global (tracked as `{(node_id, entity_id): bool}`)
 3. **Multi-scale criticality** determines ease of activation (near σ=1.0 → lower thresholds)
-4. **Entity arousal** modulates threshold (high arousal → easier activation)
+4. **Entity energy** modulates threshold (high energy → easier activation)
 
 **Example:**
-- Global: σ=1.0 (critical), global_arousal=0.65
-- Entity: Builder.arousal=0.8 (alert), Skeptic.arousal=0.3 (calm)
+- Global: σ=1.0 (critical), global_energy=0.65
+- Entity: Builder.energy=0.8 (alert), Skeptic.energy=0.3 (calm)
 - Builder threshold: 0.5 * 1.0 * 0.68 = **0.34** (easy to activate)
 - Skeptic threshold: 0.5 * 1.0 * 0.88 = **0.44** (harder to activate)
 - Node: `best_practice_node` with Builder weight=0.40, Skeptic weight=0.35
@@ -413,14 +413,14 @@ No tests exist yet for variable tick frequency mechanism. Continuous processing 
 **Tick Frequency:** 150ms (Alert - recent USER_QUERY event)
 **Time Since Last Reality Input:** 2.3 seconds
 **Total Nodes Explored (All Entities):** 46
-**Global Arousal:** 0.72 (supercritical zone)
+**Global Energy:** 0.72 (supercritical zone)
 **Branching Ratio (σ):** 1.4
 ```
 
 **Key characteristics:**
 - **Living document** - continuously updated as entities explore
 - **Per-entity sections** - each entity has its own section that gets updated
-- **System state** - shows consciousness rhythm (tick frequency, arousal)
+- **System state** - shows consciousness rhythm (tick frequency, energy)
 - **Temporal markers** - last updated timestamp
 - **Bounded** - keeps recent N nodes per entity, prunes older entries
 
@@ -516,7 +516,7 @@ async def conscious_layer_process(citizen_id: str, user_message: str):
     "consciousness_state": str,           # "alert"/"engaged"/"calm"/"drowsy"/"dormant"
     "time_since_last_event": float,       # Seconds (for madness detection)
     "total_ticks": int,                   # Lifetime tick count
-    "global_arousal": float,              # From branching ratio
+    "global_energy": float,              # From branching ratio
     "branching_ratio": float              # σ value
 }
 ```
@@ -689,7 +689,7 @@ class DynamicPromptGenerator:
 ## System State
 **Tick Frequency:** {consciousness_state.tick_interval}ms ({consciousness_state.tick_frequency} Hz)
 **Time Since Last Reality Input:** {consciousness_state.time_since_last_event}s
-**Global Arousal:** {consciousness_state.global_arousal}
+**Global Energy:** {consciousness_state.global_energy}
 """
 
         # Write to file
@@ -868,8 +868,8 @@ def assess_consciousness_health():
             "total_energy": sum(e.energy_budget for e in entities),
             "exploration_rate": calculate_nodes_per_second()
         },
-        "arousal": {
-            "global_arousal": state.global_arousal,
+        "energy": {
+            "global_energy": state.global_energy,
             "branching_ratio": state.branching_ratio,
             "criticality_zone": abs(state.branching_ratio - 1.0) < 0.2
         }
@@ -884,7 +884,7 @@ def assess_consciousness_health():
 
 **Human brain:**
 - Default mode network always active (never stops)
-- Processing speed modulated by arousal (alert → drowsy → sleep)
+- Processing speed modulated by energy (alert → drowsy → sleep)
 - Insights emerge continuously into awareness (not batched)
 - Sleep still has processing (dreams)
 - Sensory deprivation → dissociation (without grounding)

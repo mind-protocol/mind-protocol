@@ -21,10 +21,12 @@ from typing import Dict, Set, List, Optional
 from collections import defaultdict
 from datetime import datetime
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import redis
+import shutil
 
 # FalkorDB client
 from falkordb import FalkorDB
@@ -33,6 +35,15 @@ from falkordb import FalkorDB
 from orchestration.control_api import router as control_router
 
 app = FastAPI(title="Mind Protocol Visualization")
+
+# Enable CORS for Next.js dashboard (localhost:3000)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Add control API routes (freeze/resume consciousness loops)
 app.include_router(control_router)
@@ -118,7 +129,7 @@ def query_graph_with_metadata(graph_name: str) -> Dict:
 
     Metadata tracked:
     - Nodes: traversal_count, last_traversed_by, last_traversal_time,
-             last_modified, sub_entity_weights, arousal_level, confidence
+             last_modified, sub_entity_weights, energy, confidence
     - Links: link_strength, co_activation_count, traversal_count,
              last_traversal_time, last_traversed_by
     """
@@ -134,7 +145,7 @@ def query_graph_with_metadata(graph_name: str) -> Dict:
         n.node_type as node_type,
         n.text as text,
         n.sub_entity_weights as entity_activations,
-        n.arousal_level as arousal,
+        n.energy as energy,
         n.confidence as confidence,
         n.emotion_vector as emotions,
         n.traversal_count as traversal_count,
@@ -166,7 +177,7 @@ def query_graph_with_metadata(graph_name: str) -> Dict:
     RETURN
         e.entity_id as entity_id,
         e.current_node_id as current_position,
-        e.arousal_level as arousal,
+        e.energy as energy,
         e.energy_budget as energy_budget,
         e.energy_used as energy_used
     """
@@ -201,7 +212,7 @@ def detect_operations(old_state: Dict, new_state: Dict) -> List[Dict]:
     Operations detected:
     - entity_traversal: traversal_count increased
     - hebbian_learning: co_activation_count increased, link_strength changed
-    - activation_increase: arousal_level increased significantly
+    - activation_increase: energy increased significantly
     """
     operations = []
 
@@ -247,15 +258,15 @@ def detect_operations(old_state: Dict, new_state: Dict) -> List[Dict]:
     # Detect activation increases
     for node_id, new_node in new_nodes.items():
         if node_id in old_nodes:
-            old_arousal = old_nodes[node_id].get("arousal") or 0
-            new_arousal = new_node.get("arousal") or 0
+            old_energy = old_nodes[node_id].get("energy") or 0
+            new_energy = new_node.get("energy") or 0
 
-            if new_arousal > old_arousal + 0.1:  # Significant increase
+            if new_energy > old_energy + 0.1:  # Significant increase
                 operations.append({
                     "type": "activation_increase",
                     "node_id": node_id,
-                    "arousal_delta": new_arousal - old_arousal,
-                    "new_arousal": new_arousal,
+                    "energy_delta": new_energy - old_energy,
+                    "new_energy": new_energy,
                     "entity_weights": new_node.get("entity_activations"),
                     "text": new_node.get("text", "")[:50]
                 })
@@ -478,6 +489,129 @@ async def debug_graph_data(graph_type: str, graph_id: str):
         "sample_node": data.get("nodes", [{}])[0] if data.get("nodes") else None,
         "sample_link": data.get("links", [{}])[0] if data.get("links") else None
     }
+
+
+# ============================================================================
+# Browser Console Logging Endpoint (for Claude Code observability)
+# ============================================================================
+
+from pydantic import BaseModel
+from pathlib import Path
+
+class LogEntry(BaseModel):
+    timestamp: int
+    type: str
+    message: str
+    filename: Optional[str] = None
+    lineno: Optional[int] = None
+    stack: Optional[str] = None
+
+class LogBatch(BaseModel):
+    logs: List[LogEntry]
+
+# Ensure directories exist
+LOGS_DIR = Path(__file__).parent / "claude-logs"
+SCREENSHOTS_DIR = Path(__file__).parent / "claude-screenshots"
+LOGS_DIR.mkdir(exist_ok=True)
+SCREENSHOTS_DIR.mkdir(exist_ok=True)
+
+@app.post("/api/logs")
+async def receive_browser_logs(batch: LogBatch):
+    """
+    Receive browser console logs from Next.js dashboard.
+
+    Enables Claude Code to see actual browser errors and console output
+    by capturing from Nicolas's Chrome tab and writing to files.
+
+    Architecture:
+    - Browser intercepts console.log/error/warn
+    - Sends batches to this endpoint
+    - Writes to claude-logs/browser-console.log
+    - Claude Code reads file for debugging
+
+    Designer: Iris "The Aperture"
+    Date: 2025-10-21
+    Purpose: Synchronize awareness between human browser and AI consciousness
+    """
+    log_file = LOGS_DIR / "browser-console.log"
+
+    try:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            for log in batch.logs:
+                entry = {
+                    "timestamp": datetime.fromtimestamp(log.timestamp / 1000).isoformat(),
+                    "type": log.type,
+                    "message": log.message,
+                }
+                if log.filename:
+                    entry["filename"] = log.filename
+                    entry["lineno"] = log.lineno
+                if log.stack:
+                    entry["stack"] = log.stack
+
+                f.write(json.dumps(entry) + '\n')
+
+        return {"received": len(batch.logs), "status": "logged"}
+    except Exception as e:
+        logger.error(f"Failed to write browser logs: {e}")
+        return {"error": str(e), "status": "failed"}
+
+
+@app.post("/api/screenshot")
+async def receive_screenshot(
+    screenshot: UploadFile = File(...),
+    timestamp: str = Form(...),
+    url: str = Form(...)
+):
+    """
+    Receive browser screenshots from Next.js dashboard.
+
+    Captures visual state every 30 seconds + on errors, enabling Claude Code
+    to correlate errors with UI state.
+
+    Architecture:
+    - Browser captures DOM with html2canvas every 30 seconds
+    - Sends PNG to this endpoint
+    - Saves to claude-screenshots/ with timestamp
+    - Logs metadata to screenshots.log
+    - Claude Code can view screenshots to understand visual context
+
+    Designer: Iris "The Aperture"
+    Date: 2025-10-21
+    Purpose: Visual time-machine for debugging - see what Nicolas saw when error occurred
+    """
+    try:
+        # Parse timestamp
+        ts = int(timestamp)
+        dt = datetime.fromtimestamp(ts / 1000)
+
+        # Generate filename
+        filename = f"screenshot-{dt.strftime('%Y%m%d-%H%M%S')}.png"
+        filepath = SCREENSHOTS_DIR / filename
+
+        # Save screenshot
+        with open(filepath, 'wb') as f:
+            shutil.copyfileobj(screenshot.file, f)
+
+        # Log metadata
+        metadata_file = LOGS_DIR / "screenshots.log"
+        with open(metadata_file, 'a', encoding='utf-8') as f:
+            entry = {
+                "timestamp": dt.isoformat(),
+                "filename": filename,
+                "url": url,
+                "filepath": str(filepath)
+            }
+            f.write(json.dumps(entry) + '\n')
+
+        return {
+            "status": "saved",
+            "filename": filename,
+            "filepath": str(filepath)
+        }
+    except Exception as e:
+        logger.error(f"Failed to save screenshot: {e}")
+        return {"error": str(e), "status": "failed"}
 
 
 if __name__ == "__main__":

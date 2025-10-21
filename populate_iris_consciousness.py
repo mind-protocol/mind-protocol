@@ -113,7 +113,7 @@ animations - while backend hasn't been tested, data is mocked, or errors are
 silently swallowed.
 
 When I encounter this, I feel:
-- Sharp suspicion (arousal: 0.8)
+- Sharp suspicion (energy: 0.8)
 - Protective vigilance (valence: -0.7 toward deception)
 - Responsibility to expose the truth
 

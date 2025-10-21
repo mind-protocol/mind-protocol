@@ -312,7 +312,7 @@ def extract_simple_fields(entity_text, entity_type, context_sentence):
 
 **Use NRC Affect Intensity Lexicon** (6,000 words with real-valued scores 0-1) rather than binary NRC Emotion Lexicon. This captures intensity distinctions: furious (0.95) > angry (0.75) > annoyed (0.55).
 
-**Optimal emotion vocabulary: 50-100 terms** covering 4 basic emotions (anger, fear, joy, sadness) plus valence/arousal/dominance dimensions. Research shows larger vocabularies (200+ terms) introduce noise without accuracy gains.
+**Optimal emotion vocabulary: 50-100 terms** covering 4 basic emotions (anger, fear, joy, sadness) plus valence/energy/dominance dimensions. Research shows larger vocabularies (200+ terms) introduce noise without accuracy gains.
 
 **Intensity modifier detection:**
 

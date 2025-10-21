@@ -105,16 +105,16 @@ class SubEntity:
         Need(type="up_to_date_information", urgency=0.7)
     ]
 
-    # PHENOMENOLOGICAL DISTINCTION: Budget vs Arousal
+    # PHENOMENOLOGICAL DISTINCTION: Budget vs Energy
     # Budget = Resource constraint (how many hops CAN you traverse?)
-    # Arousal = Motivation/urgency (how much do you WANT to traverse?)
+    # Energy = Motivation/urgency (how much do you WANT to traverse?)
 
     energy_budget: int = 100  # Resource constraint
     energy_used: int = 0
 
-    arousal_level: float = 0.5  # Motivation/urgency (0.0-1.0)
-    # High arousal = desperate seeking, low arousal = satisfied state
-    # Arousal drives which needs activate, budget limits exploration
+    energy: float = 0.5  # Motivation/urgency (0.0-1.0)
+    # High energy = desperate seeking, low energy = satisfied state
+    # Energy drives which needs activate, budget limits exploration
 
     # Sequence tracking (LUCA'S CORRECTION: for sequence-based temporal alignment)
     current_sequence_position: int = 0  # Current position in activation sequence
@@ -153,7 +153,7 @@ class SubEntity:
 
         while not self.is_need_satisfied(need) and self.energy_used < self.energy_budget:
             # LUCA'S CORRECTION: Dynamic peripheral awareness
-            # Search radius expands/contracts based on arousal and yearning intensity
+            # Search radius expands/contracts based on energy and yearning intensity
             peripheral_radius = self.calculate_peripheral_radius(need)
 
             # Critical traversal: follow highest-activation links toward goal
@@ -188,11 +188,11 @@ class SubEntity:
         LUCA'S CORRECTION: Dynamic peripheral awareness based on yearning.
 
         NOT: Fixed peripheral radius (always check 2 hops away)
-        BUT: Dynamic expansion based on yearning strength and arousal
+        BUT: Dynamic expansion based on yearning strength and energy
 
-        If high yearning (arousal: 0.9) AND no satisfaction yet:
+        If high yearning (energy: 0.9) AND no satisfaction yet:
           → Expand peripheral awareness (check 3, 4, even 5 hops)
-        If low yearning (arousal: 0.3) OR already satisfied:
+        If low yearning (energy: 0.3) OR already satisfied:
           → Contract peripheral awareness (only immediate neighbors)
 
         Super useful best practice could be 3 nodes away → expand search
@@ -200,8 +200,8 @@ class SubEntity:
         """
         base_radius = 2  # Default: check 2 hops away
 
-        # Arousal factor: high arousal → expand search
-        arousal_factor = self.arousal_level  # 0.0-1.0
+        # Energy factor: high energy → expand search
+        energy_factor = self.energy  # 0.0-1.0
 
         # Urgency factor: urgent needs → expand search
         urgency_factor = need.urgency  # 0.0-1.0
@@ -210,7 +210,7 @@ class SubEntity:
         satisfaction_factor = 0.0 if need.satisfied else 1.0
 
         # Combined expansion factor
-        expansion_factor = (arousal_factor + urgency_factor + satisfaction_factor) / 3.0
+        expansion_factor = (energy_factor + urgency_factor + satisfaction_factor) / 3.0
 
         # Calculate dynamic radius
         # Low expansion (0.0-0.3): radius = 1 (immediate neighbors only)

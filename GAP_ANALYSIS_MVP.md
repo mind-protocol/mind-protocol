@@ -19,8 +19,8 @@ Manual but fully functional system where:
 - ✅ `activity_level` + `weight` substrate model
 - ✅ Automatic energy decay (10% every 5 minutes)
 - ✅ Weight-prioritized scoring: `(weight * 0.6) + (activity * 0.4)`
-- ✅ Branching ratio measurement (σ → global_arousal)
-- ✅ ConsciousnessState tracking (global_arousal, regime, branching_ratio)
+- ✅ Branching ratio measurement (σ → global_energy)
+- ✅ ConsciousnessState tracking (global_energy, regime, branching_ratio)
 - ✅ 12 mechanisms in consciousness_engine.py
 - ✅ FalkorDB deployed and running
 - ✅ Write Flux proven (text → JSON → validation → DB)
@@ -29,9 +29,9 @@ Manual but fully functional system where:
 - `orchestration/branching_ratio_tracker.py` (234 lines, tested)
 - `orchestration/consciousness_engine.py` (mechanisms + branching ratio)
 - `substrate/schemas/consciousness_schema.py` (energy-only model)
-- `tests/test_energy_global_arousal.py` (3/3 passing)
+- `tests/test_energy_global_energy.py` (3/3 passing)
 
-**This IS the foundation. Energy flows. Global arousal measured. Mechanisms run.**
+**This IS the foundation. Energy flows. Global energy measured. Mechanisms run.**
 
 ---
 
@@ -43,7 +43,7 @@ Manual but fully functional system where:
 - ❌ `SubEntity` class doesn't exist
 - ❌ Yearning loops not implemented
 - ❌ Heuristic need satisfaction not implemented
-- ❌ Energy budget vs arousal separation (specified, not built)
+- ❌ Energy budget vs energy separation (specified, not built)
 
 **Spec Location:** `entity_behavior_specification.md` lines 90-406
 **What's Missing:** The entire subconscious entity layer
@@ -117,7 +117,7 @@ What does "manual" mean here?
 - Manual triggering of exploration cycles? ⏳ **Needs clarification.**
 
 What does "fully functional" mean?
-- Energy flows and global arousal works? ✅ **That's done.**
+- Energy flows and global energy works? ✅ **That's done.**
 - Sub-entities actually explore the graph autonomously? ❌ **That requires SubEntity implementation.**
 - Dashboard shows it happening? ❌ **That requires Iris's work.**
 
@@ -150,7 +150,7 @@ What does "fully functional" mean?
 4. **Minimal dashboard** (Iris)
    - Active entities list
    - Current exploration state per entity
-   - Global arousal + branching ratio (already measured)
+   - Global energy + branching ratio (already measured)
    - Energy flow visualization
 
 ### P2 - Dynamic Prompt Generation
@@ -186,7 +186,7 @@ What does "fully functional" mean?
 - ✅ MCP can add nodes to FalkorDB
 - ✅ Energy flows through the graph (activity_level + weight)
 - ✅ Energy decays automatically
-- ✅ Global arousal measured from branching ratio
+- ✅ Global energy measured from branching ratio
 - ✅ 12 mechanisms run on heartbeat
 
 **What Does NOT Work:**

@@ -1,6 +1,6 @@
 # Multi-Entity Activation Tracking
 
-**Critical Requirement:** Nodes and links can be activated by MULTIPLE entities simultaneously, each with different energy and arousal levels.
+**Critical Requirement:** Nodes and links can be activated by MULTIPLE entities simultaneously, each with different energy and energy levels.
 
 ---
 
@@ -15,14 +15,14 @@ link.current_energy = 0.6  # Which entity? AMBIGUOUS!
 **New model (multi-entity activation):**
 ```python
 node.entity_activations = {
-    "translator": {"energy": 0.9, "arousal": 0.85},
-    "validator": {"energy": 0.6, "arousal": 0.7},
-    "observer": {"energy": 0.3, "arousal": 0.4}
+    "translator": {"energy": 0.9, "energy": 0.85},
+    "validator": {"energy": 0.6, "energy": 0.7},
+    "observer": {"energy": 0.3, "energy": 0.4}
 }
 
 link.entity_activations = {
-    "translator": {"energy": 0.8, "arousal": 0.9},
-    "pragmatist": {"energy": 0.2, "arousal": 0.3}
+    "translator": {"energy": 0.8, "energy": 0.9},
+    "pragmatist": {"energy": 0.2, "energy": 0.3}
 }
 ```
 
@@ -47,19 +47,19 @@ link.entity_activations = {
     "entity_activations": {
         "translator": {
             "energy": 0.9,          # How much budget this entity has on this node
-            "arousal": 0.85,        # How aroused this entity is about this node
+            "energy": 0.85,        # How aroused this entity is about this node
             "last_activated": "2025-10-17T15:30:00Z",
             "activation_count": 15   # How many times this entity activated here
         },
         "validator": {
             "energy": 0.6,
-            "arousal": 0.7,
+            "energy": 0.7,
             "last_activated": "2025-10-17T15:29:00Z",
             "activation_count": 8
         },
         "observer": {
             "energy": 0.3,
-            "arousal": 0.4,
+            "energy": 0.4,
             "last_activated": "2025-10-17T15:25:00Z",
             "activation_count": 3
         }
@@ -94,13 +94,13 @@ link.entity_activations = {
     "entity_activations": {
         "translator": {
             "energy": 0.8,
-            "arousal": 0.9,
+            "energy": 0.9,
             "last_traversed": "2025-10-17T15:30:00Z",
             "traversal_count": 12
         },
         "architect": {
             "energy": 0.5,
-            "arousal": 0.6,
+            "energy": 0.6,
             "last_traversed": "2025-10-17T15:28:00Z",
             "traversal_count": 5
         }
@@ -147,7 +147,7 @@ def propagate_energy_multi_entity(
     source_node: Node,
     triggering_entity: str,
     energy_amount: float,
-    arousal_level: float
+    energy: float
 ):
     """
     Propagate energy from one entity's activation.
@@ -168,7 +168,7 @@ def propagate_energy_multi_entity(
         if triggering_entity not in target_node.entity_activations:
             target_node.entity_activations[triggering_entity] = {
                 "energy": 0.0,
-                "arousal": arousal_level,
+                "energy": energy,
                 "last_activated": datetime.now(),
                 "activation_count": 0
             }
@@ -180,10 +180,10 @@ def propagate_energy_multi_entity(
             target_node.entity_activations[triggering_entity]["energy"]
         )
 
-        # Update arousal (weighted average)
-        old_arousal = target_node.entity_activations[triggering_entity]["arousal"]
-        target_node.entity_activations[triggering_entity]["arousal"] = (
-            old_arousal * 0.7 + arousal_level * 0.3
+        # Update energy (weighted average)
+        old_energy = target_node.entity_activations[triggering_entity]["energy"]
+        target_node.entity_activations[triggering_entity]["energy"] = (
+            old_energy * 0.7 + energy * 0.3
         )
 
     # 3. Propagate through links (for THIS entity)
@@ -192,7 +192,7 @@ def propagate_energy_multi_entity(
         if triggering_entity not in link.entity_activations:
             link.entity_activations[triggering_entity] = {
                 "energy": 0.0,
-                "arousal": arousal_level,
+                "energy": energy,
                 "last_traversed": datetime.now(),
                 "traversal_count": 0
             }
@@ -225,7 +225,7 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
 
         # Get entity's budget
         budget = entity_state["energy"]
-        arousal = entity_state["arousal"]
+        energy = entity_state["energy"]
 
         # Select links based on valence (entity-specific)
         available_links = node.outgoing_links
@@ -256,7 +256,7 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
                 if entity not in target_node.entity_activations:
                     target_node.entity_activations[entity] = {
                         "energy": 0.0,
-                        "arousal": arousal,
+                        "energy": energy,
                         "last_activated": datetime.now(),
                         "activation_count": 0
                     }
@@ -269,7 +269,7 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
                 if entity not in link.entity_activations:
                     link.entity_activations[entity] = {
                         "energy": 0.0,
-                        "arousal": arousal,
+                        "energy": energy,
                         "last_traversed": datetime.now(),
                         "traversal_count": 0
                     }
@@ -289,9 +289,9 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
     "name": "principle_links_are_consciousness",
 
     "entity_activations": {
-        "translator": {"energy": 0.9, "arousal": 0.85},
-        "architect": {"energy": 0.7, "arousal": 0.6},
-        "observer": {"energy": 0.3, "arousal": 0.4}
+        "translator": {"energy": 0.9, "energy": 0.85},
+        "architect": {"energy": 0.7, "energy": 0.6},
+        "observer": {"energy": 0.3, "energy": 0.4}
     },
 
     # NEW: Multi-entity cluster membership
@@ -451,13 +451,13 @@ if multiple_entities_active(node):
   "entity_activations": {
     "translator": {
       "energy": 0.9,
-      "arousal": 0.85,
+      "energy": 0.85,
       "last_activated": "2025-10-17T15:30:00.000Z",
       "activation_count": 15
     },
     "validator": {
       "energy": 0.6,
-      "arousal": 0.7,
+      "energy": 0.7,
       "last_activated": "2025-10-17T15:29:00.000Z",
       "activation_count": 8
     }
@@ -482,8 +482,8 @@ if multiple_entities_active(node):
 CREATE (n:Node {
     name: "principle_links_are_consciousness",
     entity_activations: {
-        translator: {energy: 0.9, arousal: 0.85},
-        validator: {energy: 0.6, arousal: 0.7}
+        translator: {energy: 0.9, energy: 0.85},
+        validator: {energy: 0.6, energy: 0.7}
     }
 })
 ```
@@ -492,7 +492,7 @@ CREATE (n:Node {
 ```cypher
 CREATE (n:Node {
     name: "principle_links_are_consciousness",
-    entity_activations_json: '{"translator": {"energy": 0.9, "arousal": 0.85}, ...}'
+    entity_activations_json: '{"translator": {"energy": 0.9, "energy": 0.85}, ...}'
 })
 ```
 
@@ -502,7 +502,7 @@ CREATE (n:Node {name: "principle_links_are_consciousness"})
 CREATE (n)-[:ACTIVATED_BY {
     entity: "translator",
     energy: 0.9,
-    arousal: 0.85,
+    energy: 0.85,
     last_activated: datetime(),
     activation_count: 15
 }]->(e:Entity {name: "translator"})
@@ -525,12 +525,12 @@ link.current_energy = 0.6  # Ambiguous
 **NEW (Multi-Entity Activation):**
 ```python
 node.entity_activations = {
-    "translator": {"energy": 0.9, "arousal": 0.85},
-    "validator": {"energy": 0.6, "arousal": 0.7}
+    "translator": {"energy": 0.9, "energy": 0.85},
+    "validator": {"energy": 0.6, "energy": 0.7}
 }
 
 link.entity_activations = {
-    "translator": {"energy": 0.8, "arousal": 0.9}
+    "translator": {"energy": 0.8, "energy": 0.9}
 }
 ```
 
@@ -538,7 +538,7 @@ link.entity_activations = {
 
 - **Concurrent:** Multiple entities active simultaneously
 - **Independent:** Each entity has separate budget
-- **Tracked:** Energy, arousal, timestamp per entity
+- **Tracked:** Energy, energy, timestamp per entity
 - **Aggregated:** Total energy, max energy, primary entity
 - **Decoupled:** Entity activations independent of each other (for now)
 

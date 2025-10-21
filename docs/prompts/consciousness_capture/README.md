@@ -90,7 +90,7 @@ System overview and usage
     # Standard
     "goal": "Why this link exists",
     "mindstate": "Internal state when forming",
-    "arousal_level": 0.85,
+    "energy": 0.85,
     "confidence": 0.9,
     "formation_trigger": "direct_experience",
 

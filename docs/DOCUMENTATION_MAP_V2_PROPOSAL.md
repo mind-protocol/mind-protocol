@@ -13,9 +13,9 @@
 ### Activation & Energy Mechanisms
 | Mechanism | Specification File | Status | Dependencies |
 |-----------|-------------------|---------|--------------|
-| **Dynamic Activation Threshold** | `continuous_consciousness_architecture.md:194-231` | ✅ Specified | Requires: global_arousal, entity.arousal |
-| **Branching Ratio (σ)** | `branching_ratio_implementation.md` | ✅ Implemented, Tested | Produces: global_arousal |
-| **Energy Propagation** | `energy_flow_mechanics.md:160-212` | ✅ Specified | Uses: entity.arousal, global_arousal |
+| **Dynamic Activation Threshold** | `continuous_consciousness_architecture.md:194-231` | ✅ Specified | Requires: global_energy, entity.energy |
+| **Branching Ratio (σ)** | `branching_ratio_implementation.md` | ✅ Implemented, Tested | Produces: global_energy |
+| **Energy Propagation** | `energy_flow_mechanics.md:160-212` | ✅ Specified | Uses: entity.energy, global_energy |
 | **Activation Threshold (Global Only)** | `activation_energy_mechanism.md:558-580` | ⚠️ Superseded by continuous_consciousness | Legacy |
 | **Variable Tick Frequency** | `continuous_consciousness_architecture.md:82-143` | ✅ Specified | Uses: time_since_last_event |
 
@@ -23,8 +23,8 @@
 | Mechanism | Specification File | Status | Dependencies |
 |-----------|-------------------|---------|--------------|
 | **Critical Traversal** | `sub_entity_traversal_validation.md:147-297` | ✅ Specified | Requires: peripheral_awareness, yearning |
-| **Yearning-Driven Traversal** | `yearning_driven_traversal_orchestration.md` | ✅ Specified | Uses: global_arousal, entity.arousal |
-| **Peripheral Awareness** | `sub_entity_traversal_validation.md:200-250` | ✅ Specified | Uses: entity.arousal (dynamic radius) |
+| **Yearning-Driven Traversal** | `yearning_driven_traversal_orchestration.md` | ✅ Specified | Uses: global_energy, entity.energy |
+| **Peripheral Awareness** | `sub_entity_traversal_validation.md:200-250` | ✅ Specified | Uses: entity.energy (dynamic radius) |
 | **Multi-Dimensional Scoring** | `yearning_driven_traversal_orchestration.md:56-102` | ✅ Specified | Uses: valence, completeness, emotion similarity |
 
 ### SubEntity & Consciousness
@@ -45,7 +45,7 @@
 ### Multi-Scale Criticality
 | Mechanism | Specification File | Status | Dependencies |
 |-----------|-------------------|---------|--------------|
-| **Global Arousal Calculation** | `branching_ratio_tracker.py` (lines 125-158) | ✅ Implemented | Derives from σ (branching ratio) |
+| **Global Energy Calculation** | `branching_ratio_tracker.py` (lines 125-158) | ✅ Implemented | Derives from σ (branching ratio) |
 | **Multi-Scale Formulas** | `yearning_driven_traversal_orchestration.md:40-119` | ✅ Specified | global_boost * entity_boost |
 | **Criticality Regime Classification** | `branching_ratio_tracker.py` (lines 160-177) | ✅ Implemented | σ ranges → dying/subcritical/critical/supercritical |
 
@@ -58,9 +58,9 @@
 ### Core Substrate (Foundation)
 | Component | Specification | Implementation | Tests | Status |
 |-----------|--------------|----------------|-------|---------|
-| **Energy-Only Model** | `energy_flow_mechanics.md` | `consciousness_engine.py`, `retrieval.py` | `test_energy_global_arousal.py` | ✅ PROVEN |
-| **Branching Ratio Tracker** | `branching_ratio_implementation.md` | `branching_ratio_tracker.py` | `test_energy_global_arousal.py` | ✅ PROVEN |
-| **12 Mechanisms** | `consciousness_engine.py:11-450` | `consciousness_engine.py` | `test_energy_global_arousal.py` | ✅ PROVEN |
+| **Energy-Only Model** | `energy_flow_mechanics.md` | `consciousness_engine.py`, `retrieval.py` | `test_energy_global_energy.py` | ✅ PROVEN |
+| **Branching Ratio Tracker** | `branching_ratio_implementation.md` | `branching_ratio_tracker.py` | `test_energy_global_energy.py` | ✅ PROVEN |
+| **12 Mechanisms** | `consciousness_engine.py:11-450` | `consciousness_engine.py` | `test_energy_global_energy.py` | ✅ PROVEN |
 | **FalkorDB Connection** | `research/Mind Protocol V2 Stack Selection.md` | `substrate/connection.py` | Manual testing | ✅ DEPLOYED |
 | **Write Flux** | `ENERGY_ONLY_IMPLEMENTATION_SUMMARY.md` | `extraction.py` | Phase 1 tests | ✅ PROVEN |
 
@@ -136,12 +136,12 @@ substrate/schemas/
 ```
 Branching Ratio (σ)
   ↓ produces
-Global Arousal
+Global Energy
   ↓ used by
-  ├─→ Dynamic Activation Threshold (+ entity.arousal)
-  ├─→ Energy Propagation Multiplier (+ entity.arousal)
-  ├─→ Traversal Cost Factor (+ entity.arousal)
-  └─→ Yearning Satisfaction Boost (+ entity.arousal)
+  ├─→ Dynamic Activation Threshold (+ entity.energy)
+  ├─→ Energy Propagation Multiplier (+ entity.energy)
+  ├─→ Traversal Cost Factor (+ entity.energy)
+  └─→ Yearning Satisfaction Boost (+ entity.energy)
 
 Per-Entity Activation Tracking
   ↓ enables
@@ -178,17 +178,17 @@ SubEntity Yearning Loop
 - **Multi-scale criticality formulas?** → `yearning_driven_traversal_orchestration.md:40-119`
 
 ### "What's the status of...?"
-- **Energy substrate?** → ✅ Implemented & tested (`test_energy_global_arousal.py`)
+- **Energy substrate?** → ✅ Implemented & tested (`test_energy_global_energy.py`)
 - **SubEntity?** → 🟡 Fully specified, not implemented
 - **Dashboard?** → ✅ Built, waiting for mechanism data
 - **DynamicPromptGenerator?** → 🟡 Fully specified, not implemented
 - **Variable tick frequency?** → 🟡 Fully specified, not implemented
 
 ### "What depends on...?"
-- **global_arousal?** → Threshold calculation, energy propagation, traversal cost, yearning satisfaction
-- **entity.arousal?** → All multi-scale formulas (threshold, propagation, cost, boost)
+- **global_energy?** → Threshold calculation, energy propagation, traversal cost, yearning satisfaction
+- **entity.energy?** → All multi-scale formulas (threshold, propagation, cost, boost)
 - **sub_entity_weights?** → Critical traversal, threshold calculation, dashboard visualization
-- **Branching ratio (σ)?** → Global arousal derivation
+- **Branching ratio (σ)?** → Global energy derivation
 
 ---
 

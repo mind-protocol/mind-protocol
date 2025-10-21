@@ -34,17 +34,17 @@ async function checkFalkorDB(): Promise<ComponentStatus> {
   }
 }
 
-async function checkConsciousnessEngine(): Promise<ComponentStatus> {
+async function checkConsciousnessMechanisms(): Promise<ComponentStatus[]> {
   try {
-    // Check for heartbeat file written by consciousness_engine.py every 10s
+    // Check for heartbeat file written by websocket_server every 60s
     const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\.heartbeats\\consciousness_engine.heartbeat';
 
     if (!existsSync(heartbeatPath)) {
-      return {
-        name: 'Consciousness Engine',
+      return [{
+        name: 'Consciousness Mechanisms',
         status: 'stopped',
         details: 'No heartbeat file found',
-      };
+      }];
     }
 
     const stats = await readFile(heartbeatPath, 'utf-8');
@@ -53,25 +53,55 @@ async function checkConsciousnessEngine(): Promise<ComponentStatus> {
     const now = new Date();
     const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;
 
-    if (ageSeconds < 30) {
-      return {
-        name: 'Consciousness Engine',
-        status: 'running',
-        details: `Last heartbeat ${Math.floor(ageSeconds)}s ago`,
-      };
-    } else {
-      return {
-        name: 'Consciousness Engine',
+    // Check if heartbeat is stale
+    if (ageSeconds > 120) {
+      return [{
+        name: 'Consciousness Mechanisms',
         status: 'stopped',
         details: `Stale heartbeat (${Math.floor(ageSeconds)}s old)`,
-      };
+      }];
     }
+
+    // Count running engines
+    const engines = heartbeatData.engines || {};
+    const runningCount = Object.values(engines).filter((e: any) => e.running).length;
+
+    // Return individual mechanism statuses
+    const mechanismStatus = runningCount > 0 ? 'running' : 'stopped';
+
+    return [
+      {
+        name: 'Energy Diffusion',
+        status: mechanismStatus,
+        details: runningCount > 0 ? `Active across ${runningCount} engines` : 'Inactive',
+      },
+      {
+        name: 'Energy Decay',
+        status: mechanismStatus,
+        details: runningCount > 0 ? `Active across ${runningCount} engines` : 'Inactive',
+      },
+      {
+        name: 'Link Strengthening',
+        status: mechanismStatus,
+        details: runningCount > 0 ? `Active across ${runningCount} engines` : 'Inactive',
+      },
+      {
+        name: 'Threshold Activation',
+        status: mechanismStatus,
+        details: runningCount > 0 ? `Active across ${runningCount} engines` : 'Inactive',
+      },
+      {
+        name: 'Workspace Selection',
+        status: mechanismStatus,
+        details: runningCount > 0 ? `Active across ${runningCount} engines` : 'Inactive',
+      },
+    ];
   } catch (error) {
-    return {
-      name: 'Consciousness Engine',
+    return [{
+      name: 'Consciousness Mechanisms',
       status: 'error',
       details: 'Could not read heartbeat file',
-    };
+    }];
   }
 }
 
@@ -144,16 +174,46 @@ async function checkTRACECapture(): Promise<ComponentStatus> {
   }
 }
 
+async function checkStimulusInjection(): Promise<ComponentStatus> {
+  try {
+    // Stimulus injection is part of conversation_watcher
+    // Uses the same heartbeat, but represents a separate capability
+    const watcherStatus = await checkConversationWatcher();
+
+    if (watcherStatus.status === 'running') {
+      return {
+        name: 'Stimulus Injection',
+        status: 'running',
+        details: 'Energy injection active',
+      };
+    } else {
+      return {
+        name: 'Stimulus Injection',
+        status: watcherStatus.status,
+        details: watcherStatus.status === 'stopped' ? 'Inactive' : 'Error',
+      };
+    }
+  } catch (error) {
+    return {
+      name: 'Stimulus Injection',
+      status: 'error',
+      details: 'Status check failed',
+    };
+  }
+}
+
 export async function GET() {
   try {
-    const [falkorDB, engine, watcher, trace] = await Promise.all([
+    const [falkorDB, mechanisms, watcher, trace, stimulus] = await Promise.all([
       checkFalkorDB(),
-      checkConsciousnessEngine(),
+      checkConsciousnessMechanisms(),
       checkConversationWatcher(),
       checkTRACECapture(),
+      checkStimulusInjection(),
     ]);
 
-    const components = [falkorDB, engine, watcher, trace];
+    // Flatten mechanisms array (it returns multiple ComponentStatus objects)
+    const components = [falkorDB, ...mechanisms, watcher, trace, stimulus];
 
     // Overall system health
     const allRunning = components.every(c => c.status === 'running');

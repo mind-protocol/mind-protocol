@@ -279,7 +279,7 @@ LINK_TYPE_METADATA = {
         "level": "n1", "category": "value",
         "description": "Value pushing toward goal",
         "detection_pattern": "coherence_verification",
-        "mechanisms": ["coherence_verification", "arousal_propagation"]
+        "mechanisms": ["coherence_verification", "energy_propagation"]
     },
 }
 

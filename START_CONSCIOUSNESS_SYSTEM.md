@@ -230,7 +230,7 @@ npm run dev
 **Look for these patterns:**
 ```
 [Heartbeat] Tick 42: 120ms (8.33 Hz) - alert
-[BranchingRatio] σ=1.15 (avg=1.12), global_arousal=0.68
+[BranchingRatio] σ=1.15 (avg=1.12), global_energy=0.68
 [SubEntity:builder] Traversed to node 123 (energy: 15/100)
 [DynamicPromptGenerator] felix-engineer: Node "architecture_v2.md" ACTIVATED
 [WebSocketManager] Client connected (total: 1)

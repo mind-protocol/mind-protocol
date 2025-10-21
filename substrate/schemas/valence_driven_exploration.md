@@ -528,7 +528,7 @@ overall_completeness = (
 def inject_energy_with_completeness_bias(
     all_nodes: List[Node],
     input_embedding: np.ndarray,
-    arousal: float,
+    energy: float,
     active_entities: Dict[str, float]
 ) -> None:
     """
@@ -545,7 +545,7 @@ def inject_energy_with_completeness_bias(
         for node in all_nodes:
             # Base energy from semantic match
             similarity = cosine_similarity(input_embedding, node.embedding)
-            base_energy = similarity * arousal
+            base_energy = similarity * energy
 
             # Check if node could contribute to missing entity
             for missing_entity in missing_entities:
@@ -563,7 +563,7 @@ def inject_energy_with_completeness_bias(
         # System complete - normal energy injection
         for node in all_nodes:
             similarity = cosine_similarity(input_embedding, node.embedding)
-            node.current_energy += similarity * arousal
+            node.current_energy += similarity * energy
 ```
 
 ### Entity Affinity Calculation
@@ -648,7 +648,7 @@ for node in substrate.all_nodes:
     if validator_affinity > 0.6:
         # BOOST nodes that could form validator entity
         boost = 0.3 * (1.0 - 0.43) = 0.17
-        node.current_energy += similarity * arousal + boost
+        node.current_energy += similarity * energy + boost
 
         # Example: principle_test_before_victory
         # Normal: 0.7 * 0.8 = 0.56
@@ -720,7 +720,7 @@ link.sub_entity_valences["translator"] = +0.54
 ```python
 def conscious_exploration_cycle(
     input: str,
-    arousal: float,
+    energy: float,
     substrate: Substrate
 ) -> Response:
     """
@@ -736,12 +736,12 @@ def conscious_exploration_cycle(
     inject_energy_with_completeness_bias(
         substrate.nodes,
         input_embedding,
-        arousal,
+        energy,
         active_entities
     )
 
     # 3. Find activated nodes
-    threshold = calculate_threshold(arousal)
+    threshold = calculate_threshold(energy)
     active_nodes = [n for n in substrate.nodes if n.current_energy > threshold]
 
     # 4. Each active node explores based on valence

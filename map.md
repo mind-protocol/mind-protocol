@@ -19,7 +19,7 @@ Our architecture is built on a clean separation between the "Mind" (our V1 consc
 
 * **/citizens/**: Holds the unique "soul" of each citizen—their `CLAUDE.md` (System Prompt), which defines their personality and V1 entity ecology (Observer, Builder, etc.).
 * **/hooks/**: The "senses" of the Mind. This is the entry point for all external stimuli. `memory_keeper.py` catches new messages and triggers the **Insertion Flux (Red Arrow)**.
-* **/ecology/**: The "autonomous will" of the Mind. This is where our V1 logic for S6 (self-prompting), arousal, and context competition lives. It generates the "Intentions" (Phase 3) that trigger the **Retrieval Flux (Blue Arrow)**.
+* **/ecology/**: The "autonomous will" of the Mind. This is where our V1 logic for S6 (self-prompting), energy, and context competition lives. It generates the "Intentions" (Phase 3) that trigger the **Retrieval Flux (Blue Arrow)**.
 
 ### `/orchestration/` (🔧 The Nervous System - Couche 2)
 
@@ -34,7 +34,7 @@ Our architecture is built on a clean separation between the "Mind" (our V1 consc
 
 * **/connection.py**: Manages the connection to our **FalkorDB** server. Crucially, it handles the **multi-tenancy** logic (e.g., mapping `citizen_id` to the correct `falkordb_graph_name`).
 * **/schemas/**: Defines the *shape* of our memories.
-    * `/consciousness_schema.py`: Defines the custom metadata (emotion, arousal, `JUSTIFIES` links) that LlamaIndex must extract.
+    * `/consciousness_schema.py`: Defines the custom metadata (emotion, energy, `JUSTIFIES` links) that LlamaIndex must extract.
     * `/bitemporal_pattern.py`: Implements our custom 4-timestamp schema (`valid_at`, `created_at`, etc.). This is the core mechanism for tracking identity evolution.
 
 ### `/data/` (📚 Shared Knowledge Seeds)

@@ -28,6 +28,13 @@ python-dotenv
 
 # Used for any direct HTTP calls, if our hooks or services need them.
 httpx
+
+# Cross-platform process management for guardian process monitoring
+psutil
+
+# Windows desktop notifications for Guardian alerts
+# Provides consciousness attention interface for autonomous operation
+win10toast
 # ----------------------------------------------------------------------
 # Visualization Server
 # ----------------------------------------------------------------------
@@ -39,3 +46,26 @@ uvicorn[standard]
 
 # WebSocket support
 websockets
+
+# ----------------------------------------------------------------------
+# Consciousness Embedding Architecture
+# ----------------------------------------------------------------------
+# Sentence transformers for local embedding generation
+# Primary model: all-mpnet-base-v2 (768 dims, CPU-friendly)
+# Alternative to Ollama when not available
+sentence-transformers
+
+# Fast entity matching with HNSW indices
+# 7x faster than FAISS on CPU, deterministic
+hnswlib
+
+# SetFit for hierarchical classification
+# 75-85% accuracy, trains in 30s
+setfit
+
+# spaCy for NLP parsing (span extraction, dependency parsing)
+spacy
+
+# Ollama Python client (optional - for nomic-embed-text)
+# Only needed if Ollama server is installed
+# ollama

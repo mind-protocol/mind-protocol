@@ -29,7 +29,7 @@ Consciousness Engine (100ms heartbeat)
 **Purpose:** Heartbeat loop that triggers all 12 universal mechanisms
 
 **Execution Schedule:**
-- **Every tick (100ms):** Event propagation, link activation, arousal propagation
+- **Every tick (100ms):** Event propagation, link activation, energy propagation
 - **Every 10 ticks (~1s):** Evidence tracking
 - **Every 100 ticks (~10s):** Crystallization, dependency verification, coherence verification
 - **Every 1000 ticks (~100s):** Activation decay, staleness detection
@@ -70,7 +70,7 @@ SET link.last_mechanism_id = 'mechanism_name'
    - Animation: Link glow
 
 3. **Activation Increase**
-   - Detects: `arousal_level` increased significantly
+   - Detects: `energy` increased significantly
    - Animation: Ripple effect
 
 **Multi-Graph Support:**
@@ -87,8 +87,8 @@ SET link.last_mechanism_id = 'mechanism_name'
 **Purpose:** 2D force-directed graph with time controls
 
 **Visual Encoding:**
-- **Node size:** Larger = higher arousal
-- **Node color:** Blue (low arousal) → Green (medium) → Yellow (high)
+- **Node size:** Larger = higher energy
+- **Node color:** Blue (low energy) → Green (medium) → Yellow (high)
 - **Node opacity:** Recent activity = opaque, old activity = faded
 - **Node glow:** 5-second glow after activity
 - **Link thickness:** Thicker = stronger Hebbian connection
@@ -100,7 +100,7 @@ SET link.last_mechanism_id = 'mechanism_name'
 - Label visibility toggle
 
 **Interactivity:**
-- Hover node → tooltip (arousal, confidence, traversals, last entity)
+- Hover node → tooltip (energy, confidence, traversals, last entity)
 - Drag node → force simulation adjusts
 - Zoom/pan → explore graph
 
@@ -183,7 +183,7 @@ python orchestration/consciousness_engine.py --graph citizen_felix --entity feli
 - Metadata reveals which mechanism ran:
   - `last_mechanism_id: 'spreading_activation'`
   - `last_mechanism_id: 'hebbian_learning'`
-  - `last_mechanism_id: 'arousal_propagation'`
+  - `last_mechanism_id: 'energy_propagation'`
 
 ---
 
@@ -220,7 +220,7 @@ LIMIT 10
 // Should show:
 // - spreading_activation
 // - hebbian_learning
-// - arousal_propagation
+// - energy_propagation
 // - etc.
 ```
 

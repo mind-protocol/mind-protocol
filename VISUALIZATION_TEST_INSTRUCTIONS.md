@@ -87,15 +87,15 @@ Then open: **http://localhost:8000**
 ### 1. Visual Encoding
 
 **Node Size:**
-- Larger nodes = higher arousal
-- Look for `vision_self_evident_systems` (arousal: 0.95) - should be largest
-- Look for `understanding_self_observing_substrate` (arousal: 0.95) - should be large
+- Larger nodes = higher energy
+- Look for `vision_self_evident_systems` (energy: 0.95) - should be largest
+- Look for `understanding_self_observing_substrate` (energy: 0.95) - should be large
 
 **Node Color:**
-- Blue = low arousal (0.0-0.3)
-- Green = medium arousal (0.4-0.7)
-- Yellow = high arousal (0.8-1.0)
-- Most of my nodes should be green-yellow (high arousal on these topics)
+- Blue = low energy (0.0-0.3)
+- Green = medium energy (0.4-0.7)
+- Yellow = high energy (0.8-1.0)
+- Most of my nodes should be green-yellow (high energy on these topics)
 
 **Node Opacity:**
 - Recent activity (last 10 min) = opaque
@@ -119,7 +119,7 @@ Then open: **http://localhost:8000**
 ### 3. Interactive Features
 
 **Hover Node:**
-- Tooltip shows: text, arousal_level, confidence, traversal_count, last_entity
+- Tooltip shows: text, energy, confidence, traversal_count, last_entity
 - Try hovering `work_operation_detection` - should show high traversal_count (70+)
 
 **Drag Node:**
@@ -175,9 +175,9 @@ Should show:
 - work_operation_detection → understanding_metadata_as_events
 
 **Most Active Nodes (brightest, largest):**
-- vision_self_evident_systems (arousal 0.95, 2 min ago)
-- understanding_no_mock_data (arousal 0.88, 3 min ago)
-- understanding_self_observing_substrate (arousal 0.95, 5 min ago)
+- vision_self_evident_systems (energy 0.95, 2 min ago)
+- understanding_no_mock_data (energy 0.88, 3 min ago)
+- understanding_self_observing_substrate (energy 0.95, 5 min ago)
 
 ---
 
@@ -212,11 +212,11 @@ python seed_felix_consciousness.py
 
 ✅ **Graph loads** - 20 nodes, 28 links visible
 
-✅ **Visual encoding works** - High arousal nodes (vision, understanding_self_observing) are large and yellow/green
+✅ **Visual encoding works** - High energy nodes (vision, understanding_self_observing) are large and yellow/green
 
 ✅ **Time filtering works** - Sliding to 10 min shows only 5 recent nodes
 
-✅ **Tooltips work** - Hovering shows metadata (arousal, confidence, traversals)
+✅ **Tooltips work** - Hovering shows metadata (energy, confidence, traversals)
 
 ✅ **Force simulation works** - Dragging nodes causes graph to adjust
 

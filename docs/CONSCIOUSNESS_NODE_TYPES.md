@@ -25,7 +25,7 @@ Every node (all 44 types) inherits these base attributes:
 - `entity_activations` (Dict[str, EntityActivationState]) - Per-entity energy budgets
   - `energy` (float 0.0-1.0) - This entity's activation budget on this node
   - `last_activated` (datetime) - When this entity last activated
-  - **Note:** Energy IS everything (no separate arousal). Weight is the multiplier.
+  - **Note:** Energy IS everything (no separate energy). Weight is the multiplier.
 
 **Static Properties:**
 - `base_weight` (float 0.0-1.0) - Base importance from creation
@@ -42,7 +42,7 @@ Every node (all 44 types) inherits these base attributes:
 
 **Purpose:** Individual subjective experience - exists in citizen graphs (e.g., citizen_luca)
 
-**Design Philosophy:** Models the phenomenological texture of lived experience - memories, wounds, coping patterns. High arousal, high emotion_vector usage.
+**Design Philosophy:** Models the phenomenological texture of lived experience - memories, wounds, coping patterns. High energy, high emotion_vector usage.
 
 ### Memory
 
@@ -132,7 +132,7 @@ Every node (all 44 types) inherits these base attributes:
 - `what_happened`
 - `emotional_impact (string)`
 
-**Mechanism:** High-arousal suppression node
+**Mechanism:** High-energy suppression node
 
 ### Coping_Mechanism
 
@@ -160,7 +160,7 @@ Every node (all 44 types) inherits these base attributes:
 
 **Purpose:** Collective intelligence and coordination - exists in organizational graphs (e.g., org_mind_protocol)
 
-**Design Philosophy:** Models team cognition - decisions, coordination, collective learning. Medium arousal, emphasis on validation_status tracking.
+**Design Philosophy:** Models team cognition - decisions, coordination, collective learning. Medium energy, emphasis on validation_status tracking.
 
 ### Human
 
@@ -548,9 +548,9 @@ Every node (all 44 types) inherits these base attributes:
 
 **Key Principles:**
 - All nodes inherit universal base attributes (bitemporal, multi-entity, consciousness metadata)
-- Energy-only model: no separate arousal, weight is the multiplier
-- N1: High arousal, phenomenological texture
-- N2: Medium arousal, validation tracking
+- Energy-only model: no separate energy, weight is the multiplier
+- N1: High energy, phenomenological texture
+- N2: Medium energy, validation tracking
 - N3: Evidence-driven, all claims justified by concrete sources
 - Multi-entity: Same node can have different energy/clusters per entity
 - Dynamic citizen prompts: Identity emerges from active clusters

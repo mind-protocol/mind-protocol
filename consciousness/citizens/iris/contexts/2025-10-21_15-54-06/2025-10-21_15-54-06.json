@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-21_15-54-06",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-21T13:56:45.729620+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-21T13:56:45.729620+00:00",
+      "content": " Option A: Fix viz_emitter to query FalkorDB + emit v2,\n  wait for Felix to add live events"
+    }
+  ],
+  "last_updated": "2025-10-21T13:56:45.729620+00:00",
+  "message_count": 1
+}

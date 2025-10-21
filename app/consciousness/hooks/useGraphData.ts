@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface Node {
   id: string;
@@ -6,12 +6,18 @@ export interface Node {
   labels?: string[];
   node_type?: string;
   text?: string;
-  arousal?: number;
+  energy?: number;
   confidence?: number;
   entity_activations?: Record<string, { energy: number; last_activated?: number }>;
   last_active?: number;
+  last_traversal_time?: number;
   last_traversed_by?: string;
   traversal_count?: number;
+  created_at?: number;
+  last_modified?: number;
+  base_weight?: number;
+  reinforcement_weight?: number;
+  weight?: number;
   x?: number;
   y?: number;
 }
@@ -23,6 +29,8 @@ export interface Link {
   type: string;
   strength?: number;
   last_traversed?: number;
+  created_at?: number;
+  weight?: number;
   sub_entity_valences?: Record<string, number>;
   sub_entity_emotion_vectors?: Record<string, Record<string, number>>;
   entity_activations?: Record<string, { energy: number }>;
@@ -51,22 +59,29 @@ export interface AvailableGraphs {
 /**
  * useGraphData Hook
  *
- * Manages WebSocket connection to visualization_server.py
- * Provides real-time consciousness substrate state
+ * Manages graph state via REST API for initial load
+ * Provides methods to update state from WebSocket events
+ *
+ * Architecture:
+ * - Initial load: REST API /api/graph/{type}/{id}
+ * - Real-time updates: WebSocket events via useWebSocket hook
+ *
+ * Author: Iris "The Aperture"
+ * Integration with: Felix "Ironhand"'s REST API
  */
 export function useGraphData() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
-  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [availableGraphs, setAvailableGraphs] = useState<AvailableGraphs>({
     citizens: [],
     organizations: [],
     ecosystems: []
   });
 
-  const wsRef = useRef<WebSocket | null>(null);
   const [currentGraphType, setCurrentGraphType] = useState<string>('citizen');
   const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
 
@@ -111,126 +126,119 @@ export function useGraphData() {
     fetchGraphs();
   }, []); // Run once on mount
 
-  // Connect to specific graph
-  const selectGraph = useCallback((graphType: string, graphId: string) => {
+  /**
+   * Load graph from REST API
+   * Called when user selects a graph from the dropdown
+   */
+  const selectGraph = useCallback(async (graphType: string, graphId: string) => {
     if (!graphId) return;
-
-    // Close existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
 
     setCurrentGraphType(graphType);
     setCurrentGraphId(graphId);
+    setLoading(true);
+    setError(null);
 
-    // Establish WebSocket connection
-    // Connect directly to backend (bypassing Next.js proxy for WebSocket)
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
-    const wsUrl = `${wsProtocol}//${wsHost}/ws/graph/${graphType}/${graphId}`;
+    try {
+      console.log(`[useGraphData] Fetching graph: ${graphType}/${graphId}`);
+      const response = await fetch(`/api/consciousness/${graphType}/${graphId}`);
 
-    console.log('Connecting to WebSocket:', wsUrl);
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      console.log('Connected to', graphType, graphId);
-      setConnected(true);
-    };
-
-    ws.onmessage = (event) => {
-      console.log('WebSocket message received:', event.data);
-      try {
-        const message = JSON.parse(event.data);
-
-        if (message.type === 'initial_state') {
-          // Full state load
-          console.log('Initial state received:', message.data);
-          setNodes(message.data.nodes || []);
-          setLinks(message.data.links || []);
-          setEntities(message.data.entities || []);
-        }
-        else if (message.type === 'graph_update') {
-          // Incremental update
-          applyDiff(message.diff);
-
-          // Track operations for animations
-          if (message.operations && message.operations.length > 0) {
-            setOperations(prev => [...message.operations, ...prev].slice(0, 50));
-          }
-        }
-        else if (message.type === 'error') {
-          console.error('Server error:', message.message);
-        }
-      } catch (error) {
-        console.error('Error parsing message:', error);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch graph: ${response.status} ${response.statusText}`);
       }
-    };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setConnected(false);
-    };
+      const data = await response.json();
 
-    ws.onclose = (event) => {
-      console.log('WebSocket closed. Code:', event.code, 'Reason:', event.reason);
-      setConnected(false);
-    };
-
-    wsRef.current = ws;
+      setNodes(data.nodes || []);
+      setLinks(data.links || []);
+      setEntities(data.entities || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('[useGraphData] Error fetching graph:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load graph');
+      setLoading(false);
+    }
   }, []);
 
-  // Apply incremental diff to state
-  const applyDiff = (diff: any) => {
-    if (diff.nodes_added) {
-      setNodes(prev => [...prev, ...diff.nodes_added]);
-    }
+  /**
+   * Update node based on WebSocket events
+   * Called when threshold_crossing or entity_activity events arrive
+   * FIXED: Properly merges entity_activations and increments traversal_count
+   */
+  const updateNodeFromEvent = useCallback((nodeId: string, updates: Partial<Node>) => {
+    setNodes(prev => prev.map(node => {
+      if (node.id === nodeId || node.node_id === nodeId) {
+        // Handle special cases for incremental updates
+        const merged: Node = { ...node };
 
-    if (diff.nodes_updated) {
-      setNodes(prev => prev.map(node => {
-        const updated = diff.nodes_updated.find((n: Node) => n.id === node.id);
-        return updated || node;
-      }));
-    }
+        // Merge entity_activations instead of replacing
+        if (updates.entity_activations) {
+          merged.entity_activations = {
+            ...node.entity_activations,
+            ...updates.entity_activations
+          };
+        }
 
-    if (diff.links_added) {
-      setLinks(prev => [...prev, ...diff.links_added]);
-    }
+        // Increment traversal_count instead of replacing
+        if (updates.traversal_count) {
+          merged.traversal_count = (node.traversal_count || 0) + updates.traversal_count;
+        }
 
-    if (diff.links_updated) {
-      setLinks(prev => prev.map(link => {
-        const updated = diff.links_updated.find((l: Link) => l.id === link.id);
-        return updated || link;
-      }));
-    }
-  };
+        // Apply all other updates normally
+        return { ...merged, ...updates, entity_activations: merged.entity_activations, traversal_count: merged.traversal_count };
+      }
+      return node;
+    }));
+  }, []);
 
-  // Auto-connect to first available graph
+  /**
+   * Update link based on WebSocket events
+   * Called when entity traverses a link
+   */
+  const updateLinkFromEvent = useCallback((linkId: string, updates: Partial<Link>) => {
+    setLinks(prev => prev.map(link => {
+      if (link.id === linkId) {
+        return { ...link, ...updates };
+      }
+      return link;
+    }));
+  }, []);
+
+  /**
+   * Add operation for animation tracking
+   */
+  const addOperation = useCallback((operation: Operation) => {
+    setOperations(prev => [operation, ...prev].slice(0, 50)); // Keep last 50
+  }, []);
+
+  // Auto-load first available graph
   useEffect(() => {
     if (availableGraphs.citizens && availableGraphs.citizens.length > 0 && !currentGraphId) {
       const firstCitizen = availableGraphs.citizens[0];
-      console.log('Auto-connecting to:', firstCitizen);
+      console.log('[useGraphData] Auto-loading first graph:', firstCitizen);
       selectGraph('citizen', firstCitizen.id);
     }
   }, [availableGraphs, currentGraphId, selectGraph]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
-
   return {
+    // Graph state
     nodes,
     links,
     entities,
     operations,
-    connected,
+
+    // Loading state
+    loading,
+    error,
+
+    // Graph selection
     selectGraph,
     availableGraphs,
     currentGraphType,
-    currentGraphId
+    currentGraphId,
+
+    // Event-driven updates (called by parent component with WebSocket events)
+    updateNodeFromEvent,
+    updateLinkFromEvent,
+    addOperation
   };
 }

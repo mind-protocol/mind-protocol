@@ -62,7 +62,7 @@ async def test_websocket_client():
                     elif event_type == "consciousness_state":
                         print(f"  Network: {event.get('network_id')}")
                         print(f"  State: {event.get('consciousness_state')}")
-                        print(f"  Global arousal: {event.get('global_arousal'):.2f}")
+                        print(f"  Global energy: {event.get('global_energy'):.2f}")
                         print(f"  Branching ratio: {event.get('branching_ratio'):.2f}")
                         print(f"  Tick frequency: {event.get('tick_frequency_hz'):.2f} Hz")
 

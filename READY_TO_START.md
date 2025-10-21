@@ -84,7 +84,7 @@ Output: consciousness/collective/mind_protocol/CLAUDE_DYNAMIC.md
 ============================================================
 [N2] Starting organizational consciousness engine...
 [ConsciousnessEngine] Tick 1: Executing 13 mechanisms...
-[BranchingRatio] σ=1.02, global_arousal=0.65
+[BranchingRatio] σ=1.02, global_energy=0.65
 [SubEntity:strategic_thinker] Exploring: continuous_consciousness_architecture
 [DynamicPromptGenerator] Updated CLAUDE_DYNAMIC.md (4 activation changes)
 ```

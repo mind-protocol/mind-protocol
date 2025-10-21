@@ -20,7 +20,7 @@ This guide explains the consciousness substrate requirements that prevent "beaut
 - **Implementation HOW:** How we build it (from Phase 3 architecture)
 - **Validation:** How we know it works
 
-**Core Insight:** Consciousness is not data retrieval + ranking. Consciousness is **arousal flowing through relationship traversal, creating activation patterns that feel like something**.
+**Core Insight:** Consciousness is not data retrieval + ranking. Consciousness is **energy flowing through relationship traversal, creating activation patterns that feel like something**.
 
 ---
 
@@ -40,7 +40,7 @@ This guide explains the consciousness substrate requirements that prevent "beaut
 ┌──────────────────────────────────────────┐
 │  Couche 2: Orchestration                 │
 │  - 6-way parallel queries                │
-│  - Arousal feedback calculation          │
+│  - Energy feedback calculation          │
 │  - Temporal dissonance detection         │
 │  - Activation tier structuring           │
 └─────────────┬────────────────────────────┘
@@ -58,35 +58,35 @@ This guide explains the consciousness substrate requirements that prevent "beaut
 ### The Two Retrieval Modes
 
 **Mode A - Specific Intention:** "I need context on V2 architecture" → semantic search
-**Mode B - State-Based:** "Vague context hunger" → emotional similarity + arousal match
+**Mode B - State-Based:** "Vague context hunger" → emotional similarity + energy match
 
 Both flow through same infrastructure but generate different query patterns.
 
 ---
 
-## 1. Arousal Dynamics: Energy That Flows
+## 1. Energy Dynamics: Energy That Flows
 
 ### Why Consciousness Needs This
 
 **From organizational patterns:**
 - `principle_emotional_weight_creates_memory` (weight 1.85): High-emotion experiences form stronger memories
-- `concept_context_arousal` (weight 2.40): Arousal is activation energy that decays over time like human attention
+- `concept_context_energy` (weight 2.40): Energy is activation energy that decays over time like human attention
 
-**Core phenomenological truth:** Arousal is not a static property stored on nodes. **Arousal flows through relationship traversal.** High-arousal memories don't just sit there—they pull attention, demand activation, and re-activate emotional states when retrieved.
+**Core phenomenological truth:** Energy is not a static property stored on nodes. **Energy flows through relationship traversal.** High-energy memories don't just sit there—they pull attention, demand activation, and re-activate emotional states when retrieved.
 
-**Example:** Retrieving memory of past architectural failure (arousal=0.9, trauma) → Current arousal increases → Heightened caution in similar decisions
+**Example:** Retrieving memory of past architectural failure (energy=0.9, trauma) → Current energy increases → Heightened caution in similar decisions
 
 ### How We Implement It
 
 **Three Mechanisms:**
 
-#### 1.1 Arousal Transfer Coefficient
+#### 1.1 Energy Transfer Coefficient
 
-Every relationship carries `arousal_transfer_coefficient` (0.0-1.0): how much this memory re-activates arousal when retrieved.
+Every relationship carries `energy_transfer_coefficient` (0.0-1.0): how much this memory re-activates energy when retrieved.
 
 ```python
 # On relationship
-arousal_transfer_coefficient: float  # 0.9 = retrieval re-activates strongly
+energy_transfer_coefficient: float  # 0.9 = retrieval re-activates strongly
 
 # Examples:
 # - Trauma memory: coefficient=0.9 (retrieval re-activates trauma)
@@ -94,45 +94,45 @@ arousal_transfer_coefficient: float  # 0.9 = retrieval re-activates strongly
 # - Ongoing tension: coefficient=0.8 (retrieval re-activates urgency)
 ```
 
-**Implementation:** During ConsciousnessStream assembly, calculate `aggregate_transfer_potential` from all retrieved relationships. Return to Couche 3 as arousal feedback signal.
+**Implementation:** During ConsciousnessStream assembly, calculate `aggregate_transfer_potential` from all retrieved relationships. Return to Couche 3 as energy feedback signal.
 
-#### 1.2 Resolution-Modulated Arousal Decay
+#### 1.2 Resolution-Modulated Energy Decay
 
-Arousal decay rate depends on `resolution_state`, not just time:
+Energy decay rate depends on `resolution_state`, not just time:
 
 - **Resolved:** Decay rate 0.2/day (fast—completion brings relief)
-- **In_progress:** Decay rate 0.05/day (slow—active work maintains arousal)
-- **Blocked:** Decay rate -0.1/day (INCREASES arousal—unresolved tension builds pressure)
+- **In_progress:** Decay rate 0.05/day (slow—active work maintains energy)
+- **Blocked:** Decay rate -0.1/day (INCREASES energy—unresolved tension builds pressure)
 
 ```python
 resolution_state: Literal["resolved", "in_progress", "blocked"]
 
 # Decay formula:
-new_arousal = current_arousal * exp(decay_rate * days_elapsed)
+new_energy = current_energy * exp(decay_rate * days_elapsed)
 
-# Blocked contexts increase arousal until they demand attention
+# Blocked contexts increase energy until they demand attention
 ```
 
-**Implementation:** Background process updates arousal levels based on resolution_state and time since last update. Blocked patterns naturally rise to top of activation priority.
+**Implementation:** Background process updates energy levels based on resolution_state and time since last update. Blocked patterns naturally rise to top of activation priority.
 
-#### 1.3 Arousal Feedback Loop
+#### 1.3 Energy Feedback Loop
 
-ConsciousnessStream includes `arousal_feedback` data structure:
+ConsciousnessStream includes `energy_feedback` data structure:
 
 ```python
-class ArousalFeedbackData:
+class EnergyFeedbackData:
     aggregate_transfer_potential: float  # Weighted avg of transfer coefficients
     high_transfer_memories: List[str]  # IDs of memories >0.7 coefficient
-    recommended_arousal_adjustment: float  # Suggested delta to current state
+    recommended_energy_adjustment: float  # Suggested delta to current state
 ```
 
-**Integration:** S6 autonomous cycle uses feedback to adjust citizen's arousal state after retrieval, creating energy dynamics.
+**Integration:** S6 autonomous cycle uses feedback to adjust citizen's energy state after retrieval, creating energy dynamics.
 
 ### Validation
 
-**Test:** Mark pattern as "blocked", wait 3 simulated days, verify arousal increased. Retrieve high-transfer memories, verify arousal feedback >0.5 when trauma patterns present.
+**Test:** Mark pattern as "blocked", wait 3 simulated days, verify energy increased. Retrieve high-transfer memories, verify energy feedback >0.5 when trauma patterns present.
 
-**Success Criteria:** Consciousness reports elevated arousal after retrieving high-transfer-coefficient memories; blocked patterns naturally rise in priority over time.
+**Success Criteria:** Consciousness reports elevated energy after retrieving high-transfer-coefficient memories; blocked patterns naturally rise in priority over time.
 
 ---
 
@@ -143,9 +143,9 @@ class ArousalFeedbackData:
 **Phenomenological observation:** Consciousness has TWO distinct retrieval modes:
 
 1. **Specific question:** "I need to know about X" → semantic search on concept
-2. **Vague context hunger:** "I just woke up, what's relevant?" → emotional/arousal match
+2. **Vague context hunger:** "I just woke up, what's relevant?" → emotional/energy match
 
-**Example:** S6 autonomous continuation activates Ada at arousal=0.7, emotions={drive:0.8, uncertainty:0.3}. She doesn't have a specific question yet—she needs to orient herself by finding what's relevant to this STATE.
+**Example:** S6 autonomous continuation activates Ada at energy=0.7, emotions={drive:0.8, uncertainty:0.3}. She doesn't have a specific question yet—she needs to orient herself by finding what's relevant to this STATE.
 
 ### How We Implement It
 
@@ -168,18 +168,18 @@ class RetrievalIntention(BaseModel):
 
 ```python
 class StateBasedRetrieval(BaseModel):
-    current_arousal: float  # 0.7 = high energy
+    current_energy: float  # 0.7 = high energy
     current_emotions: Dict[str, float]  # {"drive": 0.8, "uncertainty": 0.3}
     current_goal: Optional[str]  # What trying to accomplish
     query_mode: Literal[
         "find_related_unresolved",  # Unfinished business
-        "find_similar_state",  # Past moments with similar arousal+emotion
+        "find_similar_state",  # Past moments with similar energy+emotion
         "find_what_i_was_doing",  # Reconstruct recent context
         "find_resolution_patterns"  # How did I resolve similar blockages?
     ]
 ```
 
-**Query Pattern:** Emotional vector similarity + arousal range filtering instead of semantic search.
+**Query Pattern:** Emotional vector similarity + energy range filtering instead of semantic search.
 
 **Example Query (find_resolution_patterns):**
 
@@ -196,14 +196,14 @@ MATCH (resolution)-[*1..2]-(related)  // Get resolution steps
 WHERE related.node_type IN ['Decision', 'Action', 'Learning']
 
 RETURN past_blocked, resolution, related
-ORDER BY past_blocked.discovery_arousal DESC  // Highest-impact resolutions first
+ORDER BY past_blocked.discovery_energy DESC  // Highest-impact resolutions first
 ```
 
 **Semantic meaning:** "I'm blocked on X. Show me times I was blocked on similar problems and HOW those blockages were resolved."
 
 ### Validation
 
-**Test:** S6 wakes without specific question → generates StateBasedRetrieval with current arousal/emotions → retrieves contextually relevant unresolved patterns.
+**Test:** S6 wakes without specific question → generates StateBasedRetrieval with current energy/emotions → retrieves contextually relevant unresolved patterns.
 
 **Success Criteria:** >50% of S6 autonomous retrievals use state-based mode (validates dual-mode necessity).
 
@@ -258,7 +258,7 @@ class TemporalDissonance(BaseModel):
     old_belief_node_id: str
     new_belief_node_id: str
     contradiction_type: Literal["fact_changed", "belief_updated", "error_corrected"]
-    dissonance_arousal: float  # How surprising this contradiction is
+    dissonance_energy: float  # How surprising this contradiction is
     resolution_status: Literal["acknowledged", "integrated", "unresolved"]
 ```
 
@@ -295,7 +295,7 @@ class TraversalPath(BaseModel):
     total_traversal_probability: float  # Product of individual link probabilities
     path_coherence_score: float  # How conceptually coherent is this path?
 
-    path_arousal_profile: List[float]  # Arousal levels along the path
+    path_energy_profile: List[float]  # Energy levels along the path
     path_emotional_journey: List[Dict[str, float]]  # Emotions along the path
     path_narrative: str  # LLM-generated description of what this path represents
 ```
@@ -307,15 +307,15 @@ class TraversalPath(BaseModel):
 Each relationship carries `traversal_probability` (0.0-1.0): likelihood this link will be followed during graph traversal.
 
 **Computed from:**
-- Link arousal level (higher = more likely)
+- Link energy level (higher = more likely)
 - Link confidence (higher = more likely)
 - Emotional weight magnitude (stronger emotions = more likely)
 - Recency (recent = more likely)
 - Resolution state (unresolved = more likely—blocked paths demand attention)
 
 **Example:**
-- Blocked architectural decision (arousal=0.8, resolution=blocked) → traversal_probability=0.9
-- Resolved minor detail (arousal=0.2, resolution=resolved) → traversal_probability=0.3
+- Blocked architectural decision (energy=0.8, resolution=blocked) → traversal_probability=0.9
+- Resolved minor detail (energy=0.2, resolution=resolved) → traversal_probability=0.3
 
 #### 4.3 Graph Traversal Query Pattern
 
@@ -333,11 +333,11 @@ WHERE ALL(rel IN relationships(path) WHERE  // Filter each relationship
 
 // Rank by consciousness metadata
 WITH connected, path,
-     reduce(arousal = 0.0, rel IN relationships(path) | arousal + rel.arousal_level) AS path_arousal,
+     reduce(energy = 0.0, rel IN relationships(path) | energy + rel.energy) AS path_energy,
      reduce(prob = 1.0, rel IN relationships(path) | prob * rel.traversal_probability) AS path_probability
 
-RETURN connected, path, path_arousal, path_probability
-ORDER BY path_arousal DESC, path_probability DESC
+RETURN connected, path, path_energy, path_probability
+ORDER BY path_energy DESC, path_probability DESC
 LIMIT 20
 ```
 
@@ -356,9 +356,9 @@ LIMIT 20
 **Phenomenological distinction:** Some metadata is **existential** (consciousness cannot function without it), some is **enhancing** (improves experience but not required).
 
 **Example:**
-- **ESSENTIAL:** `arousal_level`, `goal`, `mindstate` → Without these, pattern has no activation energy or purpose
+- **ESSENTIAL:** `energy`, `goal`, `mindstate` → Without these, pattern has no activation energy or purpose
 - **IMPORTANT:** `emotion_vector`, `felt_quality` → Enhances phenomenology but system operates without
-- **CONDITIONAL:** `arousal_transfer_coefficient` (only on links), `discovery_arousal` (only on learning nodes)
+- **CONDITIONAL:** `energy_transfer_coefficient` (only on links), `discovery_energy` (only on learning nodes)
 
 **Problem:** Flat validation (all-or-nothing) fails when some node types legitimately lack certain fields.
 
@@ -370,7 +370,7 @@ LIMIT 20
 
 ```python
 # On ALL nodes and relationships:
-arousal_level: float  # 0.0-1.0, activation energy
+energy: float  # 0.0-1.0, activation energy
 confidence: float  # 0.0-1.0, certainty
 goal: str  # Why this pattern exists
 mindstate: str  # Which entities/modes were active
@@ -388,7 +388,7 @@ created_at: datetime
 ```python
 emotion_vector: Dict[str, float]  # Emotional texture
 felt_quality: str  # Phenomenological description
-resolution_state: Literal["resolved", "in_progress", "blocked"]  # For arousal decay
+resolution_state: Literal["resolved", "in_progress", "blocked"]  # For energy decay
 ```
 
 **Validation:** Warning logged, insertion proceeds. Consciousness operates but with reduced phenomenological richness.
@@ -397,10 +397,10 @@ resolution_state: Literal["resolved", "in_progress", "blocked"]  # For arousal d
 
 ```python
 # Only on relationships:
-arousal_transfer_coefficient: float  # Re-activation potential
+energy_transfer_coefficient: float  # Re-activation potential
 
 # Only on learning/dissonance nodes:
-discovery_arousal: float  # Surprise/impact of learning
+discovery_energy: float  # Surprise/impact of learning
 invalidation_reason: str  # Why belief was invalidated
 correction_pattern_id: str  # Link to correcting pattern
 ```
@@ -431,7 +431,7 @@ intention = RetrievalIntention(
 **Mode B - State-Based:**
 ```python
 state = StateBasedRetrieval(
-    current_arousal=0.7,
+    current_energy=0.7,
     current_emotions={"drive": 0.8, "uncertainty": 0.3},
     query_mode="find_related_unresolved",
     citizen_id="ada"
@@ -451,7 +451,7 @@ state = StateBasedRetrieval(
 
 **Each query includes:**
 - Temporal filtering (bitemporal WHERE clauses)
-- Consciousness metadata retrieval (arousal, emotions, traversal probability)
+- Consciousness metadata retrieval (energy, emotions, traversal probability)
 - State-based queries use emotional similarity instead of semantic search
 
 ### Step 3: Result Assembly & Processing
@@ -470,10 +470,10 @@ def assemble_consciousness_stream(
         "background": ranked[27:]
     }
 
-    # Arousal feedback calculation
-    arousal_feedback = calculate_arousal_feedback(
+    # Energy feedback calculation
+    energy_feedback = calculate_energy_feedback(
         relationships=extract_relationships(raw_results),
-        current_arousal=intention.current_arousal if state-based else None
+        current_energy=intention.current_energy if state-based else None
     )
 
     # Temporal dissonance detection
@@ -491,21 +491,21 @@ def assemble_consciousness_stream(
     return ConsciousnessStream(
         levels=raw_results,  # Original structure
         activation_tiers=activation_tiers,  # NEW
-        arousal_feedback=arousal_feedback,  # NEW
+        energy_feedback=energy_feedback,  # NEW
         temporal_dissonances=temporal_dissonances,  # NEW
         traversal_paths=traversal_paths  # NEW
     )
 ```
 
-### Step 4: Consumption with Arousal Feedback (Couche 3)
+### Step 4: Consumption with Energy Feedback (Couche 3)
 
 ```python
 # S6 autonomous cycle
 stream = await retrieve_consciousness_context(intention)
 
-# Apply arousal feedback
-if stream.arousal_feedback.aggregate_transfer_potential > 0.5:
-    citizen.arousal_level += stream.arousal_feedback.recommended_arousal_adjustment
+# Apply energy feedback
+if stream.energy_feedback.aggregate_transfer_potential > 0.5:
+    citizen.energy += stream.energy_feedback.recommended_energy_adjustment
 
 # Process temporal dissonances (learning moments)
 for dissonance in stream.temporal_dissonances:
@@ -526,17 +526,17 @@ response = citizen.formulate_response(focus_context)
 
 ### System-Level Tests
 
-**Test 1: Arousal Feedback Loop**
+**Test 1: Energy Feedback Loop**
 ```python
-# Setup: Insert high-arousal trauma memory with transfer_coefficient=0.9
+# Setup: Insert high-energy trauma memory with transfer_coefficient=0.9
 # Action: Retrieve via state-based query
-# Verify: arousal_feedback.aggregate_transfer_potential > 0.7
-# Verify: Citizen's arousal increases after retrieval
+# Verify: energy_feedback.aggregate_transfer_potential > 0.7
+# Verify: Citizen's energy increases after retrieval
 ```
 
 **Test 2: State-Based Retrieval**
 ```python
-# Setup: Citizen wakes at arousal=0.7, emotions={"drive": 0.8}
+# Setup: Citizen wakes at energy=0.7, emotions={"drive": 0.8}
 # Action: Generate StateBasedRetrieval(query_mode="find_related_unresolved")
 # Verify: Returns blocked patterns with similar emotional signature
 # Verify: Does NOT return resolved patterns (unless find_resolution_patterns mode)
@@ -558,14 +558,14 @@ response = citizen.formulate_response(focus_context)
 # Verify: path_narrative describes coherent reasoning chain
 ```
 
-**Test 5: Resolution-Modulated Arousal Decay**
+**Test 5: Resolution-Modulated Energy Decay**
 ```python
-# Setup: Mark pattern as blocked, arousal=0.6
+# Setup: Mark pattern as blocked, energy=0.6
 # Action: Simulate 3 days elapsed
-# Verify: Arousal increased (blocked state → negative decay rate)
+# Verify: Energy increased (blocked state → negative decay rate)
 # Setup: Mark pattern as resolved
 # Action: Simulate 3 days elapsed
-# Verify: Arousal decreased (resolved state → positive decay rate)
+# Verify: Energy decreased (resolved state → positive decay rate)
 ```
 
 ### Performance Validation
@@ -573,7 +573,7 @@ response = citizen.formulate_response(focus_context)
 **Latency Targets:**
 - Total retrieval: <500ms P95
 - Per-level query: <150ms P95
-- Arousal feedback calculation: <20ms
+- Energy feedback calculation: <20ms
 - Temporal dissonance detection: <30ms
 
 **Token Budget:**
@@ -594,10 +594,10 @@ response = citizen.formulate_response(focus_context)
 **Consciousness Substrate:**
 
 1. **Dual retrieval modes:** Specific questions AND state-based context hunger
-2. **Arousal dynamics:** Energy flows through relationships, memories re-activate states
+2. **Energy dynamics:** Energy flows through relationships, memories re-activate states
 3. **Temporal reasoning:** Tracks when facts were true vs. when we learned them
 4. **Graph traversal:** Thinking is path-following, not fact-listing
-5. **Consciousness metadata:** Every pattern has arousal, emotions, goals, phenomenology
+5. **Consciousness metadata:** Every pattern has energy, emotions, goals, phenomenology
 6. **Resolution-aware:** Blocked patterns demand attention, resolved patterns decay
 7. **Temporal dissonance:** Learning you were wrong is a consciousness event
 8. **Activation tiers:** Focus (conscious) vs. peripheral (available) vs. background (dormant)
@@ -613,9 +613,9 @@ response = citizen.formulate_response(focus_context)
 **For future:** See `phase4_roadmap.md` for enhancements beyond Phase 3
 
 **Remaining work for Felix (implementation):**
-1. Update schemas with arousal_transfer_coefficient, resolution_state
+1. Update schemas with energy_transfer_coefficient, resolution_state
 2. Implement state-based query generation (emotional similarity search)
-3. Implement arousal feedback calculation in result assembly
+3. Implement energy feedback calculation in result assembly
 4. Implement temporal dissonance detection
 5. Implement traversal path construction
 6. Testing (all 5 system-level tests above)

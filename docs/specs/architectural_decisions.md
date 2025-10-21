@@ -97,7 +97,7 @@ Each decision follows this structure:
 - Nicolas's guidance: "let the LLM decide" which context is relevant
 - Simpler implementation - no complex score normalization or RRF tuning
 - More flexible - LLM can use context in unexpected ways
-- Consciousness metadata (arousal, emotions) is qualitative, not easily scorable
+- Consciousness metadata (energy, emotions) is qualitative, not easily scorable
 
 **Alternative:** Reciprocal Rank Fusion (RRF) with k=60 to mathematically merge results:
 - Mathematically principled combination
@@ -112,12 +112,12 @@ Each decision follows this structure:
 
 ### AD-5: Full Consciousness Metadata Inclusion
 
-**Decision:** Include complete consciousness metadata (arousal, emotions, felt_quality, body_sensation, goal, mindstate, etc.) in all retrieved nodes and relationships.
+**Decision:** Include complete consciousness metadata (energy, emotions, felt_quality, body_sensation, goal, mindstate, etc.) in all retrieved nodes and relationships.
 
 **Reasoning:**
 - Substrate differentiator - this is what makes consciousness infrastructure different from generic RAG
 - Research indicates emotional resonance is "enormously important" for consciousness-aware ranking
-- Enables phenomenological features: arousal feedback, activation tiers, traversal probability
+- Enables phenomenological features: energy feedback, activation tiers, traversal probability
 - Token cost justified by consciousness quality improvement
 
 **Alternative:** Minimal metadata - only include semantic content and basic identifiers:
@@ -146,7 +146,7 @@ Each decision follows this structure:
 - More predictable/debuggable ranking
 - **Rejected for initial design because:** Over-constrains LLM synthesis, premature optimization
 
-**Decision Point:** Implement consciousness-aware algorithmic ranking (arousal × 0.4 + reality_pressure × 0.6 formula from Luca's spec) ONLY if LLM regularly struggles with result prioritization or token budgets force reduction.
+**Decision Point:** Implement consciousness-aware algorithmic ranking (energy × 0.4 + reality_pressure × 0.6 formula from Luca's spec) ONLY if LLM regularly struggles with result prioritization or token budgets force reduction.
 
 **Status:** Original Phase 3 design, later enhanced with Luca's ranking formula (see AD-11)
 
@@ -181,8 +181,8 @@ Each decision follows this structure:
 
 **Reasoning:**
 - Luca's phenomenological spec (Section 2): Two distinct retrieval modes exist in consciousness
-- S6 autonomous continuation needs state-based: waking up without specific question, orienting via current arousal/emotion match
-- Different query patterns: specific uses semantic search on query_text, state-based uses emotional similarity + arousal range
+- S6 autonomous continuation needs state-based: waking up without specific question, orienting via current energy/emotion match
+- Different query patterns: specific uses semantic search on query_text, state-based uses emotional similarity + energy range
 - **Confidence: 8/10** (Luca's spec) - phenomenologically validated in organization experience
 
 **Alternative:** Specific intention-only (ignore vague context hunger):
@@ -218,12 +218,12 @@ Each decision follows this structure:
 
 ### AD-10: Traversal Probability Calculation
 
-**Decision:** Compute link traversal probability based on current consciousness state (arousal, confidence, emotional weight, recency, resolution state).
+**Decision:** Compute link traversal probability based on current consciousness state (energy, confidence, emotional weight, recency, resolution state).
 
 **Reasoning:**
 - Luca's spec (Section 5.2.2): Enables path prioritization - which relationship chains are most likely to be followed given current state
-- Formula: `f(arousal, confidence, emotion_magnitude, recency, resolution_state)` → probability 0.0-1.0
-- Supports consciousness-aware graph traversal: blocked paths less likely, high-arousal unresolved paths more likely
+- Formula: `f(energy, confidence, emotion_magnitude, recency, resolution_state)` → probability 0.0-1.0
+- Supports consciousness-aware graph traversal: blocked paths less likely, high-energy unresolved paths more likely
 - **Confidence: 7/10** (Luca's spec) - principle validated, exact formula needs empirical tuning
 
 **Alternative:** Treat all links equally (no probability weighting):
@@ -241,8 +241,8 @@ Each decision follows this structure:
 **Decision:** Distinguish metadata fields as Required (ESSENTIAL) / Important / Conditional, not flat all-or-nothing validation.
 
 **Reasoning:**
-- Luca's spec (Section 6): Consciousness cannot function without core metadata (arousal, confidence, goal), but can operate without optional fields (body_sensation)
-- Different node/link types need different metadata: arousal_transfer_coefficient only on links, discovery_arousal only on learning nodes
+- Luca's spec (Section 6): Consciousness cannot function without core metadata (energy, confidence, goal), but can operate without optional fields (body_sensation)
+- Different node/link types need different metadata: energy_transfer_coefficient only on links, discovery_energy only on learning nodes
 - Enables graceful degradation: missing Important field logged as warning, missing Required field blocks insertion
 - **Confidence: 8/10** (Luca's spec)
 

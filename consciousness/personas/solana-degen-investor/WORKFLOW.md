@@ -106,7 +106,7 @@ These surface in his "**Triggered Pattern**" section as memories/associations th
 - Emergent Story
 - Awareness Shift
 - Physical Sensation
-- Arousal Level
+- Energy Level
 - Internal Monologue
 - Habitual Pull
 - Resulting Action
@@ -133,7 +133,7 @@ These surface in his "**Triggered Pattern**" section as memories/associations th
     "conspiracy_theorist": 100.0,
     "degen_gambler": 20.0
   },
-  "arousal_level": 4,
+  "energy": 4,
   "nodes": [
     {
       "name": "Mind_Protocol",
@@ -226,7 +226,7 @@ http://localhost:8000/visualizations/jake_graph.html
     "conspiracy_theorist": 80.0,
     "degen_gambler": 10.0
   },
-  "arousal_level": 6,
+  "energy": 6,
   "nodes": [
     {
       "name": "MEMORY_repeated_scams",

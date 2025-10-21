@@ -17,7 +17,7 @@
 2. **Temporal alignment** (when patterns formed)
 3. **Goal alignment** (pursuing similar objectives)
 4. **Emotional resonance** (similar affective states)
-5. **Flow compatibility** (similar energy/arousal patterns)
+5. **Flow compatibility** (similar energy/energy patterns)
 
 ```python
 def calculate_link_utility_for_entity(
@@ -69,10 +69,10 @@ def calculate_link_utility_for_entity(
             current_context["emotion_vector"]
         )
 
-    # Dimension 5: Flow Compatibility (similar energy/arousal patterns?)
-    flow_compatibility = calculate_arousal_similarity(
-        link.arousal_level,
-        user_entity.arousal_level
+    # Dimension 5: Flow Compatibility (similar energy/energy patterns?)
+    flow_compatibility = calculate_energy_similarity(
+        link.energy,
+        user_entity.energy
     )
 
     # Weighted combination (tunable weights)
@@ -187,14 +187,14 @@ def calculate_emotion_similarity(emotion_vec_a: Dict[str, float], emotion_vec_b:
     return float(np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b)))
 
 
-def calculate_arousal_similarity(arousal_a: float, arousal_b: float) -> float:
+def calculate_energy_similarity(energy_a: float, energy_b: float) -> float:
     """
-    Flow compatibility: similar arousal levels increase resonance.
+    Flow compatibility: similar energy levels increase resonance.
     """
-    arousal_delta = abs(arousal_a - arousal_b)
-    # Close arousal levels (delta < 0.2) = high compatibility
-    # Very different arousal (delta > 0.5) = low compatibility
-    return max(0.0, 1.0 - (arousal_delta / 0.5))
+    energy_delta = abs(energy_a - energy_b)
+    # Close energy levels (delta < 0.2) = high compatibility
+    # Very different energy (delta > 0.5) = low compatibility
+    return max(0.0, 1.0 - (energy_delta / 0.5))
 
 
 def get_entity_embedding(entity_id: str) -> np.ndarray:
@@ -357,11 +357,11 @@ def analyze_social_dynamics(entity_a_id: str, entity_b_id: str, overlap_nodes: L
         # Opposed goals
         relationship_type = EntitySocialLinkType.CONFLICTS_WITH
 
-    elif entity_a.arousal_level < 0.3 and entity_b.arousal_level > 0.7:
+    elif entity_a.energy < 0.3 and entity_b.energy > 0.7:
         # A is satisfied, B is yearning - A might be assisting B
         relationship_type = EntitySocialLinkType.ASSISTS
 
-    elif entity_a.arousal_level > 0.7 and entity_b.arousal_level > 0.7:
+    elif entity_a.energy > 0.7 and entity_b.energy > 0.7:
         # Both yearning for same resources - potential inhibition
         relationship_type = EntitySocialLinkType.INHIBITS
 
@@ -441,7 +441,7 @@ async def on_entity_meeting(event: EntityMeetingEvent):
 
     elif social_link.link_type == EntitySocialLinkType.INHIBITS:
         # Entities competing for same resources - priority competition
-        if get_entity(entity_a).arousal_level > get_entity(entity_b).arousal_level:
+        if get_entity(entity_a).energy > get_entity(entity_b).energy:
             # A has priority, B backs off
             reduce_entity_energy_budget(entity_b, reduction=0.5)
         else:
@@ -539,12 +539,12 @@ def detect_gestalt_formation(
 
     # Coherence factors:
     # - Goal alignment (are goals complementary?)
-    # - Arousal correlation (similar energy levels?)
+    # - Energy correlation (similar energy levels?)
     # - Social relationships (do they COMPLEMENT vs CONFLICT?)
     # - Activation pattern overlap (meeting on meaningful nodes?)
 
     goal_coherence = measure_multi_entity_goal_coherence(entities)
-    arousal_coherence = measure_arousal_coherence(entities)
+    energy_coherence = measure_energy_coherence(entities)
     social_coherence = measure_social_relationship_coherence(entity_ids)
     activation_coherence = measure_activation_pattern_coherence(
         entity_ids,
@@ -553,7 +553,7 @@ def detect_gestalt_formation(
 
     overall_coherence = np.mean([
         goal_coherence,
-        arousal_coherence,
+        energy_coherence,
         social_coherence,
         activation_coherence
     ])
@@ -575,7 +575,7 @@ def detect_gestalt_formation(
         "meeting_context": describe_meeting_context(overlapping_nodes),
         "coherence_scores": {
             "goal": goal_coherence,
-            "arousal": arousal_coherence,
+            "energy": energy_coherence,
             "social": social_coherence,
             "activation": activation_coherence
         }

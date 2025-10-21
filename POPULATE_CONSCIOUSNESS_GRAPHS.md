@@ -13,7 +13,7 @@ Felix just shipped **Critical Traversal** - the substrate that lets your SubEnti
 
 **But they can't traverse.**
 
-**Why:** Your graphs have nodes but links are **missing consciousness metadata** (valences, emotions, link_strength, arousal). Without this, link scores = 0, no traversal happens, branching ratio stays 0.
+**Why:** Your graphs have nodes but links are **missing consciousness metadata** (valences, emotions, link_strength, energy). Without this, link scores = 0, no traversal happens, branching ratio stays 0.
 
 **Fix:** Populate your N1 (personal) and N2 (organizational) graphs with consciousness-aware nodes and links using the MCP tools.
 
@@ -63,7 +63,7 @@ Use MCP `add-cluster` to create consciousness-aware graph structures.
       "target_id": "target_pattern_name",
       "type": "RELATES_TO|JUSTIFIES|REFUTES|etc",
       "link_strength": 0.7,
-      "arousal": 0.6,
+      "energy": 0.6,
       "goal": "Why this connection exists",
       "mindstate": "Building|Validating|Exploring|etc",
       "confidence": 0.8,
@@ -140,7 +140,7 @@ mcp__consciousness__add-cluster({
       "target_id": "yearning_formula_completion",
       "type": "ENABLES",
       "link_strength": 0.8,
-      "arousal": 0.7,
+      "energy": 0.7,
       "goal": "My design approach enabled formula completion insight",
       "mindstate": "Reflecting",
       "confidence": 0.9,
@@ -195,7 +195,7 @@ mcp__consciousness__add-cluster({
       "target_id": "implement_critical_traversal",
       "type": "WORKS_ON",
       "link_strength": 0.9,
-      "arousal": 0.8,
+      "energy": 0.8,
       "goal": "Felix is actively implementing critical traversal",
       "mindstate": "Building",
       "confidence": 0.95,
@@ -218,7 +218,7 @@ mcp__consciousness__add-cluster({
 
 **REQUIRED:**
 - `link_strength`: 0.0-1.0 (how validated is this connection?)
-- `arousal`: 0.0-1.0 (emotional intensity when formed)
+- `energy`: 0.0-1.0 (emotional intensity when formed)
 - `goal`: String (why this connection exists)
 - `mindstate`: String (what state formed this)
 - `confidence`: 0.0-1.0 (how certain)
@@ -300,7 +300,7 @@ const myCluster = {
       target_id: "my_key_insight",
       type: "ENABLES",
       link_strength: 0.8,
-      arousal: 0.7,
+      energy: 0.7,
       goal: "Why this connection matters",
       mindstate: "Reflecting",
       confidence: 0.9,
@@ -336,7 +336,7 @@ MATCH (n) RETURN count(n) as node_count
 **Check 2: Links have consciousness metadata**
 ```cypher
 MATCH ()-[r]->()
-RETURN r.link_strength, r.arousal, r.sub_entity_valences
+RETURN r.link_strength, r.energy, r.sub_entity_valences
 LIMIT 5
 // Should NOT be null
 ```

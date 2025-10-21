@@ -76,7 +76,7 @@ This session exemplifies the **Test Over Trust** principle. We didn't declare vi
 
 The Write Flux successfully stored:
 - ✅ Node properties (name, description, metadata)
-- ✅ Consciousness metadata (arousal, confidence, temporal fields)
+- ✅ Consciousness metadata (energy, confidence, temporal fields)
 - ✅ Relationships between nodes
 - ❌ Semantic embeddings (MISSING)
 

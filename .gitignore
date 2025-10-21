@@ -37,6 +37,7 @@ yarn-error.log*
 # Temp files
 temp_*
 *.backup
+nul
 
 # Local env
 .env
@@ -44,3 +45,31 @@ temp_*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Mind Protocol System Files
+.heartbeats/
+.launcher.lock
+guardian.log
+*.lock
+
+# Claude Code artifacts
+claude-logs/
+claude-screenshots/
+.claude/hooks/
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Test outputs
+test_*.py
+*_test.txt
+query
+resurrection_log.txt
+system_test_results.json
+
+# Task management XML (temporary)
+task_*.xml
+
+# Backup files
+*.py.bak
+*.py.broken

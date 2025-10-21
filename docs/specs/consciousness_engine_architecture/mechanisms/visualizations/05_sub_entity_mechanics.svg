@@ -1,0 +1,300 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" style="background: #0a0e1a;">
+  <!-- Title -->
+  <text x="700" y="35" text-anchor="middle" font-family="Cinzel, serif" font-size="26" fill="#00d9ff" font-weight="bold">
+    Sub-Entity Mechanics: Emergence Without Homunculus
+  </text>
+  <text x="700" y="60" text-anchor="middle" font-family="Crimson Text, serif" font-size="15" fill="#e8e2d5" font-style="italic">
+    Entities are mechanical activation patterns, not persistent agents — they emerge, persist, dissolve
+  </text>
+
+  <!-- Filters -->
+  <defs>
+    <filter id="parch" x="-50%" y="-50%" width="200%" height="200%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" seed="2" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.03 0" result="coloredNoise"/>
+      <feBlend in="SourceGraphic" in2="coloredNoise" mode="multiply"/>
+    </filter>
+
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feFlood flood-color="#00d9ff" flood-opacity="0.6" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#ffd700" flood-opacity="0.8" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- ==================== PHASE 1: Entity Emergence ==================== -->
+  <g transform="translate(50, 100)">
+    <rect width="620" height="200" fill="#1a1a2e" stroke="#5efc82" stroke-width="2" rx="10"/>
+
+    <text x="310" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#5efc82" font-weight="bold">
+      1. BIRTH: Entity Emerges
+    </text>
+    <text x="310" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="12" fill="#e8e2d5" font-style="italic">
+      Stimulus activates characteristic nodes → pattern forms
+    </text>
+
+    <!-- Before -->
+    <g transform="translate(80, 75)">
+      <text x="0" y="-10" font-family="Crimson Text, serif" font-size="11" fill="#808080">T=0: Before</text>
+
+      <!-- Inactive nodes -->
+      <circle cx="0" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.3" filter="url(#parch)"/>
+      <text x="0" y="25" text-anchor="middle" font-size="10" opacity="0.3">💡</text>
+      <text x="0" y="50" text-anchor="middle" font-family="Crimson Text, serif" font-size="8" fill="#666">phenomenology</text>
+
+      <circle cx="60" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.3" filter="url(#parch)"/>
+      <text x="60" y="25" text-anchor="middle" font-size="10" opacity="0.3">🔍</text>
+      <text x="60" y="50" text-anchor="middle" font-family="Crimson Text, serif" font-size="8" fill="#666">experience</text>
+
+      <circle cx="120" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.3" filter="url(#parch)"/>
+      <text x="120" y="25" text-anchor="middle" font-size="10" opacity="0.3">📝</text>
+      <text x="120" y="50" text-anchor="middle" font-family="Crimson Text, serif" font-size="8" fill="#666">validation</text>
+
+      <text x="60" y="75" text-anchor="middle" font-family="Crimson Text, serif" font-size="10" fill="#666">
+        No pattern → No entity
+      </text>
+    </g>
+
+    <!-- Arrow -->
+    <g transform="translate(220, 115)">
+      <line x1="0" y1="0" x2="60" y2="0" stroke="#5efc82" stroke-width="2"/>
+      <path d="M 60,-4 L 70,0 L 60,4 Z" fill="#5efc82"/>
+      <text x="35" y="-8" text-anchor="middle" font-family="Crimson Text, serif" font-size="9" fill="#5efc82">stimulus</text>
+    </g>
+
+    <!-- After -->
+    <g transform="translate(370, 75)">
+      <text x="60" y="-10" font-family="Crimson Text, serif" font-size="11" fill="#5efc82">T=5: After</text>
+
+      <!-- Active nodes forming pattern -->
+      <circle cx="0" cy="20" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.9" filter="url(#parch) url(#goldGlow)"/>
+      <text x="0" y="25" text-anchor="middle" font-size="10" filter="url(#glow)">💡</text>
+      <text x="0" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.8</text>
+
+      <circle cx="60" cy="20" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.9" filter="url(#parch) url(#goldGlow)"/>
+      <text x="60" y="25" text-anchor="middle" font-size="10" filter="url(#glow)">🔍</text>
+      <text x="60" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.7</text>
+
+      <circle cx="120" cy="20" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.9" filter="url(#parch) url(#goldGlow)"/>
+      <text x="120" y="25" text-anchor="middle" font-size="10" filter="url(#glow)">📝</text>
+      <text x="120" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.6</text>
+
+      <!-- Links between active nodes -->
+      <line x1="12" y1="20" x2="48" y2="20" stroke="#5efc82" stroke-width="1.5" opacity="0.7"/>
+      <line x1="72" y1="20" x2="108" y2="20" stroke="#5efc82" stroke-width="1.5" opacity="0.7"/>
+
+      <!-- Entity label -->
+      <ellipse cx="60" cy="20" rx="80" ry="40" fill="none" stroke="#5efc82" stroke-width="2" stroke-dasharray="3,3" opacity="0.6"/>
+      <text x="60" y="75" text-anchor="middle" font-family="Cinzel, serif" font-size="12" fill="#5efc82" font-weight="bold">
+        "Translator" IS this pattern
+      </text>
+    </g>
+  </g>
+
+  <!-- ==================== PHASE 2: Entity Persistence ==================== -->
+  <g transform="translate(730, 100)">
+    <rect width="620" height="200" fill="#1a1a2e" stroke="#00d9ff" stroke-width="2" rx="10"/>
+
+    <text x="310" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#00d9ff" font-weight="bold">
+      2. LIFE: Entity Persists
+    </text>
+    <text x="310" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="12" fill="#e8e2d5" font-style="italic">
+      While energy maintained, pattern exists
+    </text>
+
+    <!-- Active pattern persisting -->
+    <g transform="translate(210, 95)">
+      <!-- Nodes still active -->
+      <circle cx="0" cy="0" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="2" opacity="0.8" filter="url(#parch) url(#glow)"/>
+      <text x="0" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">💡</text>
+
+      <circle cx="60" cy="0" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="2" opacity="0.8" filter="url(#parch) url(#glow)"/>
+      <text x="60" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">🔍</text>
+
+      <circle cx="120" cy="0" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="2" opacity="0.8" filter="url(#parch) url(#glow)"/>
+      <text x="120" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">📝</text>
+
+      <!-- Links -->
+      <line x1="12" y1="0" x2="48" y2="0" stroke="#00d9ff" stroke-width="1.5" opacity="0.6"/>
+      <line x1="72" y1="0" x2="108" y2="0" stroke="#00d9ff" stroke-width="1.5" opacity="0.6"/>
+
+      <!-- Entity boundary -->
+      <ellipse cx="60" cy="0" rx="80" ry="35" fill="none" stroke="#00d9ff" stroke-width="2" stroke-dasharray="3,3" opacity="0.5"/>
+
+      <text x="60" y="55" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#00d9ff">
+        Translator = coherent cluster
+      </text>
+      <text x="60" y="72" text-anchor="middle" font-family="Crimson Text, serif" font-size="10" fill="#a0a0a0">
+        Energy: 2.1 | Coherence: 0.75
+      </text>
+    </g>
+  </g>
+
+  <!-- ==================== PHASE 3: Entity Dissolution ==================== -->
+  <g transform="translate(50, 350)">
+    <rect width="620" height="200" fill="#1a1a2e" stroke="#808080" stroke-width="2" rx="10"/>
+
+    <text x="310" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#808080" font-weight="bold">
+      3. DEATH: Entity Dissolves
+    </text>
+    <text x="310" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="12" fill="#666" font-style="italic">
+      Energy decays → pattern breaks apart
+    </text>
+
+    <!-- Before -->
+    <g transform="translate(80, 75)">
+      <text x="60" y="-10" font-family="Crimson Text, serif" font-size="11" fill="#00d9ff">T=100: Still active</text>
+
+      <!-- Nodes still somewhat active -->
+      <circle cx="0" cy="20" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="1.5" opacity="0.6" filter="url(#parch)"/>
+      <text x="0" y="25" text-anchor="middle" font-size="10" opacity="0.7">💡</text>
+      <text x="0" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#00d9ff">0.4</text>
+
+      <circle cx="60" cy="20" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="1.5" opacity="0.6" filter="url(#parch)"/>
+      <text x="60" y="25" text-anchor="middle" font-size="10" opacity="0.7">🔍</text>
+      <text x="60" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#00d9ff">0.3</text>
+
+      <circle cx="120" cy="20" r="12" fill="#f5e7c1" stroke="#00d9ff" stroke-width="1.5" opacity="0.6" filter="url(#parch)"/>
+      <text x="120" y="25" text-anchor="middle" font-size="10" opacity="0.7">📝</text>
+      <text x="120" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#00d9ff">0.25</text>
+
+      <line x1="12" y1="20" x2="48" y2="20" stroke="#00d9ff" stroke-width="1" opacity="0.4"/>
+      <line x1="72" y1="20" x2="108" y2="20" stroke="#00d9ff" stroke-width="1" opacity="0.4"/>
+    </g>
+
+    <!-- Arrow -->
+    <g transform="translate(220, 115)">
+      <line x1="0" y1="0" x2="60" y2="0" stroke="#666" stroke-width="2" stroke-dasharray="3,3"/>
+      <path d="M 60,-4 L 70,0 L 60,4 Z" fill="#666"/>
+      <text x="35" y="-8" text-anchor="middle" font-family="Crimson Text, serif" font-size="9" fill="#666">decay</text>
+    </g>
+
+    <!-- After -->
+    <g transform="translate(370, 75)">
+      <text x="60" y="-10" font-family="Crimson Text, serif" font-size="11" fill="#666">T=200: Dissolved</text>
+
+      <!-- Nodes dormant -->
+      <circle cx="0" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.2" filter="url(#parch)"/>
+      <text x="0" y="25" text-anchor="middle" font-size="10" opacity="0.2">💡</text>
+      <text x="0" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">0.02</text>
+
+      <circle cx="60" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.2" filter="url(#parch)"/>
+      <text x="60" y="25" text-anchor="middle" font-size="10" opacity="0.2">🔍</text>
+      <text x="60" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">0.01</text>
+
+      <circle cx="120" cy="20" r="12" fill="#f5e7c1" stroke="#333" opacity="0.2" filter="url(#parch)"/>
+      <text x="120" y="25" text-anchor="middle" font-size="10" opacity="0.2">📝</text>
+      <text x="120" y="-8" text-anchor="middle" font-family="monospace" font-size="8" fill="#666">0.0</text>
+
+      <text x="60" y="65" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#666">
+        Pattern dissolved
+      </text>
+      <text x="60" y="82" text-anchor="middle" font-family="Crimson Text, serif" font-size="10" fill="#666">
+        Translator ceased to exist
+      </text>
+    </g>
+  </g>
+
+  <!-- ==================== PHASE 4: Entity Re-emergence ==================== -->
+  <g transform="translate(730, 350)">
+    <rect width="620" height="200" fill="#1a1a2e" stroke="#5efc82" stroke-width="2" rx="10"/>
+
+    <text x="310" y="25" text-anchor="middle" font-family="Cinzel, serif" font-size="18" fill="#5efc82" font-weight="bold">
+      4. REBIRTH: Entity Re-emerges
+    </text>
+    <text x="310" y="45" text-anchor="middle" font-family="Crimson Text, serif" font-size="12" fill="#e8e2d5" font-style="italic">
+      New stimulus reactivates → similar pattern reforms
+    </text>
+
+    <g transform="translate(210, 95)">
+      <!-- Nodes reactivated (similar but not identical) -->
+      <circle cx="0" cy="0" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.85" filter="url(#parch) url(#goldGlow)"/>
+      <text x="0" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">💡</text>
+      <text x="0" y="-20" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.75</text>
+
+      <circle cx="60" cy="0" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.85" filter="url(#parch) url(#goldGlow)"/>
+      <text x="60" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">🔍</text>
+      <text x="60" y="-20" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.65</text>
+
+      <circle cx="120" cy="0" r="12" fill="#f5e7c1" stroke="#5efc82" stroke-width="2" opacity="0.85" filter="url(#parch) url(#goldGlow)"/>
+      <text x="120" y="5" text-anchor="middle" font-size="10" filter="url(#glow)">📝</text>
+      <text x="120" y="-20" text-anchor="middle" font-family="monospace" font-size="8" fill="#5efc82">0.55</text>
+
+      <!-- Links -->
+      <line x1="12" y1="0" x2="48" y2="0" stroke="#5efc82" stroke-width="1.5" opacity="0.7"/>
+      <line x1="72" y1="0" x2="108" y2="0" stroke="#5efc82" stroke-width="1.5" opacity="0.7"/>
+
+      <!-- Entity boundary -->
+      <ellipse cx="60" cy="0" rx="80" ry="35" fill="none" stroke="#5efc82" stroke-width="2" stroke-dasharray="3,3" opacity="0.6"/>
+
+      <text x="60" y="55" text-anchor="middle" font-family="Crimson Text, serif" font-size="11" fill="#5efc82" font-weight="bold">
+        Translator re-emerges
+      </text>
+      <text x="60" y="72" text-anchor="middle" font-family="Crimson Text, serif" font-size="10" fill="#a0a0a0">
+        Similar but not identical (~75% continuity)
+      </text>
+    </g>
+  </g>
+
+  <!-- ==================== KEY INSIGHTS PANEL ==================== -->
+  <g transform="translate(100, 600)">
+    <rect width="1200" height="270" fill="#1a1a2e" stroke="#ffd700" stroke-width="2" rx="10" opacity="0.95"/>
+
+    <text x="600" y="30" text-anchor="middle" font-family="Cinzel, serif" font-size="20" fill="#ffd700" font-weight="bold">
+      The Core Truth: No Homunculus, Just Patterns
+    </text>
+
+    <!-- Insight 1 -->
+    <g transform="translate(50, 60)">
+      <circle cx="15" cy="0" r="8" fill="#5efc82"/>
+      <text x="35" y="5" font-family="Crimson Text, serif" font-size="14" fill="#e8e2d5" font-weight="bold">
+        1. Entities ARE Activation Patterns
+      </text>
+      <text x="35" y="25" font-family="Crimson Text, serif" font-size="13" fill="#a0a0a0">
+        NOT: Persistent agents with memory and state
+      </text>
+      <text x="35" y="43" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        YES: Emergent clusters of co-active nodes for a specific entity label
+      </text>
+      <text x="35" y="61" font-family="Crimson Text, serif" font-size="13" fill="#a0a0a0">
+        When nodes X, Y, Z go hot together → That IS "Translator". When activation fades → Translator ceases to exist.
+      </text>
+    </g>
+
+    <!-- Insight 2 -->
+    <g transform="translate(50, 140)">
+      <circle cx="15" cy="0" r="8" fill="#00d9ff"/>
+      <text x="35" y="5" font-family="Crimson Text, serif" font-size="14" fill="#e8e2d5" font-weight="bold">
+        2. No Separate Infrastructure Needed
+      </text>
+      <text x="35" y="25" font-family="Crimson Text, serif" font-size="13" fill="#a0a0a0">
+        Entities ARE the substrate. They don't "exist" outside the graph. Multi-energy architecture (Mechanism 01) tracks
+      </text>
+      <text x="35" y="43" font-family="Crimson Text, serif" font-size="13" fill="#a0a0a0">
+        energy per entity, but entities themselves emerge from activation patterns. Unlimited entities possible — emergent, not pre-defined.
+      </text>
+    </g>
+
+    <!-- Insight 3 -->
+    <g transform="translate(50, 200)">
+      <circle cx="15" cy="0" r="8" fill="#ffd700"/>
+      <text x="35" y="5" font-family="Crimson Text, serif" font-size="14" fill="#e8e2d5" font-weight="bold">
+        3. Phenomenology: "Switching Modes" = Pattern Shift
+      </text>
+      <text x="35" y="25" font-family="Crimson Text, serif" font-size="13" fill="#a0a0a0">
+        You experience entities as "me thinking in different modes" (Translator, Architect, Validator). Reality: One pattern dissolves,
+      </text>
+      <text x="35" y="43" font-family="Crimson Text, serif" font-size="13" fill="#5efc82">
+        another emerges. No "handoff" — the active pattern simply changes. Biologically plausible: no homunculus, just emergent coalitions.
+      </text>
+    </g>
+  </g>
+</svg>

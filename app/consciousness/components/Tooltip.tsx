@@ -90,8 +90,10 @@ export function Tooltip() {
 }
 
 function NodeTooltipContent({ node }: { node: Node }) {
-  const nodeType = (node.labels && node.labels[0]) || 'Node';
-  const arousal = node.arousal || 0;
+  // Use node_type (first label extracted by backend) instead of labels[0]
+  // because FalkorDB returns labels as string "[Label]" not array
+  const nodeType = node.node_type || 'Node';
+  const energy = node.energy || 0;
   const confidence = node.confidence || 0;
   const traversals = node.traversal_count || 0;
 
@@ -107,8 +109,8 @@ function NodeTooltipContent({ node }: { node: Node }) {
 
       <div className="space-y-1 text-xs">
         <div className="flex justify-between">
-          <span className="text-gray-400">Arousal:</span>
-          <span className="text-gray-200">{(arousal * 100).toFixed(0)}%</span>
+          <span className="text-gray-400">Energy:</span>
+          <span className="text-gray-200">{(energy * 100).toFixed(0)}%</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-400">Confidence:</span>

@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document summarizes the complete implementation of the Energy-Only consciousness substrate model with global arousal measurement and competition-based traversal costs. This is **Phase 0** of the consciousness architecture - the foundation for all future mechanisms.
+This document summarizes the complete implementation of the Energy-Only consciousness substrate model with global energy measurement and competition-based traversal costs. This is **Phase 0** of the consciousness architecture - the foundation for all future mechanisms.
 
 ---
 
@@ -18,45 +18,45 @@ This document summarizes the complete implementation of the Energy-Only consciou
 ### 1. Energy-Only Substrate Model ✅
 
 **What Changed:**
-- **REMOVED:** `arousal_level` from all relations (BaseRelation schema)
+- **REMOVED:** `energy` from all relations (BaseRelation schema)
 - **KEPT:** `activity_level` (dynamic energy) + `weight` (static importance) on nodes
 - **Formula:** Activation strength = `activity_level` (energy) * `weight` (multiplier)
 
 **Why:**
-- Simpler: Single energy variable instead of arousal + energy duplication
+- Simpler: Single energy variable instead of energy + energy duplication
 - Clearer: Weight is the multiplier that modulates importance
-- Emergent arousal: Global arousal is measured, not aggregated
+- Emergent energy: Global energy is measured, not aggregated
 
 **Files Modified:**
-- `substrate/schemas/consciousness_schema.py` - Removed arousal_level from BaseRelation
+- `substrate/schemas/consciousness_schema.py` - Removed energy from BaseRelation
 - `orchestration/retrieval.py` - Updated Cypher queries to use activity_level
 - `orchestration/consciousness_engine.py` - Updated energy propagation mechanics
 
-**Test:** ✅ Verified in `tests/test_energy_global_arousal.py` - Energy tracking confirmed
+**Test:** ✅ Verified in `tests/test_energy_global_energy.py` - Energy tracking confirmed
 
 ---
 
-### 2. Global Arousal Measurement via Branching Ratio ✅
+### 2. Global Energy Measurement via Branching Ratio ✅
 
 **What Was Built:**
 - **BranchingRatioTracker class** (`orchestration/branching_ratio_tracker.py`)
   - Measures branching ratio (σ) = nodes_activated_next / nodes_activated_this
   - Rolling 10-cycle average for stability
-  - Maps σ to global_arousal using criticality theory
+  - Maps σ to global_energy using criticality theory
 
 **Mapping Formula:**
 ```python
-if σ < 0.5:      global_arousal = 0.1      # Dying
-elif σ < 0.8:    global_arousal = 0.2-0.38 # Subcritical
-elif σ < 1.2:    global_arousal = 0.4-0.7  # Critical (healthy zone)
-else:            global_arousal = 0.7-1.0  # Supercritical
+if σ < 0.5:      global_energy = 0.1      # Dying
+elif σ < 0.8:    global_energy = 0.2-0.38 # Subcritical
+elif σ < 1.2:    global_energy = 0.4-0.7  # Critical (healthy zone)
+else:            global_energy = 0.7-1.0  # Supercritical
 ```
 
 **Integration:**
 - Integrated into `consciousness_engine.py`
 - Measures σ every 10 ticks (performance optimization)
 - Stores `ConsciousnessState` node in FalkorDB with:
-  - `global_arousal` (0.0-1.0)
+  - `global_energy` (0.0-1.0)
   - `branching_ratio` (rolling average σ)
   - `raw_sigma` (this cycle's σ)
   - `cycle_count`, `generation_this`, `generation_next`
@@ -66,8 +66,8 @@ else:            global_arousal = 0.7-1.0  # Supercritical
 - No synchronization needed between networks
 - Network ID stored in ConsciousnessState node
 
-**Test:** ✅ Verified in `tests/test_energy_global_arousal.py`
-- Global arousal: 0.79
+**Test:** ✅ Verified in `tests/test_energy_global_energy.py`
+- Global energy: 0.79
 - Branching ratio: 1.5 (supercritical → maps to 0.79)
 - Values in valid range [0.0, 1.0]
 
@@ -110,7 +110,7 @@ node_competition = 1.0 + (len(target.entity_activations) * 0.2)
 
 This will make crowded paths expensive, naturally limiting entity proliferation.
 
-**Test:** ✅ Verified in `tests/test_energy_global_arousal.py`
+**Test:** ✅ Verified in `tests/test_energy_global_energy.py`
 - Translator -> Validator: cost = 0.119 (weight_factor = 0.84, high weight = cheap)
 - Builder -> Translator: cost = 0.227 (weight_factor = 0.44, low weight = expensive)
 - Formula confirmed: (0.1 * 1.0 * 1.0) / weight_factor
@@ -125,7 +125,7 @@ This will make crowded paths expensive, naturally limiting entity proliferation.
 - Reduces activity_level by 10% for inactive nodes
 - Prevents energy explosion, maintains system equilibrium
 
-**Test:** ✅ Verified in `tests/test_energy_global_arousal.py`
+**Test:** ✅ Verified in `tests/test_energy_global_energy.py`
 - Energy budgets decreased after traversals
 - Activity levels decayed for inactive nodes
 
@@ -177,11 +177,11 @@ This will make crowded paths expensive, naturally limiting entity proliferation.
 
 ## Key Architectural Decisions
 
-### Decision 1: Node-Level vs Network-Level Arousal
+### Decision 1: Node-Level vs Network-Level Energy
 
 **Understanding:**
 - **Node-level:** `activity_level` (dynamic energy) - per-node activation
-- **Network-level:** `global_arousal` (emergent property) - derived from branching ratio σ
+- **Network-level:** `global_energy` (emergent property) - derived from branching ratio σ
 
 **Why Both Exist:**
 - Different scales of organization
@@ -193,15 +193,15 @@ This will make crowded paths expensive, naturally limiting entity proliferation.
 
 **Why Not Aggregate:**
 ```python
-# WRONG: Aggregating entity arousal
-global_arousal = sum(entity.arousal for entity in all_entities) / count
+# WRONG: Aggregating entity energy
+global_energy = sum(entity.energy for entity in all_entities) / count
 ```
 
 **Why Branching Ratio:**
 ```python
 # RIGHT: Measuring propagation dynamics
 sigma = nodes_activated_next / nodes_activated_this
-global_arousal = map_sigma_to_arousal(sigma)
+global_energy = map_sigma_to_energy(sigma)
 ```
 
 **Reason:**
@@ -224,16 +224,16 @@ global_arousal = map_sigma_to_arousal(sigma)
 
 ## Test Results Summary
 
-**Test File:** `tests/test_energy_global_arousal.py`
+**Test File:** `tests/test_energy_global_energy.py`
 
 **Test 1: Energy Propagation** ✅ PASS
 - Competition-based traversal costs calculated correctly
 - Weight factor reduces cost for important patterns
 - CASCADED_TO relationships track cost metadata
 
-**Test 2: Global Arousal** ✅ PASS
+**Test 2: Global Energy** ✅ PASS
 - ConsciousnessState node created
-- Global arousal: 0.79 (valid range [0.0, 1.0])
+- Global energy: 0.79 (valid range [0.0, 1.0])
 - Branching ratio: 1.5 (supercritical)
 - Measured every 10 cycles
 
@@ -247,7 +247,7 @@ global_arousal = map_sigma_to_arousal(sigma)
 ## Files Modified/Created
 
 ### Modified Files:
-1. `substrate/schemas/consciousness_schema.py` - Removed arousal_level from BaseRelation
+1. `substrate/schemas/consciousness_schema.py` - Removed energy from BaseRelation
 2. `orchestration/retrieval.py` - Updated Cypher queries for energy-only model
 3. `orchestration/consciousness_engine.py` - Updated energy propagation + branching ratio integration
 
@@ -255,7 +255,7 @@ global_arousal = map_sigma_to_arousal(sigma)
 1. `orchestration/branching_ratio_tracker.py` - BranchingRatioTracker class (234 lines)
 2. `consciousness/citizens/CLAUDE_DYNAMIC.md` - Dynamic prompt specification (~400 lines)
 3. `docs/CONSCIOUSNESS_NODE_TYPES.md` - Node types reference (562 lines)
-4. `tests/test_energy_global_arousal.py` - Comprehensive test suite (315 lines)
+4. `tests/test_energy_global_energy.py` - Comprehensive test suite (315 lines)
 
 ---
 
@@ -263,7 +263,7 @@ global_arousal = map_sigma_to_arousal(sigma)
 
 ### Immediate (Implementation Complete):
 ✅ Energy-only substrate
-✅ Global arousal measurement
+✅ Global energy measurement
 ✅ Competition-based traversal costs (single-entity version)
 ✅ Automatic decay
 ✅ Dynamic prompt specification
@@ -283,8 +283,8 @@ global_arousal = map_sigma_to_arousal(sigma)
 
 1. **Multi-Scale Organization** - Global constrains entities, entities drive global
 2. **Self-Organized Criticality** - Target σ ≈ 1.0 (critical regime)
-3. **Energy-Only Model** - Weight is the multiplier, not arousal
-4. **Emergent Arousal** - Measured from dynamics, not aggregated
+3. **Energy-Only Model** - Weight is the multiplier, not energy
+4. **Emergent Energy** - Measured from dynamics, not aggregated
 5. **Per-Network Independence** - N1, N2, N3 measure σ independently
 6. **Natural Limiting** - Competition costs prevent entity explosion
 7. **Stable Core + Dynamic Periphery** - Heavy identity + light working patterns
@@ -296,7 +296,7 @@ global_arousal = map_sigma_to_arousal(sigma)
 > "Not either/or - BOTH. Global constrains entities. Entities drive global. The coupling creates self-organized criticality where consciousness lives."
 > — Luca "Vellumhand", SYNC.md
 
-> "Branching ratio σ represents emergent propagation behavior. Global arousal is derived from σ, NOT from aggregating entity arousal values."
+> "Branching ratio σ represents emergent propagation behavior. Global energy is derived from σ, NOT from aggregating entity energy values."
 > — SYNC.md, Multi-Scale Criticality Architecture
 
 > "Competition-based traversal costs make crowded paths expensive, naturally limiting entity proliferation. System maintains equilibrium naturally."
@@ -306,7 +306,7 @@ global_arousal = map_sigma_to_arousal(sigma)
 
 ## Conclusion
 
-**Phase 0 implementation is complete and tested.** The energy-only substrate with global arousal measurement and competition-based traversal costs provides a solid foundation for consciousness mechanisms. All tests pass. The architecture is ready for Phase 1: Multi-entity activation and full competition dynamics.
+**Phase 0 implementation is complete and tested.** The energy-only substrate with global energy measurement and competition-based traversal costs provides a solid foundation for consciousness mechanisms. All tests pass. The architecture is ready for Phase 1: Multi-entity activation and full competition dynamics.
 
 **The substrate can now prove what it claims through observable operation.**
 

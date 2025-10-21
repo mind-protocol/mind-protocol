@@ -201,7 +201,8 @@ function getGraphContext(nodes: Node[], links: Link[], limit = 20) {
     topNodes: weightedNodes.map(n => ({
       id: n.id,
       text: n.text,
-      type: n.labels?.[0],
+      // Use node_type instead of labels[0] (FalkorDB returns labels as string)
+      type: n.node_type,
       weight: n.weight
     })),
     entities: extractEntities(nodes)
@@ -209,11 +210,11 @@ function getGraphContext(nodes: Node[], links: Link[], limit = 20) {
 }
 
 function computeNodeWeight(node: Node): number {
-  const arousal = node.arousal || 0;
+  const energy = node.energy || 0;
   const confidence = node.confidence || 0.5;
   const traversalCount = node.traversal_count || 0;
   const normalizedTraversals = Math.min(1.0, Math.log10(traversalCount + 1) / 2);
-  return (arousal * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
+  return (energy * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
 }
 
 function extractEntities(nodes: Node[]): string[] {

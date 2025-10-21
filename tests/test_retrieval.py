@@ -72,7 +72,7 @@ def emotional_intention():
         query_text="Times when I felt excited but cautious about V2",
         citizen_id="Luca",
         temporal_mode="current",
-        min_arousal=0.6,  # High-energy memories only
+        min_energy=0.6,  # High-energy memories only
         required_emotions=["excitement", "caution"],
         intention_id="test_intention_003",
         generated_by="test_suite",
@@ -132,7 +132,7 @@ async def test_basic_retrieval_structure(sample_intention):
         print(f"  N1 count: {summary.n1_result_count}")
         print(f"  N2 count: {summary.n2_result_count}")
         print(f"  N3 count: {summary.n3_result_count}")
-        print(f"  Dominant arousal: {summary.dominant_arousal:.2f}")
+        print(f"  Dominant energy: {summary.dominant_energy:.2f}")
         print(f"  Emotional themes: {summary.emotional_themes}")
 
         # Verify latency tracked
@@ -160,7 +160,7 @@ async def test_consciousness_metadata_preservation(sample_intention):
     Test that consciousness metadata is preserved in all results.
 
     Validates:
-    - Arousal levels present (0.0-1.0 range)
+    - Energy levels present (0.0-1.0 range)
     - Confidence present (0.0-1.0 range)
     - Emotion vectors where applicable
     - Temporal fields (valid_at, created_at, etc.)
@@ -181,8 +181,8 @@ async def test_consciousness_metadata_preservation(sample_intention):
             nodes_checked += 1
 
             # Verify consciousness metadata
-            assert 0.0 <= node.arousal_level <= 1.0, \
-                f"Arousal {node.arousal_level} out of range for {node.name}"
+            assert 0.0 <= node.energy <= 1.0, \
+                f"Energy {node.energy} out of range for {node.name}"
 
             assert 0.0 <= node.confidence <= 1.0, \
                 f"Confidence {node.confidence} out of range for {node.name}"
@@ -213,7 +213,7 @@ async def test_consciousness_metadata_preservation(sample_intention):
             # Relationships MUST have these consciousness fields
             assert rel.goal is not None
             assert rel.mindstate is not None
-            assert 0.0 <= rel.arousal_level <= 1.0
+            assert 0.0 <= rel.energy <= 1.0
             assert 0.0 <= rel.confidence <= 1.0
             assert rel.formation_trigger is not None
 
@@ -348,7 +348,7 @@ async def test_emotional_filtering(emotional_intention):
     Test consciousness-aware emotional filtering.
 
     Validates:
-    - min_arousal filtering works
+    - min_energy filtering works
     - required_emotions filtering works
     - High-energy memories surfaced
     """
@@ -356,13 +356,13 @@ async def test_emotional_filtering(emotional_intention):
     print("\n[TEST] Emotional Filtering")
     print("=" * 60)
 
-    print(f"  Min arousal: {emotional_intention.min_arousal}")
+    print(f"  Min energy: {emotional_intention.min_energy}")
     print(f"  Required emotions: {emotional_intention.required_emotions}")
 
     stream = await retrieve_consciousness_context(emotional_intention)
 
     nodes_validated = 0
-    high_arousal_count = 0
+    high_energy_count = 0
 
     for level_name, level_results in stream.levels.items():
         all_nodes = level_results.vector_results + level_results.graph_results
@@ -370,11 +370,11 @@ async def test_emotional_filtering(emotional_intention):
         for node in all_nodes:
             nodes_validated += 1
 
-            # Verify arousal threshold
-            if emotional_intention.min_arousal is not None:
-                if node.arousal_level >= emotional_intention.min_arousal:
-                    high_arousal_count += 1
-                    print(f"   {node.name}: arousal={node.arousal_level:.2f}")
+            # Verify energy threshold
+            if emotional_intention.min_energy is not None:
+                if node.energy >= emotional_intention.min_energy:
+                    high_energy_count += 1
+                    print(f"   {node.name}: energy={node.energy:.2f}")
 
             # Check for emotional content
             if node.emotion_vector:
@@ -382,7 +382,7 @@ async def test_emotional_filtering(emotional_intention):
                 print(f"   {node.name}: emotions={list(emotions_present)}")
 
     print(f"\n Validated {nodes_validated} nodes")
-    print(f"  High-arousal memories (>={emotional_intention.min_arousal}): {high_arousal_count}")
+    print(f"  High-energy memories (>={emotional_intention.min_energy}): {high_energy_count}")
     print(f"  Emotional themes: {stream.consciousness_summary.emotional_themes}")
     print("\n Emotional filtering test PASSED")
 
@@ -613,7 +613,7 @@ if __name__ == "__main__":
             query_text="Times when I felt excited but cautious about V2",
             citizen_id="Luca",
             temporal_mode="current",
-            min_arousal=0.6,
+            min_energy=0.6,
             required_emotions=["excitement", "caution"],
             intention_id="test_intention_003",
             generated_by="test_suite",

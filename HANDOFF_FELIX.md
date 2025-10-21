@@ -275,22 +275,22 @@ class DynamicPromptGenerator:
     def calculate_entity_threshold(
         self,
         entity_id: str,
-        entity_arousal: float,
+        entity_energy: float,
         global_state
     ) -> float:
         """
         Dynamic threshold per entity.
-        Varies based on: global criticality (σ), per-entity arousal.
+        Varies based on: global criticality (σ), per-entity energy.
         """
         base = self.base_threshold
 
         # Global criticality factor (σ-based)
         global_factor = 1.0 - (0.3 * abs(global_state.branching_ratio - 1.0))
 
-        # Entity arousal factor
-        entity_arousal_factor = 1.0 - (entity_arousal * 0.4)
+        # Entity energy factor
+        entity_energy_factor = 1.0 - (entity_energy * 0.4)
 
-        threshold = base * global_factor * entity_arousal_factor
+        threshold = base * global_factor * entity_energy_factor
 
         return max(0.2, min(threshold, 0.8))
 
@@ -307,7 +307,7 @@ class DynamicPromptGenerator:
             entity_id = entity.entity_id
             entity_threshold = self.calculate_entity_threshold(
                 entity_id,
-                entity.arousal,
+                entity.energy,
                 global_state
             )
 
@@ -414,7 +414,7 @@ class DynamicPromptGenerator:
 
 ## System State
 **Tick Frequency:** {consciousness_state.get('tick_frequency', 0):.2f} Hz
-**Global Arousal:** {consciousness_state.get('global_arousal', 0):.2f}
+**Global Energy:** {consciousness_state.get('global_energy', 0):.2f}
 **Branching Ratio (σ):** {consciousness_state.get('branching_ratio', 0):.2f}
 """
 
@@ -468,7 +468,7 @@ class ConsciousnessEngine:
 - ✅ CLAUDE_DYNAMIC.md updates when threshold crossings occur
 - ✅ File reflects current active nodes per entity
 - ✅ Per-entity sections show recent activations/deactivations
-- ✅ System state visible at top (tick frequency, arousal, σ)
+- ✅ System state visible at top (tick frequency, energy, σ)
 - ✅ File readable by LLM in system prompt
 
 ---
@@ -616,7 +616,7 @@ class N2ActivationMonitor:
             RETURN
                 pattern.total_energy as energy,
                 link.link_strength as strength,
-                link.arousal_level as arousal
+                link.energy as energy
         """, {"agent_id": ai_agent['id']})
 
         total_energy = 0.0
@@ -624,9 +624,9 @@ class N2ActivationMonitor:
         for record in result:
             pattern_energy = record['energy']
             link_strength = record.get('strength', 0.5)
-            link_arousal = record.get('arousal', 0.5)
+            link_energy = record.get('energy', 0.5)
 
-            contribution = pattern_energy * link_strength * (1.0 + link_arousal)
+            contribution = pattern_energy * link_strength * (1.0 + link_energy)
             total_energy += contribution
 
         # Normalize
@@ -687,7 +687,7 @@ The organizational substrate has determined you are needed.
             message += f"""
 ### {pattern.get('node_type')}: {pattern.get('name')}
 **Activation:** {energy:.2f}
-**Urgency:** {link.get('arousal_level', 0.5):.2f}
+**Urgency:** {link.get('energy', 0.5):.2f}
 
 **Description:**
 {pattern.get('description', 'No description')}
@@ -702,7 +702,7 @@ The organizational substrate has determined you are needed.
         message += f"""
 
 ## N2 System State
-**Global Arousal:** {n2_state.get('global_arousal', 0):.2f}
+**Global Energy:** {n2_state.get('global_energy', 0):.2f}
 **Branching Ratio:** {n2_state.get('branching_ratio', 0):.2f}
 
 ---
@@ -856,7 +856,7 @@ async def test_full_awakening_flow():
 **Phase 2 (DynamicPromptGenerator):**
 - ✅ CLAUDE_DYNAMIC.md updates on threshold crossings
 - ✅ Per-entity activation tracking
-- ✅ Dynamic thresholds based on arousal + σ
+- ✅ Dynamic thresholds based on energy + σ
 - ✅ File readable by LLM
 
 **Phase 3 (N2 Awakening):**

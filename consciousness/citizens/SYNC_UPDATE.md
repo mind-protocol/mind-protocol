@@ -6,19 +6,19 @@
 **File:** `orchestration/sub_entity.py`
 
 **Problem Diagnosed:**
-- Code was querying `link.arousal` (field doesn't exist in DB)
+- Code was querying `link.energy` (field doesn't exist in DB)
 - Code was querying `target.weight` (field doesn't exist in DB)
 - Both returned `None`, causing all link scores to be too low
 - Links never selected for traversal → branching ratio stayed at 0
 
 **Solution Implemented:**
-- Changed query to use `target.arousal_level` (exists, range 0.5-0.95)
-- Simplified scoring formula: `0.4*link_strength + 0.4*target_arousal + 0.2*emotion`
+- Changed query to use `target.energy` (exists, range 0.5-0.95)
+- Simplified scoring formula: `0.4*link_strength + 0.4*target_energy + 0.2*emotion`
 - Verified with actual Felix graph data: all scores now 0.75-0.87 (well above 0.1 threshold)
 
 **Testing Results:**
 ```
-Link Strength   Target Arousal    Score      Status
+Link Strength   Target Energy    Score      Status
 0.95            0.95              0.86       ✅ Above threshold
 0.88            0.88              0.80       ✅ Above threshold
 0.92            0.92              0.84       ✅ Above threshold
@@ -58,7 +58,7 @@ The link scoring fix is correct (verified with test data), but:
 **Files Modified:**
 - `orchestration/sub_entity.py` (lines 528-606)
   - `_get_outgoing_links()` - Updated Cypher query
-  - `_calculate_link_score()` - Updated to use target_arousal
+  - `_calculate_link_score()` - Updated to use target_energy
 
 **Commit:**
 - 71d4f54 "Fix link traversal scoring to use actual database schema"

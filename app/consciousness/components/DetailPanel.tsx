@@ -56,8 +56,9 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
     return sourceId === selectedNode.id;
   });
 
-  const nodeType = (selectedNode.labels && selectedNode.labels[0]) || 'Node';
-  const arousal = selectedNode.arousal || 0;
+  // Use node_type instead of labels[0] (FalkorDB returns labels as string)
+  const nodeType = selectedNode.node_type || 'Node';
+  const energy = selectedNode.energy || 0;
   const confidence = selectedNode.confidence || 0;
   const traversals = selectedNode.traversal_count || 0;
 
@@ -104,7 +105,7 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
         <div>
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Consciousness</div>
           <div className="space-y-2">
-            <MetricRow label="Arousal" value={`${(arousal * 100).toFixed(0)}%`} color="#5efc82" />
+            <MetricRow label="Energy" value={`${(energy * 100).toFixed(0)}%`} color="#5efc82" />
             <MetricRow label="Confidence" value={`${(confidence * 100).toFixed(0)}%`} color="#3b82f6" />
             <MetricRow label="Traversals" value={traversals.toString()} color="#8b5cf6" />
             {selectedNode.last_traversed_by && (
@@ -150,7 +151,7 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
                         <span className="text-consciousness-green font-medium">{link.type}</span>
                       </div>
                       <div className="text-gray-200 break-words ml-4">
-                        {sourceNode?.text || sourceNode?.description || sourceId}
+                        {sourceNode?.text || (sourceNode as any)?.description || sourceId}
                       </div>
                     </div>
                   );
@@ -176,7 +177,7 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
                         <span className="text-consciousness-green font-medium">{link.type}</span>
                       </div>
                       <div className="text-gray-200 break-words ml-4">
-                        {targetNode?.text || targetNode?.description || targetId}
+                        {targetNode?.text || (targetNode as any)?.description || targetId}
                       </div>
                     </div>
                   );
@@ -212,7 +213,7 @@ function renderNodeFields(node: Node) {
   // Fields to exclude (technical metadata)
   const excludeFields = new Set([
     'id', 'node_id', 'labels', 'x', 'y', 'vx', 'vy', 'fx', 'fy', 'index',
-    'arousal', 'confidence', 'traversal_count', 'last_traversed_by',
+    'energy', 'confidence', 'traversal_count', 'last_traversed_by',
     'entity_activations', 'sub_entity_weights', 'sub_entity_valences',
     'last_active', 'weight'
   ]);

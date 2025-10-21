@@ -78,7 +78,7 @@ class BaseRelation(BaseModel):
     # Required Consciousness Metadata
     goal: str
     mindstate: str
-    arousal_level: float
+    energy: float
     confidence: float
     formation_trigger: FormationTrigger
 
@@ -272,7 +272,7 @@ async def on_content_injected(event: ContentInjectionEvent):
                     formation_trigger="injected_together",
                     goal=f"Preserve co-occurrence from injection by {injecting_entity}",
                     mindstate=f"{injecting_entity}_injecting",
-                    arousal_level=0.5,
+                    energy=0.5,
                     confidence=0.7,
                     created_by=injecting_entity,
                     # Initial neutral valence and emotions - will evolve based on usage
@@ -521,7 +521,7 @@ def detect_identity_emergence(entity_id: str) -> Optional[EmergentIdentity]:
     # 2. PATTERN DESCRIPTION (Heuristic)
     pattern_summary = {
         "dominant_goals": get_most_frequent_goals(behavior_patterns, top_n=3),
-        "typical_arousal_range": get_arousal_statistics(behavior_patterns),
+        "typical_energy_range": get_energy_statistics(behavior_patterns),
         "common_emotions": get_emotion_distribution(behavior_patterns),
         "preferred_actions": get_action_frequency(behavior_patterns),
         "interaction_style": get_social_pattern_summary(behavior_patterns)
@@ -559,7 +559,7 @@ async def crystallize_emergent_identity(emergent_identity: EmergentIdentity):
 
     Patterns:
     - Dominant Goals: {patterns['dominant_goals']}
-    - Typical Arousal: {patterns['typical_arousal_range']}
+    - Typical Energy: {patterns['typical_energy_range']}
     - Common Emotions: {patterns['common_emotions']}
     - Preferred Actions: {patterns['preferred_actions']}
     - Interaction Style: {patterns['interaction_style']}
@@ -697,7 +697,7 @@ def measure_action_patterns(behavior_patterns: List[BehaviorPattern]) -> float:
 - [ ] Activation-based decay calculations
 - [ ] Hebbian learning on co-activation
 - [ ] Heuristic need satisfaction checks
-- [ ] Energy budget + arousal separation
+- [ ] Energy budget + energy separation
 - [ ] Identity node support for entities
 
 **Next:** See `implementation_roadmap.md` for phase-by-phase plan

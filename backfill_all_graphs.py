@@ -19,61 +19,61 @@ def get_metadata_for_link_type(link_type: str, entity_id: str = "default_entity"
             "goal": "Shared alignment on technical direction",
             "valence": 0.8,
             "emotions": '{"confidence": 0.8, "focus": 0.7}',
-            "arousal": 0.6
+            "energy": 0.6
         },
         "COLLABORATIVE_BUILD": {
             "goal": "Building together towards shared outcome",
             "valence": 0.85,
             "emotions": '{"momentum": 0.9, "satisfaction": 0.8}',
-            "arousal": 0.7
+            "energy": 0.7
         },
         "REQUIRES": {
             "goal": "Dependency relationship for implementation",
             "valence": 0.5,
             "emotions": '{"focus": 0.7, "pressure": 0.6}',
-            "arousal": 0.6
+            "energy": 0.6
         },
         "ENABLES": {
             "goal": "Makes something possible or easier",
             "valence": 0.75,
             "emotions": '{"clarity": 0.8, "confidence": 0.7}',
-            "arousal": 0.65
+            "energy": 0.65
         },
         "JUSTIFIES": {
             "goal": "Provides rationale or evidence",
             "valence": 0.7,
             "emotions": '{"certainty": 0.8, "focus": 0.7}',
-            "arousal": 0.6
+            "energy": 0.6
         },
         "RELATES_TO": {
             "goal": "General connection between concepts",
             "valence": 0.6,
             "emotions": '{"curiosity": 0.6, "exploration": 0.5}',
-            "arousal": 0.5
+            "energy": 0.5
         },
         "LED_TO": {
             "goal": "Causal or sequential relationship",
             "valence": 0.65,
             "emotions": '{"understanding": 0.7, "connection": 0.6}',
-            "arousal": 0.55
+            "energy": 0.55
         },
         "IMPLEMENTS": {
             "goal": "Putting theory into practice",
             "valence": 0.8,
             "emotions": '{"focus": 0.9, "momentum": 0.8}',
-            "arousal": 0.7
+            "energy": 0.7
         },
         "DOCUMENTS": {
             "goal": "Recording knowledge for future reference",
             "valence": 0.7,
             "emotions": '{"clarity": 0.8, "completion": 0.7}',
-            "arousal": 0.5
+            "energy": 0.5
         },
         "BLOCKS": {
             "goal": "Prevents or constrains progress",
             "valence": -0.6,
             "emotions": '{"frustration": 0.7, "pressure": 0.8}',
-            "arousal": 0.75
+            "energy": 0.75
         }
     }
 
@@ -82,7 +82,7 @@ def get_metadata_for_link_type(link_type: str, entity_id: str = "default_entity"
         "goal": f"Connection of type {link_type}",
         "valence": 0.6,
         "emotions": '{"neutral": 0.5}',
-        "arousal": 0.5
+        "energy": 0.5
     })
 
     return metadata
@@ -116,7 +116,7 @@ def backfill_graph(graph_name: str, default_entity_id: str):
         query = f"""
         MATCH ()-[r]->() WHERE id(r) = {link_id}
         SET r.goal = '{metadata['goal']}',
-            r.arousal = {metadata['arousal']},
+            r.energy = {metadata['energy']},
             r.sub_entity_valences = '{{"{default_entity_id}": {metadata['valence']}}}',
             r.sub_entity_emotion_vectors = '{{"{default_entity_id}": {metadata['emotions']}}}'
         RETURN id(r)

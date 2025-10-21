@@ -391,7 +391,7 @@ LINK_TYPE_SCHEMAS = [
             "check_condition": "goal.status == 'completed' OR value_changed"
         },
         "task_template": "Verify alignment: {source} -> {target}",
-        "mechanisms": ["coherence_verification", "arousal_propagation"]
+        "mechanisms": ["coherence_verification", "energy_propagation"]
     },
 ]
 
@@ -399,7 +399,7 @@ MECHANISM_SCHEMAS = [
     {
         "mechanism_id": "spreading_activation",
         "mechanism_name": "Spreading Activation",
-        "description": "Energy spreads from activated nodes to connected nodes based on link weights and arousal",
+        "description": "Energy spreads from activated nodes to connected nodes based on link weights and energy",
         "detection_patterns": [],  # Universal, not detection-based
         "applicable_link_types": ["ALL"],  # Applies to all link types
         "tick_frequency_ms": 100,
@@ -478,9 +478,9 @@ MECHANISM_SCHEMAS = [
         "implementation_status": "partial"
     },
     {
-        "mechanism_id": "arousal_propagation",
-        "mechanism_name": "Arousal Propagation",
-        "description": "Spreads arousal/urgency through graph for prioritization",
+        "mechanism_id": "energy_propagation",
+        "mechanism_name": "Energy Propagation",
+        "description": "Spreads energy/urgency through graph for prioritization",
         "detection_patterns": [],
         "applicable_link_types": ["ALL"],
         "tick_frequency_ms": 100,

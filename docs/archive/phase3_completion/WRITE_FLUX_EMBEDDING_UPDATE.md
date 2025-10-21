@@ -97,7 +97,7 @@ print(f"  [OK] Wrote {node_type}: {node.name} (with {len(embedding)}-dim embeddi
 7. **Confirmation** - Print success with embedding dimension count
 
 **Every new node now gets:**
-- ✅ All metadata (arousal, confidence, timestamps, etc.)
+- ✅ All metadata (energy, confidence, timestamps, etc.)
 - ✅ Semantic embedding (384-dim vector)
 - ✅ Immediate searchability via vector indices
 

@@ -11,7 +11,7 @@ export function Legend() {
     <div className="fixed bottom-24 left-6 z-40 space-y-3">
       {/* Link Type Legend */}
       <div className="consciousness-panel px-4 py-3">
-        <div className="text-xs text-gray-400 uppercase tracking-wider mb-3">
+        <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-3">
           Link Types
         </div>
         <div className="space-y-2">
@@ -25,7 +25,7 @@ export function Legend() {
 
       {/* Valence Legend */}
       <div className="consciousness-panel px-4 py-3">
-        <div className="text-xs text-gray-400 uppercase tracking-wider mb-3">
+        <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-3">
           Valence (Entity View)
         </div>
         <div className="space-y-2">
@@ -34,10 +34,10 @@ export function Legend() {
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-red-500">Negative</span>
-            <span className="text-gray-400">Neutral</span>
+            <span className="text-observatory-text/60">Neutral</span>
             <span className="text-green-500">Positive</span>
           </div>
-          <div className="text-xs text-gray-500 mt-2">
+          <div className="text-xs text-observatory-text/50 mt-2">
             Shows subjective link experience per entity
           </div>
         </div>
@@ -53,7 +53,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
         className="w-6 h-0.5"
         style={{ backgroundColor: color }}
       ></div>
-      <span className="text-xs text-gray-300">{label}</span>
+      <span className="text-xs text-observatory-text/80">{label}</span>
     </div>
   );
 }

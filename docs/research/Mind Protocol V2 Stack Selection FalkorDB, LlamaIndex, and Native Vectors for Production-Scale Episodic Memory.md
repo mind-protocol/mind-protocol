@@ -2,11 +2,11 @@
 
 **FalkorDB + LlamaIndex + Native Vectors** provides the optimal foundation for streaming ingestion with multi-tenant isolation at 1M+ node scale. This stack eliminates Enterprise licensing costs while delivering proven performance for continuous graph construction.
 
-**Bottom line up front**: Deploy FalkorDB Community Edition for its unmatched 10,000+ graph multi-tenancy, pair it with LlamaIndex's SchemaLLMPathExtractor for property-rich entity extraction with emotion/arousal metadata, and leverage native vector capabilities to avoid dual-database synchronization complexity. Adopt Graphiti's bi-temporal schema pattern (custom implementation) to track event vs transaction timestamps without LLM overhead.
+**Bottom line up front**: Deploy FalkorDB Community Edition for its unmatched 10,000+ graph multi-tenancy, pair it with LlamaIndex's SchemaLLMPathExtractor for property-rich entity extraction with emotion/energy metadata, and leverage native vector capabilities to avoid dual-database synchronization complexity. Adopt Graphiti's bi-temporal schema pattern (custom implementation) to track event vs transaction timestamps without LLM overhead.
 
 ## Context and requirements
 
-Mind Protocol V2 requires a production substrate handling continuous sequential ingestion (streaming, not batch), per-citizen scalability to 1M+ nodes, custom schemas with multi-dimensional metadata (emotion, arousal fields), and mature Python tooling. The architecture must support 1000+ isolated citizen graphs per instance while maintaining sub-second query performance. This research evaluates graph databases, temporal modeling approaches, orchestration frameworks, and vector storage strategies against these constraints.
+Mind Protocol V2 requires a production substrate handling continuous sequential ingestion (streaming, not batch), per-citizen scalability to 1M+ nodes, custom schemas with multi-dimensional metadata (emotion, energy fields), and mature Python tooling. The architecture must support 1000+ isolated citizen graphs per instance while maintaining sub-second query performance. This research evaluates graph databases, temporal modeling approaches, orchestration frameworks, and vector storage strategies against these constraints.
 
 ## Priority 1: Graph database selection for episodic memory
 
@@ -79,7 +79,7 @@ State nodes (versioned): (:IdentityState {
     name: "...",
     attributes: {...},
     emotion: {...},
-    arousal: 0.8
+    energy: 0.8
 })
 
 Temporal relationships:
@@ -109,7 +109,7 @@ Production examples exist across financial services (tracking executive role cha
 
 ### Entity extraction with complex schemas
 
-LlamaIndex's **SchemaLLMPathExtractor enables native property graph extraction** with validation schemas preventing invalid entity-relationship combinations. This directly supports Mind Protocol's emotion and arousal metadata requirements without intermediate conversion layers.
+LlamaIndex's **SchemaLLMPathExtractor enables native property graph extraction** with validation schemas preventing invalid entity-relationship combinations. This directly supports Mind Protocol's emotion and energy metadata requirements without intermediate conversion layers.
 
 The architecture provides three extraction strategies: SimpleLLMPathExtractor (free-form), DynamicLLMPathExtractor (inferred types), and **SchemaLLMPathExtractor (strict validation)**. The latter supports:
 
@@ -122,7 +122,7 @@ kg_extractor = SchemaLLMPathExtractor(
         "MEMORY": ["TRIGGERED_BY", "FELT_DURING"],
         "EMOTION": ["FELT_DURING", "TRIGGERED_BY"]
     },
-    possible_entity_props=["emotion_valence", "arousal_level"],
+    possible_entity_props=["emotion_valence", "energy"],
     possible_relation_props=["confidence"],
     strict=True
 )
@@ -158,7 +158,7 @@ LlamaIndex's IngestionPipeline supports streaming document batches through trans
 
 ### Recommendation: LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor
 
-**Deploy LlamaIndex as orchestration framework**. The SchemaLLMPathExtractor directly supports entity properties (emotion, arousal) with validation schemas. FalkorDB integration is documented and maintained. Hybrid retrieval fusion is superior. The only reason to choose LangChain: if natural language query generation (text-to-Cypher) is more important than graph construction—which contradicts Mind Protocol's streaming ingestion focus. **Confidence level: High** based on architecture alignment and graph-specific community strength.
+**Deploy LlamaIndex as orchestration framework**. The SchemaLLMPathExtractor directly supports entity properties (emotion, energy) with validation schemas. FalkorDB integration is documented and maintained. Hybrid retrieval fusion is superior. The only reason to choose LangChain: if natural language query generation (text-to-Cypher) is more important than graph construction—which contradicts Mind Protocol's streaming ingestion focus. **Confidence level: High** based on architecture alignment and graph-specific community strength.
 
 ## Priority 4: Vector database architecture decision
 
@@ -335,7 +335,7 @@ Bi-temporal implementation complexity: Start with simplified two-timestamp model
 
 1. **FalkorDB Community Edition** for episodic memory graph with 10k+ graph multi-tenancy at $0 licensing cost
 2. **Custom bi-temporal implementation** following Graphiti's four-timestamp schema pattern without LLM dependencies
-3. **LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor** for entity extraction with emotion/arousal metadata
+3. **LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor** for entity extraction with emotion/energy metadata
 4. **Native FalkorDB vectors** for semantic memory to 5M vectors, deferring dedicated VDB until proven necessary
 5. **Graphiti + Neo4j LLM Graph Builder** as architectural reference implementations
 

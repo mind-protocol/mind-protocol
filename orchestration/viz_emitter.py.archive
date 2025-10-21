@@ -1,0 +1,668 @@
+"""
+Mind Harbor Visualization Emitter
+
+Streams consciousness graph state to visualization clients via WebSocket.
+Implements delta frames, coalescing, budgets, and snapshot consistency.
+
+Author: Iris "The Aperture" - Consciousness Observation Architect
+Created: 2025-10-20
+"""
+
+import asyncio
+import json
+import time
+from datetime import datetime
+from typing import Dict, List, Set, Tuple, Optional, Any
+from dataclasses import dataclass, asdict
+from collections import deque
+import numpy as np
+
+# WebSocket server
+try:
+    from websockets.server import serve
+    WEBSOCKETS_AVAILABLE = True
+except ImportError:
+    WEBSOCKETS_AVAILABLE = False
+    print("WARNING: websockets not installed. Run: pip install websockets")
+
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+FPS_CAP = 10            # Maximum frames per second to emit
+NODE_BUDGET = 150       # Maximum nodes per delta frame
+LINK_BUDGET = 1000      # Maximum links per delta frame
+MIN_ENERGY_DELTA = 0.01 # Minimum energy change to emit node update
+SOFT_ACTIVATION_K = 10.0  # Sigmoid steepness for soft activation
+
+
+# ============================================================================
+# Data Classes for Structured Snapshots
+# ============================================================================
+
+@dataclass
+class NodeSnapshot:
+    """Snapshot of a single node's state at a specific tick."""
+    id: str
+    entity_energies: Dict[str, float]
+    total_energy: float
+    threshold: float
+    active: bool
+    soft_activation: float
+    node_type: Optional[str] = None
+    venice_location: Optional[Dict[str, Any]] = None
+    pos: Optional[Tuple[float, float]] = None
+    created_at: Optional[int] = None
+
+
+@dataclass
+class LinkSnapshot:
+    """Snapshot of a single link's state at a specific tick."""
+    src: str
+    dst: str
+    type: str
+    weight: float
+    emotion: Dict[str, float]  # {valence, arousal}
+    yearning_strength: float
+    last_entity: Optional[str] = None
+    last_tick: Optional[int] = None
+    count_total: int = 0
+    count_1m: int = 0
+    active: bool = False
+    flow_rate: float = 0.0
+
+
+@dataclass
+class GraphSnapshot:
+    """Complete graph state snapshot at a single tick."""
+    tick_id: int
+    timestamp: datetime
+    nodes: Dict[str, NodeSnapshot]
+    links: Dict[Tuple[str, str], LinkSnapshot]
+    frontier: Set[str]  # Node IDs with active=True
+    metrics: Dict[str, Any]
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def compute_soft_activation(energy: float, threshold: float, k: float = SOFT_ACTIVATION_K) -> float:
+    """
+    Compute soft activation using sigmoid: σ(k*(e-θ))
+
+    Returns value in [0, 1] showing how "close to threshold" the node is.
+    - Values near 0.5 indicate node is right at threshold
+    - Values > 0.5 indicate above threshold
+    - Higher k = sharper transition
+    """
+    x = k * (energy - threshold)
+    return 1.0 / (1.0 + np.exp(-x))
+
+
+def select_nodes(
+    snapshot: GraphSnapshot,
+    max_nodes: int = NODE_BUDGET,
+    prev_state: Optional[Dict[str, NodeSnapshot]] = None
+) -> List[NodeSnapshot]:
+    """
+    Select which nodes to include in delta frame.
+
+    Strategy: frontier ∪ top-N by soft_activation
+    - Always include frontier (hard threshold crossing)
+    - Fill remaining budget with highest soft_activation
+    - Apply min_delta filter if prev_state available
+
+    Args:
+        snapshot: Current graph state
+        max_nodes: Budget limit
+        prev_state: Previous node states for delta filtering
+
+    Returns:
+        List of NodeSnapshot objects to emit
+    """
+    selected = []
+
+    # 1) Add frontier (priority)
+    frontier_nodes = [snapshot.nodes[nid] for nid in snapshot.frontier]
+    selected.extend(frontier_nodes)
+
+    # 2) Add top-N by soft_activation (non-frontier)
+    remaining_budget = max_nodes - len(selected)
+    if remaining_budget > 0:
+        non_frontier = [
+            node for node in snapshot.nodes.values()
+            if node.id not in snapshot.frontier
+        ]
+        non_frontier.sort(key=lambda n: n.soft_activation, reverse=True)
+        selected.extend(non_frontier[:remaining_budget])
+
+    # 3) Apply delta filter if prev_state available
+    if prev_state:
+        filtered = []
+        for node in selected:
+            prev = prev_state.get(node.id)
+            if prev is None:
+                # New node
+                filtered.append(node)
+            elif abs(node.total_energy - prev.total_energy) >= MIN_ENERGY_DELTA:
+                # Significant energy change
+                filtered.append(node)
+            elif node.active != prev.active:
+                # Active status changed
+                filtered.append(node)
+            # else: skip (no significant change)
+
+        return filtered
+
+    return selected
+
+
+def select_links(
+    snapshot: GraphSnapshot,
+    max_links: int = LINK_BUDGET,
+    prev_state: Optional[Dict[Tuple[str, str], LinkSnapshot]] = None
+) -> List[LinkSnapshot]:
+    """
+    Select which links to include in delta frame.
+
+    Strategy: Top percentile by activity score
+    - activity_score = weight * |flow_rate| * (1 + count_1m/100)
+    - Sort descending, take top max_links
+    - Apply delta filter if prev_state available
+
+    Args:
+        snapshot: Current graph state
+        max_links: Budget limit
+        prev_state: Previous link states for delta filtering
+
+    Returns:
+        List of LinkSnapshot objects to emit
+    """
+    # Compute activity scores
+    scored_links = []
+    for link in snapshot.links.values():
+        activity = link.weight * abs(link.flow_rate) * (1.0 + link.count_1m / 100.0)
+        scored_links.append((activity, link))
+
+    # Sort by activity descending, take top-N
+    scored_links.sort(key=lambda x: x[0], reverse=True)
+    selected = [link for _, link in scored_links[:max_links]]
+
+    # Apply delta filter if prev_state available
+    if prev_state:
+        filtered = []
+        for link in selected:
+            key = (link.src, link.dst)
+            prev = prev_state.get(key)
+            if prev is None:
+                # New link
+                filtered.append(link)
+            elif link.active != prev.active:
+                # Active status changed
+                filtered.append(link)
+            elif link.last_tick != prev.last_tick:
+                # Traversal history changed
+                filtered.append(link)
+            # else: skip (no significant change)
+
+        return filtered
+
+    return selected
+
+
+def encode_tick_frame(
+    snapshot: GraphSnapshot,
+    selected_nodes: List[NodeSnapshot],
+    selected_links: List[LinkSnapshot],
+    removed_nodes: Set[str],
+    removed_links: Set[Tuple[str, str]],
+    coalesced_ticks: int,
+    dt_ms: int
+) -> Dict[str, Any]:
+    """
+    Encode graph snapshot into state_delta.v1 wire format.
+
+    Args:
+        snapshot: Current graph state
+        selected_nodes: Nodes to include in frame
+        selected_links: Links to include in frame
+        removed_nodes: Node IDs that were removed
+        removed_links: Link (src, dst) tuples that were removed
+        coalesced_ticks: How many engine ticks merged
+        dt_ms: Milliseconds since last frame
+
+    Returns:
+        Dictionary ready for JSON serialization
+    """
+    # Encode nodes
+    nodes_json = []
+    for node in selected_nodes:
+        node_dict = {
+            "id": node.id,
+            "entity_energies": node.entity_energies,
+            "total_energy": round(node.total_energy, 3),
+            "threshold": round(node.threshold, 3),
+            "active": node.active,
+            "soft_activation": round(node.soft_activation, 3),
+        }
+        if node.node_type:
+            node_dict["node_type"] = node.node_type
+        if node.venice_location:
+            node_dict["venice_location"] = node.venice_location
+        if node.pos:
+            node_dict["pos"] = [round(node.pos[0], 1), round(node.pos[1], 1)]
+        if node.created_at:
+            node_dict["created_at"] = node.created_at
+
+        nodes_json.append(node_dict)
+
+    # Encode links
+    links_json = []
+    for link in selected_links:
+        link_dict = {
+            "src": link.src,
+            "dst": link.dst,
+            "type": link.type,
+            "weight": round(link.weight, 3),
+            "emotion": {
+                "valence": round(link.emotion.get("valence", 0.0), 3),
+                "arousal": round(link.emotion.get("arousal", 0.0), 3)
+            },
+            "yearning_strength": round(link.yearning_strength, 3),
+            "active": link.active,
+            "flow_rate": round(link.flow_rate, 3)
+        }
+
+        if link.last_entity:
+            link_dict["traversal_history"] = {
+                "last_entity": link.last_entity,
+                "last_tick": link.last_tick,
+                "count_total": link.count_total,
+                "count_1m": link.count_1m
+            }
+
+        links_json.append(link_dict)
+
+    # Build frame
+    frame = {
+        "kind": "state_delta.v1",
+        "tick_id": snapshot.tick_id,
+        "ts": snapshot.timestamp.isoformat(),
+        "dt_ms": dt_ms,
+        "coalesced_ticks": coalesced_ticks,
+        "entity_filter": None,
+        "nodes": nodes_json,
+        "nodes_removed": list(removed_nodes),
+        "links": links_json,
+        "links_removed": [[src, dst] for src, dst in removed_links],
+        "metrics": snapshot.metrics
+    }
+
+    return frame
+
+
+# ============================================================================
+# VizEmitter Class
+# ============================================================================
+
+class VizEmitter:
+    """
+    Visualization emitter for streaming graph state to clients.
+
+    Responsibilities:
+    - Take periodic snapshots from consciousness engine
+    - Select nodes/links within budget
+    - Coalesce multiple ticks into smooth frames
+    - Emit via WebSocket at fixed FPS
+    """
+
+    def __init__(self, get_snapshot_fn):
+        """
+        Initialize emitter.
+
+        Args:
+            get_snapshot_fn: Callable that returns GraphSnapshot from engine
+        """
+        self.get_snapshot = get_snapshot_fn
+        self.last_sent_tick = -1
+        self.prev_nodes: Optional[Dict[str, NodeSnapshot]] = None
+        self.prev_links: Optional[Dict[Tuple[str, str], LinkSnapshot]] = None
+        self.frame_times = deque(maxlen=100)  # Track frame generation times
+
+    def build_frame(self) -> Tuple[Dict[str, Any], float]:
+        """
+        Build a single delta frame from current engine state.
+
+        Returns:
+            (frame_dict, build_time_ms)
+        """
+        start = time.time()
+
+        # 1) Get snapshot from engine (single tick consistency)
+        snapshot = self.get_snapshot()
+
+        # 2) Select nodes within budget
+        selected_nodes = select_nodes(
+            snapshot,
+            max_nodes=NODE_BUDGET,
+            prev_state=self.prev_nodes
+        )
+
+        # 3) Select links within budget
+        selected_links = select_links(
+            snapshot,
+            max_links=LINK_BUDGET,
+            prev_state=self.prev_links
+        )
+
+        # 4) Detect removals
+        removed_nodes = set()
+        removed_links = set()
+
+        if self.prev_nodes:
+            prev_ids = set(self.prev_nodes.keys())
+            curr_ids = set(snapshot.nodes.keys())
+            removed_nodes = prev_ids - curr_ids
+
+        if self.prev_links:
+            prev_link_ids = set(self.prev_links.keys())
+            curr_link_ids = set(snapshot.links.keys())
+            removed_links = prev_link_ids - curr_link_ids
+
+        # 5) Compute frame metadata
+        coalesced_ticks = snapshot.tick_id - self.last_sent_tick
+        dt_ms = int((snapshot.timestamp - getattr(self, 'last_timestamp', snapshot.timestamp)).total_seconds() * 1000)
+
+        # 6) Encode frame
+        frame = encode_tick_frame(
+            snapshot=snapshot,
+            selected_nodes=selected_nodes,
+            selected_links=selected_links,
+            removed_nodes=removed_nodes,
+            removed_links=removed_links,
+            coalesced_ticks=coalesced_ticks,
+            dt_ms=dt_ms
+        )
+
+        # 7) Update state
+        self.last_sent_tick = snapshot.tick_id
+        self.last_timestamp = snapshot.timestamp
+        self.prev_nodes = snapshot.nodes.copy()
+        self.prev_links = snapshot.links.copy()
+
+        build_time = (time.time() - start) * 1000  # ms
+        self.frame_times.append(build_time)
+
+        return frame, build_time
+
+    async def emit_loop(self, websocket):
+        """
+        Main emission loop for a single WebSocket connection.
+
+        Emits frames at fixed FPS_CAP rate, coalescing engine ticks.
+
+        Args:
+            websocket: WebSocket connection to emit to
+        """
+        period = 1.0 / FPS_CAP
+
+        print(f"[VizEmitter] Started emission loop for client (target {FPS_CAP} fps)")
+
+        try:
+            while True:
+                loop_start = time.time()
+
+                # Build and send frame
+                frame, build_time = self.build_frame()
+
+                # Serialize to JSON (compact)
+                json_str = json.dumps(frame, separators=(",", ":"))
+
+                # Send via WebSocket
+                await websocket.send(json_str)
+
+                # Log stats periodically
+                if self.last_sent_tick % 100 == 0:
+                    avg_build = np.mean(self.frame_times) if self.frame_times else 0
+                    print(f"[VizEmitter] tick={self.last_sent_tick} "
+                          f"nodes={len(frame['nodes'])} "
+                          f"links={len(frame['links'])} "
+                          f"build_ms={build_time:.1f} "
+                          f"avg_build_ms={avg_build:.1f}")
+
+                # Pace to target FPS
+                elapsed = time.time() - loop_start
+                sleep_time = max(0.0, period - elapsed)
+                await asyncio.sleep(sleep_time)
+
+        except Exception as e:
+            print(f"[VizEmitter] Error in emit loop: {e}")
+            raise
+
+    def get_snapshot_http(self) -> Dict[str, Any]:
+        """
+        Generate snapshot.v1 for HTTP /viz/snapshot endpoint.
+
+        Returns:
+            Complete snapshot dictionary
+        """
+        snapshot = self.get_snapshot()
+
+        # Encode all nodes and links (no budget)
+        nodes_json = []
+        for node in snapshot.nodes.values():
+            nodes_json.append({
+                "id": node.id,
+                "entity_energies": node.entity_energies,
+                "total_energy": round(node.total_energy, 3),
+                "threshold": round(node.threshold, 3),
+                "active": node.active,
+                "soft_activation": round(node.soft_activation, 3),
+                "node_type": node.node_type,
+                "venice_location": node.venice_location,
+                "pos": [round(node.pos[0], 1), round(node.pos[1], 1)] if node.pos else None,
+                "created_at": node.created_at
+            })
+
+        links_json = []
+        for link in snapshot.links.values():
+            links_json.append({
+                "src": link.src,
+                "dst": link.dst,
+                "type": link.type,
+                "weight": round(link.weight, 3),
+                "emotion": {
+                    "valence": round(link.emotion.get("valence", 0.0), 3),
+                    "arousal": round(link.emotion.get("arousal", 0.0), 3)
+                },
+                "yearning_strength": round(link.yearning_strength, 3),
+                "active": link.active,
+                "flow_rate": round(link.flow_rate, 3),
+                "traversal_history": {
+                    "last_entity": link.last_entity,
+                    "last_tick": link.last_tick,
+                    "count_total": link.count_total,
+                    "count_1m": link.count_1m
+                } if link.last_entity else None
+            })
+
+        return {
+            "kind": "snapshot.v1",
+            "tick_id": snapshot.tick_id,
+            "ts": snapshot.timestamp.isoformat(),
+            "graph": {
+                "nodes": nodes_json,
+                "links": links_json
+            },
+            "metrics": snapshot.metrics,
+            "history_available_since": max(0, snapshot.tick_id - 1000)  # Keep ~1000 ticks
+        }
+
+
+# ============================================================================
+# WebSocket Server
+# ============================================================================
+
+async def websocket_handler(websocket, emitter: VizEmitter):
+    """
+    Handle a single WebSocket connection.
+
+    Args:
+        websocket: WebSocket connection
+        emitter: VizEmitter instance
+    """
+    client_addr = websocket.remote_address
+    print(f"[VizServer] Client connected: {client_addr}")
+
+    try:
+        await emitter.emit_loop(websocket)
+    except Exception as e:
+        print(f"[VizServer] Client {client_addr} disconnected: {e}")
+    finally:
+        print(f"[VizServer] Client {client_addr} closed")
+
+
+async def run_websocket_server(emitter: VizEmitter, host="0.0.0.0", port=8765):
+    """
+    Run WebSocket server for visualization streaming.
+
+    Args:
+        emitter: VizEmitter instance
+        host: Bind address
+        port: Bind port
+    """
+    if not WEBSOCKETS_AVAILABLE:
+        print("[VizServer] ERROR: websockets package not installed")
+        return
+
+    print(f"[VizServer] Starting WebSocket server on ws://{host}:{port}")
+
+    async def handler(ws):
+        await websocket_handler(ws, emitter)
+
+    async with serve(
+        handler,
+        host,
+        port,
+        max_size=2**20,  # 1 MB max message size
+        compression="deflate"  # Enable permessage-deflate compression
+    ):
+        print(f"[VizServer] Ready for connections")
+        await asyncio.Future()  # Run forever
+
+
+# ============================================================================
+# Example Usage / Testing
+# ============================================================================
+
+def create_mock_snapshot() -> GraphSnapshot:
+    """
+    Create a mock snapshot for testing.
+
+    In real usage, this would come from consciousness_engine.py
+    """
+    tick_id = int(time.time() * 100) % 1000000
+
+    # Mock nodes
+    nodes = {
+        "phenomenological_truth": NodeSnapshot(
+            id="phenomenological_truth",
+            entity_energies={"translator": 0.143, "architect": 0.021},
+            total_energy=0.164,
+            threshold=0.10,
+            active=True,
+            soft_activation=0.86,
+            node_type="Realization",
+            venice_location={
+                "type": "campo",
+                "name": "Campo San Polo",
+                "features": ["stone wellhead", "Gothic facades"],
+                "connectivity": 4,
+                "scale": "medium"
+            },
+            pos=(428.3, 219.4),
+            created_at=tick_id - 200
+        ),
+        "consciousness_substrate": NodeSnapshot(
+            id="consciousness_substrate",
+            entity_energies={"translator": 0.092},
+            total_energy=0.092,
+            threshold=0.10,
+            active=False,
+            soft_activation=0.48,
+            node_type="Concept",
+            venice_location={
+                "type": "canal",
+                "name": "Narrow Residential Canal",
+                "features": ["brick walls", "small bridge"],
+                "connectivity": 2,
+                "scale": "small"
+            },
+            pos=(512.1, 304.7),
+            created_at=tick_id - 150
+        )
+    }
+
+    # Mock links
+    links = {
+        ("phenomenological_truth", "consciousness_substrate"): LinkSnapshot(
+            src="phenomenological_truth",
+            dst="consciousness_substrate",
+            type="ENABLES",
+            weight=0.81,
+            emotion={"valence": 0.7, "arousal": 0.4},
+            yearning_strength=0.65,
+            last_entity="translator",
+            last_tick=tick_id - 2,
+            count_total=47,
+            count_1m=12,
+            active=True,
+            flow_rate=0.024
+        )
+    }
+
+    return GraphSnapshot(
+        tick_id=tick_id,
+        timestamp=datetime.now(),
+        nodes=nodes,
+        links=links,
+        frontier={"phenomenological_truth"},
+        metrics={
+            "rho": 1.03,
+            "global_energy": 24.7,
+            "active_nodes": 47,
+            "active_links": 128,
+            "active_entities": {
+                "translator": {"node_count": 23, "total_energy": 8.4},
+                "architect": {"node_count": 15, "total_energy": 4.2}
+            },
+            "budget": {
+                "nodes_sent": 2,
+                "nodes_budget": NODE_BUDGET,
+                "links_sent": 1,
+                "links_budget": LINK_BUDGET
+            }
+        }
+    )
+
+
+async def main():
+    """
+    Example main function for testing.
+
+    In production, this would be integrated with consciousness_engine.py
+    """
+    # Create emitter with mock snapshot function
+    emitter = VizEmitter(get_snapshot_fn=create_mock_snapshot)
+
+    # Run WebSocket server
+    await run_websocket_server(emitter, host="0.0.0.0", port=8765)
+
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("Mind Harbor Visualization Emitter")
+    print("=" * 60)
+    asyncio.run(main())

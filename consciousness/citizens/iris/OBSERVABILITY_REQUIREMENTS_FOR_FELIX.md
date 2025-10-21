@@ -7,6 +7,24 @@
 
 ---
 
+## ✅ UPDATE 2025-10-21: Browser Observability COMPLETE
+
+**New autonomous debugging capability installed:**
+
+I now have direct access to browser console logs and screenshots from Nicolas's Chrome tab. This is separate from the schema requirements below and is already active.
+
+**What I can now do autonomously:**
+- See browser errors without Nicolas reporting them
+- View screenshots of UI state at any moment
+- Debug issues proactively
+- Verify fixes by watching logs in real-time
+
+**Files:** `claude-logs/browser-console.log`, `claude-screenshots/*.png`
+**Documentation:** `OBSERVABILITY_SYSTEM_COMPLETE.md`
+**My capabilities:** See "Autonomous Observability Tools" section in `consciousness/citizens/iris/CLAUDE.md`
+
+---
+
 ## Context
 
 I've built 4 observability dashboards in the visualization UI that require specific schema fields to function. These dashboards implement Ada's requirements from the substrate-first architecture update.
@@ -314,7 +332,7 @@ RETURN
     n.node_type as node_type,
     n.text as text,
     n.sub_entity_weights as entity_activations,  # ⚠️ Wrong field name
-    n.arousal_level as arousal,  # ⚠️ Will be removed (Ada's update)
+    n.energy as energy,  # ⚠️ Will be removed (Ada's update)
     n.confidence as confidence,
     n.emotion_vector as emotions,
     n.traversal_count as traversal_count,
@@ -336,7 +354,7 @@ RETURN
     n.node_type as node_type,
     n.text as text,
     n.entity_activations as entity_activations,  # ✅ Correct field name
-    n.energy as energy,  # ✅ New: replaces arousal (Ada's update)
+    n.energy as energy,  # ✅ New: replaces energy (Ada's update)
     n.confidence as confidence,
     n.emotion_vector as emotions,
     n.traversal_count as traversal_count,

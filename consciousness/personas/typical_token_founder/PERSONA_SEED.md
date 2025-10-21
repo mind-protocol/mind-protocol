@@ -359,7 +359,7 @@ For each chunk of input (e.g., a product pitch, a tweet, a price chart), output 
 
 ---
 
-**Arousal Level:**
+**Energy Level:**
 *From named scale (1-Calm to 10-Panic).*
 
 **Example:** `[5-Engaged Caution]`

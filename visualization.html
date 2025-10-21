@@ -697,7 +697,7 @@
                 entities.forEach(entity => {
                     const option = document.createElement('option');
                     option.value = entity.entity_id;
-                    option.textContent = `${entity.entity_id} (arousal: ${(entity.arousal_level || 0).toFixed(2)})`;
+                    option.textContent = `${entity.entity_id} (energy: ${(entity.energy || 0).toFixed(2)})`;
                     entitySelect.appendChild(option);
                 });
             } else {
@@ -1055,37 +1055,37 @@
         }
 
         function getNodeColor(node) {
-            // Color by arousal (emotional/motivational intensity)
+            // Color by energy (emotional/motivational intensity)
             // Emoji shows type, color shows intensity
-            const arousal = node.arousal || 0;
+            const energy = node.energy || 0;
 
             // Cool to warm gradient: blue (dormant) → cyan → white → orange → red (intense)
-            if (arousal < 0.2) return '#3b82f6';      // Blue - dormant
-            if (arousal < 0.4) return '#06b6d4';      // Cyan - low
-            if (arousal < 0.6) return '#94a3b8';      // Light gray - moderate
-            if (arousal < 0.8) return '#f59e0b';      // Amber - elevated
+            if (energy < 0.2) return '#3b82f6';      // Blue - dormant
+            if (energy < 0.4) return '#06b6d4';      // Cyan - low
+            if (energy < 0.6) return '#94a3b8';      // Light gray - moderate
+            if (energy < 0.8) return '#f59e0b';      // Amber - elevated
             return '#ef4444';                         // Red - intense
         }
 
         function computeNodeWeight(node) {
             // Composite importance metric
-            const arousal = node.arousal || 0;
+            const energy = node.energy || 0;
             const confidence = node.confidence || 0.5;
             const traversalCount = node.traversal_count || 0;
 
             // Normalize traversal count (log scale for large values)
             const normalizedTraversals = Math.min(1.0, Math.log10(traversalCount + 1) / 2);
 
-            // Weight formula: arousal (40%) + confidence (30%) + usage (30%)
-            const weight = (arousal * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
+            // Weight formula: energy (40%) + confidence (30%) + usage (30%)
+            const weight = (energy * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
 
             return weight;
         }
 
         function getNodeOpacity(node) {
-            // Opacity now encodes arousal (motivation/emotional weight)
-            const arousal = node.arousal || 0;
-            return 0.5 + (arousal * 0.5);  // Range: 0.5-1.0
+            // Opacity now encodes energy (motivation/emotional weight)
+            const energy = node.energy || 0;
+            return 0.5 + (energy * 0.5);  // Range: 0.5-1.0
         }
 
         function getNodeGlow(node) {
@@ -1137,7 +1137,7 @@
             const nodeType = (node.labels && node.labels[0]) || 'Node';
             const nodeEmoji = NODE_TYPE_EMOJIS[nodeType] || NODE_TYPE_EMOJIS['default'];
             const computedWeight = computeNodeWeight(node);
-            const arousalColor = getNodeColor(node);
+            const energyColor = getNodeColor(node);
 
             content.innerHTML = `
                 <h3 style="color: #4CAF50; margin-bottom: 10px;">Node Details</h3>
@@ -1157,7 +1157,7 @@
                         <strong>Weight:</strong> ${computedWeight.toFixed(2)}
                     </div>
                     <div>
-                        <strong>Arousal:</strong> ${(node.arousal || 0).toFixed(2)}
+                        <strong>Energy:</strong> ${(node.energy || 0).toFixed(2)}
                     </div>
                     <div>
                         <strong>Confidence:</strong> ${(node.confidence || 0).toFixed(2)}
@@ -1316,9 +1316,9 @@
             // Pulse effect on node
             d3.select(`circle[data-id="${nodeId}"]`)
                 .transition().duration(300)
-                .attr("r", d => (5 + (d.arousal || 0) * 8) * 1.5)
+                .attr("r", d => (5 + (d.energy || 0) * 8) * 1.5)
                 .transition().duration(300)
-                .attr("r", d => 5 + (d.arousal || 0) * 8);
+                .attr("r", d => 5 + (d.energy || 0) * 8);
         }
 
         function animateHebbianLearning(linkId) {
@@ -1413,10 +1413,10 @@
                 <span class="tooltip-value">${weight.toFixed(2)}</span>
             </div>`;
 
-            if (d.arousal !== undefined) {
+            if (d.energy !== undefined) {
                 content += `<div class="tooltip-row">
-                    <span class="tooltip-label">Arousal:</span>
-                    <span class="tooltip-value">${d.arousal.toFixed(2)}</span>
+                    <span class="tooltip-label">Energy:</span>
+                    <span class="tooltip-value">${d.energy.toFixed(2)}</span>
                 </div>`;
             }
 

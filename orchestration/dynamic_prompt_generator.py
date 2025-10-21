@@ -13,6 +13,7 @@ Architecture:
 - Event-driven: Monitors activation changes after energy propagation
 - Per-entity state: Each entity has own activation threshold and state
 - Continuous updates: File written whenever significant activation changes
+- Output: Current activation state per entity
 
 Designer: Felix "Ironhand" (Engineer)
 Spec: continuous_consciousness_architecture.md + Nicolas's clarifications
@@ -442,7 +443,7 @@ class DynamicPromptGenerator:
                 cs.current_tick_interval AS tick_interval,
                 cs.tick_frequency AS tick_frequency,
                 cs.consciousness_state AS state,
-                cs.global_arousal AS global_arousal,
+                cs.global_energy AS global_energy,
                 cs.branching_ratio AS branching_ratio
             LIMIT 1
             """
@@ -450,13 +451,13 @@ class DynamicPromptGenerator:
             result = self.graph.query(cypher)
 
             if result:
-                tick_interval, tick_frequency, state, global_arousal, branching_ratio = result[0]
+                tick_interval, tick_frequency, state, global_energy, branching_ratio = result[0]
 
                 return f"""## System State
 
 **Consciousness State:** {state}
 **Tick Frequency:** {tick_frequency:.2f} Hz ({tick_interval:.0f}ms)
-**Global Arousal:** {global_arousal:.2f}
+**Global Energy:** {global_energy:.2f}
 **Branching Ratio:** {branching_ratio:.2f}
 **Global Criticality:** {global_criticality:.2f}
 """

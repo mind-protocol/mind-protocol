@@ -66,7 +66,7 @@ class MechanismValidator:
             ("2. Link Activation", self.validate_link_activation),
             ("3. Context Aggregation", self.validate_context_aggregation),
             ("4. Hebbian Learning", self.validate_hebbian_learning),
-            ("5. Arousal Propagation", self.validate_arousal_propagation),
+            ("5. Energy Propagation", self.validate_energy_propagation),
             ("6. Activation Decay", self.validate_activation_decay),
             ("7. Crystallization", self.validate_crystallization),
             ("8. Dependency Verification", self.validate_dependency_verification),
@@ -273,17 +273,17 @@ class MechanismValidator:
         # Simulate co-activation
         self.g.query(f"""
             MATCH (a {{id: '{source}'}}), (b {{id: '{target}'}})
-            SET a.arousal_level = 0.8,
-                b.arousal_level = 0.8,
+            SET a.energy = 0.8,
+                b.energy = 0.8,
                 a.last_modified = timestamp(),
                 b.last_modified = timestamp()
         """)
-        details.append("Set both nodes to high arousal (co-activation)")
+        details.append("Set both nodes to high energy (co-activation)")
 
         # Execute Hebbian learning
         result = self.g.query(f"""
             MATCH (a {{id: '{source}'}})-[link]->(b {{id: '{target}'}})
-            WHERE a.arousal_level > 0.5 AND b.arousal_level > 0.5
+            WHERE a.energy > 0.5 AND b.energy > 0.5
             SET link.co_activation_count = coalesce(link.co_activation_count, 0) + 1,
                 link.link_strength = coalesce(link.link_strength, 0.5) * 1.05,
                 link.last_modified = timestamp(),
@@ -309,18 +309,18 @@ class MechanismValidator:
 
         return passed, details
 
-    def validate_arousal_propagation(self) -> Tuple[bool, List[str]]:
+    def validate_energy_propagation(self) -> Tuple[bool, List[str]]:
         """
-        Validate: High arousal node → Propagate to neighbors
+        Validate: High energy node → Propagate to neighbors
 
-        Test: Set high arousal → Check neighbors receive activation
+        Test: Set high energy → Check neighbors receive activation
         """
         details = []
 
         # Find node with neighbors
         result = self.g.query("""
             MATCH (n)-[r]->(m)
-            WHERE n.arousal_level IS NOT NULL
+            WHERE n.energy IS NOT NULL
             RETURN n.id as source, count(m) as neighbor_count
             ORDER BY neighbor_count DESC
             LIMIT 1
@@ -333,50 +333,50 @@ class MechanismValidator:
         neighbor_count = result.result_set[0][1]
         details.append(f"Testing node: {source_id} ({neighbor_count} neighbors)")
 
-        # Set high arousal
+        # Set high energy
         self.g.query(f"""
             MATCH (n {{id: '{source_id}'}})
-            SET n.arousal_level = 0.95,
+            SET n.energy = 0.95,
                 n.last_modified = timestamp()
         """)
-        details.append("Set source arousal to 0.95 (high)")
+        details.append("Set source energy to 0.95 (high)")
 
-        # Get neighbor arousal before propagation
+        # Get neighbor energy before propagation
         before = self.g.query(f"""
             MATCH ({{id: '{source_id}'}})-[r]->(target)
-            RETURN avg(coalesce(target.arousal_level, 0)) as avg_arousal_before
+            RETURN avg(coalesce(target.energy, 0)) as avg_energy_before
         """)
 
         avg_before = before.result_set[0][0] if before.result_set else 0
-        details.append(f"Neighbor avg arousal before: {avg_before:.3f}")
+        details.append(f"Neighbor avg energy before: {avg_before:.3f}")
 
-        # Execute arousal propagation
+        # Execute energy propagation
         self.g.query(f"""
             MATCH (source {{id: '{source_id}'}})-[activates]->(target)
-            WHERE source.arousal_level > 0.7
-            SET target.arousal_level = coalesce(target.arousal_level, 0) + 0.2,
+            WHERE source.energy > 0.7
+            SET target.energy = coalesce(target.energy, 0) + 0.2,
                 target.last_modified = timestamp(),
-                activates.last_mechanism_id = 'arousal_propagation'
+                activates.last_mechanism_id = 'energy_propagation'
         """)
 
-        # Check neighbor arousal after propagation
+        # Check neighbor energy after propagation
         after = self.g.query(f"""
             MATCH ({{id: '{source_id}'}})-[r]->(target)
-            RETURN avg(coalesce(target.arousal_level, 0)) as avg_arousal_after,
+            RETURN avg(coalesce(target.energy, 0)) as avg_energy_after,
                    count(r) as propagated_count
         """)
 
         if after.result_set:
             avg_after = after.result_set[0][0]
             propagated = after.result_set[0][1]
-            details.append(f"Neighbor avg arousal after: {avg_after:.3f} (Δ{avg_after - avg_before:+.3f})")
+            details.append(f"Neighbor avg energy after: {avg_after:.3f} (Δ{avg_after - avg_before:+.3f})")
             details.append(f"Propagated to {propagated} neighbor(s)")
 
             passed = avg_after > avg_before
             if passed:
-                details.append("Verification: Arousal propagated ✓")
+                details.append("Verification: Energy propagated ✓")
             else:
-                details.append("Verification FAILED: Arousal did not increase")
+                details.append("Verification FAILED: Energy did not increase")
         else:
             passed = False
             details.append("Verification FAILED: No propagation result")
@@ -387,25 +387,25 @@ class MechanismValidator:
         """
         Validate: Old activations decay over time
 
-        Test: Set old timestamp → Check arousal decreases
+        Test: Set old timestamp → Check energy decreases
         """
         details = []
 
-        # Find a node with arousal
+        # Find a node with energy
         result = self.g.query("""
             MATCH (n)
-            WHERE n.arousal_level > 0.3
-            RETURN n.id as node_id, n.arousal_level as current_arousal
+            WHERE n.energy > 0.3
+            RETURN n.id as node_id, n.energy as current_energy
             LIMIT 1
         """)
 
         if not result.result_set:
-            return False, ["No nodes with arousal > 0.3 found"]
+            return False, ["No nodes with energy > 0.3 found"]
 
         node_id = result.result_set[0][0]
-        initial_arousal = result.result_set[0][1]
+        initial_energy = result.result_set[0][1]
         details.append(f"Testing node: {node_id}")
-        details.append(f"Initial arousal: {initial_arousal:.3f}")
+        details.append(f"Initial energy: {initial_energy:.3f}")
 
         # Set old timestamp to trigger decay
         old_timestamp = int((datetime.now().timestamp() - 200) * 1000)  # 200 seconds ago
@@ -419,24 +419,24 @@ class MechanismValidator:
         self.g.query(f"""
             MATCH (n {{id: '{node_id}'}})
             WHERE (timestamp() - n.last_modified) > 100000
-            SET n.arousal_level = n.arousal_level * 0.9,
+            SET n.energy = n.energy * 0.9,
                 n.last_mechanism_id = 'activation_decay'
         """)
 
-        # Check arousal after decay
+        # Check energy after decay
         result = self.g.query(f"""
             MATCH (n {{id: '{node_id}'}})
-            RETURN n.arousal_level as decayed_arousal
+            RETURN n.energy as decayed_energy
         """)
 
-        decayed_arousal = result.result_set[0][0] if result.result_set else initial_arousal
-        details.append(f"Arousal after decay: {decayed_arousal:.3f} (Δ{decayed_arousal - initial_arousal:+.3f})")
+        decayed_energy = result.result_set[0][0] if result.result_set else initial_energy
+        details.append(f"Energy after decay: {decayed_energy:.3f} (Δ{decayed_energy - initial_energy:+.3f})")
 
-        passed = decayed_arousal < initial_arousal
+        passed = decayed_energy < initial_energy
         if passed:
-            details.append("Verification: Arousal decayed ✓")
+            details.append("Verification: Energy decayed ✓")
         else:
-            details.append("Verification FAILED: Arousal did not decrease")
+            details.append("Verification FAILED: Energy did not decrease")
 
         return passed, details
 

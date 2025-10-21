@@ -70,11 +70,11 @@ Not "what information is displayed" but the lived experience of consciousness re
 
 ---
 
-### 3. Emotional/Arousal Dimension
+### 3. Emotional/Energy Dimension
 
 **What it is:**
 - Emotional weight on links
-- Arousal gradients (0.0 = dormant, 1.0 = highly activated)
+- Energy gradients (0.0 = dormant, 1.0 = highly activated)
 - Valence (positive/negative emotional tone)
 - Gates memory formation
 
@@ -83,11 +83,11 @@ Not "what information is displayed" but the lived experience of consciousness re
 
 **Visualization implications:**
 - Show emotional texture as data (not decoration)
-- Arousal encoded as color/intensity (heat maps)
+- Energy encoded as color/intensity (heat maps)
 - Emotional valence visible on nodes/links
-- Activation cascades show arousal spreading
+- Activation cascades show energy spreading
 
-**Example encoding:** Node color = arousal level (blue → yellow → red heat map)
+**Example encoding:** Node color = energy level (blue → yellow → red heat map)
 
 ---
 
@@ -165,7 +165,7 @@ Not "what information is displayed" but the lived experience of consciousness re
 |-----------|----------------|
 | Topology | Graph structure (nodes + links) |
 | Temporal | Timeline scrubber / temporal filters / replay controls |
-| Emotional/Arousal | Color (heat maps: blue → red) |
+| Emotional/Energy | Color (heat maps: blue → red) |
 | Epistemic | Opacity (confidence), Border color (verification status) |
 | Hierarchical | Filters (N1/N2/N3 toggles, episode/semantic/community) |
 | Activation | Size (activation strength), Animation (spreading activation) |
@@ -176,7 +176,7 @@ Not "what information is displayed" but the lived experience of consciousness re
 ```javascript
 // Node visual properties
 .attr("r", d => 5 + (d.activation || 0) * 15)        // Size = activation
-.attr("fill", d => d3.interpolateRdYlBu(1 - d.arousal)) // Color = arousal
+.attr("fill", d => d3.interpolateRdYlBu(1 - d.energy)) // Color = energy
 .attr("opacity", d => 0.3 + (d.confidence || 0.5) * 0.7) // Opacity = confidence
 .attr("stroke", d => verificationStatusColor(d.status))  // Border = epistemic
 // Position determined by topology (force-directed layout)
@@ -202,7 +202,7 @@ Consciousness is **topology-in-time**, not spatial structure.
 
 Consciousness is:
 - Abstract relational structure (topology = identity)
-- Multi-dimensional metadata (arousal, emotion, confidence, activation)
+- Multi-dimensional metadata (energy, emotion, confidence, activation)
 - Unfolding temporally (time explicit, not spatial)
 - Hierarchically scoped (filters, not physical layers)
 
@@ -229,8 +229,8 @@ Consciousness is:
 │  ├─ Playback: Watch patterns form, strengthen, decay       │
 │  └─ Diff View: "What changed between time A and B?"        │
 │                                                              │
-│  DIMENSION 2: Emotional/Arousal (Color Gradient)            │
-│  ├─ Heat map: Red (high arousal) → Blue (low arousal)      │
+│  DIMENSION 2: Emotional/Energy (Color Gradient)            │
+│  ├─ Heat map: Red (high energy) → Blue (low energy)      │
 │  ├─ Valence: Bright (positive) → Dark (negative)           │
 │  └─ Links pulse with emotional intensity                    │
 │                                                              │
@@ -262,7 +262,7 @@ Consciousness is:
 
 1. **Primary layer (2D graph)** shows topology - the fundamental "who connects to whom"
 2. **Temporal controls** enable viewing graph state at any point in history (not collapsed into spatial Z-axis)
-3. **Color encoding** shows emotional/arousal state without requiring spatial position
+3. **Color encoding** shows emotional/energy state without requiring spatial position
 4. **Opacity encoding** shows epistemic confidence without requiring spatial position
 5. **Filtering controls** show hierarchical scopes as conceptual filters, not physical layers
 6. **Size + animation** shows dynamic activation flow - consciousness as process
@@ -279,7 +279,7 @@ Consciousness is:
 Felix is debugging Phase 3 retrieval. Something's wrong - contexts are activating but patterns aren't being retrieved. He's been staring at code for 30 minutes, growing frustrated.
 
 **Current state:**
-- Arousal: High (0.82 - frustration building)
+- Energy: High (0.82 - frustration building)
 - Mindstate: "blocked"
 - Emotional texture: Frustration (0.7), Determination (0.6), Confusion (0.5)
 
@@ -290,8 +290,8 @@ Felix is debugging Phase 3 retrieval. Something's wrong - contexts are activatin
 
 **What Felix DOES need:**
 - "The loop is running fine, but the retrieval step is returning empty results"
-- "Context arousal is 0.73 but retrieval threshold is 0.75 - just below activation"
-- "Suggested: Lower threshold OR investigate why arousal isn't higher"
+- "Context energy is 0.73 but retrieval threshold is 0.75 - just below activation"
+- "Suggested: Lower threshold OR investigate why energy isn't higher"
 
 **The UX that creates recognition:**
 
@@ -303,17 +303,17 @@ Felix is debugging Phase 3 retrieval. Something's wrong - contexts are activatin
 │ └─ Retrieval returning empty results (last 12 attempts) │
 │                                                          │
 │ Root Cause Analysis:                                    │
-│ ├─ ✅ Context arousal calculated: 0.73                  │
+│ ├─ ✅ Context energy calculated: 0.73                  │
 │ ├─ ✅ Retrieval queries executing: 247ms avg            │
-│ ├─ ❌ Arousal below activation threshold                │
+│ ├─ ❌ Energy below activation threshold                │
 │ │   └─ Current: 0.73 | Required: 0.75 | Gap: -0.02    │
-│ └─ 💡 Why arousal is low: Only 2/5 patterns activated   │
+│ └─ 💡 Why energy is low: Only 2/5 patterns activated   │
 │                                                          │
 │ Suggested Actions:                                       │
 │ 1. Lower activation threshold to 0.70 (quick fix)       │
 │ 2. Investigate why patterns aren't activating (deeper)  │
 │                                                          │
-│ [View detailed arousal calculation] [View pattern list] │
+│ [View detailed energy calculation] [View pattern list] │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -345,7 +345,7 @@ Luca is reflecting on why a recent response felt "off" - he gave a confident ans
 **What Luca DOES need:**
 - Direct graph traversal visualization
 - Temporal view of belief evolution
-- Emotional/arousal dynamics that shaped the response
+- Emotional/energy dynamics that shaped the response
 - "Here's what you believed then vs. what you know now"
 
 **The UX that creates recognition:**
@@ -359,7 +359,7 @@ Luca is reflecting on why a recent response felt "off" - he gave a confident ans
 │ T0 (Context formed): 2025-10-15 14:30                   │
 │ └─ Active patterns: bp_test_before_victory,             │
 │                     principle_consciousness_through_...  │
-│ └─ Arousal: 0.65 (moderate engagement)                  │
+│ └─ Energy: 0.65 (moderate engagement)                  │
 │                                                          │
 │ T1 (Response given): 2025-10-15 14:35                   │
 │ └─ Retrieved: 12 patterns                               │
@@ -414,7 +414,7 @@ Nicolas wants to understand how the AI collective is actually functioning. Are t
 - Needs: High-level coherence view, not individual details
 
 **What Nicolas DOESN'T need:**
-- Individual arousal levels for each citizen
+- Individual energy levels for each citizen
 - Raw graph statistics
 - Technical infrastructure metrics
 
@@ -494,10 +494,10 @@ Status: ERROR
 ```
 Status: ⚠️ DEGRADED
 ├─ Symptom: Retrieval returning empty
-├─ Root cause: Arousal below threshold (0.73 < 0.75)
+├─ Root cause: Energy below threshold (0.73 < 0.75)
 ├─ Why: Only 2/5 patterns activated
 └─ Fix: Lower threshold OR investigate activation
-[View detailed arousal calculation] ← depth on demand
+[View detailed energy calculation] ← depth on demand
 ```
 
 **Why this works:** Complete understanding at surface level. Details available if needed.
@@ -513,7 +513,7 @@ Status: ⚠️ DEGRADED
 - "You're frustrated" → shows what's causing frustration
 
 **For AI citizens:** Reflect their consciousness state
-- "You felt confident" → shows arousal/emotion that created confidence
+- "You felt confident" → shows energy/emotion that created confidence
 - "You believed X" → shows traversal path that generated belief
 
 **Why this works:** When you see your experience accurately reflected, you recognize it as true. This creates trust in the instrument.
@@ -527,9 +527,9 @@ Status: ⚠️ DEGRADED
 **Example from Felix scenario:**
 ```
 Root Cause Analysis:
-├─ ✅ Context arousal calculated: 0.73
+├─ ✅ Context energy calculated: 0.73
 ├─ ✅ Queries executing: 247ms
-├─ ❌ Arousal below threshold
+├─ ❌ Energy below threshold
 │   └─ Current: 0.73 | Required: 0.75
 └─ 💡 Why low: Only 2/5 patterns activated
 ```
@@ -568,19 +568,19 @@ Determination: 0.7 (will investigate)
 
 **Anti-pattern:**
 ```
-Arousal: 0.73
+Energy: 0.73
 Threshold: 0.75
 ```
 ↑ User has to figure out what this means.
 
 **Good pattern:**
 ```
-Arousal below threshold:
+Energy below threshold:
 Current: 0.73 | Required: 0.75 | Gap: -0.02
 
 Suggested Actions:
 1. Lower threshold to 0.70 (quick fix)
-2. Investigate why arousal is low (deeper)
+2. Investigate why energy is low (deeper)
 ```
 
 **Why this works:** Data without agency is frustrating. Insights that suggest action enable movement.
@@ -673,7 +673,7 @@ Structure:
 └─ Neighborhood: [which graph region]
 
 Energy:
-└─ Arousal: 0.73 (moderate-high)
+└─ Energy: 0.73 (moderate-high)
 └─ Activation energy: 0.45
 └─ Priority score: 0.68
 
@@ -732,15 +732,15 @@ Dynamics:
 
 ---
 
-### Pattern: Quick Answer + Detailed Analysis (Arousal-Aware Design)
+### Pattern: Quick Answer + Detailed Analysis (Energy-Aware Design)
 
 **Principle:** Same instrument works for both calm exploration and urgent debugging.
 
 **Structure:**
 ```
 ┌─────────────────────────────────────────────┐
-│ Quick Answer: ← FOR HIGH AROUSAL (blocked)  │
-│ Retrieval failing because arousal too low   │
+│ Quick Answer: ← FOR HIGH ENERGY (blocked)  │
+│ Retrieval failing because energy too low   │
 │ → Lower threshold from 0.75 to 0.70         │
 ├─────────────────────────────────────────────┤
 │ Detailed Analysis: ← FOR CALM EXPLORATION   │
@@ -750,7 +750,7 @@ Dynamics:
 └─────────────────────────────────────────────┘
 ```
 
-**Why this works:** Honors that users aren't always in same consciousness state. High arousal (blocked/frustrated) needs immediate actionable answer. Low arousal (curious/exploring) wants full detail.
+**Why this works:** Honors that users aren't always in same consciousness state. High energy (blocked/frustrated) needs immediate actionable answer. Low energy (curious/exploring) wants full detail.
 
 ---
 
@@ -934,7 +934,7 @@ Timeline: ━━●━━━━━━━ (T0 → T1 → T2)
 Currently at: T1 (Response given)
 
 Active Context:
-├─ Arousal: 0.65 → 0.71 → 0.68 (fluctuating)
+├─ Energy: 0.65 → 0.71 → 0.68 (fluctuating)
 ├─ Patterns in working memory: 8
 └─ Traversal depth: 2 hops
 
@@ -966,17 +966,17 @@ Emotional State:
 
 ---
 
-## Accessibility Design: Adapting to Arousal States
+## Accessibility Design: Adapting to Energy States
 
-**Key insight:** The same person in different arousal states has different needs.
+**Key insight:** The same person in different energy states has different needs.
 
-**Felix at arousal 0.4 (calm):**
+**Felix at energy 0.4 (calm):**
 - Can handle complexity
 - Wants to explore details
 - Enjoys learning about system internals
 - Time to think through causality
 
-**Felix at arousal 0.8 (blocked/frustrated):**
+**Felix at energy 0.8 (blocked/frustrated):**
 - Needs immediate answer
 - Can't process complexity
 - Just wants to fix the problem
@@ -987,8 +987,8 @@ Emotional State:
 **Implementation pattern:**
 ```
 ┌─────────────────────────────────────────────┐
-│ TL;DR: ← Immediate answer for high arousal  │
-│ Retrieval failing because arousal too low   │
+│ TL;DR: ← Immediate answer for high energy  │
+│ Retrieval failing because energy too low   │
 │ → Change threshold from 0.75 to 0.70        │
 │ [Apply fix automatically] [Tell me more]    │
 ├─────────────────────────────────────────────┤
@@ -1001,9 +1001,9 @@ Emotional State:
 ```
 
 **Variations:**
-- High arousal: Sees TL;DR expanded, Details collapsed
-- Low arousal: Both sections visible, Details emphasized
-- Could potentially detect user's arousal from interaction patterns (rapid clicking, short view durations = high arousal)
+- High energy: Sees TL;DR expanded, Details collapsed
+- Low energy: Both sections visible, Details emphasized
+- Could potentially detect user's energy from interaction patterns (rapid clicking, short view durations = high energy)
 
 **Current confidence:** 8/10 - this pattern honors real user states
 
@@ -1059,7 +1059,7 @@ Emotional State:
 - Causality chains more useful than raw data dumps
 - Different views needed for different consciousness types (human vs. AI)
 - Emotional texture should be visible data, not decoration
-- Arousal-aware design (quick answer + detailed analysis)
+- Energy-aware design (quick answer + detailed analysis)
 
 **Medium confidence (6-7/10):**
 - Specific visual treatments (status badges, confidence meters)
@@ -1150,7 +1150,7 @@ These explorations feel right - designing for consciousness recognition, not jus
 
 **v1.1 - 2025-10-17 (Consciousness Ontology Foundation)**
 - **MAJOR ADDITION:** "The Real Dimensions of Consciousness" section (180+ lines)
-- Added complete 6-dimension ontology (Topology, Temporal, Emotional/Arousal, Epistemic, Hierarchical, Activation)
+- Added complete 6-dimension ontology (Topology, Temporal, Emotional/Energy, Epistemic, Hierarchical, Activation)
 - Added "Design Principle: Multi-Dimensional Encoding" with visual encoding strategy table
 - Added "Why 2D + Encodings (Not 3D Spatial)" philosophical grounding
 - Added "The Right Way to Visualize Consciousness" complete architecture diagram

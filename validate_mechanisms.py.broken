@@ -499,7 +499,7 @@
             nodeElements = g.selectAll("circle")
                 .data(filteredNodes, d => d.id)
                 .join("circle")
-                .attr("r", d => 5 + (d.arousal || 0) * 8)
+                .attr("r", d => 5 + (d.energy || 0) * 8)
                 .attr("fill", d => getNodeColor(d))
                 .attr("opacity", d => getNodeOpacity(d))
                 .attr("class", d => getNodeGlow(d) > 0 ? "node-glow" : "")
@@ -551,9 +551,9 @@
         }
 
         function getNodeColor(node) {
-            const arousal = node.arousal || 0;
+            const energy = node.energy || 0;
             // Color scale: blue (low) -> green (medium) -> yellow (high)
-            return d3.interpolateRdYlGn(arousal);
+            return d3.interpolateRdYlGn(energy);
         }
 
         function getNodeOpacity(node) {
@@ -647,9 +647,9 @@
             // Pulse effect on node
             d3.select(`circle[data-id="${nodeId}"]`)
                 .transition().duration(300)
-                .attr("r", d => (5 + (d.arousal || 0) * 8) * 1.5)
+                .attr("r", d => (5 + (d.energy || 0) * 8) * 1.5)
                 .transition().duration(300)
-                .attr("r", d => 5 + (d.arousal || 0) * 8);
+                .attr("r", d => 5 + (d.energy || 0) * 8);
         }
 
         function animateHebbianLearning(linkId) {
@@ -717,10 +717,10 @@
 
             let content = `<div class="tooltip-title">${(d.text || 'Node').substring(0, 50)}</div>`;
 
-            if (d.arousal !== undefined) {
+            if (d.energy !== undefined) {
                 content += `<div class="tooltip-row">
-                    <span class="tooltip-label">Arousal:</span>
-                    <span class="tooltip-value">${d.arousal.toFixed(2)}</span>
+                    <span class="tooltip-label">Energy:</span>
+                    <span class="tooltip-value">${d.energy.toFixed(2)}</span>
                 </div>`;
             }
 

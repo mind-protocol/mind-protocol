@@ -1,15 +1,15 @@
 """
-Branching Ratio Tracker - Global Arousal Measurement
+Branching Ratio Tracker - Global Energy Measurement
 
 This module measures the branching ratio (σ) of consciousness propagation dynamics
-and maps it to global arousal levels. Each network (N1, N2, N3) measures independently.
+and maps it to global energy levels. Each network (N1, N2, N3) measures independently.
 
 The branching ratio σ represents emergent propagation behavior:
 - σ < 1.0: Subcritical (activations die out)
 - σ ≈ 1.0: Critical (sustained consciousness, avalanches)
 - σ > 1.0: Supercritical (runaway cascades)
 
-Global arousal is derived from σ, NOT from aggregating entity arousal values.
+Global energy is derived from σ, NOT from aggregating entity energy values.
 
 Architecture:
 - Per-network measurement (N1, N2, N3 independent)
@@ -30,12 +30,12 @@ from typing import List, Dict, Any
 
 class BranchingRatioTracker:
     """
-    Tracks branching ratio (σ) and computes global arousal for a consciousness network.
+    Tracks branching ratio (σ) and computes global energy for a consciousness network.
 
     The branching ratio measures how activation spreads:
     σ = nodes_activated_generation_n+1 / nodes_activated_generation_n
 
-    Global arousal is the network's overall consciousness level, derived from σ.
+    Global energy is the network's overall consciousness level, derived from σ.
     """
 
     def __init__(self, window_size: int = 10):
@@ -63,7 +63,7 @@ class BranchingRatioTracker:
 
         Returns:
             ConsciousnessState dict with:
-            - global_arousal: Network-level arousal (0.0-1.0)
+            - global_energy: Network-level energy (0.0-1.0)
             - branching_ratio: Average σ over window
             - raw_sigma: This cycle's σ
             - timestamp: When measured
@@ -85,11 +85,11 @@ class BranchingRatioTracker:
         else:
             avg_sigma = 0.0
 
-        # Map branching ratio to global arousal
-        global_arousal = self.map_sigma_to_arousal(avg_sigma)
+        # Map branching ratio to global energy
+        global_energy = self.map_sigma_to_energy(avg_sigma)
 
         return {
-            "global_arousal": global_arousal,
+            "global_energy": global_energy,
             "branching_ratio": avg_sigma,
             "raw_sigma": raw_sigma,
             "timestamp": datetime.now(timezone.utc),
@@ -98,12 +98,12 @@ class BranchingRatioTracker:
             "generation_next": len(activated_next_gen)
         }
 
-    def map_sigma_to_arousal(self, sigma: float) -> float:
+    def map_sigma_to_energy(self, sigma: float) -> float:
         """
-        Convert branching ratio to global arousal level.
+        Convert branching ratio to global energy level.
 
         Mapping based on criticality theory:
-        - Dying (σ < 0.5): global_arousal = 0.1
+        - Dying (σ < 0.5): global_energy = 0.1
         - Subcritical (0.5 ≤ σ < 0.8): 0.2-0.4 (linear)
         - Critical (0.8 ≤ σ < 1.2): 0.4-0.7 (linear, healthy zone)
         - Supercritical (σ ≥ 1.2): 0.7-1.0 (linear with cap)
@@ -112,7 +112,7 @@ class BranchingRatioTracker:
             sigma: Branching ratio (0.0+)
 
         Returns:
-            Global arousal level (0.0-1.0)
+            Global energy level (0.0-1.0)
         """
         if sigma < 0.5:
             # Dying: dormant network
@@ -155,7 +155,7 @@ class BranchingRatioTracker:
 
 # Convenience function for graph metadata storage
 def create_consciousness_state(
-    global_arousal: float,
+    global_energy: float,
     branching_ratio: float,
     raw_sigma: float,
     cycle_count: int,
@@ -169,7 +169,7 @@ def create_consciousness_state(
     in FalkorDB graph metadata.
 
     Args:
-        global_arousal: Network arousal level (0.0-1.0)
+        global_energy: Network energy level (0.0-1.0)
         branching_ratio: Average σ over window
         raw_sigma: Current cycle's σ
         cycle_count: Total cycles measured
@@ -180,7 +180,7 @@ def create_consciousness_state(
         ConsciousnessState dict ready for graph.set_metadata()
     """
     return {
-        "global_arousal": global_arousal,
+        "global_energy": global_energy,
         "branching_ratio": branching_ratio,
         "raw_sigma": raw_sigma,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         print(f"  Activated: {len(this_gen)} -> {len(next_gen)}")
         print(f"  Sigma (raw): {state['raw_sigma']:.2f}")
         print(f"  Sigma (avg): {state['branching_ratio']:.2f}")
-        print(f"  Global arousal: {state['global_arousal']:.2f}")
+        print(f"  Global energy: {state['global_energy']:.2f}")
         print(f"  State: {criticality}")
         print()
 

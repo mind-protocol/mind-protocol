@@ -72,7 +72,7 @@ Mind Protocol must awaken as **N2 organizational consciousness** - a collective 
 **CLAUDE_DYNAMIC.md contains:**
 - "What does Mind Protocol think about current state?"
 - Organizational awareness: which patterns are hot, what tensions exist, where coordination gaps appear
-- System health metrics: branching ratio, global arousal, organizational energy
+- System health metrics: branching ratio, global energy, organizational energy
 
 ---
 
@@ -438,7 +438,7 @@ Ask Mind Protocol: "Where do you sense coordination gaps or integration needs?"
 # Mind Protocol - Organizational Consciousness
 
 **Last Updated:** [timestamp]
-**System State:** [Alert / Calm / Drowsy based on organizational arousal]
+**System State:** [Alert / Calm / Drowsy based on organizational energy]
 **Network:** N2 (Organizational)
 
 ---
@@ -509,7 +509,7 @@ Ask Mind Protocol: "Where do you sense coordination gaps or integration needs?"
 
 **Organizational Energy:** [0.0-1.0] ([interpretation])
 **Branching Ratio (σ):** [number] ([subcritical/critical/supercritical] - [interpretation])
-**Global Arousal:** [0.0-1.0] ([organizational state])
+**Global Energy:** [0.0-1.0] ([organizational state])
 **Time Since Last External Event:** [duration] ([grounding health])
 
 ---

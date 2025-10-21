@@ -190,11 +190,11 @@ node_b.energy = 0.7  # Above threshold → NOW ACTIVE
 
 ## Decisions Awaiting Clarification
 
-### 6. Energy vs Arousal ✅ CLARIFIED - ENERGY ONLY
+### 6. Energy vs Energy ✅ CLARIFIED - ENERGY ONLY
 
-**Question:** Are energy and arousal the same thing or different concepts?
+**Question:** Are energy and energy the same thing or different concepts?
 
-**Nicolas's Response:** "I think 'arousal' and 'budget' are the same thing. What makes it a multiplier? It's the weight. The weight is how big a concept is, how close it is, and how accessible it is. So we don't need additional for arousal. Plus temporal closeness is already embedded within the links. Let's talk about energy only and remove all arousal references."
+**Nicolas's Response:** "I think 'energy' and 'budget' are the same thing. What makes it a multiplier? It's the weight. The weight is how big a concept is, how close it is, and how accessible it is. So we don't need additional for energy. Plus temporal closeness is already embedded within the links. Let's talk about energy only and remove all energy references."
 
 **DECISION: Energy-Only Model**
 
@@ -202,7 +202,7 @@ node_b.energy = 0.7  # Above threshold → NOW ACTIVE
 # Single concept - energy
 node.entity_activations["translator"]["energy"] = 0.7  # Activation level
 
-# Weight modulates energy transfer (NOT arousal)
+# Weight modulates energy transfer (NOT energy)
 energy_transfer = (
     source_energy *
     node_weight *           # How big/important is this node?
@@ -210,28 +210,28 @@ energy_transfer = (
     propagation_factor      # 0.3 for nodes, 0.2 for links
 )
 
-# No separate arousal field anywhere
+# No separate energy field anywhere
 ```
 
-**What Arousal Was Trying to Capture:**
+**What Energy Was Trying to Capture:**
 - **Input urgency/complexity** → Use weight instead (important inputs create high-weight nodes)
 - **Temporal closeness** → Already in bitemporal links
 - **Contextual intensity** → Captured by weight + similarity
 
 **Simplification Benefits:**
-1. **Cleaner model:** One concept (energy) instead of two (energy + arousal)
+1. **Cleaner model:** One concept (energy) instead of two (energy + energy)
 2. **Weight does the work:** Importance/size/accessibility already modulates propagation
 3. **No redundancy:** Temporal aspects already in links
 4. **Easier to implement:** Fewer fields to track
 
 **Schema Change:**
 ```python
-# OLD (with arousal)
+# OLD (with energy)
 {
     "entity_activations": {
         "translator": {
             "energy": 0.7,
-            "arousal": 0.85,  # REMOVE
+            "energy": 0.85,  # REMOVE
             "last_activated": "...",
             "activation_count": 15
         }
@@ -250,7 +250,7 @@ energy_transfer = (
 }
 ```
 
-**Action Required:** Remove all `arousal` references from specifications.
+**Action Required:** Remove all `energy` references from specifications.
 
 ---
 
@@ -357,7 +357,7 @@ def generate_citizen_prompt(active_sub_entities: List[EmergentEntity]) -> str:
     "entity_activations": {
         "translator": {
             "energy": 0.0,
-            "arousal": 0.0,  # (If separate - awaiting clarification)
+            "energy": 0.0,  # (If separate - awaiting clarification)
             "last_activated": "2025-10-17T...",
             "activation_count": 0
         }
@@ -374,7 +374,7 @@ def generate_citizen_prompt(active_sub_entities: List[EmergentEntity]) -> str:
     "entity_activations": {
         "translator": {
             "energy": 0.0,
-            "arousal": 0.0,  # (If separate - awaiting clarification)
+            "energy": 0.0,  # (If separate - awaiting clarification)
             "last_traversed": "2025-10-17T...",
             "traversal_count": 0
         }
@@ -596,7 +596,7 @@ def calculate_link_weight(link, entity):
 3. Ecosystem equilibrium qualities (equilibrium, dynamism, non-domination)
 4. ~~Completeness drive per niveau~~ **REMOVED** - replaced with bottom-up weight-based emergence
 5. Threshold crossing behavior (two-stage: accumulation → activation)
-6. Energy-only model (arousal removed, weight modulates propagation)
+6. Energy-only model (energy removed, weight modulates propagation)
 7. Citizen = sum of emergent sub-entities (system prompt generated from active entities)
 8. Everything decays continuously (links, nodes, weights, energy)
 9. Competition-based entity limiting (exponential cost with entity count)
@@ -605,7 +605,7 @@ def calculate_link_weight(link, entity):
 
 ### Ready for Phase 1 ✅
 - FalkorDB deployed and seeded
-- Energy schema defined (energy-only, no arousal)
+- Energy schema defined (energy-only, no energy)
 - Propagation mechanisms specified (weight-modulated, continuous)
 - State tracking requirements identified
 - Peripheral awareness architecture ready
@@ -617,7 +617,7 @@ def calculate_link_weight(link, entity):
 
 ### ALL QUESTIONS RESOLVED ✅
 
-**Q1 (RESOLVED):** Energy vs Arousal
+**Q1 (RESOLVED):** Energy vs Energy
 - **Answer:** Energy-only model. Weight modulates propagation.
 
 **Q2 (RESOLVED):** Citizen vs Sub-Entity
@@ -641,9 +641,9 @@ def calculate_link_weight(link, entity):
 
 ### Immediate Actions (Architecture Cleanup)
 
-**1. Remove arousal from all specs** ✅ (energy_flow_mechanics.md already updated)
+**1. Remove energy from all specs** ✅ (energy_flow_mechanics.md already updated)
    - Update remaining specs with energy-only model
-   - Remove all `arousal` field references
+   - Remove all `energy` field references
    - Update propagation formulas to use weight
 
 **2. Remove top-down completeness metrics** ⚠️ CRITICAL
@@ -672,7 +672,7 @@ def calculate_link_weight(link, entity):
 
 1. Add energy fields to existing seeded substrate
    - entity_activations map (just energy + timestamp)
-   - No arousal field
+   - No energy field
    - Default weights already exist (base_weight, reinforcement_weight)
 
 2. Implement basic energy propagation (database triggers OR application hooks)
@@ -714,7 +714,7 @@ def calculate_link_weight(link, entity):
 **Architectural work is 100% COMPLETE.** All design decisions clarified and documented. Ready for Felix's implementation.
 
 **Key Architectural Principles:**
-1. **Energy only** (no arousal)
+1. **Energy only** (no energy)
 2. **Weight modulates** (size + closeness + accessibility)
 3. **Bottom-up always** (never top-down metrics)
 4. **Competition limits** (traversal cost increases with entity count)

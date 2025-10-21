@@ -24,7 +24,8 @@ export function SearchBar({ nodes }: SearchBarProps) {
     return nodes
       .filter(node => {
         const text = (node.text || node.node_id || node.id || '').toLowerCase();
-        const type = ((node.labels && node.labels[0]) || '').toLowerCase();
+        // Use node_type instead of labels[0] (FalkorDB returns labels as string)
+        const type = (node.node_type || '').toLowerCase();
         return text.includes(lowerQuery) || type.includes(lowerQuery);
       })
       .slice(0, 10) // Max 10 results
@@ -51,7 +52,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
       {/* Search Input */}
       <div className="consciousness-panel px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">🔍</span>
+          <span className="text-observatory-cyan">🔍</span>
           <input
             type="text"
             value={query}
@@ -59,7 +60,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder="Search nodes..."
-            className="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none"
+            className="flex-1 bg-transparent text-observatory-text placeholder-observatory-text/40 focus:outline-none"
           />
           {query && (
             <button
@@ -67,7 +68,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
                 setQuery('');
                 setFocused(false);
               }}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-observatory-text/60 hover:text-observatory-text transition-colors"
             >
               ✕
             </button>
@@ -83,18 +84,18 @@ export function SearchBar({ nodes }: SearchBarProps) {
               <button
                 key={node.id}
                 onClick={() => handleSelectNode(node)}
-                className="w-full px-4 py-3 hover:bg-consciousness-green/10 transition-colors text-left"
+                className="w-full px-4 py-3 hover:bg-observatory-cyan/10 transition-colors text-left"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">
                     {getNodeEmoji(node)}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-200 truncate">
+                    <div className="text-sm font-medium text-observatory-text truncate">
                       {node.text || node.node_id || node.id}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {(node.labels && node.labels[0]) || 'Node'}
+                    <div className="text-xs text-observatory-text/60 mt-1">
+                      {node.node_type || 'Node'}
                       {node.traversal_count ? ` • ${node.traversal_count} traversals` : ''}
                     </div>
                   </div>
@@ -104,7 +105,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
           </div>
 
           {/* Show count */}
-          <div className="px-4 py-2 border-t border-consciousness-border text-xs text-gray-500">
+          <div className="px-4 py-2 border-t border-observatory-teal/30 text-xs text-observatory-text/50">
             {results.length} result{results.length !== 1 ? 's' : ''}
           </div>
         </div>
@@ -113,7 +114,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
       {/* No results */}
       {focused && query.length >= 2 && results.length === 0 && (
         <div className="consciousness-panel mt-2 px-4 py-3">
-          <div className="text-sm text-gray-400 text-center">
+          <div className="text-sm text-observatory-text/60 text-center">
             No nodes found matching "{query}"
           </div>
         </div>
@@ -123,7 +124,8 @@ export function SearchBar({ nodes }: SearchBarProps) {
 }
 
 function getNodeEmoji(node: Node): string {
-  const nodeType = (node.labels && node.labels[0]) || 'Node';
+  // Use node_type instead of labels[0] (FalkorDB returns labels as string)
+  const nodeType = node.node_type || 'Node';
   const EMOJIS: Record<string, string> = {
     // N1 - Personal/Individual Consciousness
     'Memory': '💭',
