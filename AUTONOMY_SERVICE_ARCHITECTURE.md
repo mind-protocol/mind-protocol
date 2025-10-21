@@ -543,6 +543,12 @@ See full implementation template in architecture doc sections above.
 
 ### Alert Thresholds
 
+**WebSocket Server (Consciousness Engines):**
+- ❌ CRITICAL: Heartbeat stale >10s → restart
+- ❌ CRITICAL: Port 8000 not bound → restart
+- ⚠️ WARNING: Memory >2GB (normal: ~1.2GB with 7 engines)
+- ℹ️ INFO: Expected memory usage: 1.16GB with 7 consciousness engines
+
 **Stimulus Injection:**
 - ❌ CRITICAL: Heartbeat stale >10s → restart
 - ❌ CRITICAL: Port 8001 not bound → restart
