@@ -24,6 +24,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\formation_reminder.py"
+          },
+          {
+            "type": "command",
             "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\capture_conversation.py"
           }
         ]
