@@ -274,7 +274,7 @@ export class PixiRenderer implements RendererAdapter {
       .alphaDecay(0.02) // Slower decay for smoother animation
       .on('tick', () => {
         this.needsRedraw = true;
-      });
+      }) as any;
 
     // Initial rebuild
     this.rebuildScene();

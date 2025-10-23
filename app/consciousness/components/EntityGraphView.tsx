@@ -15,7 +15,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { EntityMoodMap, type Entity } from './EntityMoodMap';
 import { PixiCanvas } from './PixiCanvas';
 import { StrideSparks } from './StrideSparks';
@@ -52,7 +52,18 @@ export function EntityGraphView({
   const [viewMode, setViewMode] = useState<ViewMode>('entity-map');
   const [expandedEntityId, setExpandedEntityId] = useState<string | null>(null);
 
+  // Window dimensions for EntityMoodMap (set client-side to avoid hydration mismatch)
+  const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+
   const { emotionState } = useWebSocket();
+
+  // Set actual window dimensions on mount (client-side only)
+  useEffect(() => {
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+  }, []);
 
   // Convert subentities to Entity format with emotion aggregation
   const entities = useMemo<Entity[]>(() => {
@@ -190,8 +201,8 @@ export function EntityGraphView({
       {viewMode === 'entity-map' && (
         <EntityMoodMap
           entities={entities}
-          width={typeof window !== 'undefined' ? window.innerWidth : 1920}
-          height={typeof window !== 'undefined' ? window.innerHeight : 1080}
+          width={dimensions.width}
+          height={dimensions.height}
           onEntityClick={handleEntityClick}
         />
       )}

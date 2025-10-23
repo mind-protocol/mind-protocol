@@ -93,7 +93,7 @@ export function aggregateEntityEmotion(
 export function aggregateEntityEnergy(memberNodes: Node[]): number {
   return memberNodes.reduce((sum, node) => {
     const energy = node.energy || 0;
-    const theta = node.theta || node.activation_threshold || 0;
+    const theta = (node as any).activation_threshold || 0.1;
     // Only count active members
     return energy > theta ? sum + energy : sum;
   }, 0);

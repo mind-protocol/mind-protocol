@@ -45,7 +45,7 @@ import shutil
 
 from orchestration.adapters.api.control_api import router, websocket_manager
 from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2, EngineConfig
-from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS
+from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS, get_all_engines
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
 from orchestration.core.graph import Graph
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
@@ -646,7 +646,7 @@ class HeartbeatWriter:
         import json
 
         try:
-            quotes_path = Path(__file__).parent.parent / "public" / "text" / "inspirational_quotes.json"
+            quotes_path = Path(__file__).parent.parent.parent.parent / "public" / "text" / "inspirational_quotes.json"
 
             if not quotes_path.exists():
                 logger.warning(f"[Guardian] Inspirational quotes file not found at {quotes_path}")
@@ -941,8 +941,8 @@ async def healthz(selftest: int = 0):
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "engines": {
-            "count": len(ENGINE_REGISTRY),
-            "running": list(ENGINE_REGISTRY.keys())
+            "count": len(get_all_engines()),
+            "running": [e.citizen_id for e in get_all_engines()]
         }
     }
     

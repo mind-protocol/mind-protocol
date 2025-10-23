@@ -303,7 +303,7 @@ export function AffectiveTelemetryPanel() {
               </div>
             )}
 
-            <div className="text-xs text-observatory-text/40 mt-2">
+            <div className="text-xs text-observatory-text/40 mt-2" suppressHydrationWarning>
               Last checked: {new Date(validation.lastChecked).toLocaleTimeString()}
             </div>
           </div>
