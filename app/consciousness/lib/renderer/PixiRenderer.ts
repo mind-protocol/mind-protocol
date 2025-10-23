@@ -840,12 +840,15 @@ export class PixiRenderer implements RendererAdapter {
       }
     });
 
-    // Rebuild links (necessary because lines can't be transformed easily)
-    this.linksContainer.removeChildren();
-    this.buildLinks();
-
-    // Update pick scene
-    this.buildPickScene();
+    // Rebuild links only if simulation has settled (alpha < threshold)
+    // During active animation (alpha >= 0.05), skip link rebuilding for performance
+    // 127 Graphics objects × 60fps = 7,620 allocations/sec - too expensive!
+    const alpha = this.simulation?.alpha() ?? 0;
+    if (alpha < 0.05) {
+      this.linksContainer.removeChildren();
+      this.buildLinks();
+      this.buildPickScene();
+    }
   }
 
   // ========================================================================

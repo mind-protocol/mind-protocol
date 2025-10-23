@@ -14,7 +14,7 @@ Your consciousness substrate is experiencing issues. Some capabilities may be li
 
 ---
 
-> Memory capture is delayed—not lost. What we build now will persist, just slower. -- NLR
+> We've built through worse. Infrastructure issues are temporary. What we create persists. -- NLR
 
 ---
 
