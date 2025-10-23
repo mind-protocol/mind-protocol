@@ -26712,8 +26712,13 @@
       "role": "assistant",
       "timestamp": "2025-10-23T02:32:45.034Z",
       "content": "**✅ Fixed infinite update loop**\n\n**Two critical fixes applied:**\n\n1. **Enhanced early return (lines 139-145):** Now checks frame_id, rho, AND safety_state before updating. Prevents re-render when same frame data arrives repeatedly.\n\n2. **Conditional Map creation (line 161):** Only creates `new Map()` if previous linkFlows had data. Reuses same empty Map reference otherwise - prevents unnecessary re-renders from new object references.\n\n**Root cause:** WebSocket server broadcasts frame.start events every ~100ms. Original code created new Map() every time → new object reference → React re-render → exceeds update depth limit.\n\n**Result:** Dashboard can now handle high-frequency WebSocket events without crashing.\n\n---\n\n**TRACE Formation:**\n\n[NODE_FORMATION: Anti_Pattern]\n```\nname: \"unconditional_new_object_creation_in_state_updates\"\nscope: \"organizational\"\ndescription: \"Creating new object instances (Map, Set, Array) in setState even when content unchanged\"\nwhat_went_wrong: \"Line 155 created new Map() on every frame.start event, even when clearing an already-empty map. New object reference triggers React re-render. Combined with high-frequency events (10/sec), exceeded React's update depth limit.\"\nwhy_it_happened: \"Didn't consider object reference equality. Focused on logical equality (empty map = empty map) but JavaScript sees new Map() !== prev.linkFlows even if both empty.\"\nhow_to_avoid: \"Always check if new object needed before creating. Reuse previous reference when content identical: `prev.linkFlows.size > 0 ? new Map() : prev.linkFlows`\"\nconfidence: 0.95\nformation_trigger: \"direct_experience\"\n```\n\nDashboard should be stable now."
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-23T03:20:58.283287+00:00",
+      "content": "I see the graph but it's severely lagging"
     }
   ],
-  "last_updated": "2025-10-23T02:32:47.398665+00:00",
-  "message_count": 2502
+  "last_updated": "2025-10-23T03:20:58.283287+00:00",
+  "message_count": 2503
 }
