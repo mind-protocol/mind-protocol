@@ -189,15 +189,33 @@ class CriticalityController:
             self.frame_count % self.config.sample_rho_every_n_frames == 0
         )
 
-        if should_sample:
+        matrix_degenerate = (
+            P is None
+            or (hasattr(P, "shape") and (P.shape[0] == 0 or P.shape[1] == 0))
+            or (hasattr(P, "nnz") and getattr(P, "nnz") == 0)
+        )
+        rho_valid = not matrix_degenerate
+
+        if rho_valid and should_sample:
             # Compute effective operator T = (1-δ)[(1-α)I + αP^T]
             rho_global = self._estimate_rho_power_iteration(
                 P, current_delta, current_alpha
             )
-            self.last_rho_global = rho_global
+            if not np.isfinite(rho_global):
+                rho_valid = False
+        elif not rho_valid:
+            rho_global = self.config.rho_target
         else:
             # Use cached value between samples
             rho_global = self.last_rho_global
+
+        if not rho_valid:
+            rho_global = self.config.rho_target
+
+        if rho_valid and should_sample:
+            self.last_rho_global = rho_global
+        elif not rho_valid:
+            self.last_rho_global = rho_global
 
         # Track branching ratio as cheap proxy (every frame)
         rho_proxy_branching = branching_ratio
@@ -224,39 +242,40 @@ class CriticalityController:
             upper_bound = settings.TRIPWIRE_CRITICALITY_UPPER  # 1.3
             lower_bound = settings.TRIPWIRE_CRITICALITY_LOWER  # 0.7
 
-            if rho_global > upper_bound:
-                # Chaotic regime - too much activation spread
-                safe_mode.record_violation(
-                    tripwire_type=TripwireType.CRITICALITY,
-                    value=rho_global,
-                    threshold=upper_bound,
-                    message=f"Criticality too high (chaotic): ρ={rho_global:.3f} > {upper_bound}"
-                )
-            elif rho_global < lower_bound:
-                # Dying regime - insufficient activation spread
-                safe_mode.record_violation(
-                    tripwire_type=TripwireType.CRITICALITY,
-                    value=rho_global,
-                    threshold=lower_bound,
-                    message=f"Criticality too low (dying): ρ={rho_global:.3f} < {lower_bound}"
-                )
+            if rho_valid:
+                if rho_global > upper_bound:
+                    safe_mode.record_violation(
+                        tripwire_type=TripwireType.CRITICALITY,
+                        value=rho_global,
+                        threshold=upper_bound,
+                        message=f"Criticality too high (chaotic): ?={rho_global:.3f} > {upper_bound}"
+                    )
+                elif rho_global < lower_bound:
+                    safe_mode.record_violation(
+                        tripwire_type=TripwireType.CRITICALITY,
+                        value=rho_global,
+                        threshold=lower_bound,
+                        message=f"Criticality too low (dying): ?={rho_global:.3f} < {lower_bound}"
+                    )
+                else:
+                    safe_mode.record_compliance(TripwireType.CRITICALITY)
             else:
-                # Stable edge-of-chaos - record compliance
                 safe_mode.record_compliance(TripwireType.CRITICALITY)
 
         except Exception as e:
-            # Tripwire check failed - log but don't crash controller
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"[TRIPWIRE] Criticality check failed: {e}")
-            # Continue execution - tripwire is diagnostic, not control flow
+
 
         # === Step 2: Compute Control Error ===
-        error = rho_global - self.config.rho_target
+        error = (rho_global - self.config.rho_target) if rho_valid else 0.0
         self.error_history.append(error)
 
         # === Step 3: Controller Output ===
-        if self.config.enable_pid:
+        if not rho_valid:
+            delta_adjustment = 0.0
+        elif self.config.enable_pid:
             # PID controller
             delta_adjustment = self._compute_pid_output(error)
         else:

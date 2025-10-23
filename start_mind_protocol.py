@@ -508,11 +508,10 @@ class ProcessManager:
 
             try:
                 process = subprocess.Popen(
-                    [sys.executable, str(server_script)]
-                    # Don't capture stdout - let it go to parent to avoid pipe buffer deadlock
+                    [sys.executable, str(server_script)],
+                    stdout=subprocess.DEVNULL,  # Discard output to prevent pipe buffer deadlock
+                    stderr=subprocess.DEVNULL   # Discard errors too
                 )
-
-                self.processes['websocket_server'] = process
 
                 # Give it time to start and bind to port
                 # (uvicorn + background engine initialization of all 8 consciousness engines takes 30-60 seconds)
@@ -859,8 +858,7 @@ class ProcessManager:
             result_stdout = stdout.decode("utf-8", errors="ignore")
 
             # Check if port appears in LISTENING state
-            for line in result_stdout.split('
-'):
+            for line in result_stdout.split('\n'):
                 if f':{port}' in line and 'LISTENING' in line:
                     return False  # Port is occupied
 

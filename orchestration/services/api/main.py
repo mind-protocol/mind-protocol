@@ -26,7 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from orchestration.core import configure_logging, settings
-from orchestration.adapters.api.control_api import router
+from orchestration.adapters.api.control_api import router as control_router
+from orchestration.services.api.proof_router import router as proof_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -48,8 +49,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include control router
-app.include_router(router)
+# Include routers
+app.include_router(control_router)
+app.include_router(proof_router)
 
 
 @app.get("/")

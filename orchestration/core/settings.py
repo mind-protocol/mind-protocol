@@ -59,6 +59,11 @@ class Settings:
     MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS", "180000"))
     FRAME_RATE_TARGET: float = float(os.getenv("FRAME_RATE_TARGET", "1.0"))  # frames per second
 
+    # === Proof Runner ===
+    PROOF_CAPTURE_SECONDS: int = int(os.getenv("PROOF_CAPTURE_SECONDS", "60"))
+    PROOF_RHO_BAND_LOW: float = float(os.getenv("PROOF_RHO_BAND_LOW", "0.8"))
+    PROOF_RHO_BAND_HIGH: float = float(os.getenv("PROOF_RHO_BAND_HIGH", "1.2"))
+
     # === Health Monitoring ===
     HEARTBEAT_INTERVAL: int = int(os.getenv("HEARTBEAT_INTERVAL", "5"))  # seconds
     HEALTH_CHECK_PORT: int = int(os.getenv("HEALTH_CHECK_PORT", "8789"))
@@ -297,6 +302,8 @@ class Settings:
 
     # Safe Mode overrides (env-driven instant apply)
     # These values replace normal settings when Safe Mode activates
+    SAFE_MODE_HARD_EXIT: bool = os.getenv("SAFE_MODE_HARD_EXIT", "false").lower() == "true"
+
     SAFE_MODE_OVERRIDES: dict = {
         # Reduce activation rate
         "ALPHA_TICK_MULTIPLIER": float(os.getenv("SAFE_MODE_ALPHA_TICK_MULT", "0.3")),  # 70% reduction
