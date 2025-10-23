@@ -44,6 +44,7 @@ import redis
 import shutil
 
 from orchestration.adapters.api.control_api import router, websocket_manager
+from orchestration.adapters.api.citizen_snapshot import router as citizen_router
 from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2, EngineConfig
 from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS, get_all_engines
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
@@ -76,6 +77,7 @@ app.add_middleware(
 
 # Include control API router (adds /api/* endpoints including /api/ws)
 app.include_router(router)
+app.include_router(citizen_router)  # Citizen snapshot endpoint (stops 404 flood)
 
 
 # ============================================================================

@@ -229,7 +229,7 @@ def main():
             logger.error("❌ Failed to obtain administrator privileges")
             logger.error("Guardian will run with limited capabilities")
             logger.error("May not be able to kill all blocking processes")
-            input("Press Enter to continue anyway (not recommended)...")
+            logger.error("Continuing in limited mode (no admin). Some operations may fail.")
 
     else:
         logger.info("✅ Running with administrator privileges")
