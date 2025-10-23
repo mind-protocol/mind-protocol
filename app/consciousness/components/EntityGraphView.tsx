@@ -31,7 +31,7 @@ interface EntityGraphViewProps {
   operations: Operation[];
   subentities: Subentity[];
   workingMemory: string[];
-  linkFlows: Array<{ link_id: string; count: number; entity_ids: string[] }>;
+  linkFlows: Map<string, number>;
   recentFlips: Array<{ node_id: string; direction: 'on' | 'off'; timestamp: number }>;
 }
 
@@ -158,8 +158,8 @@ export function EntityGraphView({
       }
 
       // Only show active links (flow > 0)
-      const flow = linkFlows.find(f => f.link_id === link.id);
-      return flow && flow.count > 0;
+      const flowCount = linkFlows.get(link.id || '');
+      return flowCount !== undefined && flowCount > 0;
     });
   }, [links, expandedMemberNodes, expandedEntityId, linkFlows]);
 
@@ -238,7 +238,7 @@ export function EntityGraphView({
             })}
             subentities={[]}
             workingMemory={new Set(workingMemory)}
-            linkFlows={new Map(linkFlows.map(f => [f.link_id, f.count]))}
+            linkFlows={linkFlows}
             recentFlips={recentFlips.filter(flip => {
               const memberIds = new Set(expandedMemberNodes.map(n => n.id || n.node_id));
               return memberIds.has(flip.node_id);
@@ -256,7 +256,7 @@ export function EntityGraphView({
             operations={operations}
             subentities={subentities}
             workingMemory={new Set(workingMemory)}
-            linkFlows={new Map(linkFlows.map(f => [f.link_id, f.count]))}
+            linkFlows={linkFlows}
             recentFlips={recentFlips}
           />
           <StrideSparks nodes={nodes} links={links} />
