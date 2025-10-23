@@ -135,8 +135,14 @@ export function useWebSocket(): WebSocketStreams {
         case 'frame.start': {
           const frameEvent = data as FrameStartEvent;
           setV2State(prev => {
-            // Only update if frame actually changed
-            if (prev.currentFrame === frameEvent.frame_id) return prev;
+            // Only update if frame actually changed OR critical values changed
+            if (
+              prev.currentFrame === frameEvent.frame_id &&
+              prev.rho === frameEvent.rho &&
+              prev.safety_state === frameEvent.safety_state
+            ) {
+              return prev; // No changes, skip update to prevent re-render loop
+            }
 
             return {
               ...prev,
@@ -151,8 +157,8 @@ export function useWebSocket(): WebSocketStreams {
               interval_sched: frameEvent.interval_sched ?? prev.interval_sched,
               dt_used: frameEvent.dt_used ?? prev.dt_used,
 
-              // Clear link flows at frame start
-              linkFlows: new Map<string, number>()
+              // Clear link flows at frame start (only if not already empty)
+              linkFlows: prev.linkFlows.size > 0 ? new Map<string, number>() : prev.linkFlows
             };
           });
           break;
@@ -330,6 +336,13 @@ export function useWebSocket(): WebSocketStreams {
           });
           break;
         }
+
+        // Internal consciousness engine events (no UI updates needed)
+        case 'criticality.state':
+        case 'decay.tick':
+          // Safe to ignore - these are internal engine telemetry events
+          // broadcast for monitoring but don't require UI state updates
+          break;
 
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
