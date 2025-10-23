@@ -140,7 +140,7 @@ export function useGraphData() {
 
     try {
       console.log(`[useGraphData] Fetching graph: ${graphType}/${graphId}`);
-      const response = await fetch(`/api/consciousness/${graphType}/${graphId}`);
+      const response = await fetch(`/api/graph/${graphType}/${graphId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch graph: ${response.status} ${response.statusText}`);
