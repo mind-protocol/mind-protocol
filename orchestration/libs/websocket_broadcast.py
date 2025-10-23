@@ -222,3 +222,43 @@ class ConsciousnessStateBroadcaster:
             True
         """
         return self.available and self.websocket_manager is not None
+
+    def stride_exec(self, stride_data: Dict[str, Any]):
+        """
+        Broadcast stride execution event (synchronous wrapper for async broadcast).
+
+        Called from diffusion_runtime during stride execution with full forensic trail.
+        Uses fire-and-forget pattern to avoid blocking stride execution.
+
+        Args:
+            stride_data: Stride execution data including:
+                - src_node, dst_node, link_id
+                - Forensic trail: phi, ease, res_mult, comp_mult, total_cost, reason
+                - Energy: delta_E, stickiness, retained_delta_E
+                - chosen: True (this link was selected)
+
+        Example:
+            >>> broadcaster.stride_exec({
+            ...     "src_node": "n1",
+            ...     "dst_node": "n2",
+            ...     "phi": 0.05,
+            ...     "ease": 2.01,
+            ...     "delta_E": 0.012,
+            ...     "reason": "strong_link(ease=2.01) + goal_aligned(aff=0.95)"
+            ... })
+        """
+        if not self.available or not self.websocket_manager:
+            return
+
+        try:
+            event = {
+                "type": "stride.exec",
+                "timestamp": datetime.now().isoformat(),
+                **stride_data
+            }
+
+            # Fire-and-forget: don't block stride execution
+            asyncio.create_task(self.websocket_manager.broadcast(event))
+
+        except Exception as e:
+            logger.error(f"[ConsciousnessStateBroadcaster] stride.exec broadcast failed: {e}")

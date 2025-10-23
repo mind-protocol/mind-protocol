@@ -40,7 +40,8 @@ class AutoGitCommitService:
         self,
         repo_path: Path,
         interval_seconds: int = 60,
-        enabled: bool = True
+        enabled: bool = True,
+        push_enabled: bool = False
     ):
         """
         Initialize auto-commit service.
@@ -49,10 +50,12 @@ class AutoGitCommitService:
             repo_path: Path to git repository root
             interval_seconds: Seconds between commits (default: 60 = 1 minute)
             enabled: Whether service is active (default: True)
+            push_enabled: Whether to push commits to remote (default: False, requires auth)
         """
         self.repo_path = repo_path
         self.interval_seconds = interval_seconds
         self.enabled = enabled
+        self.push_enabled = push_enabled
         self.commit_count = 0
         self.last_commit_time: Optional[datetime] = None
 
@@ -109,14 +112,18 @@ class AutoGitCommitService:
                 commit_message
             ])
 
-            # Push to remote
-            await self._run_git_command(["push"])
+            # Push to remote (only if enabled)
+            if self.push_enabled:
+                await self._run_git_command(["push"])
+                push_status = "and pushed"
+            else:
+                push_status = "(local only, push disabled)"
 
             # Update metrics
             self.commit_count += 1
             self.last_commit_time = datetime.now()
 
-            logger.info(f"[AutoCommit] ✅ Committed and pushed changes (total: {self.commit_count})")
+            logger.info(f"[AutoCommit] ✅ Committed {push_status} changes (total: {self.commit_count})")
 
         except subprocess.CalledProcessError as e:
             logger.error(f"[AutoCommit] Git command failed: {e.stderr if hasattr(e, 'stderr') else str(e)}")

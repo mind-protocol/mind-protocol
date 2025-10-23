@@ -323,6 +323,10 @@ class CriticalityController:
         Returns:
             ρ (spectral radius estimate)
         """
+        # Handle None or empty matrix
+        if P is None or (hasattr(P, 'size') and P.size == 0):
+            return 0.0
+
         N = P.shape[0]
         if N == 0:
             return 0.0

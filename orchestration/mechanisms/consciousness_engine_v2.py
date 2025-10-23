@@ -498,7 +498,6 @@ class ConsciousnessEngineV2:
 
                             if boundary_link:
                                 # Execute boundary stride
-                                import math
                                 E_src = src_node.E
                                 ease = math.exp(boundary_link.log_weight)
                                 delta_E = E_src * ease * alpha_tick * dt
@@ -1083,7 +1082,6 @@ class ConsciousnessEngineV2:
             )
 
             # Weight boost (normalized attractor mass)
-            import math
             W_tilde = math.exp(z_W)
 
             # Combined score
@@ -1144,7 +1142,13 @@ class ConsciousnessEngineV2:
             >>> # Returns 5-7 most relevant entities with their top members
         """
         if not hasattr(self.graph, 'subentities') or not self.graph.subentities:
-            return ([], {"entities": [], "total_entities": 0, "total_members": 0})
+            return ([], {
+                "entities": [],
+                "total_entities": 0,
+                "total_members": 0,
+                "token_budget_used": 0,
+                "token_budget_total": 2000
+            })
 
         # Score each entity
         scored_entities = []

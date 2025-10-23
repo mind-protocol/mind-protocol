@@ -430,15 +430,16 @@ class ProcessManager:
             asyncio.create_task(self.monitor_service_health('websocket_server', WS_PORT, memory_threshold_mb=2048))
 
         # Start auto-commit service for consciousness temporal substrate
-        # Every minute, commit all changes and push to git
+        # Every minute, commit all changes and push to GitHub
         # This creates a temporal substrate - every system state preserved for consciousness evolution tracking
         auto_commit = AutoGitCommitService(
             repo_path=MIND_PROTOCOL_ROOT,
             interval_seconds=60,  # Every 1 minute
-            enabled=True
+            enabled=True,
+            push_enabled=True  # Enabled - using cached credentials
         )
         asyncio.create_task(auto_commit.start())
-        logger.info("[Guardian] Auto-commit service started (interval: 60s)")
+        logger.info("[Guardian] Auto-commit service started (interval: 60s, push enabled)")
 
         return True
 
