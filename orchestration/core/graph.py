@@ -1,17 +1,17 @@
 """
-Graph container - manages nodes, entities, and links.
+Graph container - manages nodes, subentities, and links.
 
 ARCHITECTURAL PRINCIPLE: Container, not controller.
 
 Graph provides:
-- Storage (nodes, entities, links)
+- Storage (nodes, subentities, links)
 - Basic operations (add, get, remove)
 - Graph structure maintenance (link references)
 
 Graph does NOT provide:
 - Energy dynamics (see mechanisms/diffusion.py)
 - Workspace selection (see services/workspace.py)
-- Entity detection (see services/entity.py)
+- Subentity detection (see services/subentity.py)
 
 Author: Felix (Engineer)
 Created: 2025-10-19
@@ -22,29 +22,29 @@ from typing import Dict, List, Optional, Set, Union
 from datetime import datetime
 
 from .node import Node
-from .entity import Entity
+from .subentity import Subentity
 from .link import Link
 from .types import NodeID, EntityID, NodeType, LinkType
 
 
 class Graph:
     """
-    Container for nodes, entities, and links with basic graph operations.
+    Container for nodes, subentities, and links with basic graph operations.
 
     This is a CONTAINER, not a CONTROLLER. Complex operations delegate to:
     - orchestration.mechanisms.* (energy dynamics)
-    - orchestration.services.* (workspace, clustering, entity detection)
+    - orchestration.services.* (workspace, clustering, subentity detection)
 
     Storage:
         nodes: Dict[NodeID, Node] - All nodes by ID
-        entities: Dict[str, Entity] - All entities by ID
+        subentities: Dict[str, Subentity] - All subentities by ID
         links: Dict[LinkID, Link] - All links by ID
 
     Graph Structure:
         Maintains bidirectional references:
         - Node.outgoing_links / Node.incoming_links
-        - Entity.outgoing_links / Entity.incoming_links
-        - Link.source / Link.target (can be Node or Entity)
+        - Subentity.outgoing_links / Subentity.incoming_links
+        - Link.source / Link.target (can be Node or Subentity)
     """
 
     def __init__(self, graph_id: str, name: str):
@@ -60,7 +60,7 @@ class Graph:
 
         # Storage
         self.nodes: Dict[NodeID, Node] = {}
-        self.entities: Dict[str, Entity] = {}
+        self.subentities: Dict[str, Subentity] = {}
         self.links: Dict[str, Link] = {}
 
         # Metadata
@@ -127,86 +127,86 @@ class Graph:
         """
         return [n for n in self.nodes.values() if n.node_type == node_type]
 
-    # --- Entity Operations ---
+    # --- Subentity Operations ---
 
-    def add_entity(self, entity: Entity) -> None:
+    def add_entity(self, subentity: Subentity) -> None:
         """
-        Add entity to graph.
+        Add subentity to graph.
 
         Args:
-            entity: Entity to add
+            subentity: Subentity to add
 
         Raises:
-            ValueError: If entity.id already exists
+            ValueError: If subentity.id already exists
         """
-        if entity.id in self.entities:
-            raise ValueError(f"Entity {entity.id} already exists in graph {self.id}")
+        if subentity.id in self.subentities:
+            raise ValueError(f"Subentity {subentity.id} already exists in graph {self.id}")
 
-        self.entities[entity.id] = entity
+        self.subentities[subentity.id] = subentity
 
-    def get_entity(self, entity_id: str) -> Optional[Entity]:
+    def get_entity(self, entity_id: str) -> Optional[Subentity]:
         """
-        Get entity by ID.
+        Get subentity by ID.
 
         Args:
-            entity_id: Entity identifier
+            entity_id: Subentity identifier
 
         Returns:
-            Entity if found, None otherwise
+            Subentity if found, None otherwise
         """
-        return self.entities.get(entity_id)
+        return self.subentities.get(entity_id)
 
     def remove_entity(self, entity_id: str) -> None:
         """
-        Remove entity and all connected links.
+        Remove subentity and all connected links.
 
         Args:
-            entity_id: Entity identifier
+            entity_id: Subentity identifier
         """
-        entity = self.entities.get(entity_id)
-        if not entity:
+        subentity = self.subentities.get(entity_id)
+        if not subentity:
             return
 
         # Remove all connected links
-        for link in list(entity.outgoing_links):
+        for link in list(subentity.outgoing_links):
             self.remove_link(link.id)
-        for link in list(entity.incoming_links):
+        for link in list(subentity.incoming_links):
             self.remove_link(link.id)
 
-        # Remove entity
-        del self.entities[entity_id]
+        # Remove subentity
+        del self.subentities[entity_id]
 
-    def get_entities_by_kind(self, entity_kind: str) -> List[Entity]:
+    def get_entities_by_kind(self, entity_kind: str) -> List[Subentity]:
         """
-        Get all entities of given kind.
+        Get all subentities of given kind.
 
         Args:
             entity_kind: Kind to filter by ("functional" or "semantic")
 
         Returns:
-            List of entities with matching kind
+            List of subentities with matching kind
         """
-        return [e for e in self.entities.values() if e.entity_kind == entity_kind]
+        return [e for e in self.subentities.values() if e.entity_kind == entity_kind]
 
-    def get_active_entities(self) -> List[Entity]:
+    def get_active_entities(self) -> List[Subentity]:
         """
-        Get all entities currently active (energy >= threshold).
+        Get all subentities currently active (energy >= threshold).
 
         Returns:
-            List of active entities
+            List of active subentities
         """
-        return [e for e in self.entities.values() if e.is_active()]
+        return [e for e in self.subentities.values() if e.is_active()]
 
     # --- Link Operations ---
 
     def add_link(self, link: Link) -> None:
         """
-        Add link to graph and update node/entity references.
+        Add link to graph and update node/subentity references.
 
         Supports:
         - Node -> Node links (ENABLES, BLOCKS, etc.)
-        - Node -> Entity links (BELONGS_TO)
-        - Entity -> Entity links (RELATES_TO)
+        - Node -> Subentity links (BELONGS_TO)
+        - Subentity -> Subentity links (RELATES_TO)
 
         Args:
             link: Link to add
@@ -217,13 +217,13 @@ class Graph:
         if link.id in self.links:
             raise ValueError(f"Link {link.id} already exists in graph {self.id}")
 
-        # Try to find source in nodes, then entities
-        source: Union[Node, Entity, None] = self.get_node(link.source_id)
+        # Try to find source in nodes, then subentities
+        source: Union[Node, Subentity, None] = self.get_node(link.source_id)
         if not source:
             source = self.get_entity(link.source_id)
 
-        # Try to find target in nodes, then entities
-        target: Union[Node, Entity, None] = self.get_node(link.target_id)
+        # Try to find target in nodes, then subentities
+        target: Union[Node, Subentity, None] = self.get_node(link.target_id)
         if not target:
             target = self.get_entity(link.target_id)
 
@@ -287,36 +287,38 @@ class Graph:
         """
         return [l for l in self.links.values() if l.link_type == link_type]
 
-    # --- Entity Queries (delegate to mechanisms) ---
+    # --- Subentity Queries (delegate to mechanisms) ---
 
     def get_all_active_entities(self) -> Set[EntityID]:
         """
-        Get all entities with non-zero energy anywhere in graph.
+        Get all subentities with non-zero energy anywhere in graph.
 
         Scans all nodes for active energy.
 
         Returns:
-            Set of entity IDs with energy > 0
-        """
-        entities = set()
-        for node in self.nodes.values():
-            entities.update(node.energy.keys())
-        return entities
+            Set of subentity IDs with energy > 0
 
-    def get_nodes_with_entity_energy(self, entity: EntityID, min_energy: float = 0.0) -> List[Node]:
+        NOTE: In V2 architecture, nodes use single-energy E (not per-entity buffers).
+        Entity differentiation is handled by mechanism layer via membership/selection.
+        This method returns empty set as there are no entity-specific energy buffers.
         """
-        Get all nodes where entity has energy above threshold.
+        # V2: No per-entity buffers, entity differentiation via mechanism layer
+        return set()
+
+    def get_nodes_with_entity_energy(self, subentity: EntityID, min_energy: float = 0.0) -> List[Node]:
+        """
+        Get all nodes where subentity has energy above threshold.
 
         Args:
-            entity: Entity identifier
+            subentity: Subentity identifier
             min_energy: Minimum energy threshold (default 0.0)
 
         Returns:
-            List of nodes with entity energy > min_energy
+            List of nodes with subentity energy > min_energy
         """
         return [
             node for node in self.nodes.values()
-            if node.get_entity_energy(entity) > min_energy
+            if node.get_entity_energy(subentity) > min_energy
         ]
 
     # --- Statistics ---
@@ -328,4 +330,4 @@ class Graph:
     def __repr__(self) -> str:
         """Human-readable representation."""
         return (f"Graph(id={self.id!r}, nodes={len(self.nodes)}, "
-                f"entities={len(self.entities)}, links={len(self.links)})")
+                f"subentities={len(self.subentities)}, links={len(self.links)})")
