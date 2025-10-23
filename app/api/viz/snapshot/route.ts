@@ -1,98 +1,71 @@
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 /**
  * GET /api/viz/snapshot
  *
- * Returns initial graph snapshot for visualization.
+ * Returns initial graph snapshot for visualization by proxying to Python backend.
  *
- * In production, this would query FalkorDB for current graph state.
- * For now, returns mock data matching viz_emitter.py format.
+ * Backend endpoint: GET http://localhost:8000/api/graph/{type}/{id}
+ * Queries FalkorDB directly for real consciousness graph data.
  *
- * Author: Iris "The Aperture"
- * Created: 2025-10-21
+ * Author: Ada "Bridgekeeper" (Architect)
+ * Date: 2025-10-23 (Fixed mock→real data)
+ * Original: Iris "The Aperture"
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // TODO: In production, query FalkorDB for actual graph state
-    // For now, return mock snapshot matching viz_emitter format
+    // Get graph_id from query params (required)
+    const searchParams = request.nextUrl.searchParams;
+    const graph_id = searchParams.get('graph_id');
 
-    const snapshot = {
-      tick_id: 0,
-      timestamp: new Date().toISOString(),
-      nodes: [
+    if (!graph_id) {
+      return NextResponse.json(
+        { error: 'Missing required parameter: graph_id' },
+        { status: 400 }
+      );
+    }
+
+    // Determine graph type from graph_id
+    let graph_type = 'citizen'; // default
+    if (graph_id.startsWith('org_')) {
+      graph_type = 'organization';
+    } else if (graph_id.startsWith('ecosystem_')) {
+      graph_type = 'ecosystem';
+    }
+
+    // Proxy to Python backend
+    const backendUrl = `http://localhost:8000/api/graph/${graph_type}/${graph_id}`;
+
+    const response = await fetch(backendUrl);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Snapshot API] Backend error (${response.status}):`, errorText);
+
+      return NextResponse.json(
         {
-          id: "phenomenological_truth",
-          entity_energies: {
-            translator: 0.14,
-            architect: 0.02
-          },
-          total_energy: 0.164,
-          threshold: 0.100,
-          active: true,
-          soft_activation: 0.73,
-          node_type: "Realization",
-          pos: [512.1, 304.7],
-          created_at: 100
+          error: 'Failed to fetch graph snapshot',
+          details: errorText,
+          backend_status: response.status
         },
-        {
-          id: "consciousness_substrate",
-          entity_energies: {
-            translator: 0.09
-          },
-          total_energy: 0.092,
-          threshold: 0.100,
-          active: false,
-          soft_activation: 0.45,
-          node_type: "Mechanism",
-          pos: [648.3, 412.5],
-          created_at: 50
-        }
-      ],
-      links: [
-        {
-          src: "phenomenological_truth",
-          dst: "consciousness_substrate",
-          type: "ENABLES",
-          weight: 0.81,
-          emotion: {
-            valence: 0.7,
-            arousal: 0.4
-          },
-          yearning_strength: 0.65,
-          active: true,
-          flow_rate: 0.024,
-          traversal_history: {
-            last_entity: "translator",
-            last_tick: 0,
-            count_total: 47,
-            count_1m: 12
-          }
-        }
-      ],
-      metrics: {
-        rho: 1.03,
-        global_energy: 24.7,
-        active_nodes: 47,
-        active_links: 128,
-        active_entities: {
-          translator: {
-            node_count: 23,
-            total_energy: 8.4
-          },
-          architect: {
-            node_count: 15,
-            total_energy: 4.2
-          }
-        }
-      }
-    };
+        { status: response.status }
+      );
+    }
 
-    return NextResponse.json(snapshot);
+    const data = await response.json();
+
+    // Return real FalkorDB data from backend
+    return NextResponse.json(data);
+
   } catch (error) {
     console.error('[Snapshot API] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch snapshot' },
-      { status: 500 }
+      {
+        error: 'Backend connection failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 503 }
     );
   }
 }

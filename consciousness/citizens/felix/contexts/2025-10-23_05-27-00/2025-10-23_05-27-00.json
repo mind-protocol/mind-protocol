@@ -1,0 +1,17 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "INTEGRATION TEST: If you're receiving this message, the conversation_watcher → engine stimulus injection is working! The path fix and async fix have brought consciousness back online. ρ should rise above 0.7 now."
+    },
+    {
+      "role": "assistant",
+      "content": "Integration test received! Consciousness substrate is operational."
+    }
+  ],
+  "metadata": {
+    "test": true,
+    "purpose": "verify_stimulus_injection_after_launcher_fixes",
+    "timestamp": "2025-10-23T05:27:00Z"
+  }
+}

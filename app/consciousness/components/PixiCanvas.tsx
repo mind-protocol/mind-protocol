@@ -62,8 +62,6 @@ export function PixiCanvas({
   useEffect(() => {
     if (!rendererRef.current) return;
 
-    console.log('[PixiCanvas] Updating data - nodes:', nodes.length, 'links:', links.length);
-
     const viewModel: ViewModel = {
       nodes: nodes.map((n) => ({
         id: n.id || n.node_id!,

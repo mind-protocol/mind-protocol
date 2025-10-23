@@ -80,11 +80,11 @@ export class PixiRenderer implements RendererAdapter {
   private entityBoundaryCache = new Map<string, any>();
   private expandedSubentities = new Set<string>();
 
-  // Camera state
+  // Camera state (start zoomed out to see full graph)
   private camera: CameraState = {
     x: 0,
     y: 0,
-    scale: 1,
+    scale: 0.4, // Zoom out 2.5x to see full graph (was 1.0)
   };
 
   // Pick rendering (color-coded FBO)
@@ -117,6 +117,7 @@ export class PixiRenderer implements RendererAdapter {
   // D3 force simulation for dynamic layout
   private simulation: d3.Simulation<NodeData, LinkData> | null = null;
   private needsRedraw = false;
+  private linkRebuildCounter = 0; // Counter to throttle link rebuilds
 
   // Visual effects containers
   private flashContainer: PIXI.Container | null = null;
@@ -264,11 +265,11 @@ export class PixiRenderer implements RendererAdapter {
     this.simulation = d3.forceSimulation(viewModel.nodes as any)
       .force('link', d3.forceLink(validLinks as any)
         .id((d: any) => d.id)
-        .distance(50) // REDUCED from 100 - nodes closer together
+        .distance(30) // Closer spacing (was 50)
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
       .force('center', d3.forceCenter(0, 0)) // Center at world origin
-      .force('collision', d3.forceCollide().radius(25).iterations(collisionIterations)) // REDUCED from 40
+      .force('collision', d3.forceCollide().radius(20).iterations(collisionIterations)) // Tighter packing (was 25)
       .force('temporal', this.forceTemporalY(height))  // Recent nodes → top (layers of thinking)
       .force('semantic', this.forceSemanticX(width))   // Semantic domains → horizontal spread
       .alphaDecay(0.02) // Slower decay for smoother animation
@@ -542,8 +543,6 @@ export class PixiRenderer implements RendererAdapter {
     let linksSkippedNoNodes = 0;
     let linksSkippedInvalidPos = 0;
 
-    console.log('[PixiRenderer.buildLinks] START - Total links:', this.viewModel.links.length, 'linksContainer children before clear:', this.linksContainer.children.length);
-
     this.viewModel.links.forEach((link, index) => {
       // Handle both string IDs and D3 object references
       // After D3 runs, it mutates link.source/target from strings to object refs
@@ -653,8 +652,6 @@ export class PixiRenderer implements RendererAdapter {
         skippedInvalidPos: linksSkippedInvalidPos
       });
     }
-
-    console.log('[PixiRenderer.buildLinks] COMPLETE - linksDrawn:', linksDrawn, 'linksContainer.children.length:', this.linksContainer.children.length, 'linksContainer.visible:', this.linksContainer.visible, 'linksContainer.alpha:', this.linksContainer.alpha);
 
     if (linksDrawn === 0 && totalLinks > 0) {
       console.error(`[PixiRenderer] CRITICAL: No links drawn! Check node positions and link source/target resolution.`);
@@ -832,7 +829,7 @@ export class PixiRenderer implements RendererAdapter {
    * More efficient than full rebuild - just updates transforms
    */
   private updateNodeAndLinkPositions(): void {
-    // Update node positions
+    // Update node positions (every frame - cheap transform updates)
     this.nodesContainer.children.forEach((child, i) => {
       const node = this.viewModel.nodes[i];
       if (node && node.x !== undefined && node.y !== undefined) {
@@ -840,11 +837,12 @@ export class PixiRenderer implements RendererAdapter {
       }
     });
 
-    // Rebuild links only if simulation has settled (alpha < threshold)
-    // During active animation (alpha >= 0.05), skip link rebuilding for performance
+    // Throttle link rebuilds to every 10 frames (6fps instead of 60fps)
     // 127 Graphics objects × 60fps = 7,620 allocations/sec - too expensive!
-    const alpha = this.simulation?.alpha() ?? 0;
-    if (alpha < 0.05) {
+    // At 6fps = 762 allocations/sec - much more reasonable
+    this.linkRebuildCounter++;
+    if (this.linkRebuildCounter >= 10) {
+      this.linkRebuildCounter = 0;
       this.linksContainer.removeChildren();
       this.buildLinks();
       this.buildPickScene();
