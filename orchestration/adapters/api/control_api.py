@@ -93,10 +93,10 @@ class WebSocketManager:
             - link_traversal: Link traversal events
         """
         if not self.active_connections:
-            logger.info(f"[WebSocketManager] Broadcast attempted but no clients connected (event: {event.get('type', 'unknown')})")
+            logger.debug(f"[WebSocketManager] Broadcast attempted but no clients connected (event: {event.get('type', 'unknown')})")
             return  # No clients connected, skip broadcast
 
-        logger.info(f"[WebSocketManager] Broadcasting {event.get('type', 'unknown')} to {len(self.active_connections)} clients")
+        logger.debug(f"[WebSocketManager] Broadcasting {event.get('type', 'unknown')} to {len(self.active_connections)} clients")
 
         # Add timestamp if not present
         if "timestamp" not in event:

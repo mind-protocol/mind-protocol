@@ -848,15 +848,19 @@ class ProcessManager:
             True if port is free, False if occupied
         """
         try:
-            result = subprocess.run(
-                ["netstat", "-ano"],
-                capture_output=True,
-                text=True,
-                timeout=5
+            # Use asyncio.create_subprocess_exec instead of subprocess.run to avoid blocking event loop
+            process = await asyncio.create_subprocess_exec(
+                "netstat", "-ano",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
             )
 
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=5.0)
+            result_stdout = stdout.decode("utf-8", errors="ignore")
+
             # Check if port appears in LISTENING state
-            for line in result.stdout.split('\n'):
+            for line in result_stdout.split('
+'):
                 if f':{port}' in line and 'LISTENING' in line:
                     return False  # Port is occupied
 
