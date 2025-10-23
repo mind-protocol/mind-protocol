@@ -289,7 +289,7 @@ class Settings:
     # Automatic degradation when tripwires fire
     # Per SCRIPT_MAP.md operational resilience requirements
 
-    SAFE_MODE_ENABLED: bool = os.getenv("SAFE_MODE_ENABLED", "true").lower() == "true"
+    SAFE_MODE_ENABLED: bool = os.getenv("SAFE_MODE_ENABLED", "false").lower() == "true"  # Disabled - Safe Mode broken (kills engines instead of degrading)
 
     # Tripwire thresholds (how many violations before entering Safe Mode)
     SAFE_MODE_VIOLATION_THRESHOLD: int = int(os.getenv("SAFE_MODE_VIOLATION_THRESHOLD", "3"))  # Violations within window

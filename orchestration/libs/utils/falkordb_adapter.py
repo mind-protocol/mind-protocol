@@ -609,6 +609,7 @@ class FalkorDBAdapter:
                 from datetime import datetime
 
                 # Handle energy field - might be JSON string or float
+                # Supports both V1 format ({"entity_name": value}) and V2 format ({"default": value})
                 energy_raw = props.get('energy', props.get('sub_entity_weights', '{}'))
                 if isinstance(energy_raw, str):
                     try:
@@ -620,12 +621,27 @@ class FalkorDBAdapter:
                 else:
                     energy = {}
 
+                # Extract scalar E value from energy dict (V1/V2 backward compatibility)
+                if isinstance(energy, dict):
+                    if "default" in energy:
+                        # V2 format: {"default": value}
+                        E = float(energy["default"])
+                    elif energy:
+                        # V1 format: {"entity_name": value} - use first entity's value
+                        E = float(next(iter(energy.values())))
+                    else:
+                        # Empty dict
+                        E = 0.0
+                else:
+                    # Not a dict (shouldn't happen given above logic, but handle gracefully)
+                    E = float(energy) if energy else 0.0
+
                 node = Node(
                     id=node_id,
                     name=node_name,
                     node_type=node_type,
                     description=props.get('description', ''),
-                    E=energy.get("default", 0.0) if isinstance(energy, dict) else (float(energy) if energy else 0.0),
+                    E=E,
                     valid_at=datetime.now(),  # Use current time as fallback
                     created_at=datetime.now(),
                     properties=props  # Store all props for later use

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Crimson_Text } from 'next/font/google';
 import "./globals.css";
-import { ConsoleCapture } from "./consciousness/components/ConsoleCapture";
+// import { ConsoleCapture } from "./consciousness/components/ConsoleCapture"; // DISABLED: Missing backend endpoints
 
 // Venice/Serenissima Typography (from VENICE_DESIGN_SYSTEM_EXTRACT.md)
 const cinzel = Cinzel({
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${cinzel.variable} ${crimsonText.variable}`}>
       <body className="bg-parchment-base text-venice-brown antialiased font-crimson">
-        <ConsoleCapture />
+        {/* <ConsoleCapture /> DISABLED: Missing /api/logs and /api/screenshot endpoints */}
         {children}
       </body>
     </html>

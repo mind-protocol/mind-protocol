@@ -48,6 +48,7 @@ from orchestration.mechanisms.stimulus_injection import StimulusInjector, create
 from orchestration.adapters.search.embedding_service import get_embedding_service
 from orchestration.adapters.search.semantic_search import SemanticSearch
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
+from orchestration.adapters.storage.engine_registry import get_engine
 
 # Heartbeat writer for health monitoring
 from orchestration.services.telemetry.heartbeat_writer import HeartbeatWriter
@@ -60,7 +61,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Paths
-MIND_PROTOCOL_ROOT = Path(__file__).parent.parent
+MIND_PROTOCOL_ROOT = Path(__file__).parent.parent.parent.parent  # Fixed: need 4 levels up
 INJECTION_TOOL = MIND_PROTOCOL_ROOT / "tools" / "inject_consciousness_from_json.py"
 
 # Contexts-only architecture - no more legacy Claude Code projects watching
@@ -538,6 +539,21 @@ class ConversationWatcher(FileSystemEventHandler):
                     r.execute_command('GRAPH.QUERY', graph_name, update_query)
 
             logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB")
+
+            # Inject stimulus into running engine for immediate activation
+            try:
+                engine = get_engine(citizen_id)
+                if engine:
+                    engine.inject_stimulus(
+                        text=stimulus_text,
+                        embedding=stimulus_embedding,
+                        source_type="user_message"
+                    )
+                    logger.info(f"[ConversationWatcher] Injected stimulus into running {citizen_id} engine")
+                else:
+                    logger.debug(f"[ConversationWatcher] No running engine found for {citizen_id}")
+            except Exception as e:
+                logger.error(f"[ConversationWatcher] Failed to inject stimulus to engine: {e}")
 
             # Compute activation entropy for learning
             # Get all node energies

@@ -245,6 +245,59 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
         return {"n1": [], "n2": [], "n3": []}
 
 
+@app.get("/api/graphs")
+async def get_graphs():
+    """
+    Graph discovery endpoint for Next.js dashboard.
+    Returns list of available consciousness graphs organized by type.
+
+    Returns JSON matching Next.js frontend format:
+        {
+            "citizens": [{"id": "citizen_felix", "name": "Felix", "type": "personal"}, ...],
+            "organizations": [...],
+            "ecosystems": [...]
+        }
+    """
+    try:
+        graphs = discover_graphs()
+
+        # Format for frontend consumption
+        return {
+            "citizens": [
+                {
+                    "id": graph_name,
+                    "name": graph_name.replace("citizen_", "").title(),
+                    "type": "personal"
+                }
+                for graph_name in graphs['n1']
+            ],
+            "organizations": [
+                {
+                    "id": graph_name,
+                    "name": graph_name.replace("org_", "").replace("collective_", "").replace("_", " ").title(),
+                    "type": "organizational"
+                }
+                for graph_name in graphs.get('n2', [])
+            ],
+            "ecosystems": [
+                {
+                    "id": graph_name,
+                    "name": graph_name.replace("ecosystem_", "").replace("_", " ").title(),
+                    "type": "ecosystem"
+                }
+                for graph_name in graphs.get('n3', [])
+            ]
+        }
+    except Exception as e:
+        logger.error(f"[API] Failed to discover graphs: {e}")
+        return {
+            "citizens": [],
+            "organizations": [],
+            "ecosystems": [],
+            "error": str(e)
+        }
+
+
 def extract_citizen_id(graph_name: str) -> str:
     """
     Extract citizen ID from graph name.

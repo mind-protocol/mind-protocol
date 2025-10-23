@@ -77,21 +77,30 @@ async def health(selftest: int = 0):
     if selftest:
         from orchestration.scripts.startup_self_tests import run_all_self_tests
         from fastapi import HTTPException
+        from dataclasses import asdict
 
         results = run_all_self_tests()
+
+        # Convert TestResult objects to dicts for JSON serialization
+        serializable_results = {
+            "all_passed": results["all_passed"],
+            "total_duration_ms": results["total_duration_ms"],
+            "results": [asdict(r) for r in results["results"]],
+            "failures": results["failures"]
+        }
 
         if not results["all_passed"]:
             raise HTTPException(
                 status_code=503,
                 detail={
                     "status": "degraded",
-                    "selftest_results": results
+                    "selftest_results": serializable_results
                 }
             )
 
         return {
             "status": "healthy",
-            "selftest_results": results
+            "selftest_results": serializable_results
         }
 
     return {"status": "healthy"}

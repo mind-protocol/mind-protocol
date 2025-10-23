@@ -21,8 +21,14 @@ Spec: orchestration/TRIPWIRE_INTEGRATION_SPEC.md
 
 import logging
 import time
+import sys
+from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Configure logging for self-tests
 logging.basicConfig(
@@ -58,6 +64,11 @@ class StartupSelfTests:
         """Initialize self-test infrastructure."""
         self.results: List[TestResult] = []
 
+    @staticmethod
+    def _count_tripwire_violations(controller, tripwire_type) -> int:
+        """Count existing violations for a given tripwire type."""
+        return sum(1 for violation in controller.violations if violation.tripwire_type == tripwire_type)
+
     def test_conservation_tripwire(self) -> TestResult:
         """
         Test 1: Conservation Tripwire
@@ -78,6 +89,7 @@ class StartupSelfTests:
             from orchestration.core.graph import Graph
             from orchestration.core.node import Node
             from orchestration.core.link import Link
+            from orchestration.core.types import NodeType, LinkType
             from orchestration.mechanisms.diffusion_runtime import DiffusionRuntime
             from orchestration.services.health.safe_mode import (
                 get_safe_mode_controller, TripwireType
@@ -85,23 +97,42 @@ class StartupSelfTests:
             from orchestration.core.settings import settings
 
             # Create minimal graph
-            graph = Graph()
-            node_a = Node(name="test_a", node_type="Concept")
-            node_b = Node(name="test_b", node_type="Concept")
+            graph = Graph(graph_id="selftest_conservation", name="SelfTest Conservation")
+
+            node_a = Node(
+                id="selftest_node_a",
+                name="SelfTest Node A",
+                node_type=NodeType.CONCEPT,
+                description="Self-test node A"
+            )
+            node_b = Node(
+                id="selftest_node_b",
+                name="SelfTest Node B",
+                node_type=NodeType.CONCEPT,
+                description="Self-test node B"
+            )
             node_a.E = 1.0
             node_b.E = 0.5
 
             graph.add_node(node_a)
             graph.add_node(node_b)
-            graph.add_link(Link(source=node_a, target=node_b, link_type="RELATES_TO"))
+
+            link = Link(
+                id="selftest_link_ab",
+                source_id=node_a.id,
+                target_id=node_b.id,
+                link_type=LinkType.DIFFUSES_TO,
+                subentity="selftest"
+            )
+            graph.add_link(link)
 
             # Create diffusion runtime
-            diffusion_rt = DiffusionRuntime(graph)
+            diffusion_rt = DiffusionRuntime()
 
             # Manually inject conservation violation (ΣΔE = 0.002 > ε)
             # This simulates an energy leak that should trigger the tripwire
-            diffusion_rt.delta_E[node_a] = -0.001  # Source loses energy
-            diffusion_rt.delta_E[node_b] = 0.003   # Target gains MORE (violation)
+            diffusion_rt.add(node_a.id, -0.001)  # Source loses energy
+            diffusion_rt.add(node_b.id, 0.003)   # Target gains MORE (violation)
 
             # Check conservation error
             conservation_error = diffusion_rt.get_conservation_error()
@@ -111,7 +142,7 @@ class StartupSelfTests:
             if abs(conservation_error) > epsilon:
                 # Tripwire should fire
                 safe_mode = get_safe_mode_controller()
-                initial_count = safe_mode.violation_counts.get(TripwireType.CONSERVATION, 0)
+                initial_count = self._count_tripwire_violations(safe_mode, TripwireType.CONSERVATION)
 
                 # Simulate tripwire check (same logic as consciousness_engine_v2.py:534-567)
                 safe_mode.record_violation(
@@ -122,7 +153,7 @@ class StartupSelfTests:
                 )
 
                 # Verify violation was recorded
-                new_count = safe_mode.violation_counts.get(TripwireType.CONSERVATION, 0)
+                new_count = self._count_tripwire_violations(safe_mode, TripwireType.CONSERVATION)
 
                 if new_count > initial_count:
                     duration_ms = (time.time() - start_time) * 1000
@@ -199,7 +230,7 @@ class StartupSelfTests:
             controller.last_rho_global = 1.5  # Above upper bound (1.3)
 
             safe_mode = get_safe_mode_controller()
-            initial_count = safe_mode.violation_counts.get(TripwireType.CRITICALITY, 0)
+            initial_count = self._count_tripwire_violations(safe_mode, TripwireType.CRITICALITY)
 
             # Call update with force_sample=False (uses cached rho_global)
             metrics = controller.update(
@@ -211,7 +242,7 @@ class StartupSelfTests:
             )
 
             # Verify violation was recorded
-            new_count = safe_mode.violation_counts.get(TripwireType.CRITICALITY, 0)
+            new_count = self._count_tripwire_violations(safe_mode, TripwireType.CRITICALITY)
             upper_bound = settings.TRIPWIRE_CRITICALITY_UPPER  # 1.3
 
             if new_count > initial_count:
@@ -263,15 +294,21 @@ class StartupSelfTests:
         try:
             from orchestration.core.graph import Graph
             from orchestration.core.node import Node
+            from orchestration.core.types import NodeType
             from orchestration.services.health.safe_mode import (
                 get_safe_mode_controller, TripwireType
             )
             from orchestration.core.settings import settings
 
             # Create graph with 10 nodes
-            graph = Graph()
+            graph = Graph(graph_id="selftest_frontier", name="SelfTest Frontier")
             for i in range(10):
-                node = Node(name=f"test_node_{i}", node_type="Concept")
+                node = Node(
+                    id=f"selftest_frontier_node_{i}",
+                    name=f"SelfTest Frontier Node {i}",
+                    node_type=NodeType.CONCEPT,
+                    description="Self-test frontier node"
+                )
                 node.E = 0.1 if i < 8 else 0.0  # 8 active, 2 inactive
                 graph.add_node(node)
 
@@ -288,7 +325,7 @@ class StartupSelfTests:
             if frontier_pct > max_frontier_pct:
                 # Tripwire should fire
                 safe_mode = get_safe_mode_controller()
-                initial_count = safe_mode.violation_counts.get(TripwireType.FRONTIER, 0)
+                initial_count = self._count_tripwire_violations(safe_mode, TripwireType.FRONTIER)
 
                 # Simulate tripwire check (same logic as consciousness_engine_v2.py:240-270)
                 safe_mode.record_violation(
@@ -299,7 +336,7 @@ class StartupSelfTests:
                 )
 
                 # Verify violation was recorded
-                new_count = safe_mode.violation_counts.get(TripwireType.FRONTIER, 0)
+                new_count = self._count_tripwire_violations(safe_mode, TripwireType.FRONTIER)
 
                 if new_count > initial_count:
                     duration_ms = (time.time() - start_time) * 1000
@@ -368,7 +405,7 @@ class StartupSelfTests:
             frame_end_emitted = False  # Broadcaster unavailable or exception
 
             safe_mode = get_safe_mode_controller()
-            initial_count = safe_mode.violation_counts.get(TripwireType.OBSERVABILITY, 0)
+            initial_count = self._count_tripwire_violations(safe_mode, TripwireType.OBSERVABILITY)
 
             # Simulate tripwire check (same logic as consciousness_engine_v2.py:912-961)
             if not frame_end_emitted:
@@ -380,7 +417,7 @@ class StartupSelfTests:
                 )
 
             # Verify violation was recorded
-            new_count = safe_mode.violation_counts.get(TripwireType.OBSERVABILITY, 0)
+            new_count = self._count_tripwire_violations(safe_mode, TripwireType.OBSERVABILITY)
 
             if new_count > initial_count:
                 duration_ms = (time.time() - start_time) * 1000

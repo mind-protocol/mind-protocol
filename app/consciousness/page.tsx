@@ -190,6 +190,15 @@ export default function ConsciousnessPage() {
     }
   }, [selectGraph]);
 
+  // Auto-select first available citizen on mount
+  useEffect(() => {
+    if (!currentGraphId && availableGraphs.citizens.length > 0) {
+      const firstCitizen = availableGraphs.citizens[0];
+      console.log('[ConsciousnessPage] Auto-selecting first citizen:', firstCitizen.id);
+      selectGraph('citizen', firstCitizen.id);
+    }
+  }, [availableGraphs, currentGraphId, selectGraph]);
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-observatory-dark">
       {/* Header with system status, search, and stats (top) */}
