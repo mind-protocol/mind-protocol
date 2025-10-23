@@ -54,15 +54,24 @@ export function EntityGraphView({
 
   // Window dimensions for EntityMoodMap (set client-side to avoid hydration mismatch)
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+  const [isClient, setIsClient] = useState(false);
 
   const { emotionState } = useWebSocket();
 
   // Set actual window dimensions on mount (client-side only)
   useEffect(() => {
-    setDimensions({
-      width: window.innerWidth,
-      height: window.innerHeight
-    });
+    setIsClient(true);
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
   // Convert subentities to Entity format with emotion aggregation
