@@ -30,7 +30,7 @@ interface EntityGraphViewProps {
   links: Link[];
   operations: Operation[];
   subentities: Subentity[];
-  workingMemory: string[];
+  workingMemory: Set<string>;
   linkFlows: Map<string, number>;
   recentFlips: Array<{ node_id: string; direction: 'on' | 'off'; timestamp: number }>;
 }
@@ -237,7 +237,7 @@ export function EntityGraphView({
               return memberIds.has(op.node_id);
             })}
             subentities={[]}
-            workingMemory={new Set(workingMemory)}
+            workingMemory={workingMemory}
             linkFlows={linkFlows}
             recentFlips={recentFlips.filter(flip => {
               const memberIds = new Set(expandedMemberNodes.map(n => n.id || n.node_id));
@@ -255,7 +255,7 @@ export function EntityGraphView({
             links={links}
             operations={operations}
             subentities={subentities}
-            workingMemory={new Set(workingMemory)}
+            workingMemory={workingMemory}
             linkFlows={linkFlows}
             recentFlips={recentFlips}
           />

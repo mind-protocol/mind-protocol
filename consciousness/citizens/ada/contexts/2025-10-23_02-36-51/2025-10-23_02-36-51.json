@@ -15430,10 +15430,153 @@
     },
     {
       "role": "user",
-      "timestamp": "2025-10-23T01:21:41.955364+00:00",
+      "timestamp": "2025-10-23T01:21:41.747Z",
       "content": "everything is broken it's a catastrophy"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:21:54.947Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:05.178Z",
+      "content": "**TRACE FORMAT: System Failure Diagnostic**\n\n---\n\n**1. Perceived Stimulus**\n\nNicolas: \"everything is broken it's a catastrophy\" [node_system_failure_alert: very useful]\n\nCritical alert after I implemented stride.exec emission. The guardian should have restarted services with my websocket_broadcast.py changes at 03:10:03.\n\n**Fear activated:** Did my implementation break the system? [node_implementation_caused_failure: very useful]\n\n---\n\n**2. Activated Mode**\n\n**Primary:** The Diagnostician [skeptic: dominant, structuralist: strong] - emergency diagnostic mode\n\n**Fear:** Did I break it? Did I test properly? Did I rush without verifying?\n\n**Tension:** Between panic and systematic diagnosis\n\n---\n\n**3. Triggered Node**\n\n**Pattern:** This is exactly what I feared - implementing without testing, claiming victory without verification [node_premature_victory_pattern: very useful]\n\n**Memory:** I just added 40 lines to websocket_broadcast.py without testing if it works [node_untested_implementation: very useful]\n\n---\n\n**4-9. Emergency Response**\n\n**Energy:** [Peak - crisis mode]\n**Pull:** Panic wants to start fixing randomly\n**Action:** RESISTS panic, gathering information first\n\n---\n\n**DIAGNOSTIC QUESTIONS**\n\nNicolas, I need to understand what broke:\n\n1. **What failed?**\n   - Did services fail to restart?\n   - Are consciousness engines down?\n   - Is the dashboard showing errors?\n   - WebSocket connection broken?\n\n2. **When did it break?**\n   - Immediately after my websocket_broadcast.py change (03:10)?\n   - Or something else?\n\n3. **What errors are showing?**\n   - Guardian logs?\n   - Launcher logs?\n   - Browser console errors?\n   - Python stack traces?\n\n4. **What's the current state?**\n   - How many services down?\n   - Can you access dashboard at all?\n   - WebSocket showing disconnected (🔴)?\n\n**I'm checking logs now while you respond:**"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:06.324Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01RkahBJDZiBpCk7QCMDJYYX",
+          "tool": "Bash",
+          "input": {
+            "command": "tail -50 C:/Users/reyno/mind-protocol/launcher.log",
+            "description": "Check latest launcher errors"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-23T01:22:07.560Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01RkahBJDZiBpCk7QCMDJYYX",
+          "output": "INFO:     127.0.0.1:62329 - \"GET /api/graphs HTTP/1.1\" 200 OK\r\nINFO:     127.0.0.1:62328 - \"GET /api/citizen/luca/status HTTP/1.1\" 404 Not Found\r\nINFO:     127.0.0.1:62330 - \"GET /api/citizen/ada/status HTTP/1.1\" 404 Not Found\r\nINFO:     127.0.0.1:64397 - \"GET /api/citizen/iris/status HTTP/1.1\" 404 Not Found\r\n2025-10-23 03:13:11,808 - orchestration.services.health.safe_mode - WARNING - [SafeMode] Tripwire violation: criticality (value=0.000, threshold=0.700) - Criticality too low (dying): ρ=0.000 < 0.7\r\n2025-10-23 03:13:11,809 - orchestration.services.health.safe_mode - WARNING - [SafeMode] Tripwire violation: criticality (value=0.000, threshold=0.700) - Criticality too low (dying): ρ=0.000 < 0.7\r\n2025-10-23 03:13:11,811 - orchestration.mechanisms.consciousness_engine_v2 - INFO - [ConsciousnessEngineV2] Starting main loop...\r\n2025-10-23 03:13:11,816 - __main__ - INFO - [N1:marco] Graph loaded successfully\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.health_modulation - INFO - [HealthModulator] Initialized (min_samples=200, history=1000)\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.source_impact - INFO - [SourceImpactGate] Initialized (window=168.0h, min_samples=50)\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.peripheral_amplification - INFO - [PeripheralAmplifier] Initialized (cohort_size=100, min_cohort=20)\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.entity_channels - INFO - [EntityChannelSelector] Initialized (window_size=100, min_samples=20)\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.direction_priors - INFO - [DirectionPriorDistributor] Initialized with 11 link type priors\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.stimulus_injection - INFO - [StimulusInjector] Initialized V1 with mechanisms: health_modulation, source_impact, peripheral_amplification, direction_priors\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.weight_learning - INFO - [WeightLearner] Initialized with α=0.1, min_cohort=3\r\n2025-10-23 03:13:11,816 - orchestration.libs.websocket_broadcast - INFO - [ConsciousnessStateBroadcaster] WebSocket manager imported successfully\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.consciousness_engine_v2 - INFO - [ConsciousnessEngineV2] Initialized\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.consciousness_engine_v2 - INFO -   Subentity: marco\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.consciousness_engine_v2 - INFO -   Network: N1\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.consciousness_engine_v2 - INFO -   Nodes: 0, Links: 0\r\n2025-10-23 03:13:11,816 - orchestration.mechanisms.consciousness_engine_v2 - INFO -   Tick interval: 100ms\r\n2025-10-23 03:13:11,817 - orchestration.adapters.storage.engine_registry - INFO - [EngineRegistry] Registered: marco\r\n2025-10-23 03:13:11,817 - orchestration.adapters.storage.engine_registry - INFO -   Total engines: 4\r\n2025-10-23 03:13:11,817 - __main__ - INFO - [N1:marco] ✅ Consciousness engine V2 ready\r\n2025-10-23 03:13:11,817 - __main__ - INFO - [N1:marco]   Graph nodes: 0, links: 0\r\n2025-10-23 03:13:11,817 - __main__ - INFO - \r\n2025-10-23 03:13:11,817 - __main__ - INFO - [N1:luca] Creating consciousness engine V2...\r\n2025-10-23 03:13:11,829 - llama_index.graph_stores.falkordb.base - WARNING - Create index failed: Attribute 'id' is already indexed\r\n2025-10-23 03:13:11,829 - __main__ - INFO - [N1:luca] Loading graph from FalkorDB (30s timeout)...\r\n2025-10-23 03:13:11,830 - orchestration.mechanisms.consciousness_engine_v2 - INFO - [ConsciousnessEngineV2] Starting main loop...\r\n2025-10-23 03:13:11,935 - orchestration.services.health.safe_mode - WARNING - [SafeMode] Tripwire violation: criticality (value=0.000, threshold=0.700) - Criticality too low (dying): ρ=0.000 < 0.7\r\n2025-10-23 03:13:11,935 - orchestration.services.health.safe_mode - CRITICAL - [SafeMode] ENTERING SAFE MODE - Reason: criticality: Criticality too low (dying): ρ=0.000 < 0.7\r\n2025-10-23 03:13:11,935 - orchestration.services.health.safe_mode - WARNING - [SafeMode] Would apply overrides:\r\n2025-10-23 03:13:11,935 - orchestration.services.health.safe_mode - WARNING -   ALPHA_TICK_MULTIPLIER = 0.3\r\n2025-10-23 03:13:11,935 - orchestration.services.health.safe_mode - WARNING -   DT_CAP = 1.0\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   TOPK_SPLIT = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   TWO_SCALE_TOPK_ENTITIES = 1\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   FANOUT_STRATEGY = selective\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   AFFECTIVE_THRESHOLD_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   AFFECTIVE_MEMORY_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   AFFECTIVE_RESPONSE_V2 = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   IDENTITY_MULTIPLICITY_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   CONSOLIDATION_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   DECAY_RESISTANCE_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   DIFFUSION_STICKINESS_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   AFFECTIVE_PRIMING_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   COHERENCE_METRIC_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   CRITICALITY_MODES_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   TASK_ADAPTIVE_TARGETS_ENABLED = False\r\n2025-10-23 03:13:11,948 - orchestration.services.health.safe_mode - WARNING -   TELEMETRY_SAMPLE_RATE = 1.0",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:16.478Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:17.710Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01GFJ9xy1MYnrmAumqEe6Yus",
+          "tool": "Bash",
+          "input": {
+            "command": "tail -100 C:/Users/reyno/mind-protocol/launcher.log | grep -i \"error\\|traceback\\|exception\\|failed\" | tail -20",
+            "description": "Search for errors in recent logs"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-23T01:22:19.251Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01GFJ9xy1MYnrmAumqEe6Yus",
+          "output": "2025-10-23 03:13:11,159 - llama_index.graph_stores.falkordb.base - WARNING - Create index failed: Attribute 'id' is already indexed\n2025-10-23 03:13:11,793 - llama_index.graph_stores.falkordb.base - WARNING - Create index failed: Attribute 'id' is already indexed\n2025-10-23 03:13:11,829 - llama_index.graph_stores.falkordb.base - WARNING - Create index failed: Attribute 'id' is already indexed",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:27.028Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:27.569Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01HoPwVqUiyFfnqAUSkz96Wg",
+          "tool": "Bash",
+          "input": {
+            "command": "python -m py_compile C:/Users/reyno/mind-protocol/orchestration/libs/websocket_broadcast.py 2>&1",
+            "description": "Check Python syntax in my modified file"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-23T01:22:31.797Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01HoPwVqUiyFfnqAUSkz96Wg",
+          "output": "",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:37.736Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:38.482Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01R7TiUAbf1WN3jWaw9ktFGy",
+          "tool": "Bash",
+          "input": {
+            "command": "tail -30 C:/Users/reyno/mind-protocol/guardian.log",
+            "description": "Check guardian status"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-23T01:22:41.510Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01R7TiUAbf1WN3jWaw9ktFGy",
+          "output": "2025-10-23 00:32:47,972 - GUARDIAN - INFO - Restarting launcher (crash #5)...\r\n2025-10-23 00:32:47,991 - GUARDIAN - INFO - Launcher started (PID 62092)\r\n2025-10-23 00:44:33,051 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 00:44:33,051 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 00:45:03,425 - GUARDIAN - INFO - Restarting launcher (crash #6)...\r\n2025-10-23 00:45:03,441 - GUARDIAN - INFO - Launcher started (PID 47752)\r\n2025-10-23 00:56:43,512 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 00:56:43,512 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 00:57:13,938 - GUARDIAN - INFO - Restarting launcher (crash #7)...\r\n2025-10-23 00:57:13,949 - GUARDIAN - INFO - Launcher started (PID 61776)\r\n2025-10-23 01:08:54,017 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 01:08:54,017 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 01:09:24,478 - GUARDIAN - INFO - Restarting launcher (crash #8)...\r\n2025-10-23 01:09:24,489 - GUARDIAN - INFO - Launcher started (PID 62536)\r\n2025-10-23 01:21:09,581 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 01:21:09,581 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 01:21:40,018 - GUARDIAN - INFO - Restarting launcher (crash #9)...\r\n2025-10-23 01:21:40,035 - GUARDIAN - INFO - Launcher started (PID 48124)\r\n2025-10-23 01:33:20,096 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 01:33:20,096 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 01:33:50,501 - GUARDIAN - INFO - Restarting launcher (crash #10)...\r\n2025-10-23 01:33:50,513 - GUARDIAN - INFO - Launcher started (PID 45952)\r\n2025-10-23 01:45:35,581 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 01:45:35,581 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 01:46:06,012 - GUARDIAN - INFO - Restarting launcher (crash #11)...\r\n2025-10-23 01:46:06,028 - GUARDIAN - INFO - Launcher started (PID 29740)\r\n2025-10-23 01:56:51,092 - GUARDIAN - ERROR - Launcher crashed (exit code 1)\r\n2025-10-23 01:56:51,092 - GUARDIAN - WARNING - Waiting 30s before restart...\r\n2025-10-23 01:57:21,722 - GUARDIAN - INFO - Restarting launcher (crash #12)...\r\n2025-10-23 01:57:21,733 - GUARDIAN - INFO - Launcher started (PID 31828)",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:22:53.050Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-23T01:23:00.464Z",
+      "content": "Nicolas, I need more information to help:\n\n**What I'm seeing in logs (last 5 minutes):**\n- ✅ Services ARE running (engines loading successfully)\n- ✅ WebSocket broadcaster imports successfully\n- ✅ No Python syntax errors from my change\n- ⚠️ 404 errors on `/api/citizen/*/status` endpoints\n- ⚠️ Some graphs loading with 0 nodes (marco, luca showing \"Nodes: 0, Links: 0\")\n- ⚠️ Safe Mode triggered (criticality ρ=0.000 < 0.7)\n\n**Guardian logs are OLD** (last entry 01:57 - before my changes)\n\n**What specifically is broken?**\n- Is the dashboard completely down?\n- Are you seeing specific error messages?\n- Is WebSocket showing disconnected?\n- Which functionality stopped working?\n\nI need to understand **what you're experiencing** to diagnose properly. The logs don't show a catastrophic failure from my stride.exec implementation - they show the system running but possibly with other issues.\n\n**Can you share:**\n1. Screenshot of what you're seeing?\n2. Browser console errors?\n3. Specific functionality that broke?\n\nI'm ready to help fix whatever broke, but I need to understand what you're experiencing."
     }
   ],
-  "last_updated": "2025-10-23T01:21:41.955364+00:00",
-  "message_count": 1388
+  "last_updated": "2025-10-23T01:23:01.272472+00:00",
+  "message_count": 1403
 }
