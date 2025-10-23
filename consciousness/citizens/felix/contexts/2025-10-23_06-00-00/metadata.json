@@ -1,0 +1,6 @@
+{
+  "citizen": "felix",
+  "session_start": "2025-10-23T06:00:00Z",
+  "test_injection": true,
+  "purpose": "verify_threshold_fix_enables_nonzero_budget"
+}

@@ -423,7 +423,9 @@ class ConversationWatcher(FileSystemEventHandler):
                 result = r.execute_command('GRAPH.QUERY', graph_name, query)
 
                 if result and result[1]:
-                    threshold = float(result[1][0][0]) if result[1][0][0] else 1.0
+                    # Use 30.0 as default threshold (above 95th percentile of existing energy values)
+                    # This ensures nodes have gap available for stimulus injection
+                    threshold = float(result[1][0][0]) if result[1][0][0] else 30.0
 
                     # Parse energy - can be either simple number or JSON dict
                     energy_value = result[1][0][1]
