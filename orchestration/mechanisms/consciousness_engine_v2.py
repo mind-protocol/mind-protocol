@@ -190,8 +190,15 @@ class ConsciousnessEngineV2:
 
         try:
             while self.running:
-                # Execute one tick
-                await self.tick()
+                # Execute one tick with exception handling
+                try:
+                    await self.tick()
+                except Exception as e:
+                    # Log tick errors but continue running
+                    logger.error(f"[ConsciousnessEngineV2] Tick {self.tick_count} failed: {e}", exc_info=True)
+                    # Don't stop engine - continue to next tick
+                    await asyncio.sleep(1.0)  # Brief pause before retry
+                    continue
 
                 # Check max ticks
                 if max_ticks is not None and self.tick_count >= max_ticks:
@@ -203,6 +210,9 @@ class ConsciousnessEngineV2:
 
         except KeyboardInterrupt:
             logger.info("[ConsciousnessEngineV2] Interrupted by user")
+        except Exception as e:
+            # Fatal error in main loop (not tick-related)
+            logger.error(f"[ConsciousnessEngineV2] Fatal error in main loop: {e}", exc_info=True)
         finally:
             self.running = False
             logger.info("[ConsciousnessEngineV2] Stopped")

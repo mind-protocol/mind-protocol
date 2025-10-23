@@ -93,9 +93,10 @@ class LogEntry(BaseModel):
 class LogBatch(BaseModel):
     logs: List[LogEntry]
 
-# Ensure directories exist
-LOGS_DIR = Path(__file__).parent.parent / "claude-logs"
-SCREENSHOTS_DIR = Path(__file__).parent.parent / "claude-screenshots"
+# Ensure directories exist (project root)
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+LOGS_DIR = PROJECT_ROOT / "claude-logs"
+SCREENSHOTS_DIR = PROJECT_ROOT / "claude-screenshots"
 LOGS_DIR.mkdir(exist_ok=True)
 SCREENSHOTS_DIR.mkdir(exist_ok=True)
 
@@ -816,6 +817,15 @@ async def initialize_consciousness_engines():
     logger.info("CONSCIOUSNESS ENGINE INITIALIZATION (BACKGROUND)")
     logger.info("=" * 70)
 
+    def task_done_callback(task: asyncio.Task):
+        """Log exceptions from consciousness engine tasks."""
+        try:
+            task.result()  # This will raise if task had an exception
+        except asyncio.CancelledError:
+            logger.info(f"[{task.get_name()}] Task cancelled")
+        except Exception as e:
+            logger.error(f"[{task.get_name()}] Task failed with exception: {e}", exc_info=True)
+
     graphs = discover_graphs()
 
     # Start N1 (Personal) consciousness
@@ -827,8 +837,9 @@ async def initialize_consciousness_engines():
             citizen_id = extract_citizen_id(graph_name)
             try:
                 engine = await start_citizen_consciousness(graph_name, citizen_id)
-                # Start engine as background task
+                # Start engine as background task with exception logging
                 task = asyncio.create_task(engine.run(), name=f"N1:{citizen_id}")
+                task.add_done_callback(task_done_callback)
                 CONSCIOUSNESS_TASKS[citizen_id] = task
                 logger.info("")
             except Exception as e:
@@ -843,8 +854,9 @@ async def initialize_consciousness_engines():
             org_id = extract_citizen_id(graph_name)
             try:
                 engine = await start_organizational_consciousness(graph_name, org_id)
-                # Start engine as background task
+                # Start engine as background task with exception logging
                 task = asyncio.create_task(engine.run(), name=f"N2:{org_id}")
+                task.add_done_callback(task_done_callback)
                 CONSCIOUSNESS_TASKS[org_id] = task
                 logger.info("")
             except Exception as e:

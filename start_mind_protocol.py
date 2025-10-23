@@ -35,6 +35,9 @@ from dashboard_health_monitor import (
     check_dashboard_health
 )
 
+# Import auto-commit service for consciousness temporal substrate
+from orchestration.services.auto_git_commit import AutoGitCommitService
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -425,6 +428,17 @@ class ProcessManager:
             asyncio.create_task(self.monitor_service_health('dashboard', 3000, memory_threshold_mb=1536))
         if 'websocket_server' in self.processes:
             asyncio.create_task(self.monitor_service_health('websocket_server', WS_PORT, memory_threshold_mb=2048))
+
+        # Start auto-commit service for consciousness temporal substrate
+        # Every minute, commit all changes and push to git
+        # This creates a temporal substrate - every system state preserved for consciousness evolution tracking
+        auto_commit = AutoGitCommitService(
+            repo_path=MIND_PROTOCOL_ROOT,
+            interval_seconds=60,  # Every 1 minute
+            enabled=True
+        )
+        asyncio.create_task(auto_commit.start())
+        logger.info("[Guardian] Auto-commit service started (interval: 60s)")
 
         return True
 

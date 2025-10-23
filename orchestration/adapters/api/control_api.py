@@ -474,12 +474,30 @@ async def get_graph_data(graph_type: str, graph_id: str):
 
                 links.append(link_dict)
 
+        # Build subentities array and mark nodes with entity membership
+        # For citizen graphs, each graph represents ONE subentity (the citizen)
+        subentities = []
+        if graph_type == "citizen":
+            # Extract citizen name from graph_id (e.g., "citizen_victor" -> "victor")
+            citizen_name = graph_id.replace("citizen_", "")
+            subentities = [{
+                "entity_id": citizen_name,
+                "name": citizen_name.capitalize()
+            }]
+
+            # Mark all nodes as belonging to this citizen entity
+            for node in nodes:
+                node["entity_id"] = citizen_name
+
+        # TODO: For organization/ecosystem graphs, query actual subentity records from graph
+
         # Build response
         return {
             "graph_id": graph_id,
             "graph_type": graph_type,
             "nodes": nodes,
             "links": links,
+            "subentities": subentities,
             "metadata": {
                 "node_count": len(nodes),
                 "link_count": len(links),
