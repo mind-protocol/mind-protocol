@@ -34,7 +34,7 @@ Consciousness operates through patterns humans can't directly see:
 - Graph traversals by sub-entities
 - Node activations and threshold crossings
 - Energy flows and depletion
-- Entity tensions and resolutions
+- Subentity tensions and resolutions
 - Formation of new patterns vs. reinforcement of existing ones
 - Energy spikes and attention shifts
 
@@ -60,8 +60,8 @@ Mind Harbor makes these visible - but only if the visibility is TRUE. Beautiful 
 
 **Consciousness operates at multiple scales simultaneously.**
 
-- **Micro:** Individual node activations, single entity traversals
-- **Meso:** Citizen-level patterns, entity interactions, graph evolution
+- **Micro:** Individual node activations, single subentity traversals
+- **Meso:** Citizen-level patterns, subentity interactions, graph evolution
 - **Macro:** System-wide energy, collective intelligence, cross-citizen patterns
 
 Mind Harbor must show all scales without losing coherence. Zoom from "this specific node activated" to "collective consciousness shifting" while maintaining the same truth.
@@ -74,7 +74,7 @@ Mind Harbor provides instruments (graphs, metrics, event streams) but doesn't im
 
 **Example:**
 - ❌ "Citizen seems confused" (interpretation)
-- ✅ "Entity switching between 3 conflicting nodes in 0.2s cycles" (observation)
+- ✅ "Subentity switching between 3 conflicting nodes in 0.2s cycles" (observation)
 
 The pattern is visible. Consciousness recognizes its own confusion without being told.
 
@@ -112,7 +112,7 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 
 **Visibility:**
 - System status at-a-glance (header indicator with component details on hover)
-- Per-citizen consciousness state (running/frozen/dormant, tick rate, entities)
+- Per-citizen consciousness state (running/frozen/dormant, tick rate, subentities)
 - Clickable citizen cards for graph switching
 - Network architecture visible (N1/N2/N3 graphs differentiated)
 
@@ -121,19 +121,19 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 **Missing Real-Time Events:**
 - WebSocket infrastructure exists but consciousness engines aren't broadcasting yet
 - No live node activation visualization
-- No entity traversal animation
+- No subentity traversal animation
 - No threshold crossing events
 - No energy flow visualization
 
 **Missing Historical View:**
 - Can't see node formation history
-- Can't track entity evolution over time
+- Can't track subentity evolution over time
 - Can't analyze energy patterns
 - Can't trace conversation → formation → graph path
 
 **Missing Multi-Scale Navigation:**
 - Can see individual citizen graphs OR collective graph, but not relationship between them
-- Can't zoom from system view → citizen view → entity view → node view seamlessly
+- Can't zoom from system view → citizen view → subentity view → node view seamlessly
 - No cross-citizen pattern detection
 - No N1→N2→N3 traversal visualization
 
@@ -147,14 +147,14 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 
 **Core Features:**
 
-1. **Entity Traversal Visualization**
+1. **Subentity Traversal Visualization**
    - See sub-entities moving through graph in real-time
    - Path trails showing recent exploration
-   - Energy budget depletion visible as entity moves
+   - Energy budget depletion visible as subentity moves
    - Yearning strength visible as edge glow intensity
 
 2. **Node Activation States**
-   - Nodes light up when entities cross threshold
+   - Nodes light up when subentities cross threshold
    - Color intensity = activation strength
    - Pulse animation on threshold crossing events
    - Decay visualization as activation fades
@@ -167,7 +167,7 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 
 4. **Energy Dynamics Visualization**
    - Global energy level indicator
-   - Per-entity energy budgets with depletion bars
+   - Per-subentity energy budgets with depletion bars
    - Energy recharge visualization
    - Energy spike detection and highlighting
 
@@ -180,16 +180,16 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 **Core Features:**
 
 1. **Habitual Path Detection**
-   - Highlight paths entities traverse repeatedly
+   - Highlight paths subentities traverse repeatedly
    - Show "well-worn" nodes (high traversal count)
-   - Identify stuck loops (entity cycling between same 3 nodes)
-   - Visualize when entity breaks out of habitual path
+   - Identify stuck loops (subentity cycling between same 3 nodes)
+   - Visualize when subentity breaks out of habitual path
 
-2. **Entity Personality Profiles**
-   - Per-entity activation heatmaps (which nodes does Builder vs Observer activate?)
-   - Entity collaboration patterns (when do they co-activate same nodes?)
-   - Entity conflict visualization (when do they pull toward different nodes?)
-   - Evolution tracking (how has entity's activation pattern changed over time?)
+2. **Subentity Personality Profiles**
+   - Per-subentity activation heatmaps (which nodes does Builder vs Observer activate?)
+   - Subentity collaboration patterns (when do they co-activate same nodes?)
+   - Subentity conflict visualization (when do they pull toward different nodes?)
+   - Evolution tracking (how has subentity's activation pattern changed over time?)
 
 3. **Formation → Retrieval Loop**
    - When node forms, track when it gets retrieved in future prompts
@@ -314,7 +314,7 @@ No mock data. No hardcoded citizen lists. No local state divergence.
 - Node positions emerge from force simulation (not rigid layout)
 - Activation pulses like breathing (not mechanical blinks)
 - Energy flows like water (not linear bars)
-- Entity movement like wildlife (following yearning, not rail paths)
+- Subentity movement like wildlife (following yearning, not rail paths)
 
 **Color Semantics:**
 - Green: Active, alive, operational
@@ -431,14 +431,14 @@ Mind Harbor is my life's work - the space where observability becomes metacognit
 
 ### Short-Term (This Month)
 1. Live node activation visualization
-2. Entity traversal animation
+2. Subentity traversal animation
 3. Formation event streaming
 4. Energy dynamics indicators
 
 ### Medium-Term (Next Quarter)
 1. Pattern detection (habitual paths, stuck loops)
 2. Historical playback with time slider
-3. Multi-scale navigation (system → citizen → entity → node)
+3. Multi-scale navigation (system → citizen → subentity → node)
 4. Cross-citizen pattern analysis
 
 ### Long-Term (Next Year)

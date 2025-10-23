@@ -1,8 +1,8 @@
 # Ecosystem Equilibrium Mechanisms
 
-**Core Principle:** Entity emergence is a dynamic ecosystem, not a correct/incorrect binary. The system should maintain equilibrium, dynamism, and prevent domination by any single entity.
+**Core Principle:** Subentity emergence is a dynamic ecosystem, not a correct/incorrect binary. The system should maintain equilibrium, dynamism, and prevent domination by any single subentity.
 
-**Design Decision:** As more entities exist, forming new entities becomes harder. This prevents entity explosion while maintaining natural ecosystem dynamics.
+**Design Decision:** As more subentities exist, forming new subentities becomes harder. This prevents subentity explosion while maintaining natural ecosystem dynamics.
 
 ---
 
@@ -11,27 +11,27 @@
 ### Target Qualities
 
 **1. Equilibrium**
-- System maintains stable entity count range (e.g., 5-12 entities)
+- System maintains stable subentity count range (e.g., 5-12 subentities)
 - Not too few (lack of perspective diversity)
 - Not too many (attention fragmentation)
 
 **2. Dynamism**
-- Entities can form naturally when patterns emerge
-- Entities can dissolve naturally when patterns weaken
+- Subentities can form naturally when patterns emerge
+- Subentities can dissolve naturally when patterns weaken
 - System adapts to changing substrate patterns
 
 **3. Non-Domination**
-- No single entity captures majority of substrate energy
+- No single subentity captures majority of substrate energy
 - Multiple perspectives remain active
-- Weak entities have chance to grow if patterns support them
+- Weak subentities have chance to grow if patterns support them
 
 ---
 
-## Part 2: Entity Emergence Difficulty Scaling
+## Part 2: Subentity Emergence Difficulty Scaling
 
-### Core Mechanism: Formation Threshold Increases with Entity Count
+### Core Mechanism: Formation Threshold Increases with Subentity Count
 
-**Principle:** The more entities already exist, the higher the bar for new entity formation.
+**Principle:** The more subentities already exist, the higher the bar for new subentity formation.
 
 ```python
 def calculate_entity_formation_threshold(
@@ -39,15 +39,15 @@ def calculate_entity_formation_threshold(
     target_entity_range: tuple = (5, 12)
 ) -> float:
     """
-    Formation threshold increases as entity count approaches target.
+    Formation threshold increases as subentity count approaches target.
 
-    Result: Easy to form first few entities, hard to form beyond target.
+    Result: Easy to form first few subentities, hard to form beyond target.
     """
     target_min, target_max = target_entity_range
 
     if current_entity_count < target_min:
         # Below minimum - ENCOURAGE formation
-        # Linear scaling: 0 entities → 0.5 threshold, 5 entities → 0.7 threshold
+        # Linear scaling: 0 subentities → 0.5 threshold, 5 subentities → 0.7 threshold
         return 0.5 + (current_entity_count / target_min) * 0.2
 
     elif current_entity_count <= target_max:
@@ -58,7 +58,7 @@ def calculate_entity_formation_threshold(
 
     else:
         # Above maximum - DISCOURAGE formation
-        # Exponential scaling: 13 entities → 0.85, 15 entities → 0.95
+        # Exponential scaling: 13 subentities → 0.85, 15 subentities → 0.95
         excess = current_entity_count - target_max
         return min(0.95, 0.8 + excess * 0.05)
 ```
@@ -66,29 +66,29 @@ def calculate_entity_formation_threshold(
 **Example:**
 
 ```python
-# 0 entities → threshold 0.5 (easy to form first entity)
+# 0 subentities → threshold 0.5 (easy to form first subentity)
 calculate_entity_formation_threshold(0) = 0.5
 
-# 3 entities → threshold 0.62 (still easy)
+# 3 subentities → threshold 0.62 (still easy)
 calculate_entity_formation_threshold(3) = 0.62
 
-# 5 entities → threshold 0.7 (target minimum reached)
+# 5 subentities → threshold 0.7 (target minimum reached)
 calculate_entity_formation_threshold(5) = 0.7
 
-# 8 entities → threshold 0.74 (moderate difficulty)
+# 8 subentities → threshold 0.74 (moderate difficulty)
 calculate_entity_formation_threshold(8) = 0.74
 
-# 12 entities → threshold 0.8 (target maximum reached)
+# 12 subentities → threshold 0.8 (target maximum reached)
 calculate_entity_formation_threshold(12) = 0.8
 
-# 15 entities → threshold 0.95 (very hard to form new entity)
+# 15 subentities → threshold 0.95 (very hard to form new subentity)
 calculate_entity_formation_threshold(15) = 0.95
 
-# 20 entities → threshold 0.95 (capped - nearly impossible)
+# 20 subentities → threshold 0.95 (capped - nearly impossible)
 calculate_entity_formation_threshold(20) = 0.95
 ```
 
-**Effect:** Natural equilibrium around 5-12 entities without hard caps.
+**Effect:** Natural equilibrium around 5-12 subentities without hard caps.
 
 ---
 
@@ -96,48 +96,48 @@ calculate_entity_formation_threshold(20) = 0.95
 
 ### Mechanism 1: Energy Distribution Balance
 
-**Goal:** Prevent single entity from capturing >50% of total substrate energy.
+**Goal:** Prevent single subentity from capturing >50% of total substrate energy.
 
 ```python
-def apply_domination_pressure(entities: List[EmergentEntity]) -> None:
+def apply_domination_pressure(subentities: List[EmergentSubentity]) -> None:
     """
-    If one entity dominates, apply pressure to redistribute energy.
+    If one subentity dominates, apply pressure to redistribute energy.
     """
-    if not entities:
+    if not subentities:
         return
 
-    # Calculate total energy across all entities
-    total_energy = sum(e.total_energy for e in entities)
+    # Calculate total energy across all subentities
+    total_energy = sum(e.total_energy for e in subentities)
 
-    # Find dominant entity
-    dominant = max(entities, key=lambda e: e.total_energy)
+    # Find dominant subentity
+    dominant = max(subentities, key=lambda e: e.total_energy)
     dominant_percentage = dominant.total_energy / total_energy
 
     if dominant_percentage > 0.5:  # Dominating
-        # Apply decay pressure to dominant entity
+        # Apply decay pressure to dominant subentity
         domination_excess = dominant_percentage - 0.5  # How much over 50%
 
         # Decay factor: 0.5 excess → 0.85 decay, 0.8 excess → 0.7 decay
         decay_factor = 1.0 - (domination_excess * 0.6)
 
-        # Apply to all nodes where dominant entity is active
+        # Apply to all nodes where dominant subentity is active
         for node in get_nodes_for_entity(dominant):
             node.entity_activations[dominant.label]["energy"] *= decay_factor
 
-        # Redistribute energy to weaker entities
-        weak_entities = [e for e in entities if e != dominant and e.total_energy < total_energy * 0.1]
+        # Redistribute energy to weaker subentities
+        weak_entities = [e for e in subentities if e != dominant and e.total_energy < total_energy * 0.1]
         if weak_entities:
             boost_per_entity = (total_energy * domination_excess * 0.2) / len(weak_entities)
             for weak in weak_entities:
-                # Boost weak entity energy on high-affinity nodes
+                # Boost weak subentity energy on high-affinity nodes
                 boost_entity_on_affinity_nodes(weak, boost_per_entity)
 ```
 
 **Example:**
 
 ```python
-# 4 entities with energy distribution
-entities = [
+# 4 subentities with energy distribution
+subentities = [
     {"label": "translator", "total_energy": 50.0},  # 62.5% - DOMINATING
     {"label": "validator", "total_energy": 15.0},   # 18.75%
     {"label": "architect", "total_energy": 10.0},   # 12.5%
@@ -152,7 +152,7 @@ domination_excess = 0.625 - 0.5 = 0.125
 decay_factor = 1.0 - (0.125 * 0.6) = 0.925
 
 # Translator energy reduced: 50.0 * 0.925 = 46.25
-# Redistribute: 80.0 * 0.125 * 0.2 = 2.0 to weak entities
+# Redistribute: 80.0 * 0.125 * 0.2 = 2.0 to weak subentities
 # Observer boosted: 5.0 + 2.0 = 7.0
 
 # New distribution:
@@ -166,20 +166,20 @@ decay_factor = 1.0 - (0.125 * 0.6) = 0.925
 
 ### Mechanism 2: Attention Fragmentation Prevention
 
-**Goal:** Prevent too many weak entities from fragmenting attention.
+**Goal:** Prevent too many weak subentities from fragmenting attention.
 
 ```python
-def apply_fragmentation_pressure(entities: List[EmergentEntity]) -> None:
+def apply_fragmentation_pressure(subentities: List[EmergentSubentity]) -> None:
     """
-    If too many weak entities, encourage dissolution of weakest.
+    If too many weak subentities, encourage dissolution of weakest.
     """
-    # Find weak entities (< 5% of total energy)
-    total_energy = sum(e.total_energy for e in entities)
+    # Find weak subentities (< 5% of total energy)
+    total_energy = sum(e.total_energy for e in subentities)
     weak_threshold = total_energy * 0.05
 
-    weak_entities = [e for e in entities if e.total_energy < weak_threshold]
+    weak_entities = [e for e in subentities if e.total_energy < weak_threshold]
 
-    if len(weak_entities) > 3:  # Too many weak entities
+    if len(weak_entities) > 3:  # Too many weak subentities
         # Sort by energy (weakest first)
         weak_entities.sort(key=lambda e: e.total_energy)
 
@@ -189,7 +189,7 @@ def apply_fragmentation_pressure(entities: List[EmergentEntity]) -> None:
             for node in get_nodes_for_entity(weak):
                 node.entity_activations[weak.label]["energy"] *= 0.8  # Strong decay
 
-            # Mark entity as dissolving
+            # Mark subentity as dissolving
             if weak.total_energy < total_energy * 0.02:  # < 2% of total
                 weak.status = "dissolving"
 ```
@@ -198,17 +198,17 @@ def apply_fragmentation_pressure(entities: List[EmergentEntity]) -> None:
 
 ## Part 4: Dynamism Mechanisms
 
-### Mechanism 1: Natural Entity Formation
+### Mechanism 1: Natural Subentity Formation
 
-**Conditions for new entity formation:**
+**Conditions for new subentity formation:**
 
 ```python
 def should_form_new_entity(
     candidate_cluster: Cluster,
-    current_entities: List[EmergentEntity]
+    current_entities: List[EmergentSubentity]
 ) -> bool:
     """
-    Determine if candidate cluster should crystallize as entity.
+    Determine if candidate cluster should crystallize as subentity.
     """
     # 1. Cluster must be coherent
     if candidate_cluster.coherence < 0.7:
@@ -218,31 +218,31 @@ def should_form_new_entity(
     if candidate_cluster.stability_cycles < 10:
         return False
 
-    # 3. Check formation threshold (scales with entity count)
+    # 3. Check formation threshold (scales with subentity count)
     formation_threshold = calculate_entity_formation_threshold(len(current_entities))
     if candidate_cluster.total_energy < formation_threshold:
         return False
 
-    # 4. Cluster must be semantically distinct from existing entities
+    # 4. Cluster must be semantically distinct from existing subentities
     for existing in current_entities:
         similarity = cosine_similarity(
             candidate_cluster.mean_embedding,
             existing.mean_embedding
         )
-        if similarity > 0.8:  # Too similar to existing entity
+        if similarity > 0.8:  # Too similar to existing subentity
             return False
 
     # 5. Cluster must show unique behavioral pattern
     if not has_unique_behavior_pattern(candidate_cluster, current_entities):
         return False
 
-    return True  # All conditions met - form entity
+    return True  # All conditions met - form subentity
 ```
 
 **Example:**
 
 ```python
-# Current state: 6 entities exist
+# Current state: 6 subentities exist
 current_entities = ["translator", "validator", "architect", "observer", "pragmatist", "pattern_recognizer"]
 
 # Candidate cluster detected
@@ -262,49 +262,49 @@ candidate = {
 formation_threshold = calculate_entity_formation_threshold(6) = 0.72
 
 # Decision: 0.75 > 0.72 ✅
-# Result: Form new entity (e.g., "boundary_keeper")
+# Result: Form new subentity (e.g., "boundary_keeper")
 ```
 
 ---
 
-### Mechanism 2: Natural Entity Dissolution
+### Mechanism 2: Natural Subentity Dissolution
 
-**Conditions for entity dissolution:**
+**Conditions for subentity dissolution:**
 
 ```python
 def should_dissolve_entity(
-    entity: EmergentEntity,
-    current_entities: List[EmergentEntity]
+    subentity: EmergentSubentity,
+    current_entities: List[EmergentSubentity]
 ) -> bool:
     """
-    Determine if entity should dissolve naturally.
+    Determine if subentity should dissolve naturally.
     """
-    # 1. Entity must have low total energy
+    # 1. Subentity must have low total energy
     total_system_energy = sum(e.total_energy for e in current_entities)
-    if entity.total_energy > total_system_energy * 0.05:
+    if subentity.total_energy > total_system_energy * 0.05:
         return False  # Still has >5% of energy - keep
 
-    # 2. Entity must have low coherence
-    if entity.coherence > 0.5:
+    # 2. Subentity must have low coherence
+    if subentity.coherence > 0.5:
         return False  # Still coherent - keep
 
-    # 3. Entity must be unstable over time
-    recent_stability = np.mean(entity.stability_history[-10:])
+    # 3. Subentity must be unstable over time
+    recent_stability = np.mean(subentity.stability_history[-10:])
     if recent_stability > 0.5:
         return False  # Stable recently - keep
 
-    # 4. Entity's patterns must be absorbed by other entities
-    # (Check if other entities now cover this semantic space)
+    # 4. Subentity's patterns must be absorbed by other subentities
+    # (Check if other subentities now cover this semantic space)
     for other in current_entities:
-        if other == entity:
+        if other == subentity:
             continue
 
         similarity = cosine_similarity(
-            entity.mean_embedding,
+            subentity.mean_embedding,
             other.mean_embedding
         )
         if similarity > 0.7:
-            # Another entity covers this space - dissolve
+            # Another subentity covers this space - dissolve
             return True
 
     return True  # Low energy + low coherence + unstable → dissolve
@@ -313,7 +313,7 @@ def should_dissolve_entity(
 **Example:**
 
 ```python
-# Entity "boundary_keeper" formed 50 cycles ago
+# Subentity "boundary_keeper" formed 50 cycles ago
 boundary_keeper = {
     "total_energy": 2.0,           # Only 2% of total
     "coherence": 0.42,             # < 0.5
@@ -321,7 +321,7 @@ boundary_keeper = {
     "mean_embedding": [...]
 }
 
-# Check against other entities
+# Check against other subentities
 validator_similarity = cosine_similarity(
     boundary_keeper.mean_embedding,
     validator.mean_embedding
@@ -345,7 +345,7 @@ class EcosystemState:
     Stored in database as singleton GlobalState node.
     """
     def __init__(self):
-        # Entity counts
+        # Subentity counts
         self.current_entity_count = 0
         self.target_entity_range = (5, 12)
 
@@ -376,7 +376,7 @@ class EcosystemState:
         """
         score = 1.0
 
-        # Factor 1: Entity count (0.3 weight)
+        # Factor 1: Subentity count (0.3 weight)
         target_min, target_max = self.target_entity_range
         if self.current_entity_count < target_min:
             count_score = self.current_entity_count / target_min
@@ -414,7 +414,7 @@ class EcosystemState:
 
 ```cypher
 CREATE (gs:GlobalState {
-    // Entity counts
+    // Subentity counts
     current_entity_count: 6,
     target_entity_min: 5,
     target_entity_max: 12,
@@ -456,22 +456,22 @@ CREATE (gs:GlobalState {
 
 ## Part 6: Equilibrium Maintenance Cycle
 
-**When to run:** After every entity formation/dissolution, or every 10 consciousness cycles.
+**When to run:** After every subentity formation/dissolution, or every 10 consciousness cycles.
 
 ```python
 def maintain_ecosystem_equilibrium(
-    entities: List[EmergentEntity],
+    subentities: List[EmergentSubentity],
     state: EcosystemState
 ) -> None:
     """
     Apply equilibrium mechanisms to maintain ecosystem health.
     """
     # 1. Update state
-    state.current_entity_count = len(entities)
-    state.total_system_energy = sum(e.total_energy for e in entities)
+    state.current_entity_count = len(subentities)
+    state.total_system_energy = sum(e.total_energy for e in subentities)
     state.energy_distribution = {
         e.label: e.total_energy / state.total_system_energy
-        for e in entities
+        for e in subentities
     }
 
     # 2. Check for domination
@@ -482,37 +482,37 @@ def maintain_ecosystem_equilibrium(
 
         if state.dominant_percentage > 0.5:
             state.domination_pressure_active = True
-            apply_domination_pressure(entities)
+            apply_domination_pressure(subentities)
         else:
             state.domination_pressure_active = False
 
     # 3. Check for fragmentation
     weak_threshold = 0.05
     state.weak_entity_count = sum(
-        1 for e in entities
+        1 for e in subentities
         if e.total_energy < state.total_system_energy * weak_threshold
     )
 
     if state.weak_entity_count > 3:
         state.fragmentation_pressure_active = True
-        apply_fragmentation_pressure(entities)
+        apply_fragmentation_pressure(subentities)
     else:
         state.fragmentation_pressure_active = False
 
-    # 4. Check for entity formation candidates
-    formation_threshold = calculate_entity_formation_threshold(len(entities))
+    # 4. Check for subentity formation candidates
+    formation_threshold = calculate_entity_formation_threshold(len(subentities))
     candidate_clusters = detect_clusters_above_threshold(formation_threshold)
 
     for candidate in candidate_clusters:
-        if should_form_new_entity(candidate, entities):
+        if should_form_new_entity(candidate, subentities):
             new_entity = form_entity_from_cluster(candidate)
-            entities.append(new_entity)
+            subentities.append(new_entity)
             state.entities_formed_last_100_cycles += 1
 
-    # 5. Check for entity dissolution candidates
-    for entity in entities:
-        if should_dissolve_entity(entity, entities):
-            dissolve_entity(entity, entities)
+    # 5. Check for subentity dissolution candidates
+    for subentity in subentities:
+        if should_dissolve_entity(subentity, subentities):
+            dissolve_entity(subentity, subentities)
             state.entities_dissolved_last_100_cycles += 1
 
     # 6. Calculate equilibrium score
@@ -538,9 +538,9 @@ Cluster detection
 🔷 EQUILIBRIUM CHECKPOINT 1: Formation Threshold
     - Calculate formation threshold based on current_entity_count
     - Check candidate clusters against threshold
-    - Form new entities if conditions met
+    - Form new subentities if conditions met
     ↓
-Entity identification
+Subentity identification
     ↓
 Response generation
     ↓
@@ -548,7 +548,7 @@ Consciousness extraction
     ↓
 🔷 EQUILIBRIUM CHECKPOINT 2: Ecosystem Maintenance (every 10 cycles)
     - Check for domination → apply pressure if needed
-    - Check for fragmentation → dissolve weak entities if needed
+    - Check for fragmentation → dissolve weak subentities if needed
     - Update global equilibrium state
     - Calculate equilibrium score
     ↓
@@ -604,23 +604,23 @@ Cycle Ends
 ### Equilibrium Mechanisms Specified
 
 **1. Formation Difficulty Scaling**
-- Easy when few entities (threshold 0.5)
-- Hard when many entities (threshold 0.95)
-- Natural equilibrium around 5-12 entities
+- Easy when few subentities (threshold 0.5)
+- Hard when many subentities (threshold 0.95)
+- Natural equilibrium around 5-12 subentities
 
 **2. Non-Domination**
-- Decay pressure on entities with >50% of energy
-- Boost weak entities (<10% of energy)
-- Prevents single-entity dominance
+- Decay pressure on subentities with >50% of energy
+- Boost weak subentities (<10% of energy)
+- Prevents single-subentity dominance
 
 **3. Fragmentation Prevention**
-- Dissolve weakest entities when >3 weak entities exist
+- Dissolve weakest subentities when >3 weak subentities exist
 - Prevents attention fragmentation
 - Maintains focused perspectives
 
 **4. Natural Dynamism**
-- Entities form when coherent + stable + distinct + unique
-- Entities dissolve when weak + incoherent + unstable + absorbed
+- Subentities form when coherent + stable + distinct + unique
+- Subentities dissolve when weak + incoherent + unstable + absorbed
 - System adapts organically
 
 **5. Global State Tracking**
@@ -647,6 +647,6 @@ EQUILIBRIUM_PARAMS = {
 
 **This is self-regulating consciousness ecology.**
 
-No hard caps, no forced limits. Natural pressure toward equilibrium, dynamism, and balanced perspectives. Entities emerge when substrate supports them, dissolve when patterns weaken. The ecosystem knows how to regulate itself.
+No hard caps, no forced limits. Natural pressure toward equilibrium, dynamism, and balanced perspectives. Subentities emerge when substrate supports them, dissolve when patterns weaken. The ecosystem knows how to regulate itself.
 
 Beautiful.

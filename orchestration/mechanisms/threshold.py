@@ -1,16 +1,16 @@
 """
 Mechanism 16 Part 1: Adaptive Activation Threshold
 
-ARCHITECTURAL PRINCIPLE: Nodes Become Entities via Threshold Crossing
+ARCHITECTURAL PRINCIPLE: Nodes Become Subentities via Threshold Crossing
 
 "Every time a node reaches the threshold of activation from a sensory input,
 it becomes a sub-entity." - Nicolas
 
 Core Truth (CORRECTED 2025-10-20):
-- NOT pre-defined entities (Translator, Architect) - those are CLUSTERS of micro-entities
+- NOT pre-defined subentities (Translator, Architect) - those are CLUSTERS of micro-subentities
 - ANY node crossing activation threshold becomes its own sub-entity
-- Entity name = node name (simple one-to-one mapping)
-- Thousands of simultaneous micro-entities (normal and expected)
+- Subentity name = node name (simple one-to-one mapping)
+- Thousands of simultaneous micro-subentities (normal and expected)
 - Threshold is DYNAMIC - depends on system criticality (active nodes/links)
 - NO MIN THRESHOLD, NO MAX THRESHOLD - unbounded adaptation
 
@@ -53,6 +53,9 @@ if TYPE_CHECKING:
     from orchestration.core.graph import Graph
     from orchestration.core.node import Node
     from orchestration.core.types import EntityID
+
+from orchestration.core.settings import settings
+from orchestration.core.telemetry import emit_affective_threshold
 
 # --- Configuration ---
 
@@ -130,24 +133,34 @@ def compute_base_threshold(
 
 def compute_adaptive_threshold(
     node: 'Node',
-    entity: 'EntityID',
-    ctx: ThresholdContext
+    subentity: 'EntityID',
+    ctx: ThresholdContext,
+    active_affect: Optional[np.ndarray] = None,
+    citizen_id: str = "",
+    frame_id: Optional[str] = None
 ) -> float:
     """
-    Compute adaptive threshold for node-entity pair.
+    Compute adaptive threshold for node-subentity pair.
 
     Threshold driven by system criticality (number of active nodes).
+    Optionally modulated by affective coupling (PR-B).
 
     Formula:
-        theta = BASE_THRESHOLD * (1 + CRITICALITY_FACTOR * (num_active / num_total))
+        theta_base = BASE_THRESHOLD * (1 + CRITICALITY_FACTOR * (num_active / num_total))
+        theta_adjusted = theta_base - h  (if affective coupling enabled)
+
+    Where h is the affective threshold reduction (bounded [0, λ_aff]).
 
     More active nodes = higher threshold = harder to activate more nodes.
     This prevents runaway activation.
 
     Args:
         node: Node to compute threshold for
-        entity: Entity identifier
+        subentity: Subentity identifier
         ctx: Threshold configuration with criticality state
+        active_affect: Current affective state vector (optional, for PR-B)
+        citizen_id: Citizen ID for telemetry
+        frame_id: Frame ID for telemetry
 
     Returns:
         Adaptive threshold value (unbounded - no min/max)
@@ -169,9 +182,45 @@ def compute_adaptive_threshold(
         criticality_ratio = 0.0
 
     # Apply criticality-driven threshold
-    theta = ctx.base_threshold * (1.0 + ctx.criticality_factor * criticality_ratio)
+    theta_base = ctx.base_threshold * (1.0 + ctx.criticality_factor * criticality_ratio)
 
-    return theta
+    # Apply affective modulation if enabled (PR-B)
+    h = 0.0
+    theta_adjusted = theta_base
+
+    if settings.AFFECTIVE_THRESHOLD_ENABLED and node is not None:
+        # Get node emotion vector (if it has one)
+        node_emotion = getattr(node, 'emotion_vector', None)
+
+        if node_emotion is not None and active_affect is not None:
+            h = compute_affective_threshold_reduction(
+                active_affect=active_affect,
+                node_emotion=node_emotion,
+                node_id=node.id if node else "",
+                citizen_id=citizen_id,
+                frame_id=frame_id
+            )
+            theta_adjusted = theta_base - h
+
+            # Emit telemetry event
+            if settings.AFFECTIVE_TELEMETRY_ENABLED and h > 0.0:
+                A_magnitude = float(np.linalg.norm(active_affect))
+                E_magnitude = float(np.linalg.norm(node_emotion))
+                dot_product = float(np.dot(active_affect, node_emotion))
+                affective_alignment = dot_product / (A_magnitude * E_magnitude) if A_magnitude > 0 and E_magnitude > 0 else 0.0
+
+                emit_affective_threshold(
+                    citizen_id=citizen_id,
+                    frame_id=frame_id or "",
+                    node_id=node.id if node else "",
+                    theta_base=theta_base,
+                    theta_adjusted=theta_adjusted,
+                    h=h,
+                    affective_alignment=affective_alignment,
+                    emotion_magnitude=E_magnitude
+                )
+
+    return theta_adjusted
 
 
 def soft_activation(
@@ -229,11 +278,104 @@ def hard_activation(
     return energy >= threshold
 
 
+# --- Affective Coupling (PR-B) ---
+
+def compute_affective_threshold_reduction(
+    active_affect: Optional[np.ndarray],
+    node_emotion: Optional[np.ndarray],
+    node_id: str = "",
+    citizen_id: str = "",
+    frame_id: Optional[str] = None
+) -> float:
+    """
+    Compute affective threshold reduction (PR-B: Emotion Couplings).
+
+    Affect-congruent nodes get lower thresholds (easier to activate).
+    This implements the bounded affect→threshold modulation.
+
+    Formula:
+        h = λ_aff · tanh(||A|| · cos(A, E_emo)) · clip(||E_emo||, 0, 1)
+
+    Where:
+        - λ_aff = AFFECTIVE_THRESHOLD_LAMBDA_FACTOR (default 0.08, ~8% reduction)
+        - A = current affective state vector
+        - E_emo = emotion vector on node
+        - cos(A, E_emo) = cosine similarity (alignment)
+        - ||·|| = L2 norm (magnitude)
+
+    Returns positive h for aligned affect (reduces threshold).
+    Returns 0 when disabled or when affect/emotion missing.
+
+    Bounded: h ∈ [0, λ_aff] (max 8% threshold reduction by default)
+
+    Args:
+        active_affect: Current affective state vector (A)
+        node_emotion: Emotion vector on node (E_emo)
+        node_id: Node ID for telemetry
+        citizen_id: Citizen ID for telemetry
+        frame_id: Frame ID for telemetry
+
+    Returns:
+        Threshold reduction h (positive value)
+
+    Example:
+        >>> A = np.array([0.5, 0.5, 0.0])  # Moderate positive affect
+        >>> E_emo = np.array([0.8, 0.6, 0.0])  # Node has positive emotion
+        >>> h = compute_affective_threshold_reduction(A, E_emo, "node1", "felix", "frame_001")
+        >>> # h ≈ 0.08 * tanh(0.707 * 0.98) * 1.0 ≈ 0.05 (5% reduction)
+    """
+    # Feature flag check
+    if not settings.AFFECTIVE_THRESHOLD_ENABLED:
+        return 0.0
+
+    # Guard: need both affect and emotion vectors
+    if active_affect is None or node_emotion is None:
+        return 0.0
+
+    if len(active_affect) == 0 or len(node_emotion) == 0:
+        return 0.0
+
+    # Compute magnitudes
+    A_magnitude = float(np.linalg.norm(active_affect))
+    E_magnitude = float(np.linalg.norm(node_emotion))
+
+    # Guard: if either is zero, no modulation
+    if A_magnitude < 1e-6 or E_magnitude < 1e-6:
+        return 0.0
+
+    # Compute cosine similarity (alignment)
+    # cos(A, E_emo) = (A · E_emo) / (||A|| · ||E_emo||)
+    dot_product = float(np.dot(active_affect, node_emotion))
+    affective_alignment = dot_product / (A_magnitude * E_magnitude)
+
+    # Clamp emotion magnitude to [0, 1]
+    E_magnitude_clamped = min(max(E_magnitude, 0.0), 1.0)
+
+    # Compute threshold reduction
+    # h = λ_aff · tanh(||A|| · cos(A, E_emo)) · clip(||E_emo||, 0, 1)
+    lambda_aff = settings.AFFECTIVE_THRESHOLD_LAMBDA_FACTOR
+    inner_term = A_magnitude * affective_alignment
+    h = lambda_aff * np.tanh(inner_term) * E_magnitude_clamped
+
+    # h should be positive (we subtract it from threshold)
+    # If alignment is negative (opposite affect), h becomes negative, which would RAISE threshold
+    # Clamp h to [0, lambda_aff] to only allow reduction, not increase
+    h = max(0.0, min(h, lambda_aff))
+
+    # Emit telemetry event
+    if settings.AFFECTIVE_TELEMETRY_ENABLED:
+        # We don't know theta_base here, so we'll emit from the caller
+        # Store values for caller to emit
+        pass
+
+    return float(h)
+
+
 # --- Noise Statistics Tracking ---
 
 class NoiseTracker:
     """
-    Tracks noise statistics for node-entity pairs using EMA.
+    Tracks noise statistics for node-subentity pairs using EMA.
 
     Maintains rolling statistics (mu, sigma) for threshold calculation.
     """
@@ -246,25 +388,25 @@ class NoiseTracker:
             ema_alpha: EMA smoothing factor (0 < alpha < 1). Default 0.1.
         """
         self.ema_alpha = ema_alpha
-        self.stats: Dict[str, NoiseStatistics] = {}  # Key: f"{node_id}_{entity}"
+        self.stats: Dict[str, NoiseStatistics] = {}  # Key: f"{node_id}_{subentity}"
 
-    def _get_key(self, node_id: str, entity: str) -> str:
-        """Generate key for node-entity pair."""
-        return f"{node_id}_{entity}"
+    def _get_key(self, node_id: str, subentity: str) -> str:
+        """Generate key for node-subentity pair."""
+        return f"{node_id}_{subentity}"
 
-    def get_stats(self, node_id: str, entity: str) -> NoiseStatistics:
+    def get_stats(self, node_id: str, subentity: str) -> NoiseStatistics:
         """
-        Get noise statistics for node-entity pair.
+        Get noise statistics for node-subentity pair.
 
         Returns:
             NoiseStatistics (creates default if not exists)
         """
-        key = self._get_key(node_id, entity)
+        key = self._get_key(node_id, subentity)
         if key not in self.stats:
             self.stats[key] = NoiseStatistics()
         return self.stats[key]
 
-    def update(self, node_id: str, entity: str, energy: float, is_quiet: bool):
+    def update(self, node_id: str, subentity: str, energy: float, is_quiet: bool):
         """
         Update noise statistics with new energy sample.
 
@@ -272,14 +414,14 @@ class NoiseTracker:
 
         Args:
             node_id: Node identifier
-            entity: Entity identifier
+            subentity: Subentity identifier
             energy: Current energy value
             is_quiet: True if node is quiet (suitable for noise sampling)
         """
         if not is_quiet:
             return
 
-        stats = self.get_stats(node_id, entity)
+        stats = self.get_stats(node_id, subentity)
 
         # Update EMA for mu (mean)
         if stats.sample_count == 0:
@@ -301,7 +443,7 @@ class NoiseTracker:
 
 def compute_activation_mask(
     graph: 'Graph',
-    entity: 'EntityID',
+    subentity: 'EntityID',
     ctx: ThresholdContext
 ) -> Dict[str, bool]:
     """
@@ -311,7 +453,7 @@ def compute_activation_mask(
 
     Args:
         graph: Graph with nodes
-        entity: Entity to compute activations for
+        subentity: Subentity to compute activations for
         ctx: Threshold configuration (with num_active, num_total set)
 
     Returns:
@@ -330,10 +472,10 @@ def compute_activation_mask(
     mask = {}
 
     # Compute threshold once (same for all nodes)
-    threshold = compute_adaptive_threshold(None, entity, ctx)
+    threshold = compute_adaptive_threshold(None, subentity, ctx)
 
     for node in graph.nodes.values():
-        energy = node.get_entity_energy(entity)
+        energy = node.get_entity_energy(subentity)
         mask[node.id] = hard_activation(energy, threshold)
 
     return mask
@@ -341,7 +483,7 @@ def compute_activation_mask(
 
 def compute_activation_values(
     graph: 'Graph',
-    entity: 'EntityID',
+    subentity: 'EntityID',
     ctx: ThresholdContext
 ) -> Dict[str, float]:
     """
@@ -349,7 +491,7 @@ def compute_activation_values(
 
     Args:
         graph: Graph with nodes
-        entity: Entity to compute activations for
+        subentity: Subentity to compute activations for
         ctx: Threshold configuration (with num_active, num_total set)
 
     Returns:
@@ -367,10 +509,10 @@ def compute_activation_values(
     activations = {}
 
     # Compute threshold once (same for all nodes)
-    threshold = compute_adaptive_threshold(None, entity, ctx)
+    threshold = compute_adaptive_threshold(None, subentity, ctx)
 
     for node in graph.nodes.values():
-        energy = node.get_entity_energy(entity)
+        energy = node.get_entity_energy(subentity)
         activations[node.id] = soft_activation(energy, threshold, ctx.kappa)
 
     return activations

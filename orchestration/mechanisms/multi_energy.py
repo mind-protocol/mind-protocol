@@ -4,13 +4,13 @@ Mechanism 01: Multi-Energy Architecture - Pure Functions
 CRITICAL ARCHITECTURAL PRINCIPLES (CORRECTED 2025-10-20):
 1. Energy is strictly non-negative [0.0, ∞) - UNBOUNDED
 2. Inhibition is LINK-BASED (SUPPRESS links), NOT value-based (negative energy)
-3. Each entity has independent energy on each node
+3. Each subentity has independent energy on each node
 4. Bounded GROWTH (not bounded values) prevents numerical overflow
 5. Near-zero cleanup maintains graph efficiency
 
 Energy Storage:
     Node.energy: Dict[entity_id, float]
-    - Key: entity identifier (str)
+    - Key: subentity identifier (str)
     - Value: raw energy >= 0.0 (unbounded)
 
 Energy Bounds:
@@ -56,16 +56,16 @@ GROWTH_DAMPENING: float = 0.1  # Logarithmic dampening factor for high-energy gr
 
 # --- Core Energy Operations ---
 
-def get_entity_energy(node: 'Node', entity: 'EntityID') -> float:
+def get_entity_energy(node: 'Node', subentity: 'EntityID') -> float:
     """
-    Get energy for entity on node.
+    Get energy for subentity on node.
 
     Args:
         node: Node to query
-        entity: Entity identifier
+        subentity: Subentity identifier
 
     Returns:
-        Energy value (>= 0.0), or 0.0 if entity not present
+        Energy value (>= 0.0), or 0.0 if subentity not present
 
     Example:
         >>> node = Node(id="n1", ...)
@@ -75,12 +75,12 @@ def get_entity_energy(node: 'Node', entity: 'EntityID') -> float:
         >>> get_entity_energy(node, "other")
         0.0
     """
-    return node.energy.get(entity, 0.0)
+    return node.energy.get(subentity, 0.0)
 
 
 def get_total_energy(node: 'Node') -> float:
     """
-    Get TOTAL energy across all entities on this node.
+    Get TOTAL energy across all subentities on this node.
 
     This is the canonical energy used for sub-entity activation detection.
     Per spec (05_sub_entity_system.md:1514-1522):
@@ -91,7 +91,7 @@ def get_total_energy(node: 'Node') -> float:
         node: Node to query
 
     Returns:
-        Sum of energy across all entity keys
+        Sum of energy across all subentity keys
 
     Example:
         >>> node.energy = {'felix': 3.0, 'iris': 2.0}
@@ -101,9 +101,9 @@ def get_total_energy(node: 'Node') -> float:
     return float(sum(node.energy.values()))
 
 
-def set_entity_energy(node: 'Node', entity: 'EntityID', value: float) -> None:
+def set_entity_energy(node: 'Node', subentity: 'EntityID', value: float) -> None:
     """
-    Set energy for entity on node with cleanup.
+    Set energy for subentity on node with cleanup.
 
     CRITICAL: Energy is strictly non-negative [0.0, ∞) - UNBOUNDED.
     Negative values are clamped to 0.0.
@@ -115,7 +115,7 @@ def set_entity_energy(node: 'Node', entity: 'EntityID', value: float) -> None:
 
     Args:
         node: Node to modify
-        entity: Entity identifier
+        subentity: Subentity identifier
         value: Energy value (will be clamped to >= 0.0, stored as-is)
 
     Example:
@@ -134,16 +134,16 @@ def set_entity_energy(node: 'Node', entity: 'EntityID', value: float) -> None:
     clamped = max(0.0, value)
 
     # 2. Store raw value (no saturation)
-    node.energy[entity] = clamped
+    node.energy[subentity] = clamped
 
     # 3. Cleanup near-zero
     if clamped < CLEANUP_THRESHOLD:
-        node.energy.pop(entity, None)
+        node.energy.pop(subentity, None)
 
 
-def add_entity_energy(node: 'Node', entity: 'EntityID', delta: float) -> None:
+def add_entity_energy(node: 'Node', subentity: 'EntityID', delta: float) -> None:
     """
-    Add energy delta to entity (can be positive or negative).
+    Add energy delta to subentity (can be positive or negative).
 
     With logarithmic dampening for large positive additions to prevent overflow.
 
@@ -155,7 +155,7 @@ def add_entity_energy(node: 'Node', entity: 'EntityID', delta: float) -> None:
 
     Args:
         node: Node to modify
-        entity: Entity identifier
+        subentity: Subentity identifier
         delta: Energy change (positive = add, negative = subtract)
 
     Example:
@@ -168,7 +168,7 @@ def add_entity_energy(node: 'Node', entity: 'EntityID', delta: float) -> None:
         >>> get_entity_energy(node, "validator")
         # Still grows but dampened: 0.682 + log(1 + 100) * GROWTH_DAMPENING ~= 1.14
     """
-    current = get_entity_energy(node, entity)
+    current = get_entity_energy(node, subentity)
 
     # Apply logarithmic dampening to prevent overflow on large additions
     if delta > 0:
@@ -179,12 +179,12 @@ def add_entity_energy(node: 'Node', entity: 'EntityID', delta: float) -> None:
         delta_effective = delta
 
     new_value = current + delta_effective
-    set_entity_energy(node, entity, new_value)
+    set_entity_energy(node, subentity, new_value)
 
 
-def multiply_entity_energy(node: 'Node', entity: 'EntityID', factor: float) -> None:
+def multiply_entity_energy(node: 'Node', subentity: 'EntityID', factor: float) -> None:
     """
-    Multiply entity energy by factor (for decay, diffusion).
+    Multiply subentity energy by factor (for decay, diffusion).
 
     Process:
     1. Get current energy
@@ -193,7 +193,7 @@ def multiply_entity_energy(node: 'Node', entity: 'EntityID', factor: float) -> N
 
     Args:
         node: Node to modify
-        entity: Entity identifier
+        subentity: Subentity identifier
         factor: Multiplication factor (e.g., 0.9 for decay)
 
     Example:
@@ -207,18 +207,18 @@ def multiply_entity_energy(node: 'Node', entity: 'EntityID', factor: float) -> N
         >>> get_entity_energy(node, "validator")
         90.0  # High energy decays proportionally
     """
-    current = get_entity_energy(node, entity)
+    current = get_entity_energy(node, subentity)
     if current > 0:
         new_value = current * factor
-        set_entity_energy(node, entity, new_value)
+        set_entity_energy(node, subentity, new_value)
 
 
 def get_all_active_entities(node: 'Node') -> List['EntityID']:
     """
-    Get all entities with non-zero energy on node.
+    Get all subentities with non-zero energy on node.
 
     Returns:
-        List of entity IDs with energy > 0
+        List of subentity IDs with energy > 0
 
     Example:
         >>> node = Node(id="n1", ...)
@@ -230,13 +230,13 @@ def get_all_active_entities(node: 'Node') -> List['EntityID']:
     return list(node.energy.keys())
 
 
-def clear_entity_energy(node: 'Node', entity: 'EntityID') -> None:
+def clear_entity_energy(node: 'Node', subentity: 'EntityID') -> None:
     """
-    Remove entity energy from node entirely.
+    Remove subentity energy from node entirely.
 
     Args:
         node: Node to modify
-        entity: Entity identifier
+        subentity: Subentity identifier
 
     Example:
         >>> node = Node(id="n1", ...)
@@ -245,12 +245,12 @@ def clear_entity_energy(node: 'Node', entity: 'EntityID') -> None:
         >>> get_entity_energy(node, "validator")
         0.0
     """
-    node.energy.pop(entity, None)
+    node.energy.pop(subentity, None)
 
 
 def clear_all_energy(node: 'Node') -> None:
     """
-    Remove all energy from node (all entities).
+    Remove all energy from node (all subentities).
 
     Args:
         node: Node to modify
@@ -270,7 +270,7 @@ def clear_all_energy(node: 'Node') -> None:
 
 def get_total_energy(node: 'Node') -> float:
     """
-    Get sum of all entity energies on node.
+    Get sum of all subentity energies on node.
 
     Returns:
         Sum of all energy values
@@ -287,7 +287,7 @@ def get_total_energy(node: 'Node') -> float:
 
 def get_max_entity_energy(node: 'Node') -> tuple['EntityID', float]:
     """
-    Get entity with maximum energy on node.
+    Get subentity with maximum energy on node.
 
     Returns:
         Tuple of (entity_id, energy_value), or (None, 0.0) if no energy
@@ -311,7 +311,7 @@ def get_energy_distribution(node: 'Node') -> Dict['EntityID', float]:
     Get normalized energy distribution (percentages).
 
     Returns:
-        Dict mapping entity to percentage of total energy
+        Dict mapping subentity to percentage of total energy
 
     Example:
         >>> node = Node(id="n1", ...)
@@ -324,7 +324,7 @@ def get_energy_distribution(node: 'Node') -> Dict['EntityID', float]:
     if total == 0:
         return {}
 
-    return {entity: energy / total for entity, energy in node.energy.items()}
+    return {subentity: energy / total for subentity, energy in node.energy.items()}
 
 
 # --- Energy Isolation Verification ---
@@ -352,7 +352,7 @@ def verify_energy_isolation(node: 'Node') -> bool:
         >>> verify_energy_isolation(node)
         False
     """
-    for entity, energy in node.energy.items():
+    for subentity, energy in node.energy.items():
         if energy < 0.0:
             return False  # Negative energy detected
         # No upper bound check - energy can be arbitrarily large

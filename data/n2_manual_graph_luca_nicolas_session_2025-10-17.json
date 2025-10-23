@@ -357,7 +357,7 @@
         "Deactivation triggered by focus-shift, not timeout",
         "Pruning considers usage ratio, not recency alone"
       ],
-      "source": "Entity behavior specification document",
+      "source": "Subentity behavior specification document",
       "formation_trigger": "systematic_analysis",
       "confidence": 0.9,
       "created_by": "luca_vellumhand",

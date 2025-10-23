@@ -137,7 +137,7 @@ def inject_json_to_graph(json_path: str, graph_name: str, clear_existing: bool =
                 props['last_modified'] = current_time
 
             if 'energy' not in props:
-                # Default energy: dict with default entity (per multi-energy spec)
+                # Default energy: dict with default subentity (per multi-energy spec)
                 import json
                 props['energy'] = json.dumps({"consciousness_engine": 0.0})
 

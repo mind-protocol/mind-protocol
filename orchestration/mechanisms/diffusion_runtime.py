@@ -19,11 +19,44 @@ import random
 import time
 import numpy as np
 from typing import Dict, Set, Optional, Any, TYPE_CHECKING
+from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from orchestration.core.graph import Graph
     from orchestration.core.link import Link
     from orchestration.mechanisms.strengthening import LearningController
+
+
+@dataclass
+class CostBreakdown:
+    """
+    Forensic trail for link cost computation.
+
+    Enables attribution tracking - understanding exactly why a link was chosen.
+    All intermediate values preserved for observability.
+
+    Fields:
+        total_cost: Final cost after all modulations (lower = better)
+        ease: exp(log_weight) - structural ease of traversal
+        ease_cost: 1/ease - cost from link strength
+        goal_affinity: cos(target.emb, goal.emb) - alignment with goal
+        res_mult: Resonance multiplier from emotion gates (1.0 = neutral)
+        res_score: Resonance alignment score (cosine similarity)
+        comp_mult: Complementarity multiplier from emotion gates (1.0 = neutral)
+        emotion_mult: Combined emotion multiplier (res_mult * comp_mult)
+        base_cost: Cost before emotion modulation (ease_cost - goal_affinity)
+        reason: Human-readable explanation of why this link was chosen
+    """
+    total_cost: float
+    ease: float
+    ease_cost: float
+    goal_affinity: float
+    res_mult: float
+    res_score: float
+    comp_mult: float
+    emotion_mult: float
+    base_cost: float
+    reason: str
 
 
 class DiffusionRuntime:
@@ -38,13 +71,17 @@ class DiffusionRuntime:
         active: Nodes with E >= theta or touched this tick
         shadow: 1-hop neighbors of active (candidate frontier)
     """
-    __slots__ = ("delta_E", "active", "shadow")
+    __slots__ = ("delta_E", "active", "shadow", "stride_relatedness_scores", "current_frontier_nodes")
 
     def __init__(self):
         """Initialize empty runtime accumulator."""
         self.delta_E: Dict[str, float] = {}
         self.active: Set[str] = set()
         self.shadow: Set[str] = set()
+
+        # Coherence tracking (E.6) - collected during stride execution
+        self.stride_relatedness_scores: List[float] = []
+        self.current_frontier_nodes: List[Any] = []
 
     def add(self, node_id: str, delta: float) -> None:
         """
@@ -235,10 +272,11 @@ def execute_stride_step(
     Where f(w) = exp(log_weight) per spec.
 
     Cost computation (traversal_v2.md §3.4):
-        cost = (1/ease) - goal_affinity + emotion_penalty
+        cost = base_cost * emotion_mult
+        - base_cost = (1/ease) - goal_affinity
         - ease = exp(log_weight)
         - goal_affinity = cos(target.embedding, goal_embedding)
-        - emotion_penalty = gates (TODO - not implemented yet)
+        - emotion_mult = resonance_mult * complementarity_mult (when EMOTION_GATES_ENABLED)
 
     Strengthening: Links strengthen when energy flows through them (spec: link_strengthening.md).
     Only when BOTH nodes inactive (D020 rule) - prevents runaway strengthening.
@@ -272,6 +310,11 @@ def execute_stride_step(
 
     strides_executed = 0
 
+    # === E.6: Collect current frontier nodes for coherence metric ===
+    if settings.COHERENCE_METRIC_ENABLED:
+        rt.current_frontier_nodes = [graph.nodes[nid] for nid in rt.active if nid in graph.nodes]
+        rt.stride_relatedness_scores = []  # Reset for this tick
+
     # Iterate over active nodes
     for src_id in list(rt.active):
         node = graph.nodes.get(src_id)
@@ -282,10 +325,28 @@ def execute_stride_step(
         if E_src <= 0.0:
             continue
 
+        # Construct emotion context for gate computation
+        emotion_context = None
+        if hasattr(node, 'emotion_vector') and node.emotion_vector is not None:
+            emotion_magnitude = np.linalg.norm(node.emotion_vector)
+            emotion_context = {
+                'entity_affect': node.emotion_vector,  # Use node's emotion as current affect
+                'intensity': emotion_magnitude,
+                'context_gate': 1.0  # Neutral context (TODO: infer from task mode)
+            }
+
         # Select best outgoing edge using cost computation (K=1 for now)
-        best_link = _select_best_outgoing_link(node, goal_embedding=goal_embedding)
-        if not best_link:
+        result = _select_best_outgoing_link(node, goal_embedding=goal_embedding, emotion_context=emotion_context)
+        if not result:
             continue
+
+        best_link, cost_breakdown = result
+
+        # === E.6: Collect stride relatedness for coherence metric ===
+        if settings.COHERENCE_METRIC_ENABLED:
+            from orchestration.mechanisms.coherence_metric import assess_stride_relatedness
+            relatedness = assess_stride_relatedness(node, best_link.target, best_link)
+            rt.stride_relatedness_scores.append(relatedness)
 
         # Compute ease from log_weight: f(w) = exp(log_weight)
         ease = math.exp(best_link.log_weight)
@@ -356,9 +417,37 @@ def execute_stride_step(
 
         strides_executed += 1
 
-        # TODO: Emit stride.exec event (sampled) for observability
-        # if random.random() < sample_rate:
-        #     emit_stride_exec(src_id, best_link.target.id, delta_E, ...)
+        # Emit stride.exec event with forensic trail (sampled for performance)
+        if broadcaster is not None and random.random() < sample_rate:
+            # Get threshold value (phi) for forensic trail
+            phi = getattr(node, 'theta', 0.0)
+
+            stride_data = {
+                'src_node': src_id,
+                'dst_node': best_link.target.id,
+                'link_id': best_link.id,
+                # Forensic trail fields
+                'phi': round(phi, 4),  # Threshold
+                'ease': round(cost_breakdown.ease, 4),
+                'ease_cost': round(cost_breakdown.ease_cost, 4),
+                'goal_affinity': round(cost_breakdown.goal_affinity, 4),
+                'res_mult': round(cost_breakdown.res_mult, 4),
+                'res_score': round(cost_breakdown.res_score, 4),
+                'comp_mult': round(cost_breakdown.comp_mult, 4),
+                'emotion_mult': round(cost_breakdown.emotion_mult, 4),
+                'base_cost': round(cost_breakdown.base_cost, 4),
+                'total_cost': round(cost_breakdown.total_cost, 4),
+                'reason': cost_breakdown.reason,
+                # Energy transfer
+                'delta_E': round(delta_E, 6),
+                'stickiness': round(stickiness, 4),
+                'retained_delta_E': round(retained_delta_E, 6),
+                # Metadata
+                'chosen': True  # This link was selected (lowest cost)
+            }
+
+            # Emit via broadcaster
+            broadcaster.stride_exec(stride_data)
 
     return strides_executed
 
@@ -367,29 +456,33 @@ def _compute_link_cost(
     link: 'Link',
     goal_embedding: Optional[np.ndarray] = None,
     emotion_context: Optional[Dict] = None
-) -> float:
+) -> CostBreakdown:
     """
-    Compute traversal cost for link (lower = better).
+    Compute traversal cost for link with full forensic trail (lower cost = better).
 
     Cost components (spec: traversal_v2.md §3.4):
     - Ease cost: 1/exp(log_weight) - harder to traverse weak links
     - Goal affinity: -cos(link.target.embedding, goal) - prefer goal-aligned targets
-    - Emotion gates: resonance/complementarity multipliers (TODO - spec not written yet)
+    - Emotion gates: resonance/complementarity multipliers (modulate base cost)
 
     Args:
         link: Link to evaluate
         goal_embedding: Optional goal vector for affinity computation
-        emotion_context: Optional emotion state (for gates)
+        emotion_context: Optional emotion state dict with:
+            - entity_affect: np.ndarray - current entity affect vector
+            - context_gate: float - context modulation (0-2, focus vs recovery)
+            - intensity: float - affect magnitude
 
     Returns:
-        Cost value (lower = prefer this link)
+        CostBreakdown with total_cost and all intermediate values for observability
 
     Example:
-        >>> cost = _compute_link_cost(link, goal_embedding=goal_vec)
+        >>> breakdown = _compute_link_cost(link, goal_embedding=goal_vec)
         >>> # Strong link (log_weight=0.7) aligned with goal → low cost
-        >>> # Weak link (log_weight=-1.0) opposed to goal → high cost
+        >>> # breakdown.ease = 2.0, breakdown.goal_affinity = 0.8, breakdown.total_cost = 0.2
     """
     import numpy as np
+    from orchestration.core.settings import settings
 
     # 1. Ease cost: 1/exp(log_weight)
     #    Strong links (log_weight >> 0) have low ease cost
@@ -410,29 +503,92 @@ def _compute_link_cost(
             cos_sim = np.dot(goal_embedding, target_emb) / (norm_goal * norm_target)
             goal_affinity = np.clip(cos_sim, -1.0, 1.0)
 
-    # 3. Emotion gate penalty (TODO - specs not written yet)
-    #    For now, set to 0.0 and add TODO comment
-    #    Should compute resonance/complementarity multipliers from emotion_context
-    emotion_penalty = 0.0
-    # TODO: Implement emotion gates as cost modulators when specs are written
-    # Should compute:
-    # - resonance_mult = f(emotion similarity) using RES_LAMBDA, RES_MIN/MAX_MULT
-    # - comp_mult = f(emotion opposition) using COMP_LAMBDA, COMP_MIN/MAX_MULT
-    # - emotion_penalty = some combination of these gates
+    # 3. Emotion gates (resonance + complementarity)
+    #    Modulate base cost multiplicatively per specs:
+    #    - emotion_complementarity.md - regulation via opposites
+    #    - emotion_weighted_traversal.md - coherence via similarity
+    emotion_mult = 1.0  # Neutral default
+    res_mult = 1.0  # Neutral (no resonance modulation)
+    res_score = 0.0  # No alignment
+    comp_mult = 1.0  # Neutral (no complementarity modulation)
 
-    # Total cost (lower = better)
-    total_cost = ease_cost - goal_affinity + emotion_penalty
+    if settings.EMOTION_GATES_ENABLED and emotion_context:
+        entity_affect = emotion_context.get('entity_affect')
+        link_emotion = getattr(link, 'emotion_vector', None)
 
-    return total_cost
+        if entity_affect is not None and link_emotion is not None:
+            from orchestration.mechanisms.emotion_coloring import (
+                resonance_multiplier,
+                complementarity_multiplier
+            )
+
+            # Resonance gate (coherence - prefer emotionally aligned paths)
+            # r > 0 (aligned) → m_res < 1 (attractive, easier)
+            # r < 0 (clash) → m_res > 1 (repulsive, harder)
+            res_mult, res_score = resonance_multiplier(entity_affect, link_emotion)
+
+            # Complementarity gate (regulation - prefer opposite affect for balance)
+            # High opposition → lower multiplier → lower cost (regulatory pull)
+            intensity_gate = emotion_context.get('intensity', np.linalg.norm(entity_affect))
+            context_gate = emotion_context.get('context_gate', 1.0)  # 0-2 scale
+            comp_mult = complementarity_multiplier(
+                entity_affect,
+                link_emotion,
+                intensity_gate=np.clip(intensity_gate, 0.0, 1.0),
+                context_gate=context_gate
+            )
+
+            # Combine gates multiplicatively (per spec: order doesn't matter)
+            emotion_mult = res_mult * comp_mult
+
+    # Total cost: base cost modulated by emotion gates
+    base_cost = ease_cost - goal_affinity
+    total_cost = base_cost * emotion_mult
+
+    # Generate human-readable reason for why this link was chosen
+    reason_parts = []
+    if ease > 1.5:
+        reason_parts.append(f"strong_link(ease={ease:.2f})")
+    elif ease < 0.5:
+        reason_parts.append(f"weak_link(ease={ease:.2f})")
+
+    if goal_affinity > 0.5:
+        reason_parts.append(f"goal_aligned(aff={goal_affinity:.2f})")
+    elif goal_affinity < -0.5:
+        reason_parts.append(f"goal_opposed(aff={goal_affinity:.2f})")
+
+    if res_mult < 0.9:
+        reason_parts.append(f"resonance_attract(r={res_score:.2f})")
+    elif res_mult > 1.1:
+        reason_parts.append(f"resonance_repel(r={res_score:.2f})")
+
+    if comp_mult < 0.9:
+        reason_parts.append(f"regulation_pull")
+
+    reason = " + ".join(reason_parts) if reason_parts else "neutral"
+
+    # Return full breakdown for forensic trail
+    return CostBreakdown(
+        total_cost=total_cost,
+        ease=ease,
+        ease_cost=ease_cost,
+        goal_affinity=goal_affinity,
+        res_mult=res_mult,
+        res_score=res_score,
+        comp_mult=comp_mult,
+        emotion_mult=emotion_mult,
+        base_cost=base_cost,
+        reason=reason
+    )
 
 
 def _select_best_outgoing_link(
     node,
     goal_embedding: Optional[np.ndarray] = None,
     emotion_context: Optional[Dict] = None
-) -> Optional['Link']:
+) -> Optional[tuple['Link', CostBreakdown]]:
     """
-    Select best outgoing link from node (argmin cost).
+    Select best outgoing link from node (argmin cost) with full forensic trail.
 
     Uses cost computation with ease, goal affinity, and emotion gates.
     This is the V2 spec implementation (traversal_v2.md §3.4).
@@ -443,11 +599,13 @@ def _select_best_outgoing_link(
         emotion_context: Optional emotion state for gate computation
 
     Returns:
-        Best link (lowest cost), or None if no outgoing links
+        Tuple of (best_link, cost_breakdown), or None if no outgoing links
 
     Example:
-        >>> best = _select_best_outgoing_link(node, goal_embedding=goal_vec)
-        >>> # Returns link with lowest total cost (ease + goal + emotion)
+        >>> result = _select_best_outgoing_link(node, goal_embedding=goal_vec)
+        >>> if result:
+        >>>     best_link, breakdown = result
+        >>>     print(f"Chosen link: {best_link.id}, reason: {breakdown.reason}")
     """
     if not node.outgoing_links:
         return None
@@ -459,9 +617,9 @@ def _select_best_outgoing_link(
     ]
 
     # Select link with minimum cost
-    best_cost, best_link = min(link_costs, key=lambda x: x[0])
+    best_breakdown, best_link = min(link_costs, key=lambda x: x[0].total_cost)
 
-    return best_link
+    return (best_link, best_breakdown)
 
 
 # === PR-E: E.4 Stickiness (energy retention during diffusion) ===

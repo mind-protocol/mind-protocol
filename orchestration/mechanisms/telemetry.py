@@ -5,7 +5,7 @@ Implements:
 - Diff-first event stream (zero snapshots)
 - 2-frame reorder buffer for temporal coherence
 - WebSocket event emission
-- Event schema for entity/stride/node/convergence tracking
+- Event schema for subentity/stride/node/convergence tracking
 
 Author: AI #7
 Created: 2025-10-20
@@ -35,7 +35,7 @@ def get_event_buffer():
 
 def emit_edge_valence_batch_event(
     frame: int,
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     candidates: List[Dict[str, Any]],
     ws_connection=None
@@ -47,7 +47,7 @@ def emit_edge_valence_batch_event(
         {
             "type": "edge.valence_batch",
             "frame": int,
-            "entity": str,
+            "subentity": str,
             "source": str,
             "candidates": [
                 {
@@ -71,7 +71,7 @@ def emit_edge_valence_batch_event(
 
     Args:
         frame: Current frame number
-        entity: Sub-entity evaluating edges
+        subentity: Sub-entity evaluating edges
         source_i: Source node ID
         candidates: List of candidate edges with valence breakdown
         ws_connection: WebSocket connection (optional)
@@ -84,7 +84,7 @@ def emit_edge_valence_batch_event(
     event = {
         "type": "edge.valence_batch",
         "frame": frame,
-        "entity": entity.id,
+        "subentity": subentity.id,
         "source": str(source_i),
         "candidates": candidates
     }
@@ -95,18 +95,18 @@ def emit_edge_valence_batch_event(
 
 def emit_entity_quota_event(
     frame: int,
-    entity: SubEntity,
+    subentity: SubEntity,
     quota_assigned: int,
     ws_connection=None
 ):
     """
-    Emit entity quota allocation event.
+    Emit subentity quota allocation event.
 
     Schema:
         {
-            "type": "entity.quota",
+            "type": "subentity.quota",
             "frame": int,
-            "entity": str,
+            "subentity": str,
             "quota": int,
             "extent_size": int,
             "total_energy": float
@@ -114,19 +114,19 @@ def emit_entity_quota_event(
 
     Args:
         frame: Current frame number
-        entity: Sub-entity that received quota
+        subentity: Sub-entity that received quota
         quota_assigned: Number of strides allocated
         ws_connection: WebSocket connection (optional)
     """
     # Calculate total energy in extent
-    total_energy = sum(entity.get_energy(node_id) for node_id in entity.extent)
+    total_energy = sum(subentity.get_energy(node_id) for node_id in subentity.extent)
 
     event = {
-        "type": "entity.quota",
+        "type": "subentity.quota",
         "frame": frame,
-        "entity": entity.id,
+        "subentity": subentity.id,
         "quota": quota_assigned,
-        "extent_size": len(entity.extent),
+        "extent_size": len(subentity.extent),
         "total_energy": total_energy
     }
 
@@ -136,7 +136,7 @@ def emit_entity_quota_event(
 
 def emit_stride_exec_event(
     frame: int,
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     delta: float,
@@ -155,7 +155,7 @@ def emit_stride_exec_event(
         {
             "type": "stride.exec",
             "frame": int,
-            "entity": str,
+            "subentity": str,
             "edge": {"i": str, "j": str},
             "delta": float,
             "alpha": float,
@@ -168,7 +168,7 @@ def emit_stride_exec_event(
 
     Args:
         frame: Current frame number
-        entity: Sub-entity executing stride
+        subentity: Sub-entity executing stride
         source_i: Source node ID
         target_j: Target node ID
         delta: Energy transferred
@@ -183,7 +183,7 @@ def emit_stride_exec_event(
     event = {
         "type": "stride.exec",
         "frame": frame,
-        "entity": entity.id,
+        "subentity": subentity.id,
         "edge": {"i": str(source_i), "j": str(target_j)},
         "delta": delta,
         "alpha": alpha,
@@ -200,7 +200,7 @@ def emit_stride_exec_event(
 
 def emit_node_activation_event(
     frame: int,
-    entity: SubEntity,
+    subentity: SubEntity,
     node_id: int,
     activation_type: str,  # "activate" | "deactivate"
     energy: float,
@@ -214,7 +214,7 @@ def emit_node_activation_event(
         {
             "type": "node.activation",
             "frame": int,
-            "entity": str,
+            "subentity": str,
             "node": str,
             "event": "activate" | "deactivate",
             "energy": float,
@@ -223,7 +223,7 @@ def emit_node_activation_event(
 
     Args:
         frame: Current frame number
-        entity: Sub-entity
+        subentity: Sub-entity
         node_id: Node that changed activation state
         activation_type: "activate" or "deactivate"
         energy: Current energy level
@@ -233,7 +233,7 @@ def emit_node_activation_event(
     event = {
         "type": "node.activation",
         "frame": frame,
-        "entity": entity.id,
+        "subentity": subentity.id,
         "node": str(node_id),
         "event": activation_type,
         "energy": energy,
@@ -246,7 +246,7 @@ def emit_node_activation_event(
 
 def emit_convergence_event(
     frame: int,
-    entity: SubEntity,
+    subentity: SubEntity,
     reason: str,  # "roi_below_whisker" | "quota_exhausted" | "deadline"
     final_roi: float,
     whisker_threshold: float,
@@ -254,13 +254,13 @@ def emit_convergence_event(
     ws_connection=None
 ):
     """
-    Emit entity convergence event.
+    Emit subentity convergence event.
 
     Schema:
         {
-            "type": "entity.converged",
+            "type": "subentity.converged",
             "frame": int,
-            "entity": str,
+            "subentity": str,
             "reason": str,
             "final_roi": float,
             "whisker_threshold": float,
@@ -270,7 +270,7 @@ def emit_convergence_event(
 
     Args:
         frame: Current frame number
-        entity: Sub-entity that converged
+        subentity: Sub-entity that converged
         reason: Convergence trigger
         final_roi: Last ROI value
         whisker_threshold: Q1 - 1.5×IQR threshold
@@ -278,14 +278,14 @@ def emit_convergence_event(
         ws_connection: WebSocket connection (optional)
     """
     event = {
-        "type": "entity.converged",
+        "type": "subentity.converged",
         "frame": frame,
-        "entity": entity.id,
+        "subentity": subentity.id,
         "reason": reason,
         "final_roi": final_roi,
         "whisker_threshold": whisker_threshold,
         "strides_executed": strides_executed,
-        "final_extent_size": len(entity.extent)
+        "final_extent_size": len(subentity.extent)
     }
 
     buffer = get_event_buffer()
@@ -410,7 +410,7 @@ async def broadcast_event(
 # --- Integration Helpers ---
 
 def track_extent_changes(
-    entity: SubEntity,
+    subentity: SubEntity,
     old_extent: set,
     new_extent: set,
     frame: int,
@@ -420,7 +420,7 @@ def track_extent_changes(
     Track and emit extent changes (activations/deactivations).
 
     Args:
-        entity: Sub-entity
+        subentity: Sub-entity
         old_extent: Extent from previous frame
         new_extent: Extent from current frame
         frame: Current frame number
@@ -432,25 +432,25 @@ def track_extent_changes(
     # Activated nodes = new - old
     activated = new_extent - old_extent
     for node_id in activated:
-        energy = entity.get_energy(node_id)
-        threshold = entity.get_threshold(node_id)
+        energy = subentity.get_energy(node_id)
+        threshold = subentity.get_threshold(node_id)
         emit_node_activation_event(
-            frame, entity, node_id, "activate", energy, threshold, ws_connection
+            frame, subentity, node_id, "activate", energy, threshold, ws_connection
         )
 
     # Deactivated nodes = old - new
     deactivated = old_extent - new_extent
     for node_id in deactivated:
-        energy = entity.get_energy(node_id)
-        threshold = entity.get_threshold(node_id)
+        energy = subentity.get_energy(node_id)
+        threshold = subentity.get_threshold(node_id)
         emit_node_activation_event(
-            frame, entity, node_id, "deactivate", energy, threshold, ws_connection
+            frame, subentity, node_id, "deactivate", energy, threshold, ws_connection
         )
 
 
 def emit_frame_summary(
     frame: int,
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     strides_executed: int,
     wall_time_us: float,
     ws_connection=None
@@ -470,18 +470,18 @@ def emit_frame_summary(
 
     Args:
         frame: Current frame number
-        entities: Active entities this frame
+        subentities: Active subentities this frame
         strides_executed: Total strides executed
         wall_time_us: Frame execution time
         ws_connection: WebSocket connection (optional)
     """
-    # Calculate average ROI across entities
-    if entities:
-        # Get last ROI value from each entity's tracker
+    # Calculate average ROI across subentities
+    if subentities:
+        # Get last ROI value from each subentity's tracker
         roi_values = []
-        for entity in entities:
-            if entity.roi_tracker.window:
-                roi_values.append(entity.roi_tracker.window[-1])
+        for subentity in subentities:
+            if subentity.roi_tracker.window:
+                roi_values.append(subentity.roi_tracker.window[-1])
 
         avg_roi = sum(roi_values) / len(roi_values) if roi_values else 0.0
     else:
@@ -490,7 +490,7 @@ def emit_frame_summary(
     event = {
         "type": "frame.summary",
         "frame": frame,
-        "entities_active": len(entities),
+        "entities_active": len(subentities),
         "strides_executed": strides_executed,
         "wall_time_us": wall_time_us,
         "avg_roi": avg_roi

@@ -1,9 +1,9 @@
 """
-Entity Channel Selection - Multi-Entity Budget Distribution
+Subentity Channel Selection - Multi-Subentity Budget Distribution
 
-Implements entity-aware energy routing for shared graphs:
-- Entity affinity (cosine similarity with entity embeddings)
-- Entity recent success (flip share × gap closure share)
+Implements subentity-aware energy routing for shared graphs:
+- Subentity affinity (cosine similarity with subentity embeddings)
+- Subentity recent success (flip share × gap closure share)
 - Combined scoring with rank-z normalization
 - Softmax proportions for budget allocation
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class EntityObservation:
-    """Single frame observation for entity performance."""
+    """Single frame observation for subentity performance."""
     entity_id: str
     num_flips: int
     gap_closed: float  # Sum of (new_energy - threshold) for flips
@@ -32,16 +32,16 @@ class EntityObservation:
 
 class EntityChannelSelector:
     """
-    Selects entity channels for multi-entity graphs.
+    Selects subentity channels for multi-subentity graphs.
 
     Tracks:
-    - Entity affinity (stimulus embedding × entity embedding)
-    - Entity recent success (flips × gap closure)
+    - Subentity affinity (stimulus embedding × subentity embedding)
+    - Subentity recent success (flips × gap closure)
     - Combined rank-z scoring
     - Softmax proportions for budget split
 
     Returns:
-    - Per-entity budget proportions π_e
+    - Per-subentity budget proportions π_e
     """
 
     def __init__(
@@ -50,21 +50,21 @@ class EntityChannelSelector:
         min_samples: int = 20
     ):
         """
-        Initialize entity channel selector.
+        Initialize subentity channel selector.
 
         Args:
-            window_size: Rolling window for entity observations
-            min_samples: Minimum samples per entity before modulation
+            window_size: Rolling window for subentity observations
+            min_samples: Minimum samples per subentity before modulation
         """
         self.window_size = window_size
         self.min_samples = min_samples
 
-        # Per-entity observations: entity_id -> deque
+        # Per-subentity observations: entity_id -> deque
         self.observations: Dict[str, deque] = defaultdict(
             lambda: deque(maxlen=window_size)
         )
 
-        # Entity embeddings cache (entity_id -> embedding)
+        # Subentity embeddings cache (entity_id -> embedding)
         self.entity_embeddings: Dict[str, np.ndarray] = {}
 
         logger.info(
@@ -74,11 +74,11 @@ class EntityChannelSelector:
 
     def set_entity_embedding(self, entity_id: str, embedding: np.ndarray):
         """
-        Set or update entity embedding.
+        Set or update subentity embedding.
 
         Args:
-            entity_id: Entity identifier
-            embedding: Entity embedding vector
+            entity_id: Subentity identifier
+            embedding: Subentity embedding vector
         """
         self.entity_embeddings[entity_id] = embedding
         logger.debug(f"[EntityChannelSelector] Updated embedding for {entity_id}")
@@ -91,11 +91,11 @@ class EntityChannelSelector:
         timestamp: float
     ):
         """
-        Record entity performance observation.
+        Record subentity performance observation.
 
         Args:
-            entity_id: Entity identifier
-            num_flips: Number of flips this entity caused
+            entity_id: Subentity identifier
+            num_flips: Number of flips this subentity caused
             gap_closed: Total gap closed (sum of new_energy - threshold)
             timestamp: Observation timestamp
         """
@@ -119,11 +119,11 @@ class EntityChannelSelector:
         entity_ids: List[str]
     ) -> Dict[str, float]:
         """
-        Compute entity affinity scores (cosine similarity).
+        Compute subentity affinity scores (cosine similarity).
 
         Args:
             stimulus_embedding: Current stimulus embedding
-            entity_ids: List of entity IDs to score
+            entity_ids: List of subentity IDs to score
 
         Returns:
             Dict mapping entity_id -> affinity score
@@ -153,17 +153,17 @@ class EntityChannelSelector:
         entity_ids: List[str]
     ) -> Dict[str, float]:
         """
-        Compute entity recent success scores.
+        Compute subentity recent success scores.
 
         Success = flip_share × gap_closure_share
 
         Args:
-            entity_ids: List of entity IDs to score
+            entity_ids: List of subentity IDs to score
 
         Returns:
             Dict mapping entity_id -> success score
         """
-        # Collect recent observations across all entities
+        # Collect recent observations across all subentities
         total_flips = 0
         total_gap_closed = 0.0
         entity_flips = defaultdict(int)
@@ -212,7 +212,7 @@ class EntityChannelSelector:
             Dict of entity_id -> z-score
         """
         if len(scores) < 2:
-            # Single entity - neutral
+            # Single subentity - neutral
             return {k: 0.0 for k in scores.keys()}
 
         # Get values in order
@@ -268,11 +268,11 @@ class EntityChannelSelector:
         entity_ids: List[str]
     ) -> Dict[str, float]:
         """
-        Select entity channels and compute budget proportions.
+        Select subentity channels and compute budget proportions.
 
         Args:
             stimulus_embedding: Current stimulus embedding
-            entity_ids: List of active entity IDs
+            entity_ids: List of active subentity IDs
 
         Returns:
             Dict mapping entity_id -> budget proportion π_e

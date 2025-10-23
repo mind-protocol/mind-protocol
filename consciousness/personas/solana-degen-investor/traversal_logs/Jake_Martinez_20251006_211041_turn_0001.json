@@ -19,22 +19,22 @@
       {
         "name": "DOLLAR_USDC",
         "energy": 2.475149768031395,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "Trading_Frequency",
         "energy": 2.132226551762267,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "degen_gambler_Never*",
         "energy": 2.0874594798274595,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "Risk",
         "energy": 1.7333955998640693,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "HANDLE_MustStopMurad",
@@ -127,7 +127,7 @@
     "traversals": [
       {
         "timestamp": "2025-10-06T21:10:41.320876",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_0xRacer",
         "link_type": "CO_OCCURRENCE",
@@ -242,7 +242,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321049",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_cielo_finance",
         "link_type": "CO_OCCURRENCE",
@@ -379,7 +379,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321170",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_DegenSpartan",
         "link_type": "CO_OCCURRENCE",
@@ -538,7 +538,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321283",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_BullX_io",
         "link_type": "CO_OCCURRENCE",
@@ -719,7 +719,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321395",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_degentradingLDN",
         "link_type": "CO_OCCURRENCE",
@@ -922,7 +922,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321510",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_theunipcs",
         "link_type": "CO_OCCURRENCE",
@@ -1147,7 +1147,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.321644",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_solana_tracker",
         "link_type": "CO_OCCURRENCE",
@@ -1394,7 +1394,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.322074",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_AltcoinPsycho",
         "link_type": "CO_OCCURRENCE",
@@ -1663,7 +1663,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.322448",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_intotheblock",
         "link_type": "CO_OCCURRENCE",
@@ -1954,7 +1954,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.322764",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_birdeye_so",
         "link_type": "CO_OCCURRENCE",
@@ -2267,7 +2267,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.322900",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_jakey",
         "link_type": "CO_OCCURRENCE",
@@ -2602,7 +2602,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323034",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_SOLBigBrain",
         "link_type": "CO_OCCURRENCE",
@@ -2959,7 +2959,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323195",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_SolanaFloor",
         "link_type": "CO_OCCURRENCE",
@@ -3338,7 +3338,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323319",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_CryptoCobain",
         "link_type": "CO_OCCURRENCE",
@@ -3739,7 +3739,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323458",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_JupiterExchange",
         "link_type": "CO_OCCURRENCE",
@@ -4162,7 +4162,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323593",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_MustStopMurad",
         "link_type": "CO_OCCURRENCE",
@@ -4607,7 +4607,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.323719",
-        "entity": "Cynic",
+        "subentity": "Cynic",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_entities",
         "link_type": "CO_OCCURRENCE",
@@ -5074,7 +5074,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.327755",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_0xRacer",
         "link_type": "CO_OCCURRENCE",
@@ -5189,7 +5189,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.327876",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_cielo_finance",
         "link_type": "CO_OCCURRENCE",
@@ -5326,7 +5326,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328003",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_DegenSpartan",
         "link_type": "CO_OCCURRENCE",
@@ -5485,7 +5485,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328116",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_BullX_io",
         "link_type": "CO_OCCURRENCE",
@@ -5666,7 +5666,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328228",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_degentradingLDN",
         "link_type": "CO_OCCURRENCE",
@@ -5869,7 +5869,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328424",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_theunipcs",
         "link_type": "CO_OCCURRENCE",
@@ -6094,7 +6094,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328536",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_solana_tracker",
         "link_type": "CO_OCCURRENCE",
@@ -6341,7 +6341,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328640",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_AltcoinPsycho",
         "link_type": "CO_OCCURRENCE",
@@ -6610,7 +6610,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328754",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_intotheblock",
         "link_type": "CO_OCCURRENCE",
@@ -6901,7 +6901,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328856",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_birdeye_so",
         "link_type": "CO_OCCURRENCE",
@@ -7214,7 +7214,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.328960",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_jakey",
         "link_type": "CO_OCCURRENCE",
@@ -7549,7 +7549,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329063",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_SOLBigBrain",
         "link_type": "CO_OCCURRENCE",
@@ -7906,7 +7906,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329170",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_SolanaFloor",
         "link_type": "CO_OCCURRENCE",
@@ -8285,7 +8285,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329274",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_CryptoCobain",
         "link_type": "CO_OCCURRENCE",
@@ -8686,7 +8686,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329378",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_JupiterExchange",
         "link_type": "CO_OCCURRENCE",
@@ -9109,7 +9109,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329483",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_MustStopMurad",
         "link_type": "CO_OCCURRENCE",
@@ -9554,7 +9554,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329593",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HANDLE_entities",
         "link_type": "CO_OCCURRENCE",
@@ -10021,7 +10021,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329698",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Churned",
         "link_type": "CO_OCCURRENCE",
@@ -10510,7 +10510,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329813",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Anxiety",
         "link_type": "CO_OCCURRENCE",
@@ -11021,7 +11021,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.329921",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Archetype_Blend",
         "link_type": "CO_OCCURRENCE",
@@ -11554,7 +11554,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330042",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "In",
         "link_type": "CO_OCCURRENCE",
@@ -12109,7 +12109,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330122",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_489",
         "link_type": "CO_OCCURRENCE",
@@ -12686,7 +12686,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330189",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "FINANCIAL_REALITY",
         "link_type": "CO_OCCURRENCE",
@@ -13285,7 +13285,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330259",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Wolf",
         "link_type": "CO_OCCURRENCE",
@@ -13906,7 +13906,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330324",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "MEV",
         "link_type": "CO_OCCURRENCE",
@@ -14549,7 +14549,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330390",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Quiet",
         "link_type": "CO_OCCURRENCE",
@@ -15214,7 +15214,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330469",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_0.00147",
         "link_type": "CO_OCCURRENCE",
@@ -15901,7 +15901,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330597",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Jupiter",
         "link_type": "CO_OCCURRENCE",
@@ -16610,7 +16610,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330694",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Wall_Street",
         "link_type": "CO_OCCURRENCE",
@@ -17341,7 +17341,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330793",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Patience",
         "link_type": "CO_OCCURRENCE",
@@ -18094,7 +18094,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.330912",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "X_Posts",
         "link_type": "CO_OCCURRENCE",
@@ -18869,7 +18869,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331030",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_1,250",
         "link_type": "CO_OCCURRENCE",
@@ -19666,7 +19666,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331155",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Fear**",
         "link_type": "CO_OCCURRENCE",
@@ -20485,7 +20485,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331267",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Solana_Degen_Investor_Persona",
         "link_type": "CO_OCCURRENCE",
@@ -21326,7 +21326,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331377",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Leg_Up",
         "link_type": "CO_OCCURRENCE",
@@ -22189,7 +22189,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331486",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_SAMO",
         "link_type": "CO_OCCURRENCE",
@@ -23074,7 +23074,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331601",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Missed",
         "link_type": "CO_OCCURRENCE",
@@ -23981,7 +23981,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331713",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Reality**",
         "link_type": "CO_OCCURRENCE",
@@ -24910,7 +24910,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331832",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Tokenomics",
         "link_type": "CO_OCCURRENCE",
@@ -25861,7 +25861,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.331944",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "My",
         "link_type": "CO_OCCURRENCE",
@@ -26834,7 +26834,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332070",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_598",
         "link_type": "CO_OCCURRENCE",
@@ -27829,7 +27829,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332182",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_87",
         "link_type": "CO_OCCURRENCE",
@@ -28846,7 +28846,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332292",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_12-95",
         "link_type": "CO_OCCURRENCE",
@@ -29885,7 +29885,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332403",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_PENG",
         "link_type": "CO_OCCURRENCE",
@@ -30946,7 +30946,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332523",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Jan-Nov",
         "link_type": "CO_OCCURRENCE",
@@ -32029,7 +32029,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332632",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "DOLLAR_10,000+",
         "link_type": "CO_OCCURRENCE",
@@ -33134,7 +33134,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332746",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "HAUNTS_YOU",
         "link_type": "CO_OCCURRENCE",
@@ -34261,7 +34261,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332854",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Starting",
         "link_type": "CO_OCCURRENCE",
@@ -35410,7 +35410,7 @@
       },
       {
         "timestamp": "2025-10-06T21:10:41.332963",
-        "entity": "Philosopher",
+        "subentity": "Philosopher",
         "source_pattern": "Credit",
         "target_pattern": "Copied",
         "link_type": "CO_OCCURRENCE",

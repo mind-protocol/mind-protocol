@@ -26,7 +26,7 @@ export function Legend() {
       {/* Valence Legend */}
       <div className="consciousness-panel px-4 py-3">
         <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-3">
-          Valence (Entity View)
+          Valence (Subentity View)
         </div>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -38,7 +38,7 @@ export function Legend() {
             <span className="text-green-500">Positive</span>
           </div>
           <div className="text-xs text-observatory-text/50 mt-2">
-            Shows subjective link experience per entity
+            Shows subjective link experience per subentity
           </div>
         </div>
       </div>

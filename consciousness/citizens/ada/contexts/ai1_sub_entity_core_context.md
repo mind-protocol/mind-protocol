@@ -57,7 +57,7 @@ Without proper tracking infrastructure, patterns would:
 
 **Phenomenology:** Patterns shouldn't traverse forever. When ROI (gap_reduced / stride_time) drops below recent performance baseline, it's time to stop and emit working memory.
 
-**The Intelligence:** Uses lower whisker (Q1 - 1.5 × IQR) from recent stride ROI distribution. This adapts to EACH entity's performance characteristics - no global "stop at 0.1 ROI" threshold.
+**The Intelligence:** Uses lower whisker (Q1 - 1.5 × IQR) from recent stride ROI distribution. This adapts to EACH subentity's performance characteristics - no global "stop at 0.1 ROI" threshold.
 
 **Implementation verified:**
 - ✅ `push()` - record stride ROI (lines 166-173)
@@ -65,8 +65,8 @@ Without proper tracking infrastructure, patterns would:
 - ✅ Window size 256 (appropriate for rolling statistics)
 
 **Zero-Constants Compliance:**
-- ✅ Threshold derived from entity's recent performance
-- ✅ Adapts as entity learns better traversal paths
+- ✅ Threshold derived from subentity's recent performance
+- ✅ Adapts as subentity learns better traversal paths
 - ✅ No fixed ROI floor - naturally emerges from distribution
 
 ---
@@ -75,9 +75,9 @@ Without proper tracking infrastructure, patterns would:
 
 **Specification Reference:** Lines 1975-1988 in `05_sub_entity_system.md`
 
-**Phenomenology:** When evaluating "should I integrate with other entities?" we need context: "Am I weak (below Q25) or strong (above Q75) relative to the current population?"
+**Phenomenology:** When evaluating "should I integrate with other subentities?" we need context: "Am I weak (below Q25) or strong (above Q75) relative to the current population?"
 
-**The Intelligence:** Quantiles recomputed each frame from current active entities. A weak entity in a low-energy frame might be strong in a high-energy frame. This prevents arbitrary "weak if E < 0.3" thresholds.
+**The Intelligence:** Quantiles recomputed each frame from current active subentities. A weak subentity in a low-energy frame might be strong in a high-energy frame. This prevents arbitrary "weak if E < 0.3" thresholds.
 
 **Implementation verified:**
 - ✅ `update()` - add sample to rolling window (lines 215-222)
@@ -95,7 +95,7 @@ Without proper tracking infrastructure, patterns would:
 
 **Specification Reference:** Lines 1503-1582 in `05_sub_entity_system.md`
 
-**Phenomenology:** This IS a traversing pattern. One entity might be "the translator seeking bridging concepts" with:
+**Phenomenology:** This IS a traversing pattern. One subentity might be "the translator seeking bridging concepts" with:
 - Extent = {node_42, node_19, node_57} (currently active)
 - Frontier = extent ∪ 1-hop neighbors (exploration boundary)
 - Energy channels tracking per-node activation
@@ -131,7 +131,7 @@ Without proper tracking infrastructure, patterns would:
 
 **Test:** Compare centroid-based dispersion vs pairwise similarity on real graph
 - Load `citizen_luca` (1000+ nodes)
-- Simulate entity with 10-50 active nodes
+- Simulate subentity with 10-50 active nodes
 - Compute both: centroid dispersion and pairwise similarity
 - If correlation > 0.85: centroid is good enough proxy
 - If correlation < 0.85: revert to pairwise O(m²) calculation
@@ -148,17 +148,17 @@ Without proper tracking infrastructure, patterns would:
 
 **Edge cases:**
 - Empty extent (no nodes active)
-- Single entity (quotas, quantiles)
+- Single subentity (quotas, quantiles)
 - Budget = 0 (no strides allocated)
 - All nodes below threshold (extent empty)
 
 ### 3. Integration Readiness
 
 **Verification:**
-- ✅ AI #2 (quotas) can call `entity.extent`, `entity.compute_size()`
-- ✅ AI #4 (valence) can call `entity.centroid.distance_to(embedding)`
-- ✅ AI #5 (strides) can call `entity.get_energy()`, `entity.get_threshold()`
-- ✅ AI #6 (wm_pack) can access `entity.extent`, `entity.energies`
+- ✅ AI #2 (quotas) can call `subentity.extent`, `subentity.compute_size()`
+- ✅ AI #4 (valence) can call `subentity.centroid.distance_to(embedding)`
+- ✅ AI #5 (strides) can call `subentity.get_energy()`, `subentity.get_threshold()`
+- ✅ AI #6 (wm_pack) can access `subentity.extent`, `subentity.energies`
 - ✅ AI #7 (telemetry) can access all SubEntity attributes
 
 **No blocking dependencies - your foundation enables parallel implementation.**
@@ -183,8 +183,8 @@ Before declaring complete, verify:
 **Phenomenological Accuracy:**
 - [ ] Dispersion increases when semantically diverse nodes activate
 - [ ] ROI tracking catches diminishing returns (not just "ran out of quota")
-- [ ] Quantiles correctly identify weak vs strong entities relative to population
-- [ ] Entity size metric combines energy + connectivity (not just node count)
+- [ ] Quantiles correctly identify weak vs strong subentities relative to population
+- [ ] Subentity size metric combines energy + connectivity (not just node count)
 
 ---
 

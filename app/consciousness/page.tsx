@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { PixiCanvas } from './components/PixiCanvas';
+import { EntityGraphView } from './components/EntityGraphView';
 import { EntityClusterOverlay } from './components/EntityClusterOverlay';
 import { EnergyFlowParticles } from './components/EnergyFlowParticles';
 import { ActivationBubbles } from './components/ActivationBubbles';
@@ -11,6 +12,12 @@ import { Legend } from './components/Legend';
 import { Header } from './components/Header';
 import { CitizenMonitor } from './components/CitizenMonitor';
 import { SystemStatusPanel } from './components/SystemStatusPanel';
+import { InstrumentPanel } from './components/InstrumentPanel';
+import { AffectiveTelemetryPanel } from './components/AffectiveTelemetryPanel';
+import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
+// import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
+// import { IdentityMultiplicityPanel } from './components/IdentityMultiplicityPanel';
+// import { FoundationsEnrichmentsPanel } from './components/FoundationsEnrichmentsPanel';
 import { useGraphData } from './hooks/useGraphData';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useCitizens } from './hooks/useCitizens';
@@ -34,7 +41,7 @@ export default function ConsciousnessPage() {
   const {
     nodes,
     links,
-    entities,
+    subentities,
     operations,
     loading,
     error,
@@ -116,14 +123,14 @@ export default function ConsciousnessPage() {
     }
   }, [thresholdCrossings, lastProcessedThreshold, updateNodeFromEvent, addOperation]);
 
-  // Handle entity activity events
+  // Handle subentity activity events
   // FIXED: Removed 'nodes' from dependencies to prevent re-runs on every node update
   useEffect(() => {
-    // Process all new entity activities since last check
+    // Process all new subentity activities since last check
     for (let i = lastProcessedActivity + 1; i < entityActivity.length; i++) {
       const activity = entityActivity[i];
 
-      console.log('[ConsciousnessPage] Processing entity activity:', activity);
+      console.log('[ConsciousnessPage] Processing subentity activity:', activity);
 
       // Update currently explored node
       // The updateNodeFromEvent will handle incrementing traversal_count internally
@@ -224,12 +231,12 @@ export default function ConsciousnessPage() {
         </div>
       )}
 
-      {/* Main graph visualization - WebGL/PixiJS renderer */}
-      <PixiCanvas
+      {/* Main graph visualization - Entity-first with drill-down */}
+      <EntityGraphView
         nodes={nodes}
         links={links}
         operations={operations}
-        entities={entities}
+        subentities={subentities}
         workingMemory={v2State.workingMemory}
         linkFlows={v2State.linkFlows}
         recentFlips={v2State.recentFlips.map(flip => ({
@@ -239,10 +246,10 @@ export default function ConsciousnessPage() {
         }))}
       />
 
-      {/* Entity names floating over their clusters */}
+      {/* Subentity names floating over their clusters */}
       <EntityClusterOverlay
         nodes={nodes}
-        entities={entities}
+        subentities={subentities}
         entityActivity={entityActivity}
       />
 
@@ -262,6 +269,23 @@ export default function ConsciousnessPage() {
       {/* Legend (bottom-left) */}
       <Legend />
 
+      {/* Emotion Regulation Instruments (left sidebar) */}
+      <InstrumentPanel />
+
+      {/* Affective Telemetry Panel (left sidebar, below instruments) - PR-A */}
+      <AffectiveTelemetryPanel />
+
+      {/* Affective Coupling Panel (left sidebar, lower section) - PR-B */}
+      <AffectiveCouplingPanel />
+
+      {/* Multi-Pattern Response Panel (left sidebar, upper section) - PR-C */}
+      {/* <MultiPatternResponsePanel /> */}
+
+      {/* Foundations Enrichments Panel (right sidebar, upper section) - PR-E */}
+      {/* <FoundationsEnrichmentsPanel /> */}
+
+      {/* Identity Multiplicity Panel (right sidebar, lower section) - PR-D */}
+      {/* <IdentityMultiplicityPanel /> */}
 
       {/* Tooltip for hover info */}
       <Tooltip />

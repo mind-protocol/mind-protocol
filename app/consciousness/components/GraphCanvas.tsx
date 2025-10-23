@@ -4,12 +4,16 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import type { Node, Link, Operation } from '../hooks/useGraphData';
 import { ENTITY_COLORS, hexToRgb } from '../constants/entity-colors';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { emotionToHSL, hslToCSS } from '../lib/emotionColor';
+import { shouldUpdateColor, type EmotionDisplayState } from '../lib/emotionHysteresis';
+import type { EmotionMetadata } from '../hooks/websocket-types';
 
 interface GraphCanvasProps {
   nodes: Node[];
   links: Link[];
   operations: Operation[];
-  entities?: { entity_id: string; name?: string }[];
+  subentities?: { entity_id: string; name?: string }[];
 }
 
 /**
@@ -22,17 +26,24 @@ interface GraphCanvasProps {
  * - Emoji = Node type
  * - Size = Weight (energy + confidence + traversals)
  * - Glow = Recent activity
- * - Link color = Type (structural) or Valence (entity view)
+ * - Link color = Type (structural) or Valence (subentity view)
  * - Link thickness = Hebbian strength
  */
-export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCanvasProps) {
+export function GraphCanvas({ nodes, links, operations, subentities = [] }: GraphCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [selectedEntity, setSelectedEntity] = useState<string>('structural');
+  const [selectedSubentity, setSelectedSubentity] = useState<string>('structural');
+
+  // Emotion coloring state
+  const { emotionState } = useWebSocket();
+
+  // Track emotion display states for hysteresis (per node and link)
+  const emotionDisplayStates = useRef<Map<string, EmotionDisplayState>>(new Map());
+  const linkEmotionDisplayStates = useRef<Map<string, EmotionDisplayState>>(new Map());
 
   // PERFORMANCE: Identify sub-entities (nodes in working memory - last 10 seconds) - computed once per nodes update
   // Sub-entity architecture: entity_name = node_name, any node with recent traversal + energy becomes sub-entity
   // For visualization: all sub-entities get 'default' color glow (slate)
-  const activeNodesByEntity = useMemo(() => {
+  const activeNodesBySubentity = useMemo(() => {
     const now = Date.now();
     const workingMemoryWindow = 10000; // 10 seconds
     const entityMap = new Map<string, Set<string>>();
@@ -60,8 +71,8 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
     if (!svgRef.current || nodes.length === 0) return;
 
     const svg = d3.select(svgRef.current);
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const height = typeof window !== 'undefined' ? window.innerHeight : 1080;
 
     // Clear previous content
     svg.selectAll('*').remove();
@@ -165,13 +176,13 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
       .attr('in', 'SourceGraphic')
       .attr('stdDeviation', '3');
 
-    // ENTITY-COLORED GLOWS (for sub-entity active nodes)
-    // Create a glow filter for each entity color
+    // SUBENTITY-COLORED GLOWS (for sub-entity active nodes)
+    // Create a glow filter for each subentity color
     Object.entries(ENTITY_COLORS).forEach(([entityId, colorHex]) => {
       const rgb = hexToRgb(colorHex);
 
       const entityGlow = defs.append('filter')
-        .attr('id', `entity-glow-${entityId}`)
+        .attr('id', `subentity-glow-${entityId}`)
         .attr('x', '-50%')
         .attr('y', '-50%')
         .attr('width', '200%')
@@ -213,7 +224,7 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
         .attr('fill', getLinkTypeColor(type));
     });
 
-    // Valence-based arrow (for entity view)
+    // Valence-based arrow (for subentity view)
     defs.append('marker')
       .attr('id', 'arrow-valence')
       .attr('viewBox', '0 -5 10 10')
@@ -286,17 +297,30 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
       .force('valence', forceValenceY(height));
 
     // Render links with wireframe aesthetic (Venice consciousness flows)
+    // Now with emotion-based coloring when available
     const linkElements = g.append('g')
       .selectAll('line')
       .data(validLinks)
       .join('line')
-      .attr('stroke', d => getLinkColor(d, selectedEntity))
+      .attr('stroke', d => getLinkColorWithEmotion(d, selectedSubentity, emotionState.linkEmotions))
       .attr('stroke-width', d => getLinkThickness(d))
-      .attr('stroke-opacity', d => isNewLink(d) ? 0.9 : 0.7)
+      .attr('stroke-opacity', d => {
+        // Slightly more opaque for emotional links
+        const linkId = d.id || `${d.source}-${d.target}`;
+        const hasEmotion = emotionState.linkEmotions.has(linkId);
+        if (hasEmotion) return 0.85;
+        return isNewLink(d) ? 0.9 : 0.7;
+      })
       .attr('marker-end', d => `url(#arrow-${d.type || 'default'})`)
       .style('cursor', 'pointer')
       .style('filter', d => {
-        // Subtle wireframe glow for active/new links
+        // Enhanced glow for emotional links
+        const linkId = d.id || `${d.source}-${d.target}`;
+        const linkEmotion = emotionState.linkEmotions.get(linkId);
+
+        if (linkEmotion && linkEmotion.magnitude > 0.3) {
+          return 'drop-shadow(0 0 3px currentColor)';
+        }
         if (isNewLink(d)) {
           return 'drop-shadow(0 0 2px currentColor)';
         }
@@ -319,19 +343,14 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
         window.dispatchEvent(customEvent);
       });
 
-    // Render nodes (emoji only with Venice wireframe/gold filters)
-    const nodeElements = g.append('g')
-      .selectAll('text')
+    // Render nodes (groups with emotion-colored circles + emoji)
+    const nodeGroups = g.append('g')
+      .selectAll('g.node-group')
       .data(nodes)
-      .join('text')
+      .join('g')
+      .attr('class', 'node-group')
       .style('cursor', 'pointer')
-      .style('user-select', 'none')
       .style('pointer-events', 'all')
-      .style('font-family', '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif')
-      .style('text-anchor', 'middle')
-      .style('dominant-baseline', 'central')
-      .attr('font-size', d => getNodeSize(d) * 0.7)
-      .text(d => getNodeEmoji(d))
       .call(drag(simulation) as any)
       .on('click', (event, d) => {
         event.stopPropagation();
@@ -347,33 +366,67 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
         window.dispatchEvent(customEvent);
       });
 
-    // PERFORMANCE: Pre-compute which entity each active node belongs to
-    const nodeToEntity = new Map<string, string>();
-    activeNodesByEntity.forEach((nodeIds, entityId) => {
+    // Add emotion-colored circles behind emojis
+    nodeGroups.append('circle')
+      .attr('class', 'emotion-background')
+      .attr('r', d => getNodeSize(d) * 0.5)
+      .attr('fill', d => {
+        const nodeId = d.id || d.node_id;
+        if (!nodeId) return '#1e293b'; // Default dark slate
+
+        const emotionMeta = emotionState.nodeEmotions.get(nodeId);
+        if (!emotionMeta || emotionMeta.magnitude < 0.05) {
+          return '#1e293b'; // Default for neutral/no emotion
+        }
+
+        // Extract valence and arousal from axes
+        const valence = emotionMeta.axes.find(a => a.axis === 'valence')?.value ?? 0;
+        const arousal = emotionMeta.axes.find(a => a.axis === 'arousal')?.value ?? 0;
+
+        // Convert to HSL
+        const color = emotionToHSL(valence, arousal);
+        return hslToCSS(color);
+      })
+      .attr('opacity', 0.8)
+      .style('filter', 'url(#parchment-texture)');
+
+    // Add emoji text on top of circles
+    const nodeElements = nodeGroups.append('text')
+      .style('user-select', 'none')
+      .style('pointer-events', 'none')
+      .style('font-family', '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif')
+      .style('text-anchor', 'middle')
+      .style('dominant-baseline', 'central')
+      .attr('font-size', d => getNodeSize(d) * 0.7)
+      .text(d => getNodeEmoji(d));
+
+    // PERFORMANCE: Pre-compute which subentity each active node belongs to
+    const nodeToSubentity = new Map<string, string>();
+    activeNodesBySubentity.forEach((nodeIds, entityId) => {
       nodeIds.forEach(nodeId => {
-        if (!nodeToEntity.has(nodeId)) {
-          nodeToEntity.set(nodeId, entityId);
+        if (!nodeToSubentity.has(nodeId)) {
+          nodeToSubentity.set(nodeId, entityId);
         }
       });
     });
 
-    // Update node filters (wireframe glow + entity glow for active nodes + gold shimmer + activity glows)
+    // Update node filters (wireframe glow + subentity glow for active nodes + gold shimmer + activity glows)
     const updateNodeEffects = () => {
       nodeElements.each(function(d: any) {
         const node = d3.select(this);
         const activityGlow = getNodeGlow(d);
         const hasGoldEnergy = shouldApplyGoldShimmer(d);
 
-        // Check if node is recently active for any entity
+        // Check if node is recently active for any subentity
         const nodeId = d.id || d.node_id;
-        const activeEntity = nodeToEntity.get(nodeId);
+        const activeSubentity = nodeToSubentity.get(nodeId);
 
-        // Build filter string: wireframe glow + entity glow (if active) + gold shimmer + activity glow
+        // Build filter string: wireframe glow + subentity glow (if active) + gold shimmer + activity glow
         let filterStr = 'url(#wireframe-glow)';
 
-        // Entity-colored glow for recently active nodes
-        if (activeEntity) {
-          filterStr += ` url(#entity-glow-${activeEntity})`;
+        // Subentity-colored glow for recently active nodes
+        if (activeSubentity) {
+          filterStr += ` url(#subentity-glow-${activeSubentity})`;
         }
 
         if (hasGoldEnergy) {
@@ -387,8 +440,96 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
         node.style('filter', filterStr);
       });
     };
+
+    // Update emotion colors with hysteresis (prevents flicker)
+    const updateEmotionColors = () => {
+      nodeGroups.select('circle.emotion-background').attr('fill', function(d: any) {
+        const nodeId = d.id || d.node_id;
+        if (!nodeId) return '#1e293b';
+
+        const emotionMeta = emotionState.nodeEmotions.get(nodeId);
+        if (!emotionMeta || emotionMeta.magnitude < 0.05) {
+          return '#1e293b'; // Neutral
+        }
+
+        // Extract valence and arousal
+        const valence = emotionMeta.axes.find(a => a.axis === 'valence')?.value ?? 0;
+        const arousal = emotionMeta.axes.find(a => a.axis === 'arousal')?.value ?? 0;
+
+        // Get or create display state for hysteresis
+        let displayState = emotionDisplayStates.current.get(nodeId);
+        if (!displayState) {
+          // Initialize display state
+          displayState = {
+            actual: { valence, arousal, magnitude: emotionMeta.magnitude },
+            displayed: { valence, arousal, magnitude: emotionMeta.magnitude },
+            lastUpdateTime: Date.now()
+          };
+          emotionDisplayStates.current.set(nodeId, displayState);
+        } else {
+          // Update actual emotion
+          displayState.actual = { valence, arousal, magnitude: emotionMeta.magnitude };
+
+          // Check if update needed (hysteresis)
+          if (shouldUpdateColor(displayState)) {
+            displayState.displayed = { valence, arousal, magnitude: emotionMeta.magnitude };
+            displayState.lastUpdateTime = Date.now();
+          }
+        }
+
+        // Convert displayed emotion to HSL
+        const color = emotionToHSL(displayState.displayed.valence, displayState.displayed.arousal);
+        return hslToCSS(color);
+      });
+    };
+
+    // Update link emotion colors with hysteresis
+    const updateLinkEmotionColors = () => {
+      linkElements.attr('stroke', function(d: any) {
+        const linkId = d.id || `${typeof d.source === 'object' ? d.source.id : d.source}-${typeof d.target === 'object' ? d.target.id : d.target}`;
+
+        const linkEmotion = emotionState.linkEmotions.get(linkId);
+        if (!linkEmotion || linkEmotion.magnitude < 0.05) {
+          // Fall back to default color
+          return getLinkColor(d, selectedSubentity);
+        }
+
+        // Extract valence and arousal
+        const valence = linkEmotion.axes.find(a => a.axis === 'valence')?.value ?? 0;
+        const arousal = linkEmotion.axes.find(a => a.axis === 'arousal')?.value ?? 0;
+
+        // Get or create display state for hysteresis
+        let displayState = linkEmotionDisplayStates.current.get(linkId);
+        if (!displayState) {
+          displayState = {
+            actual: { valence, arousal, magnitude: linkEmotion.magnitude },
+            displayed: { valence, arousal, magnitude: linkEmotion.magnitude },
+            lastUpdateTime: Date.now()
+          };
+          linkEmotionDisplayStates.current.set(linkId, displayState);
+        } else {
+          displayState.actual = { valence, arousal, magnitude: linkEmotion.magnitude };
+
+          if (shouldUpdateColor(displayState)) {
+            displayState.displayed = { valence, arousal, magnitude: linkEmotion.magnitude };
+            displayState.lastUpdateTime = Date.now();
+          }
+        }
+
+        // Convert to HSL
+        const color = emotionToHSL(displayState.displayed.valence, displayState.displayed.arousal);
+        return hslToCSS(color);
+      });
+    };
+
     updateNodeEffects(); // Initial update
-    const effectInterval = setInterval(updateNodeEffects, 2000); // Update every 2 seconds (reduced frequency)
+    updateEmotionColors(); // Initial emotion colors
+    updateLinkEmotionColors(); // Initial link emotion colors
+    const effectInterval = setInterval(() => {
+      updateNodeEffects();
+      updateEmotionColors();
+      updateLinkEmotionColors();
+    }, 2000); // Update every 2 seconds
 
     // Simulation tick
     simulation.on('tick', () => {
@@ -398,9 +539,9 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
         .attr('x2', (d: any) => d.target.x)
         .attr('y2', (d: any) => d.target.y);
 
-      nodeElements
-        .attr('x', (d: any) => d.x)
-        .attr('y', (d: any) => d.y);
+      // Position node groups (contains circle + emoji)
+      nodeGroups
+        .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
 
     // PERFORMANCE: Start simulation with faster settling and stop when stable
@@ -437,7 +578,7 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
       (simulation as any).force('temporal', null);
       (simulation as any).force('valence', null);
     };
-  }, [nodes, links, selectedEntity]);
+  }, [nodes, links, selectedSubentity]);
 
   // Handle node focus from CLAUDE_DYNAMIC.md clicks
   // IMPORTANT: Empty dependency array to prevent listener accumulation
@@ -466,8 +607,8 @@ export function GraphCanvas({ nodes, links, operations, entities = [] }: GraphCa
       if (!nodeData || !nodeData.x || !nodeData.y) return;
 
       // Center view on node with smooth transition
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1920;
+      const height = typeof window !== 'undefined' ? window.innerHeight : 1080;
 
       const scale = 1.5; // Zoom in a bit
       const x = -nodeData.x * scale + width / 2;
@@ -666,15 +807,40 @@ function shouldApplyGoldShimmer(node: Node): boolean {
   return false;
 }
 
-function getLinkColor(link: Link, selectedEntity: string): string {
-  if (selectedEntity === 'structural') {
+function getLinkColor(link: Link, selectedSubentity: string): string {
+  if (selectedSubentity === 'structural') {
     return getLinkTypeColor(link.type);
   } else {
     // Valence-based coloring
     const valences = link.sub_entity_valences || {};
-    const valence = valences[selectedEntity];
+    const valence = valences[selectedSubentity];
     return getValenceColor(valence);
   }
+}
+
+/**
+ * Get link color with emotion support
+ * Uses emotion-based HSL coloring when available, falls back to type/valence coloring
+ */
+function getLinkColorWithEmotion(
+  link: Link,
+  selectedSubentity: string,
+  linkEmotions: Map<string, EmotionMetadata>
+): string {
+  // Try to get emotion data for this link
+  const linkId = link.id || `${link.source}-${link.target}`;
+  const linkEmotion = linkEmotions.get(linkId);
+
+  // If link has emotion and it's above threshold, use emotion color
+  if (linkEmotion && linkEmotion.magnitude > 0.05) {
+    const valence = linkEmotion.axes.find(a => a.axis === 'valence')?.value ?? 0;
+    const arousal = linkEmotion.axes.find(a => a.axis === 'arousal')?.value ?? 0;
+    const color = emotionToHSL(valence, arousal);
+    return hslToCSS(color);
+  }
+
+  // Otherwise fall back to default link coloring
+  return getLinkColor(link, selectedSubentity);
 }
 
 function getLinkTypeColor(type: string): string {

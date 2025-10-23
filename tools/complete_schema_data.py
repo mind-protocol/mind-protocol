@@ -14,7 +14,7 @@ Source: UNIFIED_SCHEMA_REFERENCE.md
 # ============================================================================
 
 UNIVERSAL_NODE_ATTRIBUTES = {
-    "core_identity": [
+    "core_idsubentity": [
         {"name": "name", "type": "string", "required": True,
          "description": "Unique identifier for this node"},
         {"name": "description", "type": "string", "required": True,
@@ -281,7 +281,7 @@ LINK_FIELD_SPECS = {
 
     "COLLABORATES_WITH": {
         "level": "shared", "category": "organizational",
-        "description": "Working partnership between entities",
+        "description": "Working partnership between subentities",
         "required": [],
         "optional": []
     },
@@ -310,7 +310,7 @@ LINK_FIELD_SPECS = {
     # Activation & Triggering (3 types)
     "ACTIVATES": {
         "level": "n1", "category": "activation",
-        "description": "Trigger awakens entity coalition",
+        "description": "Trigger awakens subentity coalition",
         "required": [],
         "optional": []
     },
@@ -324,7 +324,7 @@ LINK_FIELD_SPECS = {
 
     "SUPPRESSES": {
         "level": "n1", "category": "activation",
-        "description": "What blocks entity activation",
+        "description": "What blocks subentity activation",
         "required": [],
         "optional": []
     },
@@ -483,12 +483,12 @@ NODE_TYPE_SCHEMAS = {
 
     "Trigger": {
         "level": "n1", "category": "personal",
-        "description": "What awakens entity coalitions",
+        "description": "What awakens subentity coalitions",
         "required": [
             {"name": "stimulus_description", "type": "string",
              "description": "What triggers activation"},
             {"name": "activated_entities", "type": "array",
-             "description": "Which entities this triggers"}
+             "description": "Which subentities this triggers"}
         ],
         "optional": []
     },
@@ -732,7 +732,7 @@ NODE_TYPE_SCHEMAS = {
     },
 
     # N3 (Ecosystem Intelligence) - 15 Types
-    # Category 1: External Organizations & Entities
+    # Category 1: External Organizations & Subentities
     "Company": {
         "level": "n3", "category": "ecosystem",
         "description": "External organization we track",
@@ -905,7 +905,7 @@ NODE_TYPE_SCHEMAS = {
     # Category 3: Derived Intelligence
     "Psychological_Trait": {
         "level": "n3", "category": "derived",
-        "description": "Behavioral tendency of person/entity",
+        "description": "Behavioral tendency of person/subentity",
         "required": [
             {"name": "trait_description", "type": "string",
              "description": "Description of the trait"},
@@ -950,7 +950,7 @@ NODE_TYPE_SCHEMAS = {
 
     "Network_Cluster": {
         "level": "n3", "category": "derived",
-        "description": "Group of related entities",
+        "description": "Group of related subentities",
         "required": [
             {"name": "cluster_type", "type": "enum",
              "enum_values": ["social", "financial", "technical"],

@@ -19,12 +19,15 @@ Architecture: V2 Single-Energy (foundations/diffusion.md)
 """
 
 import json
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
 from orchestration.core.node import Node
 from orchestration.core.link import Link
 from orchestration.core.types import NodeType, LinkType
+
+logger = logging.getLogger(__name__)
 
 
 # --- Node Serialization ---
@@ -691,7 +694,15 @@ class FalkorDBAdapter:
                             created_at=datetime.now()
                         )
 
-                        graph.add_link(link)
+                        # Skip duplicate links (Bug #2 fix - 2025-10-23)
+                        try:
+                            graph.add_link(link)
+                        except ValueError as e:
+                            if "already exists" in str(e):
+                                # Link already in graph, skip (likely from previous load or duplicate in DB)
+                                logger.debug(f"Skipping duplicate link {link.id}: {e}")
+                            else:
+                                raise
 
         return graph
 

@@ -47,13 +47,13 @@ const NODE_TYPE_EMOJI: Record<string, string> = {
   // ... add more as needed
 };
 
-// Entity colors (from constants)
+// Subentity colors (from constants)
 const ENTITY_COLORS: Record<string, number> = {
   default: 0x64748b,    // slate-500
   validator: 0x3b82f6,  // blue-500
   architect: 0x8b5cf6,  // purple-500
   translator: 0x06b6d4, // cyan-500
-  // ... add more entities
+  // ... add more subentities
 };
 
 export class PixiRenderer implements RendererAdapter {
@@ -64,21 +64,21 @@ export class PixiRenderer implements RendererAdapter {
   private worldContainer!: PIXI.Container;
   private linksContainer!: PIXI.Container;
   private nodesContainer!: PIXI.Container;
-  private entitiesContainer!: PIXI.Container;  // Entity nodes (collapsed layer)
+  private entitiesContainer!: PIXI.Container;  // Subentity nodes (collapsed layer)
   private entityBoundariesContainer!: PIXI.Container;  // RELATES_TO edges
 
   // Data
   private viewModel: ViewModel = {
     nodes: [],
     links: [],
-    entities: [],
+    subentities: [],
     operations: [],
   };
 
-  // Entity caches (from WebSocket)
+  // Subentity caches (from WebSocket)
   private entityCache = new Map<string, any>();
   private entityBoundaryCache = new Map<string, any>();
-  private expandedEntities = new Set<string>();
+  private expandedSubentities = new Set<string>();
 
   // Camera state
   private camera: CameraState = {
@@ -150,8 +150,8 @@ export class PixiRenderer implements RendererAdapter {
 
     // Create scene hierarchy
     this.worldContainer = new PIXI.Container();
-    this.entityBoundariesContainer = new PIXI.Container();  // Entity RELATES_TO edges (bottom)
-    this.entitiesContainer = new PIXI.Container();  // Entity nodes (middle)
+    this.entityBoundariesContainer = new PIXI.Container();  // Subentity RELATES_TO edges (bottom)
+    this.entitiesContainer = new PIXI.Container();  // Subentity nodes (middle)
     this.linksContainer = new PIXI.Container();  // Node links (when expanded)
     this.trailContainer = new PIXI.Container();  // Trail effects (above links)
     this.linkCurrentContainer = new PIXI.Container();  // Link current effects (above trails)
@@ -866,7 +866,7 @@ export class PixiRenderer implements RendererAdapter {
   }
 
   private getNodeColor(node: NodeData): number {
-    // Check for active entity
+    // Check for active subentity
     if (node.entity_activations) {
       const entries = Object.entries(node.entity_activations);
       if (entries.length > 0) {
@@ -1053,7 +1053,7 @@ export class PixiRenderer implements RendererAdapter {
       }
     });
 
-    // Note: Trail creation would happen when processing entity activity events
+    // Note: Trail creation would happen when processing subentity activity events
     // For now, trails are created based on working memory changes
   }
 
@@ -1104,7 +1104,7 @@ function hashString(str: string): number {
  * Without embeddings, we use available numerical signals:
  * 1. Weight/confidence/energy (if available)
  * 2. Traversal patterns
- * 3. Last entity that touched this node
+ * 3. Last subentity that touched this node
  * 4. Text content hash (fallback)
  */
 function computeSemanticPolarity(node: NodeData): number {
@@ -1119,7 +1119,7 @@ function computeSemanticPolarity(node: NodeData): number {
     totalWeight += 0.4;
   }
 
-  // Signal 2: Entity activation energy (30% weight)
+  // Signal 2: Subentity activation energy (30% weight)
   // If entity_activations exists, use it
   if (node.entity_activations && Object.keys(node.entity_activations).length > 0) {
     const activations = Object.values(node.entity_activations);
@@ -1129,11 +1129,11 @@ function computeSemanticPolarity(node: NodeData): number {
     totalWeight += 0.3;
   }
 
-  // Signal 3: Last traversed entity hash (20% weight)
-  // Nodes last touched by same entity cluster together
-  const lastEntity = node.last_traversed_by || (node as any).created_by;
-  if (lastEntity) {
-    const entityHash = hashString(lastEntity);
+  // Signal 3: Last traversed subentity hash (20% weight)
+  // Nodes last touched by same subentity cluster together
+  const lastSubentity = node.last_traversed_by || (node as any).created_by;
+  if (lastSubentity) {
+    const entityHash = hashString(lastSubentity);
     polarity += ((entityHash % 1000) / 500 - 1) * 0.2;
     totalWeight += 0.2;
   }

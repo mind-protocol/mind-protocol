@@ -422,9 +422,9 @@ class ProcessManager:
 
         # Start service health monitors for both critical services
         if 'dashboard' in self.processes:
-            asyncio.create_task(self.monitor_service_health('dashboard', 3000))
+            asyncio.create_task(self.monitor_service_health('dashboard', 3000, memory_threshold_mb=1536))
         if 'websocket_server' in self.processes:
-            asyncio.create_task(self.monitor_service_health('websocket_server', WS_PORT))
+            asyncio.create_task(self.monitor_service_health('websocket_server', WS_PORT, memory_threshold_mb=2048))
 
         return True
 
@@ -471,7 +471,7 @@ class ProcessManager:
         # Retry loop with active port verification (no blind wait)
         # The retry loop below will check if port is free and wait only if needed
         max_retries = 10
-        server_script = MIND_PROTOCOL_ROOT / "orchestration" / "websocket_server.py"
+        server_script = MIND_PROTOCOL_ROOT / "orchestration" / "adapters" / "ws" / "websocket_server.py"
 
         if not server_script.exists():
             logger.error(f"  ❌ Script not found: {server_script}")
@@ -553,7 +553,7 @@ class ProcessManager:
         logger.info("[3/5] Starting Conversation Watcher...")
 
         try:
-            watcher_script = MIND_PROTOCOL_ROOT / "orchestration" / "conversation_watcher.py"
+            watcher_script = MIND_PROTOCOL_ROOT / "orchestration" / "services" / "watchers" / "conversation_watcher.py"
 
             if not watcher_script.exists():
                 logger.error(f"  ❌ Script not found: {watcher_script}")

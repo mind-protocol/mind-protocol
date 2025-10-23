@@ -5,7 +5,7 @@ Implements:
 - Energy-weighted greedy knapsack (energy/token ratio)
 - Token budget from LLM context limit (not arbitrary cap)
 - LRU eviction when budget exceeded
-- Cross-entity aggregation for workspace construction
+- Cross-subentity aggregation for workspace construction
 
 Author: AI #6
 Created: 2025-10-20
@@ -123,7 +123,7 @@ def estimate_node_tokens(node, graph) -> int:
 # --- Energy-Weighted Knapsack Selection ---
 
 def select_wm_nodes(
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     graph,
     token_budget: int
 ) -> Tuple[Set[int], Dict[str, any]]:
@@ -131,14 +131,14 @@ def select_wm_nodes(
     Select nodes for working memory using energy-weighted greedy knapsack.
 
     Algorithm:
-        1. Aggregate nodes across all entities
+        1. Aggregate nodes across all subentities
         2. For each node: compute energy density = E_total / token_cost
         3. Sort by energy density descending
         4. Greedy select until budget exhausted
         5. Return selected nodes + statistics
 
     Args:
-        entities: Active sub-entities with energy distributions
+        subentities: Active sub-entities with energy distributions
         graph: Graph object
         token_budget: Available token budget (from compute_wm_token_budget)
 
@@ -158,8 +158,8 @@ def select_wm_nodes(
         - Budget from LLM capacity (not fixed cap)
         - No minimum/maximum node count constraints
     """
-    # Step 1: Aggregate energy across all entities
-    energy_totals = aggregate_entity_energies(entities, graph)
+    # Step 1: Aggregate energy across all subentities
+    energy_totals = aggregate_entity_energies(subentities, graph)
 
     if not energy_totals:
         # No active nodes - return empty selection
@@ -212,35 +212,35 @@ def select_wm_nodes(
 
 
 def aggregate_entity_energies(
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     graph
 ) -> Dict[int, float]:
     """
-    Aggregate energy values across all entities.
+    Aggregate energy values across all subentities.
 
     Formula:
-        E_total[node] = Σ (E[entity, node] for entity in entities)
+        E_total[node] = Σ (E[subentity, node] for subentity in subentities)
 
     Args:
-        entities: Active sub-entities
+        subentities: Active sub-entities
         graph: Graph object
 
     Returns:
         Dict[node_id -> total_energy]
 
     Interpretation:
-        Nodes with high aggregate energy are important to multiple entities.
+        Nodes with high aggregate energy are important to multiple subentities.
         These are workspace candidates.
     """
     energy_totals = {}
 
-    for entity in entities:
-        # Iterate through entity's extent (nodes above threshold for this entity)
-        for node_id in entity.extent:
-            # Get entity's energy at this node
-            node_energy = entity.get_energy(node_id)
+    for subentity in subentities:
+        # Iterate through subentity's extent (nodes above threshold for this subentity)
+        for node_id in subentity.extent:
+            # Get subentity's energy at this node
+            node_energy = subentity.get_energy(node_id)
 
-            # Aggregate across entities
+            # Aggregate across subentities
             if node_id in energy_totals:
                 energy_totals[node_id] += node_energy
             else:
@@ -262,7 +262,7 @@ def compute_energy_density(
 
     Args:
         node_id: Node to evaluate
-        total_energy: Aggregated energy across entities
+        total_energy: Aggregated energy across subentities
         graph: Graph object
 
     Returns:
@@ -322,7 +322,7 @@ def evict_lru_nodes(
 
 def compute_wm_statistics(
     selected_nodes: Set[int],
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     graph,
     token_budget: int
 ) -> Dict[str, any]:
@@ -336,9 +336,9 @@ def compute_wm_statistics(
             - tokens_used: int (actual token consumption)
             - budget_utilization: float (tokens_used / token_budget)
             - nodes_excluded: int (nodes above threshold but excluded)
-            - energy_coverage: float (WM energy / total entity energy)
+            - energy_coverage: float (WM energy / total subentity energy)
     """
-    energy_totals = aggregate_entity_energies(entities, graph)
+    energy_totals = aggregate_entity_energies(subentities, graph)
 
     # Total energy in system
     total_system_energy = sum(energy_totals.values())
@@ -370,7 +370,7 @@ def compute_wm_statistics(
 def construct_workspace_prompt(
     selected_nodes: Set[int],
     graph,
-    entities: List[SubEntity]
+    subentities: List[SubEntity]
 ) -> str:
     """
     Construct workspace prompt from selected nodes.
@@ -378,12 +378,12 @@ def construct_workspace_prompt(
     Includes:
         - Node content (name, description, metadata)
         - Active links between WM nodes
-        - Entity extent indicators (which entities are present)
+        - Subentity extent indicators (which subentities are present)
 
     Args:
         selected_nodes: Nodes selected for WM
         graph: Graph object
-        entities: Active sub-entities
+        subentities: Active sub-entities
 
     Returns:
         Formatted workspace prompt string
@@ -392,11 +392,11 @@ def construct_workspace_prompt(
         ## Workspace (Frame N)
 
         **Nodes:**
-        - Node_A (E=0.85, entities=[translator, architect])
+        - Node_A (E=0.85, subentities=[translator, architect])
           Description: ...
           Links: → Node_B (ENABLES, w=0.7)
 
-        **Active Entities:**
+        **Active Subentities:**
         - translator: 12 nodes, center=Node_A
         - architect: 8 nodes, center=Node_C
     """
@@ -407,7 +407,7 @@ def construct_workspace_prompt(
     lines.append("**Active Nodes:**\n")
 
     # Sort nodes by total energy (highest first) for readability
-    energy_totals = aggregate_entity_energies(entities, graph)
+    energy_totals = aggregate_entity_energies(subentities, graph)
     sorted_nodes = sorted(selected_nodes,
                          key=lambda nid: energy_totals.get(nid, 0.0),
                          reverse=True)
@@ -419,11 +419,11 @@ def construct_workspace_prompt(
         node_name = node_data.get('name', f'node_{node_id}')
         total_energy = energy_totals.get(node_id, 0.0)
 
-        # Which entities have this node in their extent?
-        present_entities = [e.id for e in entities if node_id in e.extent]
+        # Which subentities have this node in their extent?
+        present_entities = [e.id for e in subentities if node_id in e.extent]
         entity_str = ', '.join(present_entities) if present_entities else 'none'
 
-        lines.append(f"- **{node_name}** (E={total_energy:.2f}, entities=[{entity_str}])")
+        lines.append(f"- **{node_name}** (E={total_energy:.2f}, subentities=[{entity_str}])")
 
         # Node description
         if 'description' in node_data:
@@ -451,17 +451,17 @@ def construct_workspace_prompt(
 
         lines.append("")  # Blank line between nodes
 
-    # Entity summary
+    # Subentity summary
     lines.append("\n**Active Sub-Entities:**\n")
-    for entity in entities:
-        extent_size = len(entity.extent)
+    for subentity in subentities:
+        extent_size = len(subentity.extent)
         # Find highest-energy node in extent as "center"
-        if entity.extent:
-            center_node_id = max(entity.extent, key=lambda nid: entity.get_energy(nid))
+        if subentity.extent:
+            center_node_id = max(subentity.extent, key=lambda nid: subentity.get_energy(nid))
             center_name = graph.nodes[center_node_id].get('name', f'node_{center_node_id}')
         else:
             center_name = 'none'
 
-        lines.append(f"- **{entity.id}**: {extent_size} nodes, center={center_name}")
+        lines.append(f"- **{subentity.id}**: {extent_size} nodes, center={center_name}")
 
     return '\n'.join(lines)

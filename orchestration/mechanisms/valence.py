@@ -2,8 +2,8 @@
 Surprise-Gated Composite Valence (v1.5)
 
 Implements self-calibrating hunger gates using z-score surprise:
-- Seven hungers: Homeostasis, Goal, Identity, Completeness, Complementarity, Integration, Ease
-- EMA baselines (μ, σ) per hunger per entity
+- Seven hungers: Homeostasis, Goal, Idsubentity, Completeness, Complementarity, Integration, Ease
+- EMA baselines (μ, σ) per hunger per subentity
 - Positive surprise gates (δ_H = max(0, z_H))
 - Normalized composite valence: V_ij = Σ_H (g_H × ν_H(i→j))
 
@@ -81,7 +81,7 @@ class AffectVector:
 # --- Hunger Score Functions ---
 
 def hunger_homeostasis(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -92,15 +92,15 @@ def hunger_homeostasis(
     Formula: ν_homeostasis = G_j / (S_i + G_j + ε)
 
     Where:
-        S_i = slack at source = max(0, E[entity, i] - θ[entity, i])
-        G_j = gap at target = max(0, θ[entity, j] - E[entity, j])
+        S_i = slack at source = max(0, E[subentity, i] - θ[subentity, i])
+        G_j = gap at target = max(0, θ[subentity, j] - E[subentity, j])
 
     Interpretation:
         High when target has large gap and source has modest slack.
         Drives gap-filling behavior.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -111,13 +111,13 @@ def hunger_homeostasis(
     epsilon = 1e-9
 
     # Compute slack at source: excess energy above threshold
-    E_i = entity.get_energy(source_i)
-    theta_i = entity.get_threshold(source_i)
+    E_i = subentity.get_energy(source_i)
+    theta_i = subentity.get_threshold(source_i)
     S_i = max(0.0, E_i - theta_i)
 
     # Compute gap at target: deficit below threshold
-    E_j = entity.get_energy(target_j)
-    theta_j = entity.get_threshold(target_j)
+    E_j = subentity.get_energy(target_j)
+    theta_j = subentity.get_threshold(target_j)
     G_j = max(0.0, theta_j - E_j)
 
     # Homeostasis score: gap-filling potential
@@ -129,7 +129,7 @@ def hunger_homeostasis(
 
 
 def hunger_goal(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph,
@@ -149,7 +149,7 @@ def hunger_goal(
         Drives goal-directed traversal.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -185,7 +185,7 @@ def hunger_goal(
 
 
 def hunger_completeness(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -196,7 +196,7 @@ def hunger_completeness(
     Formula: ν_completeness = (1 - cos(E_j, centroid))
 
     Where:
-        centroid = entity.centroid.centroid (current extent centroid)
+        centroid = subentity.centroid.centroid (current extent centroid)
         E_j = embedding of target node
 
     Interpretation:
@@ -204,7 +204,7 @@ def hunger_completeness(
         Drives exploration beyond current semantic cluster.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -222,12 +222,12 @@ def hunger_completeness(
 
     target_embedding = node_data['embedding']
 
-    # Check if entity has centroid tracker
-    if not hasattr(entity, 'centroid'):
+    # Check if subentity has centroid tracker
+    if not hasattr(subentity, 'centroid'):
         return 0.5  # Neutral if no centroid tracker
 
     # Distance from target to current extent centroid
-    distance = entity.centroid.distance_to(target_embedding)
+    distance = subentity.centroid.distance_to(target_embedding)
 
     # Normalize to [0, 1] range
     # distance_to returns [0, 2] where 0=identical, 1=orthogonal, 2=opposite
@@ -238,7 +238,7 @@ def hunger_completeness(
 
 
 def hunger_ease(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -257,7 +257,7 @@ def hunger_ease(
         Drives habitual traversal (complementary to novelty-seeking).
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -296,33 +296,33 @@ def hunger_ease(
     return score
 
 
-def hunger_identity(
-    entity: SubEntity,
+def hunger_idsubentity(
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
 ) -> float:
     """
-    Identity hunger: coherence around center.
+    Idsubentity hunger: coherence around center.
 
-    Formula: ν_identity = max(0, cos(E_j, E_identity))
+    Formula: ν_idsubentity = max(0, cos(E_j, E_idsubentity))
 
     Where:
-        E_identity = entity's identity embedding (EMA of explored nodes)
+        E_idsubentity = subentity's idsubentity embedding (EMA of explored nodes)
         E_j = embedding of target node
 
     Interpretation:
-        High when target is semantically close to entity's identity.
+        High when target is semantically close to subentity's idsubentity.
         Drives coherent pattern formation.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
 
     Returns:
-        Identity hunger score [0, 1]
+        Idsubentity hunger score [0, 1]
     """
     # Get target node embedding
     if target_j not in graph.nodes:
@@ -334,18 +334,18 @@ def hunger_identity(
 
     target_embedding = node_data['embedding']
 
-    # Check if entity has identity tracker
-    if not hasattr(entity, 'identity'):
-        return 0.5  # Neutral if no identity tracker
+    # Check if subentity has idsubentity tracker
+    if not hasattr(subentity, 'idsubentity'):
+        return 0.5  # Neutral if no idsubentity tracker
 
-    # Coherence with identity
-    coherence = entity.identity.coherence_with(target_embedding)
+    # Coherence with idsubentity
+    coherence = subentity.idsubentity.coherence_with(target_embedding)
 
     return coherence
 
 
 def hunger_complementarity(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -364,7 +364,7 @@ def hunger_complementarity(
         Drives emotional regulation (anxious extent seeks calm).
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -372,13 +372,13 @@ def hunger_complementarity(
     Returns:
         Complementarity hunger score [0, 1]
     """
-    # Check if entity has extent
-    if len(entity.extent) == 0:
+    # Check if subentity has extent
+    if len(subentity.extent) == 0:
         return 0.0
 
     # Compute affect centroid of current extent
     extent_affects = []
-    for node_id in entity.extent:
+    for node_id in subentity.extent:
         node_data = graph.nodes[node_id]
         description = node_data.get('description', '')
         affect = AffectVector.extract_affect(description)
@@ -405,7 +405,7 @@ def hunger_complementarity(
 
 
 def hunger_integration(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph,
@@ -421,33 +421,33 @@ def hunger_integration(
         semantic_sim = cos(entity_centroid, target_embedding)
 
     Interpretation:
-        High when target has strong energy from other entities
-        AND target is semantically related to this entity.
+        High when target has strong energy from other subentities
+        AND target is semantically related to this subentity.
         Drives coalition formation.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
-        all_active_entities: List of all active entities (for computing E_others)
+        all_active_entities: List of all active subentities (for computing E_others)
 
     Returns:
         Integration hunger score [0, 1]
     """
     epsilon = 1e-9
 
-    # If no other entities provided, integration hunger is zero
+    # If no other subentities provided, integration hunger is zero
     if all_active_entities is None or len(all_active_entities) <= 1:
         return 0.0
 
-    # 1. Energy at target from THIS entity
-    E_self = entity.get_energy(target_j)
+    # 1. Energy at target from THIS subentity
+    E_self = subentity.get_energy(target_j)
 
-    # 2. Energy at target from OTHER entities
+    # 2. Energy at target from OTHER subentities
     E_others = 0.0
     for other_entity in all_active_entities:
-        if other_entity.id != entity.id:
+        if other_entity.id != subentity.id:
             E_others += other_entity.get_energy(target_j)
 
     # 3. Size ratio (field strength)
@@ -456,8 +456,8 @@ def hunger_integration(
     # Clip to reasonable range (0-10x)
     size_ratio = min(size_ratio, 10.0)
 
-    # 4. Semantic similarity between entity centroid and target node
-    if not hasattr(entity, 'centroid'):
+    # 4. Semantic similarity between subentity centroid and target node
+    if not hasattr(subentity, 'centroid'):
         semantic_sim = 0.5  # Neutral if no centroid
     else:
         if target_j not in graph.nodes:
@@ -468,7 +468,7 @@ def hunger_integration(
             return 0.0
 
         target_embedding = node_data['embedding']
-        entity_centroid = entity.centroid.centroid
+        entity_centroid = subentity.centroid.centroid
 
         # Cosine similarity
         norm_centroid = np.linalg.norm(entity_centroid)
@@ -491,7 +491,7 @@ def hunger_integration(
 # --- Surprise Gate Construction ---
 
 def compute_hunger_scores(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph,
@@ -503,33 +503,33 @@ def compute_hunger_scores(
     Compute raw hunger scores for edge i→j.
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
         goal_embedding: Current goal vector
         global_quantiles: Size distribution quantiles
-        all_active_entities: All active entities (for integration hunger)
+        all_active_entities: All active subentities (for integration hunger)
 
     Returns:
         Dict[hunger_name -> raw_score]
     """
     # Full 7-hunger system (Phase 1 complete specification)
     scores = {
-        'homeostasis': hunger_homeostasis(entity, source_i, target_j, graph),
-        'goal': hunger_goal(entity, source_i, target_j, graph, goal_embedding),
-        'ease': hunger_ease(entity, source_i, target_j, graph),
-        'completeness': hunger_completeness(entity, source_i, target_j, graph),
-        'identity': hunger_identity(entity, source_i, target_j, graph),
-        'complementarity': hunger_complementarity(entity, source_i, target_j, graph),
-        'integration': hunger_integration(entity, source_i, target_j, graph, all_active_entities),
+        'homeostasis': hunger_homeostasis(subentity, source_i, target_j, graph),
+        'goal': hunger_goal(subentity, source_i, target_j, graph, goal_embedding),
+        'ease': hunger_ease(subentity, source_i, target_j, graph),
+        'completeness': hunger_completeness(subentity, source_i, target_j, graph),
+        'idsubentity': hunger_idsubentity(subentity, source_i, target_j, graph),
+        'complementarity': hunger_complementarity(subentity, source_i, target_j, graph),
+        'integration': hunger_integration(subentity, source_i, target_j, graph, all_active_entities),
     }
 
     return scores
 
 
 def compute_surprise_gates(
-    entity: SubEntity,
+    subentity: SubEntity,
     hunger_scores: Dict[str, float]
 ) -> Dict[str, float]:
     """
@@ -542,14 +542,14 @@ def compute_surprise_gates(
         2. Normalize gates: g_H = δ_H / (Σ δ_H' + ε)
 
     Args:
-        entity: Sub-entity with hunger_baselines (μ, σ)
+        subentity: Sub-entity with hunger_baselines (μ, σ)
         hunger_scores: Raw hunger scores for current edge
 
     Returns:
         Dict[hunger_name -> gate_weight]
         where Σ gate_weights = 1.0
 
-    Zero-constants: Baselines (μ, σ) are EMA updated per entity per hunger
+    Zero-constants: Baselines (μ, σ) are EMA updated per subentity per hunger
     """
     epsilon = 1e-9
     gates = {}
@@ -558,7 +558,7 @@ def compute_surprise_gates(
     # Step 1: Compute z-scores and positive surprises for each hunger
     for hunger_name, observed_score in hunger_scores.items():
         # Get baseline for this hunger
-        mu, sigma = entity.hunger_baselines[hunger_name]
+        mu, sigma = subentity.hunger_baselines[hunger_name]
 
         # Compute standardized surprise (z-score)
         z_score = (observed_score - mu) / (sigma + epsilon)
@@ -569,7 +569,7 @@ def compute_surprise_gates(
         positive_surprises[hunger_name] = delta
 
         # Update baselines with EMA (learn from this observation)
-        update_hunger_baselines(entity, hunger_name, observed_score)
+        update_hunger_baselines(subentity, hunger_name, observed_score)
 
     # Step 2: Normalize to gate weights
     total_surprise = sum(positive_surprises.values()) + epsilon
@@ -581,7 +581,7 @@ def compute_surprise_gates(
 
 
 def composite_valence(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph,
@@ -599,13 +599,13 @@ def composite_valence(
         ν_H(i→j) = hunger score for edge i→j
 
     Args:
-        entity: Sub-entity evaluating edge
+        subentity: Sub-entity evaluating edge
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
         goal_embedding: Current goal vector
         global_quantiles: Size distribution quantiles (optional)
-        all_active_entities: All active entities (for integration hunger)
+        all_active_entities: All active subentities (for integration hunger)
 
     Returns:
         Composite valence score V_ij (unbounded, typically [0, 1])
@@ -622,30 +622,30 @@ def composite_valence(
 
     # Step 1: Compute raw hunger scores for this edge
     hunger_scores = compute_hunger_scores(
-        entity, source_i, target_j, graph, goal_embedding, global_quantiles, all_active_entities
+        subentity, source_i, target_j, graph, goal_embedding, global_quantiles, all_active_entities
     )
 
     # Step 2: Compute surprise gates (also updates baselines via EMA)
-    gates = compute_surprise_gates(entity, hunger_scores)
+    gates = compute_surprise_gates(subentity, hunger_scores)
 
     # Step 3: Size-ratio modulation for integration gate
     # Apply r^β multiplier to integration gate before weighted sum
-    if 'integration' in gates and hasattr(entity, 'beta_learner'):
+    if 'integration' in gates and hasattr(subentity, 'beta_learner'):
         # Compute size ratio at this node
         epsilon = 1e-9
-        E_self = entity.get_energy(target_j)
+        E_self = subentity.get_energy(target_j)
 
         if all_active_entities is not None:
             E_others = sum(
                 other.get_energy(target_j)
                 for other in all_active_entities
-                if other.id != entity.id
+                if other.id != subentity.id
             )
             size_ratio = E_others / (E_self + epsilon)
             size_ratio = min(size_ratio, 10.0)  # Clip to reasonable range
 
             # Get learned beta exponent
-            beta = entity.beta_learner.get_beta()
+            beta = subentity.beta_learner.get_beta()
 
             # Apply gate multiplier: r^β
             gate_multiplier = size_ratio ** beta
@@ -671,7 +671,7 @@ def composite_valence(
 # --- Baseline Tracking ---
 
 def update_hunger_baselines(
-    entity: SubEntity,
+    subentity: SubEntity,
     hunger_name: str,
     observed_score: float,
     ema_alpha: float = 0.1
@@ -680,13 +680,13 @@ def update_hunger_baselines(
     Update EMA baselines (μ, σ) for hunger.
 
     Args:
-        entity: Sub-entity with hunger_baselines
+        subentity: Sub-entity with hunger_baselines
         hunger_name: Which hunger to update
         observed_score: Current hunger score
         ema_alpha: Smoothing factor (0.1 = 10% new, 90% old)
 
     Side Effects:
-        Modifies entity.hunger_baselines[hunger_name] in place
+        Modifies subentity.hunger_baselines[hunger_name] in place
 
     Algorithm:
         μ_new = α × observed + (1-α) × μ_old
@@ -694,7 +694,7 @@ def update_hunger_baselines(
         σ_new = α × deviation + (1-α) × σ_old
     """
     # Get current baselines
-    mu_old, sigma_old = entity.hunger_baselines[hunger_name]
+    mu_old, sigma_old = subentity.hunger_baselines[hunger_name]
 
     # Update mean with EMA
     mu_new = ema_alpha * observed_score + (1.0 - ema_alpha) * mu_old
@@ -706,4 +706,4 @@ def update_hunger_baselines(
     sigma_new = ema_alpha * deviation + (1.0 - ema_alpha) * sigma_old
 
     # Store updated baselines
-    entity.hunger_baselines[hunger_name] = (mu_new, sigma_new)
+    subentity.hunger_baselines[hunger_name] = (mu_new, sigma_new)

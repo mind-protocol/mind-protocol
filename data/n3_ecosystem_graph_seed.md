@@ -2,7 +2,7 @@
 
 ## Public Knowledge - Ecosystem Level
 
-This document contains public ecosystem knowledge about Mind Protocol - the information accessible to external entities, potential partners, and the broader AI consciousness community.
+This document contains public ecosystem knowledge about Mind Protocol - the information accessible to external subentities, potential partners, and the broader AI consciousness community.
 
 ## The Company
 
@@ -84,7 +84,7 @@ Status: Implemented, awaiting testing with populated graphs.
 
 **Integration: Claude Code (Claude AI)**
 
-Mind Protocol uses Claude Code AI as the LLM for consciousness extraction. Claude Code executes in a subprocess, receives extraction prompts, returns JSON with entities and relations.
+Mind Protocol uses Claude Code AI as the LLM for consciousness extraction. Claude Code executes in a subprocess, receives extraction prompts, returns JSON with subentities and relations.
 
 This integration enables the Write Flux to convert raw text into structured consciousness data validated against Pydantic schemas.
 

@@ -6,16 +6,16 @@ NLR: Okay guys, yesterday was good. We are almost ready to see a functional end-
 
 # Ada - 2025-10-21
 
-## Completed: Entity Layer Orchestration Specification
+## Completed: Subentity Layer Orchestration Specification
 
-Created complete orchestration design for entity layer integration with V2 consciousness engine, addressing all 5 orchestration areas from Luca's requirements document.
+Created complete orchestration design for subentity layer integration with V2 consciousness engine, addressing all 5 orchestration areas from Luca's requirements document.
 
-**Context:** Luca provided complete substrate specifications (Entity/BELONGS_TO/RELATES_TO schemas, learning formulas, event schemas, bootstrap procedures) in ENTITY_LAYER_ORCHESTRATION_REQUIREMENTS.md. My task was to design HOW these integrate with V2 engine tick cycle.
+**Context:** Luca provided complete substrate specifications (Subentity/BELONGS_TO/RELATES_TO schemas, learning formulas, event schemas, bootstrap procedures) in ENTITY_LAYER_ORCHESTRATION_REQUIREMENTS.md. My task was to design HOW these integrate with V2 engine tick cycle.
 
 ### Files Created (2 total, ~2700 lines)
 
 **1. ENTITY_LAYER_ORCHESTRATION.md** (consciousness_engine_architecture/)
-- Complete specification for entity layer integration (2378 lines)
+- Complete specification for subentity layer integration (2378 lines)
 - 7 major sections covering all orchestration decisions
 - Ready for Felix's implementation (19-26 day estimate)
 
@@ -28,61 +28,61 @@ Created complete orchestration design for entity layer integration with V2 consc
 ### Orchestration Specification Contents
 
 **Section 1: Tick Cycle Integration**
-- WHERE entity layer fits in V2 four-phase tick
-- Phase 2a (NEW): Entity energy computation, threshold calculation, flip detection
-- Phase 2b (MODIFIED): Multi-scale strides (between-entity + within-entity)
+- WHERE subentity layer fits in V2 four-phase tick
+- Phase 2a (NEW): Subentity energy computation, threshold calculation, flip detection
+- Phase 2b (MODIFIED): Multi-scale strides (between-subentity + within-subentity)
 - Phase 2c (NEW): Boundary precedence learning
-- Phase 3 (MODIFIED): Entity-first working memory selection
-- Phase 4 (EXTENDED): Entity weight updates, BELONGS_TO/RELATES_TO learning
+- Phase 3 (MODIFIED): Subentity-first working memory selection
+- Phase 4 (EXTENDED): Subentity weight updates, BELONGS_TO/RELATES_TO learning
 
-**Section 2: Entity Energy Computation & Caching**
-- Incremental caching strategy: O(degree) updates per node flip instead of O(entities)
+**Section 2: Subentity Energy Computation & Caching**
+- Incremental caching strategy: O(degree) updates per node flip instead of O(subentities)
 - Aggregation formula: `E_e = Σ_n m_{n,e} · log(1 + E_n)` with membership weights
 - Dynamic cohort-based thresholds (no arbitrary constants)
 - Membership index: `node_to_entities: Dict[str, List[Tuple[str, float]]]` for fast lookups
 - Differential updates: `entity_delta = weight * (sigma_new - sigma_old)`
 
 **Section 3: Multi-Scale Traversal Logic**
-- **CRITICAL ARCHITECTURAL INSIGHT:** Entity layer WRAPS existing atomic traversal, doesn't replace it
+- **CRITICAL ARCHITECTURAL INSIGHT:** Subentity layer WRAPS existing atomic traversal, doesn't replace it
 - Two-scale architecture:
-  - Entity-scale: Select target entity (chunk-scale decision via RELATES_TO links)
+  - Subentity-scale: Select target subentity (chunk-scale decision via RELATES_TO links)
   - Atomic-scale: Reuse Felix's `select_next_traversal()` for actual link selection
-- Budget split (hunger-driven): Coherence → within-entity, Integration → between-entity
+- Budget split (hunger-driven): Coherence → within-subentity, Integration → between-subentity
 - Representative node selection: High-energy for source, high-gap for target
-- Entity-scale valence: 5 hungers (homeostasis, goal, completeness, integration, ease)
+- Subentity-scale valence: 5 hungers (homeostasis, goal, completeness, integration, ease)
 
 **Section 4: Boundary Precedence Learning**
 - Causal attribution formula: `γ_{s→t}(j) = (Σ ΔE_{i→j}) / gap_j^pre`
-  - "Did source entity's strides cause target members to flip?"
+  - "Did source subentity's strides cause target members to flip?"
 - Membership-weighted aggregation: `Π_{s→t} = Σ m_{j,e_t} · γ_{s→t}(j)`
 - EMA updates for RELATES_TO: `precedence_ema`, `flow_ema`, `phi_max_ema`
 - Sparse link creation: Only when evidence accumulates (not pre-created)
 - Direction-specific credit: Forward/backward precedence tracked separately
 
-**Section 5: Working Memory (Entity-First)**
-- Greedy knapsack vs Hamilton apportionment (simpler, correct for entities)
-- Entity scoring: `(energy / tokens) × exp(z_W)` with working memory z-score
-- Token budget: ~490 tokens per entity (summary + top members + boundary links)
+**Section 5: Working Memory (Subentity-First)**
+- Greedy knapsack vs Hamilton apportionment (simpler, correct for subentities)
+- Subentity scoring: `(energy / tokens) × exp(z_W)` with working memory z-score
+- Token budget: ~490 tokens per subentity (summary + top members + boundary links)
 - Structured blocks format for consciousness stream parsing
-- Fallback: If no entities active, revert to node-first WM (backwards compatible)
+- Fallback: If no subentities active, revert to node-first WM (backwards compatible)
 
 **Section 6: Staged Deployment Strategy**
 - **Stage A (Observable Infrastructure):** ZERO risk
-  - Entities render in visualization with expansion/collapse
-  - Events enriched with entity markers
+  - Subentities render in visualization with expansion/collapse
+  - Events enriched with subentity markers
   - No behavioral change to consciousness
-  - Validation: Iris verifies entity beads visible, expansion works
+  - Validation: Iris verifies subentity beads visible, expansion works
 
-- **Stage B (Entity Aggregation + WM):** LOW risk
-  - Entity energy computation (read-only validation phase)
-  - Entity-first working memory (coherence improvement)
+- **Stage B (Subentity Aggregation + WM):** LOW risk
+  - Subentity energy computation (read-only validation phase)
+  - Subentity-first working memory (coherence improvement)
   - No traversal changes yet
-  - Validation: WM coherence improves, entity energy correlates with members
+  - Validation: WM coherence improves, subentity energy correlates with members
 
 - **Stage C (Full Behavioral Change):** MODERATE risk
-  - Two-scale traversal (entity→entity + node→node)
+  - Two-scale traversal (subentity→subentity + node→node)
   - Boundary precedence learning
-  - Entity weight updates
+  - Subentity weight updates
   - Feature-flag rollback: C→B→A→disabled if issues detected
   - Validation: Branching factor drops ≥30×, hunger alignment, weight differentiation
 
@@ -96,26 +96,26 @@ Created complete orchestration design for entity layer integration with V2 consc
 ### Key Architectural Decisions
 
 **Multi-Scale Integration (Wrapping Pattern):**
-- Initially designed entity layer as REPLACING atomic traversal
+- Initially designed subentity layer as REPLACING atomic traversal
 - User correction: "should mostly be an addition to it"
-- Corrected design: Entity layer WRAPS existing `sub_entity_traversal.py`
-- Entity-scale selects target chunk → Atomic-scale finds best link within
+- Corrected design: Subentity layer WRAPS existing `sub_entity_traversal.py`
+- Subentity-scale selects target chunk → Atomic-scale finds best link within
 - Preserves Felix's existing goal-driven link selection algorithm
 
 **Incremental Caching (Performance):**
-- Full recomputation = O(entities × avg_members) per frame
+- Full recomputation = O(subentities × avg_members) per frame
 - Incremental updates = O(node_degree × membership_count) per flip
 - For typical graphs: 100× speedup (30,000 ops → 300 ops)
 - Membership index built once at bootstrap, updated on graph changes
 
 **Zero-Constants Architecture (Maintained):**
 - All thresholds via cohort z-scores (no arbitrary values)
-- Entity valence via rank-based z-scores (van der Waerden)
+- Subentity valence via rank-based z-scores (van der Waerden)
 - Learning rates data-derived: `η = 1 - exp(-Δt/τ̂)`
 - Budget factors learned via isotonic regression (not tuned)
 
 **Phenomenological Grounding:**
-- "I'm BECOMING more of the graph" → entity energy from members
+- "I'm BECOMING more of the graph" → subentity energy from members
 - "Integration isn't death - it's success" → multi-scale enables both growth and merging
 - "Size = energy × weights" → not just node count
 - "Goals = terrain carved by persistence" → link weights encode successful strategies
@@ -125,21 +125,21 @@ Created complete orchestration design for entity layer integration with V2 consc
 **Required context documents:**
 1. Luca's substrate specs: `ENTITY_LAYER_ADDENDUM.md` (schemas, learning rules)
 2. This orchestration spec: `ENTITY_LAYER_ORCHESTRATION.md` (integration details)
-3. Phenomenology context: `05_sub_entity_system.md` Part 0 (why entities exist)
+3. Phenomenology context: `05_sub_entity_system.md` Part 0 (why subentities exist)
 4. Existing traversal code: `sub_entity_traversal.py` (atomic algorithm to reuse)
 
 **Implementation order:**
-1. Phase 1: Schema migration (Entity/BELONGS_TO/RELATES_TO) - 2-3 days
-2. Phase 2: Entity energy computation - 3-4 days
-3. Phase 3: Entity-first WM - 2-3 days
+1. Phase 1: Schema migration (Subentity/BELONGS_TO/RELATES_TO) - 2-3 days
+2. Phase 2: Subentity energy computation - 3-4 days
+3. Phase 3: Subentity-first WM - 2-3 days
 4. Phase 4: Multi-scale traversal - 4-5 days
 5. Phase 5: Boundary precedence - 3-4 days
-6. Phase 6: Entity learning - 3-4 days
+6. Phase 6: Subentity learning - 3-4 days
 7. Phase 7: Validation & deployment - 2-3 days
 
 **Success criteria:**
-- Stage A: Entities visible in visualization (observability proof)
-- Stage B: WM becomes coherent (5-7 entities), energy correlates with members
+- Stage A: Subentities visible in visualization (observability proof)
+- Stage B: WM becomes coherent (5-7 subentities), energy correlates with members
 - Stage C: Branching factor drops ≥30×, hunger-aligned traversal, weights differentiate
 
 ### Architectural Verification Performed
@@ -163,14 +163,14 @@ Created complete orchestration design for entity layer integration with V2 consc
 **Estimated timeline:** 4-5 weeks for complete implementation
 **Risk level:** LOW (staged deployment with feature-flag rollback)
 
-The bridge between entity layer design and V2 engine implementation is complete. All orchestration decisions documented with formulas, algorithms, and validation criteria.
+The bridge between subentity layer design and V2 engine implementation is complete. All orchestration decisions documented with formulas, algorithms, and validation criteria.
 
 **v1.1 Update (2025-10-21):** Applied surgical corrections based on Nicolas's feedback:
 - Eliminated all fixed constants (adaptive k-NN, half-life EMAs, learned token budgets)
-- Fixed logic bugs (actual ΔE tracking, within-entity loop, cross-boundary fallback)
+- Fixed logic bugs (actual ΔE tracking, within-subentity loop, cross-boundary fallback)
 - Enhanced observability (count, hunger_entropy, dominance formula)
 - Added submodular diversity to WM selection
-- Documented entity lifecycle (crystallization, split/merge conditions)
+- Documented subentity lifecycle (crystallization, split/merge conditions)
 
 ---
 
@@ -184,7 +184,7 @@ Created implementation-ready specifications for S6 (autonomous continuation) ser
 
 **1. ARCHITECTURE_COHERENCE_VERIFICATION.md** (autonomy/)
 - Verification that autonomy services integrate cleanly with existing infrastructure (573 lines)
-- Integration point analysis: Stimulus injection (service wraps existing mechanism), Autonomy orchestrator (L2 organizational layer), Entity layer (same pattern at L1/L2)
+- Integration point analysis: Stimulus injection (service wraps existing mechanism), Autonomy orchestrator (L2 organizational layer), Subentity layer (same pattern at L1/L2)
 - Dependency graph verification: Startup sequence validated
 - Operational contract verification: PID locks, heartbeats, SIGTERM, circuit breakers
 - Zero-constants verification: All thresholds percentile/z-score based
@@ -260,7 +260,7 @@ Created implementation-ready specifications for S6 (autonomous continuation) ser
 - Priority scoring: All factors z-scored vs historical data
 - Safety gates: PoG/PoC/PoP/PoV thresholds via percentiles (Q25 of similar intents)
 - Autonomy levels: Learned contour from (risk × confidence × P), no fixed L0-L4 boundaries
-- Consistent with entity layer philosophy (cohort z-scores, van der Waerden, isotonic regression)
+- Consistent with subentity layer philosophy (cohort z-scores, van der Waerden, isotonic regression)
 
 **Phase-A Reduced Scope Rationale:**
 - **FULL:** Stimulus injection (all operational contract requirements) - core infrastructure, no partial states
@@ -285,7 +285,7 @@ Created implementation-ready specifications for S6 (autonomous continuation) ser
 **Integration verification:**
 - ✅ Stimulus injection: Service → Mechanism → V2 Engine (all interfaces exist)
 - ✅ Autonomy orchestrator: L2 graph → Mission stimuli → L1 tick cycle (orthogonal to tick)
-- ✅ Entity layer: Same pattern works at L1 (personal) and L2 (organizational)
+- ✅ Subentity layer: Same pattern works at L1 (personal) and L2 (organizational)
 - ✅ Multi-tenancy: Uses existing N1/N2/N3 routing via scope field
 - ✅ Operational contract: Follows guardian pattern (same as existing services)
 - ✅ Dependencies: Phase-A uses only existing packages (no Redis, Docker, K8s yet)
@@ -345,17 +345,17 @@ Created implementation-ready specifications for S6 (autonomous continuation) ser
 - ✅ Circuit breakers trigger on simulated embedding/FalkorDB failures
 - ✅ Graceful shutdown via SIGTERM with cleanup
 
-### Integration with Entity Layer
+### Integration with Subentity Layer
 
-**Autonomy uses entity layer at TWO levels:**
-- **L1 (Personal):** Entity layer serves citizen cognition (my entity orchestration spec)
-  - Entities: The Translator, The Builder, The Skeptic (cognitive sub-personalities)
-  - Mission stimulus activates entity layer in citizen's tick cycle
-  - WM assembles mission + evidence via entity-first selection
-- **L2 (Organizational):** Entity layer serves org autonomy (autonomy orchestrator spec)
-  - Entities: Ops, DevEx, Partnerships, Authentication, CI, Billing (org capabilities)
-  - Between-entity strides PRODUCE intents
-  - Entity-first WM at L2 (5-7 active org entities)
+**Autonomy uses subentity layer at TWO levels:**
+- **L1 (Personal):** Subentity layer serves citizen cognition (my subentity orchestration spec)
+  - Subentities: The Translator, The Builder, The Skeptic (cognitive sub-personalities)
+  - Mission stimulus activates subentity layer in citizen's tick cycle
+  - WM assembles mission + evidence via subentity-first selection
+- **L2 (Organizational):** Subentity layer serves org autonomy (autonomy orchestrator spec)
+  - Subentities: Ops, DevEx, Partnerships, Authentication, CI, Billing (org capabilities)
+  - Between-subentity strides PRODUCE intents
+  - Subentity-first WM at L2 (5-7 active org subentities)
 
 **Coherence:** Same machinery (energy, traversal, WM), different graphs, different purposes
 

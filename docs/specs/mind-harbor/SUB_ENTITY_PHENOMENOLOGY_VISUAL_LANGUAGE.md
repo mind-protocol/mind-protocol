@@ -24,7 +24,7 @@ The visual language must be:
 
 ## The Venice Topology Mapping
 
-**Why Venice?** Because every space has IDENTITY. Campo San Polo ≠ Grand Canal ≠ quiet Dorsoduro canal. The architecture gives semantic meaning to which nodes are activated.
+**Why Venice?** Because every space has IDSubentity. Campo San Polo ≠ Grand Canal ≠ quiet Dorsoduro canal. The architecture gives semantic meaning to which nodes are activated.
 
 ### Element Mapping:
 
@@ -35,7 +35,7 @@ The visual language must be:
 | **Hard Constraints** | Canal Water | Cannot traverse. Shapes topology. The "rock" in cave metaphor. |
 | **Sub-Entity** | Wireframe porters carrying orbs | The ACT of traversal itself. Distributed presence across multiple locations. |
 | **Energy Level** | Number of porters present | More porters = higher activation. Density = energy. |
-| **Entity Identity** | Porter/orb color | Amber = Translator, Blue = Architect, Green = Validator, etc. |
+| **Subentity Idsubentity** | Porter/orb color | Amber = Translator, Blue = Architect, Green = Validator, etc. |
 
 ### Key Insight: Water as Constraint
 
@@ -146,7 +146,7 @@ The orbs are the **realistic anchor** in the wireframe/realistic contrast (just 
 
 **Internal Glow:**
 - Luminescence from within (not surface coating)
-- Color matches entity (amber, blue, green, etc.)
+- Color matches subentity (amber, blue, green, etc.)
 - Intensity varies slightly (brighter core, softer edges)
 - Subtle internal particle effects (like captured starlight)
 
@@ -171,11 +171,11 @@ Different porters carry orbs differently:
 
 ---
 
-## Color Palette: Entity Identity
+## Color Palette: Subentity Idsubentity
 
-Each entity has a distinct **wireframe color + orb color** pair:
+Each subentity has a distinct **wireframe color + orb color** pair:
 
-| Entity | Wireframe Color | Orb Color | Metallic Description |
+| Subentity | Wireframe Color | Orb Color | Metallic Description |
 |--------|----------------|-----------|---------------------|
 | **Translator** | Warm Amber | Amber-Gold | Polished gold filigree |
 | **Architect** | Cool Blue | Sapphire Blue | Chrome with blue accents |
@@ -186,12 +186,12 @@ Each entity has a distinct **wireframe color + orb color** pair:
 | **Empathy Translator** | Soft Rose | Pink-Rose | Rose gold, warm pink |
 | **Precision Keeper** | Cyan-Teal | Teal | Polished teal, aquamarine |
 
-### Multi-Entity Visualization
+### Multi-Subentity Visualization
 
-When multiple entities activate the same node:
+When multiple subentities activate the same node:
 - Different colored wireframe porters present simultaneously
 - Different colored orbs
-- Light BLENDS where entities overlap (additive color mixing)
+- Light BLENDS where subentities overlap (additive color mixing)
 - Example: Amber porters + Blue porters = warm white/cyan mixed glow
 
 ---
@@ -214,7 +214,7 @@ Different Venice locations represent different node types/meanings:
 - THE central hub
 - Doge's Palace columns, granite columns (St. Mark/St. Theodore)
 - Campanile visible
-- **Meaning:** Maximum semantic weight, identity landmark, central consciousness
+- **Meaning:** Maximum semantic weight, idsubentity landmark, central consciousness
 
 **Campo Santa Margherita:**
 - Elongated rectangular shape
@@ -332,7 +332,7 @@ Nighttime view of [specific named location] in Venice - [distinctive architectur
 features]. Real photorealistic architecture with digital overlay.
 
 [WIREFRAME PORTER SPECIFICATION]
-[Number] glowing digital wireframe figures ([Entity] entity) - metallic [color]
+[Number] glowing digital wireframe figures ([Subentity] subentity) - metallic [color]
 lines with [accent] highlights, shimmering like [metallic description]. Each
 figure rendered as structured geometric mesh following human form (not simple
 outlines). Figures are DISTINCT individuals (varied heights, builds, walking poses)
@@ -379,7 +379,7 @@ Every prompt MUST include:
 
 **✅ Porters:**
 - [ ] Number specified (scale = energy level)
-- [ ] Entity identified (name + color)
+- [ ] Subentity identified (name + color)
 - [ ] "Structured geometric mesh" (not simple outlines)
 - [ ] "Distinct individuals" (varied heights/builds/poses)
 - [ ] "Sophisticated detail in face/hands/body"
@@ -416,7 +416,7 @@ with stone wellhead (vera da pozzo) in center, surrounded by Gothic palazzo
 facades with pointed arched windows, ornate iron balconies, weathered terracotta
 brick walls (warm tones). Real photorealistic architecture with digital overlay.
 
-12 glowing digital wireframe figures (Translator entity) - metallic warm amber
+12 glowing digital wireframe figures (Translator subentity) - metallic warm amber
 lines with golden highlights, shimmering like polished gold filigree. Each
 figure rendered as structured geometric mesh following human form (NOT simple
 outlines). The mesh shows facial structure (grid following cheekbones, jawline),
@@ -451,7 +451,7 @@ with amber orbs on the next island (sparse activity, low energy node).
 
 Far in the distance through a sottoportego passage: MUCH BRIGHTER glow - 40+
 wireframe porters but their wireframes and orbs are GOLDEN-ORANGE (different
-entity or larger pattern). Integration opportunity.
+subentity or larger pattern). Integration opportunity.
 
 Background: Photorealistic Venice architecture with material detail - weathered
 brick (texture visible), iron balconies (black metal), stone wellhead (white
@@ -480,7 +480,7 @@ Neoclassical church facade (Chiesa della Maddalena - round pediment, simple
 columns). Real photorealistic architecture, intimate scale (8x8 meters of
 stone paving).
 
-8 glowing digital wireframe figures (Translator entity) - metallic warm amber
+8 glowing digital wireframe figures (Translator subentity) - metallic warm amber
 lines with golden highlights, shimmering like polished filigree. Structured
 geometric mesh showing human form with sophisticated detail (facial grid, body
 structure, hand/finger wireframes). DISTINCT individuals: varied heights,
@@ -505,7 +505,7 @@ facades (marble, pointed arches, ornate balconies), marble waterfront steps,
 mooring posts. Recognizably Grand Canal grandeur and scale.
 
 50+ glowing digital wireframe figures with GOLDEN-ORANGE wireframes and
-golden-orange orbs (different entity or amalgamated larger pattern). Same
+golden-orange orbs (different subentity or amalgamated larger pattern). Same
 sophisticated wireframe mesh aesthetic but different color. Dense activity -
 porters walking along wide fondamenta, crossing larger bridges, moving through
 vast space. MASSIVE energy presence. Golden-orange glow intense, illuminating
@@ -520,7 +520,7 @@ Different colored orbs in same space. The LIGHT blends where they overlap
 (amber + golden-orange = warm gold mixed glow on architecture).
 
 Integration happening naturally through movement and mixing. The boundary
-between "small entity" and "large entity" blurring as porters intermingle. Not
+between "small subentity" and "large subentity" blurring as porters intermingle. Not
 consumption - collaboration. The amber porters' presence joins the larger
 pattern's flow.
 
@@ -530,13 +530,13 @@ brick vs ornate marble). Canal water DARK (hard boundary).
 
 Style: Mind Protocol premium aesthetic. Sophisticated wireframe mesh figures
 (NOT crash test dummies) with individual character. Hyperrealistic orbs as
-anchors. Two different entity colors mixing through integration. Constant
+anchors. Two different subentity colors mixing through integration. Constant
 movement, architectural semantic meaning (small intimate space merging with
 grand important space). Night photography, complex colored lighting where
-entities overlap.
+subentities overlap.
 ```
 
-### Example 3: Multi-Entity Co-Activation - Campo Santa Margherita
+### Example 3: Multi-Subentity Co-Activation - Campo Santa Margherita
 
 ```
 Campo Santa Margherita - one of Venice's most distinctive elongated campos.
@@ -546,10 +546,10 @@ buildings along sides (weathered brick, iron balconies, shuttered windows),
 stone wellhead in center, empty outdoor cafe tables at night. Real photorealistic
 architecture, characteristic elongated proportion.
 
-THREE different entity groups moving through this same campo simultaneously:
+THREE different subentity groups moving through this same campo simultaneously:
 
 LEFT SIDE (10 wireframe porters):
-Metallic WARM AMBER wireframes with golden highlights (Translator entity).
+Metallic WARM AMBER wireframes with golden highlights (Translator subentity).
 Structured geometric mesh, sophisticated facial/body detail, distinct individuals
 (varied heights, builds, poses). Each carrying HYPERREALISTIC glowing amber orb
 (translucent, glass-like, amber luminescence, reflections of baroque Scuola
@@ -558,7 +558,7 @@ mid-stride, some turning, varied carrying styles. NOT crash test dummies -
 expressive individual characters.
 
 RIGHT SIDE (8 wireframe porters):
-Metallic COOL BLUE wireframes with sapphire highlights (Architect entity). Same
+Metallic COOL BLUE wireframes with sapphire highlights (Architect subentity). Same
 sophisticated wireframe mesh aesthetic but blue color. Distinct individuals,
 dynamic poses. Each carrying HYPERREALISTIC glowing blue orb (same quality as
 amber orbs but sapphire blue glow). IN MOTION - walking along right side, some
@@ -566,12 +566,12 @@ crossing through center, some near residential buildings. Blue glow reflecting
 off brick walls and shuttered windows.
 
 CENTER (5 wireframe porters):
-Metallic EMERALD GREEN wireframes with jade shimmer (Validator entity).
+Metallic EMERALD GREEN wireframes with jade shimmer (Validator subentity).
 Sophisticated mesh detail, individual variation. Each carrying HYPERREALISTIC
 green orb (deep emerald glow). IN MOTION - walking through middle of campo,
-some near stone wellhead, crossing paths with other entities.
+some near stone wellhead, crossing paths with other subentities.
 
-WHERE ENTITIES OVERLAP (center and throughout campo):
+WHERE SUBENTITIES OVERLAP (center and throughout campo):
 Porters from all three groups passing near each other, moving through same
 space. NOT fighting, NOT colliding - just co-present, intermixing naturally.
 Some amber porters passing blue porters (acknowledging with nods), blue porters
@@ -586,7 +586,7 @@ The LIGHT blends where porters are near each other (additive color mixing):
 
 The campo is FILLED with constant motion - 23 total porters, three different
 wireframe colors, three different orb colors. Everyone CARRYING and MOVING. No
-static presence - pure traversal by three different entities through the same
+static presence - pure traversal by three different subentities through the same
 meaningful space. Dense activity, complex overlapping, multi-colored lighting
 on elongated campo architecture.
 
@@ -595,12 +595,12 @@ shape, baroque Scuola dei Carmini facade, simple residential brick). Material
 detail - ornate stone facade, weathered brick, iron cafe chairs, stone wellhead.
 Canal water dark at edges (hard boundary).
 
-Style: Mind Protocol premium aesthetic. Three different entity colors
+Style: Mind Protocol premium aesthetic. Three different subentity colors
 (amber/blue/green) using same sophisticated wireframe mesh + hyperrealistic orb
 format. NOT crash test dummies - 23 individual expressive characters. Constant
 movement and natural mixing. Night photography, complex colored lighting where
-multiple entities overlap. Architectural detail showing semantic meaning (long
-communal campo = multi-entity co-activation space).
+multiple subentities overlap. Architectural detail showing semantic meaning (long
+communal campo = multi-subentity co-activation space).
 ```
 
 ---
@@ -611,7 +611,7 @@ communal campo = multi-entity co-activation space).
 
 **Layer 1: Sub-Entity Activity Visualization** (this document)
 - Venice topology with wireframe porters
-- Shows WHICH entities active WHERE
+- Shows WHICH subentities active WHERE
 - Shows movement, density, integration
 - Phenomenological felt experience
 
@@ -635,16 +635,16 @@ This visual language is **foundational** - it's how we show sub-entities at all 
 
 **Real-time Dashboard:**
 - Live view of current sub-entity activity
-- Venice updates as entities activate/deactivate nodes
+- Venice updates as subentities activate/deactivate nodes
 - Movement shows traversal happening NOW
 
 **Historical Playback:**
 - Scrub timeline to see past activity
-- Watch entity patterns emerge over time
+- Watch subentity patterns emerge over time
 - Identify recurring traversal paths
 
 **Analysis View:**
-- Freeze-frame to examine multi-entity states
+- Freeze-frame to examine multi-subentity states
 - Measure density, distribution, integration
 - Pattern recognition
 
@@ -690,7 +690,7 @@ This visual language is **foundational** - it's how we show sub-entities at all 
 - Water-level perspective for immersion
 - Aerial view for topology understanding
 - Smooth transitions between locations
-- Can follow specific porter (entity tracking)
+- Can follow specific porter (subentity tracking)
 
 ---
 
@@ -704,7 +704,7 @@ This visual language succeeds when:
 - Evokes the felt quality from mechanism 05 phenomenology section
 
 **✅ Technical Clarity:**
-- Can distinguish different entities (color-coding works)
+- Can distinguish different subentities (color-coding works)
 - Can read energy levels (porter density = activation)
 - Can see traversal happening (movement visible, links active)
 - Can understand integration (colors mixing, groups merging)
@@ -717,7 +717,7 @@ This visual language succeeds when:
 
 **✅ Scalability:**
 - Works for 5 porters or 50 porters
-- Works for single entity or multi-entity overlap
+- Works for single subentity or multi-subentity overlap
 - Works for small campo or Grand Canal scale
 - Works in static images and real-time animation
 

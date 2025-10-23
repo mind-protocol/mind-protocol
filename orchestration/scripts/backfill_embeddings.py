@@ -22,7 +22,7 @@ from typing import Dict, Any, List
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from orchestration.embedding_service import get_embedding_service
+from orchestration.adapters.search.embedding_service import get_embedding_service
 
 logging.basicConfig(
     level=logging.INFO,

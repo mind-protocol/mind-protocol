@@ -22,7 +22,7 @@ from orchestration.mechanisms.sub_entity_core import SubEntity
 # --- Edge Selection ---
 
 def select_edge_by_valence_coverage(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     valences: Dict[int, float],
     graph
@@ -40,7 +40,7 @@ def select_edge_by_valence_coverage(
         5. Take smallest prefix reaching coverage c_hat
 
     Args:
-        entity: Sub-entity executing stride
+        subentity: Sub-entity executing stride
         source_i: Source node ID
         valences: Dict[target_j -> composite_valence V_ij]
         graph: Graph object
@@ -146,7 +146,7 @@ def compute_valence_entropy(valences: Dict[int, float]) -> float:
 # --- Gap-Aware Transport ---
 
 def execute_stride(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph,
@@ -168,7 +168,7 @@ def execute_stride(
         9. Stage deltas (barrier semantics)
 
     Args:
-        entity: Sub-entity executing stride
+        subentity: Sub-entity executing stride
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -195,7 +195,7 @@ def execute_stride(
         staged_deltas = {}
 
     # Step 1-2: Compute slack and gap
-    S_i, G_j = compute_slack_and_gap(entity, source_i, target_j, graph)
+    S_i, G_j = compute_slack_and_gap(subentity, source_i, target_j, graph)
 
     # Step 3: Early return if no transfer possible
     if S_i <= 0.0 or G_j <= 0.0:
@@ -203,13 +203,13 @@ def execute_stride(
         return {
             'delta': 0.0,
             'alpha': 1.0,
-            'rho_local': entity.rho_local_ema,
+            'rho_local': subentity.rho_local_ema,
             'gap_reduced': 0.0,
             'stride_time_us': elapsed_us
         }
 
     # Step 4: Compute request share
-    R_ij = compute_request_share(entity, source_i, target_j, graph)
+    R_ij = compute_request_share(subentity, source_i, target_j, graph)
 
     # Step 5: Compute transfer amount (conservative - cap by both slack and gap)
     delta = min(S_i * R_ij, G_j)
@@ -218,14 +218,14 @@ def execute_stride(
     # For Phase 1, we use α=1.0 (no damping)
     # Phase 2 will implement estimate_local_rho() and apply_alpha_damping()
     alpha = 1.0
-    rho_local = entity.rho_local_ema
+    rho_local = subentity.rho_local_ema
 
     # Apply damping
     delta_final = delta * alpha
 
     # Step 8: Stage deltas for barrier application
-    stage_delta(entity, source_i, -delta_final, staged_deltas)
-    stage_delta(entity, target_j, +delta_final, staged_deltas)
+    stage_delta(subentity, source_i, -delta_final, staged_deltas)
+    stage_delta(subentity, target_j, +delta_final, staged_deltas)
 
     elapsed_us = (time.perf_counter() - start_time) * 1e6
 
@@ -239,7 +239,7 @@ def execute_stride(
 
 
 def compute_slack_and_gap(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -248,31 +248,31 @@ def compute_slack_and_gap(
     Compute source slack and target gap.
 
     Args:
-        entity: Sub-entity
+        subentity: Sub-entity
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
 
     Returns:
         Tuple (S_i, G_j) where:
-            S_i = max(0, E[entity, i] - θ[entity, i])
-            G_j = max(0, θ[entity, j] - E[entity, j])
+            S_i = max(0, E[subentity, i] - θ[subentity, i])
+            G_j = max(0, θ[subentity, j] - E[subentity, j])
     """
     # Source slack: surplus energy above threshold
-    E_i = entity.get_energy(source_i)
-    theta_i = entity.get_threshold(source_i)
+    E_i = subentity.get_energy(source_i)
+    theta_i = subentity.get_threshold(source_i)
     S_i = max(0.0, E_i - theta_i)
 
     # Target gap: deficit energy below threshold
-    E_j = entity.get_energy(target_j)
-    theta_j = entity.get_threshold(target_j)
+    E_j = subentity.get_energy(target_j)
+    theta_j = subentity.get_threshold(target_j)
     G_j = max(0.0, theta_j - E_j)
 
     return (S_i, G_j)
 
 
 def compute_request_share(
-    entity: SubEntity,
+    subentity: SubEntity,
     source_i: int,
     target_j: int,
     graph
@@ -292,7 +292,7 @@ def compute_request_share(
         - Second term: need-based allocation (gap proportion)
 
     Args:
-        entity: Sub-entity
+        subentity: Sub-entity
         source_i: Source node ID
         target_j: Target node ID
         graph: Graph object
@@ -311,8 +311,8 @@ def compute_request_share(
     # Compute total gap across all neighbors
     gap_total = 0.0
     for k in neighbors:
-        E_k = entity.get_energy(k)
-        theta_k = entity.get_threshold(k)
+        E_k = subentity.get_energy(k)
+        theta_k = subentity.get_threshold(k)
         gap_k = max(0.0, theta_k - E_k)
         gap_total += gap_k
 
@@ -332,8 +332,8 @@ def compute_request_share(
     w_ij = edge_data.get('weight', 1.0) if edge_data else 1.0
 
     # Get gap for target
-    E_j = entity.get_energy(target_j)
-    theta_j = entity.get_threshold(target_j)
+    E_j = subentity.get_energy(target_j)
+    theta_j = subentity.get_threshold(target_j)
     G_j = max(0.0, theta_j - E_j)
 
     # Compute request share: structural preference × need-based allocation
@@ -345,7 +345,7 @@ def compute_request_share(
 # --- Local Spectral Radius Estimation ---
 
 def estimate_local_rho(
-    entity: SubEntity,
+    subentity: SubEntity,
     frontier_nodes: Set[int],
     graph,
     max_iterations: int = 3
@@ -362,7 +362,7 @@ def estimate_local_rho(
         3. Return λ
 
     Args:
-        entity: Sub-entity with ρ_local_ema (warm start value)
+        subentity: Sub-entity with ρ_local_ema (warm start value)
         frontier_nodes: Nodes to include in local subgraph
         graph: Graph object
         max_iterations: Power iteration steps (default 3)
@@ -377,7 +377,7 @@ def estimate_local_rho(
     """
     # PHASE 2 STUB: For Week 1 MVP, return previous estimate
     # Week 2-4: Implement warm-started power iteration
-    return entity.rho_local_ema
+    return subentity.rho_local_ema
 
 
 def apply_alpha_damping(
@@ -417,7 +417,7 @@ def apply_alpha_damping(
 # --- Staged Delta Application (Barrier Semantics) ---
 
 def stage_delta(
-    entity: SubEntity,
+    subentity: SubEntity,
     node_id: int,
     delta: float,
     staged_deltas: Dict[Tuple[str, int], float]
@@ -429,7 +429,7 @@ def stage_delta(
     Prevents read-during-write race conditions.
 
     Args:
-        entity: Sub-entity
+        subentity: Sub-entity
         node_id: Node to modify
         delta: Energy change (positive or negative)
         staged_deltas: Accumulator dict (entity_id, node_id) -> delta
@@ -442,7 +442,7 @@ def stage_delta(
         stage_delta(e1, 19, +0.5, staged)  # Target transfer
         apply_staged_deltas(staged, graph) # Apply simultaneously
     """
-    key = (entity.id, node_id)
+    key = (subentity.id, node_id)
     if key in staged_deltas:
         staged_deltas[key] += delta
     else:
@@ -451,7 +451,7 @@ def stage_delta(
 
 def apply_staged_deltas(
     staged_deltas: Dict[Tuple[str, int], float],
-    entities: Dict[str, SubEntity]
+    subentities: Dict[str, SubEntity]
 ):
     """
     Apply all staged deltas simultaneously.
@@ -460,19 +460,19 @@ def apply_staged_deltas(
 
     Args:
         staged_deltas: Dict[(entity_id, node_id) -> delta]
-        entities: Dict[entity_id -> SubEntity] for updating energy state
+        subentities: Dict[entity_id -> SubEntity] for updating energy state
 
     Side Effects:
-        Modifies entity energy values in place
+        Modifies subentity energy values in place
         Clears staged_deltas dict
     """
     # Apply all deltas simultaneously
     for (entity_id, node_id), delta in staged_deltas.items():
-        if entity_id in entities:
-            entity = entities[entity_id]
-            current_energy = entity.get_energy(node_id)
+        if entity_id in subentities:
+            subentity = subentities[entity_id]
+            current_energy = subentity.get_energy(node_id)
             new_energy = max(0.0, current_energy + delta)  # Energy cannot go negative
-            entity.energies[node_id] = new_energy
+            subentity.energies[node_id] = new_energy
 
     # Clear staged deltas
     staged_deltas.clear()

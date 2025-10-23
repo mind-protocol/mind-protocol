@@ -20,9 +20,9 @@ class NodeType(Enum):
     MECHANISM = "Mechanism"
 
     # Multi-scale consciousness (Phase 7)
-    ENTITY = "Entity"
+    SUBENTITY = "Subentity"
 
-    # Entity types
+    # Subentity types
     AI_AGENT = "AI_Agent"
     HUMAN = "Human"
 
@@ -47,8 +47,8 @@ class LinkType(Enum):
     INSTANCE_OF = "INSTANCE_OF"
 
     # Multi-scale consciousness (Phase 7)
-    BELONGS_TO = "BELONGS_TO"  # Node -> Entity membership
-    RELATES_TO = "RELATES_TO"  # Entity -> Entity boundary
+    BELONGS_TO = "BELONGS_TO"  # Node -> Subentity membership
+    RELATES_TO = "RELATES_TO"  # Subentity -> Subentity boundary
 
     # Energy flow
     DIFFUSES_TO = "DIFFUSES_TO"

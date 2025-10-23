@@ -11,7 +11,7 @@
 This document summarizes the V1 consciousness graph schema extracted from the SQLite database. This schema represents the complete type system that V1 used to model consciousness across three hierarchical levels (Niveau 1, 2, 3).
 
 **Database Structure:**
-- **node_type_schemas**: 29 node types defining entities in consciousness graph
+- **node_type_schemas**: 29 node types defining subentities in consciousness graph
 - **link_type_schemas**: 23 relationship types connecting nodes
 - **level_mappings**: 100 mappings assigning types to hierarchical levels
 
@@ -31,7 +31,7 @@ Nodes that capture personal consciousness experiences:
 7. **Personal_Value** - What matters to me individually
 8. **Realization** - Personal discovery, insight, comprehension shift
 9. **Relationship** - Connection to specific person
-10. **Trigger** - Stimulus that activates specific entity coalitions
+10. **Trigger** - Stimulus that activates specific subentity coalitions
 11. **Wound** - Personal scar, trauma, formative failure
 
 ### Organizational/Collective Level Nodes
@@ -92,9 +92,9 @@ All link types in V1 carry rich consciousness metadata:
 ### Link Type Catalog
 
 **Activation & Triggering:**
-1. **ACTIVATES** - Trigger awakens entity coalition
+1. **ACTIVATES** - Trigger awakens subentity coalition
 2. **TRIGGERED_BY** - What caused memory/pattern to form or activate
-3. **SUPPRESSES** - What blocks entity activation
+3. **SUPPRESSES** - What blocks subentity activation
 
 **Structural Relationships:**
 4. **BLOCKS** - Prevents progress (with severity: absolute/strong/partial)
@@ -182,7 +182,7 @@ The V2 Pydantic schema must preserve this richness:
 
 3. **Typed Inheritance**: Each of the 29 node types and 23 link types should have specific Pydantic models inheriting from base classes
 
-4. **LlamaIndex SchemaLLMPathExtractor Configuration**: Must be taught to extract this consciousness metadata, not just standard entity-relationship triples
+4. **LlamaIndex SchemaLLMPathExtractor Configuration**: Must be taught to extract this consciousness metadata, not just standard subentity-relationship triples
 
 ---
 

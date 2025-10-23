@@ -1,5 +1,5 @@
 {
-  "entity": "Cynic",
+  "subentity": "Cynic",
   "turn_number": 1,
   "timestamp": "2025-10-06T21:10:41.341613",
   "input_text": "\nGot a Telegram DM from @DegenAlpha pitching \"SolAI Protocol\" - AI agents that trade Solana memecoins.\nJoin their private alpha group at t.me/solai_alpha for early access before public launch.\nThey cl",
@@ -7,7 +7,7 @@
   "traversals": [
     {
       "timestamp": "2025-10-06T21:10:41.320876",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_0xRacer",
       "link_type": "CO_OCCURRENCE",
@@ -122,7 +122,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321049",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_cielo_finance",
       "link_type": "CO_OCCURRENCE",
@@ -259,7 +259,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321170",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_DegenSpartan",
       "link_type": "CO_OCCURRENCE",
@@ -418,7 +418,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321283",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_BullX_io",
       "link_type": "CO_OCCURRENCE",
@@ -599,7 +599,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321395",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_degentradingLDN",
       "link_type": "CO_OCCURRENCE",
@@ -802,7 +802,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321510",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_theunipcs",
       "link_type": "CO_OCCURRENCE",
@@ -1027,7 +1027,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.321644",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_solana_tracker",
       "link_type": "CO_OCCURRENCE",
@@ -1274,7 +1274,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.322074",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_AltcoinPsycho",
       "link_type": "CO_OCCURRENCE",
@@ -1543,7 +1543,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.322448",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_intotheblock",
       "link_type": "CO_OCCURRENCE",
@@ -1834,7 +1834,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.322764",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_birdeye_so",
       "link_type": "CO_OCCURRENCE",
@@ -2147,7 +2147,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.322900",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_jakey",
       "link_type": "CO_OCCURRENCE",
@@ -2482,7 +2482,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323034",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_SOLBigBrain",
       "link_type": "CO_OCCURRENCE",
@@ -2839,7 +2839,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323195",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_SolanaFloor",
       "link_type": "CO_OCCURRENCE",
@@ -3218,7 +3218,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323319",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_CryptoCobain",
       "link_type": "CO_OCCURRENCE",
@@ -3619,7 +3619,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323458",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_JupiterExchange",
       "link_type": "CO_OCCURRENCE",
@@ -4042,7 +4042,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323593",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_MustStopMurad",
       "link_type": "CO_OCCURRENCE",
@@ -4487,7 +4487,7 @@
     },
     {
       "timestamp": "2025-10-06T21:10:41.323719",
-      "entity": "Cynic",
+      "subentity": "Cynic",
       "source_pattern": "Credit",
       "target_pattern": "HANDLE_entities",
       "link_type": "CO_OCCURRENCE",

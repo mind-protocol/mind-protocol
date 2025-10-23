@@ -54,6 +54,9 @@ class InjectionMatch:
     source_threshold: Optional[float] = None
     target_threshold: Optional[float] = None
 
+    # PR-E.5: Affective Priming fields
+    emotion_vector: Optional[np.ndarray] = None  # E_emo for affect alignment
+
 
 @dataclass
 class InjectionResult:
@@ -88,7 +91,7 @@ class StimulusInjector:
 
     Core: Entropy-based adaptive retrieval + gap-weighted budget distribution
     Foundation: Health modulation, source learning, link injection, peripheral amplification
-    Entity layer (TODO): Entity-aware injection channels
+    Subentity layer (TODO): Subentity-aware injection channels
     """
 
     def __init__(self):
@@ -124,10 +127,15 @@ class StimulusInjector:
         self.source_impact_enabled = True
         self.peripheral_amplification_enabled = True
         self.link_injection_enabled = True
-        self.entity_channels_enabled = False  # V1: Simplified to single entity
+        self.entity_channels_enabled = False  # V1: Simplified to single subentity
 
         # Frame counter for diagnostics
         self.frame_count = 0
+
+        # PR-E.5: Affective Priming
+        self.affective_priming_enabled = False  # Feature flag
+        self.recent_affect = np.zeros(2)  # A_recent: [valence, arousal] EMA
+        self.affect_ema_alpha = 0.1  # EMA smoothing factor (window ~20 frames)
 
         logger.info(
             f"[StimulusInjector] Initialized V1 with mechanisms: "
@@ -156,8 +164,11 @@ class StimulusInjector:
             InjectionResult with budget breakdown and per-item injections
         """
 
+        # Step 0 (PR-E.5): Apply affective priming
+        matches_primed = self._apply_affective_priming(matches)
+
         # Step 1: Entropy-coverage search (adaptive retrieval)
-        entropy, coverage_target, selected = self._entropy_coverage_search(matches)
+        entropy, coverage_target, selected = self._entropy_coverage_search(matches_primed)
 
         logger.info(
             f"[StimulusInjector] Entropy-coverage: H={entropy:.2f}, "
@@ -270,22 +281,21 @@ class StimulusInjector:
 
     def _compute_gap_mass(self, matches: List[InjectionMatch]) -> float:
         """
-        Compute similarity mass: Σ s_m
+        Compute gap mass: Σ s_m · max(0, Θ_m - E_m)
 
-        Total relevance across all matches (no gap constraint).
-        Renamed from gap_mass but kept method name for backward compatibility.
+        Weighted sum of gaps by similarity - estimates useful work potential.
 
         Args:
             matches: Selected matches
 
         Returns:
-            Similarity mass (total relevance)
+            Gap mass (similarity-weighted gap sum)
         """
-        similarity_mass = sum(m.similarity for m in matches)
+        gap_mass = sum(m.similarity * m.gap for m in matches)
 
-        logger.debug(f"[StimulusInjector] Similarity mass: {similarity_mass:.2f} from {len(matches)} matches")
+        logger.debug(f"[StimulusInjector] Gap mass: {gap_mass:.2f} from {len(matches)} matches")
 
-        return similarity_mass
+        return gap_mass
 
     def _health_modulation(
         self,
@@ -370,15 +380,139 @@ class StimulusInjector:
 
         return alpha
 
+    def _apply_affective_priming(
+        self,
+        matches: List[InjectionMatch],
+        priming_strength: float = 0.15
+    ) -> List[InjectionMatch]:
+        """
+        Apply affective priming boost to match scores.
+
+        PR-E.5: Affective Priming - Bias stimulus injection toward affect-congruent entry nodes.
+
+        Formula: score_i = s_semantic × (1 + p × r_affect)
+        where:
+        - s_semantic: baseline semantic match [0,1]
+        - p: priming strength (default 0.15 = 15% max boost)
+        - r_affect = cos(A_recent, E_emo_i): affect alignment [-1,1]
+
+        Args:
+            matches: Injection matches with emotion_vector populated
+            priming_strength: Maximum boost fraction (default 0.15)
+
+        Returns:
+            Matches with adjusted similarity scores
+        """
+        if not self.affective_priming_enabled:
+            return matches
+
+        # Check if recent affect is significant
+        affect_magnitude = np.linalg.norm(self.recent_affect)
+
+        # Read config from settings if available
+        from orchestration.core.settings import settings
+        min_magnitude = getattr(settings, 'AFFECTIVE_PRIMING_MIN_RECENT', 0.3)
+        priming_strength = getattr(settings, 'AFFECTIVE_PRIMING_P', 0.15)
+
+        if affect_magnitude < min_magnitude:
+            # Recent affect too weak - skip priming
+            logger.debug(f"[AffectivePriming] Skipped - recent affect magnitude {affect_magnitude:.2f} < {min_magnitude}")
+            return matches
+
+        primed_matches = []
+        priming_applied_count = 0
+
+        for match in matches:
+            # Skip if no emotion vector
+            if match.emotion_vector is None or len(match.emotion_vector) == 0:
+                primed_matches.append(match)
+                continue
+
+            # Compute affect alignment: r_affect = cos(A_recent, E_emo_i)
+            # Normalize both vectors
+            recent_norm = self.recent_affect / (affect_magnitude + 1e-10)
+            emotion_norm = match.emotion_vector / (np.linalg.norm(match.emotion_vector) + 1e-10)
+
+            # Cosine similarity
+            r_affect = np.dot(recent_norm, emotion_norm)
+
+            # Apply boost: score_i = s_semantic × (1 + p × r_affect)
+            # where r_affect ∈ [-1, 1], so boost ∈ [-p, +p]
+            boost = priming_strength * r_affect
+            boosted_similarity = match.similarity * (1.0 + boost)
+
+            # Clamp to [0, 1] to keep similarity valid
+            boosted_similarity = np.clip(boosted_similarity, 0.0, 1.0)
+
+            # Create new match with boosted similarity
+            primed_match = InjectionMatch(
+                item_id=match.item_id,
+                item_type=match.item_type,
+                similarity=boosted_similarity,
+                current_energy=match.current_energy,
+                threshold=match.threshold,
+                gap=match.gap,
+                source_id=match.source_id,
+                target_id=match.target_id,
+                precedence_forward=match.precedence_forward,
+                precedence_backward=match.precedence_backward,
+                source_energy=match.source_energy,
+                target_energy=match.target_energy,
+                source_threshold=match.source_threshold,
+                target_threshold=match.target_threshold,
+                emotion_vector=match.emotion_vector
+            )
+
+            primed_matches.append(primed_match)
+
+            if abs(boost) > 0.01:  # Log significant boosts
+                priming_applied_count += 1
+                logger.debug(
+                    f"[AffectivePriming] {match.item_id}: "
+                    f"r_affect={r_affect:.2f}, boost={boost:+.2f}, "
+                    f"sim {match.similarity:.2f} → {boosted_similarity:.2f}"
+                )
+
+        if priming_applied_count > 0:
+            logger.info(
+                f"[AffectivePriming] Applied to {priming_applied_count}/{len(matches)} matches "
+                f"(A_recent magnitude={affect_magnitude:.2f})"
+            )
+
+        return primed_matches
+
+    def update_recent_affect(self, current_affect: np.ndarray):
+        """
+        Update recent affect EMA.
+
+        PR-E.5: Track A_recent via exponential moving average.
+
+        Args:
+            current_affect: Current active entity affect vector [valence, arousal, ...]
+        """
+        if not self.affective_priming_enabled:
+            return
+
+        # EMA update: A_recent = α × current + (1 - α) × A_recent_old
+        self.recent_affect = (
+            self.affect_ema_alpha * current_affect[:2]  # Use first 2 dims (valence, arousal)
+            + (1 - self.affect_ema_alpha) * self.recent_affect
+        )
+
+        logger.debug(
+            f"[AffectivePriming] Updated A_recent: [{self.recent_affect[0]:.2f}, {self.recent_affect[1]:.2f}], "
+            f"magnitude={np.linalg.norm(self.recent_affect):.2f}"
+        )
+
     def _distribute_budget(
         self,
         budget: float,
         matches: List[InjectionMatch]
     ) -> List[Dict[str, Any]]:
         """
-        Distribute budget across matches proportional to similarity only.
+        Distribute budget across matches proportional to similarity × gap, capped at gap.
 
-        No gap constraint - nodes can accumulate energy indefinitely.
+        Implements gap-capped budgeting: nodes never exceed their threshold.
 
         Args:
             budget: Total energy budget to distribute
@@ -390,22 +524,28 @@ class StimulusInjector:
         if budget <= 0 or not matches:
             return []
 
-        # Compute weights: similarity only (no gap constraint)
-        weights = np.array([m.similarity for m in matches])
+        # Compute weights: similarity × gap
+        weights = np.array([m.similarity * m.gap for m in matches])
         total_weight = weights.sum()
 
         if total_weight == 0:
-            # All similarities zero - nothing to inject
-            logger.debug("[StimulusInjector] All similarities zero, no injection")
+            # All gaps zero - nothing to inject
+            logger.debug("[StimulusInjector] All gaps zero, no injection")
             return []
 
         injections = []
 
         for match, weight in zip(matches, weights):
             # Proportional allocation
-            delta_energy = budget * (weight / total_weight)
+            delta_energy_uncapped = budget * (weight / total_weight)
 
-            # No cap - energy accumulates indefinitely
+            # Cap at gap (don't exceed threshold)
+            delta_energy = min(delta_energy_uncapped, match.gap)
+
+            # Skip negligible injections
+            if delta_energy < 1e-9:
+                continue
+
             new_energy = match.current_energy + delta_energy
 
             injections.append({
@@ -422,7 +562,7 @@ class StimulusInjector:
             logger.debug(
                 f"[StimulusInjector] {match.item_id}: "
                 f"E={match.current_energy:.2f} + ΔE={delta_energy:.2f} "
-                f"= {new_energy:.2f} (sim={match.similarity:.2f})"
+                f"= {new_energy:.2f} (gap={match.gap:.2f}, sim={match.similarity:.2f})"
             )
 
         return injections
@@ -524,14 +664,19 @@ class StimulusInjector:
         logger.info("[StimulusInjector] Source impact learning ENABLED")
 
     def enable_entity_channels(self):
-        """Enable entity-aware injection."""
+        """Enable subentity-aware injection."""
         self.entity_channels_enabled = True
-        logger.info("[StimulusInjector] Entity channels ENABLED")
+        logger.info("[StimulusInjector] Subentity channels ENABLED")
 
     def enable_peripheral_amplification(self):
         """Enable S5/S6 peripheral amplification."""
         self.peripheral_amplification_enabled = True
         logger.info("[StimulusInjector] Peripheral amplification ENABLED")
+
+    def enable_affective_priming(self):
+        """Enable affective priming (PR-E.5)."""
+        self.affective_priming_enabled = True
+        logger.info("[StimulusInjector] Affective priming ENABLED")
 
 
 def create_match(
@@ -541,9 +686,9 @@ def create_match(
     current_energy: float,
     threshold: float
 ) -> InjectionMatch:
-    """Helper to create InjectionMatch (gap field kept for backward compatibility but unused)."""
-    # Gap no longer used - nodes can accumulate energy indefinitely
-    gap = 0.0  # Placeholder only
+    """Helper to create InjectionMatch with proper gap computation."""
+    # Compute gap: max(0, threshold - current_energy)
+    gap = max(0.0, threshold - current_energy)
 
     return InjectionMatch(
         item_id=item_id,

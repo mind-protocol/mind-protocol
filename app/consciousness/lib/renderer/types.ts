@@ -24,7 +24,7 @@ export interface NodeData {
   last_traversal_time?: number;
   traversal_count?: number;
 
-  // Entity activation (for glow colors)
+  // Subentity activation (for glow colors)
   entity_activations?: Record<string, {
     energy: number;
     last_activated?: number;
@@ -72,11 +72,11 @@ export interface OperationData {
 export interface ViewModel {
   nodes: NodeData[];
   links: LinkData[];
-  entities: EntityData[];
+  subentities: EntityData[];
   operations: OperationData[];
 
   // Viewport state
-  selectedEntity?: string;
+  selectedSubentity?: string;
   highlightedNodeId?: string;
 
   // V2 consciousness state
@@ -147,7 +147,7 @@ export interface RendererAdapter {
   getCamera(): CameraState;
 
   /**
-   * Update scene data (nodes, links, entities)
+   * Update scene data (nodes, links, subentities)
    */
   setData(viewModel: ViewModel): void;
 
@@ -252,7 +252,7 @@ export interface StimulusProcessed extends BaseEvent {
 // Valence computation
 export interface ValenceBatch extends BaseEvent {
   kind: "valence.batch";
-  entity: string;
+  subentity: string;
   frontier: Array<{
     src: string;
     tgt: string;
@@ -260,7 +260,7 @@ export interface ValenceBatch extends BaseEvent {
     gates: {
       homeostasis: number;
       goal: number;
-      identity: number;
+      idsubentity: number;
       completeness: number;
       complementarity: number;
       integration: number;
@@ -272,13 +272,13 @@ export interface ValenceBatch extends BaseEvent {
 // Stride execution (movement along links)
 export interface StrideExec extends BaseEvent {
   kind: "stride.exec";
-  entity: string;
+  subentity: string;
   src: string;
   tgt: string;
   ΔE: number;
   φ: number;
-  src_entity: string;   // Entity owning source node
-  tgt_entity?: string;  // Entity owning target node (for cross-layer routing)
+  src_entity: string;   // Subentity owning source node
+  tgt_entity?: string;  // Subentity owning target node (for cross-layer routing)
   affect?: {
     link_energy?: number;
     affinity?: number;
@@ -328,7 +328,7 @@ export interface WeightsUpdated extends BaseEvent {
 export interface WmEmit extends BaseEvent {
   kind: "wm.emit";
   selected_nodes?: string[];
-  selected_entities?: string[];  // Entity-level WM selection
+  selected_entities?: string[];  // Subentity-level WM selection
 }
 
 // Trace parsing results
@@ -345,10 +345,10 @@ export interface TraceParsed extends BaseEvent {
   };
 }
 
-// Entity-level events
+// Subentity-level events
 export interface EntityFlip extends BaseEvent {
-  kind: "entity.flip";
-  entity: string;
+  kind: "subentity.flip";
+  subentity: string;
   E_pre: number;
   E_post: number;
   Θ: number;
@@ -356,9 +356,9 @@ export interface EntityFlip extends BaseEvent {
 }
 
 export interface EntityWeightsUpdated extends BaseEvent {
-  kind: "entity.weights.updated";
+  kind: "subentity.weights.updated";
   updates: Array<{
-    entity: string;
+    subentity: string;
     log_weight_before: number;
     log_weight_after: number;
     signals?: Record<string, number>;
@@ -367,7 +367,7 @@ export interface EntityWeightsUpdated extends BaseEvent {
 }
 
 export interface EntityBoundarySummary extends BaseEvent {
-  kind: "entity.boundary.summary";
+  kind: "subentity.boundary.summary";
   pairs: Array<{
     src: string;
     tgt: string;
@@ -379,8 +379,8 @@ export interface EntityBoundarySummary extends BaseEvent {
 }
 
 export interface EntityMembersDelta extends BaseEvent {
-  kind: "entity.members.delta";
-  entity: string;
+  kind: "subentity.members.delta";
+  subentity: string;
   add?: Array<SnapshotNode>;
   remove?: string[];
 }
@@ -412,8 +412,8 @@ export interface SnapshotNode {
   Theta: number;
   log_weight: number;
   ema_wm_presence?: number;
-  primary_entity?: string;  // For cross-layer node→entity mapping
-  memberships?: Array<{ entity: string; weight: number }>;
+  primary_entity?: string;  // For cross-layer node→subentity mapping
+  memberships?: Array<{ subentity: string; weight: number }>;
   pos?: [number, number];
 }
 
@@ -428,7 +428,7 @@ export interface SnapshotLink {
   z_flow?: number;
 }
 
-export interface SnapshotEntity {
+export interface SnapshotSubentity {
   id: string;
   name?: string;
   kind?: "functional" | "semantic";
@@ -443,7 +443,7 @@ export interface SnapshotEntity {
 export interface Snapshot {
   nodes: SnapshotNode[];
   links: SnapshotLink[];
-  entities: SnapshotEntity[];
+  subentities: SnapshotSubentity[];
 }
 
 // ============================================================================

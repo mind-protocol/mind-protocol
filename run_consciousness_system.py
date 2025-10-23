@@ -65,7 +65,7 @@ async def main():
         help='Initial tick interval in ms (default: 100)'
     )
     parser.add_argument(
-        '--entities',
+        '--subentities',
         nargs='+',
         default=['builder', 'observer'],
         help='SubEntity IDs to create (default: builder observer)'
@@ -103,7 +103,7 @@ async def main():
     print(f"N1 Graph: citizen_{args.citizen.replace('-', '_')}")
     print(f"FalkorDB: {args.host}:{args.port}")
     print(f"Initial Tick: {args.tick_ms}ms")
-    print(f"SubEntities: {', '.join(args.entities)}")
+    print(f"SubEntities: {', '.join(args.subentities)}")
     print(f"Dynamic Prompts: {'enabled' if args.enable_dynamic_prompts else 'disabled'}")
     print(f"N2 Monitoring: {'enabled' if args.enable_n2 else 'disabled'}")
     print("=" * 70)
@@ -123,8 +123,8 @@ async def main():
     )
 
     # Add SubEntities
-    logger.info(f"Adding {len(args.entities)} SubEntities...")
-    for entity_id in args.entities:
+    logger.info(f"Adding {len(args.subentities)} SubEntities...")
+    for entity_id in args.subentities:
         engine.add_sub_entity(
             entity_id=entity_id,
             energy_budget=args.energy_budget,
@@ -142,7 +142,7 @@ async def main():
 
         engine.enable_dynamic_prompts(
             citizen_id=args.citizen,
-            entity_ids=args.entities,
+            entity_ids=args.subentities,
             file_path=str(dynamic_md_path)
         )
 

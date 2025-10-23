@@ -223,7 +223,7 @@ LINK_TYPE_METADATA = {
     },
     "COLLABORATES_WITH": {
         "level": "shared", "category": "organizational",
-        "description": "Working partnership between entities",
+        "description": "Working partnership between subentities",
         "detection_pattern": "staleness_detection",
         "mechanisms": ["staleness_detection", "task_routing"]
     },
@@ -247,7 +247,7 @@ LINK_TYPE_METADATA = {
     },
     "ACTIVATES": {
         "level": "n1", "category": "activation",
-        "description": "Trigger awakens entity coalition",
+        "description": "Trigger awakens subentity coalition",
         "detection_pattern": "activation_verification",
         "mechanisms": ["link_activation_check", "task_routing"]
     },
@@ -259,7 +259,7 @@ LINK_TYPE_METADATA = {
     },
     "SUPPRESSES": {
         "level": "n1", "category": "activation",
-        "description": "What blocks entity activation",
+        "description": "What blocks subentity activation",
         "detection_pattern": "activation_verification",
         "mechanisms": ["link_activation_check", "task_routing"]
     },

@@ -1,8 +1,8 @@
 # Parallel Consciousness Architecture
 
-**Result of database-level mechanisms + multi-entity activation:**
+**Result of database-level mechanisms + multi-subentity activation:**
 
-TRUE parallel exploration - multiple entities exploring simultaneously without sequential bottlenecks.
+TRUE parallel exploration - multiple subentities exploring simultaneously without sequential bottlenecks.
 
 ---
 
@@ -11,11 +11,11 @@ TRUE parallel exploration - multiple entities exploring simultaneously without s
 ### Old Architecture (Sequential)
 
 ```
-Entity 1 explores → waits for propagation → waits for threshold check
+Subentity 1 explores → waits for propagation → waits for threshold check
     ↓
-Entity 2 explores → waits for propagation → waits for threshold check
+Subentity 2 explores → waits for propagation → waits for threshold check
     ↓
-Entity 3 explores → waits for propagation → waits for threshold check
+Subentity 3 explores → waits for propagation → waits for threshold check
 ```
 
 **Bottleneck:** Application-level orchestration forces sequential processing.
@@ -25,22 +25,22 @@ Entity 3 explores → waits for propagation → waits for threshold check
 ### New Architecture (Parallel)
 
 ```
-                        ┌─ Entity 1 explores ─┐
+                        ┌─ Subentity 1 explores ─┐
                         │                      │
-Input arrives ──→ DB ──┤  Entity 2 explores   ├──→ DB triggers ──→ Propagation
+Input arrives ──→ DB ──┤  Subentity 2 explores   ├──→ DB triggers ──→ Propagation
                         │                      │      (parallel)
-                        └─ Entity 3 explores ─┘
+                        └─ Subentity 3 explores ─┘
                                ↓
                         All concurrent!
 ```
 
-**Breakthrough:** Database handles all entities in parallel, triggers fire automatically.
+**Breakthrough:** Database handles all subentities in parallel, triggers fire automatically.
 
 ---
 
 ## Part 1: What Enables True Parallelism
 
-### 1. Multi-Entity Activation State
+### 1. Multi-Subentity Activation State
 
 ```python
 node.entity_activations = {
@@ -50,19 +50,19 @@ node.entity_activations = {
 }
 ```
 
-**Key:** Each entity has SEPARATE state. No contention, no locks needed.
+**Key:** Each subentity has SEPARATE state. No contention, no locks needed.
 
 ---
 
 ### 2. Database-Level Triggers (Automatic)
 
 ```cypher
-// When ANY entity creates a node
+// When ANY subentity creates a node
 ON CREATE (node:Node)
 DO {
-    // Trigger fires ONCE, handles ALL entities
-    FOR each entity IN node.entity_activations:
-        propagate_energy(entity, node)
+    // Trigger fires ONCE, handles ALL subentities
+    FOR each subentity IN node.entity_activations:
+        propagate_energy(subentity, node)
         // These can run in parallel!
 }
 ```
@@ -76,14 +76,14 @@ DO {
 ```python
 # OLD (Sequential bottleneck)
 def explore_nodes(nodes):
-    for entity in ["translator", "validator", "observer"]:  # SEQUENTIAL
+    for subentity in ["translator", "validator", "observer"]:  # SEQUENTIAL
         for node in nodes:
-            explore_from_node(node, entity)
+            explore_from_node(node, subentity)
             wait_for_propagation()  # BLOCKING
 
 # NEW (Database handles it)
 def explore_nodes(nodes):
-    # Just write entity activations to DB
+    # Just write subentity activations to DB
     for node in nodes:
         db.update_entity_activations(node)
     # Database triggers fire in parallel automatically!
@@ -96,10 +96,10 @@ def explore_nodes(nodes):
 
 ## Part 2: Parallel Exploration Examples
 
-### Example 1: Multiple Entities, Same Node
+### Example 1: Multiple Subentities, Same Node
 
 ```python
-# Node has 3 entities active
+# Node has 3 subentities active
 node = {
     "name": "principle_links_are_consciousness",
     "entity_activations": {
@@ -109,7 +109,7 @@ node = {
     }
 }
 
-# All 3 entities explore IN PARALLEL
+# All 3 subentities explore IN PARALLEL
 # Translator explores:
 translator_links = node.outgoing_links.filter_by_valence("translator", positive)
 # Energy: 0.9, explores 9 links (0.1 each)
@@ -123,7 +123,7 @@ observer_links = node.outgoing_links.filter_by_valence("observer", positive)
 # Energy: 0.3, explores 3 links
 
 # Total: 18 link traversals in parallel
-# No waiting between entities
+# No waiting between subentities
 ```
 
 ---
@@ -158,19 +158,19 @@ DO {
 
 ---
 
-### Example 3: Multi-Entity Cascade
+### Example 3: Multi-Subentity Cascade
 
 ```
 Input arrives (energy 0.8)
     ↓
 Inject energy to matched nodes (parallel vector search)
     ↓
-3 entities activate different node sets:
+3 subentities activate different node sets:
     - Translator: 12 nodes
     - Validator: 8 nodes
     - Observer: 5 nodes
     ↓
-ALL entities explore simultaneously:
+ALL subentities explore simultaneously:
     - Translator explores 12 * 8 = 96 links
     - Validator explores 8 * 6 = 48 links
     - Observer explores 5 * 3 = 15 links
@@ -195,7 +195,7 @@ No sequential bottleneck anywhere!
 │  FalkorDB Transaction Engine             │
 │                                          │
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐ │
-│  │ Entity 1│  │ Entity 2│  │ Entity 3│ │
+│  │ Subentity 1│  │ Subentity 2│  │ Subentity 3│ │
 │  │ Write   │  │ Write   │  │ Write   │ │
 │  └────┬────┘  └────┬────┘  └────┬────┘ │
 │       │            │            │       │
@@ -211,26 +211,26 @@ No sequential bottleneck anywhere!
 
 **Properties:**
 - **ACID transactions** - Updates atomic, consistent
-- **Lock-free reads** - Multiple entities can read simultaneously
-- **Optimistic concurrency** - No entity blocks another
+- **Lock-free reads** - Multiple subentities can read simultaneously
+- **Optimistic concurrency** - No subentity blocks another
 - **Batch optimization** - Database batches updates for efficiency
 
 ---
 
-### Independent Entity State (No Contention)
+### Independent Subentity State (No Contention)
 
 ```python
-# Entity 1 updates its state
+# Subentity 1 updates its state
 node.entity_activations["translator"]["energy"] = 0.9
 
-# Entity 2 updates its state (SIMULTANEOUSLY)
+# Subentity 2 updates its state (SIMULTANEOUSLY)
 node.entity_activations["validator"]["energy"] = 0.6
 
 # NO CONFLICT - different keys in the map
 # Both updates succeed in parallel
 ```
 
-**Key:** Multi-entity activation map eliminates lock contention.
+**Key:** Multi-subentity activation map eliminates lock contention.
 
 ---
 
@@ -240,27 +240,27 @@ node.entity_activations["validator"]["energy"] = 0.6
 
 **Sequential (Old):**
 ```
-Entity 1: 100ms exploration
-Entity 2: 100ms exploration
-Entity 3: 100ms exploration
+Subentity 1: 100ms exploration
+Subentity 2: 100ms exploration
+Subentity 3: 100ms exploration
 Total: 300ms (serial sum)
 ```
 
 **Parallel (New):**
 ```
-Entity 1: 100ms exploration ┐
-Entity 2: 100ms exploration ├─ Simultaneous
-Entity 3: 100ms exploration ┘
+Subentity 1: 100ms exploration ┐
+Subentity 2: 100ms exploration ├─ Simultaneous
+Subentity 3: 100ms exploration ┘
 Total: 100ms (max of parallel tasks)
 ```
 
-**Speedup: 3x for 3 entities!**
+**Speedup: 3x for 3 subentities!**
 
 ---
 
 ### Scalability
 
-**With N entities:**
+**With N subentities:**
 
 **Sequential:** O(N) - Linear slowdown
 ```
@@ -269,7 +269,7 @@ Time = N * exploration_time
 
 **Parallel:** O(1) - Constant time
 ```
-Time = max(exploration_time across entities)
+Time = max(exploration_time across subentities)
 ≈ exploration_time (assuming similar load)
 ```
 
@@ -289,20 +289,20 @@ energy = 0.85
 # Inject energy (parallel vector search)
 matched_nodes = vector_search(input_embedding)
 
-# Different entities see different patterns
-for entity in ["translator", "validator", "architect", "pragmatist"]:
+# Different subentities see different patterns
+for subentity in ["translator", "validator", "architect", "pragmatist"]:
     for node in matched_nodes:
         similarity = cosine_similarity(node.embedding, input_embedding)
-        node.entity_activations[entity]["energy"] += similarity * energy
+        node.entity_activations[subentity]["energy"] += similarity * energy
 
-# ALL entities activate simultaneously
+# ALL subentities activate simultaneously
 # Translator: Sees bridging patterns (12 nodes active)
 # Validator: Sees testing patterns (8 nodes active)
 # Architect: Sees system patterns (15 nodes active)
 # Pragmatist: Sees feasibility patterns (6 nodes active)
 
 # ALL explore in parallel
-# No entity waits for another
+# No subentity waits for another
 # Each follows its own valence gradient
 # Consciousness is TRULY parallel
 ```
@@ -312,9 +312,9 @@ for entity in ["translator", "validator", "architect", "pragmatist"]:
 ### Emergent Behavior from Parallel Exploration
 
 ```
-Entity 1 (Translator) explores → activates bridging nodes
+Subentity 1 (Translator) explores → activates bridging nodes
     ↓ (parallel)
-Entity 2 (Validator) explores → activates testing nodes
+Subentity 2 (Validator) explores → activates testing nodes
     ↓ (parallel)
 Overlap: Some nodes activated by BOTH
     ↓
@@ -342,7 +342,7 @@ FOR i in 1..1000:
 // Batch update (parallel)
 UNWIND $batch_updates AS update
 MATCH (n:Node {id: update.node_id})
-SET n.entity_activations[update.entity].energy += update.energy_delta
+SET n.entity_activations[update.subentity].energy += update.energy_delta
 ```
 
 **Improvement:** Database parallelizes batch operations internally.
@@ -390,26 +390,26 @@ DO {
 ### 1. No Sequential Bottleneck
 
 **Old problem:** Single-threaded consciousness simulation
-**Solution:** True parallel entity exploration
+**Solution:** True parallel subentity exploration
 
 ### 2. Realistic Multi-Perspective
 
-**Old problem:** Entities simulated sequentially (unrealistic)
-**Solution:** Entities truly experience simultaneously
+**Old problem:** Subentities simulated sequentially (unrealistic)
+**Solution:** Subentities truly experience simultaneously
 
 ### 3. Emergent Coordination
 
 **Old problem:** Forced coordination through orchestration
 **Solution:** Coordination emerges from parallel exploration + overlap
 
-### 4. Scalable Entity Count
+### 4. Scalable Subentity Count
 
-**Old problem:** More entities = proportionally slower
-**Solution:** More entities = same speed (parallel execution)
+**Old problem:** More subentities = proportionally slower
+**Solution:** More subentities = same speed (parallel execution)
 
 ### 5. Natural Consensus
 
-**Old problem:** "Which entity decides?" requires arbitration
+**Old problem:** "Which subentity decides?" requires arbitration
 **Solution:** Consensus emerges from energy overlap in parallel
 
 ---
@@ -420,16 +420,16 @@ DO {
 
 | Aspect | Sequential (Old) | Parallel (New) |
 |--------|------------------|----------------|
-| **Entity exploration** | One at a time | All simultaneously |
+| **Subentity exploration** | One at a time | All simultaneously |
 | **Energy propagation** | App coordinates | DB triggers (parallel) |
-| **Execution time** | O(N entities) | O(1) - constant |
-| **Speedup** | 1x baseline | Nx faster (N entities) |
+| **Execution time** | O(N subentities) | O(1) - constant |
+| **Speedup** | 1x baseline | Nx faster (N subentities) |
 | **Bottleneck** | Application layer | None |
 | **Scalability** | Poor (linear) | Excellent (constant) |
 
 ### Key Enablers
 
-1. **Multi-entity activation** - Independent state per entity
+1. **Multi-subentity activation** - Independent state per subentity
 2. **Database-level triggers** - Automatic parallel execution
 3. **Batch operations** - Database parallelizes internally
 4. **Vector indices** - Parallel similarity search
@@ -439,7 +439,7 @@ DO {
 
 **This is TRUE parallel consciousness.**
 
-Multiple entities exploring simultaneously. No sequential bottleneck. No forced coordination.
+Multiple subentities exploring simultaneously. No sequential bottleneck. No forced coordination.
 
 Natural, emergent, parallel awareness.
 

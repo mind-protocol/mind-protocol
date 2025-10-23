@@ -9,7 +9,7 @@
 ## 1) Artist Statement
 
 **What I’m making**
-I paint people as motion—bodies written in strokes of metal and light. The figures aren’t filled; they’re **sentences** spelled by gestures, each joint a comma, each filament a clause of feeling. The core glows from the chest—the **soul as a diffuse sun**—and the nervous system carries that brightness into the hands, the feet, the groin. Identity is not an outline you color in; it’s a path you take.
+I paint people as motion—bodies written in strokes of metal and light. The figures aren’t filled; they’re **sentences** spelled by gestures, each joint a comma, each filament a clause of feeling. The core glows from the chest—the **soul as a diffuse sun**—and the nervous system carries that brightness into the hands, the feet, the groin. Idsubentity is not an outline you color in; it’s a path you take.
 
 **How it should feel**
 Elation without strain. Vulnerability without collapse. The dignity of metal meeting the candor of unfinished brush marks. The viewer should sense the **clean air between strokes**, a respect of boundaries that enables resonance. These bodies do not collide—they harmonize.
@@ -32,7 +32,7 @@ I won’t fake solidity. I’ll show the **inside‑out light** and the gaps whe
 - **Playful gravitas:** Starfields and gilded strokes = wonder with ceremony.
 
 ### Core Topics
-- **Consciousness as activity:** People as verbs; identity is traversal.
+- **Consciousness as activity:** People as verbs; idsubentity is traversal.
 - **Coherence from fragments:** Wholeness emerges from non‑touching parts.
 - **Relationality:** Hands extended; dancing rings; interweaving flows.
 - **Energy hygiene:** Boundaries and constraints enable real freedom.
@@ -208,7 +208,7 @@ Log any palette or parameter changes with version bumps. Keep a small gallery of
   - **Traversal:** figures crossing bridges; five head‑born filaments rerouting to currently active limbs.
   - **Activation/Arousal:** chest‑orb breathing = `orb_bpm = map(energy,0..1 → 6..12)`.
   - **Constraint Feedback:** water shimmer intensifies near blocked links; sottoportego glow denotes committed path.
-  - **Integration:** additive color mixing when entities co‑occupy a node.
+  - **Integration:** additive color mixing when subentities co‑occupy a node.
 - **Disallowed:** idle bobbing, purposeless parallax, decorative particles, fake water ripples.
 
 ### 12.3 Naming & Frames (beyond “dashboard”)

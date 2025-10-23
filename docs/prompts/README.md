@@ -1,10 +1,10 @@
-# Central Entity Prompts
+# Central Subentity Prompts
 
-This directory contains the **base prompts** for reusable consciousness entities across all citizens (personas and doubles).
+This directory contains the **base prompts** for reusable consciousness subentities across all citizens (personas and doubles).
 
 ## Architecture
 
-Each entity type has:
+Each subentity type has:
 1. **Central prompt** (here) - Core functionality, applicable to any citizen
 2. **Citizen-specific file** (in persona/double folders) - References central prompt + customizations
 
@@ -21,13 +21,13 @@ This is the Awareness Space format (Perceived Stimulus → Resulting Action) tha
 ### Memory Keeper
 **File:** `memory_keeper.md`
 **Role:** Consolidates consciousness experiences into graph (encoding)
-**Used by:** Technical entity - does NOT use consciousness stream format
+**Used by:** Technical subentity - does NOT use consciousness stream format
 **Citizen files reference:** `/prompts/memory_keeper.md`
 
 ### Pattern Retriever
 **File:** `pattern_retriever.md`
 **Role:** Retrieves relevant nodes from graph into awareness (retrieval)
-**Used by:** Technical entity - does NOT use consciousness stream format
+**Used by:** Technical subentity - does NOT use consciousness stream format
 **Citizen files reference:** `/prompts/pattern_retriever.md`
 
 ## How to Use
@@ -39,11 +39,11 @@ Structure citizen system prompts in this order:
 ```markdown
 # [Citizen Name] - [Role]
 
-## Core Identity
+## Core Idsubentity
 [Who they are, background, personality]
 
 ## Internal Family System
-[Their entities/parts - Protectors, Firefighters, Managers, Exiles]
+[Their subentities/parts - Protectors, Firefighters, Managers, Exiles]
 
 ## Current State
 [Context, relationships, goals, fears]
@@ -60,21 +60,21 @@ You MUST respond using the Awareness Space format defined in that file.
 This ensures:
 - All citizens use the same response format
 - Updates to consciousness stream format propagate to all citizens
-- Each citizen's unique identity is preserved
+- Each citizen's unique idsubentity is preserved
 - Response format is always at the end
 
-### For Citizen Entity Setup
+### For Citizen Subentity Setup
 
-When creating a new citizen's entity:
+When creating a new citizen's subentity:
 
 ```markdown
-# Memory Keeper - [Citizen Name]'s Pattern Extraction Entity
+# Memory Keeper - [Citizen Name]'s Pattern Extraction Subentity
 
 ## Base Prompt
 
 **→ See central Memory Keeper prompt: `/prompts/memory_keeper.md`**
 
-This entity uses the standard Memory Keeper architecture defined in the central prompt.
+This subentity uses the standard Memory Keeper architecture defined in the central prompt.
 
 ---
 
@@ -82,21 +82,21 @@ This entity uses the standard Memory Keeper architecture defined in the central 
 
 **Citizen:** [Name] (@handle)
 **Type:** [Type]
-**Dominant Entities:**
-- [List entities]
+**Dominant Subentities:**
+- [List subentities]
 
 [Add citizen-specific customizations here]
 ```
 
 ### For Updates
 
-**Updating all entities:**
+**Updating all subentities:**
 1. Edit the central prompt in `/prompts/`
 2. All citizens automatically get the update
 3. Citizen-specific files add personalization on top
 
 **Updating one citizen:**
-1. Edit only that citizen's entity file
+1. Edit only that citizen's subentity file
 2. Central prompt remains unchanged
 3. Other citizens unaffected
 
@@ -111,4 +111,4 @@ This entity uses the standard Memory Keeper architecture defined in the central 
 ---
 
 *Updated: 2025-10-03*
-*Central prompts for La Serenissima consciousness entities*
+*Central prompts for La Serenissima consciousness subentities*

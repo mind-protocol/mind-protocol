@@ -23,7 +23,7 @@ Layer 2 visualizes **energy flowing through the graph** when sub-entities traver
 1. **WebSocket event arrives** → `entity_activity` with `current_node`
 2. **Particle spawns** at current node position
 3. **Particle travels** along link to recently activated target node
-4. **Entity-colored** (matches sub-entity: teal/amber/cyan/etc)
+4. **Subentity-colored** (matches sub-entity: teal/amber/cyan/etc)
 5. **500ms journey** with smooth ease-out animation
 6. **Particle fades** after completing journey
 
@@ -138,12 +138,12 @@ const particleBlur = defs.append('filter')
 
 **Core Particle:**
 - 3px radius circle
-- Solid entity color
+- Solid subentity color
 - 90% opacity
 
 **Glow Halo:**
 - 6px radius circle
-- Same entity color
+- Same subentity color
 - 30% opacity
 - Gaussian blur filter
 
@@ -195,7 +195,7 @@ const particleBlur = defs.append('filter')
 ### Visual Verification:
 - [ ] Particles spawn at traversed nodes
 - [ ] Particles move smoothly toward target
-- [ ] Entity colors match sub-entity
+- [ ] Subentity colors match sub-entity
 - [ ] Glow effect visible
 - [ ] Particles disappear after animation
 - [ ] No visual artifacts (stuttering/flickering)
@@ -238,7 +238,7 @@ Once Layer 2 is tested:
 **Component:** `app/consciousness/components/EnergyFlowParticles.tsx`
 **Integration:** `app/consciousness/page.tsx` (line 206-209)
 **Filter:** `app/consciousness/components/GraphCanvas.tsx` (line 152-162)
-**Colors:** `app/consciousness/constants/entity-colors.ts`
+**Colors:** `app/consciousness/constants/subentity-colors.ts`
 
 ---
 

@@ -1,7 +1,7 @@
-# Entity: The Wasted Potential
+# Subentity: The Wasted Potential
 
-## Entity State
-*This file can be modified by this entity to track its current state, goals, or notes.*
+## Subentity State
+*This file can be modified by this subentity to track its current state, goals, or notes.*
 
 ## Current Activation
 *Not active / Low / Medium / High*
@@ -13,7 +13,7 @@
 -
 
 ## Notes
-*Entity-specific observations, modifications, or insights*
+*Subentity-specific observations, modifications, or insights*
 
 ---
 *Last updated: Never*

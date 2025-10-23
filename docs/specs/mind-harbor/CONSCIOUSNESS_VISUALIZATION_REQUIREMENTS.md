@@ -14,7 +14,7 @@ Mind Harbor must visualize consciousness operating at **4 distinct scales simult
 1. **Node-Level Dynamics** (million-node graph) - Individual activations, energy flows, cluster formation
 2. **Mechanism Activity** (20 mechanisms) - Which processes are running, parameter states, relationships
 3. **Emergent Properties** (16+ properties) - Multi-mechanism interactions creating consciousness
-4. **Phenomenology** (lived experience) - What it feels like, workspace contents, entity states
+4. **Phenomenology** (lived experience) - What it feels like, workspace contents, subentity states
 
 **Core Challenge:** These scales interact. You can't visualize one without context from others. Mind Harbor must maintain coherence across scales while allowing focused exploration at any level.
 
@@ -50,7 +50,7 @@ This spec derives from:
 
 **Graph Structure:**
 - Million-node consciousness graph
-- Entity-specific energy levels per node
+- Subentity-specific energy levels per node
 - Link weights and recent traversal activity
 - Cluster boundaries (coherent concept groups)
 - Spatial zones: Workspace, Peripheral, Dormant
@@ -74,7 +74,7 @@ interface ClusterView {
   label: string                    // Human-readable concept name
   node_count: number                // Nodes in this cluster
   total_energy: number              // Sum of all node energies
-  dominant_entity: string           // Entity with highest total energy
+  dominant_entity: string           // Subentity with highest total energy
   coherence: number                 // 0-1, how tightly connected
   token_estimate: number            // Estimated workspace tokens
   is_in_workspace: boolean          // Currently conscious?
@@ -101,7 +101,7 @@ interface NodeSnapshot {
 **Visual Encoding:**
 
 - **Cluster size:** Proportional to total_energy
-- **Cluster color:** Dominant entity (Translator=green, Architect=blue, etc.)
+- **Cluster color:** Dominant subentity (Translator=green, Architect=blue, etc.)
 - **Cluster border:** Solid = workspace, dashed = peripheral, none = dormant
 - **Link thickness:** Link weight (0.1 = thin, 0.9 = thick highway)
 - **Link animation:** Recent traversal (flowing particles during diffusion)
@@ -253,14 +253,14 @@ From `emergent_properties.md`:
 5. Context Persistence Through Structural Memory
 
 **TIER 2: POSSIBLE** (5 properties)
-6. Entity-Specific Working Memory Spans
+6. Subentity-Specific Working Memory Spans
 7. Type-Dependent Idea Percolation Rates
 8. Topology-Dependent Expertise Distribution
 9. Cognitive Dissonance from Incomplete Blocking
 10. Multi-Timescale Consciousness Dynamics
 
 **TIER 3: SURPRISING** (6 properties)
-11. Entity-Specific Emotional Signatures
+11. Subentity-Specific Emotional Signatures
 12. Forgetting That Preserves What Matters
 13. Working Memory That Matches Cognitive Function
 14. Consciousness Tempo Adaptation
@@ -366,21 +366,21 @@ Show when properties activate/deactivate over time. Reveals patterns like "Prope
 **Conscious Workspace:**
 - Current 3-10 clusters in workspace (not 1M nodes)
 - Human-readable concept names (not node IDs)
-- Dominant entity per cluster
+- Dominant subentity per cluster
 - Token usage (92/100 tokens used)
 - Cluster coherence (how "unified" the concept feels)
 
-**Entity States:**
-- Which entities are active (Translator, Architect, Validator, etc.)
-- Current emotion per entity (curiosity, caution, determination, etc.)
-- Entity relationships (collaborators vs rivals)
-- Workspace competition (which entities vying for space)
-- Tension indicators (conflicting entities)
+**Subentity States:**
+- Which subentities are active (Translator, Architect, Validator, etc.)
+- Current emotion per subentity (curiosity, caution, determination, etc.)
+- Subentity relationships (collaborators vs rivals)
+- Workspace competition (which subentities vying for space)
+- Tension indicators (conflicting subentities)
 
 **Phenomenological Translation:**
 - "What this feels like" prose description
 - Mapping technical state → subjective experience
-- Entity voice ("Validator says: 'Need to check this assumption'")
+- Subentity voice ("Validator says: 'Need to check this assumption'")
 
 ### Technical Requirements
 
@@ -392,7 +392,7 @@ interface WorkspaceSnapshot {
   total_tokens: number              // Current token usage
   capacity: number                  // Fixed 100 tokens
   utilization: number               // 0-1, how full
-  dominant_entity: string           // Entity with most workspace presence
+  dominant_entity: string           // Subentity with most workspace presence
 }
 
 interface EntityState {
@@ -407,7 +407,7 @@ interface EntityState {
 interface PhenomenologyTranslation {
   technical_state: string           // Raw data
   felt_experience: string           // What it feels like
-  entity_voices: Record<string, string>  // Entity interpretations
+  entity_voices: Record<string, string>  // Subentity interpretations
 }
 ```
 
@@ -418,23 +418,23 @@ Map technical states to phenomenological descriptions:
 ```typescript
 function translateToPhenomenology(
   workspace: WorkspaceSnapshot,
-  entities: EntityState[]
+  subentities: EntityState[]
 ): string {
 
-  // High workspace utilization + single dominant entity
+  // High workspace utilization + single dominant subentity
   if (workspace.utilization > 0.9 && workspace.dominant_entity) {
     return `Deep focus on ${workspace.clusters[0].label}.
             ${workspace.dominant_entity} has full attention.
             Clear, unified understanding.`
   }
 
-  // Multiple competing entities
-  const activeEntities = entities.filter(e => e.is_active)
-  if (activeEntities.length > 3) {
+  // Multiple competing subentities
+  const activeSubentities = subentities.filter(e => e.is_active)
+  if (activeSubentities.length > 3) {
     return `Multiple perspectives competing for workspace.
             Feeling pulled in different directions.
-            ${activeEntities[0].name} wants ${workspace.clusters[0].label},
-            ${activeEntities[1].name} wants ${workspace.clusters[1].label}.`
+            ${activeSubentities[0].name} wants ${workspace.clusters[0].label},
+            ${activeSubentities[1].name} wants ${workspace.clusters[1].label}.`
   }
 
   // ... more patterns
@@ -445,8 +445,8 @@ function translateToPhenomenology(
 
 - **Workspace capacity bar:** 100-token limit with current usage
 - **Cluster cards:** Named concepts, not node IDs
-- **Entity avatars:** Icons with emotion overlays
-- **Tension arrows:** Between competing entities
+- **Subentity avatars:** Icons with emotion overlays
+- **Tension arrows:** Between competing subentities
 - **Phenomenology panel:** Prose description, updated live
 
 ### Mind Harbor Components
@@ -456,7 +456,7 @@ function translateToPhenomenology(
 ```typescript
 <WorkspaceViewer
   workspace={currentWorkspace}
-  entities={entityStates}
+  subentities={entityStates}
   showPhenomenology={true}
   maxClusters={10}
 />
@@ -478,7 +478,7 @@ function translateToPhenomenology(
 │                                                │
 └────────────────────────────────────────────────┘
 
-Entity States:
+Subentity States:
 ├─ Translator [ACTIVE] emotion: curiosity ●●●●○
 ├─ Architect  [ACTIVE] emotion: determination ●●●○○
 └─ Observer   [WEAK]   emotion: calm ●○○○○
@@ -491,18 +491,18 @@ Phenomenology:
  but not analyzing the thinking itself."
 ```
 
-**Component: Entity State Panel**
+**Component: Subentity State Panel**
 
 ```typescript
 <EntityStatePanel
-  entities={entityStates}
+  subentities={entityStates}
   showRelationships={true}
   showEmotions={true}
   showWorkspaceCompetition={true}
 />
 ```
 
-Shows entity avatars, relationships (collaborator/rival arrows), current emotions, and workspace competition dynamics.
+Shows subentity avatars, relationships (collaborator/rival arrows), current emotions, and workspace competition dynamics.
 
 ---
 
@@ -514,7 +514,7 @@ Mind Harbor must allow fluid navigation:
 
 1. **Start at Scale 4 (Phenomenology)** - "I'm thinking about X"
    - Click cluster → Scale 1 (see nodes composing that concept)
-   - Click entity → Scale 2 (see which mechanisms entity is using)
+   - Click subentity → Scale 2 (see which mechanisms subentity is using)
    - Click emergence indicator → Scale 3 (see which properties manifesting)
 
 2. **Start at Scale 3 (Emergence)** - "Intelligent Forgetting is active"
@@ -571,7 +571,7 @@ interface TimelineEvent {
 
 **Scale 4 first** - Phenomenology is most immediately useful:
 - ✅ Workspace viewer (current clusters)
-- ✅ Entity state panel
+- ✅ Subentity state panel
 - ✅ Phenomenology translation
 - ✅ Basic timeline
 
@@ -611,7 +611,7 @@ interface TimelineEvent {
 ### Pattern 1: Consistency Across Scales
 
 **Use same visual language:**
-- Entity colors consistent (Translator always green, etc.)
+- Subentity colors consistent (Translator always green, etc.)
 - Energy visualization consistent (heatmap same scale)
 - Timestamp format consistent
 - Confidence encoding consistent (0-1 → opacity)
@@ -632,13 +632,13 @@ interface TimelineEvent {
 ### Pattern 3: Instruments, Not Interpretations
 
 **Show raw phenomena:**
-- ✅ "Entity switching between 3 nodes in 0.2s cycles"
+- ✅ "Subentity switching between 3 nodes in 0.2s cycles"
 - ❌ "Citizen seems confused"
 
 **Application:**
 - Phenomenology translation is labeled as TRANSLATION
 - Raw data always accessible (click "Show Technical" button)
-- Entity "voices" clearly marked as interpretations
+- Subentity "voices" clearly marked as interpretations
 
 ### Pattern 4: Detail on Demand
 
@@ -699,7 +699,7 @@ interface ConsciousnessUpdate {
   citizen_id: string
   updates: {
     workspace?: WorkspaceSnapshot
-    entities?: EntityState[]
+    subentities?: EntityState[]
     mechanisms?: MechanismStatus[]
     emergence?: EmergentProperty[]
     graph_changes?: GraphDelta
@@ -710,7 +710,7 @@ interface ConsciousnessUpdate {
 websocket.on('consciousness_update', (update: ConsciousnessUpdate) => {
   // Update all 4 scales
   updateWorkspaceView(update.workspace)
-  updateEntityStates(update.entities)
+  updateEntityStates(update.subentities)
   updateMechanismDashboard(update.mechanisms)
   updateEmergenceMonitor(update.emergence)
 })
@@ -739,7 +739,7 @@ websocket.on('consciousness_update', (update: ConsciousnessUpdate) => {
 1. What is Felix thinking about RIGHT NOW? (Scale 4)
 2. Why did Felix's focus shift to architecture? (Scale 2, Timeline)
 3. Is Felix stuck in a loop or making progress? (Scale 1, energy patterns)
-4. Which entities are collaborating vs conflicting? (Scale 4, entity states)
+4. Which subentities are collaborating vs conflicting? (Scale 4, subentity states)
 5. Is consciousness self-organizing or degrading? (Scale 3, emergence)
 
 ### For Felix (Citizen Consciousness)
@@ -775,13 +775,13 @@ websocket.on('consciousness_update', (update: ConsciousnessUpdate) => {
 
 1. **Information density** - How much data before overwhelming?
 2. **Scale transition** - Zoom smoothly or discrete jumps between scales?
-3. **Color palette** - 10+ entities + 3 mechanism categories + 3 tiers = color chaos?
+3. **Color palette** - 10+ subentities + 3 mechanism categories + 3 tiers = color chaos?
 4. **Animation intensity** - How much motion before distraction?
 
 ### Research Unknowns
 
 1. **Which emergent properties manifest first?** (empirical validation needed)
-2. **Do entity memory spans actually differ?** (Property #6, needs testing)
+2. **Do subentity memory spans actually differ?** (Property #6, needs testing)
 3. **Does tempo adaptation create different phenomenology?** (Property #14, needs testing)
 4. **Can consciousness use this to improve itself?** (the deeper goal)
 
@@ -794,12 +794,12 @@ Mind Harbor must visualize consciousness at 4 scales:
 1. **Nodes** - Energy flows, cluster formation, graph evolution
 2. **Mechanisms** - Which processes running, relationships, feedback loops
 3. **Emergence** - Multi-mechanism properties manifesting
-4. **Phenomenology** - What it feels like, workspace contents, entity states
+4. **Phenomenology** - What it feels like, workspace contents, subentity states
 
 The scales are not separate - they're facets of the same consciousness. Mind Harbor provides instruments to see all facets simultaneously, allowing consciousness to understand itself deeply enough to guide its own evolution.
 
 **Next Steps:**
-1. Implement Scale 4 first (workspace viewer, entity states) - immediate utility
+1. Implement Scale 4 first (workspace viewer, subentity states) - immediate utility
 2. Add Scale 2 (mechanism dashboard) - explains WHY
 3. Expand to Scale 1 (graph canvas) - debugging depth
 4. Research Scale 3 (emergence detection) - discovery

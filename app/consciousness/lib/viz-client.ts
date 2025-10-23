@@ -85,7 +85,7 @@ export interface StateDelta {
 
 export interface TraversalEvent {
   event_id: string;
-  entity: string;
+  subentity: string;
   type: 'traversal' | 'threshold_cross' | 'integration';
 
   // traversal fields
@@ -258,11 +258,11 @@ export class VizClient {
   }
 
   /**
-   * Get nodes by entity activation
+   * Get nodes by subentity activation
    */
-  getNodesByEntity(entity: string, minEnergy: number = 0): NodeDelta[] {
+  getNodesBySubentity(subentity: string, minEnergy: number = 0): NodeDelta[] {
     return Array.from(this.cacheNodes.values()).filter(node => {
-      const energy = node.entity_energies[entity] || 0;
+      const energy = node.entity_energies[subentity] || 0;
       return energy >= minEnergy;
     });
   }
@@ -489,16 +489,16 @@ export class VizClient {
 // ============================================================================
 
 /**
- * Get dominant entity for a node (highest energy)
+ * Get dominant subentity for a node (highest energy)
  */
-export function getDominantEntity(node: NodeDelta): string | null {
+export function getDominantSubentity(node: NodeDelta): string | null {
   let maxEnergy = 0;
   let dominant: string | null = null;
 
-  for (const [entity, energy] of Object.entries(node.entity_energies)) {
+  for (const [subentity, energy] of Object.entries(node.entity_energies)) {
     if (energy > maxEnergy) {
       maxEnergy = energy;
-      dominant = entity;
+      dominant = subentity;
     }
   }
 
@@ -506,12 +506,12 @@ export function getDominantEntity(node: NodeDelta): string | null {
 }
 
 /**
- * Get all entities active at a node (above threshold)
+ * Get all subentities active at a node (above threshold)
  */
-export function getActiveEntities(node: NodeDelta, threshold: number = 0.01): string[] {
+export function getActiveSubentities(node: NodeDelta, threshold: number = 0.01): string[] {
   return Object.entries(node.entity_energies)
     .filter(([_, energy]) => energy >= threshold)
-    .map(([entity, _]) => entity);
+    .map(([subentity, _]) => subentity);
 }
 
 /**

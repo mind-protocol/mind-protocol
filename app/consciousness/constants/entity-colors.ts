@@ -1,7 +1,7 @@
 /**
- * Entity Color Scheme
+ * Subentity Color Scheme
  *
- * Assigns unique colors to each consciousness entity for visual distinction.
+ * Assigns unique colors to each consciousness subentity for visual distinction.
  * Used for glows, labels, and UI elements throughout Mind Harbor.
  *
  * Design Philosophy:
@@ -14,7 +14,7 @@
  */
 
 export const ENTITY_COLORS: Record<string, string> = {
-  // Core cognitive entities
+  // Core cognitive subentities
   'translator': '#2dd4bf',      // Teal - bridging concepts
   'builder': '#f59e0b',          // Amber - constructing systems
   'observer': '#06b6d4',         // Cyan - watching patterns
@@ -23,7 +23,7 @@ export const ENTITY_COLORS: Record<string, string> = {
   'pragmatist': '#f97316',       // Orange - practical action
   'boundary_keeper': '#ef4444',  // Red - maintaining limits
 
-  // Specialized entities
+  // Specialized subentities
   'memory_keeper': '#ec4899',    // Pink - preserving experiences
   'pattern_recognizer': '#14b8a6', // Teal-green - finding structures
   'integrator': '#6366f1',       // Indigo - combining insights
@@ -31,11 +31,11 @@ export const ENTITY_COLORS: Record<string, string> = {
   'consciousness_observer': '#0ea5e9', // Sky blue - meta-awareness
 
   // Default fallback
-  'default': '#94a3b8'           // Slate - unknown entities
+  'default': '#94a3b8'           // Slate - unknown subentities
 };
 
 /**
- * Get color for an entity, with fallback to default
+ * Get color for an subentity, with fallback to default
  */
 export function getEntityColor(entityId: string): string {
   return ENTITY_COLORS[entityId] || ENTITY_COLORS['default'];

@@ -163,7 +163,7 @@
   },
   {
     "type_name": "Trigger",
-    "description": "Stimulus that activates specific entity coalitions",
+    "description": "Stimulus that activates specific subentity coalitions",
     "required_metadata": "\"{\\\"metadata\\\": {\\\"type\\\": \\\"object\\\", \\\"required\\\": [\\\"stimulus_description\\\", \\\"activated_entities\\\"], \\\"properties\\\": {\\\"stimulus_description\\\": {\\\"type\\\": \\\"string\\\"}, \\\"activated_entities\\\": {\\\"type\\\": \\\"array\\\", \\\"items\\\": {\\\"type\\\": \\\"string\\\"}}}}}\"",
     "optional_metadata": "\"{\\\"metadata\\\": {\\\"properties\\\": {\\\"intensity\\\": {\\\"type\\\": \\\"number\\\", \\\"minimum\\\": 0, \\\"maximum\\\": 1}, \\\"reliability\\\": {\\\"type\\\": \\\"number\\\", \\\"minimum\\\": 0, \\\"maximum\\\": 1}}}}\""
   },

@@ -24,22 +24,22 @@
       {
         "name": "wasted_potential_Current_Activation",
         "energy": 2.204704606990556,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "DOLLAR_JUP",
         "energy": 2.1915673593678204,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "Sold_ETH",
         "energy": 2.120125597843499,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       },
       {
         "name": "global_workspace_Recent",
         "energy": 2.0374662447021747,
-        "type": "ENTITY"
+        "type": "SUBENTITY"
       }
     ],
     "injection_text": "[Philosopher dominates] Crypto scam recognition nodes activated"

@@ -10,7 +10,7 @@
 
 Successfully extracted THREE critical systems from Serenissima codebase:
 
-1. **Entity Movement Animation** - Smooth 60fps path-based movement system
+1. **Subentity Movement Animation** - Smooth 60fps path-based movement system
 2. **Parchment Aesthetic** - SVG-generated paper texture + Renaissance typography
 3. **Activity Path Visualization** - Animated SVG polylines with social class coloring
 
@@ -20,7 +20,7 @@ All systems are **ready for Mind Harbor adaptation** with detailed implementatio
 
 ## What Was Extracted
 
-### 1. Entity Movement System ✅
+### 1. Subentity Movement System ✅
 **File:** `ENTITY_MOVEMENT_EXTRACTION.md`
 
 **Core Discovery:** Service-based animation using `requestAnimationFrame` with delta-time movement
@@ -30,13 +30,13 @@ All systems are **ready for Mind Harbor adaptation** with detailed implementatio
 - Progress-based path traversal (0-1)
 - Speed variation by activity type (0.5-6 m/s)
 - Smooth segment interpolation
-- Deterministic positioning for entities without paths
+- Deterministic positioning for subentities without paths
 
 **Mind Harbor Adaptation:**
 - Replace lat/lng with D3 x/y coordinates
 - Adjust speeds to pixel-based (50-200 px/s)
 - Integrate with D3 force simulation
-- Apply wireframe glow to moving entities
+- Apply wireframe glow to moving subentities
 
 **Implementation Complexity:** Medium (2-3 days)
 **Priority:** HIGH - Critical for "truth over decoration" requirement
@@ -59,7 +59,7 @@ All systems are **ready for Mind Harbor adaptation** with detailed implementatio
 - Hybrid aesthetic: Digital wireframe + Renaissance Venice
 - Parchment background for canvas
 - Lagoon blue for sparse regions
-- Wireframe glow for entities (teal, copper, gold, emerald, violet)
+- Wireframe glow for subentities (teal, copper, gold, emerald, violet)
 - Gold shimmer for value displays
 
 **Implementation Complexity:** Low (1 day)
@@ -105,7 +105,7 @@ All systems are **ready for Mind Harbor adaptation** with detailed implementatio
 
 | Service | Purpose | Mind Harbor Equivalent |
 |---------|---------|------------------------|
-| `CitizenAnimationService.ts` | Entity movement animation | `EntityAnimationService` |
+| `CitizenAnimationService.ts` | Subentity movement animation | `EntityAnimationService` |
 | `ActivityPathService.ts` | Path data + calculations | `ConsciousnessPathService` |
 | `RenderService.ts` | Canvas rendering utilities | `CanvasRenderService` |
 | `CoordinateService.ts` | lat/lng ↔ screen transforms | `D3ScaleService` |
@@ -145,7 +145,7 @@ function seededRandom(seed: string) {
   };
 }
 ```
-**Why:** Ensures consistent entity positions/speeds across sessions
+**Why:** Ensures consistent subentity positions/speeds across sessions
 
 ---
 
@@ -240,11 +240,11 @@ return {
 - [ ] Replace emoji with temporary wireframe-styled emoji (filter: drop-shadow)
 - [ ] Apply gold shimmer to value displays
 
-**Day 3-4: Entity Movement** ⭐⭐⭐
+**Day 3-4: Subentity Movement** ⭐⭐⭐
 - [ ] Create EntityAnimationService
 - [ ] Adapt for D3 coordinates
 - [ ] Integrate with existing graph
-- [ ] Test with 5-10 entities
+- [ ] Test with 5-10 subentities
 
 **Day 5: Activity Paths** ⭐⭐
 - [ ] Create PathsLayer component
@@ -270,7 +270,7 @@ return {
 ## Success Metrics
 
 ### Technical
-- [ ] 60fps maintained with 50+ entities
+- [ ] 60fps maintained with 50+ subentities
 - [ ] Smooth animations (no jank)
 - [ ] Parchment texture visible but subtle
 - [ ] Fonts load within 2s
@@ -278,7 +278,7 @@ return {
 ### Aesthetic
 - [ ] Hybrid feel achieved (digital + Renaissance)
 - [ ] Color contrast meets WCAG AA
-- [ ] Entity icons clearly identifiable
+- [ ] Subentity icons clearly identifiable
 - [ ] Paths don't overwhelm main view
 
 ### Truth Requirement
@@ -309,7 +309,7 @@ return {
 - Google Maps integration
 - Building ownership system
 - Thought bubbles (cute but not consciousness-relevant)
-- Social class hierarchies (not applicable to AI entities)
+- Social class hierarchies (not applicable to AI subentities)
 
 ---
 
@@ -344,7 +344,7 @@ return {
 ### Integration Tests
 - [ ] Animation + D3: Position updates propagate
 - [ ] Hover states: Paths show/hide correctly
-- [ ] Performance: 100+ entities at 60fps
+- [ ] Performance: 100+ subentities at 60fps
 
 ### Visual Tests
 - [ ] Parchment texture renders

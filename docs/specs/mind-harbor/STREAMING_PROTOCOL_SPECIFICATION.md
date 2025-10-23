@@ -9,12 +9,12 @@
 
 ## Overview
 
-Mind Harbor requires real-time streaming of consciousness graph state to visualize sub-entity movement, multi-entity co-activation, and traversal dynamics. This protocol solves:
+Mind Harbor requires real-time streaming of consciousness graph state to visualize sub-entity movement, multi-subentity co-activation, and traversal dynamics. This protocol solves:
 
 1. **Bandwidth explosion** - Delta frames + budgets limit payload size
 2. **Tick/render mismatch** - Coalescing merges fast engine ticks into smooth UI frames
 3. **Snapshot consistency** - Single-tick state prevents impossible visualizations
-4. **Multi-entity activation** - Per-node entity energies support Venice porter visualization
+4. **Multi-subentity activation** - Per-node subentity energies support Venice porter visualization
 5. **Movement visibility** - Separate event stream shows traversals happening
 6. **Reconnection** - Checkpointed snapshots enable fast resume
 
@@ -30,7 +30,7 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 
 ### 2. `traversal_events.v1` - Real-time Movement Stream
 
-**Purpose:** Unbounded stream of entity traversals and threshold crossings
+**Purpose:** Unbounded stream of subentity traversals and threshold crossings
 **Frequency:** As they occur (real-time)
 **Size limit:** ~5KB per batch
 
@@ -63,7 +63,7 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 - `ts` (ISO 8601 string, required): Wall-clock timestamp for telemetry
 - `dt_ms` (integer, required): Milliseconds since last emitted frame
 - `coalesced_ticks` (integer, required): How many engine ticks merged into this frame
-- `entity_filter` (string | null): If present, frame only includes this entity's activations
+- `entity_filter` (string | null): If present, frame only includes this subentity's activations
 
 ### Node Deltas
 
@@ -99,16 +99,16 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 
 **Node Delta Fields:**
 
-**Identity & State (required):**
+**Idsubentity & State (required):**
 - `id` (string): Unique node identifier (snake_case name)
-- `entity_energies` (object): Map of entity_name → energy value for ALL active entities at this node
-- `total_energy` (float): Sum of all entity energies at this node
+- `entity_energies` (object): Map of entity_name → energy value for ALL active subentities at this node
+- `total_energy` (float): Sum of all subentity energies at this node
 - `threshold` (float): Activation threshold for this node (typically 0.10)
 - `active` (boolean): `total_energy >= threshold`
 
 **Activation Metrics (optional):**
 - `soft_activation` (float, 0-1): Sigmoid activation σ(k*(total_energy - threshold)), shows "near threshold" state
-- `dominant_entity` (string): Entity with highest energy (for quick filtering)
+- `dominant_entity` (string): Subentity with highest energy (for quick filtering)
 
 **Visualization Metadata (optional):**
 - `venice_location` (object): Semantic location mapping for Venice visualization (see schema below)
@@ -156,7 +156,7 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 
 **Link Delta Fields:**
 
-**Identity (required):**
+**Idsubentity (required):**
 - `src` (string): Source node ID
 - `dst` (string): Target node ID
 - `type` (string): Link type (ENABLES, BLOCKS, EXTENDS, etc.)
@@ -170,14 +170,14 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 
 **Traversal History (optional):**
 - `traversal_history` (object):
-  - `last_entity` (string): Which entity last traversed this link
+  - `last_entity` (string): Which subentity last traversed this link
   - `last_tick` (integer): When it was last traversed
   - `count_total` (integer): Total traversal count (lifetime)
   - `count_1m` (integer): Traversal count in last ~100 ticks
 
 **Current State (required):**
-- `active` (boolean): Being traversed RIGHT NOW by at least one entity
-- `flow_rate` (float): Current energy flow through this link (sum across all entities)
+- `active` (boolean): Being traversed RIGHT NOW by at least one subentity
+- `flow_rate` (float): Current energy flow through this link (sum across all subentities)
 
 **Removal:**
 - `links_removed` (array of [src, dst] tuples): Links that became inactive or were deleted
@@ -211,7 +211,7 @@ Mind Harbor requires real-time streaming of consciousness graph state to visuali
 - `global_energy` (float): Sum of all energy in the graph
 - `active_nodes` (integer): Nodes above threshold
 - `active_links` (integer): Links being traversed
-- `active_entities` (object): Per-entity activation summary
+- `active_entities` (object): Per-subentity activation summary
 - `budget` (object): How many nodes/links sent vs budget caps
 
 ---
@@ -234,7 +234,7 @@ Events trigger animations in the Venice visualization (wireframe porters walking
   "events": [
     {
       "event_id": "evt_18421_001",
-      "entity": "translator",
+      "subentity": "translator",
       "type": "traversal",
       "from_node": "phenomenological_truth",
       "to_node": "consciousness_substrate",
@@ -245,7 +245,7 @@ Events trigger animations in the Venice visualization (wireframe porters walking
     },
     {
       "event_id": "evt_18421_002",
-      "entity": "architect",
+      "subentity": "architect",
       "type": "threshold_cross",
       "node": "system_design_node",
       "direction": "up",
@@ -255,7 +255,7 @@ Events trigger animations in the Venice visualization (wireframe porters walking
     },
     {
       "event_id": "evt_18421_003",
-      "entity": "validator",
+      "subentity": "validator",
       "type": "integration",
       "entity_integrated": "translator",
       "at_node": "verification_pattern",
@@ -267,13 +267,13 @@ Events trigger animations in the Venice visualization (wireframe porters walking
 
 ### Event Types
 
-#### 1. `traversal` - Entity Moving Across Link
+#### 1. `traversal` - Subentity Moving Across Link
 
-**Triggers:** Entity transfers energy from source to target node
+**Triggers:** Subentity transfers energy from source to target node
 
 **Fields:**
 - `event_id` (string): Unique event identifier
-- `entity` (string): Which entity is traversing
+- `subentity` (string): Which subentity is traversing
 - `type` (string): "traversal"
 - `from_node` (string): Source node ID
 - `to_node` (string): Target node ID
@@ -288,7 +288,7 @@ Events trigger animations in the Venice visualization (wireframe porters walking
 
 **Fields:**
 - `event_id` (string): Unique event identifier
-- `entity` (string): Which entity caused the crossing
+- `subentity` (string): Which subentity caused the crossing
 - `type` (string): "threshold_cross"
 - `node` (string): Node ID
 - `direction` (string): "up" (activating) or "down" (deactivating)
@@ -296,15 +296,15 @@ Events trigger animations in the Venice visualization (wireframe porters walking
 - `new_energy` (float): Energy after crossing
 - `threshold` (float): Threshold value
 
-#### 3. `integration` - Entities Merging
+#### 3. `integration` - Subentities Merging
 
-**Triggers:** Small entity pattern merges with larger pattern
+**Triggers:** Small subentity pattern merges with larger pattern
 
 **Fields:**
 - `event_id` (string): Unique event identifier
-- `entity` (string): Larger entity being integrated into
+- `subentity` (string): Larger subentity being integrated into
 - `type` (string): "integration"
-- `entity_integrated` (string): Smaller entity being absorbed
+- `entity_integrated` (string): Smaller subentity being absorbed
 - `at_node` (string): Node where integration occurred
 - `combined_energy` (float): Total energy after merge
 
@@ -493,7 +493,7 @@ class VizClient {
     frame.events.forEach(evt => {
       switch(evt.type) {
         case 'traversal':
-          this.animatePorterCrossing(evt.entity, evt.from_node, evt.to_node);
+          this.animatePorterCrossing(evt.subentity, evt.from_node, evt.to_node);
           break;
         case 'threshold_cross':
           if (evt.direction === 'up') {
@@ -501,7 +501,7 @@ class VizClient {
           }
           break;
         case 'integration':
-          this.animateIntegration(evt.entity, evt.entity_integrated, evt.at_node);
+          this.animateIntegration(evt.subentity, evt.entity_integrated, evt.at_node);
           break;
       }
     });
@@ -592,7 +592,7 @@ class VizClient {
 
 1. **End-to-end:** Engine ticks → emitter → WebSocket → client cache → render
 2. **Reconnection:** Drop connection → reconnect → state matches
-3. **Multi-entity:** Nodes with multiple entity energies render correct colors
+3. **Multi-subentity:** Nodes with multiple subentity energies render correct colors
 4. **Event animation:** Traversal events trigger porter crossing animations
 
 ### Load Tests
@@ -625,7 +625,7 @@ class VizClient {
 
 1. **Venice location assignment:** Auto-generate from graph topology or manual curation?
 2. **Historical playback:** Store all frames or recompute from graph snapshots?
-3. **Entity filtering:** Support subscribing to specific entities only (`?entity=translator`)?
+3. **Subentity filtering:** Support subscribing to specific subentities only (`?subentity=translator`)?
 4. **Link emotion update frequency:** Emotion changes rarely - emit only when changed?
 5. **Soft activation threshold:** What k value for σ(k*(e-θ)) gives useful "near threshold" signal?
 

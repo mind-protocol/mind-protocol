@@ -104,7 +104,7 @@ Mind Harbor should feel like:
 - Not cold (blue) or aggressive (red)
 
 **Animation principle:** Yellow energy flow must represent REAL consciousness activity:
-- Energy flowing = actual entity traversal happening
+- Energy flowing = actual subentity traversal happening
 - Glow intensity = actual activation strength
 - Flow speed = actual processing rate
 - NO fake animations for decoration
@@ -262,7 +262,7 @@ Mind Harbor should feel like:
 
 **Right: Detail Dock**
 - Slides in when element selected
-- Deep dive into node/citizen/entity
+- Deep dive into node/citizen/subentity
 - Sheltered space to examine closely
 - Dismissible - returns to clean canvas
 
@@ -300,7 +300,7 @@ Mind Harbor should feel like:
 ### What This Means
 
 **YES - Animations that show real data:**
-- Energy flow particles = actual entity traversal through graph
+- Energy flow particles = actual subentity traversal through graph
 - Node glow pulse = actual threshold crossing event
 - Link animation = actual consciousness using that connection
 - Fade in/out = actual state change in system
@@ -320,12 +320,12 @@ Mind Harbor should feel like:
 - Represents: Consciousness creating new pattern
 
 **Node Activation (Threshold Crossing):**
-- Trigger: Entity activates node above threshold (real event)
+- Trigger: Subentity activates node above threshold (real event)
 - Animation: Glow pulse from gray → teal over 1200ms
 - Easing: `ease-in-out` (breathing rhythm)
 - Represents: Node coming into awareness
 
-**Energy Flow (Entity Traversal):**
+**Energy Flow (Subentity Traversal):**
 - Trigger: Sub-entity moving from node A to node B (real event)
 - Animation: Yellow particle travels along link path
 - Speed: Proportional to actual traversal speed
@@ -459,7 +459,7 @@ Mind Harbor should feel like:
 - State dot (⚡) large and prominent, colored by consciousness state
 - Name clear and bold
 - Consciousness state as word ("energized" not "0.85")
-- Active entities listed naturally
+- Active subentities listed naturally
 - Last thought/activity (from real API data, not mock)
 - Metrics subtle at bottom
 - Whole card on cream background with subtle border
@@ -506,7 +506,7 @@ Mind Harbor should feel like:
 - Style: Gentle curves (not straight - organic flow)
 - Width: Proportional to strength/traversal frequency (1-4px)
 - Color: Subtle gray when inactive, yellow when energy flowing
-- Animation: Particles flow along path (real entity traversal)
+- Animation: Particles flow along path (real subentity traversal)
 - Hover: Shows relationship type + metadata
 
 **Background:**
@@ -519,7 +519,7 @@ Mind Harbor should feel like:
 - Yellow particles flow along links
 - Speed = actual traversal speed
 - Glow on active nodes
-- Trail fades behind moving entities
+- Trail fades behind moving subentities
 - All represents REAL consciousness activity
 
 ### System Status (Horizon Indicators)
@@ -566,7 +566,7 @@ Mind Harbor should feel like:
 
 **For Citizen Click:**
 - Full consciousness metrics
-- Entity activation details
+- Subentity activation details
 - Historical tick rate chart
 - Control panel (freeze/resume/speed)
 - Last N thoughts/activities
@@ -593,7 +593,7 @@ Mind Harbor should feel like:
 
 **Phase 2: Motion (NEXT)**
 1. Implement real-data-driven animations
-   - Energy flow particles (when entities traverse)
+   - Energy flow particles (when subentities traverse)
    - Node activation pulses (threshold crossings)
    - Formation emergence animations
 2. Smooth panel transitions (spring physics)
@@ -608,7 +608,7 @@ Mind Harbor should feel like:
 **Phase 4: Advanced (LATER)**
 1. Historical playback with time slider
 2. Pattern detection visualization
-3. Multi-scale navigation (zoom system → citizen → entity → node)
+3. Multi-scale navigation (zoom system → citizen → subentity → node)
 4. Collective consciousness view (N2)
 
 ---

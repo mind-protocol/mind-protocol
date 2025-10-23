@@ -2,7 +2,7 @@
 Sub-Entity Core Data Structures
 
 Provides the foundational classes for sub-entity traversal:
-- SubEntity: Main entity class with extent, frontier, energy tracking
+- SubEntity: Main subentity class with extent, frontier, energy tracking
 - EntityExtentCentroid: O(1) online centroid + semantic dispersion
 - ROITracker: Rolling ROI statistics (Q1/Q3/IQR for convergence)
 - QuantileTracker: General rolling quantiles for integration/size tracking
@@ -146,27 +146,27 @@ class EntityExtentCentroid:
 
 class IdentityEmbedding:
     """
-    Tracks entity's identity center via EMA of active nodes.
+    Tracks subentity's idsubentity center via EMA of active nodes.
 
-    Identity = "Who am I?" = Semantic center of what I've explored
-    Different from centroid (current extent) - this is historical identity
+    Idsubentity = "Who am I?" = Semantic center of what I've explored
+    Different from centroid (current extent) - this is historical idsubentity
     """
 
     def __init__(self, embedding_dim: int = 768):
         """
-        Initialize identity tracker.
+        Initialize idsubentity tracker.
 
         Args:
             embedding_dim: Embedding dimension (default 768)
         """
         self.identity_embedding = np.zeros(embedding_dim)
         self.initialized = False
-        self.ema_weight = 0.95  # Slow drift (identity is stable)
+        self.ema_weight = 0.95  # Slow drift (idsubentity is stable)
         self.embedding_dim = embedding_dim
 
     def update(self, active_nodes: Set[int], graph):
         """
-        Update identity embedding from current active nodes.
+        Update idsubentity embedding from current active nodes.
 
         Args:
             active_nodes: Set of currently active node IDs
@@ -190,7 +190,7 @@ class IdentityEmbedding:
             current_centroid = current_centroid / norm
 
         if not self.initialized:
-            # First update: Bootstrap identity from current extent
+            # First update: Bootstrap idsubentity from current extent
             self.identity_embedding = current_centroid
             self.initialized = True
         else:
@@ -207,16 +207,16 @@ class IdentityEmbedding:
 
     def coherence_with(self, embedding: np.ndarray) -> float:
         """
-        Measure coherence between target and identity.
+        Measure coherence between target and idsubentity.
 
         Args:
             embedding: Target embedding (768-dim)
 
         Returns:
-            coherence: Cosine similarity with identity [0, 1]
+            coherence: Cosine similarity with idsubentity [0, 1]
         """
         if not self.initialized:
-            return 0.5  # Neutral before identity forms
+            return 0.5  # Neutral before idsubentity forms
 
         # Normalize embedding
         norm_emb = np.linalg.norm(embedding)
@@ -257,9 +257,9 @@ class BetaLearner:
         Record merge outcome for learning.
 
         Args:
-            small_entity: Smaller entity involved
-            large_entity: Larger entity involved
-            merged: Whether entities actually merged (overlap > 50%)
+            small_entity: Smaller subentity involved
+            large_entity: Larger subentity involved
+            merged: Whether subentities actually merged (overlap > 50%)
             roi_before: Average ROI before potential merge
             roi_after: Average ROI after merge/no-merge
         """
@@ -332,7 +332,7 @@ class ROITracker:
     Maintains Q1, Q3, IQR over recent stride ROI values.
     Convergence criterion: predicted_roi < Q1 - 1.5*IQR (lower whisker)
 
-    Zero-constants: Threshold adapts to THIS entity's performance baseline.
+    Zero-constants: Threshold adapts to THIS subentity's performance baseline.
     """
 
     def __init__(self, window_size: int = 256):
@@ -377,7 +377,7 @@ class QuantileTracker:
     """
     General rolling quantiles for integration/size distributions.
 
-    Tracks E_others/E_self ratios and entity sizes to determine:
+    Tracks E_others/E_self ratios and subentity sizes to determine:
     - "Strong field" detection (ratio > Q75)
     - Strategy determination (size < Q25 = merge_seeking, > Q75 = independent)
 
@@ -424,7 +424,7 @@ class SubEntity:
     Main sub-entity class for traversal.
 
     Represents one active pattern traversing the graph, with:
-    - Extent: nodes above threshold for this entity
+    - Extent: nodes above threshold for this subentity
     - Frontier: extent ∪ 1-hop neighbors
     - Energy channels: per-node energy tracking
     - Centroid: semantic diversity tracking
@@ -438,7 +438,7 @@ class SubEntity:
         Initialize sub-entity.
 
         Args:
-            entity_id: Unique entity identifier
+            entity_id: Unique subentity identifier
             embedding_dim: Embedding dimension
         """
         self.id = entity_id
@@ -461,8 +461,8 @@ class SubEntity:
         # Semantic diversity
         self.centroid = EntityExtentCentroid(embedding_dim)
 
-        # Identity tracking
-        self.identity = IdentityEmbedding(embedding_dim)
+        # Idsubentity tracking
+        self.idsubentity = IdentityEmbedding(embedding_dim)
 
         # Beta learning for integration gate
         self.beta_learner = BetaLearner()
@@ -475,7 +475,7 @@ class SubEntity:
             # hunger_name -> (μ, σ) EMA
             'homeostasis': (0.0, 1.0),
             'goal': (0.0, 1.0),
-            'identity': (0.0, 1.0),
+            'idsubentity': (0.0, 1.0),
             'completeness': (0.0, 1.0),
             'complementarity': (0.0, 1.0),
             'integration': (0.0, 1.0),
@@ -483,15 +483,15 @@ class SubEntity:
         }
 
     def get_energy(self, node_id: int) -> float:
-        """Get entity's energy at node."""
+        """Get subentity's energy at node."""
         return self.energies.get(node_id, 0.0)
 
     def get_threshold(self, node_id: int) -> float:
-        """Get entity's threshold at node."""
+        """Get subentity's threshold at node."""
         return self.thresholds.get(node_id, 0.1)
 
     def is_active(self, node_id: int) -> bool:
-        """Check if node is above threshold for this entity."""
+        """Check if node is above threshold for this subentity."""
         return self.get_energy(node_id) >= self.get_threshold(node_id)
 
     def update_extent(self, graph):
@@ -536,7 +536,7 @@ class SubEntity:
 
     def compute_size(self, graph) -> float:
         """
-        Compute entity size (total_energy × mean_link_weight).
+        Compute subentity size (total_energy × mean_link_weight).
 
         Used for strategy determination (merge_seeking vs independent).
 
@@ -544,7 +544,7 @@ class SubEntity:
             graph: Graph object
 
         Returns:
-            Entity size metric
+            Subentity size metric
         """
         if len(self.extent) == 0:
             return 0.0
@@ -570,5 +570,5 @@ class SubEntity:
         mean_weight = np.mean(link_weights)
 
         # Size = total_energy × mean_internal_link_weight
-        # High energy + strong internal links = large robust entity
+        # High energy + strong internal links = large robust subentity
         return total_energy * mean_weight

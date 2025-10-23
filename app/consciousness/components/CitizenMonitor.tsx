@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { Entity } from '../hooks/useGraphData';
+import type { Subentity } from '../hooks/useGraphData';
 import type { V2ConsciousnessState } from '../hooks/websocket-types';
 
 interface Citizen {
@@ -9,7 +9,7 @@ interface Citizen {
   name: string;
   state: 'active' | 'recently_active' | 'dormant' | 'stopped';
   lastThought: string;
-  entities: Entity[];
+  subentities: Subentity[];
   lastUpdate: string;
   tickInterval: number;
   energyTotal: number;
@@ -45,7 +45,7 @@ interface CitizenMonitorProps {
  *
  * Shows all citizens with collapsible sections:
  * - Collapsed: State, last thought, color indicator
- * - Expanded: Full entity activity stream, CLAUDE_DYNAMIC.md viewer
+ * - Expanded: Full subentity activity stream, CLAUDE_DYNAMIC.md viewer
  *
  * Clicking citizen card or avatar switches to that citizen's graph.
  * Clicking node references focuses that node on the graph.
@@ -226,16 +226,16 @@ function CitizenAccordionItem({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
-          {/* Entity Activity Stream */}
+          {/* Subentity Activity Stream */}
           <div>
             <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-2">
-              Active Entities
+              Active Subentities
             </div>
             <div className="space-y-2">
-              {citizen.entities.map(entity => (
+              {citizen.subentities.map(subentity => (
                 <EntityActivityCard
-                  key={entity.entity_id}
-                  entity={entity}
+                  key={subentity.entity_id}
+                  subentity={subentity}
                   onFocusNode={onFocusNode}
                 />
               ))}
@@ -254,37 +254,37 @@ function CitizenAccordionItem({
 }
 
 function EntityActivityCard({
-  entity,
+  subentity,
   onFocusNode
 }: {
-  entity: Entity;
+  subentity: Subentity;
   onFocusNode: (nodeId: string) => void;
 }) {
   return (
     <div className="consciousness-panel p-3 text-xs">
       <div className="flex items-center justify-between mb-2">
         <span className="text-observatory-cyan font-medium">
-          {entity.entity_id}
+          {subentity.entity_id}
         </span>
-        {(entity as any).energy_used !== undefined && (entity as any).energy_budget !== undefined && (
+        {(subentity as any).energy_used !== undefined && (subentity as any).energy_budget !== undefined && (
           <span className="text-venice-gold-bright">
-            {(entity as any).energy_used}/{(entity as any).energy_budget}
+            {(subentity as any).energy_used}/{(subentity as any).energy_budget}
           </span>
         )}
       </div>
 
       {/* Current Yearning */}
-      {(entity as any).current_yearning && (
+      {(subentity as any).current_yearning && (
         <div className="text-observatory-text/70 mb-2">
-          {(entity as any).current_yearning}
+          {(subentity as any).current_yearning}
         </div>
       )}
 
       {/* Recent Path - Clickable */}
-      {(entity as any).recent_path && (entity as any).recent_path.length > 0 && (
+      {(subentity as any).recent_path && (subentity as any).recent_path.length > 0 && (
         <div className="space-y-1">
           <div className="text-observatory-text/50">Recent path:</div>
-          {(entity as any).recent_path.slice(-5).map((node: any, i: number) => (
+          {(subentity as any).recent_path.slice(-5).map((node: any, i: number) => (
             <button
               key={i}
               onClick={() => onFocusNode(node.id)}
@@ -420,6 +420,48 @@ function HeartbeatIndicator({
 
   const rhoDisplay = getRhoDisplay();
 
+  // Get safety state classification per criticality.md spec
+  const getSafetyState = () => {
+    // Use explicit safety_state if provided, otherwise derive from rho
+    if (v2State.safety_state) {
+      return {
+        state: v2State.safety_state,
+        emoji: v2State.safety_state === 'critical' ? '⚖️' :
+               v2State.safety_state === 'subcritical' ? '🎯' : '📈',
+        color: v2State.safety_state === 'critical' ? 'text-green-400' :
+               v2State.safety_state === 'subcritical' ? 'text-yellow-400' : 'text-red-400'
+      };
+    }
+
+    // Fallback: derive from rho if safety_state not provided
+    if (displayRho === null || displayRho === undefined) return null;
+    if (displayRho > 1.2) return { state: 'supercritical', emoji: '⚠️', color: 'text-red-400' };
+    if (displayRho < 0.8) return { state: 'subcritical', emoji: '🎯', color: 'text-yellow-400' };
+    return { state: 'critical', emoji: '⚖️', color: 'text-green-400' };
+  };
+
+  const safetyState = getSafetyState();
+
+  // Get conservation error status
+  const getConservationStatus = () => {
+    if (v2State.conservation_error_pct === null || v2State.conservation_error_pct === undefined) {
+      return null;
+    }
+    const errorPct = Math.abs(v2State.conservation_error_pct);
+    if (errorPct < 0.01) return { emoji: '✅', label: `${errorPct.toFixed(3)}%`, color: 'text-green-400' };
+    if (errorPct < 1.0) return { emoji: '⚠️', label: `${errorPct.toFixed(2)}%`, color: 'text-yellow-400' };
+    return { emoji: '🔴', label: `${errorPct.toFixed(1)}%`, color: 'text-red-400' };
+  };
+
+  const conservationStatus = getConservationStatus();
+
+  // Get frontier metrics
+  const frontierDisplay = (v2State.active_count !== null && v2State.shadow_count !== null) ? {
+    active: v2State.active_count,
+    shadow: v2State.shadow_count,
+    total: v2State.active_count + v2State.shadow_count
+  } : null;
+
   return (
     <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
       {/* Frame counter with live pulse */}
@@ -438,6 +480,30 @@ function HeartbeatIndicator({
         <div className={`text-xs ${rhoDisplay.color} flex items-center gap-1`}>
           <span>{rhoDisplay.emoji}</span>
           <span>flow: {rhoDisplay.label}</span>
+        </div>
+      )}
+
+      {/* Safety state (criticality) */}
+      {safetyState && (
+        <div className={`text-xs ${safetyState.color} flex items-center gap-1`}>
+          <span>{safetyState.emoji}</span>
+          <span>{safetyState.state}</span>
+        </div>
+      )}
+
+      {/* Conservation error */}
+      {conservationStatus && (
+        <div className={`text-xs ${conservationStatus.color} flex items-center gap-1`}>
+          <span>{conservationStatus.emoji}</span>
+          <span>ΔE: {conservationStatus.label}</span>
+        </div>
+      )}
+
+      {/* Frontier metrics */}
+      {frontierDisplay && (
+        <div className="text-xs text-gray-400 flex items-center gap-1">
+          <span>🎯</span>
+          <span>{frontierDisplay.active}+{frontierDisplay.shadow} nodes</span>
         </div>
       )}
     </div>

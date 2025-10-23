@@ -350,7 +350,7 @@ def create_complete_schema_registry():
     print(f"\n[1] Universal node attributes (inherited by ALL node types):")
     result = g.query("""
         MATCH (c:UniversalNodeCategory)-[:HAS_UNIVERSAL_FIELD]->(f:UniversalNodeField)
-        WHERE c.category_name = 'core_identity'
+        WHERE c.category_name = 'core_idsubentity'
         RETURN f.name, f.type, f.required, f.description
         ORDER BY f.name
         LIMIT 3

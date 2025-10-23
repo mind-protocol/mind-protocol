@@ -3,7 +3,7 @@ Test Insertion - Phase 1 Acceptance Test
 
 This test proves the Write Flux (Red Arrow) works end-to-end:
 1. CustomClaudeCodeLLM executes shell commands
-2. SchemaLLMPathExtractor extracts entities/relations using Ada's schema
+2. SchemaLLMPathExtractor extracts subentities/relations using Ada's schema
 3. Extracted data validates against consciousness_schema.py
 4. Data is written to FalkorDB
 5. Data can be queried back to verify creation
@@ -227,7 +227,7 @@ class TestWriteFlux:
         """Invalid data should be rejected during extraction"""
         # Text that would create invalid schema data
         invalid_text = """
-        This text intentionally has no clear entities or relations
+        This text intentionally has no clear subentities or relations
         that match our consciousness schema. It should result in
         either zero extractions or validation errors.
         """

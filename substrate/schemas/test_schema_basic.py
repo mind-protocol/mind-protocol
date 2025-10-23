@@ -55,7 +55,7 @@ def test_valid_memory():
 
     print(f"   [OK] Created: {memory.name}")
     print(f"   [OK] Participants: {memory.participants}")
-    print(f"   [OK] Entities active: {memory.entities_active}")
+    print(f"   [OK] Subentities active: {memory.entities_active}")
     return memory
 
 

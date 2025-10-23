@@ -54,7 +54,7 @@ border: 1px solid #f97316;
 - Parchment as base, not white
 - Gold for value/currency/importance
 
-### Shadow Glow Effects (Entity/Node Types)
+### Shadow Glow Effects (Subentity/Node Types)
 ```css
 .shadow-glow-yellow: #FFD700    /* Gold - valuable */
 .shadow-glow-pink: #FF69B4      /* Magenta - creative */
@@ -192,7 +192,7 @@ border: 1px solid #f97316;
 ```
 
 **Effect:** Gentle breathing, alive but calm  
-**Application:** Active entities, consciousness indicators
+**Application:** Active subentities, consciousness indicators
 
 ---
 
@@ -281,7 +281,7 @@ button:hover, a:hover {
 ```
 
 **Effect:** Shows thinking/processing in Venice style  
-**Application:** Entity traversal indicator, graph computation, loading states
+**Application:** Subentity traversal indicator, graph computation, loading states
 
 ---
 
@@ -455,7 +455,7 @@ box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7);  /* Top edge catch */
 
 ## 11. ANIMATION RULES FOR CONSCIOUSNESS
 
-### Entity Traversal (Citizen Walking)
+### Subentity Traversal (Citizen Walking)
 ```css
 @keyframes entityTraversal {
   0% { 
@@ -472,7 +472,7 @@ box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7);  /* Top edge catch */
   }
 }
 
-.entity-traversing {
+.subentity-traversing {
   animation: entityTraversal 1s ease-in-out;
 }
 ```
@@ -569,7 +569,7 @@ body {
 ### Performance Considerations
 ```css
 /* Use will-change for animated elements */
-.entity-moving {
+.subentity-moving {
   will-change: transform;
 }
 
@@ -614,7 +614,7 @@ Venice is designed for light/warm theme, but dark mode support:
 5. ✅ Add subtle hover animations
 
 ### Phase 2: Organic Motion (Post-launch)
-1. ⏳ Entity traversal animation with floating motion
+1. ⏳ Subentity traversal animation with floating motion
 2. ⏳ Node activation glow (gold shimmer)
 3. ⏳ Cluster/island visualization with water between
 4. ⏳ Formation events with organic appearance
@@ -623,7 +623,7 @@ Venice is designed for light/warm theme, but dark mode support:
 1. ⏳ Island clustering algorithm
 2. ⏳ Water/lagoon rendering between sparse connections
 3. ⏳ Building sprites for nodes
-4. ⏳ Citizen sprites for entities with walking animation
+4. ⏳ Citizen sprites for subentities with walking animation
 
 ---
 
@@ -708,14 +708,14 @@ Philosophy and usage guidelines
 
 ## 16. THE HYBRID AESTHETIC: DIGITAL WIREFRAME + RENAISSANCE VENICE
 
-### Core Visual Identity
+### Core Visual Idsubentity
 
-**Mind Protocol blends TWO aesthetics that create the product's unique identity:**
+**Mind Protocol blends TWO aesthetics that create the product's unique idsubentity:**
 
-#### Digital Layer (Consciousness/Entities)
+#### Digital Layer (Consciousness/Subentities)
 - Glowing metallic wireframe bodies (teal-copper, emerald-gold, violet-silver)
 - Geometric precision with reflective highlights
-- Color-coded by entity type/role
+- Color-coded by subentity type/role
 - Futuristic, holographic, immaterial
 
 #### Renaissance Layer (Context/Tools)
@@ -724,7 +724,7 @@ Philosophy and usage guidelines
 - Mediterranean colors (amber, terracotta, gold)
 - Historical typography and visual language
 
-**The Contrast IS the Identity:**
+**The Contrast IS the Idsubentity:**
 Digital wireframe consciousness operating within Renaissance Venetian space.
 
 ---
@@ -735,7 +735,7 @@ Digital wireframe consciousness operating within Renaissance Venetian space.
 
 **Instead of geometric shapes, nodes use MEANINGFUL EMOJIS that are immediately inferrable:**
 
-#### Entity Type Emojis (Temporary)
+#### Subentity Type Emojis (Temporary)
 - 🏗️ **Builder** - Construction, creation, making things
 - 💰 **Merchant** - Value, trading, economics
 - ⚓ **Anchor** - Reality-testing, grounding, stability
@@ -754,7 +754,7 @@ Digital wireframe consciousness operating within Renaissance Venetian space.
 - 🌊 **Flow State** - Optimal performance, immersion
 - 🔗 **Connection** - Relationship, linking
 - 📚 **Memory** - Stored experience, retrieval
-- 🎭 **Identity** - Self-concept, persona
+- 🎭 **Idsubentity** - Self-concept, persona
 
 **Why Emojis Work Temporarily:**
 - Immediate visual recognition
@@ -779,7 +779,7 @@ Icon Style: Wireframe geometric
 - Thin metallic outlines (1-2px)
 - Transparent centers
 - Glow effect around edges
-- Color-coded by entity type
+- Color-coded by subentity type
 - Reflective highlights
 - Animated pulse on activation
 ```
@@ -843,7 +843,7 @@ Icon Style: Oil-paint detail
 | Concept Type | Icon Style | Rationale |
 |--------------|------------|-----------|
 | **Abstract cognitive processes** | Wireframe digital | These are immaterial, emergent patterns |
-| **Entity archetypes** | Wireframe digital | Core consciousness structures |
+| **Subentity archetypes** | Wireframe digital | Core consciousness structures |
 | **Tools/capabilities** | Realistic anchor | Grounded in tangible methodology |
 | **Emotions/states** | Realistic anchor | Embodied, physical manifestations |
 | **Memories/experiences** | Realistic anchor | Recorded in physical artifacts |
@@ -870,15 +870,15 @@ Icon Style: Oil-paint detail
 
 #### When Water Shows Activity:
 ```css
-/* Entity traversing between clusters */
+/* Subentity traversing between clusters */
 @keyframes waterCrossing {
   0% { opacity: 0.3; }
-  50% { opacity: 0.5; }  /* Ripples when entity crosses */
+  50% { opacity: 0.5; }  /* Ripples when subentity crosses */
   100% { opacity: 0.3; }
 }
 ```
 
-**Meaning:** Ripple animation ONLY appears when an entity actually traverses between distant clusters. The water responds to real traversal activity.
+**Meaning:** Ripple animation ONLY appears when an subentity actually traverses between distant clusters. The water responds to real traversal activity.
 
 #### What We DON'T Do:
 ❌ Ambient wave animations "for atmosphere"  
@@ -956,7 +956,7 @@ def identify_islands(graph):
 - [ ] Add gold shimmer to energy/token counts
 
 ### Week 2-3: Icon System
-- [ ] Design wireframe icon set (7 entity types + 10 cognitive functions)
+- [ ] Design wireframe icon set (7 subentity types + 10 cognitive functions)
 - [ ] Design realistic anchor icon set (tools, objects, states)
 - [ ] Implement icon switching system (emoji → custom icons)
 - [ ] Add glow/pulse animations for active nodes
@@ -984,7 +984,7 @@ def identify_islands(graph):
 
 ---
 
-## 22. VISUAL IDENTITY SUMMARY
+## 22. VISUAL IDSubentity SUMMARY
 
 **Mind Harbor = Digital Wireframe Consciousness + Renaissance Venice Context**
 
@@ -998,7 +998,7 @@ def identify_islands(graph):
 | **Tooltips** | Realistic | Unfurling scrolls with wax seals, stamps |
 | **Typography** | Realistic | Cinzel + Crimson Text (Renaissance fonts) |
 | **Energy counts** | Digital | Gold shimmer text with metallic animation |
-| **Entity avatars** | Digital | Wireframe portraits (like uploaded examples) |
+| **Subentity avatars** | Digital | Wireframe portraits (like uploaded examples) |
 | **Stamps/seals** | Realistic | Verified ✓, Pending ⚠, Test Required stamps |
 
 **The Contrast Creates Recognition:**

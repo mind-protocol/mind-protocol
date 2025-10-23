@@ -1,0 +1,11 @@
+{
+  "context_id": "2025-10-22_23-03-14",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-22T21:09:53.549138+00:00",
+  "last_updated": "2025-10-22T22:17:01.671559+00:00",
+  "message_count": 474,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-22T22:19:15.943330+00:00",
+  "closed_reason": "compact"
+}

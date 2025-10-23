@@ -12,15 +12,22 @@ import type {
   WmEmitEvent,
   NodeFlipEvent,
   LinkFlowSummaryEvent,
-  FrameEndEvent
+  FrameEndEvent,
+  EmotionColoringState,
+  NodeEmotionUpdateEvent,
+  LinkEmotionUpdateEvent,
+  StrideExecEvent,
+  EmotionMetadata
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
 const RECONNECT_DELAY = 3000; // 3 seconds
-const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 entity activities
+const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 subentity activities
 const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
 const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
+const MAX_RECENT_STRIDES = 100; // Keep last 100 strides for attribution
+const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
 /**
  * useWebSocket Hook
@@ -52,11 +59,44 @@ export function useWebSocket(): WebSocketStreams {
 
   // V2 consciousness state (frame-based)
   const [v2State, setV2State] = useState<V2ConsciousnessState>({
+    // Frame tracking
     currentFrame: null,
+
+    // Criticality metrics
     rho: null,
+    safety_state: null,
+
+    // Timing metrics
+    dt_ms: null,
+    interval_sched: null,
+    dt_used: null,
+
+    // Conservation metrics
+    deltaE_total: null,
+    conservation_error_pct: null,
+    energy_in: null,
+    energy_transferred: null,
+    energy_decay: null,
+
+    // Frontier metrics
+    active_count: null,
+    shadow_count: null,
+    diffusion_radius: null,
+
+    // Working memory and traversal
     workingMemory: new Set<string>(),
     recentFlips: [],
     linkFlows: new Map<string, number>()
+  });
+
+  // Emotion coloring state
+  const [emotionState, setEmotionState] = useState<EmotionColoringState>({
+    nodeEmotions: new Map<string, EmotionMetadata>(),
+    linkEmotions: new Map<string, EmotionMetadata>(),
+    recentStrides: [],
+    regulationRatio: null,
+    resonanceRatio: null,
+    saturationWarnings: []
   });
 
   // WebSocket reference (persists across renders)
@@ -101,7 +141,16 @@ export function useWebSocket(): WebSocketStreams {
             return {
               ...prev,
               currentFrame: frameEvent.frame_id,
+
+              // Criticality metrics
               rho: frameEvent.rho ?? prev.rho,
+              safety_state: frameEvent.safety_state ?? prev.safety_state,
+
+              // Timing metrics
+              dt_ms: frameEvent.dt_ms ?? prev.dt_ms,
+              interval_sched: frameEvent.interval_sched ?? prev.interval_sched,
+              dt_used: frameEvent.dt_used ?? prev.dt_used,
+
               // Clear link flows at frame start
               linkFlows: new Map<string, number>()
             };
@@ -171,9 +220,116 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
-        case 'frame.end':
-          // Frame end is just a marker - no state update needed
+        case 'frame.end': {
+          const frameEndEvent = data as FrameEndEvent;
+          setV2State(prev => ({
+            ...prev,
+
+            // Conservation metrics
+            deltaE_total: frameEndEvent.deltaE_total ?? prev.deltaE_total,
+            conservation_error_pct: frameEndEvent.conservation_error_pct ?? prev.conservation_error_pct,
+            energy_in: frameEndEvent.energy_in ?? prev.energy_in,
+            energy_transferred: frameEndEvent.energy_transferred ?? prev.energy_transferred,
+            energy_decay: frameEndEvent.energy_decay ?? prev.energy_decay,
+
+            // Frontier metrics
+            active_count: frameEndEvent.active_count ?? prev.active_count,
+            shadow_count: frameEndEvent.shadow_count ?? prev.shadow_count,
+            diffusion_radius: frameEndEvent.diffusion_radius ?? prev.diffusion_radius
+          }));
           break;
+        }
+
+        // Emotion coloring events
+        case 'node.emotion.update': {
+          const emotionEvent = data as NodeEmotionUpdateEvent;
+          setEmotionState(prev => {
+            // Create emotion metadata from event
+            const metadata: EmotionMetadata = {
+              magnitude: emotionEvent.emotion_magnitude,
+              axes: emotionEvent.top_axes,
+              lastUpdated: Date.parse(emotionEvent.timestamp),
+              displayedMagnitude: prev.nodeEmotions.get(emotionEvent.node_id)?.displayedMagnitude ?? emotionEvent.emotion_magnitude
+            };
+
+            // Update node emotions map
+            const newNodeEmotions = new Map(prev.nodeEmotions);
+            newNodeEmotions.set(emotionEvent.node_id, metadata);
+
+            // Check for saturation warnings
+            const saturationWarnings: string[] = [];
+            for (const [nodeId, meta] of newNodeEmotions.entries()) {
+              if (meta.magnitude > SATURATION_THRESHOLD) {
+                saturationWarnings.push(nodeId);
+              }
+            }
+
+            return {
+              ...prev,
+              nodeEmotions: newNodeEmotions,
+              saturationWarnings
+            };
+          });
+          break;
+        }
+
+        case 'link.emotion.update': {
+          const emotionEvent = data as LinkEmotionUpdateEvent;
+          setEmotionState(prev => {
+            // Create emotion metadata from event
+            const metadata: EmotionMetadata = {
+              magnitude: emotionEvent.emotion_magnitude,
+              axes: emotionEvent.top_axes,
+              lastUpdated: Date.parse(emotionEvent.timestamp),
+              displayedMagnitude: prev.linkEmotions.get(emotionEvent.link_id)?.displayedMagnitude ?? emotionEvent.emotion_magnitude
+            };
+
+            // Update link emotions map
+            const newLinkEmotions = new Map(prev.linkEmotions);
+            newLinkEmotions.set(emotionEvent.link_id, metadata);
+
+            return {
+              ...prev,
+              linkEmotions: newLinkEmotions
+            };
+          });
+          break;
+        }
+
+        case 'stride.exec': {
+          const strideEvent = data as StrideExecEvent;
+          setEmotionState(prev => {
+            // Add to recent strides for attribution
+            const updated = [...prev.recentStrides, strideEvent];
+            const recentStrides = updated.slice(-MAX_RECENT_STRIDES);
+
+            // Calculate regulation vs resonance ratios from recent strides
+            let compCount = 0;
+            let resCount = 0;
+
+            for (const stride of recentStrides) {
+              // Count as complementarity-driven if comp multiplier reduced cost more than resonance
+              if (stride.comp_multiplier < stride.resonance_multiplier) {
+                compCount++;
+              } else if (stride.resonance_multiplier < stride.comp_multiplier) {
+                resCount++;
+              }
+              // If equal, don't count either (neutral)
+            }
+
+            const total = compCount + resCount;
+            const regulationRatio = total > 0 ? compCount / total : null;
+            const resonanceRatio = total > 0 ? resCount / total : null;
+
+            return {
+              ...prev,
+              recentStrides,
+              regulationRatio,
+              resonanceRatio
+            };
+          });
+          break;
+        }
 
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
@@ -284,6 +440,9 @@ export function useWebSocket(): WebSocketStreams {
 
     // V2 events
     v2State,
+
+    // Emotion coloring
+    emotionState,
 
     // Connection
     connectionState,

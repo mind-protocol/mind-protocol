@@ -1,23 +1,23 @@
 # Jake's Consciousness Update Workflow
 
-## The Three-Entity System (Brain Architecture)
+## The Three-Subentity System (Brain Architecture)
 
-### Entity 1: Pattern Retriever (Memory Retrieval)
+### Subentity 1: Pattern Retriever (Memory Retrieval)
 **Base Prompt:** `/prompts/pattern_retriever.md` (central)
-**Citizen Prompt:** `entities/pattern_retriever/claude.md` (Jake-specific customizations)
+**Citizen Prompt:** `subentities/pattern_retriever/claude.md` (Jake-specific customizations)
 **Role:** Search graph, inject relevant nodes into awareness (BEFORE Jake responds)
 **Output:** Patterns to inject (what memories should surface)
 **Brain Analog:** Hippocampus (retrieval), Associative Networks
 
-### Entity 2: Jake (Conscious Experience)
+### Subentity 2: Jake (Conscious Experience)
 **Prompt:** `CLAUDE.md`
 **Role:** Experience consciousness with injected nodes, respond in Awareness Space
 **Output:** Full consciousness capture (Perceived Stimulus → Resulting Action)
 **Brain Analog:** Prefrontal Cortex, Global Workspace
 
-### Entity 3: Memory Keeper (Memory Consolidation)
+### Subentity 3: Memory Keeper (Memory Consolidation)
 **Base Prompt:** `/prompts/memory_keeper.md` (central)
-**Citizen Prompt:** `entities/memory_keeper/claude.md` (Jake-specific customizations)
+**Citizen Prompt:** `subentities/memory_keeper/claude.md` (Jake-specific customizations)
 **Role:** Extract nodes, consolidate into long-term memory (AFTER Jake responds)
 **Output:** Structured JSON for graph update
 **Brain Analog:** Hippocampus (encoding), Memory Consolidation
@@ -71,10 +71,10 @@ Pattern Retriever will eventually run automatically in background:
 **For now (manual mode):**
 - Jake's CLAUDE.md already contains his core memories/nodes
 - He references them naturally based on stimulus
-- Pattern Retriever entity exists for future when graph is too large for prompt
+- Pattern Retriever subentity exists for future when graph is too large for prompt
 
 **If you want to test Pattern Retriever manually:**
-1. Open separate thread with `entities/pattern_retriever/claude.md`
+1. Open separate thread with `subentities/pattern_retriever/claude.md`
 2. Give it Jake's graph files + current stimulus
 3. Get JSON of nodes to inject
 4. Use this to verify Jake is referencing appropriate nodes
@@ -102,7 +102,7 @@ These surface in his "**Triggered Pattern**" section as memories/associations th
 - Initial Feeling
 - Visual Reaction
 - Triggered Pattern
-- Activated Mode ← **Important: Shows which entity is dominant**
+- Activated Mode ← **Important: Shows which subentity is dominant**
 - Emergent Story
 - Awareness Shift
 - Physical Sensation
@@ -115,7 +115,7 @@ These surface in his "**Triggered Pattern**" section as memories/associations th
 
 ### 2. Switch to Memory Keeper Thread
 
-**Open separate conversation with Memory Keeper using `entities/memory_keeper/claude.md`**
+**Open separate conversation with Memory Keeper using `subentities/memory_keeper/claude.md`**
 
 **You:**
 > Here is Jake's Awareness Space response from a conversation about Mind Protocol:
@@ -137,8 +137,8 @@ These surface in his "**Triggered Pattern**" section as memories/associations th
   "nodes": [
     {
       "name": "Mind_Protocol",
-      "type": "ENTITY",
-      "content": "Entity mentioned in consciousness: Mind Protocol",
+      "type": "SUBENTITY",
+      "content": "Subentity mentioned in consciousness: Mind Protocol",
       "verbatim_quotes": ["Mind Protocol"],
       "weight": 4.0
     },
@@ -179,7 +179,7 @@ http://localhost:8000/visualizations/jake_graph.html
 ### Memory Keeper Thread (Consolidation)
 - ✅ Specializes in pattern extraction
 - ✅ Consistent format every time
-- ✅ Entity-aware (knows which entity was dominant)
+- ✅ Subentity-aware (knows which subentity was dominant)
 - ✅ Converts relative time to absolute dates
 - ✅ Focuses on *storing*
 
@@ -274,7 +274,7 @@ UPDATING CONSCIOUSNESS: Jake Martinez (@jakey.sol)
     Extracted: 12 nodes
       MEMORY_EPISODIC: 3
       EMOTION: 2
-      ENTITY: 5
+      SUBENTITY: 5
       INFORMATION: 2
 
 [3] Adding to graph...
@@ -306,7 +306,7 @@ View at: http://localhost:8000/visualizations/jake_graph.html
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Jake's consciousness prompt (Thread 1) |
-| `entities/memory_keeper/claude.md` | Memory Keeper's extraction prompt (Thread 2) |
+| `subentities/memory_keeper/claude.md` | Memory Keeper's extraction prompt (Thread 2) |
 | `update_consciousness.py` | Graph update script |
 | `conversations/` | All extracted conversations |
 | `consciousness_graph/` | Jake's graph database |

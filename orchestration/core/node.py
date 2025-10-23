@@ -1,28 +1,33 @@
 """
-Node data structure - combines multi-energy + bitemporal tracking.
+Node data structure - single-energy + bitemporal tracking.
 
 ARCHITECTURAL PRINCIPLE: Core is pure data, delegates to mechanisms.
 
 This Node class is a data container with delegation methods.
 All logic lives in orchestration.mechanisms.*
 
-Energy Architecture:
+Energy Architecture (V2 - Single Energy):
 - Strictly non-negative [0.0, ∞)
+- Single scalar E per node (not per-entity)
+- Entity differentiation via membership and selection, not energy buffers
 - Inhibition via SUPPRESS link type, NOT negative energy
-- Multi-dimensional: Dict[entity_id, energy_value]
 
-Bitemporal Architecture:
+Bitemporal Architecture (V2 - Immutable Versions):
 - Reality timeline: valid_at, invalidated_at
 - Knowledge timeline: created_at, expired_at
+- Version tracking: vid (immutable), supersedes/superseded_by (version chain)
 
 Author: Felix (Engineer)
 Created: 2025-10-19
-Architecture: Phase 1 Clean Break - Mechanism 01 + 13
+Updated: 2025-10-22 - Added version tracking (vid, supersedes, superseded_by)
+Architecture: V2 Stride-Based Diffusion - foundations/diffusion.md
+Spec: foundations/bitemporal_tracking.md
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, TYPE_CHECKING
+import uuid
 
 from .types import NodeType, EnergyDict, EntityID
 
@@ -33,15 +38,17 @@ if TYPE_CHECKING:
 @dataclass
 class Node:
     """
-    Core node structure combining multi-energy + bitemporal tracking.
+    Core node structure with single-energy + bitemporal tracking.
 
     This is a PURE DATA STRUCTURE. All behavior is delegated to:
-    - orchestration.mechanisms.multi_energy (M01)
+    - orchestration.mechanisms.diffusion (stride-based energy transfer)
+    - orchestration.mechanisms.decay (exponential forgetting)
     - orchestration.mechanisms.bitemporal (M13)
 
-    Energy Storage (M01):
-        energy: Dict[entity_id, float] - Non-negative values only
-        Each entity has independent energy on this node
+    Energy Storage (V2 Single-Energy):
+        E: float - Activation energy (non-negative scalar)
+        theta: float - Activation threshold (adaptive)
+        Entity differentiation via membership, not per-entity buffers
 
     Bitemporal Tracking (M13):
         valid_at: When this node became true in reality
@@ -55,15 +62,20 @@ class Node:
     """
 
     # Identity
-    id: str
+    id: str  # Logical entity id (stable across versions)
     name: str
     node_type: NodeType
     description: str
 
-    # Multi-energy storage (M01)
+    # Version tracking (V2 Bitemporal - Immutable Versions)
+    vid: str = field(default_factory=lambda: f"v_{uuid.uuid4().hex[:12]}")  # Version id (immutable)
+    supersedes: Optional[str] = None  # Previous version vid
+    superseded_by: Optional[str] = None  # Next version vid (set when superseded)
+
+    # Single-energy storage (V2)
     # CRITICAL: Energy is strictly non-negative [0.0, ∞)
     # Inhibition is implemented via SUPPRESS link type, not negative values
-    energy: EnergyDict = field(default_factory=dict)
+    E: float = 0.0  # Activation energy (single scalar, not per-entity)
 
     # Bitemporal tracking (M13) - Reality timeline
     valid_at: datetime = field(default_factory=datetime.now)
@@ -80,6 +92,9 @@ class Node:
     # Metadata
     properties: Dict[str, any] = field(default_factory=dict)
 
+    # Emotion metadata (separate from activation - affects cost only)
+    emotion_vector: Optional[any] = None  # 2D affect vector [valence, arousal]
+
     # Learning Infrastructure (Phase 1-4: Consciousness Learning)
     # Long-run attractor strength in log space
     log_weight: float = 0.0
@@ -93,96 +108,34 @@ class Node:
     last_update_timestamp: Optional[datetime] = None
     # Node scope for cohort grouping (personal/organizational/ecosystem)
     scope: str = "personal"
-    # Threshold for activation (computed adaptively)
-    threshold: float = 0.1
+    # Threshold for activation (adaptive, computed from μ + z·σ)
+    theta: float = 0.1
 
-    # --- Delegation Methods (call mechanisms, don't implement) ---
-
-    def get_entity_energy(self, entity: EntityID) -> float:
-        """
-        Get energy for entity on this node.
-
-        Delegates to: orchestration.mechanisms.multi_energy.get_entity_energy()
-
-        Args:
-            entity: Entity identifier
-
-        Returns:
-            Energy value (>= 0.0), or 0.0 if entity not present
-        """
-        from orchestration.mechanisms.multi_energy import get_entity_energy
-        return get_entity_energy(self, entity)
-
-    def set_entity_energy(self, entity: EntityID, value: float) -> None:
-        """
-        Set energy for entity on this node.
-
-        Delegates to: orchestration.mechanisms.multi_energy.set_entity_energy()
-
-        CRITICAL: Value will be clamped to non-negative and saturated.
-
-        Args:
-            entity: Entity identifier
-            value: Energy value (will be clamped to >= 0.0, saturated via tanh)
-        """
-        from orchestration.mechanisms.multi_energy import set_entity_energy
-        set_entity_energy(self, entity, value)
-
-    def increment_entity_energy(self, entity: EntityID, delta: float) -> None:
-        """
-        Add energy delta to entity on this node.
-
-        Delegates to: orchestration.mechanisms.multi_energy.add_entity_energy()
-
-        Can be positive (add energy) or negative (remove energy).
-        Result will be clamped to non-negative and saturated.
-
-        Args:
-            entity: Entity identifier
-            delta: Energy change (positive = add, negative = subtract)
-        """
-        from orchestration.mechanisms.multi_energy import add_entity_energy
-        add_entity_energy(self, entity, delta)
-
-    def get_total_energy(self) -> float:
-        """
-        Get TOTAL energy across all entities on this node.
-
-        This is the canonical energy for sub-entity activation detection.
-        Per spec: Sub-Entity = ANY node where total_energy >= threshold
-
-        Delegates to: orchestration.mechanisms.multi_energy.get_total_energy()
-
-        Returns:
-            Sum of energy across all entity keys
-        """
-        from orchestration.mechanisms.multi_energy import get_total_energy
-        return get_total_energy(self)
+    # --- Energy Methods (V2 Single-Energy) ---
 
     def is_active(self) -> bool:
         """
-        Is this node currently an active sub-entity?
+        Is this node currently active?
 
-        Per spec (05_sub_entity_system.md:1514-1522):
-            Sub-Entity = ANY Active Node
-            is_sub_entity(node) = total_energy >= threshold
-
-        Returns:
-            True if total_energy >= threshold
-        """
-        return self.get_total_energy() >= self.threshold
-
-    def get_all_active_entities(self) -> List[EntityID]:
-        """
-        Get all entities with non-zero energy on this node.
-
-        Delegates to: orchestration.mechanisms.multi_energy.get_all_active_entities()
+        Per V2 spec (foundations/diffusion.md):
+            Active = E >= theta (activation threshold)
 
         Returns:
-            List of entity IDs with energy > 0
+            True if E >= theta
         """
-        from orchestration.mechanisms.multi_energy import get_all_active_entities
-        return get_all_active_entities(self)
+        return self.E >= self.theta
+
+    def add_energy(self, delta: float) -> None:
+        """
+        Add energy delta to this node (used by diffusion staging).
+
+        Args:
+            delta: Energy change (can be positive or negative)
+
+        Side effects:
+            Updates self.E, clamped to [0.0, ∞)
+        """
+        self.E = max(0.0, self.E + delta)
 
     def is_currently_valid(self, at_time: Optional[datetime] = None) -> bool:
         """
@@ -216,8 +169,7 @@ class Node:
 
     def __repr__(self) -> str:
         """Human-readable representation."""
-        active_entities = len(self.energy)
-        return f"Node(id={self.id!r}, name={self.name!r}, type={self.node_type.value}, entities={active_entities})"
+        return f"Node(id={self.id!r}, name={self.name!r}, type={self.node_type.value}, E={self.E:.3f}, theta={self.theta:.3f})"
 
     def __hash__(self) -> int:
         """Hash by ID for set/dict usage."""

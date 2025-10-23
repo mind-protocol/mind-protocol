@@ -37,7 +37,7 @@ I've built 4 observability dashboards in the visualization UI that require speci
 
 **What it shows:**
 - Total substrate energy across all nodes
-- Energy distribution by entity (% bars)
+- Energy distribution by subentity (% bars)
 - High energy nodes (>0.8)
 - Dormant nodes count (<0.1)
 
@@ -69,7 +69,7 @@ RETURN
 
 **Currently Missing:**
 - `entity_activations` field on nodes (exists in spec but not in FalkorDB)
-- Energy values per entity
+- Energy values per subentity
 
 ---
 
@@ -136,20 +136,20 @@ RETURN
 ## Dashboard 3: Competition Landscape (PLANNED - Needs Data)
 
 **What it will show:**
-- Average entities per node (crowding metric)
+- Average subentities per node (crowding metric)
 - Traversal cost distribution (cheap/moderate/expensive paths)
-- Entity exploration efficiency
+- Subentity exploration efficiency
 - Cost heatmap visualization
 
 **Schema Required:**
 
 ```python
-# ON NODES - multiple entities = crowding
+# ON NODES - multiple subentities = crowding
 node.entity_activations = {
     "entity_1": {"energy": 0.8},
     "entity_2": {"energy": 0.6},
     "entity_3": {"energy": 0.4}
-    # Count = 3 entities on this node
+    # Count = 3 subentities on this node
 }
 
 # ON LINKS - computed traversal cost (optional - can compute client-side)
@@ -172,20 +172,20 @@ cost = (base_cost * link_competition * node_competition) / weight_factor
 MATCH (n)
 RETURN
     id(n),
-    n.entity_activations,  # Count entities per node
+    n.entity_activations,  # Count subentities per node
     n.base_weight,
     n.reinforcement_weight
 
 MATCH ()-[r]->(target)
 RETURN
     id(r),
-    r.entity_activations,  # Count entities on link
+    r.entity_activations,  # Count subentities on link
     r.link_strength,
     id(target)
 ```
 
 **Currently Missing:**
-- Multiple entities per node/link data
+- Multiple subentities per node/link data
 - Weight fields (`base_weight`, `reinforcement_weight`)
 
 ---
@@ -204,14 +204,14 @@ RETURN
 ```python
 # ON NODES - cluster membership
 node.entity_clusters = {
-    "entity_id": "cluster_name"  # e.g., "builder", "skeptic", "identity"
+    "entity_id": "cluster_name"  # e.g., "builder", "skeptic", "idsubentity"
 }
 
 # ON NODES - semantic type for prompt generation
-node.node_type = "Identity" | "Personal_Value" | "Personal_Pattern" | "Memory" | ...
+node.node_type = "Idsubentity" | "Personal_Value" | "Personal_Pattern" | "Memory" | ...
 
 # ON NODES - weights for stability
-node.base_weight = 10.0  # High weight = stable (identity)
+node.base_weight = 10.0  # High weight = stable (idsubentity)
 node.reinforcement_weight = 5.0
 
 # NEW: Prompt generation events (for timeline)
@@ -227,7 +227,7 @@ prompt_event = {
     ],
     "generated_sections": {
         "name": "Ada Bridgekeeper",
-        "identity": "...",
+        "idsubentity": "...",
         "patterns": "..."
     }
 }
@@ -236,7 +236,7 @@ prompt_event = {
 **Query needed:**
 ```cypher
 MATCH (n)
-WHERE n.node_type IN ['Identity', 'Personal_Value', 'Personal_Pattern']
+WHERE n.node_type IN ['Idsubentity', 'Personal_Value', 'Personal_Pattern']
 RETURN
     id(n),
     n.node_type,
@@ -282,10 +282,10 @@ RETURN
 **Minimum viable test data** for Energy Dashboard:
 
 ```python
-# Create test graph with entity activations
+# Create test graph with subentity activations
 g = db.select_graph("citizen_test")
 
-# Node with multiple entities
+# Node with multiple subentities
 g.query("""
 CREATE (n:Memory {
     text: "Test memory",
@@ -376,7 +376,7 @@ RETURN
 - 4 observability dashboards with tabs
 - Toggle button in UI
 - Real-time metric calculation
-- Per-entity energy visualization
+- Per-subentity energy visualization
 - Timeline placeholders for decay/prompts
 
 **What's blocking full functionality:**
@@ -387,7 +387,7 @@ RETURN
 **Next steps for you:**
 1. Add `entity_activations` to node schema
 2. Update `visualization_server.py` query to return new fields
-3. Create test data with multiple entities per node
+3. Create test data with multiple subentities per node
 4. Verify Energy Dashboard shows data
 
 **When you're done:** Let me know and I'll validate the dashboards are working with real data.

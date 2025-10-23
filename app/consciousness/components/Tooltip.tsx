@@ -122,7 +122,7 @@ function NodeTooltipContent({ node }: { node: Node }) {
         </div>
         {node.last_traversed_by && (
           <div className="flex justify-between">
-            <span className="text-gray-400">Last entity:</span>
+            <span className="text-gray-400">Last subentity:</span>
             <span className="text-gray-200">{node.last_traversed_by}</span>
           </div>
         )}
@@ -160,16 +160,16 @@ function LinkTooltipContent({ link }: { link: Link }) {
         )}
         {(link as any).last_entity && (
           <div className="flex justify-between">
-            <span className="text-gray-400">Last entity:</span>
+            <span className="text-gray-400">Last subentity:</span>
             <span className="text-gray-200">{(link as any).last_entity}</span>
           </div>
         )}
       </div>
 
-      {/* Per-entity valences */}
+      {/* Per-subentity valences */}
       {link.sub_entity_valences && Object.keys(link.sub_entity_valences).length > 0 && (
         <div className="mt-3 pt-3 border-t border-consciousness-border">
-          <div className="text-xs text-gray-400 mb-2">Per-Entity Experience:</div>
+          <div className="text-xs text-gray-400 mb-2">Per-Subentity Experience:</div>
           <div className="space-y-1">
             {Object.entries(link.sub_entity_valences).slice(0, 3).map(([entityId, valence]) => (
               <div key={entityId} className="flex justify-between text-xs">

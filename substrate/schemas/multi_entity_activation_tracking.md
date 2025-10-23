@@ -1,6 +1,6 @@
-# Multi-Entity Activation Tracking
+# Multi-Subentity Activation Tracking
 
-**Critical Requirement:** Nodes and links can be activated by MULTIPLE entities simultaneously, each with different energy and energy levels.
+**Critical Requirement:** Nodes and links can be activated by MULTIPLE subentities simultaneously, each with different energy and energy levels.
 
 ---
 
@@ -9,10 +9,10 @@
 **Old model (single activation):**
 ```python
 node.current_energy = 0.8  # Scalar - WRONG!
-link.current_energy = 0.6  # Which entity? AMBIGUOUS!
+link.current_energy = 0.6  # Which subentity? AMBIGUOUS!
 ```
 
-**New model (multi-entity activation):**
+**New model (multi-subentity activation):**
 ```python
 node.entity_activations = {
     "translator": {"energy": 0.9, "energy": 0.85},
@@ -26,7 +26,7 @@ link.entity_activations = {
 }
 ```
 
-**Each entity has separate activation state on each node/link.**
+**Each subentity has separate activation state on each node/link.**
 
 ---
 
@@ -43,13 +43,13 @@ link.entity_activations = {
     # OLD (DEPRECATED): Single scalar energy
     # "current_energy": 0.8,
 
-    # NEW: Per-entity activation map
+    # NEW: Per-subentity activation map
     "entity_activations": {
         "translator": {
-            "energy": 0.9,          # How much budget this entity has on this node
-            "energy": 0.85,        # How aroused this entity is about this node
+            "energy": 0.9,          # How much budget this subentity has on this node
+            "energy": 0.85,        # How aroused this subentity is about this node
             "last_activated": "2025-10-17T15:30:00Z",
-            "activation_count": 15   # How many times this entity activated here
+            "activation_count": 15   # How many times this subentity activated here
         },
         "validator": {
             "energy": 0.6,
@@ -66,10 +66,10 @@ link.entity_activations = {
     },
 
     # Aggregate metrics (computed)
-    "total_energy": 1.8,           # Sum of all entity energies
-    "max_energy": 0.9,             # Highest entity energy
-    "active_entity_count": 3,      # How many entities active here
-    "primary_entity": "translator", # Entity with highest energy
+    "total_energy": 1.8,           # Sum of all subentity energies
+    "max_energy": 0.9,             # Highest subentity energy
+    "active_entity_count": 3,      # How many subentities active here
+    "primary_entity": "translator", # Subentity with highest energy
 
     # Rest of schema unchanged
     "embedding": [...],
@@ -90,7 +90,7 @@ link.entity_activations = {
     "from_node": "principle_links_are_consciousness",
     "to_node": "decision_prioritize_link_metadata",
 
-    # NEW: Per-entity activation map
+    # NEW: Per-subentity activation map
     "entity_activations": {
         "translator": {
             "energy": 0.8,
@@ -112,7 +112,7 @@ link.entity_activations = {
     "active_entity_count": 2,
     "primary_entity": "translator",
 
-    # Existing per-entity metadata (unchanged)
+    # Existing per-subentity metadata (unchanged)
     "sub_entity_valences": {
         "translator": +0.95,
         "validator": +0.85,
@@ -138,7 +138,7 @@ link.entity_activations = {
 
 ---
 
-## Part 2: Energy Propagation (Per-Entity)
+## Part 2: Energy Propagation (Per-Subentity)
 
 ### When Node Created/Retrieved
 
@@ -150,7 +150,7 @@ def propagate_energy_multi_entity(
     energy: float
 ):
     """
-    Propagate energy from one entity's activation.
+    Propagate energy from one subentity's activation.
     """
     # 1. Find semantically similar nodes
     similar_nodes = vector_search(
@@ -159,9 +159,9 @@ def propagate_energy_multi_entity(
         threshold=0.5
     )
 
-    # 2. Propagate energy to similar nodes (for THIS entity)
+    # 2. Propagate energy to similar nodes (for THIS subentity)
     for target_node, similarity in similar_nodes:
-        # Energy transfer for this specific entity
+        # Energy transfer for this specific subentity
         energy_transfer = energy_amount * similarity * 0.3
 
         # Update target's entity_activations map
@@ -186,9 +186,9 @@ def propagate_energy_multi_entity(
             old_energy * 0.7 + energy * 0.3
         )
 
-    # 3. Propagate through links (for THIS entity)
+    # 3. Propagate through links (for THIS subentity)
     for link in source_node.outgoing_links:
-        # Update link's entity activation
+        # Update link's subentity activation
         if triggering_entity not in link.entity_activations:
             link.entity_activations[triggering_entity] = {
                 "energy": 0.0,
@@ -203,58 +203,58 @@ def propagate_energy_multi_entity(
 
 ---
 
-## Part 3: Exploration (Per-Entity Budget)
+## Part 3: Exploration (Per-Subentity Budget)
 
-### Each Entity Spends Its Own Budget
+### Each Subentity Spends Its Own Budget
 
 ```python
 def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
     """
-    Multiple entities explore from same node, each with own budget.
+    Multiple subentities explore from same node, each with own budget.
     """
-    for entity in active_entities:
-        # Check if entity is active on this node
-        if entity not in node.entity_activations:
+    for subentity in active_entities:
+        # Check if subentity is active on this node
+        if subentity not in node.entity_activations:
             continue
 
-        entity_state = node.entity_activations[entity]
+        entity_state = node.entity_activations[subentity]
 
-        # Skip if entity exhausted on this node
+        # Skip if subentity exhausted on this node
         if entity_state["energy"] < 0.05:
             continue
 
-        # Get entity's budget
+        # Get subentity's budget
         budget = entity_state["energy"]
         energy = entity_state["energy"]
 
-        # Select links based on valence (entity-specific)
+        # Select links based on valence (subentity-specific)
         available_links = node.outgoing_links
         selected_links = select_links_for_entity(
             available_links,
-            entity,
+            subentity,
             budget
         )
 
         # Traverse selected links
         for link in selected_links:
-            # Get valence for this entity
-            valence = link.sub_entity_valences.get(entity, 0.0)
+            # Get valence for this subentity
+            valence = link.sub_entity_valences.get(subentity, 0.0)
 
             # Calculate cost (modulated by valence)
             cost = calculate_link_cost(link, valence)
 
             if budget >= cost:
-                # Spend energy (from THIS entity's budget)
-                node.entity_activations[entity]["energy"] -= cost
+                # Spend energy (from THIS subentity's budget)
+                node.entity_activations[subentity]["energy"] -= cost
                 budget -= cost
 
-                # Transfer energy to target (for THIS entity)
+                # Transfer energy to target (for THIS subentity)
                 target_node = link.target_node
                 energy_transfer = cost * 0.5 * (1.0 + valence)  # Valence modulation
 
-                # Initialize target entity activation if needed
-                if entity not in target_node.entity_activations:
-                    target_node.entity_activations[entity] = {
+                # Initialize target subentity activation if needed
+                if subentity not in target_node.entity_activations:
+                    target_node.entity_activations[subentity] = {
                         "energy": 0.0,
                         "energy": energy,
                         "last_activated": datetime.now(),
@@ -262,27 +262,27 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
                     }
 
                 # Transfer energy
-                target_node.entity_activations[entity]["energy"] += energy_transfer
-                target_node.entity_activations[entity]["energy"] = min(1.0, target_node.entity_activations[entity]["energy"])
+                target_node.entity_activations[subentity]["energy"] += energy_transfer
+                target_node.entity_activations[subentity]["energy"] = min(1.0, target_node.entity_activations[subentity]["energy"])
 
-                # Update link activation for this entity
-                if entity not in link.entity_activations:
-                    link.entity_activations[entity] = {
+                # Update link activation for this subentity
+                if subentity not in link.entity_activations:
+                    link.entity_activations[subentity] = {
                         "energy": 0.0,
                         "energy": energy,
                         "last_traversed": datetime.now(),
                         "traversal_count": 0
                     }
 
-                link.entity_activations[entity]["energy"] += cost * 0.5
-                link.entity_activations[entity]["traversal_count"] += 1
+                link.entity_activations[subentity]["energy"] += cost * 0.5
+                link.entity_activations[subentity]["traversal_count"] += 1
 ```
 
 ---
 
-## Part 4: Cluster Formation (Multi-Entity Membership)
+## Part 4: Cluster Formation (Multi-Subentity Membership)
 
-### Nodes Can Belong to Multiple Entity Clusters
+### Nodes Can Belong to Multiple Subentity Clusters
 
 ```python
 {
@@ -294,7 +294,7 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
         "observer": {"energy": 0.3, "energy": 0.4}
     },
 
-    # NEW: Multi-entity cluster membership
+    # NEW: Multi-subentity cluster membership
     "entity_clusters": {
         "translator": "cluster_translator_bridging",
         "architect": "cluster_architect_systems",
@@ -304,7 +304,7 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
     # OLD (DEPRECATED): Single cluster
     # "current_cluster": "cluster_bridging_patterns",
 
-    # Aggregate: Primary cluster (highest energy entity's cluster)
+    # Aggregate: Primary cluster (highest energy subentity's cluster)
     "primary_cluster": "cluster_translator_bridging"
 }
 ```
@@ -313,9 +313,9 @@ def explore_from_node_multi_entity(node: Node, active_entities: List[str]):
 
 ---
 
-## Part 5: Querying Multi-Entity State
+## Part 5: Querying Multi-Subentity State
 
-### Find Nodes Active for Specific Entity
+### Find Nodes Active for Specific Subentity
 
 ```cypher
 // Get all nodes where Translator has high energy
@@ -325,7 +325,7 @@ RETURN n
 ORDER BY n.entity_activations.translator.energy DESC
 ```
 
-### Find Links Traversed by Specific Entity
+### Find Links Traversed by Specific Subentity
 
 ```cypher
 // Get all links Validator recently traversed
@@ -335,7 +335,7 @@ RETURN r
 ORDER BY r.entity_activations.validator.last_traversed DESC
 ```
 
-### Find Multi-Entity Overlaps
+### Find Multi-Subentity Overlaps
 
 ```cypher
 // Nodes active for BOTH Translator AND Validator
@@ -343,18 +343,18 @@ MATCH (n:Node)
 WHERE n.entity_activations.translator.energy > 0.6
   AND n.entity_activations.validator.energy > 0.6
 RETURN n
-// These are points of entity collaboration
+// These are points of subentity collaboration
 ```
 
 ### Aggregate Queries
 
 ```cypher
-// Total energy across all entities
+// Total energy across all subentities
 MATCH (n:Node)
 RETURN n.name, n.total_energy
 ORDER BY n.total_energy DESC
 
-// Primary entity distribution
+// Primary subentity distribution
 MATCH (n:Node)
 WHERE n.primary_entity IS NOT NULL
 RETURN n.primary_entity, count(*) as node_count
@@ -362,21 +362,21 @@ RETURN n.primary_entity, count(*) as node_count
 
 ---
 
-## Part 6: Decay (Per-Entity)
+## Part 6: Decay (Per-Subentity)
 
 ```python
 def decay_energy_multi_entity():
     """
-    Decay each entity's energy separately.
+    Decay each subentity's energy separately.
     """
     for node in all_nodes:
-        for entity, state in node.entity_activations.items():
-            # Each entity decays independently
+        for subentity, state in node.entity_activations.items():
+            # Each subentity decays independently
             state["energy"] *= node.decay_rate  # 0.95 default
 
-            # Remove entity if energy too low
+            # Remove subentity if energy too low
             if state["energy"] < 0.01:
-                del node.entity_activations[entity]
+                del node.entity_activations[subentity]
 
         # Recompute aggregates
         node.total_energy = sum(
@@ -403,13 +403,13 @@ def decay_energy_multi_entity():
 
 ## Part 7: Sharing Mechanism (Future)
 
-**Question for later:** How do entities share/compete for node resources?
+**Question for later:** How do subentities share/compete for node resources?
 
 **Possible approaches:**
 
 ### Option A: Independent (Current Model)
 ```python
-# Each entity has independent energy budget on node
+# Each subentity has independent energy budget on node
 # No competition, no sharing
 node.entity_activations["translator"]["energy"] = 0.9
 node.entity_activations["validator"]["energy"] = 0.6
@@ -418,8 +418,8 @@ node.entity_activations["validator"]["energy"] = 0.6
 
 ### Option B: Competitive (Limited Pool)
 ```python
-# Total energy across all entities limited to 1.0
-# Entities compete for node attention
+# Total energy across all subentities limited to 1.0
+# Subentities compete for node attention
 total = 0.9 + 0.6 = 1.5  # Over budget!
 # Normalize:
 translator_share = 0.9 / 1.5 = 0.6
@@ -428,11 +428,11 @@ validator_share = 0.6 / 1.5 = 0.4
 
 ### Option C: Collaborative (Boosting)
 ```python
-# Entities boost each other when co-active
+# Subentities boost each other when co-active
 if multiple_entities_active(node):
-    for entity in node.entity_activations:
+    for subentity in node.entity_activations:
         boost = 0.1 * (num_active_entities - 1)
-        node.entity_activations[entity]["energy"] += boost
+        node.entity_activations[subentity]["energy"] += boost
 ```
 
 **Design decision needed: Competition, independence, or collaboration?**
@@ -496,16 +496,16 @@ CREATE (n:Node {
 })
 ```
 
-**Option C: Separate entity-activation edges**
+**Option C: Separate subentity-activation edges**
 ```cypher
 CREATE (n:Node {name: "principle_links_are_consciousness"})
 CREATE (n)-[:ACTIVATED_BY {
-    entity: "translator",
+    subentity: "translator",
     energy: 0.9,
     energy: 0.85,
     last_activated: datetime(),
     activation_count: 15
-}]->(e:Entity {name: "translator"})
+}]->(e:Subentity {name: "translator"})
 ```
 
 **Recommendation:** Start with Option B (JSON string), migrate to Option A if FalkorDB supports nested maps efficiently.
@@ -522,7 +522,7 @@ node.current_energy = 0.8  # Scalar
 link.current_energy = 0.6  # Ambiguous
 ```
 
-**NEW (Multi-Entity Activation):**
+**NEW (Multi-Subentity Activation):**
 ```python
 node.entity_activations = {
     "translator": {"energy": 0.9, "energy": 0.85},
@@ -536,19 +536,19 @@ link.entity_activations = {
 
 ### Properties
 
-- **Concurrent:** Multiple entities active simultaneously
-- **Independent:** Each entity has separate budget
-- **Tracked:** Energy, energy, timestamp per entity
-- **Aggregated:** Total energy, max energy, primary entity
-- **Decoupled:** Entity activations independent of each other (for now)
+- **Concurrent:** Multiple subentities active simultaneously
+- **Independent:** Each subentity has separate budget
+- **Tracked:** Energy, energy, timestamp per subentity
+- **Aggregated:** Total energy, max energy, primary subentity
+- **Decoupled:** Subentity activations independent of each other (for now)
 
 ### Schema Updates Needed
 
 1. **Update UNIFIED_SCHEMA_REFERENCE.md** - Add entity_activations field
-2. **Update all energy propagation logic** - Per-entity instead of scalar
-3. **Update cluster formation** - Multi-entity membership
-4. **Update decay mechanism** - Per-entity decay
-5. **Update queries** - Entity-specific activation queries
+2. **Update all energy propagation logic** - Per-subentity instead of scalar
+3. **Update cluster formation** - Multi-subentity membership
+4. **Update decay mechanism** - Per-subentity decay
+5. **Update queries** - Subentity-specific activation queries
 
 ---
 

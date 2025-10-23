@@ -1,6 +1,6 @@
 # Pure embedding architectures for consciousness extraction
 
-**The optimal path for Mind Protocol V2 is a hybrid approach combining SetFit classification, hnswlib entity matching, and pattern-based link detection—avoiding GNNs entirely.** This achieves 70-80% F1 with deterministic behavior, training in minutes rather than hours, and inference under 2 seconds. Start with entity recognition first, then node classification, defer complex field extraction to v2. The critical insight: hierarchical classification dramatically outperforms flat 44-way classification, while multi-vector embeddings (not GNNs) solve the link prediction problem.
+**The optimal path for Mind Protocol V2 is a hybrid approach combining SetFit classification, hnswlib subentity matching, and pattern-based link detection—avoiding GNNs entirely.** This achieves 70-80% F1 with deterministic behavior, training in minutes rather than hours, and inference under 2 seconds. Start with subentity recognition first, then node classification, defer complex field extraction to v2. The critical insight: hierarchical classification dramatically outperforms flat 44-way classification, while multi-vector embeddings (not GNNs) solve the link prediction problem.
 
 ## Why current approaches fail at scale
 
@@ -10,14 +10,14 @@ The second critical failure mode is **class imbalance combined with overlap**. W
 
 ## Start here: The critical dependency chain
 
-**Entity recognition must come first.** Everything downstream—node classification, field extraction, link detection—depends on identifying entity spans accurately. Research shows this sequence achieves optimal results:
+**Subentity recognition must come first.** Everything downstream—node classification, field extraction, link detection—depends on identifying subentity spans accurately. Research shows this sequence achieves optimal results:
 
-1. **Entity recognition** (Week 1-2): Extract spans that represent potential nodes
-2. **Node classification** (Week 3-4): Assign types to recognized entities  
-3. **Link detection** (Week 5-6): Identify relationships between typed entities
+1. **Subentity recognition** (Week 1-2): Extract spans that represent potential nodes
+2. **Node classification** (Week 3-4): Assign types to recognized subentities  
+3. **Link detection** (Week 5-6): Identify relationships between typed subentities
 4. **Field extraction** (Week 7+): Populate node attributes—defer to v2 for complex fields
 
-This ordering matters because node classification provides validation signals for link detection (e.g., only PERSON nodes can have EMPLOYED_BY links to ORG nodes), and field extraction requires stable entity boundaries.
+This ordering matters because node classification provides validation signals for link detection (e.g., only PERSON nodes can have EMPLOYED_BY links to ORG nodes), and field extraction requires stable subentity boundaries.
 
 ## Architecture: Three-stage pipeline with multi-vector embeddings
 
@@ -26,9 +26,9 @@ The winning architecture combines **deterministic span extraction with probabili
 ```
 Text Input
   ↓
-Stage 1: Entity Recognition (spaCy + hnswlib)
+Stage 1: Subentity Recognition (spaCy + hnswlib)
   ├─ Dependency parsing extracts noun chunks
-  ├─ hnswlib matches against 10K+ entity exemplars  
+  ├─ hnswlib matches against 10K+ subentity exemplars  
   ├─ Threshold 0.70: match existing | 0.60-0.70: review | <0.60: create new
   ↓
 Stage 2: Node Classification (SetFit hierarchical)
@@ -47,11 +47,11 @@ Knowledge Graph (Neo4j)
 
 **Why this works:** Each stage is deterministic and auditable. hnswlib gives identical results for identical inputs. SetFit with fixed random seed has less than 2% variance across runs. Pattern matching is fully deterministic. Only the embedding similarity scores introduce minor variance, which stays within acceptable bounds.
 
-## Entity recognition: hnswlib beats FAISS by 7x
+## Subentity recognition: hnswlib beats FAISS by 7x
 
-For entity matching against your existing entity library (which will grow to 10K+ entities), **hnswlib dominates FAISS on CPU** with 7.3x faster search, better memory layout, and AVX512 utilization. Benchmarks show 45,000 queries per second on CPU for 10K entities versus 6,000 QPS for FAISS.
+For subentity matching against your existing subentity library (which will grow to 10K+ subentities), **hnswlib dominates FAISS on CPU** with 7.3x faster search, better memory layout, and AVX512 utilization. Benchmarks show 45,000 queries per second on CPU for 10K subentities versus 6,000 QPS for FAISS.
 
-**Optimal configuration for entity matching:**
+**Optimal configuration for subentity matching:**
 
 ```python
 import hnswlib
@@ -62,24 +62,24 @@ model = SentenceTransformer('all-mpnet-base-v2')  # 768 dims, best accuracy
 index = hnswlib.Index(space='cosine', dim=768)
 index.init_index(max_elements=100000, ef_construction=200, M=32)
 
-# Build index from entity exemplars (5-10 variants per entity)
+# Build index from subentity exemplars (5-10 variants per subentity)
 entity_exemplars = {
     "Apple Inc": ["Apple Inc", "Apple", "Apple Computer", "AAPL"],
     "Microsoft": ["Microsoft", "Microsoft Corporation", "MSFT"],
-    # ... 10K+ entities
+    # ... 10K+ subentities
 }
 
 all_texts = []
 entity_map = []
-for entity, variants in entity_exemplars.items():
+for subentity, variants in entity_exemplars.items():
     all_texts.extend(variants)
-    entity_map.extend([entity] * len(variants))
+    entity_map.extend([subentity] * len(variants))
 
 embeddings = model.encode(all_texts, show_progress_bar=True)
 index.add_items(embeddings, np.arange(len(embeddings)))
 index.set_ef(50)  # Higher = more accurate
 
-# Match entity mentions (deterministic)
+# Match subentity mentions (deterministic)
 def match_entity(mention_text, match_threshold=0.70, review_threshold=0.60):
     mention_emb = model.encode([mention_text])
     labels, distances = index.knn_query(mention_emb, k=1)
@@ -93,9 +93,9 @@ def match_entity(mention_text, match_threshold=0.70, review_threshold=0.60):
         return ('create_new', None, similarity)
 ```
 
-**Critical thresholds from research:** Use 0.70 for balanced precision/recall on entity matching. Raising to 0.85+ gives high precision but loses 15-20% recall. Lowering to 0.60 catches more variants but introduces false matches. The 0.60-0.70 zone is your "human review" buffer.
+**Critical thresholds from research:** Use 0.70 for balanced precision/recall on subentity matching. Raising to 0.85+ gives high precision but loses 15-20% recall. Lowering to 0.60 catches more variants but introduces false matches. The 0.60-0.70 zone is your "human review" buffer.
 
-**Exemplar requirements:** Research shows 5-10 variants per entity provides reliable matching. Include common abbreviations, alternate spellings, and different phrasings. More than 20 exemplars per entity shows diminishing returns.
+**Exemplar requirements:** Research shows 5-10 variants per subentity provides reliable matching. Include common abbreviations, alternate spellings, and different phrasings. More than 20 exemplars per subentity shows diminishing returns.
 
 ## Node classification: SetFit with hierarchical decomposition
 
@@ -119,7 +119,7 @@ from setfit import SetFitModel, Trainer, TrainingArguments
 # Stage 1: Train coarse classifier (5-8 super-classes)
 coarse_model = SetFitModel.from_pretrained(
     "sentence-transformers/all-mpnet-base-v2",
-    labels=["Memory", "Emotional", "Decision", "Goal", "Entity"]  # 5 super-classes
+    labels=["Memory", "Emotional", "Decision", "Goal", "Subentity"]  # 5 super-classes
 )
 
 coarse_args = TrainingArguments(
@@ -141,7 +141,7 @@ coarse_trainer.train()
 
 # Stage 2: Train fine-grained classifiers (one per super-class)
 fine_models = {}
-for super_class in ["Memory", "Emotional", "Decision", "Goal", "Entity"]:
+for super_class in ["Memory", "Emotional", "Decision", "Goal", "Subentity"]:
     # Filter training data for this super-class
     sub_train = filter_by_superclass(train_dataset, super_class)
     
@@ -220,8 +220,8 @@ pattern_embeddings = {}
 for link_type, patterns in link_patterns.items():
     pattern_embeddings[link_type] = model.encode(patterns)
 
-def extract_links(text, entities):
-    """Extract links between recognized entities."""
+def extract_links(text, subentities):
+    """Extract links between recognized subentities."""
     doc = nlp(text)
     candidates = []
     
@@ -233,9 +233,9 @@ def extract_links(text, entities):
             
             for subj in subjects:
                 for obj in objects:
-                    # Match subjects/objects to entities
-                    entity1 = match_span_to_entity(subj.text, entities)
-                    entity2 = match_span_to_entity(obj.text, entities)
+                    # Match subjects/objects to subentities
+                    entity1 = match_span_to_entity(subj.text, subentities)
+                    entity2 = match_span_to_entity(obj.text, subentities)
                     
                     if entity1 and entity2:
                         # Extract relation phrase
@@ -281,7 +281,7 @@ def extract_simple_fields(entity_text, entity_type, context_sentence):
     doc = nlp(context_sentence)
     fields = {}
     
-    # Field: Entity name (always extract)
+    # Field: Subentity name (always extract)
     fields['name'] = entity_text
     
     # Field: Related dates (pattern-based)
@@ -367,11 +367,11 @@ def extract_emotion_vector(text):
 
 ## Span-based extraction: Chunking at noun phrase level
 
-**Noun chunks provide optimal granularity** for entity extraction—more precise than sentences, more complete than individual tokens. spaCy's noun chunking achieves 90%+ accuracy and runs in milliseconds.
+**Noun chunks provide optimal granularity** for subentity extraction—more precise than sentences, more complete than individual tokens. spaCy's noun chunking achieves 90%+ accuracy and runs in milliseconds.
 
 ```python
 def extract_entity_spans(text):
-    """Extract candidate entity spans using multiple strategies."""
+    """Extract candidate subentity spans using multiple strategies."""
     doc = nlp(text)
     candidates = []
     
@@ -384,13 +384,13 @@ def extract_entity_spans(text):
             'head': chunk.root.text
         })
     
-    # Strategy 2: Named entities (high confidence)
+    # Strategy 2: Named subentities (high confidence)
     for ent in doc.ents:
         candidates.append({
             'text': ent.text,
             'span': (ent.start_char, ent.end_char),
             'type': f'NER_{ent.label_}',
-            'confidence': 0.9  # Named entities are high confidence
+            'confidence': 0.9  # Named subentities are high confidence
         })
     
     # Strategy 3: Consecutive proper nouns
@@ -445,7 +445,7 @@ def aggregate_field_spans(field_description, candidate_spans, top_k=5, threshold
 
 Based on extensive research across similar systems, here are realistic performance targets for your 44 node + 38 link architecture:
 
-**Entity Recognition:**
+**Subentity Recognition:**
 - **Target:** 80-85% F1 on top 10 types, 70-75% F1 on rare types
 - **Speed:** <100ms per document (GPU), <500ms (CPU)
 - **Research baseline:** BiLSTM-CRF achieves 84-90% F1 on biomedical NER, PURE achieves 88.7% F1 on ACE05
@@ -457,13 +457,13 @@ Based on extensive research across similar systems, here are realistic performan
 
 **Link Detection (38 types):**
 - **Target:** 70-80% F1 on explicit relations, 60-70% F1 on implicit
-- **Speed:** <5ms per entity pair classification
+- **Speed:** <5ms per subentity pair classification
 - **Research baseline:** Pattern-based extraction achieves 70-86% precision at 70% recall, ComplEx achieves 0.45-0.55 MRR on link prediction
 
 **End-to-End Pipeline:**
 - **Target:** <2 seconds per response extraction (includes all stages)
 - **Achievable with:** GPU inference, batch size 16-32, pre-built hnswlib index, embedding cache
-- **Breakdown:** Embedding (100ms) + Entity matching (50ms) + Classification (20ms) + Link detection (200ms) + Graph construction (100ms) + Buffer (1530ms) = 2000ms
+- **Breakdown:** Embedding (100ms) + Subentity matching (50ms) + Classification (20ms) + Link detection (200ms) + Graph construction (100ms) + Buffer (1530ms) = 2000ms
 
 **State-of-the-art baselines:** Multi-class classification with 40+ classes typically achieves 70-85% macro F1. The challenging aspect is maintaining performance across rare classes—expect 5-10% lower F1 on the bottom 20% of types by frequency.
 
@@ -471,15 +471,15 @@ Based on extensive research across similar systems, here are realistic performan
 
 **Weeks 1-2: Data Foundation**
 - Annotate 500-1,000 examples across top 10 node types (50-100 per type)
-- Create entity exemplar library (5-10 variants for 100-500 key entities)
+- Create subentity exemplar library (5-10 variants for 100-500 key subentities)
 - Build gold standard test set (200 examples with full annotations)
 - Define hierarchical schema: group 44 types into 5-8 super-classes
 
-**Weeks 3-4: Entity Recognition**
+**Weeks 3-4: Subentity Recognition**
 - Implement spaCy-based span extraction (noun chunks + NER)
-- Build hnswlib index for entity matching
-- Train entity disambiguation model if needed
-- **Milestone:** Achieve 80% F1 on entity recognition for top 5 types
+- Build hnswlib index for subentity matching
+- Train subentity disambiguation model if needed
+- **Milestone:** Achieve 80% F1 on subentity recognition for top 5 types
 
 **Weeks 5-6: Node Classification**
 - Train coarse-grained SetFit classifier (5-8 super-classes)
@@ -494,7 +494,7 @@ Based on extensive research across similar systems, here are realistic performan
 - **Milestone:** Extract 70% of explicit causal relations
 
 **Weeks 9-10: Integration \u0026 Graph Construction**
-- Build end-to-end pipeline: text → entities → nodes → links → graph
+- Build end-to-end pipeline: text → subentities → nodes → links → graph
 - Implement Neo4j storage with property graph model
 - Add validation logic (schema constraints, confidence thresholds)
 - **Milestone:** Extract complete subgraphs from test documents
@@ -505,19 +505,19 @@ Based on extensive research across similar systems, here are realistic performan
 - Build monitoring dashboard (per-type metrics, confidence distributions)
 - **Milestone:** Production deployment with continuous evaluation
 
-**What to build first:** Entity recognition is the critical path. Everything else depends on accurate entity spans. Spend extra time here to get 80%+ F1 before moving to classification.
+**What to build first:** Subentity recognition is the critical path. Everything else depends on accurate subentity spans. Spend extra time here to get 80%+ F1 before moving to classification.
 
 **What to defer to v2:**
 - Complex field extraction requiring semantic role labeling
 - Rare node/link types (bottom 20% by frequency)
 - Multi-hop relationship inference
 - Emotion intensity fine-tuning with supervised models
-- Entity disambiguation for edge cases
+- Subentity disambiguation for edge cases
 
 **What to skip entirely:**
 - GNN implementations (10-100x complexity for 2-5% gain)
 - LLM-based extraction (non-deterministic, hallucination risk)
-- Perfect entity matching (accept 0.70 threshold, handle 0.60-0.70 with review)
+- Perfect subentity matching (accept 0.70 threshold, handle 0.60-0.70 with review)
 - Exhaustive schema coverage (80/20 rule: 20% of types cover 80% of instances)
 
 ## Critical decisions: Model selection matrix
@@ -525,7 +525,7 @@ Based on extensive research across similar systems, here are realistic performan
 | Component | Primary Choice | Rationale | Fallback Option |
 |-----------|---------------|-----------|-----------------|
 | **Embeddings** | all-mpnet-base-v2 | Best accuracy (87-88% semantic similarity), 768 dims, worth extra compute | all-MiniLM-L6-v2 (5x faster, 384 dims, −2-3% accuracy) |
-| **Entity Matching** | hnswlib | 7x faster than FAISS on CPU, 45K QPS | FAISS (use if GPU available or >100M entities) |
+| **Subentity Matching** | hnswlib | 7x faster than FAISS on CPU, 45K QPS | FAISS (use if GPU available or >100M subentities) |
 | **Node Classification** | SetFit hierarchical | 75-85% accuracy, trains in 30s, ±1-2% variance | Logistic Regression (70-80% accuracy, ±0.3% variance) |
 | **Link Prediction** | ComplEx + patterns | Handles 38 diverse types, deterministic patterns | SimplE (higher accuracy 0.71 vs 0.45 MRR, more complex) |
 | **Span Extraction** | spaCy noun chunks | 90%+ accuracy, millisecond speed, built-in | Dependency parsing (more flexible, slightly slower) |
@@ -533,7 +533,7 @@ Based on extensive research across similar systems, here are realistic performan
 
 **The all-mpnet-base-v2 model is non-negotiable** for your use case. With 44 node types requiring fine distinctions, the 2-5% accuracy gain over MiniLM is critical. At 768 dimensions, it provides sufficient capacity to represent your complex schema without dimensionality reduction artifacts.
 
-**hnswlib is the correct choice for entity matching** unless you need GPU acceleration or scale beyond 100M entities. The 7x CPU speedup enables sub-second entity resolution even with 10K+ entities in your library, and deterministic behavior with fixed parameters ensures reproducible results.
+**hnswlib is the correct choice for subentity matching** unless you need GPU acceleration or scale beyond 100M subentities. The 7x CPU speedup enables sub-second subentity resolution even with 10K+ subentities in your library, and deterministic behavior with fixed parameters ensures reproducible results.
 
 **SetFit with hierarchical classification is optimal** for 44 types because it achieves high accuracy with minimal training data (16-32 examples per class = 704-1,408 total), trains in minutes not hours, and maintains determinism with fixed random seed. The hierarchical approach reduces error propagation and improves interpretability.
 
@@ -554,57 +554,57 @@ class ExtractionPipeline:
         
     def extract_with_confidence(self, text):
         results = {
-            'entities': [],
+            'subentities': [],
             'nodes': [],
             'links': [],
             'uncertain': []  # Items needing review
         }
         
-        # Stage 1: Entity recognition
+        # Stage 1: Subentity recognition
         candidate_spans = self.extract_spans(text)
         
         for span in candidate_spans:
-            match_result, entity, confidence = self.match_entity(span['text'])
+            match_result, subentity, confidence = self.match_entity(span['text'])
             
             if confidence >= self.thresholds['entity_match']:
-                results['entities'].append({
+                results['subentities'].append({
                     'text': span['text'],
-                    'entity_id': entity,
+                    'entity_id': subentity,
                     'confidence': confidence,
                     'span': span['span']
                 })
             elif confidence >= self.thresholds['entity_review']:
                 results['uncertain'].append({
                     'text': span['text'],
-                    'suggested_entity': entity,
+                    'suggested_entity': subentity,
                     'confidence': confidence,
                     'reason': 'entity_match_below_threshold'
                 })
             else:
-                # Create new entity
+                # Create new subentity
                 new_entity_id = self.create_entity(span['text'])
-                results['entities'].append({
+                results['subentities'].append({
                     'text': span['text'],
                     'entity_id': new_entity_id,
-                    'confidence': 1.0,  # High confidence in new entity
+                    'confidence': 1.0,  # High confidence in new subentity
                     'span': span['span'],
                     'is_new': True
                 })
         
         # Stage 2: Node classification
-        for entity in results['entities']:
-            node_type, type_confidence = self.classify_node(entity['text'])
+        for subentity in results['subentities']:
+            node_type, type_confidence = self.classify_node(subentity['text'])
             
             if type_confidence >= self.thresholds['node_classification']:
                 results['nodes'].append({
-                    'entity_id': entity['entity_id'],
+                    'entity_id': subentity['entity_id'],
                     'type': node_type,
                     'confidence': type_confidence,
-                    'text': entity['text']
+                    'text': subentity['text']
                 })
             else:
                 results['uncertain'].append({
-                    'entity_id': entity['entity_id'],
+                    'entity_id': subentity['entity_id'],
                     'suggested_type': node_type,
                     'confidence': type_confidence,
                     'reason': 'type_classification_below_threshold'
@@ -709,19 +709,19 @@ class SchemaValidator:
 
 ## Summary: Start with SetFit + hnswlib, avoid GNNs
 
-Your optimal path forward combines **SetFit for classification, hnswlib for entity matching, and ComplEx embeddings with pattern matching for links**. This achieves the critical requirements: deterministic (±1-2% variance), fast (<2 seconds), accurate (70-80% F1 end-to-end), and avoids LLM interpretation entirely.
+Your optimal path forward combines **SetFit for classification, hnswlib for subentity matching, and ComplEx embeddings with pattern matching for links**. This achieves the critical requirements: deterministic (±1-2% variance), fast (<2 seconds), accurate (70-80% F1 end-to-end), and avoids LLM interpretation entirely.
 
-**Start building entity recognition first** (weeks 1-4), then node classification (weeks 5-6), then link detection (weeks 7-8). Defer complex field extraction and rare types to v2. This sequence respects the dependency chain and delivers a working prototype in 8 weeks.
+**Start building subentity recognition first** (weeks 1-4), then node classification (weeks 5-6), then link detection (weeks 7-8). Defer complex field extraction and rare types to v2. This sequence respects the dependency chain and delivers a working prototype in 8 weeks.
 
 **Skip GNN implementations entirely.** The 10-100x complexity overhead is not justified by 2-5% accuracy gains, and GNNs introduce non-determinism through stochastic training that conflicts with your consciousness substrate requirements.
 
 **Key technology choices:**
 - **Embeddings:** all-mpnet-base-v2 (768 dims, 87-88% semantic similarity)
-- **Entity matching:** hnswlib (7x faster than FAISS on CPU)
+- **Subentity matching:** hnswlib (7x faster than FAISS on CPU)
 - **Classification:** SetFit hierarchical (75-85% accuracy, 30s training)
 - **Link prediction:** ComplEx + patterns (handles 38 types, deterministic)
 - **Span extraction:** spaCy noun chunks (90%+ accuracy, millisecond speed)
 
-**Expected performance:** 80% entity recognition F1, 75% node classification accuracy, 70% link detection F1, under 2 seconds end-to-end latency on GPU. This meets production requirements while maintaining deterministic extraction and avoiding LLM hallucination risks.
+**Expected performance:** 80% subentity recognition F1, 75% node classification accuracy, 70% link detection F1, under 2 seconds end-to-end latency on GPU. This meets production requirements while maintaining deterministic extraction and avoiding LLM hallucination risks.
 
 The research is clear: simpler approaches with proper engineering outperform complex models for your constrained problem. Focus on data quality (good exemplars and patterns) over model complexity to achieve reliable consciousness substrate extraction.

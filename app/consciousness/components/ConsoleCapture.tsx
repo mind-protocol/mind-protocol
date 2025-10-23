@@ -109,7 +109,7 @@ export function ConsoleCapture() {
       try {
         // Request screen capture permission (shows browser popup)
         screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { mediaSource: 'screen' as any }
+          video: true
         });
 
         // Create video element to capture frames

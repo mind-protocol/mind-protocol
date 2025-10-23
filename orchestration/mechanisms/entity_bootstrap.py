@@ -1,9 +1,9 @@
 """
-Entity Bootstrap - Create entities from real citizen graphs.
+Subentity Bootstrap - Create subentities from real citizen graphs.
 
 Implements §7 of ENTITY_LAYER_ADDENDUM.md bootstrap procedure:
-1. Parse functional entities from Mechanism nodes (The Translator, The Architect, etc.)
-2. Create semantic entities via clustering on embeddings
+1. Parse functional subentities from Mechanism nodes (The Translator, The Architect, etc.)
+2. Create semantic subentities via clustering on embeddings
 3. Create BELONGS_TO and RELATES_TO links
 
 Uses real citizen graphs from FalkorDB.
@@ -19,7 +19,7 @@ from typing import List, Dict, Optional, Set
 from datetime import datetime
 from collections import defaultdict
 
-from orchestration.core import Node, Entity, Link, Graph, NodeType, LinkType
+from orchestration.core import Node, Subentity, Link, Graph, NodeType, LinkType
 from orchestration.core.types import EntityID
 
 logger = logging.getLogger(__name__)
@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 
 class EntityBootstrap:
     """
-    Bootstrap entity layer from existing citizen graphs.
+    Bootstrap subentity layer from existing citizen graphs.
 
     Two-phase approach:
-    1. Functional entities: Extract from Mechanism nodes (entity ecology)
-    2. Semantic entities: Cluster nodes by embedding similarity
+    1. Functional subentities: Extract from Mechanism nodes (subentity ecology)
+    2. Semantic subentities: Cluster nodes by embedding similarity
     """
 
     def __init__(self, graph: Graph):
@@ -39,19 +39,19 @@ class EntityBootstrap:
         Initialize bootstrap for a citizen graph.
 
         Args:
-            graph: Citizen graph to bootstrap entities from
+            graph: Citizen graph to bootstrap subentities from
         """
         self.graph = graph
         self.entity_keywords = self._load_entity_keywords()
 
     def _load_entity_keywords(self) -> Dict[str, List[str]]:
         """
-        Define keywords for functional entity roles.
+        Define keywords for functional subentity roles.
 
-        These help identify which nodes belong to each entity during bootstrap.
+        These help identify which nodes belong to each subentity during bootstrap.
 
         Returns:
-            Dict mapping entity roles to keyword lists
+            Dict mapping subentity roles to keyword lists
         """
         return {
             "translator": [
@@ -89,37 +89,37 @@ class EntityBootstrap:
             ]
         }
 
-    def bootstrap_functional_entities(self) -> List[Entity]:
+    def bootstrap_functional_entities(self) -> List[Subentity]:
         """
-        Extract functional entities from Mechanism nodes in graph.
+        Extract functional subentities from Mechanism nodes in graph.
 
-        Looks for nodes like "The Translator Entity", "The Architect Entity", etc.
-        These represent cognitive roles in the citizen's entity ecology.
+        Looks for nodes like "The Translator Subentity", "The Architect Subentity", etc.
+        These represent cognitive roles in the citizen's subentity ecology.
 
         Returns:
-            List of functional Entity objects created
+            List of functional Subentity objects created
         """
-        logger.info(f"Bootstrapping functional entities from graph {self.graph.id}")
+        logger.info(f"Bootstrapping functional subentities from graph {self.graph.id}")
 
         functional_entities = []
 
-        # Find all Mechanism nodes that look like entities
+        # Find all Mechanism nodes that look like subentities
         mechanism_nodes = self.graph.get_nodes_by_type(NodeType.MECHANISM)
 
         for node in mechanism_nodes:
-            # Check if node name indicates it's an entity
-            if "entity" in node.name.lower():
+            # Check if node name indicates it's an subentity
+            if "subentity" in node.name.lower():
                 # Extract role name
                 role = self._extract_role_from_name(node.name)
 
                 if role:
-                    # Create functional entity
-                    entity = self._create_functional_entity(node, role)
-                    functional_entities.append(entity)
+                    # Create functional subentity
+                    subentity = self._create_functional_entity(node, role)
+                    functional_entities.append(subentity)
 
-                    logger.info(f"  Created functional entity: {entity.id} ({role})")
+                    logger.info(f"  Created functional subentity: {subentity.id} ({role})")
 
-        logger.info(f"Created {len(functional_entities)} functional entities")
+        logger.info(f"Created {len(functional_entities)} functional subentities")
 
         return functional_entities
 
@@ -128,46 +128,46 @@ class EntityBootstrap:
         Extract role name from node name.
 
         Examples:
-            "The Translator Entity" -> "translator"
-            "Boundary Keeper Entity" -> "boundary_keeper"
-            "Observer Entity" -> "observer"
+            "The Translator Subentity" -> "translator"
+            "Boundary Keeper Subentity" -> "boundary_keeper"
+            "Observer Subentity" -> "observer"
 
         Args:
             name: Node name
 
         Returns:
-            Role name (snake_case) or None if not an entity
+            Role name (snake_case) or None if not an subentity
         """
         name_lower = name.lower()
 
         # Remove common prefixes/suffixes
         name_lower = name_lower.replace("the ", "")
-        name_lower = name_lower.replace(" entity", "")
+        name_lower = name_lower.replace(" subentity", "")
 
         # Convert to snake_case
         role = name_lower.strip().replace(" ", "_")
 
         return role if role else None
 
-    def _create_functional_entity(self, source_node: Node, role: str) -> Entity:
+    def _create_functional_entity(self, source_node: Node, role: str) -> Subentity:
         """
-        Create a functional Entity from a Mechanism node.
+        Create a functional Subentity from a Mechanism node.
 
         Args:
-            source_node: Mechanism node representing the entity
+            source_node: Mechanism node representing the subentity
             role: Role name (e.g., "translator", "architect")
 
         Returns:
-            Functional Entity object
+            Functional Subentity object
         """
         entity_id = f"entity_{self.graph.id}_{role}"
 
-        entity = Entity(
+        subentity = Subentity(
             id=entity_id,
             entity_kind="functional",
             role_or_topic=role,
             description=source_node.description,
-            stability_state="mature",  # Bootstrap entities start as mature
+            stability_state="mature",  # Bootstrap subentities start as mature
             scope=source_node.scope if hasattr(source_node, 'scope') else "personal",
             created_from="role_seed",
             created_by=f"bootstrap_{self.graph.id}",
@@ -176,24 +176,24 @@ class EntityBootstrap:
             valid_at=datetime.now()
         )
 
-        # Add entity to graph
-        self.graph.add_entity(entity)
+        # Add subentity to graph
+        self.graph.add_entity(subentity)
 
         # Find member nodes via keyword matching
-        self._assign_members_by_keywords(entity, role)
+        self._assign_members_by_keywords(subentity, role)
 
-        return entity
+        return subentity
 
-    def _assign_members_by_keywords(self, entity: Entity, role: str) -> None:
+    def _assign_members_by_keywords(self, subentity: Subentity, role: str) -> None:
         """
-        Assign nodes to entity via keyword matching.
+        Assign nodes to subentity via keyword matching.
 
-        Searches for nodes whose descriptions contain entity keywords.
+        Searches for nodes whose descriptions contain subentity keywords.
         Creates BELONGS_TO links with membership weights based on match score.
 
         Args:
-            entity: Entity to assign members to
-            role: Entity role (for keyword lookup)
+            subentity: Subentity to assign members to
+            role: Subentity role (for keyword lookup)
         """
         keywords = self.entity_keywords.get(role, [])
 
@@ -206,8 +206,8 @@ class EntityBootstrap:
         match_scores = []
 
         for node in self.graph.nodes.values():
-            # Skip self-reference if entity came from a node
-            if node.id == entity.id:
+            # Skip self-reference if subentity came from a node
+            if node.id == subentity.id:
                 continue
 
             # Compute keyword match score
@@ -226,14 +226,14 @@ class EntityBootstrap:
             for node, weight in zip(member_nodes, normalized_scores):
                 # Only create link if weight is meaningful
                 if weight >= 0.1:
-                    link_id = f"belongs_{node.id}_{entity.id}"
+                    link_id = f"belongs_{node.id}_{subentity.id}"
 
                     link = Link(
                         id=link_id,
                         source_id=node.id,
-                        target_id=entity.id,
+                        target_id=subentity.id,
                         link_type=LinkType.BELONGS_TO,
-                        entity=self.graph.id,
+                        subentity=self.graph.id,
                         weight=weight,
                         energy=0.0,
                         properties={
@@ -244,9 +244,9 @@ class EntityBootstrap:
 
                     self.graph.add_link(link)
 
-            entity.member_count = len([w for w in normalized_scores if w >= 0.1])
+            subentity.member_count = len([w for w in normalized_scores if w >= 0.1])
 
-            logger.debug(f"  Assigned {entity.member_count} members to {entity.id}")
+            logger.debug(f"  Assigned {subentity.member_count} members to {subentity.id}")
 
     def _compute_keyword_match(self, text: str, keywords: List[str]) -> float:
         """
@@ -267,20 +267,20 @@ class EntityBootstrap:
         self,
         n_clusters: int = 10,
         min_cluster_size: int = 3
-    ) -> List[Entity]:
+    ) -> List[Subentity]:
         """
-        Create semantic entities via clustering.
+        Create semantic subentities via clustering.
 
-        Groups nodes by embedding similarity, creating topic-based entities.
+        Groups nodes by embedding similarity, creating topic-based subentities.
 
         Args:
             n_clusters: Number of clusters to create
             min_cluster_size: Minimum nodes per cluster
 
         Returns:
-            List of semantic Entity objects created
+            List of semantic Subentity objects created
         """
-        logger.info(f"Bootstrapping semantic entities from graph {self.graph.id}")
+        logger.info(f"Bootstrapping semantic subentities from graph {self.graph.id}")
 
         # Get all nodes with embeddings
         nodes_with_embeddings = []
@@ -307,7 +307,7 @@ class EntityBootstrap:
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         labels = kmeans.fit_predict(embeddings_array)
 
-        # Create entity per cluster
+        # Create subentity per cluster
         semantic_entities = []
 
         for cluster_id in range(n_clusters):
@@ -323,19 +323,19 @@ class EntityBootstrap:
             # Generate topic label
             topic_label = self._generate_topic_label(cluster_nodes, cluster_id)
 
-            # Create semantic entity
-            entity = self._create_semantic_entity(
+            # Create semantic subentity
+            subentity = self._create_semantic_entity(
                 cluster_nodes,
                 kmeans.cluster_centers_[cluster_id],
                 topic_label,
                 cluster_id
             )
 
-            semantic_entities.append(entity)
+            semantic_entities.append(subentity)
 
-            logger.info(f"  Created semantic entity: {entity.id} ({topic_label})")
+            logger.info(f"  Created semantic subentity: {subentity.id} ({topic_label})")
 
-        logger.info(f"Created {len(semantic_entities)} semantic entities")
+        logger.info(f"Created {len(semantic_entities)} semantic subentities")
 
         return semantic_entities
 
@@ -400,9 +400,9 @@ class EntityBootstrap:
         centroid: np.ndarray,
         topic_label: str,
         cluster_id: int
-    ) -> Entity:
+    ) -> Subentity:
         """
-        Create a semantic Entity from clustered nodes.
+        Create a semantic Subentity from clustered nodes.
 
         Args:
             member_nodes: Nodes in this cluster
@@ -411,17 +411,17 @@ class EntityBootstrap:
             cluster_id: Cluster identifier
 
         Returns:
-            Semantic Entity object
+            Semantic Subentity object
         """
         entity_id = f"entity_{self.graph.id}_semantic_{topic_label}"
 
-        entity = Entity(
+        subentity = Subentity(
             id=entity_id,
             entity_kind="semantic",
             role_or_topic=topic_label,
             description=f"Semantic cluster: {topic_label} ({len(member_nodes)} nodes)",
             centroid_embedding=centroid,
-            stability_state="provisional",  # Semantic entities start provisional
+            stability_state="provisional",  # Semantic subentities start provisional
             scope="organizational",  # Semantic topics are shared
             created_from="semantic_clustering",
             created_by=f"bootstrap_{self.graph.id}",
@@ -431,8 +431,8 @@ class EntityBootstrap:
             valid_at=datetime.now()
         )
 
-        # Add entity to graph
-        self.graph.add_entity(entity)
+        # Add subentity to graph
+        self.graph.add_entity(subentity)
 
         # Create BELONGS_TO links
         for node in member_nodes:
@@ -443,14 +443,14 @@ class EntityBootstrap:
             else:
                 weight = 0.5  # Default weight for nodes without embeddings
 
-            link_id = f"belongs_{node.id}_{entity.id}"
+            link_id = f"belongs_{node.id}_{subentity.id}"
 
             link = Link(
                 id=link_id,
                 source_id=node.id,
-                target_id=entity.id,
+                target_id=subentity.id,
                 link_type=LinkType.BELONGS_TO,
-                entity=self.graph.id,
+                subentity=self.graph.id,
                 weight=max(0.1, weight),  # Ensure minimum weight
                 energy=0.0,
                 properties={
@@ -461,13 +461,13 @@ class EntityBootstrap:
 
             self.graph.add_link(link)
 
-        return entity
+        return subentity
 
     def create_relates_to_links(self, semantic_distance_threshold: float = 0.5) -> int:
         """
-        Create RELATES_TO links between entities.
+        Create RELATES_TO links between subentities.
 
-        Connects entities that are semantically close (cosine similarity).
+        Connects subentities that are semantically close (cosine similarity).
 
         Args:
             semantic_distance_threshold: Maximum distance for link creation
@@ -479,10 +479,10 @@ class EntityBootstrap:
 
         links_created = 0
 
-        entities = list(self.graph.entities.values())
+        subentities = list(self.graph.subentities.values())
 
-        for i, entity_a in enumerate(entities):
-            for entity_b in entities[i+1:]:
+        for i, entity_a in enumerate(subentities):
+            for entity_b in subentities[i+1:]:
                 # Skip if no centroids
                 if entity_a.centroid_embedding is None or entity_b.centroid_embedding is None:
                     continue
@@ -504,7 +504,7 @@ class EntityBootstrap:
                             source_id=source.id,
                             target_id=target.id,
                             link_type=LinkType.RELATES_TO,
-                            entity=self.graph.id,
+                            subentity=self.graph.id,
                             weight=1.0,
                             energy=0.0,
                             properties={
@@ -553,9 +553,9 @@ class EntityBootstrap:
         """
         Run complete bootstrap procedure.
 
-        1. Create functional entities from Mechanism nodes
-        2. Create semantic entities via clustering
-        3. Create RELATES_TO links between entities
+        1. Create functional subentities from Mechanism nodes
+        2. Create semantic subentities via clustering
+        3. Create RELATES_TO links between subentities
 
         Args:
             n_semantic_clusters: Number of semantic clusters
@@ -565,12 +565,12 @@ class EntityBootstrap:
         Returns:
             Dict with bootstrap statistics
         """
-        logger.info(f"Starting complete entity bootstrap for graph {self.graph.id}")
+        logger.info(f"Starting complete subentity bootstrap for graph {self.graph.id}")
 
-        # Phase 1: Functional entities
+        # Phase 1: Functional subentities
         functional_entities = self.bootstrap_functional_entities()
 
-        # Phase 2: Semantic entities
+        # Phase 2: Semantic subentities
         semantic_entities = self.bootstrap_semantic_entities(
             n_clusters=n_semantic_clusters,
             min_cluster_size=min_cluster_size
@@ -601,7 +601,7 @@ class EntityBootstrap:
 
 def bootstrap_citizen_graph(graph_id: str) -> Dict[str, int]:
     """
-    Bootstrap entities for a specific citizen graph.
+    Bootstrap subentities for a specific citizen graph.
 
     Args:
         graph_id: Graph identifier (e.g., "citizen_luca")
@@ -619,7 +619,7 @@ def bootstrap_citizen_graph(graph_id: str) -> Dict[str, int]:
     bootstrap = EntityBootstrap(graph)
     stats = bootstrap.run_complete_bootstrap()
 
-    # TODO: Persist entities to FalkorDB
+    # TODO: Persist subentities to FalkorDB
 
     return stats
 
@@ -631,11 +631,11 @@ if __name__ == "__main__":
     stats = bootstrap_citizen_graph("citizen_luca")
 
     print("\n" + "="*70)
-    print("ENTITY BOOTSTRAP COMPLETE")
+    print("SUBENTITY BOOTSTRAP COMPLETE")
     print("="*70)
-    print(f"Functional entities: {stats['functional_entities']}")
-    print(f"Semantic entities: {stats['semantic_entities']}")
-    print(f"Total entities: {stats['total_entities']}")
+    print(f"Functional subentities: {stats['functional_entities']}")
+    print(f"Semantic subentities: {stats['semantic_entities']}")
+    print(f"Total subentities: {stats['total_entities']}")
     print(f"BELONGS_TO links: {stats['belongs_to_links']}")
     print(f"RELATES_TO links: {stats['relates_to_links']}")
     print("="*70)

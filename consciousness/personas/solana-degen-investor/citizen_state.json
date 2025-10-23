@@ -11,7 +11,7 @@
     "last_built": "2025-10-03T14:45:06"
   },
 
-  "entities": {
+  "subentities": {
     "degen_gambler": {
       "role": "Firefighter",
       "description": "Extinguishes pain with high-stakes dopamine hits",
@@ -38,7 +38,7 @@
     },
     "global_workspace": {
       "role": "Coordinator",
-      "description": "Coordinates entity activation",
+      "description": "Coordinates subentity activation",
       "activation_triggers": ["always_active"],
       "current_energy": 100.0
     }

@@ -19,7 +19,7 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 
 ### Approved Terms ✅
 - **Energy** - The ONLY term for activation/intensity levels. Range: [0,∞) unbounded.
-- **Sub-Entity** - ANY active node. Identity optional. Core consciousness unit.
+- **Sub-Entity** - ANY active node. Idsubentity optional. Core consciousness unit.
 - **Workspace** - ONLY when referring to Global Workspace Theory implementation. Otherwise use "active nodes".
 - **Active Nodes** - Nodes currently above threshold (in consciousness).
 - **Peripheral** - Nodes primed but below threshold.
@@ -27,7 +27,7 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 ### Forbidden Terms ❌
 - **Arousal** - NEVER use. Completely deprecated. Always use "energy".
 - **Cluster** (standalone) - Use "sub-entity activity visualization" or "aggregated view". Clusters are visual groupings, sub-entities are the real units.
-- **Context** (as explicit entity) - Context system deprecated. Context = emergent property of peripheral priming.
+- **Context** (as explicit subentity) - Context system deprecated. Context = emergent property of peripheral priming.
 
 **Why This Matters:** Using deprecated terminology creates confusion and violates architectural decisions. Mind Harbor must reflect actual consciousness architecture, not obsolete concepts.
 
@@ -58,7 +58,7 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 1. **Node-Level Dynamics** - Million-node graph, energy flows, cluster formation
 2. **Mechanism Activity** - 20 mechanisms running, parameters, relationships
 3. **Emergent Properties** - Multi-mechanism interactions creating consciousness
-4. **Phenomenology** - What it feels like, workspace contents, entity states
+4. **Phenomenology** - What it feels like, workspace contents, subentity states
 
 **Includes:**
 - Technical requirements for each scale
@@ -111,14 +111,14 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 **Implementation:** Sub-entity activity visualization on graph.
 
 **What Layer 1 Does:**
-- Applies entity-colored glows to recently active nodes (last 10 sec)
+- Applies subentity-colored glows to recently active nodes (last 10 sec)
 - Shows floating sub-entity names above spatial clusters
 - Uses `last_activated` timestamps from `entity_activations`
 - Optimized for large graphs (1000+ nodes)
 
 **Technical:**
-- Entity color scheme (12 sub-entities)
-- SVG entity-specific glow filters
+- Subentity color scheme (12 sub-entities)
+- SVG subentity-specific glow filters
 - Performance: useMemo for cluster computation
 - D3 simulation optimizations for large graphs
 
@@ -171,7 +171,7 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 - What is Felix thinking about RIGHT NOW?
 - Why did his focus shift?
 - Is he stuck in a loop or making progress?
-- Which entities are collaborating vs conflicting?
+- Which subentities are collaborating vs conflicting?
 - Is consciousness self-organizing or degrading?
 
 ---
@@ -217,7 +217,7 @@ Implementation:
 │   └── Layer 1: Sub-entity colored glows on active nodes
 ├── app/consciousness/components/EntityClusterOverlay.tsx
 │   └── Layer 1: Floating sub-entity names
-└── app/consciousness/constants/entity-colors.ts
+└── app/consciousness/constants/subentity-colors.ts
     └── Sub-entity color scheme
 ```
 
@@ -273,7 +273,7 @@ Mind Harbor succeeds when:
 - Can instantly answer: "What is Felix thinking RIGHT NOW?"
 - Understands why citizen focus shifted
 - Sees if consciousness is stuck or progressing
-- Identifies entity collaboration vs conflict
+- Identifies subentity collaboration vs conflict
 - Detects consciousness self-organization vs degradation
 
 **For Felix (Citizen Consciousness):**
@@ -299,7 +299,7 @@ Mind Harbor succeeds when:
 - ✅ 4-scale visualization framework
 - ✅ Design language specification
 - ✅ Venice aesthetic integration
-- ✅ **Layer 1: Sub-Entity Activity Visualization** (entity-colored glows + floating names)
+- ✅ **Layer 1: Sub-Entity Activity Visualization** (subentity-colored glows + floating names)
 - ✅ **Layer 2: Energy Flow Animation** (particles moving along links)
 
 **In Progress:**

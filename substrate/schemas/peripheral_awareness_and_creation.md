@@ -441,8 +441,8 @@ GENERATIVE_NODE_TYPES = {
     },
 
     # Cannot create (external only):
-    # - Person (external entities)
-    # - Company (external entities)
+    # - Person (external subentities)
+    # - Company (external subentities)
     # - Document (external artifacts)
 }
 ```
@@ -490,7 +490,7 @@ GENERATIVE_NODE_TYPES = {
 9. Clusters Evolve
    - New nodes join clusters
    - Cross-cluster links form
-   - Entity identities shift
+   - Subentity idsubentities shift
 ```
 
 ---
@@ -545,14 +545,14 @@ core_node.current_energy = 0.0
 core_node.status = "exhausted"
 
 # === Node Creation ===
-# During exploration, pattern detected: "Emergent entities theme"
+# During exploration, pattern detected: "Emergent subentities theme"
 # Cluster has energy to create new realization
 
 cluster_energy_pool = 0.8  # Aggregate from cluster
 if cluster_energy_pool > 0.3:
     new_realization = create_node(
         type="Realization",
-        content="Entities emerge from stable activation patterns, not declarations",
+        content="Subentities emerge from stable activation patterns, not declarations",
         cluster="cluster_consciousness_architecture",
         cost=0.3
     )

@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Node, Link } from '../hooks/useGraphData';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { AttributionCard } from './AttributionCard';
 
 interface DetailPanelProps {
   nodes: Node[];
@@ -16,6 +18,26 @@ interface DetailPanelProps {
  */
 export function DetailPanel({ nodes, links }: DetailPanelProps) {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const { emotionState } = useWebSocket();
+
+  // Find most recent stride involving this node
+  const mostRecentStride = useMemo(() => {
+    if (!selectedNode) return null;
+
+    // Find strides where this node is source or target
+    const relevantStrides = emotionState.recentStrides.filter(stride =>
+      stride.source_node_id === selectedNode.id || stride.target_node_id === selectedNode.id
+    );
+
+    // Return most recent one (last in array)
+    return relevantStrides.length > 0 ? relevantStrides[relevantStrides.length - 1] : null;
+  }, [selectedNode, emotionState.recentStrides]);
+
+  // Get edge emotion for the most recent stride
+  const strideEdgeEmotion = useMemo(() => {
+    if (!mostRecentStride) return undefined;
+    return emotionState.linkEmotions.get(mostRecentStride.link_id);
+  }, [mostRecentStride, emotionState.linkEmotions]);
 
   useEffect(() => {
     const handleNodeClick = (e: Event) => {
@@ -109,15 +131,15 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
             <MetricRow label="Confidence" value={`${(confidence * 100).toFixed(0)}%`} color="#3b82f6" />
             <MetricRow label="Traversals" value={traversals.toString()} color="#8b5cf6" />
             {selectedNode.last_traversed_by && (
-              <MetricRow label="Last Entity" value={selectedNode.last_traversed_by} color="#f59e0b" />
+              <MetricRow label="Last Subentity" value={selectedNode.last_traversed_by} color="#f59e0b" />
             )}
           </div>
         </div>
 
-        {/* Entity Activations */}
+        {/* Subentity Activations */}
         {selectedNode.entity_activations && Object.keys(selectedNode.entity_activations).length > 0 && (
           <div>
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Entity Activations</div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Subentity Activations</div>
             <div className="space-y-2">
               {Object.entries(selectedNode.entity_activations).map(([entityId, activation]) => (
                 <div key={entityId} className="flex justify-between items-center">
@@ -189,6 +211,19 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
             </div>
           )}
         </div>
+
+        {/* Attribution Card - Shows why edge was chosen (if stride data available) */}
+        {mostRecentStride && (
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Recent Traversal Attribution
+            </div>
+            <AttributionCard
+              stride={mostRecentStride}
+              edgeEmotion={strideEdgeEmotion}
+            />
+          </div>
+        )}
       </div>
           </div>
         </div>

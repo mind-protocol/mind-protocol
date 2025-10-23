@@ -25,17 +25,17 @@ from datetime import datetime, timezone
 
 def setup_test_graph(graph_store):
     """
-    Create a small test graph with entities and activation links.
+    Create a small test graph with subentities and activation links.
 
     Structure:
-    - 3 entities: Builder, Translator, Validator
+    - 3 subentities: Builder, Translator, Validator
     - ACTIVATES relationships between them
     - Different base_weight and reinforcement_weight values
     """
     print("\n[Setup] Creating test graph...")
 
-    # Create entities with different weights
-    entities = [
+    # Create subentities with different weights
+    subentities = [
         {
             "id": "builder",
             "name": "Builder",
@@ -62,10 +62,10 @@ def setup_test_graph(graph_store):
         }
     ]
 
-    # Create entities
-    for entity in entities:
+    # Create subentities
+    for subentity in subentities:
         cypher = f"""
-        CREATE (e:Entity {{
+        CREATE (e:Subentity {{
             id: $id,
             name: $name,
             activity_level: $activity_level,
@@ -75,7 +75,7 @@ def setup_test_graph(graph_store):
             created_at: timestamp()
         }})
         """
-        graph_store.query(cypher, params=entity)
+        graph_store.query(cypher, params=subentity)
 
     # Create ACTIVATES relationships
     activations = [
@@ -86,8 +86,8 @@ def setup_test_graph(graph_store):
 
     for source, target, coefficient in activations:
         cypher = """
-        MATCH (source:Entity {id: $source_id})
-        MATCH (target:Entity {id: $target_id})
+        MATCH (source:Subentity {id: $source_id})
+        MATCH (target:Subentity {id: $target_id})
         CREATE (source)-[:ACTIVATES {
             active: true,
             activity_transfer_coefficient: $coefficient,
@@ -101,7 +101,7 @@ def setup_test_graph(graph_store):
             "coefficient": coefficient
         })
 
-    print(f"[Setup] Created {len(entities)} entities and {len(activations)} activation links")
+    print(f"[Setup] Created {len(subentities)} subentities and {len(activations)} activation links")
 
 
 def verify_energy_propagation(graph_store):
@@ -202,9 +202,9 @@ def verify_energy_decay(graph_store):
     """Verify energy decay is working."""
     print("\n[Test 3] Verifying energy decay...")
 
-    # Check entity activity levels
+    # Check subentity activity levels
     cypher = """
-    MATCH (e:Entity)
+    MATCH (e:Subentity)
     RETURN
         e.name AS name,
         e.activity_level AS activity_level,
@@ -214,7 +214,7 @@ def verify_energy_decay(graph_store):
 
     results = graph_store.query(cypher)
 
-    print(f"[Test 3] Entity energy levels:")
+    print(f"[Test 3] Subentity energy levels:")
     for row in results:
         name, activity, budget = row
         print(f"  {name}: activity={activity:.4f}, budget={budget:.4f}")
@@ -224,7 +224,7 @@ def verify_energy_decay(graph_store):
         print(f"[Test 3] PASS - Energy tracking present")
         return True
     else:
-        print(f"[Test 3] FAIL - No entities found")
+        print(f"[Test 3] FAIL - No subentities found")
         return False
 
 

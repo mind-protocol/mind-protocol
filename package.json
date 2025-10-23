@@ -11,13 +11,16 @@
   },
   "dependencies": {
     "@types/d3": "^7.4.3",
-    "critters": "^0.0.23",
+    "critters": "^0.0.25",
     "d3": "^7.9.0",
-    "entities": "^7.0.0",
+    "entities": "6.0.1",
     "next": "^15.0.0",
     "pixi.js": "^7.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "overrides": {
+    "htmlparser2": "^10.0.0"
   },
   "devDependencies": {
     "@types/html2canvas": "^0.5.35",

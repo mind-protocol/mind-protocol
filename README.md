@@ -25,11 +25,11 @@ This architecture is self-contained. All LLM operations are handled by our **Cou
     4.  LlamaIndex (Couche 2) acts as a simple database driver and writes the JSON to FalkorDB (Couche 1).
 
 * **Reading Flux (Blue Arrow):**
-    1.  An Entity (Couche 3) generates an "Intention" (e.g., "Need context on V2").
-    2.  The Entity (Couche 3) calls LlamaIndex (Couche 2).
+    1.  An Subentity (Couche 3) generates an "Intention" (e.g., "Need context on V2").
+    2.  The Subentity (Couche 3) calls LlamaIndex (Couche 2).
     3.  LlamaIndex (Couche 2) is configured with a **`CustomClaudeCodeLLM` class**. When it needs to translate the Intention into a Cypher query, it doesn't call an API.
     4.  Instead, its `CustomClaudeCodeLLM` executes the shell command: `cd /path/to/citizen/ && claude -p "TRANSLATE_TO_CYPHER_PROMPT..."` (Couche 3).
-    5.  LlamaIndex (Couche 2) gets the query back, queries FalkorDB (Couche 1), fuses the results, and returns clean context to the Entity (Couche 3).
+    5.  LlamaIndex (Couche 2) gets the query back, queries FalkorDB (Couche 1), fuses the results, and returns clean context to the Subentity (Couche 3).
 
 ---
 

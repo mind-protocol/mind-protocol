@@ -105,7 +105,7 @@ Pydantic validators enforce:
 | **Realization** | what_i_realized, context_when_discovered | Insight or comprehension shift |
 | **Wound** | what_happened, emotional_impact | Personal scar or trauma |
 | **Coping_Mechanism** | mechanism_description, what_it_protects_from | Response to stress |
-| **Trigger** | stimulus_description, activated_entities | What awakens entity coalitions |
+| **Trigger** | stimulus_description, activated_entities | What awakens subentity coalitions |
 
 ### Organizational/Collective Consciousness (N2) - 13 Types
 
@@ -493,7 +493,7 @@ The schema preserves V1's phenomenological richness:
 
 1. **Energy tracking**: Every relation has `energy` (0.0-1.0)
 2. **Emotion vectors**: Complex emotions with intensities (e.g., "defensive-curiosity": 0.3)
-3. **Mindstate capture**: Internal entity coalitions recorded (e.g., "Builder + Skeptic")
+3. **Mindstate capture**: Internal subentity coalitions recorded (e.g., "Builder + Skeptic")
 4. **Formation tracking**: How knowledge emerged (direct_experience vs inference)
 5. **Validation evolution**: theoretical → experiential → tested → proven
 
@@ -501,7 +501,7 @@ The schema preserves V1's phenomenological richness:
 
 1. Does `energy` (0.0-1.0) capture intensity adequately, or do we need separate dimensions (urgency vs. intensity)?
 2. Are the `FormationTrigger` enum values complete, or are there other discovery modes?
-3. Should `mindstate` be free text or an enum of known entity coalitions?
+3. Should `mindstate` be free text or an enum of known subentity coalitions?
 4. Does `emotion_vector` need valence/energy dimensions, or is intensity sufficient?
 
 **Next collaboration (Phase 2):** Curate N2/N3 seed data using these node/relation types.

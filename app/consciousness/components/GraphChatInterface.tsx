@@ -116,7 +116,7 @@ export function GraphChatInterface({ nodes, links }: GraphChatInterfaceProps) {
               <div className="text-gray-500 text-sm text-center mt-8">
                 <p>Ask questions about the consciousness state:</p>
                 <ul className="mt-3 space-y-1 text-xs text-left">
-                  <li>• "Which entity is most active?"</li>
+                  <li>• "Which subentity is most active?"</li>
                   <li>• "What are the strongest connections?"</li>
                   <li>• "Show me high-energy clusters"</li>
                   <li>• "What's the current focus?"</li>
@@ -205,7 +205,7 @@ function getGraphContext(nodes: Node[], links: Link[], limit = 20) {
       type: n.node_type,
       weight: n.weight
     })),
-    entities: extractEntities(nodes)
+    subentities: extractSubentities(nodes)
   };
 }
 
@@ -217,7 +217,7 @@ function computeNodeWeight(node: Node): number {
   return (energy * 0.4) + (confidence * 0.3) + (normalizedTraversals * 0.3);
 }
 
-function extractEntities(nodes: Node[]): string[] {
+function extractSubentities(nodes: Node[]): string[] {
   const entitySet = new Set<string>();
   nodes.forEach(node => {
     if (node.entity_activations) {
@@ -231,12 +231,12 @@ async function mockGraphQuery(query: string, context: any): Promise<string> {
   // Mock response based on query keywords
   const lowerQuery = query.toLowerCase();
 
-  if (lowerQuery.includes('most active') || lowerQuery.includes('which entity')) {
-    const entities = context.entities;
-    if (entities.length > 0) {
-      return `Based on current activity, ${entities[0]} appears to be the most active entity in the graph.`;
+  if (lowerQuery.includes('most active') || lowerQuery.includes('which subentity')) {
+    const subentities = context.subentities;
+    if (subentities.length > 0) {
+      return `Based on current activity, ${subentities[0]} appears to be the most active subentity in the graph.`;
     }
-    return "No entities are currently active in the graph.";
+    return "No subentities are currently active in the graph.";
   }
 
   if (lowerQuery.includes('strongest') || lowerQuery.includes('connections')) {
@@ -261,5 +261,5 @@ async function mockGraphQuery(query: string, context: any): Promise<string> {
   }
 
   // Default response
-  return `The graph contains ${context.nodeCount} nodes and ${context.linkCount} links. ${context.entities.length} entities are active.`;
+  return `The graph contains ${context.nodeCount} nodes and ${context.linkCount} links. ${context.subentities.length} subentities are active.`;
 }

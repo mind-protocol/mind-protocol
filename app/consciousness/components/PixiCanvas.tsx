@@ -18,8 +18,8 @@ interface PixiCanvasProps {
   nodes: Node[];
   links: Link[];
   operations: Operation[];
-  entities?: { entity_id: string; name?: string }[];
-  selectedEntity?: string;
+  subentities?: { entity_id: string; name?: string }[];
+  selectedSubentity?: string;
   workingMemory?: Set<string>;
   linkFlows?: Map<string, number>;
   recentFlips?: Array<{ node_id: string; direction: 'on' | 'off'; timestamp: number }>;
@@ -29,8 +29,8 @@ export function PixiCanvas({
   nodes,
   links,
   operations,
-  entities = [],
-  selectedEntity = 'structural',
+  subentities = [],
+  selectedSubentity = 'structural',
   workingMemory,
   linkFlows,
   recentFlips,
@@ -91,12 +91,12 @@ export function PixiCanvas({
         last_traversal: (l as any).last_traversal,
         traversal_count: (l as any).traversal_count,
       })),
-      entities: entities.map((e) => ({
+      subentities: subentities.map((e) => ({
         entity_id: e.entity_id,
         name: e.name,
       })),
       operations: operations as any,
-      selectedEntity,
+      selectedSubentity,
       workingMemory,
       linkFlows,
       recentFlips,
@@ -111,7 +111,7 @@ export function PixiCanvas({
       nodeCount: stats.nodeCount,
       linkCount: stats.linkCount,
     });
-  }, [nodes, links, entities, selectedEntity]); // operations excluded - changes too frequently
+  }, [nodes, links, subentities, selectedSubentity]); // operations excluded - changes too frequently
 
   // Handle window resize
   useEffect(() => {

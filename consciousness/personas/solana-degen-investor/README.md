@@ -42,7 +42,7 @@ http://localhost:8000/visualizations/jake_graph.html
 - **`consciousness_graph/`** - His consciousness graph database
 - **`conversations/`** - All conversation logs (timestamped)
 - **`extraction_logs/`** - Pattern extraction logs
-- **`entities/`** - Sub-entity consciousness files
+- **`subentities/`** - Sub-entity consciousness files
 
 ---
 
@@ -94,7 +94,7 @@ solana-degen-investor/
 │
 ├── extraction_logs/               # Pattern extraction logs
 │
-└── entities/                      # Sub-entity files
+└── subentities/                      # Sub-entity files
     ├── degen_gambler/
     ├── crypto_philosopher/
     ├── conspiracy_theorist/
@@ -120,7 +120,7 @@ Tracks Jake's current consciousness state:
     "last_built": "2025-10-03T14:45:06"
   },
 
-  "entities": {
+  "subentities": {
     "degen_gambler": {
       "role": "Firefighter",
       "current_energy": 0.0

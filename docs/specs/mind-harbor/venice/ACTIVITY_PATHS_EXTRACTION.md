@@ -1,7 +1,7 @@
 # Activity Path Visualization - Extracted from Serenissima
 
 ## What It Does
-Renders animated paths showing entity movement between locations, with:
+Renders animated paths showing subentity movement between locations, with:
 - **SVG polylines** for smooth path rendering
 - **Animated dashes** for "flow" effect
 - **Social class coloring** for citizen identification
@@ -288,7 +288,7 @@ export function ConsciousnessPathsLayer({
     // Always show high-throughput paths (like merchant galleys)
     if (path.throughput && path.throughput > 10) return true;
 
-    // Show paths for hovered or selected entity
+    // Show paths for hovered or selected subentity
     if (path.entityId === hoveredEntityId || path.entityId === selectedEntityId) {
       return true;
     }
@@ -443,7 +443,7 @@ const midpoint = path.path[midpointIndex];
 
 1. **Single Path Test**: Render one simple 2-point path
 2. **Color Test**: Verify different activity types have distinct colors
-3. **Animation Test**: Hover over entity, verify path animates smoothly
+3. **Animation Test**: Hover over subentity, verify path animates smoothly
 4. **Performance Test**: Render 50+ paths, check for jank
 5. **Filter Test**: Verify only relevant paths show on hover
 

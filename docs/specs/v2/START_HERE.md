@@ -1,19 +1,15 @@
-Absolutely. Here’s a **single, authoritative recap** you can hand to the whole team. It starts with a **Truths vs. Myths** page, then gives the **minimal mental model**, precise **data model**, and the **algorithms** (stimuli → activation → multi‑scale traversal → learning → WM → decay/deactivation). I’ve called out where older documents are now **deprecated**.
-
----
-
 ## 0) Truths vs. Myths (print this first)
 
 ### ✅ What’s TRUE (current design)
 
-1. **Entities are neighborhoods** (functional roles like *Translator* or semantic topics like *consciousness_architecture*).
+1. **Subentities are neighborhoods** (functional roles like *Translator* or semantic topics like *consciousness_architecture*).
    They are **first‑class graph nodes** with members (other nodes) and **dynamic activation** derived from their members.
 
-2. **“Sub‑entity” = an active entity acting as the agent of traversal** in a frame.
-   We **do not** use “sub‑entity = any active node” anymore for implementation decisions. Use “active node” for atomic state, and “active entity” for the agent.
+2. **“Sub‑subentity” = an active subentity acting as the agent of traversal** in a frame.
+   We **do not** use “sub‑subentity = any active node” anymore for implementation decisions. Use “active node” for atomic state, and “active subentity” for the agent.
 
 3. **Nodes carry one dynamic activation energy (E_i)**.
-   There are **not** per‑entity energy channels on nodes. Entities “see” a node through **membership weights** and then **aggregate**.
+   There are **not** per‑subentity energy channels on nodes. Subentities “see” a node through **membership weights** and then **aggregate**.
 
 4. **Links do not carry activation energy.**
    Links **transport** node energy during strides and store: a **static affect/urgency** field named `energy` (metadata) **plus telemetry** (flow EMA, φ, precedence, counts). No link activation buffer.
@@ -26,23 +22,23 @@ Absolutely. Here’s a **single, authoritative recap** you can hand to the whole
 
 7. **Traversal is two‑scale**:
 
-   * **Between‑entity** strides (semantic jumps, boundary learning)
-   * **Within‑entity** strides (local, atomic link choices)
-     Entity‑scale **wraps** the existing atomic traversal (we re‑use Felix’s selector).
+   * **Between‑subentity** strides (semantic jumps, boundary learning)
+   * **Within‑subentity** strides (local, atomic link choices)
+     Subentity‑scale **wraps** the existing atomic traversal (we re‑use Felix’s selector).
 
 8. **Thresholds are dynamic** (no fixed constants): depend on system criticality, local degree, and node weight.
    Activation = (E_i \ge \Theta_i). Deactivation happens when decay/flow drops (E_i) below (\Theta_i).
 
 9. **No “fast/slow” update channels.** One update speed per variable, controlled by **half‑life EMAs** learned from recent cadence.
 
-10. **Working Memory (WM) is entity‑first**: pick 5–7 entities (chunks), include their summaries + top members, within token budget.
+10. **Working Memory (WM) is subentity‑first**: pick 5–7 subentities (chunks), include their summaries + top members, within token budget.
     WM selection is **greedy + diversity‑aware**, not “fair share”.
 
 ### ❌ What’s FALSE (retired / do not implement)
 
-1. “Sub‑entities are a fixed set.” → **False.** Entities are dynamic; boundaries/membership are plastic and learned.
+1. “Sub‑subentities are a fixed set.” → **False.** Subentities are dynamic; boundaries/membership are plastic and learned.
 
-2. “Each node keeps energy per sub‑entity.” → **False.** One (E_i) per node. Entities aggregate from (E_i) via membership weights.
+2. “Each node keeps energy per sub‑subentity.” → **False.** One (E_i) per node. Subentities aggregate from (E_i) via membership weights.
 
 3. “Links store and release activation energy.” → **False.** Links only **transport** during strides and store **affect + telemetry**.
 
@@ -50,9 +46,9 @@ Absolutely. Here’s a **single, authoritative recap** you can hand to the whole
 
 5. “Use fixed thresholds / constants (e.g., 0.5 similarity, α=0.1).” → **False.** All thresholds/steps derive from **current distributions** (z‑scores, percentiles, half‑lives).
 
-6. “WM selects individual nodes only.” → **False.** First select **entities** (chunks), then add their **top members**.
+6. “WM selects individual nodes only.” → **False.** First select **subentities** (chunks), then add their **top members**.
 
-> **Deprecated docs**: Any place that says “any active node is a sub‑entity” as the **primary agent** is now superseded. Keep the phrase only as **phenomenological shorthand**; implementation uses **active entities** as agents.
+> **Deprecated docs**: Any place that says “any active node is a sub‑subentity” as the **primary agent** is now superseded. Keep the phrase only as **phenomenological shorthand**; implementation uses **active subentities** as agents.
 
 ---
 
@@ -60,12 +56,12 @@ Absolutely. Here’s a **single, authoritative recap** you can hand to the whole
 
 * **Nodes** (ideas, memories, code, etc.) have **activation energy** (E_i(t)) and a **weight** (\log W_i).
 * **Links** connect nodes; during a **stride**, some (ΔE) flows across a link from source node to target node. Links store **affect (`energy`)** and **telemetry** (how effective they’ve been).
-* **Entities** are neighborhoods (functional or semantic). They are **nodes that group nodes** via **BELONGS_TO** with weights. An entity’s activation (E_{\text{entity}}) is **derived** from member nodes.
+* **Subentities** are neighborhoods (functional or semantic). They are **nodes that group nodes** via **BELONGS_TO** with weights. An subentity’s activation (E_{\text{subentity}}) is **derived** from member nodes.
 * **Stimuli** from “reality” inject activation energy into **matched nodes** (using embeddings + budget derived from gaps/health).
-* **Traversal**: Active entities make **valence‑weighted choices** (7 hungers) to send energy along links **within** the entity or **across** entity boundaries.
+* **Traversal**: Active subentities make **valence‑weighted choices** (7 hungers) to send energy along links **within** the subentity or **across** subentity boundaries.
 * **Learning**: After strides, we update link/node weights from outcomes (flip causality, ROI, TRACE reinforcement).
-* **WM** selects a few **entities** and their best supporting nodes to feed Tier‑2 (LLM).
-* **Decay** lowers (E_i) per tick; nodes/entities deactivate when they fall below threshold.
+* **WM** selects a few **subentities** and their best supporting nodes to feed Tier‑2 (LLM).
+* **Decay** lowers (E_i) per tick; nodes/subentities deactivate when they fall below threshold.
 
 ---
 
@@ -104,10 +100,10 @@ Link {
 
 > **Important:** `energy` here is **not activation**. It’s how intense/urgent the relation *feels* at formation (affect cue for valence).
 
-### 2.3 Entity (neighborhood)
+### 2.3 Subentity (neighborhood)
 
 ```
-Entity {
+Subentity {
   id
   entity_kind                  # "functional" | "semantic"
   role_or_topic                # e.g., "translator" or "consciousness_architecture"
@@ -121,15 +117,15 @@ Entity {
 }
 ```
 
-### 2.4 Membership and entity relations
+### 2.4 Membership and subentity relations
 
 ```
-BELONGS_TO (Node -> Entity) {
+BELONGS_TO (Node -> Subentity) {
   weight                       # membership strength ∈ [0,1]
 }
 
-RELATES_TO (Entity -> Entity) {
-  ease_ema                     # how easy are cross-entity jumps (flow-based)
+RELATES_TO (Subentity -> Subentity) {
+  ease_ema                     # how easy are cross-subentity jumps (flow-based)
   precedence_ema               # directional causal credit (s->t)
   fwd_flow_ema, rev_flow_ema   # to compute dominance = σ(log ratio)
   dominance                    # ∈ (0,1) from flows
@@ -154,24 +150,24 @@ RELATES_TO (Entity -> Entity) {
 3. Compute **injection budget** from gaps × health × source strength.
 4. Distribute budget ∝ similarity; **inject (ΔE)** to matched nodes. (This is the **only** place energy enters from “reality”.)
 
-**Phase 2 – Activation, Entities, Traversal**
+**Phase 2 – Activation, Subentities, Traversal**
 2a) **Activation update**: recompute (\Theta_i) and mark node flips.
-- Entity energy = (\sum_i \sigma(E_i)\cdot m_{i,e}) (with (\sigma(x)=\log(1+x)) to prevent dominance).
-- Mark **active entities** where (E_{\text{entity}} \ge \Theta_{\text{entity}}).
+- Subentity energy = (\sum_i \sigma(E_i)\cdot m_{i,e}) (with (\sigma(x)=\log(1+x)) to prevent dominance).
+- Mark **active subentities** where (E_{\text{subentity}} \ge \Theta_{\text{subentity}}).
 
 2b) **Multi‑scale traversal (two buckets)**
 
 * Split budget into **within** vs **between** via hunger gates (coherence/ease vs integration/surprise/goal‑outside).
-* **Between‑entity loop**:
+* **Between‑subentity loop**:
 
-  * For each active entity (e), pick target (e') by **entity‑scale valence** (7 hungers, same math but at centroid/RELATES_TO level).
+  * For each active subentity (e), pick target (e') by **subentity‑scale valence** (7 hungers, same math but at centroid/RELATES_TO level).
   * Pick **representative nodes** (source high‑energy; target high‑gap).
   * Execute stride via **atomic traversal** (Felix’s selector). If no direct link, use best **cross‑boundary frontier** edge.
   * Record **actual delivered (ΔE)** and φ; track as **boundary stride** for (e \rightarrow e').
-* **Within‑entity loop**:
+* **Within‑subentity loop**:
 
-  * For each active entity, distribute its within‑budget across **active members**.
-  * For each member: run Felix’s selector **filtered to within‑entity links**; execute stride and record (ΔE).
+  * For each active subentity, distribute its within‑budget across **active members**.
+  * For each member: run Felix’s selector **filtered to within‑subentity links**; execute stride and record (ΔE).
 
 2c) **Learning (end of traversal)**
 
@@ -179,15 +175,15 @@ RELATES_TO (Entity -> Entity) {
 * **Link learning**: strengthen links that **caused flips** (fire‑together/wire‑together) and weaken persistently low‑ROI paths.
 * **Node weight learning**: see §5 below.
 
-**Phase 3 – Working Memory (entity‑first)**
+**Phase 3 – Working Memory (subentity‑first)**
 
-* Score active entities by **energy‑per‑token × importance** (importance from (z(\log W))), with a **diversity bonus** (centroid coverage).
-* Greedy pick entities until token budget; for each, include **summary + top members + top boundary links**. Update `ema_wm_presence`.
+* Score active subentities by **energy‑per‑token × importance** (importance from (z(\log W))), with a **diversity bonus** (centroid coverage).
+* Greedy pick subentities until token budget; for each, include **summary + top members + top boundary links**. Update `ema_wm_presence`.
 
 **Phase 4 – Decay & Deactivation**
 
 * Apply **tick‑based decay** to (E_i) per node‑type (memories slow, tasks fast).
-* Recompute activations; nodes/entities may **deactivate** if (E < \Theta).
+* Recompute activations; nodes/subentities may **deactivate** if (E < \Theta).
 * Emit events; advance frame.
 
 ---
@@ -203,13 +199,13 @@ RELATES_TO (Entity -> Entity) {
   ]
   Where ((\mu,\sigma)) from rolling stats of this node‑type/scope, (f(\cdot)) raises thresholds when the system is near supercritical, and node weight tilts in favor of anchors.
 
-### 4.2 Entity energy
+### 4.2 Subentity energy
 
 [
-E_{\text{entity}} = \sum_{i\in \text{members}} \log(1+E_i)\cdot m_{i,e}
+E_{\text{subentity}} = \sum_{i\in \text{members}} \log(1+E_i)\cdot m_{i,e}
 ]
 
-### 4.3 Entity‑scale valence (7 hungers, surprise‑gated)
+### 4.3 Subentity‑scale valence (7 hungers, surprise‑gated)
 
 [
 V_{e\to e'} =
@@ -277,29 +273,29 @@ Combine with **surprise‑gated** weights (derived from EMAs of each channel):
 
 * **Decay is per tick**, not per second; **rate depends on node type** (memories slow, tasks fast).
 * After decay + flows, **recompute** (E_i) and compare to (\Theta_i).
-* A node (or entity) **deactivates** when it falls below threshold; nothing special to do—future traversal can reactivate it.
+* A node (or subentity) **deactivates** when it falls below threshold; nothing special to do—future traversal can reactivate it.
 
 ---
 
 ## 7) Traversal “how‑to” (procedural)
 
-1. **Compute active entities** from current node energies.
+1. **Compute active subentities** from current node energies.
 2. **Split budget** with hunger gates into within/between.
-3. **Between**: for each active entity, pick a target entity by entity‑valence; choose representatives; run **atomic selector**; stride; record boundary stride with **actual (ΔE)**.
-4. **Within**: for each active entity, spread among active members; run selector with **within filter**; stride.
+3. **Between**: for each active subentity, pick a target subentity by subentity‑valence; choose representatives; run **atomic selector**; stride; record boundary stride with **actual (ΔE)**.
+4. **Within**: for each active subentity, spread among active members; run selector with **within filter**; stride.
 5. **Learning**: boundary precedence, link updates, node weight updates, membership adaptation (Hebbian on BELONGS_TO).
-6. **WM**: greedy entity‑first with diversity.
+6. **WM**: greedy subentity‑first with diversity.
 7. **Decay**, finish frame.
 
 ---
 
 ## 8) FAQs (answer the team’s confusions)
 
-* **Q:** “Does a node have one energy or many (per entity)?”
-  **A:** **One** energy (E_i). Entities aggregate via membership weights.
+* **Q:** “Does a node have one energy or many (per subentity)?”
+  **A:** **One** energy (E_i). Subentities aggregate via membership weights.
 
-* **Q:** “Are sub‑entities fixed?”
-  **A:** **No.** Entities (neighborhoods) are dynamic: membership, ease, and boundaries **learn** from usage.
+* **Q:** “Are sub‑subentities fixed?”
+  **A:** **No.** Subentities (neighborhoods) are dynamic: membership, ease, and boundaries **learn** from usage.
 
 * **Q:** “Do links store activation energy?”
   **A:** **No.** Links move energy during strides; they store **affect** and **telemetry** only.
@@ -308,23 +304,23 @@ Combine with **surprise‑gated** weights (derived from EMAs of each channel):
   **A:** From **stimuli** (reality). Traversal only **redistributes** energy.
 
 * **Q:** “How do we deactivate?”
-  **A:** Tick‑based **decay** + redistribution → if (E<\Theta), the node/entity **falls inactive** automatically.
+  **A:** Tick‑based **decay** + redistribution → if (E<\Theta), the node/subentity **falls inactive** automatically.
 
 * **Q:** “Do we still support atomic traversal?”
-  **A:** Yes—**unchanged**. The entity layer **wraps** it (filters candidates, routes budget).
+  **A:** Yes—**unchanged**. The subentity layer **wraps** it (filters candidates, routes budget).
 
 ---
 
 ## 9) What to fix in old code/docs (checklist)
 
-* [ ] Remove any **per‑entity node energy arrays**; replace with single (E_i) and **Entity aggregation**.
+* [ ] Remove any **per‑subentity node energy arrays**; replace with single (E_i) and **Subentity aggregation**.
 * [ ] Ensure **links** have **no activation buffer**; keep `energy` (affect), `ema_flow`, `phi_max`, `precedence_ema`, counts.
-* [ ] Add **Entity** nodes + **BELONGS_TO** + **RELATES_TO**; compute entity energy/threshold each frame.
+* [ ] Add **Subentity** nodes + **BELONGS_TO** + **RELATES_TO**; compute subentity energy/threshold each frame.
 * [ ] Implement **boundary stride** recording and **precedence** update with **actual (ΔE)** and **half‑life EMA**.
-* [ ] WM selection: **entity‑first**, greedy + diversity, learned token estimates (no hard 200/40/30 constants).
+* [ ] WM selection: **subentity‑first**, greedy + diversity, learned token estimates (no hard 200/40/30 constants).
 * [ ] Replace any **fixed thresholds/alphas** with **percentiles/z‑scores/half‑lives**.
 * [ ] Update **TRACE parser**: node/link reinforcement → weight updates; **no activation injection** via TRACE.
-* [ ] Event stream: emit **entity snapshots**, **stride.exec (with ΔE_actual)**, **entity.boundary.summary**, **wm.emit**.
+* [ ] Event stream: emit **subentity snapshots**, **stride.exec (with ΔE_actual)**, **subentity.boundary.summary**, **wm.emit**.
 
 ---
 
@@ -334,10 +330,10 @@ Combine with **surprise‑gated** weights (derived from EMAs of each channel):
 # Stimulus → node ΔE injection
 process_stimulus(stim): matches = ann_topk(stim); budget = gaps*health; distribute_and_inject(matches, budget)
 
-# Entity energy
+# Subentity energy
 E_entity(e) = sum(log1p(E_i) * m[i,e])
 
-# Between-entity stride
+# Between-subentity stride
 target = select_entity_by_valence(e, gates)
 src_node = rep_high_energy(e); tgt_node = rep_high_gap(target)
 link = best_atomic_or_cross_boundary(src_node, tgt_node)
@@ -352,7 +348,7 @@ update_relates_to(precedence_ema, ease_ema, dominance)
 ΔlogW_i = η * (α_flip z_flip + α_gap z_gap + α_wm z_wm + α_trace z_trace)
 
 # WM selection
-score(entity) = (E_entity/tokens_estimate) * exp(z(log_weight)) * (1 + diversity_bonus)
+score(subentity) = (E_entity/tokens_estimate) * exp(z(log_weight)) * (1 + diversity_bonus)
 greedy knapsack until token_budget
 ```
 
@@ -360,8 +356,8 @@ greedy knapsack until token_budget
 
 ### Bottom line for the team
 
-* Think **single (E) per node** (fast), **weights** (slow), **entities** as dynamic neighborhoods.
+* Think **single (E) per node** (fast), **weights** (slow), **subentities** as dynamic neighborhoods.
 * **Stimuli add energy**, **traversal redistributes**, **learning updates weights**, **WM picks chunks**.
-* If a piece of code relies on **per‑entity node energy or link activation buffers**, it’s wrong—replace with the above.
+* If a piece of code relies on **per‑subentity node energy or link activation buffers**, it’s wrong—replace with the above.
 
 If you want, I can turn this into a **2‑page PDF “living spec sheet”** (with the formulas boxed) and a **dev checklist** you can paste into your repo’s `CONTRIBUTING.md`.

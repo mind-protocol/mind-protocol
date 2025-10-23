@@ -1,292 +1,629 @@
 """
-Mechanism 09: Link Strengthening - Bounded Hebbian Learning
+Link Strengthening - Hebbian Learning for V2 Single-Energy
 
-ARCHITECTURAL PRINCIPLE: "Cells that fire together, wire together" (Hebb)
+Mechanism: Links strengthen when energy flows through them during diffusion.
+"Neurons that fire together, wire together" - frequently traversed paths become highways.
 
-Links strengthen when both endpoints have high energy simultaneously,
-BUT ONLY when nodes are NOT already active (CORRECTED 2025-10-20).
+CRITICAL DECISION (D020): Strengthening only when BOTH nodes INACTIVE
+- Active nodes (E >= theta): NO strengthening (normal dynamics)
+- Inactive nodes being connected: YES strengthening (new pattern learning)
+- Prevents runaway strengthening from repeated activation
 
-"Link strengthening only happens when both nodes are not active. Because there
-is going to be a lot of back-end force of energy between active nodes, this
-should not change. It's only when you're adding something new that the
-strengthening should happen." - Nicolas
-
-Formula:
-    delta_w = learning_rate * source_energy * target_energy * (1 - w/w_max)
-
-Why Only When Inactive:
-- Active nodes already have strong energy flow - strengthening them creates rich-get-richer runaway
-- Strengthening should reinforce NEW patterns forming, not existing active patterns
-- Prevents link weight inflation during sustained activation
-
-Learning occurs:
-- When both nodes have energy but are below activation threshold
-- Proportional to activation product (correlation)
-- With saturation bounds (min_weight, max_weight)
+Integration: Strengthening happens DURING diffusion stride execution, not separately.
+Complexity: O(strides) - same as diffusion, negligible additional cost.
 
 Author: Felix (Engineer)
 Created: 2025-10-19
-Updated: 2025-10-20 - Inverted condition to strengthen only when NOT active
-Spec: Based on Nicolas's corrections 2025-10-20
+Updated: 2025-10-22 - V2 single-energy architecture, stride-based integration
+Spec: docs/specs/v2/learning_and_trace/link_strengthening.md
 """
 
-from typing import Dict, Optional, List, TYPE_CHECKING
+import logging
+from typing import Dict, List, Optional, TYPE_CHECKING
 from dataclasses import dataclass
+from datetime import datetime
 
 if TYPE_CHECKING:
     from orchestration.core.graph import Graph
-    from orchestration.core.link import Link
     from orchestration.core.node import Node
-    from orchestration.core.types import EntityID
+    from orchestration.core.link import Link
 
-# --- Configuration ---
+from orchestration.core.settings import settings
+from orchestration.core.telemetry import emit_affective_memory
+import numpy as np
 
-LEARNING_RATE_DEFAULT: float = 0.02  # Strengthening rate
-MIN_WEIGHT: float = 0.0  # Minimum link weight
-MAX_WEIGHT: float = 1.0  # Maximum link weight
-ACTIVATION_THRESHOLD: float = 0.3  # Minimum energy for learning
+logger = logging.getLogger(__name__)
+
+
+# === Data Classes ===
+
+@dataclass
+class StrengtheningEvent:
+    """
+    Record of a single link strengthening event.
+
+    Used for history tracking and analysis.
+    """
+    timestamp: datetime
+    delta_weight: float        # Weight change this event (log space)
+    new_weight: float          # log_weight after strengthening
+    energy_flow: float         # Energy that triggered strengthening
+    source_active: bool        # Was source active?
+    target_active: bool        # Was target active?
 
 
 @dataclass
+class StrengtheningMetrics:
+    """
+    Metrics for link strengthening observability.
+
+    Emitted as `link.strengthen` event per spec.
+    """
+    links_strengthened: int           # Total links strengthened this tick
+    total_delta_weight: float         # Sum of all weight changes
+    mean_delta_weight: float          # Average weight change
+    max_delta_weight: float           # Largest single change
+    inactive_pairs: int               # Links with both nodes inactive (D020)
+    active_pairs_skipped: int         # Links skipped (both active)
+
+    # Highway tracking
+    new_highways: int                 # Links crossing threshold (0.7)
+    highway_threshold: float = 0.7
+
+
 class StrengtheningContext:
     """
-    Configuration for link strengthening tick.
+    Context for link strengthening mechanism.
+
+    Placeholder context class for consciousness engine integration.
+    Currently unused as strengthening happens during stride execution,
+    but kept for API compatibility with consciousness_engine_v2.py
+
+    Author: Iris (fixing import error)
+    Date: 2025-10-23
+    """
+    def __init__(self):
+        pass
+
+
+# === Learning Rate Controller ===
+
+class LearningController:
+    """
+    Manages learning rate (how fast links strengthen).
+
+    Learning rate can vary by:
+    - Link weight (diminishing returns near max)
+    - Link type (semantic vs causal)
+    - Link age (older links harder to change)
+    - Global settings
+
+    Example:
+        >>> controller = LearningController(base_rate=0.01)
+        >>> rate = controller.get_learning_rate(link)
+        >>> # Apply strengthening with adaptive rate
+    """
+
+    def __init__(self, base_rate: float = 0.01):
+        """
+        Initialize learning controller.
+
+        Args:
+            base_rate: Base learning rate (default 0.01)
+        """
+        self.base_rate = base_rate
+        self.current_rate = base_rate
+
+    def get_learning_rate(
+        self,
+        link: 'Link',
+        diminishing_returns: bool = True
+    ) -> float:
+        """
+        Get learning rate for specific link.
+
+        Implements diminishing returns: harder to strengthen already-strong links.
+
+        Args:
+            link: Link to get rate for
+            diminishing_returns: Apply diminishing returns curve
+
+        Returns:
+            Learning rate for this link
+
+        Example:
+            >>> # Weak link (log_weight=0.2)
+            >>> rate = controller.get_learning_rate(weak_link)
+            >>> rate  # Full base rate
+            0.01
+            >>>
+            >>> # Strong link (log_weight=0.9)
+            >>> rate = controller.get_learning_rate(strong_link)
+            >>> rate  # Reduced rate (diminishing returns)
+            0.005
+        """
+        rate = self.base_rate
+
+        if diminishing_returns and link.log_weight > 0.0:
+            # Diminishing returns: harder to strengthen already-strong links
+            # log_weight > 0 means weight = exp(log_weight) > 1.0 (very strong)
+            # As log_weight increases, learning slows
+            if link.log_weight > 1.0:
+                # Very strong links: 50% slower
+                rate *= 0.5
+            elif link.log_weight > 0.5:
+                # Strong links: 25% slower
+                rate *= 0.75
+
+        return rate
+
+
+# === Affective Coupling (PR-B) ===
+
+def compute_affective_memory_multiplier(
+    node: 'Node'
+) -> float:
+    """
+    Compute affective memory amplification multiplier (PR-B: Emotion Couplings).
+
+    High-emotion experiences form stronger memories.
+    This implements bounded affect→weight amplification.
+
+    Formula:
+        m_affect = max(m_min, 1 + κ · tanh(||E_emo||))
+
+    Where:
+        - κ = AFFECTIVE_MEMORY_KAPPA (default 0.3, max 1.3x boost)
+        - E_emo = emotion vector on node
+        - m_min = AFFECTIVE_MEMORY_MIN (default 0.6, prevents over-dampening)
+        - ||·|| = L2 norm (magnitude)
+
+    Returns 1.0 when disabled or emotion missing (neutral multiplier).
+
+    Bounded: m_affect ∈ [m_min, 1+κ] = [0.6, 1.3] by default
 
     Args:
-        learning_rate: Rate of weight change per tick. Default 0.02.
-        min_weight: Minimum link weight bound. Default 0.0.
-        max_weight: Maximum link weight bound. Default 1.0.
-        activation_threshold: Minimum energy to trigger learning. Default 0.3.
-        active_nodes_only: If True, only strengthen links in workspace. Default False.
+        node: Node with potential emotion coloring
+
+    Returns:
+        Memory amplification multiplier m_affect
+
+    Example:
+        >>> # Node with strong emotion
+        >>> node.emotion_vector = np.array([0.8, 0.6, 0.0])  # ||E_emo|| = 1.0
+        >>> m = compute_affective_memory_multiplier(node)
+        >>> # m = max(0.6, 1 + 0.3 * tanh(1.0)) = max(0.6, 1.23) = 1.23
+        >>> # 23% memory boost
+        >>>
+        >>> # Node with no emotion
+        >>> node.emotion_vector = None
+        >>> m = compute_affective_memory_multiplier(node)
+        >>> # m = 1.0 (neutral)
     """
-    learning_rate: float = LEARNING_RATE_DEFAULT
-    min_weight: float = MIN_WEIGHT
-    max_weight: float = MAX_WEIGHT
-    activation_threshold: float = ACTIVATION_THRESHOLD
-    active_nodes_only: bool = False
+    # Feature flag check
+    if not settings.AFFECTIVE_MEMORY_ENABLED:
+        return 1.0
+
+    # Guard: need emotion vector
+    node_emotion = getattr(node, 'emotion_vector', None)
+    if node_emotion is None:
+        return 1.0
+
+    if len(node_emotion) == 0:
+        return 1.0
+
+    # Compute emotion magnitude
+    E_magnitude = float(np.linalg.norm(node_emotion))
+
+    # Guard: if zero emotion, no modulation
+    if E_magnitude < 1e-6:
+        return 1.0
+
+    # Compute affective multiplier
+    # m_affect = max(m_min, 1 + κ · tanh(||E_emo||))
+    kappa = settings.AFFECTIVE_MEMORY_KAPPA
+    m_min = settings.AFFECTIVE_MEMORY_MIN
+    m_affect = max(m_min, 1.0 + kappa * np.tanh(E_magnitude))
+
+    return float(m_affect)
 
 
-# --- Strengthening Operations ---
+# === Core Strengthening Function ===
 
 def strengthen_link(
     link: 'Link',
-    source_energy: float,
-    target_energy: float,
-    learning_rate: float,
-    max_weight: float
-) -> float:
+    energy_flow: float,
+    learning_controller: LearningController,
+    track_history: bool = False,
+    citizen_id: str = "",
+    frame_id: Optional[str] = None
+) -> Optional[StrengtheningEvent]:
     """
-    Apply Hebbian strengthening to link.
+    Strengthen link proportional to energy flowing through it.
 
-    Formula: delta_w = learning_rate * source_energy * target_energy * (1 - w/w_max)
+    CRITICAL (D020): Strengthening only when BOTH nodes INACTIVE
+    - Active nodes (E >= theta): NO strengthening (normal dynamics)
+    - Inactive nodes being connected: YES strengthening (new pattern learning)
 
-    The (1 - w/w_max) term provides saturation:
-    - Weak links: Large updates
-    - Strong links: Small updates (diminishing returns)
-    - At max_weight: No updates (fully saturated)
+    This is Hebbian learning: "Neurons that fire together, wire together"
 
     Args:
         link: Link to strengthen
-        source_energy: Energy at source node
-        target_energy: Energy at target node
-        learning_rate: Strengthening rate
-        max_weight: Maximum weight bound
+        energy_flow: Amount of energy transferred this stride
+        learning_controller: Controller for adaptive learning rates
+        track_history: Whether to record this event in history
 
     Returns:
-        New weight after strengthening
+        StrengtheningEvent if strengthening occurred, None otherwise
 
     Example:
-        >>> link = Link(source=n1, target=n2, weight=0.5)
-        >>> new_weight = strengthen_link(link, 0.8, 0.7, 0.02, 1.0)
-        >>> # Weight increased based on correlation
+        >>> controller = LearningController(base_rate=0.01)
+        >>> event = strengthen_link(link, energy_flow=0.05, learning_controller=controller)
+        >>> if event:
+        ...     print(f"Strengthened: Δw={event.delta_weight:.4f}")
     """
-    current_weight = link.weight
+    # Check activation state (D020 decision)
+    source_active = link.source.is_active()  # E >= theta
+    target_active = link.target.is_active()  # E >= theta
 
-    # Hebbian update with saturation
-    correlation = source_energy * target_energy
-    saturation_factor = 1 - (current_weight / max_weight)
-    delta_weight = learning_rate * correlation * saturation_factor
+    if source_active and target_active:
+        # Both active: energy flows but NO strengthening
+        # This is normal dynamics, not learning moment
+        return None
 
-    # Apply update
-    new_weight = current_weight + delta_weight
+    # At least one node inactive: strengthening can occur
+    # This is learning - forming new patterns
 
-    # Clamp to max_weight
-    new_weight = min(new_weight, max_weight)
+    # Get adaptive learning rate
+    learning_rate = learning_controller.get_learning_rate(link)
 
-    return new_weight
+    # Compute affective memory multiplier (PR-B)
+    # Apply to target node (where memory is being written)
+    m_affect = compute_affective_memory_multiplier(link.target)
 
+    # Compute weight delta (base)
+    delta_log_w_base = learning_rate * energy_flow
 
-def strengthen_tick(
-    graph: 'Graph',
-    entity: 'EntityID',
-    ctx: Optional[StrengtheningContext] = None,
-    active_nodes: Optional[List['Node']] = None
-) -> Dict[str, any]:
-    """
-    Execute one tick of Hebbian link strengthening for entity.
+    # Apply affective amplification
+    delta_log_w_amplified = delta_log_w_base * m_affect
 
-    Strengthens links where both endpoints have high energy.
+    # Store old weight for event
+    old_log_weight = link.log_weight
 
-    Algorithm:
-    1. For each link in graph (or just active_nodes if specified)
-    2. Get source and target energy for entity
-    3. If both above threshold, strengthen link
-    4. Clamp weight to [min_weight, max_weight]
+    # Apply strengthening (in log space)
+    link.log_weight += delta_log_w_amplified
 
-    Args:
-        graph: Graph with nodes and links
-        entity: Entity to strengthen links for
-        ctx: Strengthening configuration (defaults if None)
-        active_nodes: Optional list of active nodes (if ctx.active_nodes_only=True)
+    # Clamp to reasonable maximum (prevents numerical overflow)
+    # log_weight = 2.0 → weight = exp(2.0) ≈ 7.4 (very strong)
+    link.log_weight = min(link.log_weight, settings.WEIGHT_CEILING)
 
-    Returns:
-        Metrics dict with:
-        - links_strengthened: Number of links updated
-        - total_weight_increase: Sum of all weight deltas
-        - average_weight_increase: Mean weight delta (if any links strengthened)
+    # Emit affective memory telemetry (PR-B)
+    if settings.AFFECTIVE_MEMORY_ENABLED and m_affect != 1.0:
+        target_emotion = getattr(link.target, 'emotion_vector', None)
+        if target_emotion is not None:
+            E_magnitude = float(np.linalg.norm(target_emotion))
 
-    Example:
-        >>> graph = Graph()
-        >>> # ... populate graph ...
-        >>> ctx = StrengtheningContext(learning_rate=0.02, activation_threshold=0.3)
-        >>> metrics = strengthen_tick(graph, "translator", ctx)
-        >>> print(f"Links strengthened: {metrics['links_strengthened']}")
-    """
-    if ctx is None:
-        ctx = StrengtheningContext()
-
-    links_strengthened = 0
-    total_weight_increase = 0.0
-
-    # Determine which links to process
-    if ctx.active_nodes_only and active_nodes is not None:
-        # Only strengthen links within active workspace
-        active_node_ids = {node.id for node in active_nodes}
-        links_to_process = [
-            link for link in graph.links.values()
-            if link.source.id in active_node_ids and link.target.id in active_node_ids
-        ]
-    else:
-        # Strengthen all links in graph
-        links_to_process = list(graph.links.values())
-
-    for link in links_to_process:
-        # Get energies
-        source_energy = link.source.get_entity_energy(entity)
-        target_energy = link.target.get_entity_energy(entity)
-
-        # Check if both BELOW threshold (not active) but have some energy
-        # Strengthening only happens when adding NEW patterns, not reinforcing active ones
-        if (source_energy < ctx.activation_threshold and
-            target_energy < ctx.activation_threshold and
-            source_energy > 0.01 and
-            target_energy > 0.01):
-            # Strengthen link
-            old_weight = link.weight
-            new_weight = strengthen_link(
-                link,
-                source_energy,
-                target_energy,
-                ctx.learning_rate,
-                ctx.max_weight
+            emit_affective_memory(
+                citizen_id=citizen_id,
+                frame_id=frame_id or "",
+                node_id=link.target.id,
+                m_affect=m_affect,
+                emotion_magnitude=E_magnitude,
+                delta_log_w_base=delta_log_w_base,
+                delta_log_w_amplified=delta_log_w_amplified
             )
 
-            # Apply update
-            link.weight = new_weight
-
-            # Clamp to bounds
-            link.weight = max(ctx.min_weight, min(link.weight, ctx.max_weight))
-
-            # Track metrics
-            weight_increase = link.weight - old_weight
-            if weight_increase > 1e-10:
-                links_strengthened += 1
-                total_weight_increase += weight_increase
-
-    average_weight_increase = (
-        total_weight_increase / links_strengthened
-        if links_strengthened > 0
-        else 0.0
+    # Create event
+    event = StrengtheningEvent(
+        timestamp=datetime.now(),
+        delta_weight=delta_log_w_amplified,  # Use amplified delta
+        new_weight=link.log_weight,
+        energy_flow=energy_flow,
+        source_active=source_active,
+        target_active=target_active
     )
 
+    # Track history if requested
+    if track_history:
+        if not hasattr(link, 'strengthening_history'):
+            link.strengthening_history = []
+
+        link.strengthening_history.append(event)
+
+        # Prune history to prevent unbounded growth
+        if len(link.strengthening_history) > settings.MAX_STRENGTHENING_HISTORY:
+            link.strengthening_history = link.strengthening_history[-settings.MAX_STRENGTHENING_HISTORY:]
+
+    return event
+
+
+# === Integration with Diffusion ===
+
+def strengthen_during_stride(
+    link: 'Link',
+    energy_flow: float,
+    learning_controller: LearningController
+) -> bool:
+    """
+    Strengthen link during stride execution (integrated with diffusion).
+
+    This is called from execute_stride_step() for each energy transfer.
+
+    Args:
+        link: Link through which energy is flowing
+        energy_flow: Amount of energy being transferred
+        learning_controller: Learning rate controller
+
+    Returns:
+        True if strengthening occurred, False if skipped (both nodes active)
+
+    Example:
+        >>> # During diffusion stride:
+        >>> energy_flow = E_src * ease * alpha * dt
+        >>> strengthened = strengthen_during_stride(link, energy_flow, controller)
+        >>> if strengthened:
+        ...     print("Link learned from this transfer")
+    """
+    event = strengthen_link(
+        link,
+        energy_flow,
+        learning_controller,
+        track_history=False  # Don't track during normal operation (too expensive)
+    )
+
+    return event is not None
+
+
+# === Analysis Functions ===
+
+def identify_highway_paths(
+    graph: 'Graph',
+    min_weight: float = 0.0,  # V2: log_weight threshold
+    min_path_length: int = 3
+) -> List[List['Node']]:
+    """
+    Find paths with consistently high link weights ("highways").
+
+    These are automatically traversed associations - thinking flows effortlessly.
+
+    Args:
+        graph: Consciousness graph
+        min_weight: Minimum log_weight for highway links (default 0.0 = weight≈1.0)
+        min_path_length: Minimum path length to qualify
+
+    Returns:
+        List of highway paths (each path is list of nodes)
+
+    Example:
+        >>> highways = identify_highway_paths(graph, min_weight=0.5)
+        >>> for path in highways:
+        ...     print(" → ".join(n.name for n in path))
+        consciousness → substrate → falkordb
+        energy → diffusion → learning
+    """
+    highways = []
+
+    # Find chains of strong links
+    for start_node in graph.nodes.values():
+        # Only start from nodes with some energy
+        if start_node.E < 0.1:
+            continue
+
+        path = [start_node]
+        current = start_node
+
+        # Follow strongest links
+        while True:
+            if not current.outgoing_links:
+                break
+
+            # Find strongest link
+            strongest_link = max(
+                current.outgoing_links,
+                key=lambda l: l.log_weight
+            )
+
+            # Highway requires strong link
+            if strongest_link.log_weight < min_weight:
+                break
+
+            # Avoid cycles
+            if strongest_link.target in path:
+                break
+
+            path.append(strongest_link.target)
+            current = strongest_link.target
+
+            # Limit path length to prevent runaway
+            if len(path) > 10:
+                break
+
+        # Only return paths above minimum length
+        if len(path) >= min_path_length:
+            highways.append(path)
+
+    return highways
+
+
+def analyze_link_symmetry(graph: 'Graph') -> Dict:
+    """
+    Measure how symmetric link weights are.
+
+    High asymmetry = strong directional associations (A → B stronger than B → A).
+    This is CORRECT behavior for causal/directional relationships.
+
+    Args:
+        graph: Consciousness graph
+
+    Returns:
+        Dict with symmetry statistics
+
+    Example:
+        >>> stats = analyze_link_symmetry(graph)
+        >>> print(f"Mean asymmetry: {stats['mean_asymmetry']:.3f}")
+        >>> for pair in stats['highly_asymmetric']:
+        ...     print(f"{pair['forward'].source.name} → {pair['forward'].target.name}: ratio={pair['ratio']:.2f}")
+    """
+    asymmetries = []
+
+    # Build reverse link index for fast lookup
+    reverse_links = {}
+    for link in graph.links.values():
+        key = (link.target.id, link.source.id)
+        reverse_links[key] = link
+
+    # Analyze each link
+    for link_ab in graph.links.values():
+        # Find reverse link
+        key = (link_ab.source.id, link_ab.target.id)
+        link_ba = reverse_links.get(key)
+
+        if link_ba:
+            # Both directions exist
+            asymmetry = abs(link_ab.log_weight - link_ba.log_weight)
+
+            # Compute ratio (in linear space for interpretability)
+            weight_ab = max(0.001, link_ab.log_weight)  # Avoid division by zero
+            weight_ba = max(0.001, link_ba.log_weight)
+            ratio = weight_ab / weight_ba if weight_ba > 0 else float('inf')
+
+            asymmetries.append({
+                'forward': link_ab,
+                'backward': link_ba,
+                'asymmetry': asymmetry,
+                'ratio': ratio
+            })
+
+    if not asymmetries:
+        return {
+            'mean_asymmetry': 0.0,
+            'median_asymmetry': 0.0,
+            'highly_asymmetric': [],
+            'count': 0
+        }
+
+    import numpy as np
+
+    asymmetry_values = [a['asymmetry'] for a in asymmetries]
+
     return {
-        "links_strengthened": links_strengthened,
-        "total_weight_increase": total_weight_increase,
-        "average_weight_increase": average_weight_increase
+        'mean_asymmetry': np.mean(asymmetry_values),
+        'median_asymmetry': np.median(asymmetry_values),
+        'highly_asymmetric': [
+            a for a in asymmetries
+            if a['ratio'] > 3.0 or a['ratio'] < 0.33
+        ],
+        'count': len(asymmetries)
     }
 
 
-def weaken_link(
-    link: 'Link',
-    decay_rate: float,
-    min_weight: float
-) -> float:
+def compute_strengthening_metrics(
+    events: List[StrengtheningEvent],
+    highway_threshold: float = 0.7
+) -> StrengtheningMetrics:
     """
-    Apply decay to link weight (forgetting).
-
-    Optional mechanism for link weakening over time.
-    Use sparingly - most forgetting happens via energy decay, not weight decay.
-
-    Formula: w_new = w * exp(-decay_rate)
+    Compute observability metrics from strengthening events.
 
     Args:
-        link: Link to weaken
-        decay_rate: Weakening rate (exponential)
-        min_weight: Minimum weight bound
+        events: List of strengthening events this tick
+        highway_threshold: log_weight threshold for "highway" status
 
     Returns:
-        New weight after weakening
+        StrengtheningMetrics for observability
 
     Example:
-        >>> link = Link(source=n1, target=n2, weight=0.8)
-        >>> new_weight = weaken_link(link, decay_rate=0.01, min_weight=0.0)
-        >>> # Weight decreased slightly
+        >>> metrics = compute_strengthening_metrics(events)
+        >>> print(f"Strengthened {metrics.links_strengthened} links")
+        >>> print(f"New highways: {metrics.new_highways}")
     """
-    import math
+    if not events:
+        return StrengtheningMetrics(
+            links_strengthened=0,
+            total_delta_weight=0.0,
+            mean_delta_weight=0.0,
+            max_delta_weight=0.0,
+            inactive_pairs=0,
+            active_pairs_skipped=0,
+            new_highways=0,
+            highway_threshold=highway_threshold
+        )
 
-    current_weight = link.weight
-    new_weight = current_weight * math.exp(-decay_rate)
+    deltas = [e.delta_weight for e in events]
+    total_delta = sum(deltas)
+    mean_delta = total_delta / len(events)
+    max_delta = max(deltas)
 
-    # Clamp to min_weight
-    new_weight = max(new_weight, min_weight)
+    # Count inactive pairs (D020 criterion)
+    inactive_pairs = sum(
+        1 for e in events
+        if not e.source_active and not e.target_active
+    )
 
-    return new_weight
+    # Count new highways
+    new_highways = sum(
+        1 for e in events
+        if e.new_weight >= highway_threshold and (e.new_weight - e.delta_weight) < highway_threshold
+    )
+
+    return StrengtheningMetrics(
+        links_strengthened=len(events),
+        total_delta_weight=total_delta,
+        mean_delta_weight=mean_delta,
+        max_delta_weight=max_delta,
+        inactive_pairs=inactive_pairs,
+        active_pairs_skipped=0,  # Not tracked in events list (they return None)
+        new_highways=new_highways,
+        highway_threshold=highway_threshold
+    )
 
 
-def compute_link_entropy(graph: 'Graph') -> float:
+# === History Management ===
+
+def prune_strengthening_history(link: 'Link', max_history: int = 100) -> int:
     """
-    Compute Shannon entropy of link weight distribution.
-
-    Measures diversity of connection strengths:
-    - High entropy: Many links with similar weights (uniform)
-    - Low entropy: Few strong links dominate (sparse)
+    Prune strengthening history to prevent unbounded memory growth.
 
     Args:
-        graph: Graph with weighted links
+        link: Link to prune history for
+        max_history: Maximum history entries to keep
 
     Returns:
-        Entropy (nats)
+        Number of entries pruned
 
     Example:
-        >>> entropy = compute_link_entropy(graph)
-        >>> print(f"Link diversity: {entropy:.3f} nats")
+        >>> pruned = prune_strengthening_history(link, max_history=100)
+        >>> print(f"Pruned {pruned} old entries")
     """
-    import numpy as np
+    if not hasattr(link, 'strengthening_history'):
+        return 0
 
-    if len(graph.links) == 0:
-        return 0.0
+    original_length = len(link.strengthening_history)
 
-    weights = np.array([link.weight for link in graph.links.values()])
-    total = weights.sum()
+    if original_length > max_history:
+        link.strengthening_history = link.strengthening_history[-max_history:]
+        return original_length - max_history
 
-    if total < 1e-10:
-        return 0.0
+    return 0
 
-    # Normalize to probability distribution
-    P = weights / total
 
-    # Compute Shannon entropy
-    P_nonzero = P[P > 1e-10]
-    entropy = -np.sum(P_nonzero * np.log(P_nonzero))
+def prune_all_histories(graph: 'Graph', max_history: int = 100) -> int:
+    """
+    Prune strengthening histories for all links in graph.
 
-    return float(entropy)
+    Args:
+        graph: Consciousness graph
+        max_history: Maximum history entries per link
+
+    Returns:
+        Total number of entries pruned
+
+    Example:
+        >>> total_pruned = prune_all_histories(graph, max_history=100)
+        >>> print(f"Pruned {total_pruned} total entries across all links")
+    """
+    total_pruned = 0
+
+    for link in graph.links.values():
+        total_pruned += prune_strengthening_history(link, max_history)
+
+    return total_pruned

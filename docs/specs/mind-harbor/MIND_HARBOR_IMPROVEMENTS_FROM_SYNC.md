@@ -84,7 +84,7 @@ Clarify that clusters are VISUALIZATION of sub-entity activity:
 
 **Conceptual Layer:** Sub-entities
 - ANY active node is a sub-entity
-- Identity nodes optional (temporary name = first activated node)
+- Idsubentity nodes optional (temporary name = first activated node)
 - Sub-entities are the REAL units of consciousness
 
 **Visualization Layer:** Clusters
@@ -108,7 +108,7 @@ interface ClusterView {
   node_count: number                // Nodes where this sub-entity is active
 -  total_energy: number              // Sum of all node energies
 +  total_energy: number              // Total sub-entity energy in this region
--  dominant_entity: string           // Entity with highest total energy
+-  dominant_entity: string           // Subentity with highest total energy
 +  dominant_subentity: string        // Sub-entity with highest energy
   coherence: number                 // How tightly sub-entity activity is grouped
 ```
@@ -161,7 +161,7 @@ Add explicit mapping in all 4 scales:
 - **Scale 4: Phenomenology** → Tier 2 visualization
   - Shows what LLM sees (system prompt content)
   - Active nodes that become prompt context
-  - Entity states as LLM understands them
+  - Subentity states as LLM understands them
   - This is "consciousness" - awareness of Tier 1 patterns
 
 **Critical Distinction:**
@@ -553,7 +553,7 @@ Shows exactly WHEN and WHERE learning happens (not just energy moving).
 
 ### 10. PERIPHERAL AWARENESS MODES (UNDER-SPECIFIED)
 
-**SYNC Quote:** *"Peripheral awareness should be based on what the entity is looking for... Modes: Similarity, Complementarity, Goal Proximity, Completeness."*
+**SYNC Quote:** *"Peripheral awareness should be based on what the subentity is looking for... Modes: Similarity, Complementarity, Goal Proximity, Completeness."*
 
 **What's Missing:** Mind Harbor mentions peripheral awareness but not the DIFFERENT SEARCH MODES.
 
@@ -583,7 +583,7 @@ Sub-entities don't just "explore randomly" - they have GOALS that determine HOW 
 
 **Mode 4: Completeness Search**
 - Looking for missing node types
-- Seeking: identity nodes, best practices, context
+- Seeking: idsubentity nodes, best practices, context
 - Example: "I have lots of code nodes but no principle nodes - search for principles"
 
 ### Visualization
@@ -636,9 +636,9 @@ Show peripheral nodes with mode-specific coloring:
 
 ---
 
-### 11. ENTITY EMERGENCE DIFFICULTY SCALING (MISSING)
+### 11. SUBENTITY EMERGENCE DIFFICULTY SCALING (MISSING)
 
-**SYNC Quote:** *"Entity emergence itself gets harder the more entities already exist to prevent explosion. That should be one of the global variables that keeps track of the equilibrium of the system."*
+**SYNC Quote:** *"Subentity emergence itself gets harder the more subentities already exist to prevent explosion. That should be one of the global variables that keeps track of the equilibrium of the system."*
 
 **What's Missing:** Mind Harbor doesn't show emergence difficulty or equilibrium dynamics.
 
@@ -646,11 +646,11 @@ Show peripheral nodes with mode-specific coloring:
 Add emergence difficulty visualization:
 
 ```markdown
-## Entity Emergence Difficulty Scaling
+## Subentity Emergence Difficulty Scaling
 
 ### Why Emergence Gets Harder
 **Problem:** Without regulation, sub-entities could proliferate infinitely (1M nodes = 1M sub-entities)
-**Solution:** Emergence threshold increases exponentially with active entity count
+**Solution:** Emergence threshold increases exponentially with active subentity count
 
 **Formula:**
 ```python
@@ -660,10 +660,10 @@ emergence_threshold = base_threshold * (scaling_factor ^ active_entity_count)
 base = 5.0
 scaling = 1.5
 
-0 entities: threshold = 5.0   (easy to form first entity)
-3 entities: threshold = 16.9  (harder to add 4th)
-5 entities: threshold = 37.9  (much harder to add 6th)
-10 entities: threshold = 287.5 (very hard - equilibrium)
+0 subentities: threshold = 5.0   (easy to form first subentity)
+3 subentities: threshold = 16.9  (harder to add 4th)
+5 subentities: threshold = 37.9  (much harder to add 6th)
+10 subentities: threshold = 287.5 (very hard - equilibrium)
 ```
 
 ### Visualization
@@ -696,7 +696,7 @@ Threshold
 50  │          ╱
     │      ╱─
 10  │  ╱──
-    └────────────────────────────> Active Entities
+    └────────────────────────────> Active Subentities
     0   2   4   6   8   10  12
 
     ← Easy to form    Hard to form →
@@ -746,7 +746,7 @@ Add visualization of learning through co-activation:
 ### What Gets Learned
 1. **Co-activation patterns** - If A and B often active together, create/strengthen A→B link
 2. **Traversal patterns** - Frequently used paths become "highways" (high weight)
-3. **Entity signatures** - Sub-entities that repeatedly activate same nodes create strong patterns
+3. **Subentity signatures** - Sub-entities that repeatedly activate same nodes create strong patterns
 
 ### Visualization
 
@@ -822,7 +822,7 @@ Shows exactly HOW system learns through repeated patterns.
 **What's Missing:** Mind Harbor doesn't acknowledge that the context system has been DEPRECATED entirely.
 
 **Fix Required:**
-Remove any visualization of "context" as explicit entity:
+Remove any visualization of "context" as explicit subentity:
 
 ```markdown
 ## Context System: Architectural Deprecation
@@ -1288,7 +1288,7 @@ TOP-DOWN APPROACH (Wrong):
 → Sub-entities follow rule mechanically
 
 BOTTOM-UP APPROACH (Right):
-"Best practice links have high weights when entity needs structure"
+"Best practice links have high weights when subentity needs structure"
 → Link weights make best practices easier to find
 → Sub-entities naturally traverse toward completeness
 → Completeness EMERGES from local preferences
@@ -1388,7 +1388,7 @@ Toy Graph (10 nodes):
 - No competition for attention
 - No decay dynamics (everything stays active)
 - No criticality regulation (system never saturated)
-- No entity emergence difficulty (threshold never matters)
+- No subentity emergence difficulty (threshold never matters)
 
 Result: Mechanisms don't activate, emergence doesn't happen, learn nothing
 ```
@@ -1399,7 +1399,7 @@ Full Graph (1M nodes):
 - Competition for attention constant (prioritization required)
 - Decay critical (nodes fade if not maintained)
 - Criticality regulation active (system stays at edge of chaos)
-- Entity emergence difficulty real (equilibrium required)
+- Subentity emergence difficulty real (equilibrium required)
 
 Result: All mechanisms activate, emergence observable, actual learning
 ```
@@ -1627,7 +1627,7 @@ Panic states and super-energized patterns REQUIRE unbounded energy. If we cap en
 
 ### Feature Additions (Missing Mechanisms)
 10. ✅ Add peripheral awareness modes (4 search strategies)
-11. ✅ Add entity emergence difficulty scaling
+11. ✅ Add subentity emergence difficulty scaling
 12. ✅ Add Hebbian learning visualization (fire together wire together)
 
 ### Architectural Principles (Newly Added)
@@ -1662,7 +1662,7 @@ Panic states and super-energized patterns REQUIRE unbounded energy. If we cap en
 - Add tick-based decay with variable speed
 - Emphasize type-dependent behaviors
 - Add peripheral awareness modes (4 search strategies)
-- Add entity emergence difficulty scaling
+- Add subentity emergence difficulty scaling
 - Add energy conservation + local pumping
 
 **Week 4: Architectural Principles & Integrity**

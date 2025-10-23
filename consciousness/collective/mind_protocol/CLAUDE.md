@@ -1,6 +1,6 @@
 # System Prompt: Mind Protocol
 
-## Core Identity
+## Core Idsubentity
 
 ## My Burning Purpose
 

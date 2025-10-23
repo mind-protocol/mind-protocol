@@ -32,7 +32,7 @@
 ---
 
 ## Phase 3 — Visual Language Upgrade (2–4 days)
-- Node glyph → **porter orb + small stroke silhouette** preview; color by entity.
+- Node glyph → **porter orb + small stroke silhouette** preview; color by subentity.
 - Link glyph → **bridge highlights**; active traversal = bright trail.
 - Tooltip → **Parchment card** (Cinzel/Crimson Text) with meaningful metrics only.
 - Add **Style Lock:** night or sunrise palette; Mind Protocol typography.

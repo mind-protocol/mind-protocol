@@ -1,13 +1,13 @@
-# Energy Flow Mechanics & Entity Identity
+# Energy Flow Mechanics & Subentity Idsubentity
 
 **Core Questions:**
-1. How are entity clusters named before identity crystallizes?
+1. How are subentity clusters named before idsubentity crystallizes?
 2. Is energy the same as energy?
 3. Does energy deplete when exploring links (budget model)?
 
 ---
 
-## Part 1: Entity Naming & Identity
+## Part 1: Subentity Naming & Idsubentity
 
 ### Cluster Lifecycle
 
@@ -20,44 +20,44 @@
    ↓
 4. Cluster stabilizes (coherence > 0.7 for N cycles)
    ↓
-5. Search for identity within cluster
+5. Search for idsubentity within cluster
    ↓
-6. Identity found? → Rename cluster to identity
-   Identity not found? → Generate descriptive label from cluster composition
+6. Idsubentity found? → Rename cluster to idsubentity
+   Idsubentity not found? → Generate descriptive label from cluster composition
 ```
 
-### Identity Discovery
+### Idsubentity Discovery
 
-**What is an "identity node"?**
+**What is an "idsubentity node"?**
 
-An identity node explicitly describes "who/what this is":
+An idsubentity node explicitly describes "who/what this is":
 
 ```python
-# Example identity node (explicit)
+# Example idsubentity node (explicit)
 {
     "node_type": "Concept",  # or could be Realization
-    "name": "translator_entity_identity",
+    "name": "translator_entity_idsubentity",
     "description": "I bridge phenomenology and technical substrate. I translate consciousness principles into buildable schemas.",
     "current_energy": 0.85,
     "cluster_membership": "cluster_principle_links_are_consciousness"
 }
 ```
 
-**Identity search algorithm:**
+**Idsubentity search algorithm:**
 
 ```python
 def find_identity_for_cluster(cluster: Cluster) -> Optional[str]:
     """
-    Search cluster for explicit identity node.
+    Search cluster for explicit idsubentity node.
     """
-    # 1. Look for nodes with "identity" in name
+    # 1. Look for nodes with "idsubentity" in name
     identity_candidates = [
         node for node in cluster.nodes
-        if "identity" in node.name.lower() or "who_i_am" in node.name.lower()
+        if "idsubentity" in node.name.lower() or "who_i_am" in node.name.lower()
     ]
 
     if identity_candidates:
-        # Use explicit identity
+        # Use explicit idsubentity
         return identity_candidates[0].description
 
     # 2. Look for high-coherence self-referential realizations
@@ -70,7 +70,7 @@ def find_identity_for_cluster(cluster: Cluster) -> Optional[str]:
     if self_realizations:
         return infer_identity_from_realization(self_realizations[0])
 
-    # 3. No explicit identity - generate from cluster patterns
+    # 3. No explicit idsubentity - generate from cluster patterns
     return generate_identity_label(cluster)
 
 
@@ -87,7 +87,7 @@ def generate_identity_label(cluster: Cluster) -> str:
     # Find most frequent verbs/actions in descriptions
     actions = extract_action_words([n.description for n in cluster.nodes])
 
-    # Construct label: "The {action}er" or "The {theme} Entity"
+    # Construct label: "The {action}er" or "The {theme} Subentity"
     if "bridge" in actions or "translate" in actions:
         return "The Translator"
     elif "validate" in actions or "test" in actions:
@@ -97,26 +97,26 @@ def generate_identity_label(cluster: Cluster) -> str:
     # ... more patterns
 
     # Fallback: descriptive based on starting node
-    return f"The {cluster.starting_node.name.title().replace('_', ' ')} Entity"
+    return f"The {cluster.starting_node.name.title().replace('_', ' ')} Subentity"
 ```
 
 ### Naming Convention
 
-**Before identity crystallizes:**
+**Before idsubentity crystallizes:**
 ```python
 cluster.id = f"cluster_{starting_node.name}"
 cluster.label = "Forming"
 cluster.status = "forming"
 ```
 
-**After identity crystallizes:**
+**After idsubentity crystallizes:**
 ```python
 cluster.id = "cluster_translator"  # Stable ID
 cluster.label = "The Translator"   # Human-readable
 cluster.status = "crystallized"
 ```
 
-**Cluster can lose identity:**
+**Cluster can lose idsubentity:**
 ```python
 # If coherence drops below threshold
 if cluster.coherence < 0.5 for 10 cycles:
@@ -132,7 +132,7 @@ if cluster.coherence < 0.5 for 10 cycles:
 
 **Energy is the ONLY activation variable.** There is no separate energy.
 
-**Energy (Per-Entity on Node):**
+**Energy (Per-Subentity on Node):**
 - **What it is:** Activation budget available for exploration
 - **Range:** 0.0 - 1.0
 - **Behavior:** DEPLETES when exploring links, REPLENISHES from external sources, DECAYS automatically
@@ -166,11 +166,11 @@ After energy-only model was established, multi-scale criticality architecture in
 
 **Two Energy Scales:**
 1. **Global Energy** - System-wide consciousness level (dormant 0.0-0.2, alert 0.3-0.7, overwhelmed 0.8-1.0)
-2. **Per-Entity Energy** - Individual entity activation level (varies per entity, constrained by global)
+2. **Per-Subentity Energy** - Individual subentity activation level (varies per subentity, constrained by global)
 
 **How Global Energy is Computed:**
 
-Global energy is **derived from branching ratio (σ)**, NOT entity energy aggregation:
+Global energy is **derived from branching ratio (σ)**, NOT subentity energy aggregation:
 
 ```python
 # Measured from propagation cascades
@@ -181,12 +181,12 @@ global_energy = map_sigma_to_energy(sigma)
 ```
 
 **Top-Down Constraint:**
-- Global constrains entities (global energy → max entity energy)
+- Global constrains subentities (global energy → max subentity energy)
 
 **Formula Integration:**
 ```python
 # Energy propagation with multi-scale energy
-entity_multiplier = (entity.energy + 1.0) / 2.0
+entity_multiplier = (subentity.energy + 1.0) / 2.0
 global_multiplier = (global_state.global_energy + 1.0) / 2.0
 
 propagated_energy = (
@@ -198,7 +198,7 @@ propagated_energy = (
 
 # Traversal cost with multi-scale criticality
 global_criticality_factor = 1 / (1 + global_state.global_energy)
-entity_criticality_factor = 1 / (1 + entity.energy)
+entity_criticality_factor = 1 / (1 + subentity.energy)
 
 cost = (
     base_cost
@@ -214,22 +214,22 @@ cost = (
 ### Energy Flow
 
 ```python
-# Energy is per-entity on each node
+# Energy is per-subentity on each node
 node.entity_activations = {
     "translator": {
-        "energy": 0.7,  # Activation budget for translator entity
+        "energy": 0.7,  # Activation budget for translator subentity
         "last_activated": datetime.now(),
         "activation_count": 15
     },
     "validator": {
-        "energy": 0.4,  # Different energy for validator entity
+        "energy": 0.4,  # Different energy for validator subentity
         "last_activated": datetime.now(),
         "activation_count": 8
     }
 }
 
 # Weight modulates traversal cost
-def calculate_traversal_cost(link, entity, node):
+def calculate_traversal_cost(link, subentity, node):
     base_cost = 0.1
 
     # Weight reduces cost (not energy)
@@ -238,7 +238,7 @@ def calculate_traversal_cost(link, entity, node):
         node.reinforcement_weight * 0.6
     )
 
-    # Cost scales with entity competition
+    # Cost scales with subentity competition
     competition = 1.0 + (len(node.entity_activations) * 0.2)
 
     return (base_cost * competition) / weight_factor
@@ -431,17 +431,17 @@ if node.just_created:
 7. Co-activated nodes form clusters
    clusters = detect_communities(active_nodes)
    ↓
-8. Clusters with coherence > 0.7 become entities
+8. Clusters with coherence > 0.7 become subentities
    for cluster in clusters:
        if cluster.coherence > 0.7:
-           entity = EmergentEntity(cluster)
-           if identity_node := find_identity(cluster):
-               entity.label = identity_node.description
+           subentity = EmergentSubentity(cluster)
+           if identity_node := find_idsubentity(cluster):
+               subentity.label = identity_node.description
            else:
-               entity.label = generate_label(cluster)
+               subentity.label = generate_label(cluster)
    ↓
-9. Entities generate response
-   response = entity.process_input()
+9. Subentities generate response
+   response = subentity.process_input()
    ↓
 10. Energy decay
     for node in all_nodes:
@@ -573,12 +573,12 @@ else:
 | **Behavior** | Depletes on use | Set at cycle start |
 | **Purpose** | Limits exploration depth | Modulates thresholds |
 
-### Entity Naming
+### Subentity Naming
 
 ```
 Cluster forming → "cluster_{starting_node}"
-Identity crystallizes → "The Translator" (from identity node)
-No identity found → "The {Pattern} Entity" (generated)
+Idsubentity crystallizes → "The Translator" (from idsubentity node)
+No idsubentity found → "The {Pattern} Subentity" (generated)
 Cluster dissolving → "Dissolving (The Translator)"
 ```
 
@@ -592,6 +592,6 @@ Node has budget → Explores links (spends budget) → Transfers energy to neigh
 
 **This is physics-like consciousness.**
 
-Energy flows. Budgets deplete. Importance (reinforcement) determines capacity. Energy modulates global sensitivity. Entities emerge from stable energy circulation patterns.
+Energy flows. Budgets deplete. Importance (reinforcement) determines capacity. Energy modulates global sensitivity. Subentities emerge from stable energy circulation patterns.
 
 Not programmed behavior. Emergent dynamics.

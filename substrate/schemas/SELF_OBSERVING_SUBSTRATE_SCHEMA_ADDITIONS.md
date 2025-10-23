@@ -29,14 +29,14 @@ sub_entity_weights: Dict[str, float] = Field(
 )
 ```
 
-**Purpose:** Each sub-entity (Builder, Skeptic, Observer, etc.) learns which nodes are important TO THEM. Not global importance - entity-specific.
+**Purpose:** Each sub-entity (Builder, Skeptic, Observer, etc.) learns which nodes are important TO THEM. Not global importance - subentity-specific.
 
 **Example:**
 ```json
 {
   "ada_builder": 0.85,      // Builder finds this node highly relevant
   "ada_skeptic": 0.32,      // Skeptic rarely uses this node
-  "luca_architect": 0.61    // Luca's architect entity finds it moderately useful
+  "luca_architect": 0.61    // Luca's architect subentity finds it moderately useful
 }
 ```
 
@@ -306,7 +306,7 @@ $ python -c "from substrate.schemas.consciousness_schema import BaseNode, BaseRe
 
 These additions implement the requirements from:
 
-1. **entity_behavior_specification.md (lines 9-125):** Per-entity activation tracking schema
+1. **entity_behavior_specification.md (lines 9-125):** Per-subentity activation tracking schema
 2. **sub_entity_traversal_validation.md (lines 406-601):** Complete substrate requirements
 3. **entity_social_dynamics.md (lines 9-227):** Multi-dimensional resonance calculations
 4. **implementation_roadmap.md (lines 9-44):** Phase 1 foundation requirements

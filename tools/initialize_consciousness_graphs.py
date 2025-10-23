@@ -89,9 +89,9 @@ def initialize_citizen_graph(db, citizen_info):
     except:
         pass
 
-    # Create identity node
+    # Create idsubentity node
     g.query("""
-        CREATE (identity:Identity {
+        CREATE (idsubentity:Idsubentity {
             citizen_id: $citizen_id,
             full_name: $full_name,
             role: $role,
@@ -143,7 +143,7 @@ def initialize_org_graph(db, org_info):
     except:
         pass
 
-    # Create organization identity
+    # Create organization idsubentity
     g.query("""
         CREATE (org:Organization {
             org_id: $org_id,

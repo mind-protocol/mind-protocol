@@ -36,7 +36,7 @@ export interface Link {
   entity_activations?: Record<string, { energy: number }>;
 }
 
-export interface Entity {
+export interface Subentity {
   entity_id: string;
   name?: string;
 }
@@ -72,7 +72,7 @@ export interface AvailableGraphs {
 export function useGraphData() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
-  const [entities, setEntities] = useState<Entity[]>([]);
+  const [subentities, setSubentities] = useState<Subentity[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +150,7 @@ export function useGraphData() {
 
       setNodes(data.nodes || []);
       setLinks(data.links || []);
-      setEntities(data.entities || []);
+      setSubentities(data.subentities || []);
       setLoading(false);
     } catch (err) {
       console.error('[useGraphData] Error fetching graph:', err);
@@ -192,7 +192,7 @@ export function useGraphData() {
 
   /**
    * Update link based on WebSocket events
-   * Called when entity traverses a link
+   * Called when subentity traverses a link
    */
   const updateLinkFromEvent = useCallback((linkId: string, updates: Partial<Link>) => {
     setLinks(prev => prev.map(link => {
@@ -223,7 +223,7 @@ export function useGraphData() {
     // Graph state
     nodes,
     links,
-    entities,
+    subentities,
     operations,
 
     // Loading state

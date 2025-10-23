@@ -188,7 +188,7 @@ h1, h2, h3, h4, h5, h6 {
   --lagoon-light: #6db3c5;
   --lagoon-dark: #2d5a6b;
 
-  /* Wireframe Entity Colors */
+  /* Wireframe Subentity Colors */
   --wireframe-teal: #00d9ff;
   --wireframe-copper: #ff6b35;
   --wireframe-emerald: #00ff88;
@@ -224,23 +224,23 @@ h1, h2, h3, h4, h5, h6, .header-text {
   stroke-opacity: 0.5;
 }
 
-/* Wireframe Entity Nodes */
-.entity-node {
+/* Wireframe Subentity Nodes */
+.subentity-node {
   fill: none;
-  stroke: var(--wireframe-teal); /* Default, change by entity type */
+  stroke: var(--wireframe-teal); /* Default, change by subentity type */
   stroke-width: 2;
   filter: drop-shadow(0 0 8px currentColor);
 }
 
-.entity-node.mind-protocol {
+.subentity-node.mind-protocol {
   stroke: var(--wireframe-gold);
 }
 
-.entity-node.citizen {
+.subentity-node.citizen {
   stroke: var(--wireframe-teal);
 }
 
-.entity-node.building {
+.subentity-node.building {
   stroke: var(--wireframe-copper);
 }
 
@@ -296,17 +296,17 @@ h1, h2, h3, h4, h5, h6, .header-text {
 }
 ```
 
-### Entity Icon Treatment (Emoji Temporary, Wireframe Future)
+### Subentity Icon Treatment (Emoji Temporary, Wireframe Future)
 
 ```css
 /* Current: Emoji Icons with Wireframe Glow */
-.entity-icon {
+.subentity-icon {
   font-size: 24px;
   filter: drop-shadow(0 0 6px var(--wireframe-teal));
   transition: filter 0.3s ease;
 }
 
-.entity-icon:hover {
+.subentity-icon:hover {
   filter: drop-shadow(0 0 12px var(--wireframe-gold));
 }
 
@@ -335,7 +335,7 @@ h1, h2, h3, h4, h5, h6, .header-text {
 3. **Apply Base Styles**: Set parchment background on main container
 4. **Add Texture**: Use SVG data URI for paper grain
 5. **Style Panels**: Apply parchment card styling to detail panels
-6. **Wireframe Entities**: Add glow filters to D3 nodes
+6. **Wireframe Subentities**: Add glow filters to D3 nodes
 7. **Lagoon Regions**: Render water as SVG paths between sparse clusters
 8. **Gold Accents**: Apply shimmer animation to value displays
 
@@ -368,7 +368,7 @@ h1, h2, h3, h4, h5, h6, .header-text {
 - Subtle wave animation (optional)
 
 ### Wireframe Layer (Foreground)
-- Glowing entity nodes
+- Glowing subentity nodes
 - Activity paths with dash animation
 - High contrast against parchment
 
@@ -397,7 +397,7 @@ h1, h2, h3, h4, h5, h6, .header-text {
 | Parchment Base | Warm Cream | #f5e7c1 | Background |
 | Parchment Dark | Aged Paper | #e8dab2 | Shadows |
 | Lagoon Blue | Mediterranean | #4a90a4 | Water regions |
-| Wireframe Teal | Digital Cyan | #00d9ff | Default entities |
+| Wireframe Teal | Digital Cyan | #00d9ff | Default subentities |
 | Wireframe Copper | Warm Metal | #ff6b35 | Buildings |
 | Wireframe Gold | Divine Light | #ffd700 | Mind Protocol |
 | Gold Shimmer | Rich Gold | #daa520 | Value displays |

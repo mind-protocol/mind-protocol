@@ -33,7 +33,7 @@ Mind Protocol uses a three-level graph architecture:
 **scope: "organizational"** - Use for N2 formations
 - Collective learnings (Best_Practice, Anti_Pattern, Principle)
 - Team decisions and processes (Decision, Process, Mechanism)
-- Organizational entities (AI_Agent, Human, Team, Project)
+- Organizational subentities (AI_Agent, Human, Team, Project)
 - Shared concepts and documentation (Concept, Document)
 
 **scope: "ecosystem"** - Use for N3 formations

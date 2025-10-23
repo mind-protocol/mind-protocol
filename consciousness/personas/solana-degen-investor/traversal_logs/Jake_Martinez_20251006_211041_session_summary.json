@@ -35,22 +35,22 @@
         {
           "name": "DOLLAR_USDC",
           "energy": 2.475149768031395,
-          "type": "ENTITY"
+          "type": "SUBENTITY"
         },
         {
           "name": "Trading_Frequency",
           "energy": 2.132226551762267,
-          "type": "ENTITY"
+          "type": "SUBENTITY"
         },
         {
           "name": "degen_gambler_Never*",
           "energy": 2.0874594798274595,
-          "type": "ENTITY"
+          "type": "SUBENTITY"
         },
         {
           "name": "Risk",
           "energy": 1.7333955998640693,
-          "type": "ENTITY"
+          "type": "SUBENTITY"
         },
         {
           "name": "HANDLE_MustStopMurad",

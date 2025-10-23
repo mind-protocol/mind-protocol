@@ -94,6 +94,9 @@ class Settings:
     COMP_MIN_MULT: float = float(os.getenv("COMP_MIN_MULT", "0.7"))  # clamp floor
     COMP_MAX_MULT: float = float(os.getenv("COMP_MAX_MULT", "1.5"))  # clamp ceiling
 
+    # Emotion gates integration (traversal cost modulation)
+    EMOTION_GATES_ENABLED: bool = os.getenv("EMOTION_GATES_ENABLED", "true").lower() == "true"  # Feature flag for gate integration (ENABLED 2025-10-23)
+
     # === Decay (spec: type_dependent_decay.md) ===
 
     # Activation decay (fast, per-tick)

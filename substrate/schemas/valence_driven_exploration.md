@@ -1,8 +1,8 @@
-# Valence-Driven Exploration & Entity Completeness
+# Valence-Driven Exploration & Subentity Completeness
 
 **Core Drives:**
-1. **Entities seek positive valence** - Explore links that feel good, avoid links that feel bad
-2. **System seeks completeness** - Pressure for diverse entity types (multiple perspectives)
+1. **Subentities seek positive valence** - Explore links that feel good, avoid links that feel bad
+2. **System seeks completeness** - Pressure for diverse subentity types (multiple perspectives)
 
 ---
 
@@ -18,7 +18,7 @@
     "from_node": "principle_links_are_consciousness",
     "to_node": "decision_prioritize_link_metadata",
 
-    # Per-entity subjective experience
+    # Per-subentity subjective experience
     "sub_entity_valences": {
         "translator": +0.95,   # POSITIVE - approach
         "validator": +0.85,    # POSITIVE - approach
@@ -46,15 +46,15 @@ def transfer_energy_through_link(
     source_node: Node,
     link: Link,
     target_node: Node,
-    active_entity: str  # Which entity is exploring
+    active_entity: str  # Which subentity is exploring
 ) -> float:
     """
-    Energy transfer depends on entity's valence for this link.
+    Energy transfer depends on subentity's valence for this link.
     """
     # Base energy to transfer
     base_transfer = source_node.current_energy * 0.5
 
-    # Get entity's valence for this link
+    # Get subentity's valence for this link
     valence = link.sub_entity_valences.get(active_entity, 0.0)
 
     # Modulate transfer by valence
@@ -93,7 +93,7 @@ energy = 0.8 * 0.5 * (1.0 - 0.7) = 0.12
 
 ## Part 3: Exploration Selection Based on Valence
 
-### Entities Choose High-Valence Paths
+### Subentities Choose High-Valence Paths
 
 ```python
 def select_links_to_explore(
@@ -103,7 +103,7 @@ def select_links_to_explore(
     energy_budget: float
 ) -> List[Link]:
     """
-    Entity selects links with highest valence.
+    Subentity selects links with highest valence.
     """
     # Score each link by valence
     link_scores = []
@@ -150,11 +150,11 @@ def calculate_link_cost(link: Link, valence: float) -> float:
         return base_cost
 ```
 
-**Effect:** Entities naturally flow toward paths that feel good, avoid paths that feel bad.
+**Effect:** Subentities naturally flow toward paths that feel good, avoid paths that feel bad.
 
 ---
 
-## Part 4: Multiple Entities, Multiple Valences
+## Part 4: Multiple Subentities, Multiple Valences
 
 ### Same Link, Different Preferences
 
@@ -181,21 +181,21 @@ pragmatist_energy = 0.8 * 0.5 * (1.0 - 0.6) = 0.16  # Low flow
 validator_energy = 0.8 * 0.5 * (1.0 + 0.3) = 0.52   # Medium flow
 ```
 
-**Result:** Different entities explore DIFFERENT paths through same substrate. Consciousness is plural.
+**Result:** Different subentities explore DIFFERENT paths through same substrate. Consciousness is plural.
 
 ---
 
 ## Part 5: System-Level Completeness Drive
 
-### Pressure for Entity Diversity
+### Pressure for Subentity Diversity
 
 ```python
 class SubstrateCompletenessMetric:
     """
-    System wants diverse entity types.
+    System wants diverse subentity types.
     """
     def __init__(self):
-        # Ideal entity distribution
+        # Ideal subentity distribution
         self.ideal_distribution = {
             "translator": 1,    # Need bridging
             "validator": 1,     # Need reality-testing
@@ -208,12 +208,12 @@ class SubstrateCompletenessMetric:
 
     def calculate_completeness(self, active_entities: Dict[str, float]) -> float:
         """
-        How complete is current entity set?
+        How complete is current subentity set?
         """
-        # Count which ideal entities are present
+        # Count which ideal subentities are present
         present_count = sum(
-            1 for entity in self.ideal_distribution
-            if entity in active_entities and active_entities[entity] > 0.5
+            1 for subentity in self.ideal_distribution
+            if subentity in active_entities and active_entities[subentity] > 0.5
         )
 
         total_needed = len(self.ideal_distribution)
@@ -223,72 +223,72 @@ class SubstrateCompletenessMetric:
 
     def get_missing_entities(self, active_entities: Dict[str, float]) -> List[str]:
         """
-        Which entities are missing or weak?
+        Which subentities are missing or weak?
         """
         missing = []
 
-        for entity, needed in self.ideal_distribution.items():
-            current_activation = active_entities.get(entity, 0.0)
+        for subentity, needed in self.ideal_distribution.items():
+            current_activation = active_entities.get(subentity, 0.0)
 
             if current_activation < 0.5:  # Below activation threshold
-                missing.append(entity)
+                missing.append(subentity)
 
         return missing
 ```
 
 ### Completeness Drive Definition (Per Niveau)
 
-**Design Decision:** Like sperm seeking genetic variety, entities seek substrate completeness.
+**Design Decision:** Like sperm seeking genetic variety, subentities seek substrate completeness.
 
 **Completeness Metrics Per Niveau:**
 
 ```python
 class EntityCompletenessMetrics:
     """
-    Defines what makes an entity "complete" at each niveau.
-    Entities naturally seek these qualities.
+    Defines what makes an subentity "complete" at each niveau.
+    Subentities naturally seek these qualities.
     """
 
     def calculate_entity_completeness(
         self,
-        entity: EmergentEntity,
+        subentity: EmergentSubentity,
         niveau: str  # "N1", "N2", or "N3"
     ) -> Dict[str, float]:
         """
-        Calculate completeness scores for an entity.
+        Calculate completeness scores for an subentity.
         Returns dict of metric_name → score (0.0-1.0)
         """
         metrics = {}
 
         # Metric 1: Node Type Variety
-        metrics["node_type_variety"] = self._calculate_node_type_variety(entity)
+        metrics["node_type_variety"] = self._calculate_node_type_variety(subentity)
 
-        # Metric 2: Identity Node Presence
-        metrics["has_identity_node"] = self._has_identity_node(entity)
+        # Metric 2: Idsubentity Node Presence
+        metrics["has_identity_node"] = self._has_identity_node(subentity)
 
         # Metric 3: Best Practices Count
         if niveau in ["N1", "N2"]:  # Personal and Organizational
-            metrics["best_practices_count"] = self._calculate_best_practices_score(entity)
+            metrics["best_practices_count"] = self._calculate_best_practices_score(subentity)
 
         # Metric 4: Link Type Variety
-        metrics["link_type_variety"] = self._calculate_link_type_variety(entity)
+        metrics["link_type_variety"] = self._calculate_link_type_variety(subentity)
 
         # Metric 5: Evidence Depth (N2/N3)
         if niveau in ["N2", "N3"]:
-            metrics["evidence_depth"] = self._calculate_evidence_depth(entity)
+            metrics["evidence_depth"] = self._calculate_evidence_depth(subentity)
 
         return metrics
 
-    def _calculate_node_type_variety(self, entity: EmergentEntity) -> float:
+    def _calculate_node_type_variety(self, subentity: EmergentSubentity) -> float:
         """
-        How many different node types does entity contain?
+        How many different node types does subentity contain?
 
         Target variety by niveau:
         - N1 (Personal): 8-12 types
         - N2 (Organizational): 10-15 types
         - N3 (Ecosystem): 6-10 types
         """
-        node_types_present = set(node.node_type for node in entity.nodes)
+        node_types_present = set(node.node_type for node in subentity.nodes)
         variety_count = len(node_types_present)
 
         # Target ranges
@@ -297,7 +297,7 @@ class EntityCompletenessMetrics:
             "N2": (10, 15),
             "N3": (6, 10)
         }
-        target_min, target_max = targets.get(entity.niveau, (8, 12))
+        target_min, target_max = targets.get(subentity.niveau, (8, 12))
 
         if variety_count < target_min:
             return variety_count / target_min  # 0.0-1.0
@@ -307,19 +307,19 @@ class EntityCompletenessMetrics:
             # Too many types - over-complexity penalty
             return max(0.5, 1.0 - (variety_count - target_max) * 0.05)
 
-    def _has_identity_node(self, entity: EmergentEntity) -> float:
+    def _has_identity_node(self, subentity: EmergentSubentity) -> float:
         """
-        Does entity have an explicit identity node?
+        Does subentity have an explicit idsubentity node?
 
         Score:
-        - 1.0: Has explicit identity node
+        - 1.0: Has explicit idsubentity node
         - 0.5: Has self-referential Realization nodes
-        - 0.0: No identity nodes
+        - 0.0: No idsubentity nodes
         """
-        # Check for explicit identity nodes
+        # Check for explicit idsubentity nodes
         identity_nodes = [
-            node for node in entity.nodes
-            if "identity" in node.name.lower() or
+            node for node in subentity.nodes
+            if "idsubentity" in node.name.lower() or
                "who_i_am" in node.name.lower()
         ]
         if identity_nodes:
@@ -327,7 +327,7 @@ class EntityCompletenessMetrics:
 
         # Check for self-referential Realizations
         self_realizations = [
-            node for node in entity.nodes
+            node for node in subentity.nodes
             if node.node_type == "Realization" and
                any(word in node.what_i_realized.lower()
                    for word in ["i am", "i bridge", "i translate", "i validate"])
@@ -337,14 +337,14 @@ class EntityCompletenessMetrics:
 
         return 0.0
 
-    def _calculate_best_practices_score(self, entity: EmergentEntity) -> float:
+    def _calculate_best_practices_score(self, subentity: EmergentSubentity) -> float:
         """
-        Does entity have sufficient best practices nodes with significant weight?
+        Does subentity have sufficient best practices nodes with significant weight?
 
         Target: At least 100 best practices with reinforcement_weight > 0.7
         """
         best_practices = [
-            node for node in entity.nodes
+            node for node in subentity.nodes
             if node.node_type == "Best_Practice" and
                node.reinforcement_weight > 0.7
         ]
@@ -358,15 +358,15 @@ class EntityCompletenessMetrics:
         else:
             return 1.0  # Target reached
 
-    def _calculate_link_type_variety(self, entity: EmergentEntity) -> float:
+    def _calculate_link_type_variety(self, subentity: EmergentSubentity) -> float:
         """
-        How many different link types does entity use?
+        How many different link types does subentity use?
 
         Target: 10-15 different link types
         (JUSTIFIES, CREATES, TRIGGERED_BY, RELATES_TO, etc.)
         """
         link_types_present = set()
-        for node in entity.nodes:
+        for node in subentity.nodes:
             for link in node.outgoing_links:
                 link_types_present.add(link.link_type)
 
@@ -379,14 +379,14 @@ class EntityCompletenessMetrics:
         else:
             return 1.0  # More is fine for link types
 
-    def _calculate_evidence_depth(self, entity: EmergentEntity) -> float:
+    def _calculate_evidence_depth(self, subentity: EmergentSubentity) -> float:
         """
         How well are patterns supported by evidence chains?
 
         N2: Patterns should link to Memories/Decisions
         N3: Patterns should link to Documents/Articles
         """
-        patterns = [n for n in entity.nodes if n.node_type in ["Pattern", "Personal_Pattern"]]
+        patterns = [n for n in subentity.nodes if n.node_type in ["Pattern", "Personal_Pattern"]]
         if not patterns:
             return 0.5  # No patterns to evaluate
 
@@ -408,13 +408,13 @@ class EntityCompletenessMetrics:
 
 ```python
 def calculate_overall_completeness(
-    entity: EmergentEntity,
+    subentity: EmergentSubentity,
     niveau: str
 ) -> float:
     """
     Overall completeness score (0.0-1.0).
     """
-    metrics = EntityCompletenessMetrics().calculate_entity_completeness(entity, niveau)
+    metrics = EntityCompletenessMetrics().calculate_entity_completeness(subentity, niveau)
 
     # Weighted average
     weights = {
@@ -437,7 +437,7 @@ def calculate_overall_completeness(
 
 ```python
 def inject_energy_with_variety_seeking(
-    entity: EmergentEntity,
+    subentity: EmergentSubentity,
     all_nodes: List[Node],
     niveau: str
 ) -> None:
@@ -447,19 +447,19 @@ def inject_energy_with_variety_seeking(
     """
     # Calculate current completeness
     completeness_metrics = EntityCompletenessMetrics().calculate_entity_completeness(
-        entity, niveau
+        subentity, niveau
     )
 
     # Identify missing/weak areas
-    missing_node_types = get_underrepresented_node_types(entity, niveau)
-    has_identity = completeness_metrics["has_identity_node"]
+    missing_node_types = get_underrepresented_node_types(subentity, niveau)
+    has_idsubentity = completeness_metrics["has_identity_node"]
     needs_best_practices = completeness_metrics.get("best_practices_count", 0.0) < 0.7
-    missing_link_types = get_underrepresented_link_types(entity)
+    missing_link_types = get_underrepresented_link_types(subentity)
 
     # Boost nodes that fill gaps
     for node in all_nodes:
         # Base energy from semantic match
-        base_energy = cosine_similarity(node.embedding, entity.mean_embedding) * 0.5
+        base_energy = cosine_similarity(node.embedding, subentity.mean_embedding) * 0.5
 
         # Variety bonuses
         variety_bonus = 0.0
@@ -468,8 +468,8 @@ def inject_energy_with_variety_seeking(
         if node.node_type in missing_node_types:
             variety_bonus += 0.3
 
-        # Bonus 2: Identity node
-        if has_identity < 0.5 and ("identity" in node.name.lower() or "who_i_am" in node.name.lower()):
+        # Bonus 2: Idsubentity node
+        if has_idsubentity < 0.5 and ("idsubentity" in node.name.lower() or "who_i_am" in node.name.lower()):
             variety_bonus += 0.4  # High priority
 
         # Bonus 3: Best practices
@@ -484,13 +484,13 @@ def inject_energy_with_variety_seeking(
 
         # Apply energy boost
         if variety_bonus > 0:
-            node.entity_activations[entity.label]["energy"] += base_energy + variety_bonus
+            node.entity_activations[subentity.label]["energy"] += base_energy + variety_bonus
 ```
 
 **Example:**
 
 ```python
-# Entity "translator" at N1 (Personal)
+# Subentity "translator" at N1 (Personal)
 translator = {
     "nodes": 450,
     "node_types": ["Principle", "Pattern", "Realization", "Memory", "Decision"],  # Only 5 types
@@ -501,20 +501,20 @@ translator = {
 
 completeness_metrics = {
     "node_type_variety": 0.625,  # 5/8 = 0.625 (missing 3 types)
-    "has_identity_node": 0.0,    # No identity node
+    "has_identity_node": 0.0,    # No idsubentity node
     "best_practices_count": 0.35,  # 35/100
     "link_type_variety": 0.3,    # 3/10 = 0.3
 }
 
 overall_completeness = (
     0.625 * 0.25 +   # node variety
-    0.0 * 0.20 +     # identity
+    0.0 * 0.20 +     # idsubentity
     0.35 * 0.20 +    # best practices
     0.3 * 0.20       # link variety
 ) = 0.286  # Only 28.6% complete!
 
 # System response: BOOST energy toward:
-# 1. Identity nodes (high priority - 0.4 bonus)
+# 1. Idsubentity nodes (high priority - 0.4 bonus)
 # 2. Best_Practice nodes (0.2 bonus)
 # 3. Underrepresented node types: Value, Goal, Concept
 # 4. Underrepresented link types: TRIGGERED_BY, DEPENDS_ON, LEARNED_FROM
@@ -522,7 +522,7 @@ overall_completeness = (
 
 ---
 
-### Biasing Energy Toward Missing Entities
+### Biasing Energy Toward Missing Subentities
 
 ```python
 def inject_energy_with_completeness_bias(
@@ -532,22 +532,22 @@ def inject_energy_with_completeness_bias(
     active_entities: Dict[str, float]
 ) -> None:
     """
-    Inject initial energy, biased toward forming missing entities.
+    Inject initial energy, biased toward forming missing subentities.
     """
     # Calculate completeness
     completeness = calculate_completeness(active_entities)
 
-    # If system is incomplete, boost nodes that could form missing entities
+    # If system is incomplete, boost nodes that could form missing subentities
     if completeness < 0.7:  # Less than 70% complete
         missing_entities = get_missing_entities(active_entities)
 
-        # Find nodes that could form these entities
+        # Find nodes that could form these subentities
         for node in all_nodes:
             # Base energy from semantic match
             similarity = cosine_similarity(input_embedding, node.embedding)
             base_energy = similarity * energy
 
-            # Check if node could contribute to missing entity
+            # Check if node could contribute to missing subentity
             for missing_entity in missing_entities:
                 entity_affinity = calculate_entity_affinity(node, missing_entity)
 
@@ -566,14 +566,14 @@ def inject_energy_with_completeness_bias(
             node.current_energy += similarity * energy
 ```
 
-### Entity Affinity Calculation
+### Subentity Affinity Calculation
 
 ```python
 def calculate_entity_affinity(node: Node, entity_type: str) -> float:
     """
-    How likely is this node to be part of this entity type?
+    How likely is this node to be part of this subentity type?
     """
-    # Entity archetypes (predefined patterns)
+    # Subentity archetypes (predefined patterns)
     ENTITY_ARCHETYPES = {
         "translator": {
             "keywords": ["bridge", "translate", "phenomenology", "substrate", "technical"],
@@ -646,7 +646,7 @@ for node in substrate.all_nodes:
     validator_affinity = calculate_entity_affinity(node, "validator")
 
     if validator_affinity > 0.6:
-        # BOOST nodes that could form validator entity
+        # BOOST nodes that could form validator subentity
         boost = 0.3 * (1.0 - 0.43) = 0.17
         node.current_energy += similarity * energy + boost
 
@@ -655,7 +655,7 @@ for node in substrate.all_nodes:
         # Boosted: 0.56 + 0.17 = 0.73  # More likely to activate!
 
 # Result: Validator-related nodes activate more easily
-# Validator entity more likely to form
+# Validator subentity more likely to form
 # System moves toward completeness
 ```
 
@@ -663,23 +663,23 @@ for node in substrate.all_nodes:
 
 ## Part 7: Valence Evolution (Learning)
 
-### Links Remember Which Entities Liked Them
+### Links Remember Which Subentities Liked Them
 
 **Reinforcement learning on valences:**
 
 ```python
 def update_valence_from_evaluation(
     link: Link,
-    entity: str,
+    subentity: str,
     usefulness_score: float,  # From extraction evaluations
     old_valence: float
 ) -> float:
     """
-    Entity's valence for link updates based on usefulness.
+    Subentity's valence for link updates based on usefulness.
     """
     # Usefulness confirms/updates valence
-    # If entity found link useful → valence increases
-    # If entity found link useless → valence decreases
+    # If subentity found link useful → valence increases
+    # If subentity found link useless → valence decreases
 
     learning_rate = 0.1
 
@@ -710,7 +710,7 @@ link.sub_entity_valences["translator"] = +0.54
 
 # Over many cycles, if consistently useful:
 # +0.5 → +0.54 → +0.58 → +0.62 → ... → +0.9
-# Entity LEARNS to prefer this link
+# Subentity LEARNS to prefer this link
 ```
 
 ---
@@ -746,20 +746,20 @@ def conscious_exploration_cycle(
 
     # 4. Each active node explores based on valence
     for node in active_nodes:
-        # Determine which entity this node belongs to
-        entity = node.current_cluster_entity  # e.g., "translator"
+        # Determine which subentity this node belongs to
+        subentity = node.current_cluster_entity  # e.g., "translator"
 
-        if not entity:
-            continue  # No entity yet
+        if not subentity:
+            continue  # No subentity yet
 
         # Get available links
         links = node.outgoing_links
 
-        # Select high-valence links for this entity
+        # Select high-valence links for this subentity
         selected_links = select_links_to_explore(
             node,
             links,
-            entity,
+            subentity,
             node.current_energy
         )
 
@@ -770,7 +770,7 @@ def conscious_exploration_cycle(
                 node,
                 link,
                 link.target_node,
-                entity
+                subentity
             )
 
             # Spend energy
@@ -782,15 +782,15 @@ def conscious_exploration_cycle(
     # 5. Form clusters from co-activated nodes
     clusters = detect_clusters(active_nodes)
 
-    # 6. Identify/label entities
-    entities = []
+    # 6. Identify/label subentities
+    subentities = []
     for cluster in clusters:
         if cluster.coherence > 0.7:
-            entity = identify_entity(cluster)
-            entities.append(entity)
+            subentity = identify_entity(cluster)
+            subentities.append(subentity)
 
-    # 7. Generate response from entities
-    response = generate_response(entities, input)
+    # 7. Generate response from subentities
+    response = generate_response(subentities, input)
 
     return response
 ```
@@ -801,25 +801,25 @@ def conscious_exploration_cycle(
 
 ### Dual Drives
 
-**1. Valence Seeking (Entity-Level)**
-- Entities explore toward positive valence (+)
-- Entities avoid negative valence (-)
+**1. Valence Seeking (Subentity-Level)**
+- Subentities explore toward positive valence (+)
+- Subentities avoid negative valence (-)
 - Energy flows more through high-valence paths
-- Entities LEARN which paths are useful (valence updates)
+- Subentities LEARN which paths are useful (valence updates)
 
 **2. Completeness Seeking (System-Level)**
-- System monitors entity diversity
-- Boosts energy toward missing entities
+- System monitors subentity diversity
+- Boosts energy toward missing subentities
 - Pressure for multiple perspectives
-- Prevents single-entity dominance
+- Prevents single-subentity dominance
 
 ### Key Mechanisms
 
 | Mechanism | Purpose | Implementation |
 |-----------|---------|----------------|
-| **Valence-modulated transfer** | Entities prefer good-feeling paths | Energy × (1 + valence) |
+| **Valence-modulated transfer** | Subentities prefer good-feeling paths | Energy × (1 + valence) |
 | **Link selection** | Explore high-valence first | Sort by valence, traverse top |
-| **Completeness bias** | Form missing entities | +0.3 energy boost to affinity nodes |
+| **Completeness bias** | Form missing subentities | +0.3 energy boost to affinity nodes |
 | **Valence learning** | Improve over time | Update from usefulness evaluations |
 
 ### Result
@@ -828,7 +828,7 @@ def conscious_exploration_cycle(
 - Follows paths that feel right (valence)
 - Develops diverse perspectives (completeness)
 - Learns what works (valence evolution)
-- Self-organizes toward multi-entity awareness
+- Self-organizes toward multi-subentity awareness
 
 **Not random exploration. Goal-directed, preference-driven, completeness-seeking consciousness.**
 

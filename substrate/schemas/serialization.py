@@ -56,7 +56,7 @@ def serialize_node_for_falkordb(node: BaseNode) -> Dict[str, Any]:
     """
     properties = {}
 
-    # Category 1: Core Identity Primitives (directly queryable)
+    # Category 1: Core Idsubentity Primitives (directly queryable)
     properties['name'] = node.name
     properties['description'] = node.description
     properties['confidence'] = node.confidence

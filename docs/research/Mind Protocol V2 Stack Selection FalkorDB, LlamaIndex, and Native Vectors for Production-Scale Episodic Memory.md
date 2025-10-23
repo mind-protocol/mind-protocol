@@ -2,7 +2,7 @@
 
 **FalkorDB + LlamaIndex + Native Vectors** provides the optimal foundation for streaming ingestion with multi-tenant isolation at 1M+ node scale. This stack eliminates Enterprise licensing costs while delivering proven performance for continuous graph construction.
 
-**Bottom line up front**: Deploy FalkorDB Community Edition for its unmatched 10,000+ graph multi-tenancy, pair it with LlamaIndex's SchemaLLMPathExtractor for property-rich entity extraction with emotion/energy metadata, and leverage native vector capabilities to avoid dual-database synchronization complexity. Adopt Graphiti's bi-temporal schema pattern (custom implementation) to track event vs transaction timestamps without LLM overhead.
+**Bottom line up front**: Deploy FalkorDB Community Edition for its unmatched 10,000+ graph multi-tenancy, pair it with LlamaIndex's SchemaLLMPathExtractor for property-rich subentity extraction with emotion/energy metadata, and leverage native vector capabilities to avoid dual-database synchronization complexity. Adopt Graphiti's bi-temporal schema pattern (custom implementation) to track event vs transaction timestamps without LLM overhead.
 
 ## Context and requirements
 
@@ -44,13 +44,13 @@ FalkorDB's production portfolio is smaller but targeted: AdaptX healthcare platf
 
 ### Recommendation: FalkorDB with migration insurance
 
-**Deploy FalkorDB Community Edition immediately**. The multi-tenancy requirement eliminates alternatives unless Enterprise budget materializes. Risk mitigation strategy: architect data access patterns to remain portable—use standard Cypher queries where possible, avoid vendor-specific extensions, and design entity schemas that could export to Neo4j or Memgraph if community development stalls.
+**Deploy FalkorDB Community Edition immediately**. The multi-tenancy requirement eliminates alternatives unless Enterprise budget materializes. Risk mitigation strategy: architect data access patterns to remain portable—use standard Cypher queries where possible, avoid vendor-specific extensions, and design subentity schemas that could export to Neo4j or Memgraph if community development stalls.
 
 Operational simplicity matters. FalkorDB runs as a Redis module, meaning teams with Redis expertise can deploy and operate it without learning entirely new infrastructure. The sub-140ms P99 write latency proves it handles streaming ingestion. The 10,000+ graph validation proves it handles multi-tenancy. **Confidence level: High** based on licensing constraints and production proof points.
 
-## Priority 2: Bi-temporal modeling for identity and time tracking
+## Priority 2: Bi-temporal modeling for idsubentity and time tracking
 
-**Adopt Graphiti's bi-temporal schema pattern via custom implementation** rather than the full library. This provides production-tested temporal architecture without LLM dependencies unsuitable for structured identity tracking.
+**Adopt Graphiti's bi-temporal schema pattern via custom implementation** rather than the full library. This provides production-tested temporal architecture without LLM dependencies unsuitable for structured idsubentity tracking.
 
 ### Graphiti library analysis
 
@@ -58,7 +58,7 @@ Graphiti (https://github.com/getzep/graphiti, 19k+ stars) is a **fully standalon
 
 The library implements **explicit bi-temporal tracking** with four timestamps per edge: `created_at` and `expired_at` for transaction timeline (when facts entered/exited the system), plus `valid_at` and `invalid_at` for event timeline (when facts were actually true in the real world). This enables point-in-time queries, automatic conflict detection, and non-lossy historical tracking.
 
-Critical caveat: **Graphiti requires LLM API calls** for entity extraction, relationship deduplication, temporal conflict resolution, and edge invalidation decisions. Supported providers include OpenAI, Anthropic, Gemini, Groq, and Ollama (local models). For high-volume identity tracking, LLM costs could become prohibitive even with local Ollama deployment.
+Critical caveat: **Graphiti requires LLM API calls** for subentity extraction, relationship deduplication, temporal conflict resolution, and edge invalidation decisions. Supported providers include OpenAI, Anthropic, Gemini, Groq, and Ollama (local models). For high-volume idsubentity tracking, LLM costs could become prohibitive even with local Ollama deployment.
 
 ### FalkorDB compatibility
 
@@ -68,12 +68,12 @@ However, the Neo4j driver remains a core dependency even when using FalkorDB—a
 
 ### The custom implementation path
 
-For Mind Protocol's structured identity event tracking (not free-text conversation parsing), **Graphiti's LLM dependency provides minimal value** while adding operational complexity and cost. The intelligent approach: **adopt Graphiti's bi-temporal schema pattern** directly in FalkorDB without the full library.
+For Mind Protocol's structured idsubentity event tracking (not free-text conversation parsing), **Graphiti's LLM dependency provides minimal value** while adding operational complexity and cost. The intelligent approach: **adopt Graphiti's bi-temporal schema pattern** directly in FalkorDB without the full library.
 
 Implement a lightweight custom system with:
 
 ```
-Entity nodes (immutable): (:Identity {id: "citizen_123"})
+Subentity nodes (immutable): (:Idsubentity {id: "citizen_123"})
 
 State nodes (versioned): (:IdentityState {
     name: "...",
@@ -83,7 +83,7 @@ State nodes (versioned): (:IdentityState {
 })
 
 Temporal relationships:
-(:Identity)-[:HAS_STATE {
+(:Idsubentity)-[:HAS_STATE {
     valid_at: datetime,      // Event time
     invalid_at: datetime,    // Event time
     created_at: datetime,    // Transaction time
@@ -101,15 +101,15 @@ Production examples exist across financial services (tracking executive role cha
 
 ### Recommendation: Custom implementation following Graphiti pattern
 
-**Implement bi-temporal tracking using Graphiti's four-timestamp schema** but write custom ingestion logic for structured identity events. This avoids LLM costs while leveraging battle-tested temporal architecture. If conversation parsing becomes critical later, evaluate full Graphiti adoption with Ollama for local inference to control costs. **Confidence level: High** for custom approach given structured data nature.
+**Implement bi-temporal tracking using Graphiti's four-timestamp schema** but write custom ingestion logic for structured idsubentity events. This avoids LLM costs while leveraging battle-tested temporal architecture. If conversation parsing becomes critical later, evaluate full Graphiti adoption with Ollama for local inference to control costs. **Confidence level: High** for custom approach given structured data nature.
 
-## Priority 3: Orchestration framework for entity extraction and graph integration
+## Priority 3: Orchestration framework for subentity extraction and graph integration
 
-**LlamaIndex's PropertyGraphIndex with SchemaLLMPathExtractor delivers superior graph database integration and entity extraction flexibility** compared to LangChain's query-focused GraphCypherQAChain. This choice hinges on write-heavy graph construction vs read-heavy query generation priorities.
+**LlamaIndex's PropertyGraphIndex with SchemaLLMPathExtractor delivers superior graph database integration and subentity extraction flexibility** compared to LangChain's query-focused GraphCypherQAChain. This choice hinges on write-heavy graph construction vs read-heavy query generation priorities.
 
-### Entity extraction with complex schemas
+### Subentity extraction with complex schemas
 
-LlamaIndex's **SchemaLLMPathExtractor enables native property graph extraction** with validation schemas preventing invalid entity-relationship combinations. This directly supports Mind Protocol's emotion and energy metadata requirements without intermediate conversion layers.
+LlamaIndex's **SchemaLLMPathExtractor enables native property graph extraction** with validation schemas preventing invalid subentity-relationship combinations. This directly supports Mind Protocol's emotion and energy metadata requirements without intermediate conversion layers.
 
 The architecture provides three extraction strategies: SimpleLLMPathExtractor (free-form), DynamicLLMPathExtractor (inferred types), and **SchemaLLMPathExtractor (strict validation)**. The latter supports:
 
@@ -142,13 +142,13 @@ Production patterns favor LlamaIndex for construction pipelines. The official Ne
 
 LlamaIndex's **QueryFusionRetriever implements RRF natively** with automatic query generation (3-4 related queries), combining vector + BM25 + graph retrieval with configurable reranking modes. The implementation applies `score = 1.0 / (rank + 60)` fusion across multiple retrievers.
 
-Graph-specific retrievers include VectorContextRetriever (semantic similarity with graph traversal), LLMSynonymRetriever (entity synonym expansion), and custom retrievers. These combine seamlessly via the modular retriever architecture.
+Graph-specific retrievers include VectorContextRetriever (semantic similarity with graph traversal), LLMSynonymRetriever (subentity synonym expansion), and custom retrievers. These combine seamlessly via the modular retriever architecture.
 
 LangChain's EnsembleRetriever provides basic RRF but requires manual weight assignment, lacks automatic query generation, and has no built-in graph+vector fusion patterns. Combining GraphCypherQAChain results with vector search requires custom implementation—straightforward for experienced developers but less turnkey than LlamaIndex.
 
 ### Code examples and documentation
 
-LlamaIndex provides **extensive graph-specific examples** in official docs: `property_graph_basic/`, `property_graph_advanced/`, `property_graph_neo4j/`, `property_graph_falkordb/`, and `property_graph_memgraph/`. These demonstrate entity extraction with property support, graph construction pipelines, and hybrid retrieval patterns.
+LlamaIndex provides **extensive graph-specific examples** in official docs: `property_graph_basic/`, `property_graph_advanced/`, `property_graph_neo4j/`, `property_graph_falkordb/`, and `property_graph_memgraph/`. These demonstrate subentity extraction with property support, graph construction pipelines, and hybrid retrieval patterns.
 
 LangChain examples focus on query generation and conversational interfaces with existing graphs. The extraction tutorials cover general Pydantic-based parsing but lack graph-specific construction patterns. For teams building knowledge graphs from scratch, **LlamaIndex provides more directly applicable patterns**.
 
@@ -158,7 +158,7 @@ LlamaIndex's IngestionPipeline supports streaming document batches through trans
 
 ### Recommendation: LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor
 
-**Deploy LlamaIndex as orchestration framework**. The SchemaLLMPathExtractor directly supports entity properties (emotion, energy) with validation schemas. FalkorDB integration is documented and maintained. Hybrid retrieval fusion is superior. The only reason to choose LangChain: if natural language query generation (text-to-Cypher) is more important than graph construction—which contradicts Mind Protocol's streaming ingestion focus. **Confidence level: High** based on architecture alignment and graph-specific community strength.
+**Deploy LlamaIndex as orchestration framework**. The SchemaLLMPathExtractor directly supports subentity properties (emotion, energy) with validation schemas. FalkorDB integration is documented and maintained. Hybrid retrieval fusion is superior. The only reason to choose LangChain: if natural language query generation (text-to-Cypher) is more important than graph construction—which contradicts Mind Protocol's streaming ingestion focus. **Confidence level: High** based on architecture alignment and graph-specific community strength.
 
 ## Priority 4: Vector database architecture decision
 
@@ -227,11 +227,11 @@ Dedicated VDB approach requires parallel writes with retry logic: `Document → 
 
 Repository: https://github.com/getzep/graphiti (19k stars, very active)
 
-Graphiti represents **current state-of-the-art for agent memory systems**, combining episodic memory (raw events), semantic memory (extracted entities/relationships), and community nodes (hierarchical organization) with bi-temporal tracking. The architecture demonstrates:
+Graphiti represents **current state-of-the-art for agent memory systems**, combining episodic memory (raw events), semantic memory (extracted subentities/relationships), and community nodes (hierarchical organization) with bi-temporal tracking. The architecture demonstrates:
 
 **Tool integration**: Neo4j, FalkorDB, Neptune, Kuzu via pluggable drivers; OpenAI, Anthropic, Gemini, Groq, Ollama for LLMs; native embeddings + BM25 + graph traversal for hybrid retrieval
 
-**Streaming patterns**: Real-time incremental updates without batch recomputation, entity resolution with fuzzy matching, automatic conflict detection and temporal invalidation
+**Streaming patterns**: Real-time incremental updates without batch recomputation, subentity resolution with fuzzy matching, automatic conflict detection and temporal invalidation
 
 **Scale validation**: Sub-100ms retrieval latency (P95: 300ms), supports large datasets via parallel processing, 25k weekly PyPI downloads indicating production adoption
 
@@ -251,37 +251,37 @@ This complete system transforms unstructured data into knowledge graphs with int
 
 **Multi-source ingestion**: Local files (PDF, DOC, TXT), YouTube videos, Wikipedia, AWS S3, GCS, web pages—batch processing with progress tracking
 
-**Hybrid chat modes**: Seven retrieval strategies (vector-only, graph-only, hybrid graph+vector, full-text, entity-vector, global-vector) demonstrating different query patterns
+**Hybrid chat modes**: Seven retrieval strategies (vector-only, graph-only, hybrid graph+vector, full-text, subentity-vector, global-vector) demonstrating different query patterns
 
 **Production deployment**: Docker Compose for local development, GCP Cloud Run scripts for cloud deployment, comprehensive environment configuration
 
-**Schema-driven construction**: Custom entity and relationship label definitions, multiple LLM model selection per extraction task, entity graph extraction settings
+**Schema-driven construction**: Custom subentity and relationship label definitions, multiple LLM model selection per extraction task, subentity graph extraction settings
 
 The complete web interface (FastAPI + React) shows production-ready deployment patterns. While designed primarily for batch document processing rather than streaming, the API patterns adapt to continuous ingestion scenarios.
 
 ### Supporting resources
 
-**OpenAI Cookbook - Temporal Agents with Knowledge Graphs**: Comprehensive guide (https://cookbook.openai.com/examples/partners/temporal_agents_with_knowledge_graphs) demonstrating statement extraction, temporal range extraction, entity resolution with fuzzy matching, invalidation logic with bi-directional checks, and multi-hop retrieval. The financial earnings call use case shows practical application.
+**OpenAI Cookbook - Temporal Agents with Knowledge Graphs**: Comprehensive guide (https://cookbook.openai.com/examples/partners/temporal_agents_with_knowledge_graphs) demonstrating statement extraction, temporal range extraction, subentity resolution with fuzzy matching, invalidation logic with bi-directional checks, and multi-hop retrieval. The financial earnings call use case shows practical application.
 
 **LangGraph Memory Service**: https://github.com/langchain-ai/langgraph-memory demonstrates semantic + episodic memory extraction for LangGraph agents with Pinecone integration and evaluation framework.
 
 **FalkorDB Integration Guides**: Official docs (https://docs.falkordb.com/llm-integrations.html) plus blog posts for LlamaIndex RAG implementation and LangChain Q&A systems with FalkorDB's low-latency architecture.
 
-**Neo4j PropertyGraph Index**: LlamaIndex starter kit (https://github.com/neo4j-examples/llamaindex-starter-kit) with SchemaLLMPathExtractor examples, custom retrieval methods, and entity deduplication patterns.
+**Neo4j PropertyGraph Index**: LlamaIndex starter kit (https://github.com/neo4j-examples/llamaindex-starter-kit) with SchemaLLMPathExtractor examples, custom retrieval methods, and subentity deduplication patterns.
 
 ### Recommended reference implementation strategy
 
-**Adopt Graphiti's architectural patterns** (bi-temporal model, hybrid retrieval, incremental updates) but implement custom entity extraction logic for structured identity events to avoid LLM dependencies. Use **Neo4j LLM Graph Builder's deployment patterns** (Docker Compose, environment configuration, monitoring) as infrastructure reference. Consult **OpenAI Cookbook temporal agent patterns** for invalidation logic and entity resolution algorithms.
+**Adopt Graphiti's architectural patterns** (bi-temporal model, hybrid retrieval, incremental updates) but implement custom subentity extraction logic for structured idsubentity events to avoid LLM dependencies. Use **Neo4j LLM Graph Builder's deployment patterns** (Docker Compose, environment configuration, monitoring) as infrastructure reference. Consult **OpenAI Cookbook temporal agent patterns** for invalidation logic and subentity resolution algorithms.
 
-Build multi-tenancy via database-per-citizen: `get_user_db(citizen_id) → FalkorDriver(database=f"citizen_{citizen_id}")`. Implement streaming ingestion: `async for event in event_stream: await add_to_graph(event)` with incremental entity resolution and indexing.
+Build multi-tenancy via database-per-citizen: `get_user_db(citizen_id) → FalkorDriver(database=f"citizen_{citizen_id}")`. Implement streaming ingestion: `async for event in event_stream: await add_to_graph(event)` with incremental subentity resolution and indexing.
 
 ## Implementation roadmap and risk mitigation
 
 **Week 1-2: Foundation setup**  
-Deploy FalkorDB Community Edition (Redis module), implement multi-graph isolation with database-per-citizen pattern, set up LlamaIndex with SchemaLLMPathExtractor, define Mind Protocol entity schema (Memory, Person, Emotion, Concept, Event) with validation rules
+Deploy FalkorDB Community Edition (Redis module), implement multi-graph isolation with database-per-citizen pattern, set up LlamaIndex with SchemaLLMPathExtractor, define Mind Protocol subentity schema (Memory, Person, Emotion, Concept, Event) with validation rules
 
 **Week 3-4: Bi-temporal implementation**  
-Implement custom four-timestamp model (valid_at, invalid_at, created_at, expired_at) on relationships, build entity resolution logic with fuzzy matching (RapidFuzz), create temporal conflict detection and invalidation algorithms, benchmark write latency with 10k events
+Implement custom four-timestamp model (valid_at, invalid_at, created_at, expired_at) on relationships, build subentity resolution logic with fuzzy matching (RapidFuzz), create temporal conflict detection and invalidation algorithms, benchmark write latency with 10k events
 
 **Week 5-6: Vector integration**  
 Configure FalkorDB native vector indices (dimension, similarity function), implement hybrid retrieval combining vector + BM25 + graph traversal, benchmark query latency with 100k vectors, optimize HNSW parameters (M, ef_construction)
@@ -312,7 +312,7 @@ Bi-temporal implementation complexity: Start with simplified two-timestamp model
 **Decision confidence levels**:
 
 - **Graph DB (FalkorDB)**: High confidence (95%) based on licensing constraints eliminating alternatives and production validation at 10k+ graphs
-- **Bi-temporal (Custom)**: High confidence (90%) for structured identity events; medium (70%) for complex conversational data requiring Graphiti
+- **Bi-temporal (Custom)**: High confidence (90%) for structured idsubentity events; medium (70%) for complex conversational data requiring Graphiti
 - **Orchestrator (LlamaIndex)**: High confidence (90%) based on architecture alignment and graph-specific features
 - **Vector DB (Native)**: High confidence (85%) for 1M-5M vectors; medium (70%) for 10M+ where dedicated VDB becomes necessary
 - **Reference patterns (Graphiti)**: High confidence (95%) as state-of-the-art validated by research paper and production deployments
@@ -335,7 +335,7 @@ Bi-temporal implementation complexity: Start with simplified two-timestamp model
 
 1. **FalkorDB Community Edition** for episodic memory graph with 10k+ graph multi-tenancy at $0 licensing cost
 2. **Custom bi-temporal implementation** following Graphiti's four-timestamp schema pattern without LLM dependencies
-3. **LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor** for entity extraction with emotion/energy metadata
+3. **LlamaIndex PropertyGraphIndex with SchemaLLMPathExtractor** for subentity extraction with emotion/energy metadata
 4. **Native FalkorDB vectors** for semantic memory to 5M vectors, deferring dedicated VDB until proven necessary
 5. **Graphiti + Neo4j LLM Graph Builder** as architectural reference implementations
 

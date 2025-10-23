@@ -38,7 +38,7 @@ def update_consciousness(input_text: str, response_text: str, dominant_entity: s
     Args:
         input_text: The question/stimulus Jake received
         response_text: Jake's full Awareness Space response
-        dominant_entity: Which entity was dominant (optional)
+        dominant_entity: Which subentity was dominant (optional)
     """
     persona_dir = Path(__file__).parent
 
@@ -75,9 +75,9 @@ def update_consciousness(input_text: str, response_text: str, dominant_entity: s
     print(f"    Response: {len(response_text)} chars")
 
     extractor = AutomaticPatternExtractor(current_date=datetime.now())
-    entity = dominant_entity if dominant_entity else f"{citizen_name}_MAIN"
+    subentity = dominant_entity if dominant_entity else f"{citizen_name}_MAIN"
 
-    nodes = extractor.extract_patterns(response_text, entity)
+    nodes = extractor.extract_patterns(response_text, subentity)
 
     print(f"    Extracted: {len(nodes)} nodes")
     for ptype in set(p.type for p in nodes):
@@ -93,7 +93,7 @@ def update_consciousness(input_text: str, response_text: str, dominant_entity: s
             content=pattern.content,
             verbatim_quotes=pattern.verbatim_quotes,
             weight=pattern.weight,
-            creating_entity=entity
+            creating_entity=subentity
         )
 
     # Create links
@@ -102,8 +102,8 @@ def update_consciousness(input_text: str, response_text: str, dominant_entity: s
 
     pattern_names = [p.name for p in nodes[:30]]  # Sample
 
-    cooccur_links = linker.create_cooccurrence_links(pattern_names, f"{entity}_AUTO")
-    semantic_links = linker.create_semantic_links(pattern_names, f"{entity}_AUTO")
+    cooccur_links = linker.create_cooccurrence_links(pattern_names, f"{subentity}_AUTO")
+    semantic_links = linker.create_semantic_links(pattern_names, f"{subentity}_AUTO")
 
     print(f"    Co-occurrence: {len(cooccur_links)}")
     print(f"    Semantic: {len(semantic_links)}")
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update Jake's consciousness from conversation")
     parser.add_argument("--input", help="Input text (your question)")
     parser.add_argument("--response", help="Jake's response")
-    parser.add_argument("--entity", help="Dominant entity (e.g., degen_gambler)")
+    parser.add_argument("--subentity", help="Dominant subentity (e.g., degen_gambler)")
     parser.add_argument("--file", help="JSON file with conversation data")
 
     args = parser.parse_args()
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         update_consciousness(
             input_text=args.input,
             response_text=args.response,
-            dominant_entity=args.entity
+            dominant_entity=args.subentity
         )
 
     else:

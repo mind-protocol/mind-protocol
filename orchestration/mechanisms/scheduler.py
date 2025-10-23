@@ -1,10 +1,10 @@
 """
 Zippered Round-Robin Scheduler
 
-Implements fair, interleaved entity execution:
-- One stride per turn for each entity
-- Round-robin cycling through all active entities
-- Quota-aware (entity exits when quota exhausted)
+Implements fair, interleaved subentity execution:
+- One stride per turn for each subentity
+- Round-robin cycling through all active subentities
+- Quota-aware (subentity exits when quota exhausted)
 - Deadline-aware (early termination on time pressure)
 
 Author: AI #3
@@ -32,25 +32,25 @@ import time
 
 
 def zippered_schedule(
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     deadline_ms: Optional[float] = None
 ) -> List[tuple[str, int]]:
     """
-    Generate zippered execution schedule for entities.
+    Generate zippered execution schedule for subentities.
 
     One stride per turn, round-robin until all quotas exhausted.
 
     Args:
-        entities: Active sub-entities with assigned quotas
+        subentities: Active sub-entities with assigned quotas
         deadline_ms: Optional wall-clock deadline (ms from epoch)
 
     Returns:
         List of (entity_id, stride_index) tuples in execution order
 
     Algorithm:
-        1. Initialize quota_remaining for each entity
-        2. While any entity has quota_remaining > 0:
-            a. For each entity in round-robin order:
+        1. Initialize quota_remaining for each subentity
+        2. While any subentity has quota_remaining > 0:
+            a. For each subentity in round-robin order:
                 - If quota_remaining > 0:
                     - Schedule one stride
                     - Decrement quota_remaining
@@ -59,42 +59,42 @@ def zippered_schedule(
         3. Return schedule
 
     Example:
-        Entity A: quota=3
-        Entity B: quota=2
-        Entity C: quota=4
+        Subentity A: quota=3
+        Subentity B: quota=2
+        Subentity C: quota=4
 
         Schedule: [A0, B0, C0, A1, B1, C1, A2, C2, C3]
 
-        No entity gets >1 stride ahead of others (zippered fairness)
+        No subentity gets >1 stride ahead of others (zippered fairness)
     """
-    if not entities:
+    if not subentities:
         return []
 
     schedule = []
-    stride_counts = {entity.id: 0 for entity in entities}
+    stride_counts = {subentity.id: 0 for subentity in subentities}
 
     # Round-robin until all quotas exhausted
     while True:
-        # Check if any entity has quota remaining
-        active = filter_active_entities(entities)
+        # Check if any subentity has quota remaining
+        active = filter_active_entities(subentities)
         if not active:
             break
 
-        # One stride per entity per round
-        for entity in entities:
-            if entity.quota_remaining <= 0:
+        # One stride per subentity per round
+        for subentity in subentities:
+            if subentity.quota_remaining <= 0:
                 continue
 
             # Schedule this stride
-            schedule.append((entity.id, stride_counts[entity.id]))
-            stride_counts[entity.id] += 1
-            entity.quota_remaining -= 1
+            schedule.append((subentity.id, stride_counts[subentity.id]))
+            stride_counts[subentity.id] += 1
+            subentity.quota_remaining -= 1
 
     return schedule
 
 
 def execute_frame(
-    entities: List[SubEntity],
+    subentities: List[SubEntity],
     graph,
     goal_embedding,
     Q_total: int,
@@ -106,7 +106,7 @@ def execute_frame(
     Execute one traversal frame with zippered scheduling.
 
     Args:
-        entities: Active sub-entities this frame
+        subentities: Active sub-entities this frame
         graph: Graph object
         goal_embedding: Current goal vector
         Q_total: Total stride budget for this frame
@@ -139,18 +139,18 @@ def execute_frame(
 
     # === Step 1: Allocate Quotas ===
     allocate_quotas(
-        entities=entities,
+        subentities=subentities,
         Q_total=Q_total,
         graph=graph,
         recent_stimuli=recent_stimuli
     )
 
     # Emit quota events
-    for entity in entities:
+    for subentity in subentities:
         emit_entity_quota_event(
             frame=frame_number,
-            entity=entity,
-            quota_assigned=entity.quota_assigned
+            subentity=subentity,
+            quota_assigned=subentity.quota_assigned
         )
 
     # === Step 2: Execute Strides in Zippered Fashion ===
@@ -164,18 +164,18 @@ def execute_frame(
 
     # Round-robin execution
     while True:
-        active = filter_active_entities(entities)
+        active = filter_active_entities(subentities)
         if not active:
             break
 
-        # One stride per entity per round
+        # One stride per subentity per round
         made_progress = False
-        for entity in entities:
-            if entity.quota_remaining <= 0:
+        for subentity in subentities:
+            if subentity.quota_remaining <= 0:
                 continue
 
             # Check deadline before executing
-            remaining_strides = sum(e.quota_remaining for e in entities)
+            remaining_strides = sum(e.quota_remaining for e in subentities)
             if check_early_termination(frame_deadline_ms, avg_stride_time_us, remaining_strides):
                 early_termination = True
                 break
@@ -183,21 +183,21 @@ def execute_frame(
             # === Step 3a: Select Edge ===
             # Get valences for all frontier edges
             source_node = None
-            if entity.extent:
+            if subentity.extent:
                 # Select a source node from extent (highest energy)
-                source_node = max(entity.extent, key=lambda n: entity.get_energy(n))
+                source_node = max(subentity.extent, key=lambda n: subentity.get_energy(n))
 
             if source_node is None:
-                # Entity has no extent (dissolved or empty)
-                entity.quota_remaining = 0
-                entities_converged.append(entity.id)
+                # Subentity has no extent (dissolved or empty)
+                subentity.quota_remaining = 0
+                entities_converged.append(subentity.id)
                 emit_convergence_event(
                     frame=frame_number,
-                    entity=entity,
+                    subentity=subentity,
                     reason="dissolution",
                     final_roi=0.0,
-                    whisker_threshold=entity.roi_tracker.lower_whisker() if entity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
-                    strides_executed=entity.quota_assigned - entity.quota_remaining
+                    whisker_threshold=subentity.roi_tracker.lower_whisker() if subentity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
+                    strides_executed=subentity.quota_assigned - subentity.quota_remaining
                 )
                 continue
 
@@ -205,22 +205,22 @@ def execute_frame(
             neighbors = list(graph.neighbors(source_node))
             if not neighbors:
                 # No outgoing edges (dead end)
-                entity.quota_remaining = 0
-                entities_converged.append(entity.id)
+                subentity.quota_remaining = 0
+                entities_converged.append(subentity.id)
                 emit_convergence_event(
                     frame=frame_number,
-                    entity=entity,
+                    subentity=subentity,
                     reason="dead_end",
                     final_roi=0.0,
-                    whisker_threshold=entity.roi_tracker.lower_whisker() if entity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
-                    strides_executed=entity.quota_assigned - entity.quota_remaining
+                    whisker_threshold=subentity.roi_tracker.lower_whisker() if subentity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
+                    strides_executed=subentity.quota_assigned - subentity.quota_remaining
                 )
                 continue
 
             valences = {}
             for target_node in neighbors:
                 v = composite_valence(
-                    entity=entity,
+                    subentity=subentity,
                     source_i=source_node,    # Fixed: use source_i
                     target_j=target_node,    # Fixed: use target_j
                     graph=graph,
@@ -230,22 +230,22 @@ def execute_frame(
 
             # Select edge by valence coverage
             selected_edges = select_edge_by_valence_coverage(
-                entity=entity,
+                subentity=subentity,
                 source_i=source_node,
                 valences=valences,
                 graph=graph
             )
             if not selected_edges:
                 # No valid edges (all zero valence)
-                entity.quota_remaining = 0
-                entities_converged.append(entity.id)
+                subentity.quota_remaining = 0
+                entities_converged.append(subentity.id)
                 emit_convergence_event(
                     frame=frame_number,
-                    entity=entity,
+                    subentity=subentity,
                     reason="zero_valence",
                     final_roi=0.0,
-                    whisker_threshold=entity.roi_tracker.lower_whisker() if entity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
-                    strides_executed=entity.quota_assigned - entity.quota_remaining
+                    whisker_threshold=subentity.roi_tracker.lower_whisker() if subentity.roi_tracker.lower_whisker() != float('-inf') else 0.0,
+                    strides_executed=subentity.quota_assigned - subentity.quota_remaining
                 )
                 continue
 
@@ -257,16 +257,16 @@ def execute_frame(
 
             # Capture state before stride
             source_before = {
-                'E': entity.get_energy(source_node),
-                'theta': entity.get_threshold(source_node)
+                'E': subentity.get_energy(source_node),
+                'theta': subentity.get_threshold(source_node)
             }
             target_before = {
-                'E': entity.get_energy(target_node),
-                'theta': entity.get_threshold(target_node)
+                'E': subentity.get_energy(target_node),
+                'theta': subentity.get_threshold(target_node)
             }
 
             result = execute_stride(
-                entity=entity,
+                subentity=subentity,
                 source_i=source_node,
                 target_j=target_node,
                 graph=graph
@@ -274,12 +274,12 @@ def execute_frame(
 
             # Capture state after stride
             source_after = {
-                'E': entity.get_energy(source_node),
-                'theta': entity.get_threshold(source_node)
+                'E': subentity.get_energy(source_node),
+                'theta': subentity.get_threshold(source_node)
             }
             target_after = {
-                'E': entity.get_energy(target_node),
-                'theta': entity.get_threshold(target_node)
+                'E': subentity.get_energy(target_node),
+                'theta': subentity.get_threshold(target_node)
             }
 
             stride_time_us = result['stride_time_us']
@@ -291,28 +291,28 @@ def execute_frame(
             if result['delta'] > 0:
                 # Record ROI for this stride
                 roi = result['delta'] / (stride_time_us + 1e-6)
-                entity.roi_tracker.push(roi)
+                subentity.roi_tracker.push(roi)
 
                 # Check if converged (ROI below whisker)
-                whisker = entity.roi_tracker.lower_whisker()
+                whisker = subentity.roi_tracker.lower_whisker()
                 if whisker != float('-inf') and roi < whisker:
                     # Converged - ROI too low
-                    entity.quota_remaining = 0
-                    entities_converged.append(entity.id)
+                    subentity.quota_remaining = 0
+                    entities_converged.append(subentity.id)
                     emit_convergence_event(
                         frame=frame_number,
-                        entity=entity,
+                        subentity=subentity,
                         reason="roi_convergence",
                         final_roi=roi,
                         whisker_threshold=whisker,
-                        strides_executed=entity.quota_assigned - entity.quota_remaining
+                        strides_executed=subentity.quota_assigned - subentity.quota_remaining
                     )
                     continue
 
             # === Step 3d: Emit Telemetry ===
             emit_stride_exec_event(
                 frame=frame_number,
-                entity=entity,
+                subentity=subentity,
                 source_i=source_node,
                 target_j=target_node,
                 delta=result['delta'],
@@ -325,7 +325,7 @@ def execute_frame(
             )
 
             # Update quota
-            entity.quota_remaining -= 1
+            subentity.quota_remaining -= 1
             strides_executed += 1
             made_progress = True
 
@@ -333,12 +333,12 @@ def execute_frame(
             break
 
         if not made_progress:
-            # No entity could make progress (all converged/blocked)
+            # No subentity could make progress (all converged/blocked)
             break
 
     # === Step 4: Select Working Memory Nodes ===
     # (Would be called here in full integration)
-    # selected_wm, stats = select_wm_nodes(entities, graph, token_budget)
+    # selected_wm, stats = select_wm_nodes(subentities, graph, token_budget)
 
     # === Step 5: Emit Frame Summary ===
     frame_end_time = time.time()
@@ -346,7 +346,7 @@ def execute_frame(
 
     emit_frame_summary(
         frame=frame_number,
-        entities=entities,
+        subentities=subentities,
         strides_executed=strides_executed,
         wall_time_us=wall_time_us
     )
@@ -400,30 +400,30 @@ def check_early_termination(
     return predicted_time_ms > (time_remaining_ms * 1.1)
 
 
-def update_quota_remaining(entity: SubEntity):
+def update_quota_remaining(subentity: SubEntity):
     """
-    Decrement quota_remaining after entity executes a stride.
+    Decrement quota_remaining after subentity executes a stride.
 
     Args:
-        entity: Sub-entity that just executed
+        subentity: Sub-entity that just executed
 
     Side Effects:
-        Modifies entity.quota_remaining in place
+        Modifies subentity.quota_remaining in place
     """
-    if entity.quota_remaining > 0:
-        entity.quota_remaining -= 1
+    if subentity.quota_remaining > 0:
+        subentity.quota_remaining -= 1
 
 
-def filter_active_entities(entities: List[SubEntity]) -> List[SubEntity]:
+def filter_active_entities(subentities: List[SubEntity]) -> List[SubEntity]:
     """
-    Filter entities that still have quota remaining.
+    Filter subentities that still have quota remaining.
 
     Args:
-        entities: All sub-entities
+        subentities: All sub-entities
 
     Returns:
-        List of entities with quota_remaining > 0
+        List of subentities with quota_remaining > 0
 
     Zero-constants: No minimum quota threshold, natural completion
     """
-    return [e for e in entities if e.quota_remaining > 0]
+    return [e for e in subentities if e.quota_remaining > 0]

@@ -55,7 +55,7 @@ websockets
 # Alternative to Ollama when not available
 sentence-transformers
 
-# Fast entity matching with HNSW indices
+# Fast subentity matching with HNSW indices
 # 7x faster than FAISS on CPU, deterministic
 hnswlib
 

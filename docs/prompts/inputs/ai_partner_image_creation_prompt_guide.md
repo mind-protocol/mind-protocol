@@ -28,7 +28,7 @@ Background is [dark void/lagoon/space/etc.] with subtle [partner-color particle 
 
 ## ⚙️ Required Elements
 
-1. **Identity**
+1. **Idsubentity**
    - Format: `Square portrait of [First Name 'Nickname']`
    - Include role/archetype (e.g., merchant, navigator, architect).
    - Optional: age to imply energy (youthful, wise, vital).

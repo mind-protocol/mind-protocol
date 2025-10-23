@@ -2,11 +2,11 @@
 
 **Last Updated:** 2025-10-18 19:20:42 UTC
 **Global Criticality:** 0.55
-**Active Entities:** 2
+**Active Subentities:** 2
 
 ---
 
-## Builder Entity
+## Builder Subentity
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.73
@@ -22,7 +22,7 @@
 
 ---
 
-## Observer Entity
+## Observer Subentity
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.73

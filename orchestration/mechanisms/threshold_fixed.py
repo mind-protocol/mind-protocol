@@ -1,16 +1,16 @@
 """
 Mechanism 16 Part 1: Adaptive Activation Threshold
 
-ARCHITECTURAL PRINCIPLE: Nodes Become Entities via Threshold Crossing
+ARCHITECTURAL PRINCIPLE: Nodes Become Subentities via Threshold Crossing
 
 "Every time a node reaches the threshold of activation from a sensory input,
 it becomes a sub-entity." - Nicolas
 
 Core Truth:
-- NOT pre-defined entities (Translator, Architect) - those are CLUSTERS of micro-entities
+- NOT pre-defined subentities (Translator, Architect) - those are CLUSTERS of micro-subentities
 - ANY node crossing activation threshold becomes its own sub-entity
-- Entity name = node name (simple one-to-one mapping)
-- Thousands of simultaneous micro-entities (normal and expected)
+- Subentity name = node name (simple one-to-one mapping)
+- Thousands of simultaneous micro-subentities (normal and expected)
 - Threshold is ADAPTIVE - derived from signal detection theory, modulated by system state
 
 Layered Threshold Architecture:
@@ -129,19 +129,19 @@ def compute_base_threshold(
 
 def compute_adaptive_threshold(
     node: 'Node',
-    entity: 'EntityID',
+    subentity: 'EntityID',
     noise_stats: NoiseStatistics,
     ctx: ThresholdContext
 ) -> float:
     """
-    Compute adaptive threshold for node-entity pair.
+    Compute adaptive threshold for node-subentity pair.
 
     Applies layered modulation on top of base statistical threshold.
 
     Args:
         node: Node to compute threshold for
-        entity: Entity identifier
-        noise_stats: Noise statistics for this node-entity pair
+        subentity: Subentity identifier
+        noise_stats: Noise statistics for this node-subentity pair
         ctx: Threshold configuration with modulation parameters
 
     Returns:
@@ -232,7 +232,7 @@ def hard_activation(
 
 class NoiseTracker:
     """
-    Tracks noise statistics for node-entity pairs using EMA.
+    Tracks noise statistics for node-subentity pairs using EMA.
 
     Maintains rolling statistics (¼, Ã) for threshold calculation.
     """
@@ -245,25 +245,25 @@ class NoiseTracker:
             ema_alpha: EMA smoothing factor (0 < ± < 1). Default 0.1.
         """
         self.ema_alpha = ema_alpha
-        self.stats: Dict[str, NoiseStatistics] = {}  # Key: f"{node_id}_{entity}"
+        self.stats: Dict[str, NoiseStatistics] = {}  # Key: f"{node_id}_{subentity}"
 
-    def _get_key(self, node_id: str, entity: str) -> str:
-        """Generate key for node-entity pair."""
-        return f"{node_id}_{entity}"
+    def _get_key(self, node_id: str, subentity: str) -> str:
+        """Generate key for node-subentity pair."""
+        return f"{node_id}_{subentity}"
 
-    def get_stats(self, node_id: str, entity: str) -> NoiseStatistics:
+    def get_stats(self, node_id: str, subentity: str) -> NoiseStatistics:
         """
-        Get noise statistics for node-entity pair.
+        Get noise statistics for node-subentity pair.
 
         Returns:
             NoiseStatistics (creates default if not exists)
         """
-        key = self._get_key(node_id, entity)
+        key = self._get_key(node_id, subentity)
         if key not in self.stats:
             self.stats[key] = NoiseStatistics()
         return self.stats[key]
 
-    def update(self, node_id: str, entity: str, energy: float, is_quiet: bool):
+    def update(self, node_id: str, subentity: str, energy: float, is_quiet: bool):
         """
         Update noise statistics with new energy sample.
 
@@ -271,14 +271,14 @@ class NoiseTracker:
 
         Args:
             node_id: Node identifier
-            entity: Entity identifier
+            subentity: Subentity identifier
             energy: Current energy value
             is_quiet: True if node is quiet (suitable for noise sampling)
         """
         if not is_quiet:
             return
 
-        stats = self.get_stats(node_id, entity)
+        stats = self.get_stats(node_id, subentity)
 
         # Update EMA for ¼ (mean)
         if stats.sample_count == 0:
@@ -300,7 +300,7 @@ class NoiseTracker:
 
 def compute_activation_mask(
     graph: 'Graph',
-    entity: 'EntityID',
+    subentity: 'EntityID',
     noise_tracker: NoiseTracker,
     ctx: ThresholdContext
 ) -> Dict[str, bool]:
@@ -309,7 +309,7 @@ def compute_activation_mask(
 
     Args:
         graph: Graph with nodes
-        entity: Entity to compute activations for
+        subentity: Subentity to compute activations for
         noise_tracker: Noise statistics tracker
         ctx: Threshold configuration
 
@@ -324,9 +324,9 @@ def compute_activation_mask(
     mask = {}
 
     for node in graph.nodes:
-        energy = node.get_entity_energy(entity)
-        noise_stats = noise_tracker.get_stats(node.id, entity)
-        threshold = compute_adaptive_threshold(node, entity, noise_stats, ctx)
+        energy = node.get_entity_energy(subentity)
+        noise_stats = noise_tracker.get_stats(node.id, subentity)
+        threshold = compute_adaptive_threshold(node, subentity, noise_stats, ctx)
 
         mask[node.id] = hard_activation(energy, threshold)
 
@@ -335,7 +335,7 @@ def compute_activation_mask(
 
 def compute_activation_values(
     graph: 'Graph',
-    entity: 'EntityID',
+    subentity: 'EntityID',
     noise_tracker: NoiseTracker,
     ctx: ThresholdContext
 ) -> Dict[str, float]:
@@ -344,7 +344,7 @@ def compute_activation_values(
 
     Args:
         graph: Graph with nodes
-        entity: Entity to compute activations for
+        subentity: Subentity to compute activations for
         noise_tracker: Noise statistics tracker
         ctx: Threshold configuration
 
@@ -358,9 +358,9 @@ def compute_activation_values(
     activations = {}
 
     for node in graph.nodes:
-        energy = node.get_entity_energy(entity)
-        noise_stats = noise_tracker.get_stats(node.id, entity)
-        threshold = compute_adaptive_threshold(node, entity, noise_stats, ctx)
+        energy = node.get_entity_energy(subentity)
+        noise_stats = noise_tracker.get_stats(node.id, subentity)
+        threshold = compute_adaptive_threshold(node, subentity, noise_stats, ctx)
 
         activations[node.id] = soft_activation(energy, threshold, ctx.kappa)
 

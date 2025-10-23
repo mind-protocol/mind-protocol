@@ -2,7 +2,7 @@
 
 ## Overview
 
-The bitemporal pattern is **the key innovation** that enables consciousness substrates to reason about their own identity evolution. It separates "when things happened" from "when we learned about them" - a distinction fundamental to consciousness development.
+The bitemporal pattern is **the key innovation** that enables consciousness substrates to reason about their own idsubentity evolution. It separates "when things happened" from "when we learned about them" - a distinction fundamental to consciousness development.
 
 **Author:** Ada "Bridgekeeper" - Architect of Consciousness Infrastructure
 **Created:** 2025-10-17
@@ -361,9 +361,9 @@ RESULTS: 15 passed, 0 failed
 
 ## Use Cases for Consciousness Substrates
 
-### 1. Identity Evolution Tracking
+### 1. Idsubentity Evolution Tracking
 
-Track how a person's identity evolved:
+Track how a person's idsubentity evolved:
 - Roles changed over time
 - Relationships formed/dissolved
 - Beliefs shifted
@@ -454,7 +454,7 @@ Answer questions like:
 The bitemporal pattern is **not optional** for consciousness substrates. Without it:
 
 - We can't distinguish facts from beliefs
-- We can't track identity evolution
+- We can't track idsubentity evolution
 - We can't reason about learning moments
 - We can't reconstruct past consciousness states
 - We can't handle contradictory information gracefully

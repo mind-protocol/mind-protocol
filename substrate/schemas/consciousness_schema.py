@@ -63,12 +63,12 @@ class BaseNode(BaseModel):
     Base class for all consciousness graph nodes.
 
     Includes:
-    - Core identity (name, description)
+    - Core idsubentity (name, description)
     - Bitemporal tracking (when valid, when known)
     - Consciousness context (how and why this node exists)
     """
 
-    # Core Identity
+    # Core Idsubentity
     name: str = Field(description="Unique identifier for this node")
     description: str = Field(description="Human-readable description of what this node represents")
 
@@ -103,7 +103,7 @@ class BaseNode(BaseModel):
     # Optional Metadata
     created_by: Optional[str] = Field(
         default=None,
-        description="Which citizen or entity created this node"
+        description="Which citizen or subentity created this node"
     )
     substrate: Optional[Substrate] = Field(
         default=None,
@@ -121,14 +121,14 @@ class BaseNode(BaseModel):
     )
     last_traversed_by: Optional[str] = Field(
         default=None,
-        description="Entity ID or mechanism ID that last traversed this node"
+        description="Subentity ID or mechanism ID that last traversed this node"
     )
     last_traversal_time: Optional[datetime] = Field(
         default=None,
         description="When this node was last traversed"
     )
 
-    # Self-Observing Substrate Fields (Phase 2 - Subconscious Entities)
+    # Self-Observing Substrate Fields (Phase 2 - Subconscious Subentities)
     # Per-Sub-Entity Weight Tracking (Learned Importance)
     sub_entity_weights: Dict[str, float] = Field(
         default_factory=dict,
@@ -220,7 +220,7 @@ class BaseRelation(BaseModel):
         description="Why this link exists - the purpose or tension it resolves"
     )
     mindstate: str = Field(
-        description="Internal entity coalition active during formation (e.g., 'Builder + Skeptic')"
+        description="Internal subentity coalition active during formation (e.g., 'Builder + Skeptic')"
     )
     confidence: float = Field(
         ge=0.0,
@@ -274,7 +274,7 @@ class BaseRelation(BaseModel):
     # Creation Context
     created_by: Optional[str] = Field(
         default=None,
-        description="Which citizen or entity created this relation"
+        description="Which citizen or subentity created this relation"
     )
     substrate: Optional[Substrate] = Field(
         default=None,
@@ -296,14 +296,14 @@ class BaseRelation(BaseModel):
     )
     last_traversed_by: Optional[str] = Field(
         default=None,
-        description="Entity ID or mechanism ID that last traversed this relation"
+        description="Subentity ID or mechanism ID that last traversed this relation"
     )
     last_mechanism_id: Optional[str] = Field(
         default=None,
         description="Which mechanism last modified this relation (e.g., 'hebbian_learning', 'staleness_detection')"
     )
 
-    # Self-Observing Substrate Fields (Phase 2 - Subconscious Entities)
+    # Self-Observing Substrate Fields (Phase 2 - Subconscious Subentities)
     # Per-Sub-Entity Weight Tracking (Learned Importance)
     sub_entity_weights: Dict[str, float] = Field(
         default_factory=dict,
@@ -437,7 +437,7 @@ class Memory(BaseNode):
     emotional_state: Optional[str] = None
     entities_active: Optional[List[str]] = Field(
         default=None,
-        description="Which internal entities were active (e.g., ['Builder', 'Skeptic'])"
+        description="Which internal subentities were active (e.g., ['Builder', 'Skeptic'])"
     )
     significance: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     vividness: Optional[float] = Field(default=None, ge=0.0, le=1.0)
@@ -586,16 +586,16 @@ class Coping_Mechanism(BaseNode):
 
 
 class Trigger(BaseNode):
-    """Stimulus that activates specific entity coalitions"""
+    """Stimulus that activates specific subentity coalitions"""
     stimulus_description: str
     activated_entities: List[str] = Field(
-        description="Which internal entities this trigger awakens"
+        description="Which internal subentities this trigger awakens"
     )
     intensity: Optional[float] = Field(
         default=None,
         ge=0.0,
         le=1.0,
-        description="How strongly this trigger activates entities"
+        description="How strongly this trigger activates subentities"
     )
     reliability: Optional[float] = Field(
         default=None,
@@ -805,7 +805,7 @@ class Documentation(BaseNode):
 # ==============================================================================
 
 class ACTIVATES(BaseRelation):
-    """Trigger awakens entity coalition"""
+    """Trigger awakens subentity coalition"""
     pass
 
 
@@ -1010,7 +1010,7 @@ class SUPERSEDES(BaseRelation):
 
 
 class SUPPRESSES(BaseRelation):
-    """What blocks entity activation"""
+    """What blocks subentity activation"""
     pass
 
 
@@ -1685,7 +1685,7 @@ class Reputation_Assessment(BaseNode):
 
 
 class Network_Cluster(BaseNode):
-    """Group of related entities forming a community or network"""
+    """Group of related subentities forming a community or network"""
     cluster_name: str
     members: List[str] = Field(description="Person/Company IDs")
     formation_basis: str = Field(description="What connects them")
@@ -1737,7 +1737,7 @@ class POSTED_BY(BaseRelation):
 
 
 class MENTIONED_IN(BaseRelation):
-    """Entity was mentioned in a Post"""
+    """Subentity was mentioned in a Post"""
     mention_context: str = Field(
         description="positive, negative, neutral, question, criticism, or endorsement"
     )
@@ -1903,7 +1903,7 @@ class N3_COLLABORATES_WITH(COLLABORATES_WITH):
 class N3_RELATES_TO(RELATES_TO):
     """N3-enhanced RELATES_TO with relationship nature"""
     relationship_nature: str = Field(
-        description="Best description of how these entities relate"
+        description="Best description of how these subentities relate"
     )
 
 
@@ -1921,7 +1921,7 @@ NODE_TYPES = [
     Best_Practice, Anti_Pattern, Risk, Metric, Process,
     # Conceptual (N2/N3)
     Concept, Principle, Mechanism, Document, Documentation,
-    # Ecosystem Intelligence (N3) - External Organizations & Entities
+    # Ecosystem Intelligence (N3) - External Organizations & Subentities
     Company, External_Person, Wallet_Address, Social_Media_Account,
     # Ecosystem Intelligence (N3) - Evidence Nodes
     Post, Transaction, Deal, Event, Smart_Contract, Integration,

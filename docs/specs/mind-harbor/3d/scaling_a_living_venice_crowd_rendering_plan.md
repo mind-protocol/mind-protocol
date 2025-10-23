@@ -73,7 +73,7 @@
 
 ## 7) Visual Coherence Rules (Style at Scale)
 
-- **Orb is the identity anchor** across all tiers; color/pulse communicates entity and energy.
+- **Orb is the idsubentity anchor** across all tiers; color/pulse communicates subentity and energy.
 - **Additive color mixing** where groups co‑occupy nodes even in B/C tiers (screen‑space light accumulation).
 - **No water crossings** ever; highlight violations in red audit overlay during dev.
 - **Bridge bands**: show walking lanes as subtle specular streaks from orbs for readability at distance.
@@ -103,7 +103,7 @@
 2. **Add tile streaming** and frustum culling; A/B/C tiers; 5k agents.  
 3. **Navgraph capacities & sottoportego commit**; congestion metronome.  
 4. **Density field D‑tier**; Bacino plume; 30–50k represented.  
-5. **Multi‑entity mixing** (color add), data bindings, QA audit overlays.  
+5. **Multi‑subentity mixing** (color add), data bindings, QA audit overlays.  
 6. **City‑wide session**: all sestieri loaded around camera, 60 fps budget tuning.
 
 ---

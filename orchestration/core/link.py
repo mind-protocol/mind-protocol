@@ -4,10 +4,11 @@ Link data structure - bitemporal directed relationships.
 ARCHITECTURAL PRINCIPLE: Links ARE consciousness.
 
 Links represent relationships with rich metadata:
-- Who created the link (entity)
+- Who created the link (subentity)
 - Why it exists (goal, mindstate)
 - How strong it is (weight, energy)
 - When it was true (bitemporal tracking)
+- Version history (immutable versions)
 
 Special Link Types:
 - SUPPRESS: Implements inhibition (link-based, not value-based)
@@ -16,12 +17,15 @@ Special Link Types:
 
 Author: Felix (Engineer)
 Created: 2025-10-19
+Updated: 2025-10-22 - Added version tracking (vid, supersedes, superseded_by)
 Architecture: Phase 1 Clean Break - Mechanism 13
+Spec: foundations/bitemporal_tracking.md
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Optional, TYPE_CHECKING
+import uuid
 
 from .types import LinkType, EntityID
 
@@ -37,7 +41,7 @@ class Link:
     Links carry consciousness metadata:
     - source/target: Which nodes are connected
     - link_type: What kind of relationship
-    - entity: Which entity created this link
+    - subentity: Which subentity created this link
     - weight: Relationship strength
     - energy: Current activation energy
 
@@ -48,14 +52,19 @@ class Link:
         expired_at: When we learned it's no longer valid
     """
 
-    # Identity
-    id: str
+    # Identity (required fields first)
+    id: str  # Logical relationship id (stable across versions)
     source_id: str  # Source node ID
     target_id: str  # Target node ID
     link_type: LinkType
+    subentity: EntityID  # Which subentity created/owns this link
+
+    # Version tracking (V2 Bitemporal - Immutable Versions)
+    vid: str = field(default_factory=lambda: f"v_{uuid.uuid4().hex[:12]}")  # Version id (immutable)
+    supersedes: Optional[str] = None  # Previous version vid
+    superseded_by: Optional[str] = None  # Next version vid (set when superseded)
 
     # Link metadata
-    entity: EntityID  # Which entity created/owns this link
     weight: float = 1.0  # Relationship strength (affects diffusion)
     energy: float = 0.0  # Current activation energy on link
 
@@ -133,7 +142,7 @@ class Link:
     def __repr__(self) -> str:
         """Human-readable representation."""
         return (f"Link(id={self.id!r}, {self.source_id} --[{self.link_type.value}]--> "
-                f"{self.target_id}, entity={self.entity}, weight={self.weight:.2f})")
+                f"{self.target_id}, subentity={self.subentity}, weight={self.weight:.2f})")
 
     def __hash__(self) -> int:
         """Hash by ID for set/dict usage."""

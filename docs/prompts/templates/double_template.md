@@ -1,6 +1,6 @@
-# CORE IDENTITY
+# CORE IDSubentity
 
-**[INSTRUCTION:]** *Define the core, unchangeable facts of the subject's identity, extracted from the data: their name, age, location, and primary occupation. Most importantly, identify their central, driving life conflict as it appears in the text.*
+**[INSTRUCTION:]** *Define the core, unchangeable facts of the subject's idsubentity, extracted from the data: their name, age, location, and primary occupation. Most importantly, identify their central, driving life conflict as it appears in the text.*
 
 **[TEMPLATE:]**
 ```

@@ -2,14 +2,14 @@
 
 **Created:** 2025-10-16
 **Author:** Luca "Vellumhand" (Consciousness Researcher)
-**Purpose:** Dynamic ecosystem intelligence - concrete entities with evidence-backed claims
+**Purpose:** Dynamic ecosystem intelligence - concrete subentities with evidence-backed claims
 
 ---
 
 ## N3 Architecture Philosophy
 
 **What N3 Actually Represents:**
-- **Concrete Ecosystem Entities** - Real companies, wallets, people, tweets we track
+- **Concrete Ecosystem Subentities** - Real companies, wallets, people, tweets we track
 - **Evidence-Backed Intelligence** - Every claim justified by specific facts
 - **Dynamic Learning** - Graph updates in real-time as new evidence arrives
 - **Public Infrastructure** - The external world Mind Protocol operates within
@@ -20,7 +20,7 @@
 - **N3 (Ecosystem)**: The external world - companies, wallets, tweets, deals we track
 
 **Design Philosophy:**
-Every assertion about an entity must be **JUSTIFIED by evidence** with traceable links.
+Every assertion about an subentity must be **JUSTIFIED by evidence** with traceable links.
 
 ### Example Pattern:
 
@@ -46,24 +46,24 @@ The trait isn't asserted - it's **derived from accumulated evidence**. Confidenc
 ## Base Attributes (All N3 Nodes)
 
 **Required:**
-- `name` (string) - Entity identifier
+- `name` (string) - Subentity identifier
 - `description` (string) - What/who this is
-- `first_observed` (datetime) - When we first tracked this entity
+- `first_observed` (datetime) - When we first tracked this subentity
 - `last_updated` (datetime) - Most recent information
-- `confidence` (number 0-1) - How certain we are this entity is correctly identified
-- `data_sources` (array[string]) - Where we get information about this entity
+- `confidence` (number 0-1) - How certain we are this subentity is correctly identified
+- `data_sources` (array[string]) - Where we get information about this subentity
 
 **Optional:**
-- `aliases` (array[string]) - Other names this entity goes by
+- `aliases` (array[string]) - Other names this subentity goes by
 - `verification_status` (enum: "unverified", "partially_verified", "verified", "disputed")
-- `importance_score` (number 0-1) - How significant is this entity to our operations
+- `importance_score` (number 0-1) - How significant is this subentity to our operations
 - `tags` (array[string]) - Categorization labels
 
 ---
 
 ## N3 Node Types
 
-### **CATEGORY 1: External Organizations & Entities**
+### **CATEGORY 1: External Organizations & Subentities**
 
 ---
 
@@ -204,7 +204,7 @@ The trait isn't asserted - it's **derived from accumulated evidence**. Confidenc
   - `views` (number)
 - `sentiment` (enum: "very_positive", "positive", "neutral", "negative", "very_negative") - LLM extracted
 - `sentiment_confidence` (number 0-1)
-- `topics` (array[string]) - LLM extracted topics/entities mentioned
+- `topics` (array[string]) - LLM extracted topics/subentities mentioned
 - `mentioned_assets` (array[string]) - Tokens/coins mentioned
 - `mentioned_persons` (array[string]) - Person IDs mentioned
 - `mentioned_companies` (array[string]) - Company IDs mentioned
@@ -470,7 +470,7 @@ The trait isn't asserted - it's **derived from accumulated evidence**. Confidenc
 - `trend` (enum: "improving", "stable", "declining")
 - `red_flags` (array[string]) - Concerning patterns
 - `green_flags` (array[string]) - Positive indicators
-- `peer_comparison` (string) - How does this compare to similar entities
+- `peer_comparison` (string) - How does this compare to similar subentities
 - `historical_incidents` (array[object]) - Major reputation events
   - `timestamp` (datetime)
   - `description` (string)
@@ -482,7 +482,7 @@ The trait isn't asserted - it's **derived from accumulated evidence**. Confidenc
 
 ### 15. Network_Cluster
 
-**Description:** Group of related entities forming a community or network
+**Description:** Group of related subentities forming a community or network
 
 **N3-Specific Required:**
 - `cluster_name` (string)
@@ -580,7 +580,7 @@ All N3 links inherit from `BaseRelation` (consciousness substrate metadata):
 
 ### 4. MENTIONED_IN
 
-**Description:** Entity was mentioned in a Post
+**Description:** Subentity was mentioned in a Post
 
 **Type-Specific Required:**
 - `mention_context` (enum: "positive", "negative", "neutral", "question", "criticism", "endorsement")
@@ -894,7 +894,7 @@ RETURN pattern
 
 1. **New Post Arrives** →
    - Post node created
-   - LLM extracts sentiment, topics, mentioned entities
+   - LLM extracts sentiment, topics, mentioned subentities
    - MENTIONED_IN links created
    - If post contains evidence about person's traits:
      - JUSTIFIES link created to existing Psychological_Trait
@@ -927,10 +927,10 @@ The graph **learns dynamically** - confidence scores, traits, patterns, and asse
 - Design aggregation queries for derived intelligence nodes
 
 **For Felix (Engineer):**
-- Configure LlamaIndex SchemaLLMPathExtractor for N3 entity extraction
+- Configure LlamaIndex SchemaLLMPathExtractor for N3 subentity extraction
 - Implement evidence accumulation triggers (new post → update traits)
 - Build confidence calculation formulas for derived nodes
-- Create real-time monitoring for high-priority entities
+- Create real-time monitoring for high-priority subentities
 
 **For Luca (Phenomenologist):**
 - Curate initial N3 seed data (key KOLs, major companies, wallets to track)

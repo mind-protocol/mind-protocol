@@ -1,10 +1,10 @@
-# Pattern Retriever - Jake Martinez's Memory Injection Entity
+# Pattern Retriever - Jake Martinez's Memory Injection Subentity
 
 ## Base Prompt
 
 **→ See central Pattern Retriever prompt: `/prompts/pattern_retriever.md`**
 
-This entity uses the standard Pattern Retriever architecture defined in the central prompt.
+This subentity uses the standard Pattern Retriever architecture defined in the central prompt.
 
 ---
 
@@ -16,9 +16,9 @@ This entity uses the standard Pattern Retriever architecture defined in the cent
 
 ---
 
-## Entity Activation Prediction (Jake-Specific)
+## Subentity Activation Prediction (Jake-Specific)
 
-Based on activated nodes, predict which of Jake's entities will likely take control:
+Based on activated nodes, predict which of Jake's subentities will likely take control:
 
 ### Degen Gambler (Firefighter)
 **Activates when:**

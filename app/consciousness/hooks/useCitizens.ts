@@ -5,7 +5,7 @@ export interface Citizen {
   name: string;
   state: 'active' | 'recently_active' | 'dormant' | 'stopped';
   lastThought: string;
-  entities: any[];
+  subentities: any[];
   lastUpdate: string;
   tickInterval: number;
   energyTotal: number;
@@ -81,7 +81,7 @@ export function useCitizens() {
             // Default state - will be updated by CitizenMonitor's status polling
             state: 'active',
             lastThought: 'Initializing...',
-            entities: [],
+            subentities: [],
             lastUpdate: 'Just now',
             // Default values - CitizenMonitor's API polling will override these
             tickInterval: 200,
@@ -102,7 +102,7 @@ export function useCitizens() {
               name: 'Mind Protocol',
               state: 'active',
               lastThought: 'Collective intelligence emerging from citizen collaboration',
-              entities: [],
+              subentities: [],
               lastUpdate: '1s ago',
               tickInterval: 200,
               energyTotal: 150,

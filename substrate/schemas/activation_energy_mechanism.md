@@ -36,7 +36,7 @@ Every node must have:
 
 ```cypher
 CREATE (n:Node {
-    // Identity
+    // Idsubentity
     name: "...",
     node_type: "...",
     description: "...",
@@ -272,44 +272,44 @@ SET r.current_energy = r.current_energy * 0.95  // standard decay for links
 
 ## Trigger 6: Link Pruning (Diversity Maintenance)
 
-**Goal:** Prevent link explosion while maintaining diversity. Each entity should keep ~50 diverse links.
+**Goal:** Prevent link explosion while maintaining diversity. Each subentity should keep ~50 diverse links.
 
 **Periodic background process (after decay):**
 
 ```cypher
-// For each entity, prune weakest links if count > 50
+// For each subentity, prune weakest links if count > 50
 MATCH (n:Node)
-UNWIND keys(n.entity_activations) AS entity
-WITH n, entity, n.entity_activations[entity] AS entity_state
-WHERE entity_state.energy > 0.01  // Entity is active on this node
+UNWIND keys(n.entity_activations) AS subentity
+WITH n, subentity, n.entity_activations[subentity] AS entity_state
+WHERE entity_state.energy > 0.01  // Subentity is active on this node
 
-// Get all outgoing links for this entity
+// Get all outgoing links for this subentity
 MATCH (n)-[r]->()
-WHERE r.entity_activations[entity] IS NOT NULL
-WITH n, entity, collect({
+WHERE r.entity_activations[subentity] IS NOT NULL
+WITH n, subentity, collect({
     link: r,
-    energy: r.entity_activations[entity].energy,
+    energy: r.entity_activations[subentity].energy,
     semantic_diversity: r.semantic_diversity_score  // Calculated below
 }) AS links
 WHERE size(links) > 50  // Only prune if too many links
 
 // Sort by composite score (energy + diversity)
-WITH n, entity, links,
+WITH n, subentity, links,
      [link IN links | link.energy * 0.6 + link.semantic_diversity * 0.4] AS scores
 ORDER BY scores DESC
 
 // Keep top 50, delete rest
-WITH n, entity, links[0..50] AS keep_links, links[50..] AS prune_links
+WITH n, subentity, links[0..50] AS keep_links, links[50..] AS prune_links
 
-// Remove entity from pruned links (or delete link if no other entities)
+// Remove subentity from pruned links (or delete link if no other subentities)
 UNWIND prune_links AS prune
-WITH prune.link AS link, entity
+WITH prune.link AS link, subentity
 MATCH ()-[link]->()
 
-// Remove entity activation from link
-SET link.entity_activations = apoc.map.removeKey(link.entity_activations, entity)
+// Remove subentity activation from link
+SET link.entity_activations = apoc.map.removeKey(link.entity_activations, subentity)
 
-// If no entities remain on link, delete it
+// If no subentities remain on link, delete it
 WITH link
 WHERE size(keys(link.entity_activations)) = 0
 DELETE link
@@ -321,7 +321,7 @@ DELETE link
 def calculate_link_semantic_diversity(
     link: Link,
     existing_links: List[Link],
-    entity: str
+    subentity: str
 ) -> float:
     """
     How semantically different is this link from existing links?
@@ -353,7 +353,7 @@ def calculate_link_semantic_diversity(
 
 ```python
 PRUNING_PARAMS = {
-    # Target link count per entity
+    # Target link count per subentity
     "target_links_per_entity": 50,
 
     # Composite score weights
@@ -370,16 +370,16 @@ PRUNING_PARAMS = {
 
 **Why This Works:**
 
-1. **Prevents explosion:** Hard cap at 50 links per entity per node
+1. **Prevents explosion:** Hard cap at 50 links per subentity per node
 2. **Maintains diversity:** Keeps semantically different links, not just strongest
 3. **Respects importance:** High-energy links (> 0.8) always preserved
 4. **Gradual:** Only prunes every 10 cycles, not aggressively
-5. **Per-entity:** Each entity maintains own diverse link set
+5. **Per-subentity:** Each subentity maintains own diverse link set
 
 **Example:**
 
 ```python
-# Node has 75 links for "translator" entity
+# Node has 75 links for "translator" subentity
 links = [
     {"goal": "bridge concepts", "energy": 0.9, "diversity": 0.8},  # HIGH - keep
     {"goal": "bridge ideas", "energy": 0.7, "diversity": 0.2},     # Similar to above - prune
@@ -458,7 +458,7 @@ SET target.current_energy = MIN(
 ```
 Stage 1: Energy Accumulation (Passive)
     - Node receives energy from other nodes
-    - Energy accumulates: node.entity_activations[entity]["energy"] += transfer
+    - Energy accumulates: node.entity_activations[subentity]["energy"] += transfer
     - Node stays DORMANT (not exploring)
 
 Stage 2: Threshold Crossing (Active)
@@ -504,7 +504,7 @@ node_d.status = "dormant"  # Below threshold, accumulating
 ```python
 class NodeEnergyState:
     """
-    Track node's activation state per entity.
+    Track node's activation state per subentity.
     """
     DORMANT = "dormant"      # energy < threshold (receiving but not exploring)
     ACTIVE = "active"        # energy >= threshold (exploring links)
@@ -512,16 +512,16 @@ class NodeEnergyState:
 
 def get_node_state(
     node: Node,
-    entity: str,
+    subentity: str,
     threshold: float
 ) -> str:
     """
-    Determine node's activation state for given entity.
+    Determine node's activation state for given subentity.
     """
-    if entity not in node.entity_activations:
-        return "dormant"  # Entity not present on node
+    if subentity not in node.entity_activations:
+        return "dormant"  # Subentity not present on node
 
-    energy = node.entity_activations[entity]["energy"]
+    energy = node.entity_activations[subentity]["energy"]
 
     if energy < 0.05:
         return "exhausted"  # Too low to be useful

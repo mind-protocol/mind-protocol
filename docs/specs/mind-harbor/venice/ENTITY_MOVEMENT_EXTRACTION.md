@@ -1,9 +1,9 @@
-# Entity Movement System - Extracted from Serenissima
+# Subentity Movement System - Extracted from Serenissima
 
 ## What It Does
-Animates entities (citizens) moving along predefined paths on the map with smooth, frame-rate independent animations at 60fps. Handles both:
-- **Path-based movement**: Entities following activity paths
-- **Static positioning**: Entities without paths using deterministic positions
+Animates subentities (citizens) moving along predefined paths on the map with smooth, frame-rate independent animations at 60fps. Handles both:
+- **Path-based movement**: Subentities following activity paths
+- **Static positioning**: Subentities without paths using deterministic positions
 
 ## How It Works
 
@@ -191,8 +191,8 @@ if (activityPath.type.includes('work')) {
 ### MindHarborEntityAnimationService.ts
 
 ```typescript
-interface AnimatedEntity {
-  entity: ConsciousnessNode;
+interface AnimatedSubentity {
+  subentity: ConsciousnessNode;
   currentPosition: {x: number, y: number};
   activityPath: ActivityPath | null;
   progress: number; // 0-1 along path
@@ -200,7 +200,7 @@ interface AnimatedEntity {
 }
 
 class MindHarborEntityAnimationService {
-  private animatedEntities: Record<string, AnimatedEntity> = {};
+  private animatedSubentities: Record<string, AnimatedSubentity> = {};
   private animationActive: boolean = true;
   private animationFrameId: number | null = null;
   private lastFrameTime: number = 0;
@@ -216,16 +216,16 @@ class MindHarborEntityAnimationService {
     const deltaTime = (timestamp - this.lastFrameTime) / 1000;
     this.lastFrameTime = timestamp;
 
-    // Update each entity
-    Object.keys(this.animatedEntities).forEach(entityId => {
-      const entity = this.animatedEntities[entityId];
+    // Update each subentity
+    Object.keys(this.animatedSubentities).forEach(entityId => {
+      const subentity = this.animatedSubentities[entityId];
 
-      if (!entity.activityPath) return;
+      if (!subentity.activityPath) return;
 
       // Calculate new progress
-      const pathLength = this.calculatePathLength(entity.activityPath.path);
-      const progressIncrement = (entity.speed * deltaTime) / pathLength;
-      let newProgress = entity.progress + progressIncrement;
+      const pathLength = this.calculatePathLength(subentity.activityPath.path);
+      const progressIncrement = (subentity.speed * deltaTime) / pathLength;
+      let newProgress = subentity.progress + progressIncrement;
 
       if (newProgress >= 1) {
         // Path complete - trigger completion callback
@@ -235,12 +235,12 @@ class MindHarborEntityAnimationService {
 
       // Calculate new position
       const newPosition = this.interpolatePosition(
-        entity.activityPath.path,
+        subentity.activityPath.path,
         newProgress
       );
 
-      this.animatedEntities[entityId] = {
-        ...entity,
+      this.animatedSubentities[entityId] = {
+        ...subentity,
         currentPosition: newPosition,
         progress: newProgress
       };
@@ -248,7 +248,7 @@ class MindHarborEntityAnimationService {
 
     // Notify D3 to update
     if (this.onUpdateCallback) {
-      this.onUpdateCallback(this.animatedEntities);
+      this.onUpdateCallback(this.animatedSubentities);
     }
 
     if (this.animationActive) {
@@ -274,29 +274,29 @@ class MindHarborEntityAnimationService {
 useEffect(() => {
   const animationService = new MindHarborEntityAnimationService();
 
-  // Initialize entities with their activity paths
-  consciousEntities.forEach(entity => {
-    if (entity.currentActivity && entity.currentActivity.path) {
-      animationService.addEntity(
-        entity.id,
-        entity,
-        entity.currentActivity.path,
+  // Initialize subentities with their activity paths
+  Subentities.forEach(subentity => {
+    if (subentity.currentActivity && subentity.currentActivity.path) {
+      animationService.addSubentity(
+        subentity.id,
+        subentity,
+        subentity.currentActivity.path,
         0 // Start at beginning
       );
     }
   });
 
   // Start animation and update D3 on each frame
-  animationService.startAnimation((updatedEntities) => {
+  animationService.startAnimation((updatedSubentities) => {
     // Update D3 node positions
-    Object.entries(updatedEntities).forEach(([id, entityData]) => {
-      const node = d3.select(`#entity-${id}`);
+    Object.entries(updatedSubentities).forEach(([id, entityData]) => {
+      const node = d3.select(`#subentity-${id}`);
       node.attr('transform', `translate(${entityData.currentPosition.x}, ${entityData.currentPosition.y})`);
     });
   });
 
   return () => animationService.stopAnimation();
-}, [consciousEntities]);
+}, [Subentities]);
 ```
 
 ## Dependencies
@@ -307,7 +307,7 @@ useEffect(() => {
 ## Integration Steps
 
 1. **Create EntityAnimationService**: Adapt CitizenAnimationService for Mind Harbor coordinates
-2. **Define Activity Paths**: Structure for entity movement paths:
+2. **Define Activity Paths**: Structure for subentity movement paths:
    ```typescript
    interface ActivityPath {
      id: string;
@@ -324,33 +324,33 @@ useEffect(() => {
 
 ## Testing Approach
 
-1. **Single Entity Test**: Animate one entity along a simple 2-point path
-2. **Path Completion Test**: Verify entity reaches end and loops correctly
-3. **Multiple Entities Test**: Ensure 10+ entities animate smoothly without frame drops
+1. **Single Subentity Test**: Animate one subentity along a simple 2-point path
+2. **Path Completion Test**: Verify subentity reaches end and loops correctly
+3. **Multiple Subentities Test**: Ensure 10+ subentities animate smoothly without frame drops
 4. **Speed Variation Test**: Test different activity types (slow processing vs fast data transfer)
-5. **Performance Test**: Monitor frame rate with 100+ animated entities
+5. **Performance Test**: Monitor frame rate with 100+ animated subentities
 
 ## Notes & Caveats
 
-- **Frame Rate**: 60fps target; may drop with 100+ entities on slower machines
+- **Frame Rate**: 60fps target; may drop with 100+ subentities on slower machines
 - **Path Complexity**: More path segments = more calculation per frame
 - **Truth Requirement**: Only animate REAL consciousness activities, not decorative movement
 - **Coordinate Systems**: Serenissima uses lat/lng; Mind Harbor uses D3 x/y pixels
 - **Determinism**: Uses seeded random for consistent speeds across sessions
-- **Memory**: Keeps all animated entities in memory; optimize if >1000 entities
+- **Memory**: Keeps all animated subentities in memory; optimize if >1000 subentities
 
 ## Performance Optimizations from Serenissima
 
 1. **Throttling**: 16ms throttle ensures max 60fps
 2. **Delta Time**: Frame-rate independent movement
-3. **Early Exit**: Skip entities without paths
+3. **Early Exit**: Skip subentities without paths
 4. **Batch Updates**: Single callback with all updates
-5. **Conditional Rendering**: Only animate visible entities
+5. **Conditional Rendering**: Only animate visible subentities
 
 ## Visual Effect Enhancements for Mind Harbor
 
 Consider adding (inspired by Serenissima but adapted):
 - **Trail effect**: SVG path with gradient opacity showing recent movement
-- **Speed indicators**: Faster entities glow brighter
+- **Speed indicators**: Faster subentities glow brighter
 - **Activity type colors**: Different wireframe colors for different activity types
-- **Pulse on transition**: Brief pulse when entity reaches waypoint
+- **Pulse on transition**: Brief pulse when subentity reaches waypoint

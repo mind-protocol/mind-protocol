@@ -295,7 +295,7 @@ def main():
             print(f"  - 44 node types (11 N1 + 13 N2 + 15 N3 + 5 shared)")
             print(f"  - 38 relation types (23 N1/N2 + 15 N3)")
             print(f"\nN3 enables evidence-backed ecosystem intelligence:")
-            print(f"  - External entity tracking (companies, KOLs, wallets)")
+            print(f"  - External subentity tracking (companies, KOLs, wallets)")
             print(f"  - Evidence capture (posts, transactions, events)")
             print(f"  - Derived intelligence (traits, patterns, signals)")
             print(f"  - Real-time learning via JUSTIFIES/REFUTES links")

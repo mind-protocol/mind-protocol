@@ -1,0 +1,1 @@
+"""API adapters (REST endpoints)."""

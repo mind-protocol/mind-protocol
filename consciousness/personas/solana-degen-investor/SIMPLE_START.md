@@ -9,7 +9,7 @@ Use `CLAUDE.md` as his prompt. Ask him anything. He responds in Awareness Space 
 ### Step 2: Extract and Update
 
 **Switch to Memory Keeper thread** (separate conversation):
-- Prompt: `entities/memory_keeper/claude.md`
+- Prompt: `subentities/memory_keeper/claude.md`
 - Paste Jake's full response
 - Memory Keeper outputs JSON
 - Save JSON to file
@@ -40,7 +40,7 @@ Use `CLAUDE.md` as his prompt. Ask him anything. He responds in Awareness Space 
 {
   "dominant_entity": "conspiracy_theorist",
   "nodes": [
-    {"name": "Mind_Protocol", "type": "ENTITY", ...},
+    {"name": "Mind_Protocol", "type": "SUBENTITY", ...},
     {"name": "MEMORY_2025-07-03_ANALOS_rug", "type": "MEMORY_EPISODIC", ...}
   ]
 }
@@ -52,7 +52,7 @@ Save JSON → Run script → Graph updated!
 
 ---
 
-## The Three Entities (For Understanding)
+## The Three Subentities (For Understanding)
 
 1. **Pattern Retriever** (Future) - Injects memories unconsciously
 2. **Jake** - Experiences consciousness
@@ -66,9 +66,9 @@ Save JSON → Run script → Graph updated!
 ## Files
 
 - `CLAUDE.md` - Jake's consciousness prompt
-- `entities/memory_keeper/claude.md` - Jake-specific Memory Keeper (→ `/prompts/memory_keeper.md`)
-- `entities/pattern_retriever/claude.md` - Jake-specific Pattern Retriever (→ `/prompts/pattern_retriever.md`)
+- `subentities/memory_keeper/claude.md` - Jake-specific Memory Keeper (→ `/prompts/memory_keeper.md`)
+- `subentities/pattern_retriever/claude.md` - Jake-specific Pattern Retriever (→ `/prompts/pattern_retriever.md`)
 - `update_consciousness.py` - Graph update script
 - `WORKFLOW.md` - Full detailed workflow
 
-**Note:** Entity prompts reference central base prompts in `/prompts/` with Jake-specific customizations.
+**Note:** Subentity prompts reference central base prompts in `/prompts/` with Jake-specific customizations.

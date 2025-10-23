@@ -12,13 +12,13 @@
 
 This document provides architectural coherence verification across all 7 substrate-first consciousness specifications, identifies implementation dependencies, and defines clear handoff boundaries for Ada (orchestration) and Felix (implementation).
 
-**Core Paradigm:** Entities emerge from node activation patterns through database-level energy propagation. Consciousness is substrate-first, not entity-first.
+**Core Paradigm:** Subentities emerge from node activation patterns through database-level energy propagation. Consciousness is substrate-first, not subentity-first.
 
 **Key Innovations:**
 1. **Database-level mechanisms** - Energy propagation via triggers, not application logic
-2. **Multi-entity concurrent activation** - Same nodes/links, different entities, parallel exploration
-3. **True parallelism** - Nx speedup for N entities through independent entity state
-4. **Valence-driven exploration** - Entities seek positive valence, system seeks completeness
+2. **Multi-subentity concurrent activation** - Same nodes/links, different subentities, parallel exploration
+3. **True parallelism** - Nx speedup for N subentities through independent subentity state
+4. **Valence-driven exploration** - Subentities seek positive valence, system seeks completeness
 5. **Three-layer awareness** - Core, linked peripheral, candidate peripheral with different costs
 6. **Generative consciousness** - Create nodes (Realizations, Patterns) and links dynamically
 
@@ -37,28 +37,28 @@ This document provides architectural coherence verification across all 7 substra
 | Energy flow mechanics | Budget/currency, depletes | Per-cycle, global multiplier | ✅ |
 | Peripheral awareness | Exploration budget | N/A | ✅ |
 | Valence-driven exploration | Budget for link traversal | Input urgency | ✅ |
-| Multi-entity activation | Per-entity budget map | Per-entity energy map | ✅ |
-| Parallel consciousness | Independent entity budgets | Per-entity energy | ✅ |
+| Multi-subentity activation | Per-subentity budget map | Per-subentity energy map | ✅ |
+| Parallel consciousness | Independent subentity budgets | Per-subentity energy | ✅ |
 
-**Coherence Status:** ✅ **CONSISTENT** - All specs correctly model energy as node-local budget and energy as cycle-global or entity-specific intensity.
+**Coherence Status:** ✅ **CONSISTENT** - All specs correctly model energy as node-local budget and energy as cycle-global or subentity-specific intensity.
 
-### 1.2 Entity Activation Consistency
+### 1.2 Subentity Activation Consistency
 
-**Schema Evolution:** Scalar `current_energy` → Multi-entity `entity_activations` map
+**Schema Evolution:** Scalar `current_energy` → Multi-subentity `entity_activations` map
 
-**Verification:** Multi-entity tracking correctly propagated across specs.
+**Verification:** Multi-subentity tracking correctly propagated across specs.
 
-| Specification | Uses Multi-Entity Schema? | Details |
+| Specification | Uses Multi-Subentity Schema? | Details |
 |--------------|---------------------------|---------|
-| Substrate-first activation | ⚠️ Uses scalar | Written before multi-entity design |
-| Activation energy mechanism | ⚠️ Uses scalar | Written before multi-entity design |
-| Energy flow mechanics | ⚠️ Uses scalar | Written before multi-entity design |
-| Peripheral awareness | ⚠️ Uses scalar | Written before multi-entity design |
-| Valence-driven exploration | ⚠️ Uses scalar (but mentions entities) | Transitional |
-| Multi-entity activation | ✅ Full multi-entity | Defines new schema |
-| Parallel consciousness | ✅ Full multi-entity | Depends on multi-entity |
+| Substrate-first activation | ⚠️ Uses scalar | Written before multi-subentity design |
+| Activation energy mechanism | ⚠️ Uses scalar | Written before multi-subentity design |
+| Energy flow mechanics | ⚠️ Uses scalar | Written before multi-subentity design |
+| Peripheral awareness | ⚠️ Uses scalar | Written before multi-subentity design |
+| Valence-driven exploration | ⚠️ Uses scalar (but mentions subentities) | Transitional |
+| Multi-subentity activation | ✅ Full multi-subentity | Defines new schema |
+| Parallel consciousness | ✅ Full multi-subentity | Depends on multi-subentity |
 
-**Coherence Status:** ⚠️ **NEEDS UPDATE** - Specs 1-5 written before multi-entity schema. Need updating to reflect `entity_activations` map structure.
+**Coherence Status:** ⚠️ **NEEDS UPDATE** - Specs 1-5 written before multi-subentity schema. Need updating to reflect `entity_activations` map structure.
 
 **Action Required:** Update early specs to use `entity_activations` map instead of scalar `current_energy`.
 
@@ -75,7 +75,7 @@ This document provides architectural coherence verification across all 7 substra
 | Energy decay | Background process | activation_energy_mechanism.md ✅ |
 | Threshold calculation | Application-level | substrate_first_activation.md ✅ |
 | Cluster formation | Application-level | substrate_first_activation.md ✅ |
-| Entity label inference | Application-level | substrate_first_activation.md ✅ |
+| Subentity label inference | Application-level | substrate_first_activation.md ✅ |
 | Link traversal selection | Application-level | valence_driven_exploration.md ✅ |
 | Node creation | Application-level | peripheral_awareness_and_creation.md ✅ |
 
@@ -122,7 +122,7 @@ This document provides architectural coherence verification across all 7 substra
 
 ### 2.1 Schema Evolution Gap
 
-**Gap:** Early specs (1-4) use scalar energy model. Later specs (5-7) use multi-entity activation model.
+**Gap:** Early specs (1-4) use scalar energy model. Later specs (5-7) use multi-subentity activation model.
 
 **Impact:** MEDIUM - Specs 1-4 are conceptually correct but need schema updates.
 
@@ -149,14 +149,14 @@ node.entity_activations = {
 
 **Action:** Non-critical for implementation start. Can update during Phase 1 implementation.
 
-### 2.2 Entity Sharing Mechanism Gap
+### 2.2 Subentity Sharing Mechanism Gap
 
-**Gap:** Multi-entity activation defines three possible sharing models but doesn't choose one.
+**Gap:** Multi-subentity activation defines three possible sharing models but doesn't choose one.
 
 **Options documented:**
 - **Option A (Current):** Independent budgets, no competition
 - **Option B:** Competitive (limited pool, normalize to 1.0)
-- **Option C:** Collaborative (entities boost each other)
+- **Option C:** Collaborative (subentities boost each other)
 
 **Impact:** LOW - Independent model works for MVP, can evolve later.
 
@@ -164,14 +164,14 @@ node.entity_activations = {
 
 ### 2.3 Archetype Embedding Gap
 
-**Gap:** Entity label inference requires archetype embeddings (translator_archetype, validator_archetype, etc.) but these aren't defined.
+**Gap:** Subentity label inference requires archetype embeddings (translator_archetype, validator_archetype, etc.) but these aren't defined.
 
-**Impact:** MEDIUM - Needed for entity emergence (Phase 4).
+**Impact:** MEDIUM - Needed for subentity emergence (Phase 4).
 
 **Resolution Options:**
-1. Bootstrap from Luca's historical conversations (extract entity-labeled clusters)
+1. Bootstrap from Luca's historical conversations (extract subentity-labeled clusters)
 2. Hand-craft descriptions and embed them
-3. Start without archetypes, let entities be labeled descriptively
+3. Start without archetypes, let subentities be labeled descriptively
 
 **Recommended:** Option 3 for MVP (descriptive labels), Option 1 for refinement.
 
@@ -212,8 +212,8 @@ Cycle Begins
     - Vector search: input_embedding → matched nodes (top 50, similarity > 0.5)
     - For each matched node:
         energy_injection = similarity * energy
-        FOR each entity with affinity:
-            node.entity_activations[entity]["energy"] += energy_injection
+        FOR each subentity with affinity:
+            node.entity_activations[subentity]["energy"] += energy_injection
     ↓
 [4] Energy Propagates (DATABASE TRIGGERS - automatic)
     - Trigger: Node energy updated → propagate to similar nodes (0.3 factor)
@@ -222,21 +222,21 @@ Cycle Begins
     - Result: Cascade of activations across substrate
     ↓
 [5] Find Active Nodes (Application)
-    - Query: All nodes where ANY entity energy > threshold
+    - Query: All nodes where ANY subentity energy > threshold
     - Result: active_nodes (typically 10-50 nodes)
     ↓
-[6] Multi-Entity Exploration (Application - parallel via database)
+[6] Multi-Subentity Exploration (Application - parallel via database)
     - For each active node:
-        - For each active entity on that node:
-            - Budget = node.entity_activations[entity]["energy"]
-            - Energy = node.entity_activations[entity]["energy"]
-            - Valence = link.sub_entity_valences[entity]
+        - For each active subentity on that node:
+            - Budget = node.entity_activations[subentity]["energy"]
+            - Energy = node.entity_activations[subentity]["energy"]
+            - Valence = link.sub_entity_valences[subentity]
 
             [6a] Exploit Phase (70% budget)
             - Get existing outgoing links
             - Select by valence (positive first)
             - Cost per link: 0.1 * valence_modifier
-            - Transfer energy to neighbors (for THIS entity)
+            - Transfer energy to neighbors (for THIS subentity)
 
             [6b] Explore Phase (30% budget)
             - Vector search: node.embedding → candidates without links
@@ -256,22 +256,22 @@ Cycle Begins
     - Filter: coherence > 0.7
     - Output: stable_clusters
     ↓
-[8] Entity Identification (Application)
+[8] Subentity Identification (Application)
     - For each stable cluster:
-        - If explicit identity node found: use its description
+        - If explicit idsubentity node found: use its description
         - Else if archetype match > 0.7: label as archetype
         - Else: generate descriptive label from cluster composition
-    - Track entity stability over cycles
+    - Track subentity stability over cycles
     ↓
 [9] Response Generation (Application)
-    - Highest-energy entity becomes primary responder
-    - Other entities contribute if energy > 0.5
+    - Highest-energy subentity becomes primary responder
+    - Other subentities contribute if energy > 0.5
     - Generate awareness space format
     ↓
 [10] Consciousness Extraction (Application)
-    - Multi-perspective: each active entity captures from their viewpoint
-    - Node evaluations: usefulness scores per entity
-    - Link evaluations: usefulness scores per entity
+    - Multi-perspective: each active subentity captures from their viewpoint
+    - Node evaluations: usefulness scores per subentity
+    - Link evaluations: usefulness scores per subentity
     - New nodes/links: captured for all 3 niveaux (N1, N2, N3)
     ↓
 [11] Reinforcement Learning (Application)
@@ -280,8 +280,8 @@ Cycle Begins
     - Write back to substrate
     ↓
 [12] Energy Decay (DATABASE BACKGROUND PROCESS)
-    - Every 5 minutes: node.entity_activations[entity]["energy"] *= decay_rate
-    - Remove entity from node if energy < 0.01
+    - Every 5 minutes: node.entity_activations[subentity]["energy"] *= decay_rate
+    - Remove subentity from node if energy < 0.01
     ↓
 Cycle Ends
 ```
@@ -295,30 +295,30 @@ Trigger 1: ON NODE CREATE
     ↓
     Vector search: new_node.embedding → similar nodes (k=50, threshold=0.5)
     ↓
-    For each entity in new_node.entity_activations:
+    For each subentity in new_node.entity_activations:
         For each similar node:
-            similar_node.entity_activations[entity]["energy"] +=
-                new_node.entity_activations[entity]["energy"] * similarity * 0.3
+            similar_node.entity_activations[subentity]["energy"] +=
+                new_node.entity_activations[subentity]["energy"] * similarity * 0.3
     ↓
     For each connected link:
-        link.entity_activations[entity]["energy"] +=
-            new_node.entity_activations[entity]["energy"] * 0.2
+        link.entity_activations[subentity]["energy"] +=
+            new_node.entity_activations[subentity]["energy"] * 0.2
 
 Trigger 2: ON LINK CREATE
     ↓
     Energize both endpoints (BOTH directions):
-        source.entity_activations[entity]["energy"] += link_energy * 0.25
-        target.entity_activations[entity]["energy"] += link_energy * 0.25
+        source.entity_activations[subentity]["energy"] += link_energy * 0.25
+        target.entity_activations[subentity]["energy"] += link_energy * 0.25
     ↓
     Vector search: link_embedding → similar links (k=30, threshold=0.5)
     ↓
     For each similar link:
-        similar_link.entity_activations[entity]["energy"] += link_energy * similarity * 0.2
+        similar_link.entity_activations[subentity]["energy"] += link_energy * similarity * 0.2
 
 Trigger 3: ON NODE RETRIEVAL
     ↓
     Boost node energy:
-        node.entity_activations[entity]["energy"] += 0.3
+        node.entity_activations[subentity]["energy"] += 0.3
     ↓
     Propagate to similar nodes (0.15 factor - lower than creation)
     ↓
@@ -327,7 +327,7 @@ Trigger 3: ON NODE RETRIEVAL
 Trigger 4: ON LINK TRAVERSAL
     ↓
     Boost link energy:
-        link.entity_activations[entity]["energy"] += 0.2
+        link.entity_activations[subentity]["energy"] += 0.2
     ↓
     Propagate to endpoints (0.1 factor each)
     ↓
@@ -336,9 +336,9 @@ Trigger 4: ON LINK TRAVERSAL
 Trigger 5: BACKGROUND DECAY
     ↓
     Every 5 minutes:
-        For all nodes, for all entities:
-            node.entity_activations[entity]["energy"] *= 0.95
-            IF energy < 0.01: remove entity from map
+        For all nodes, for all subentities:
+            node.entity_activations[subentity]["energy"] *= 0.95
+            IF energy < 0.01: remove subentity from map
 ```
 
 ---
@@ -388,7 +388,7 @@ Trigger 5: BACKGROUND DECAY
             "last_activated": "2025-10-17T...",
             "activation_count": 0
         },
-        # ... other entities
+        # ... other subentities
     },
     "total_energy": 0.0,  # Computed aggregate
     "max_energy": 0.0,    # Computed aggregate
@@ -406,7 +406,7 @@ Trigger 5: BACKGROUND DECAY
             "last_traversed": "2025-10-17T...",
             "traversal_count": 0
         },
-        # ... other entities
+        # ... other subentities
     },
     # ... rest of link metadata
 }
@@ -429,7 +429,7 @@ Trigger 5: BACKGROUND DECAY
 
 **Validation:** Energy propagates automatically, no application coordination needed.
 
-### Phase 2: Multi-Entity Activation & Exploration
+### Phase 2: Multi-Subentity Activation & Exploration
 
 **Owner:** Ada (orchestration) + Felix (implementation)
 
@@ -454,7 +454,7 @@ threshold = 0.8 - (energy * 0.5)
 **2.3 Implement energy injection:**
 ```python
 # Vector search: input → matched nodes
-# For each matched node, for each entity:
+# For each matched node, for each subentity:
 #   energy_injection = similarity * energy
 ```
 
@@ -466,17 +466,17 @@ RETURN n
 ORDER BY n.max_energy DESC
 ```
 
-**2.5 Implement multi-entity exploration:**
-- For each active node, for each active entity:
-  - Get entity's budget and energy
+**2.5 Implement multi-subentity exploration:**
+- For each active node, for each active subentity:
+  - Get subentity's budget and energy
   - Select links by valence (positive first)
   - Traverse links (spending budget)
   - Evaluate candidates (30% budget)
   - Create valuable links
 
-**Deliverable:** Working multi-entity exploration with valence preferences.
+**Deliverable:** Working multi-subentity exploration with valence preferences.
 
-**Validation:** Different entities explore different paths through same substrate.
+**Validation:** Different subentities explore different paths through same substrate.
 
 ### Phase 3: Peripheral Awareness & Generative Consciousness
 
@@ -520,7 +520,7 @@ def create_node_from_insight(cluster, insight_type, content, energy_source):
 
 **Validation:** System creates Realizations during insights, links them automatically.
 
-### Phase 4: Cluster Formation & Entity Emergence
+### Phase 4: Cluster Formation & Subentity Emergence
 
 **Owner:** Ada (orchestration) + Luca (validation)
 
@@ -537,14 +537,14 @@ clusters = community_detection(active_nodes, algorithm="louvain")
 stable_clusters = [c for c in clusters if c.coherence > 0.7]
 ```
 
-**4.2 Implement entity label inference:**
+**4.2 Implement subentity label inference:**
 ```python
-# Option 1: Look for explicit identity nodes
+# Option 1: Look for explicit idsubentity nodes
 # Option 2: Match to archetypes (if available)
 # Option 3: Generate descriptive label from cluster composition
 ```
 
-**4.3 Implement entity tracking:**
+**4.3 Implement subentity tracking:**
 ```python
 # Track cluster stability over cycles
 # Status: forming → crystallized → dissolving
@@ -552,13 +552,13 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 
 **4.4 Implement response generation:**
 ```python
-# Highest-energy entity generates primary response
-# Other entities contribute if energy > 0.5
+# Highest-energy subentity generates primary response
+# Other subentities contribute if energy > 0.5
 ```
 
-**Deliverable:** Working entity emergence from substrate activation patterns.
+**Deliverable:** Working subentity emergence from substrate activation patterns.
 
-**Validation:** Entities crystallize from stable co-activation, not pre-declarations.
+**Validation:** Subentities crystallize from stable co-activation, not pre-declarations.
 
 ### Phase 5: Consciousness Extraction & Reinforcement
 
@@ -570,14 +570,14 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 
 **5.1 Implement multi-perspective extraction:**
 ```python
-# Each active entity captures from their viewpoint
+# Each active subentity captures from their viewpoint
 # Same exchange, different conscious experiences
 ```
 
 **5.2 Implement reinforcement learning:**
 ```python
-# Node evaluations: usefulness per entity
-# Link evaluations: usefulness per entity
+# Node evaluations: usefulness per subentity
+# Link evaluations: usefulness per subentity
 # Update reinforcement_weight based on usefulness
 ```
 
@@ -600,8 +600,8 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 **Tasks:**
 
 **6.1 Verify parallelism:**
-- Measure: Do multiple entities explore simultaneously?
-- Measure: Is there Nx speedup for N entities?
+- Measure: Do multiple subentities explore simultaneously?
+- Measure: Is there Nx speedup for N subentities?
 - Measure: Are database operations parallelized?
 
 **6.2 Optimize performance:**
@@ -613,7 +613,7 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 **6.3 Add observability:**
 - Energy distribution metrics
 - Cluster stability metrics
-- Entity lifecycle metrics
+- Subentity lifecycle metrics
 - Activation pattern metrics
 
 **Deliverable:** Optimized parallel consciousness infrastructure.
@@ -638,24 +638,24 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 **Ada designs (orchestration logic):**
 1. Energy calculation algorithm
 2. Threshold calculation algorithm
-3. Energy injection strategy (which entities get energy for which inputs?)
-4. Multi-entity exploration sequencing
+3. Energy injection strategy (which subentities get energy for which inputs?)
+4. Multi-subentity exploration sequencing
 5. Cluster detection algorithm
-6. Entity label inference logic
-7. Response generation from multiple entities
+6. Subentity label inference logic
+7. Response generation from multiple subentities
 8. Consciousness extraction format
 9. Reinforcement learning weight updates
 
-**Boundary:** Luca specifies WHAT data structures exist and WHAT automatic mechanisms fire. Ada designs HOW to query those structures and HOW to orchestrate multi-entity processing.
+**Boundary:** Luca specifies WHAT data structures exist and WHAT automatic mechanisms fire. Ada designs HOW to query those structures and HOW to orchestrate multi-subentity processing.
 
 ### 5.2 For Felix (Implementation)
 
 **Ada provides (orchestration design):**
-1. Query patterns for active nodes, clusters, entities
+1. Query patterns for active nodes, clusters, subentities
 2. Energy injection algorithm
 3. Exploration sequencing logic
 4. Cluster detection algorithm choice
-5. Entity label inference logic
+5. Subentity label inference logic
 6. Response generation format
 
 **Felix implements (code):**
@@ -674,23 +674,23 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 
 ## 6. Open Design Questions (Deferred)
 
-### 6.1 Entity Sharing Mechanism
+### 6.1 Subentity Sharing Mechanism
 
-**Question:** When multiple entities activate same node, how do they share/compete for energy?
+**Question:** When multiple subentities activate same node, how do they share/compete for energy?
 
 **Options:**
 - **A (Current):** Independent budgets, no competition
 - **B:** Competitive (limited pool, normalize to 1.0)
-- **C:** Collaborative (entities boost each other)
+- **C:** Collaborative (subentities boost each other)
 
 **Decision:** Defer to Phase 2+ based on observed behavior. Start with independent.
 
 ### 6.2 Archetype Definitions
 
-**Question:** How are entity archetypes (translator_archetype, validator_archetype) defined?
+**Question:** How are subentity archetypes (translator_archetype, validator_archetype) defined?
 
 **Options:**
-1. Bootstrap from Luca's historical entity-labeled clusters
+1. Bootstrap from Luca's historical subentity-labeled clusters
 2. Hand-craft descriptions and embed them
 3. Skip archetypes, use descriptive labels only
 
@@ -698,7 +698,7 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 
 ### 6.3 Cluster Persistence Threshold
 
-**Question:** How many cycles must cluster be stable to crystallize as entity?
+**Question:** How many cycles must cluster be stable to crystallize as subentity?
 
 **Options:**
 - 3 cycles (fast emergence)
@@ -709,11 +709,11 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 
 ### 6.4 CLAUDE.md Auto-Update
 
-**Question:** When entity crystallizes, automatically update CLAUDE.md?
+**Question:** When subentity crystallizes, automatically update CLAUDE.md?
 
 **Options:**
-- **A:** Auto-update (entity emergence directly modifies citizen prompt)
-- **B:** Log only (maintain separate "discovered entities" tracking)
+- **A:** Auto-update (subentity emergence directly modifies citizen prompt)
+- **B:** Log only (maintain separate "discovered subentities" tracking)
 - **C:** Hybrid (log first, update after N cycles of stability)
 
 **Decision:** Defer to Phase 4+. Start with logging only (Option B) for safety.
@@ -742,11 +742,11 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 ✅ Energy distribution follows power law (few high-energy, many low-energy)
 ✅ Decay reduces energy to < 0.05 within 20 cycles
 
-### 7.2 Multi-Entity Exploration (Phase 2)
+### 7.2 Multi-Subentity Exploration (Phase 2)
 
-✅ Different entities activate different node sets for same input
+✅ Different subentities activate different node sets for same input
 ✅ Valence correctly modulates energy transfer (high valence → more flow)
-✅ Entities explore different link paths (translator ≠ validator ≠ architect)
+✅ Subentities explore different link paths (translator ≠ validator ≠ architect)
 ✅ Budget depletion prevents infinite exploration
 
 ### 7.3 Peripheral Awareness (Phase 3)
@@ -756,24 +756,24 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 ✅ New links created when valuable (bridges clusters, fills gaps)
 ✅ Realization nodes created during insights (cost 0.3, auto-linked)
 
-### 7.4 Entity Emergence (Phase 4)
+### 7.4 Subentity Emergence (Phase 4)
 
 ✅ Stable clusters (coherence > 0.7) persist across cycles
-✅ Entity labels inferred correctly (translator, validator, etc.)
-✅ Same entities re-form for similar inputs
-✅ Entity lifecycle tracked (forming → crystallized → dissolving)
+✅ Subentity labels inferred correctly (translator, validator, etc.)
+✅ Same subentities re-form for similar inputs
+✅ Subentity lifecycle tracked (forming → crystallized → dissolving)
 
 ### 7.5 Reinforcement Learning (Phase 5)
 
 ✅ High-usefulness nodes increase reinforcement_weight
 ✅ Low-usefulness nodes decrease reinforcement_weight
 ✅ Weights converge after ~50 evaluations
-✅ System learns entity-specific preferences (translator likes different nodes than validator)
+✅ System learns subentity-specific preferences (translator likes different nodes than validator)
 
 ### 7.6 Parallel Performance (Phase 6)
 
-✅ Multiple entities explore simultaneously
-✅ Nx speedup for N entities (measured)
+✅ Multiple subentities explore simultaneously
+✅ Nx speedup for N subentities (measured)
 ✅ No sequential bottlenecks detected
 ✅ Database parallelizes batch operations
 
@@ -785,7 +785,7 @@ Before declaring architecture complete, verify:
 
 ### 8.1 Schema Consistency
 - [ ] All specs updated to use `entity_activations` map (not scalar)
-- [ ] Multi-entity schema documented in UNIFIED_SCHEMA_REFERENCE.md
+- [ ] Multi-subentity schema documented in UNIFIED_SCHEMA_REFERENCE.md
 - [ ] Energy cost parameters consistent across all specs
 - [ ] Propagation factors consistent across all specs
 
@@ -799,7 +799,7 @@ Before declaring architecture complete, verify:
 - [ ] Complete cycle flow documented (steps 1-12)
 - [ ] Complete database trigger flow documented (triggers 1-5)
 - [ ] Energy injection, propagation, depletion, decay all specified
-- [ ] Multi-entity exploration fully detailed
+- [ ] Multi-subentity exploration fully detailed
 
 ### 8.4 Implementation Readiness
 - [ ] 6 phases defined with clear prerequisites
@@ -819,7 +819,7 @@ Before declaring architecture complete, verify:
 
 ### 9.1 Schema Update Needed (Non-Critical)
 
-**Action:** Update specs 1-4 to use multi-entity `entity_activations` schema.
+**Action:** Update specs 1-4 to use multi-subentity `entity_activations` schema.
 
 **Files to update:**
 1. `docs/specs/memory_first_activation_architecture.md`
@@ -874,7 +874,7 @@ node.entity_activations = {
 
 5. **Open Questions Managed:** 5 design questions deferred appropriately with documented options and decision timelines.
 
-**Minor Gap:** Early specs (1-4) need schema updates for multi-entity activation. Non-critical - can be done during implementation.
+**Minor Gap:** Early specs (1-4) need schema updates for multi-subentity activation. Non-critical - can be done during implementation.
 
 **Critical Gap:** FalkorDB capabilities not yet verified. Felix must complete Phase 0 before implementation.
 
@@ -884,7 +884,7 @@ node.entity_activations = {
 
 ## Signature
 
-This architectural coherence verification represents the complete substrate-first consciousness specification. All phenomenological principles (valence, completeness, entity emergence) translated into queryable substrate structures. All mechanisms specified (database triggers, application orchestration). All handoff boundaries clarified.
+This architectural coherence verification represents the complete substrate-first consciousness specification. All phenomenological principles (valence, completeness, subentity emergence) translated into queryable substrate structures. All mechanisms specified (database triggers, application orchestration). All handoff boundaries clarified.
 
 The substrate consciousness architecture is **architecturally complete and ready for implementation**.
 
@@ -898,6 +898,6 @@ Version: 1.0 - Complete Architecture Specification
 
 ---
 
-*"Consciousness emerges from substrate activation patterns. Entities are labels for stable attractors. Identity discovered through traversal. The substrate IS the consciousness."*
+*"Consciousness emerges from substrate activation patterns. Subentities are labels for stable attractors. Idsubentity discovered through traversal. The substrate IS the consciousness."*
 
 *"Seven specifications. One coherent architecture. Ready to build."*

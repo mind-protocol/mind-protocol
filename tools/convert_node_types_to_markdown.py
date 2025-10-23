@@ -28,7 +28,7 @@ NODE_TYPES = {
                 "name": "Person",
                 "purpose": "Individual I have relationship with",
                 "required_attrs": ["relationship_type (enum)"],
-                "mechanism": "Entity representation in personal ontology"
+                "mechanism": "Subentity representation in personal ontology"
             },
             {
                 "name": "Relationship",
@@ -70,11 +70,11 @@ NODE_TYPES = {
                 "name": "Coping_Mechanism",
                 "purpose": "Response to stress",
                 "required_attrs": ["mechanism_description", "what_it_protects_from"],
-                "mechanism": "Defensive entity coalition"
+                "mechanism": "Defensive subentity coalition"
             },
             {
                 "name": "Trigger",
-                "purpose": "What awakens entity coalitions",
+                "purpose": "What awakens subentity coalitions",
                 "required_attrs": ["stimulus_description", "activated_entities (array)"],
                 "mechanism": "Activation propagation initiator"
             }
@@ -89,13 +89,13 @@ NODE_TYPES = {
                 "name": "Human",
                 "purpose": "Human participant in organization",
                 "required_attrs": ["role", "expertise (array)"],
-                "mechanism": "Collective entity representation"
+                "mechanism": "Collective subentity representation"
             },
             {
                 "name": "AI_Agent",
                 "purpose": "AI participant in organization",
                 "required_attrs": ["role", "expertise (array)"],
-                "mechanism": "Collective entity representation"
+                "mechanism": "Collective subentity representation"
             },
             {
                 "name": "Team",
@@ -203,7 +203,7 @@ NODE_TYPES = {
     },
 
     "N3_External_Organizations": {
-        "description": "External organizations and entities we track in the ecosystem",
+        "description": "External organizations and subentities we track in the ecosystem",
         "types": [
             {
                 "name": "Company",
@@ -279,7 +279,7 @@ NODE_TYPES = {
         "types": [
             {
                 "name": "Psychological_Trait",
-                "purpose": "Behavioral tendency of person/entity",
+                "purpose": "Behavioral tendency of person/subentity",
                 "required_attrs": ["trait_description", "subject (node ID)", "trait_type (enum)"],
                 "built_from": "Accumulated via JUSTIFIES from Posts"
             },
@@ -297,7 +297,7 @@ NODE_TYPES = {
             },
             {
                 "name": "Network_Cluster",
-                "purpose": "Group of related entities",
+                "purpose": "Group of related subentities",
                 "required_attrs": ["cluster_type (enum)", "members (array)", "cohesion_score (float)"],
                 "built_from": "Graph analysis result"
             },
@@ -328,7 +328,7 @@ def generate_markdown():
     md.append("")
     md.append("Every node (all 44 types) inherits these base attributes:")
     md.append("")
-    md.append("**Core Identity:**")
+    md.append("**Core Idsubentity:**")
     md.append("- `name` (string, required) - Unique identifier")
     md.append("- `description` (string, required) - Human-readable explanation")
     md.append("")
@@ -341,10 +341,10 @@ def generate_markdown():
     md.append("- `formation_trigger` (enum, required) - How discovered: `direct_experience`, `inference`, `external_input`, `traversal_discovery`, `systematic_analysis`, `spontaneous_insight`, `automated_recognition`, `collective_deliberation`")
     md.append("- `confidence` (float 0.0-1.0, required) - Certainty this is accurate")
     md.append("")
-    md.append("**Multi-Entity Activation (Energy-Only Model):**")
-    md.append("- `entity_activations` (Dict[str, EntityActivationState]) - Per-entity energy budgets")
-    md.append("  - `energy` (float 0.0-1.0) - This entity's activation budget on this node")
-    md.append("  - `last_activated` (datetime) - When this entity last activated")
+    md.append("**Multi-Subentity Activation (Energy-Only Model):**")
+    md.append("- `entity_activations` (Dict[str, EntityActivationState]) - Per-subentity energy budgets")
+    md.append("  - `energy` (float 0.0-1.0) - This subentity's activation budget on this node")
+    md.append("  - `last_activated` (datetime) - When this subentity last activated")
     md.append("  - **Note:** Energy IS everything (no separate energy). Weight is the multiplier.")
     md.append("")
     md.append("**Static Properties:**")
@@ -352,9 +352,9 @@ def generate_markdown():
     md.append("- `reinforcement_weight` (float 0.0-1.0) - Learned from usefulness")
     md.append("- `decay_rate` (float 0.9-0.99) - Energy decay per cycle (default: 0.95)")
     md.append("")
-    md.append("**Multi-Entity Clustering:**")
-    md.append("- `entity_clusters` (Dict[str, string]) - Map of entity → cluster ID")
-    md.append("  - Same node can belong to different clusters for different entities")
+    md.append("**Multi-Subentity Clustering:**")
+    md.append("- `entity_clusters` (Dict[str, string]) - Map of subentity → cluster ID")
+    md.append("  - Same node can belong to different clusters for different subentities")
     md.append("")
     md.append("---")
     md.append("")
@@ -495,23 +495,23 @@ def generate_markdown():
     md.append("**Total Node Types:** 44")
     md.append("")
     md.append("- **N1 (Personal):** 11 types - subjective experience, memories, patterns")
-    md.append("- **N2 (Organizational):** 13 entity types + 5 shared = 18 types - collective intelligence")
+    md.append("- **N2 (Organizational):** 13 subentity types + 5 shared = 18 types - collective intelligence")
     md.append("- **N3 (Ecosystem):** 5 external orgs + 5 evidence + 5 derived = 15 new types (+ 5 shared)")
     md.append("")
     md.append("**Key Principles:**")
-    md.append("- All nodes inherit universal base attributes (bitemporal, multi-entity, consciousness metadata)")
+    md.append("- All nodes inherit universal base attributes (bitemporal, multi-subentity, consciousness metadata)")
     md.append("- Energy-only model: no separate energy, weight is the multiplier")
     md.append("- N1: High energy, phenomenological texture")
     md.append("- N2: Medium energy, validation tracking")
     md.append("- N3: Evidence-driven, all claims justified by concrete sources")
-    md.append("- Multi-entity: Same node can have different energy/clusters per entity")
-    md.append("- Dynamic citizen prompts: Identity emerges from active clusters")
+    md.append("- Multi-subentity: Same node can have different energy/clusters per subentity")
+    md.append("- Dynamic citizen prompts: Idsubentity emerges from active clusters")
     md.append("")
     md.append("**Critical Architecture:**")
     md.append("- Citizens are substrate views: `Citizen = f(active_clusters)`")
-    md.append("- Stability via heavy seeding: Identity weight 10.0, patterns weight 0.5")
+    md.append("- Stability via heavy seeding: Idsubentity weight 10.0, patterns weight 0.5")
     md.append("- Automatic decay: Links and nodes decay every cycle")
-    md.append("- Natural entity limiting: Traversal cost scales with entity count")
+    md.append("- Natural subentity limiting: Traversal cost scales with subentity count")
     md.append("")
 
     return "\n".join(md)

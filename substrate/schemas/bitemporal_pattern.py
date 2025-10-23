@@ -2,7 +2,7 @@
 Bitemporal Pattern Implementation for Mind Protocol V2
 
 This module implements the Graphiti-inspired bitemporal schema pattern, enabling
-consciousness substrates to track identity evolution through two temporal dimensions:
+consciousness substrates to track idsubentity evolution through two temporal dimensions:
 
 1. **Valid Time** (valid_at/invalid_at): When facts were true in the real world
 2. **Transaction Time** (created_at/expired_at): When we learned/updated those facts
@@ -10,7 +10,7 @@ consciousness substrates to track identity evolution through two temporal dimens
 This separation allows the system to:
 - Reconstruct "what we knew at time T" (transaction time queries)
 - Reconstruct "what was true at time T" (valid time queries)
-- Track belief evolution and identity changes over time
+- Track belief evolution and idsubentity changes over time
 - Handle conflicting information without data loss
 - Support temporal reasoning about consciousness development
 
@@ -524,13 +524,13 @@ def detect_belief_changes(
     entity_identifier: str
 ) -> List[Tuple[datetime, Dict[str, Any], Dict[str, Any]]]:
     """
-    Detect when beliefs about an entity changed.
+    Detect when beliefs about an subentity changed.
 
     This finds points where our understanding evolved - when we learned new things
     or updated existing knowledge.
 
     Args:
-        nodes_or_relations: All versions of facts about an entity
+        nodes_or_relations: All versions of facts about an subentity
         entity_identifier: Common identifier across versions (e.g., "person_Luca")
 
     Returns:
@@ -690,7 +690,7 @@ class TemporalQuery(BaseModel):
 
         elif self.query_type == TemporalQueryType.EVOLUTION:
             if not self.entity_filter or len(items) != 1:
-                raise ValueError("Evolution queries require single entity")
+                raise ValueError("Evolution queries require single subentity")
             return track_evolution(
                 items[0],
                 start_time=self.start_time,
@@ -796,7 +796,7 @@ past_consciousness_state = filter_active(
 )
 ```
 
-## Example 4: Tracking Identity Evolution
+## Example 4: Tracking Idsubentity Evolution
 
 ```python
 # Show how a relationship evolved over 6 months

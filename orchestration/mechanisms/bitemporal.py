@@ -1,8 +1,8 @@
 """
-Mechanism 13: Bitemporal Tracking - Pure Functions
+Mechanism 13: Bitemporal Tracking - Pure Functions with Immutable Versions
 
-BITEMPORAL ARCHITECTURE:
-Two independent timelines track consciousness evolution:
+BITEMPORAL ARCHITECTURE V2:
+Two independent timelines track consciousness evolution + version chains:
 
 1. Reality Timeline (valid_at, invalidated_at):
    - When did this node/link become TRUE in reality?
@@ -12,27 +12,36 @@ Two independent timelines track consciousness evolution:
    - When did WE LEARN about this node/link?
    - When did we learn it's no longer valid?
 
-Why Both Timelines Matter:
-- "Nicolas created Mind Protocol in 2023" (reality)
-- "I learned about this on 2025-10-19" (knowledge)
+3. Version Chain (vid, supersedes, superseded_by):
+   - vid: Immutable version identifier
+   - supersedes: Previous version vid
+   - superseded_by: Next version vid (set when superseded)
+
+Why All Three Matter:
+- "Nicolas created Mind Protocol in 2023" (reality: valid_at)
+- "I learned about this on 2025-10-19" (knowledge: created_at)
+- "I updated my understanding on 2025-10-22" (version: new vid, supersedes old vid)
 
 Queries:
 - What was true on date X? (reality timeline)
 - What did we know on date X? (knowledge timeline)
-- When did our understanding change? (knowledge timeline)
+- What version was current on date X? (version chain)
+- How has our understanding evolved? (version history)
 
-Supersession:
-- New nodes can supersede old nodes (SUPERSEDES link)
-- Old node gets invalidated_at = new_node.valid_at
-- Preserves history while marking current truth
+Immutable Version Semantics:
+- Each version has unique vid (never mutated)
+- Corrections create NEW version with supersedes link
+- Old version gets invalidated_at + expired_at + superseded_by
 
 Author: Felix (Engineer)
 Created: 2025-10-19
-Spec: consciousness_engine_architecture/implementation/mechanisms/13_bitemporal_implementation.md
+Updated: 2025-10-22 - Added version chain semantics per v2 spec
+Spec: foundations/bitemporal_tracking.md
 """
 
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, List, TYPE_CHECKING
+import uuid
 
 if TYPE_CHECKING:
     from orchestration.core.node import Node
@@ -163,29 +172,49 @@ def expire(obj: BitemporalObject, expired_at: Optional[datetime] = None) -> None
     obj.expired_at = expired_at
 
 
-# --- Supersession ---
+# --- Supersession (V2 with Version Chains) ---
 
 def supersede(old_obj: BitemporalObject, new_obj: BitemporalObject) -> None:
     """
-    Mark old object as superseded by new object.
+    Mark old object as superseded by new object (V2 with version chains).
 
-    This sets old_obj.invalidated_at = new_obj.valid_at, creating a
-    clean temporal handoff in reality timeline.
+    V2 Semantics (per foundations/bitemporal_tracking.md):
+    1. Close reality timeline: old_obj.invalidated_at = new_obj.valid_at
+    2. Close knowledge timeline: old_obj.expired_at = new_obj.created_at
+    3. Link versions: old_obj.superseded_by = new_obj.vid
+    4. Link versions: new_obj.supersedes = old_obj.vid
 
-    Note: You should also create a SUPERSEDES link between the objects.
+    This creates immutable version chain with clean temporal handoff
+    on BOTH timelines.
 
     Args:
         old_obj: Object being superseded
         new_obj: Object superseding it
 
     Example:
-        >>> old_node = Node(id="n1", valid_at=datetime(2025, 1, 1), ...)
-        >>> new_node = Node(id="n2", valid_at=datetime(2025, 6, 1), ...)
+        >>> old_node = Node(id="context_reconstruction", vid="v_abc123",
+        ...                 valid_at=datetime(2025, 1, 1), ...)
+        >>> new_node = Node(id="context_reconstruction", vid="v_def456",
+        ...                 valid_at=datetime(2025, 6, 1), ...)
         >>> supersede(old_node, new_node)
         >>> old_node.invalidated_at
         datetime(2025, 6, 1)
+        >>> old_node.expired_at
+        datetime(2025, 6, 1)  # Assuming new_node.created_at = valid_at
+        >>> old_node.superseded_by
+        'v_def456'
+        >>> new_node.supersedes
+        'v_abc123'
     """
+    # Close reality timeline (old version no longer valid)
     old_obj.invalidated_at = new_obj.valid_at
+
+    # Close knowledge timeline (old version no longer current belief)
+    old_obj.expired_at = new_obj.created_at
+
+    # Link version chain (bidirectional pointers)
+    old_obj.superseded_by = new_obj.vid
+    new_obj.supersedes = old_obj.vid
 
 
 # --- Temporal Range Queries ---
@@ -303,6 +332,7 @@ def verify_bitemporal_consistency(obj: BitemporalObject) -> bool:
     Checks:
     - valid_at <= invalidated_at (if invalidated)
     - created_at <= expired_at (if expired)
+    - Version chain consistency (if part of chain)
 
     Args:
         obj: Node or Link to validate
@@ -326,4 +356,194 @@ def verify_bitemporal_consistency(obj: BitemporalObject) -> bool:
         if obj.created_at > obj.expired_at:
             return False  # Expired before created
 
+    # Version chain consistency
+    if obj.superseded_by is not None:
+        # If superseded, both timelines should be closed
+        if obj.invalidated_at is None or obj.expired_at is None:
+            return False  # Superseded but timeline not closed
+
     return True
+
+
+# --- Version Chain Helpers (V2) ---
+
+def create_new_version(obj: BitemporalObject, **changes) -> BitemporalObject:
+    """
+    Create a new version of an object with changes applied.
+
+    Creates a new version with:
+    - New vid (auto-generated)
+    - supersedes = old_obj.vid
+    - Same id (logical entity)
+    - Changed fields applied
+    - New created_at (knowledge timeline)
+    - Same or updated valid_at (reality timeline)
+
+    Args:
+        obj: Object to create new version from
+        **changes: Fields to change in new version
+
+    Returns:
+        New version object (does NOT modify original)
+
+    Example:
+        >>> old_node = Node(id="context_reconstruction", vid="v_abc123", ...)
+        >>> new_node = create_new_version(old_node, description="Updated understanding")
+        >>> new_node.vid != old_node.vid
+        True
+        >>> new_node.supersedes
+        'v_abc123'
+        >>> new_node.id
+        'context_reconstruction'  # Same logical id
+    """
+    from copy import deepcopy
+
+    # Create copy
+    new_obj = deepcopy(obj)
+
+    # Generate new vid
+    new_obj.vid = f"v_{uuid.uuid4().hex[:12]}"
+
+    # Link to previous version
+    new_obj.supersedes = obj.vid
+    new_obj.superseded_by = None  # Not superseded yet
+
+    # Update knowledge timeline (we just learned this)
+    # Ensure new version's created_at is strictly after original
+    new_created_at = datetime.now()
+    if new_created_at <= obj.created_at:
+        # Add 1 microsecond to ensure strict ordering
+        from datetime import timedelta
+        new_created_at = obj.created_at + timedelta(microseconds=1)
+    new_obj.created_at = new_created_at
+    new_obj.expired_at = None  # Not expired yet
+
+    # Apply changes
+    for key, value in changes.items():
+        if hasattr(new_obj, key):
+            setattr(new_obj, key, value)
+
+    return new_obj
+
+
+def get_version_history(
+    objects: List[BitemporalObject],
+    logical_id: str
+) -> List[BitemporalObject]:
+    """
+    Get version history for a logical entity, ordered from oldest to newest.
+
+    Args:
+        objects: List of all objects (e.g., graph.nodes.values())
+        logical_id: Logical entity id
+
+    Returns:
+        List of versions ordered by created_at (oldest first)
+
+    Example:
+        >>> versions = get_version_history(graph.nodes.values(), "context_reconstruction")
+        >>> len(versions)
+        3  # Three versions
+        >>> versions[0].supersedes
+        None  # First version
+        >>> versions[-1].superseded_by
+        None  # Latest version
+    """
+    # Filter to logical id
+    versions = [obj for obj in objects if obj.id == logical_id]
+
+    # Sort by created_at (knowledge timeline)
+    versions.sort(key=lambda v: v.created_at)
+
+    return versions
+
+
+def get_current_version(
+    objects: List[BitemporalObject],
+    logical_id: str,
+    as_of_knowledge: Optional[datetime] = None,
+    as_of_reality: Optional[datetime] = None
+) -> Optional[BitemporalObject]:
+    """
+    Get current version of a logical entity with optional as-of queries.
+
+    Args:
+        objects: List of all objects (e.g., graph.nodes.values())
+        logical_id: Logical entity id
+        as_of_knowledge: Time for knowledge timeline query (default: now)
+        as_of_reality: Time for reality timeline query (default: now)
+
+    Returns:
+        Current version or None if not found
+
+    Example:
+        >>> # Get current version
+        >>> current = get_current_version(graph.nodes.values(), "context_reconstruction")
+        >>> current.superseded_by
+        None  # Not superseded
+
+        >>> # Time-travel query
+        >>> past = get_current_version(
+        ...     graph.nodes.values(),
+        ...     "context_reconstruction",
+        ...     as_of_knowledge=datetime(2025, 1, 1)
+        ... )
+    """
+    # Get all versions
+    versions = get_version_history(objects, logical_id)
+
+    if not versions:
+        return None
+
+    # Filter by knowledge timeline
+    if as_of_knowledge is not None:
+        versions = [v for v in versions if is_currently_known(v, as_of_knowledge)]
+
+    # Filter by reality timeline
+    if as_of_reality is not None:
+        versions = [v for v in versions if is_currently_valid(v, as_of_reality)]
+
+    if not versions:
+        return None
+
+    # Return most recent version by knowledge timeline
+    return max(versions, key=lambda v: v.created_at)
+
+
+def is_latest_version(obj: BitemporalObject) -> bool:
+    """
+    Check if this is the latest version (not superseded).
+
+    Args:
+        obj: Object to check
+
+    Returns:
+        True if latest version (superseded_by is None)
+
+    Example:
+        >>> old_node = Node(id="n1", vid="v_1", superseded_by="v_2", ...)
+        >>> is_latest_version(old_node)
+        False
+        >>> new_node = Node(id="n1", vid="v_2", superseded_by=None, ...)
+        >>> is_latest_version(new_node)
+        True
+    """
+    return obj.superseded_by is None
+
+
+def count_versions(objects: List[BitemporalObject], logical_id: str) -> int:
+    """
+    Count versions for a logical entity (belief churn metric).
+
+    Args:
+        objects: List of all objects
+        logical_id: Logical entity id
+
+    Returns:
+        Number of versions
+
+    Example:
+        >>> churn = count_versions(graph.nodes.values(), "context_reconstruction")
+        >>> print(f"Belief churn: {churn} versions")
+    """
+    return len([obj for obj in objects if obj.id == logical_id])

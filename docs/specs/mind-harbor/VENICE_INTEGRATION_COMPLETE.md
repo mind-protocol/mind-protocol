@@ -202,10 +202,10 @@ From Serenissima codebase extractions, we integrated:
 - Strategic application (content signals only)
 - Warm #ffd700 glow
 
-### ⏭️ Entity Movement (Future)
+### ⏭️ Subentity Movement (Future)
 - 60fps animation system available
 - Delta-time based movement
-- Will apply when showing REAL entity traversal
+- Will apply when showing REAL subentity traversal
 - Currently nodes are static (no fake movement)
 
 ### ⏭️ Activity Paths (Future)
@@ -253,7 +253,7 @@ Linting and checking validity of types ...
 
 ## Next Steps (Optional Enhancements)
 
-1. **Entity Movement Animation** - Apply when showing real citizen traversal
+1. **Subentity Movement Animation** - Apply when showing real citizen traversal
 2. **Activity Path Visualization** - Show consciousness flow polylines
 3. **Advanced Interactions** - Path filtering, timeline scrubbing
 4. **Performance Optimization** - Filter caching, batched updates

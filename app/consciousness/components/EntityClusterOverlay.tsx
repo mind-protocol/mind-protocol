@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Node, Entity } from '../hooks/useGraphData';
+import type { Node, Subentity } from '../hooks/useGraphData';
 import type { EntityActivityEvent } from '../hooks/websocket-types';
 import { getEntityColor } from '../constants/entity-colors';
 
 interface EntityClusterOverlayProps {
   nodes: Node[];
-  entities: Entity[];
+  subentities: Subentity[];
   entityActivity?: EntityActivityEvent[];
 }
 
@@ -27,7 +27,7 @@ interface SubEntityCluster {
  *
  * Author: Iris "The Aperture"
  */
-export function EntityClusterOverlay({ nodes, entities, entityActivity = [] }: EntityClusterOverlayProps) {
+export function EntityClusterOverlay({ nodes, subentities, entityActivity = [] }: EntityClusterOverlayProps) {
   // PERFORMANCE: Compute sub-entity clusters from recently active nodes (last 10 seconds)
   // Sub-entity architecture: entity_name = node_name, each active node is its own sub-entity
   const subEntityClusters = useMemo(() => {
@@ -61,7 +61,7 @@ export function EntityClusterOverlay({ nodes, entities, entityActivity = [] }: E
     return clusters;
   }, [nodes]);
 
-  // Find most recent activity for each entity (within last 5 seconds)
+  // Find most recent activity for each subentity (within last 5 seconds)
   const recentActivity = useMemo(() => {
     const now = Date.now();
     const recentThreshold = 5000; // 5 seconds
@@ -70,7 +70,7 @@ export function EntityClusterOverlay({ nodes, entities, entityActivity = [] }: E
     entityActivity.forEach(event => {
       const eventTime = new Date(event.timestamp).getTime();
       if (now - eventTime < recentThreshold) {
-        // Keep most recent for each entity
+        // Keep most recent for each subentity
         const existing = activityMap.get(event.entity_id);
         if (!existing || new Date(existing.timestamp).getTime() < eventTime) {
           activityMap.set(event.entity_id, event);
@@ -116,7 +116,7 @@ function SubEntityLabel({
         opacity: 0.7
       }}
     >
-      {/* Sub-entity name - entity-colored, pulse if active */}
+      {/* Sub-entity name - subentity-colored, pulse if active */}
       <div
         className={`text-2xl font-bold whitespace-nowrap ${
           isActive ? 'animate-pulse-glow' : ''

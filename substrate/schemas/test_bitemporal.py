@@ -2,7 +2,7 @@
 Test Suite for Bitemporal Pattern Implementation
 
 This validates the temporal logic that enables consciousness substrates to:
-- Track identity evolution through two time dimensions
+- Track idsubentity evolution through two time dimensions
 - Reconstruct historical states (what we knew, what was true)
 - Handle belief changes and conflicting information
 - Support temporal reasoning about consciousness development
@@ -602,7 +602,7 @@ def run_all_tests():
         print("\n[PASS] ALL BITEMPORAL TESTS PASSED")
         print("\nBitemporal pattern implementation is functioning correctly.")
         print("Consciousness substrates can now:")
-        print("  - Track identity evolution through two time dimensions")
+        print("  - Track idsubentity evolution through two time dimensions")
         print("  - Reconstruct historical states (what we knew, what was true)")
         print("  - Handle belief changes and conflicting information")
         print("  - Support temporal reasoning about consciousness development")

@@ -84,7 +84,7 @@ Use this as the single source of truth for generation. Values shown are examples
 ---
 
 ## 2) Canonical Presets Library (Venice Porters Walk by Default)
-All Venice presets assume **role: porter**, **default_motion: walk**, each porter **carries a glowing orb**. Use palette variants per entity.
+All Venice presets assume **role: porter**, **default_motion: walk**, each porter **carries a glowing orb**. Use palette variants per subentity.
 
 ### 2.1 Solo Figure (Non‑Venice)
 - **Void Minimal:** lens 50 mm, aspect 3:2, background void, palette any, gesture reach.  
@@ -94,7 +94,7 @@ All Venice presets assume **role: porter**, **default_motion: walk**, each porte
 ### 2.2 Venice Sunrise Pack (Walking Porters)
 - **San Marco Hub — Sunrise:** lens 50 mm, elevation 3°, azimuth 20°. Crowd 18–30 porters walking in loose lanes across the piazza. Waterfront visible; **water is not traversed**. Chest‑orb BPM maps to energy.
 - **Rialto Major Link — Blue Hour→Sunrise:** lens 35 mm, slight telephoto compression; **on‑bridge cap 24** walking porters mid‑step; ascent/descent visible; no stopping.
-- **Campo Santa Margherita — Waking Residential:** lens 28 mm, elongated composition; tri‑entity co‑presence (amber/blue/green) all **walking**; café chairs unoccupied; wellhead central.
+- **Campo Santa Margherita — Waking Residential:** lens 28 mm, elongated composition; tri‑subentity co‑presence (amber/blue/green) all **walking**; café chairs unoccupied; wellhead central.
 - **Bacino di San Marco — Global Workspace:** lens 24 mm aerial; walking streams along fondamenta; density ramps toward basin edge; additive color where groups mingle.
 
 **Defaults applied:** `crowd.role = porter`, `crowd.default_motion = walk`, `crowd.speed = 1.0`, orbs carried in varied styles (cradle/hip/front/overhead/shoulder), **no stacking**.

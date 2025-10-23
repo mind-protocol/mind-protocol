@@ -45,7 +45,7 @@ export function EnergyFlowParticles({ nodes, entityActivity }: EnergyFlowParticl
     return map;
   }, [nodes]);
 
-  // Process new entity activity events into particles
+  // Process new subentity activity events into particles
   useEffect(() => {
     if (entityActivity.length === 0) return;
 
@@ -65,7 +65,7 @@ export function EnergyFlowParticles({ nodes, entityActivity }: EnergyFlowParticl
     if (!currentPos) return;
 
     // Find a connected node (target of the traversal)
-    // We'll use a simple heuristic: find nodes recently activated by same entity
+    // We'll use a simple heuristic: find nodes recently activated by same subentity
     const targetNode = nodes.find(n => {
       if (!n.entity_activations || !n.x || !n.y) return false;
       const activation = n.entity_activations[latestEvent.entity_id];
@@ -74,7 +74,7 @@ export function EnergyFlowParticles({ nodes, entityActivity }: EnergyFlowParticl
       const lastActivated = (activation as any).last_activated;
       const nodeId = n.id || n.node_id;
 
-      // Target is a node activated within last 100ms by same entity (but not current node)
+      // Target is a node activated within last 100ms by same subentity (but not current node)
       return lastActivated &&
              (now - lastActivated) < 100 &&
              nodeId !== latestEvent.current_node;
