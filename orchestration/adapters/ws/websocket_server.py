@@ -399,8 +399,18 @@ async def start_citizen_consciousness(
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
     # Bootstrap subentity layer if not already present
-    if not graph.subentities or len(graph.subentities) == 0:
-        logger.info(f"[N1:{citizen_id}] Bootstrapping subentity layer...")
+    # Force re-bootstrap if entity count != 8 (fixes 0-entities bug from Mechanism confusion)
+    current_entity_count = len(graph.subentities) if graph.subentities else 0
+    expected_entity_count = 8  # 8 functional entities from config
+
+    if not graph.subentities or current_entity_count < expected_entity_count:
+        if current_entity_count > 0:
+            logger.info(f"[N1:{citizen_id}] Re-bootstrapping entity layer (current: {current_entity_count}, expected: {expected_entity_count})...")
+            # Clear old entities before re-bootstrap
+            graph.subentities = {}
+        else:
+            logger.info(f"[N1:{citizen_id}] Bootstrapping subentity layer...")
+
         from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
         bootstrap = EntityBootstrap(graph)
         bootstrap_stats = bootstrap.run_complete_bootstrap()
@@ -415,7 +425,7 @@ async def start_citizen_consciousness(
         persist_stats = adapter.persist_subentities(graph)
         logger.info(f"[N1:{citizen_id}] subentity_persistence: {persist_stats}")
     else:
-        logger.info(f"[N1:{citizen_id}] Subentities already present: {len(graph.subentities)}")
+        logger.info(f"[N1:{citizen_id}] Subentities already present: {current_entity_count} (expected: {expected_entity_count})")
 
     # Metrics: entities.total gauge
     if graph.subentities:
@@ -485,8 +495,18 @@ async def start_organizational_consciousness(
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
     # Bootstrap subentity layer if not already present
-    if not graph.subentities or len(graph.subentities) == 0:
-        logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
+    # Force re-bootstrap if entity count != 8 (fixes 0-entities bug from Mechanism confusion)
+    current_entity_count = len(graph.subentities) if graph.subentities else 0
+    expected_entity_count = 8  # 8 functional entities from config
+
+    if not graph.subentities or current_entity_count < expected_entity_count:
+        if current_entity_count > 0:
+            logger.info(f"[N2:{org_id}] Re-bootstrapping entity layer (current: {current_entity_count}, expected: {expected_entity_count})...")
+            # Clear old entities before re-bootstrap
+            graph.subentities = {}
+        else:
+            logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
+
         from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
         bootstrap = EntityBootstrap(graph)
         bootstrap_stats = bootstrap.run_complete_bootstrap()

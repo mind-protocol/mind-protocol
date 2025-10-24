@@ -49,6 +49,28 @@
 
 **Next priorities:** Entity layer operational. Ready for PR-A (3-tier strengthening), PR-B (three-factor tick speed), PR-C (task-mode fan-out), PR-D (phenomenology events).
 
+**2025-10-24 23:55 - PR-A Strengthening Complete:**
+
+✅ **3-Tier Strengthening Implemented (PR-A):**
+- Replaced D020 "inactive-only" rule with activation-state-aware strengthening
+- STRONG tier (co_activation): Both nodes active → tier_scale = 1.0
+- MEDIUM tier (causal): Stride caused target flip → tier_scale = 0.6
+- WEAK tier (background): Neither active/no flip → tier_scale = 0.3
+- Stride utility filtering: Blocks noise learning (stride_utility < -1.0 sigma)
+- Reason tracking: co_activation | causal | background
+- Updated StrengtheningMetrics: Removed D020 fields, added tier breakdown
+
+✅ **Files modified:**
+- `orchestration/mechanisms/strengthening.py` (comprehensive refactor)
+
+⚠️ **Engine restart required:** Engines need full restart to load entities from FalkorDB
+- Entities successfully persisted: 8 functional entities with 357 BELONGS_TO links
+- `load_graph()` correctly loads subentities (lines 969-989 in falkordb_adapter.py)
+- Guardian hot-reload restarted services but engines kept old in-memory graphs
+- **Action:** Stop guardian (Ctrl+C), restart (`python guardian.py`) to reload graphs with entities
+
+**Status:** Priority 1 & 2 complete. Ready for Priority 3 (three-factor tick speed).
+
 ---
 
 ## Executive Summary
