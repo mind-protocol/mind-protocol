@@ -274,27 +274,59 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       console.warn(`[GraphCanvas] Filtered ${links.length - validLinks.length} invalid links (${validLinks.length}/${links.length} valid)`);
     }
 
-    // Force simulation with TIGHT CLUSTERING (temporal/valence hints only)
-    // X-axis: subtle temporal hint (old left → recent right)
-    // Y-axis: subtle valence hint (negative bottom → positive top)
-    // PERFORMANCE: Aggressive optimization for large graphs
+    // Force simulation with CLUSTER-AWARE LAYOUT
+    // Solution: Use differential link forces to pull clusters together
+    // while keeping nodes spaced within clusters
     const nodeCount = nodes.length;
-    const chargeStrength = nodeCount > 500 ? -3 : nodeCount > 100 ? -5 : -7; // Weakened repulsion to allow tighter clustering
+    const nodeR = 6; // Visual node radius
+    const pad = 2;   // Padding to prevent overlap
     const collisionIterations = nodeCount > 500 ? 1 : nodeCount > 100 ? 1 : 2;
     const linkIterations = nodeCount > 500 ? 1 : 2;
+
+    // Helper: Get primary cluster (entity with highest energy) for a node
+    const getPrimaryCluster = (node: any): string | null => {
+      if (!node.entity_activations) return null;
+      let maxEnergy = 0;
+      let primaryEntity = null;
+      for (const [entityId, data] of Object.entries(node.entity_activations)) {
+        if ((data as any).energy > maxEnergy) {
+          maxEnergy = (data as any).energy;
+          primaryEntity = entityId;
+        }
+      }
+      return primaryEntity;
+    };
+
+    // Helper: Check if link connects different clusters
+    const isInterCluster = (link: any): boolean => {
+      const sourceCluster = getPrimaryCluster(link.source);
+      const targetCluster = getPrimaryCluster(link.target);
+      if (!sourceCluster || !targetCluster) return false;
+      return sourceCluster !== targetCluster;
+    };
 
     const simulation = d3.forceSimulation(nodes as any)
       .force('link', d3.forceLink(validLinks)
         .id((d: any) => d.id)
-        .distance(3) // Short link distance for tight global clustering
+        // Inter-cluster links: SHORT and STRONG (pull clusters together)
+        // Intra-cluster links: LONGER and WEAK (allow breathing room)
+        .distance(l => isInterCluster(l) ? 18 : 34)
+        .strength(l => isInterCluster(l) ? 1.2 : 0.4)
         .iterations(linkIterations))
-      .force('charge', d3.forceManyBody().strength(chargeStrength))
-      .force('center', d3.forceCenter(width / 2, height / 2).strength(10.0)) // Very strong pull to overcome temporal/valence spread
+      .force('charge', d3.forceManyBody()
+        .strength(-16)        // Moderate repulsion
+        .distanceMin(8)       // Prevent extreme closeness
+        .distanceMax(80))     // CAP RANGE: stop far clusters from repelling
       .force('collision', d3.forceCollide()
-        .radius(32) // Larger radius to space out nodes within clusters
+        .radius(nodeR + pad)  // Small: prevent overlap without forcing clusters apart
+        .strength(1)
         .iterations(collisionIterations))
+      .force('x', d3.forceX(width / 2).strength(0.05))   // Gentle centering
+      .force('y', d3.forceY(height / 2).strength(0.05))
       .force('temporal', forceTemporalX(width))
-      .force('valence', forceValenceY(height));
+      .force('valence', forceValenceY(height))
+      .alpha(1)
+      .alphaDecay(0.05);  // Let system settle
 
     // Render links with wireframe aesthetic (Venice consciousness flows)
     // Now with emotion-based coloring when available
