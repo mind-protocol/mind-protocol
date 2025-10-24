@@ -4,17 +4,21 @@ Link Strengthening - Hebbian Learning for V2 Single-Energy
 Mechanism: Links strengthen when energy flows through them during diffusion.
 "Neurons that fire together, wire together" - frequently traversed paths become highways.
 
-CRITICAL DECISION (D020): Strengthening only when BOTH nodes INACTIVE
-- Active nodes (E >= theta): NO strengthening (normal dynamics)
-- Inactive nodes being connected: YES strengthening (new pattern learning)
-- Prevents runaway strengthening from repeated activation
+3-TIER STRENGTHENING (PR-A - Replaces D020):
+- STRONG (co_activation): Both nodes active → full strengthening (tier_scale = 1.0)
+- MEDIUM (causal): Stride caused target flip → moderate strengthening (tier_scale = 0.6)
+- WEAK (background): Neither active/no flip → weak strengthening (tier_scale = 0.3)
+
+Guards:
+- Stride utility filter: Blocks noise learning (stride_utility < -1.0 sigma)
+- Affective amplification: High-emotion experiences strengthen faster
 
 Integration: Strengthening happens DURING diffusion stride execution, not separately.
 Complexity: O(strides) - same as diffusion, negligible additional cost.
 
 Author: Felix (Engineer)
 Created: 2025-10-19
-Updated: 2025-10-22 - V2 single-energy architecture, stride-based integration
+Updated: 2025-10-24 - PR-A: 3-tier strengthening with stride utility filtering
 Spec: docs/specs/v2/learning_and_trace/link_strengthening.md
 """
 
@@ -65,8 +69,11 @@ class StrengtheningMetrics:
     total_delta_weight: float         # Sum of all weight changes
     mean_delta_weight: float          # Average weight change
     max_delta_weight: float           # Largest single change
-    inactive_pairs: int               # Links with both nodes inactive (D020)
-    active_pairs_skipped: int         # Links skipped (both active)
+
+    # 3-tier strengthening breakdown (PR-A)
+    co_activation_count: int          # STRONG tier (both active)
+    causal_count: int                 # MEDIUM tier (caused flip)
+    background_count: int             # WEAK tier (background spillover)
 
     # Highway tracking
     new_highways: int                 # Links crossing threshold (0.7)
@@ -347,14 +354,16 @@ def strengthen_link(
                 delta_log_w_amplified=delta_log_w_amplified
             )
 
-    # Create event
+    # Create event with reason and tier tracking
     event = StrengtheningEvent(
         timestamp=datetime.now(),
         delta_weight=delta_log_w_amplified,  # Use amplified delta
         new_weight=link.log_weight,
         energy_flow=energy_flow,
-        source_active=source_active,
-        target_active=target_active
+        source_active=source_active_post,
+        target_active=target_active_post,
+        reason=reason,              # co_activation | causal | background
+        tier_scale=tier_scale       # 1.0 | 0.6 | 0.3
     )
 
     # Track history if requested
@@ -568,6 +577,7 @@ def compute_strengthening_metrics(
     Example:
         >>> metrics = compute_strengthening_metrics(events)
         >>> print(f"Strengthened {metrics.links_strengthened} links")
+        >>> print(f"Co-activation: {metrics.co_activation_count}, Causal: {metrics.causal_count}")
         >>> print(f"New highways: {metrics.new_highways}")
     """
     if not events:
@@ -576,8 +586,9 @@ def compute_strengthening_metrics(
             total_delta_weight=0.0,
             mean_delta_weight=0.0,
             max_delta_weight=0.0,
-            inactive_pairs=0,
-            active_pairs_skipped=0,
+            co_activation_count=0,
+            causal_count=0,
+            background_count=0,
             new_highways=0,
             highway_threshold=highway_threshold
         )
@@ -587,11 +598,10 @@ def compute_strengthening_metrics(
     mean_delta = total_delta / len(events)
     max_delta = max(deltas)
 
-    # Count inactive pairs (D020 criterion)
-    inactive_pairs = sum(
-        1 for e in events
-        if not e.source_active and not e.target_active
-    )
+    # Count by strengthening tier (3-tier system - PR-A)
+    co_activation_count = sum(1 for e in events if e.reason == "co_activation")
+    causal_count = sum(1 for e in events if e.reason == "causal")
+    background_count = sum(1 for e in events if e.reason == "background")
 
     # Count new highways
     new_highways = sum(
@@ -604,8 +614,9 @@ def compute_strengthening_metrics(
         total_delta_weight=total_delta,
         mean_delta_weight=mean_delta,
         max_delta_weight=max_delta,
-        inactive_pairs=inactive_pairs,
-        active_pairs_skipped=0,  # Not tracked in events list (they return None)
+        co_activation_count=co_activation_count,
+        causal_count=causal_count,
+        background_count=background_count,
         new_highways=new_highways,
         highway_threshold=highway_threshold
     )
