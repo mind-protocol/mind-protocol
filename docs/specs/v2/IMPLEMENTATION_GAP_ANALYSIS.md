@@ -7,6 +7,32 @@
 
 ---
 
+## Status Updates
+
+**2025-10-24 20:15 - Resolution Progress:**
+
+1. **Entity architecture clarified:** Nicolas provided comprehensive field guide (`docs/team/FIELD_GUIDE_ENTITIES_TRAVERSAL.md`) correcting entity architecture:
+   - Entities are **first-class graph nodes** (Entity type), not discovered by searching for Mechanism nodes
+   - BELONGS_TO weighted memberships define node→entity relationships
+   - Bootstrap creates entities from config (functional) or clustering (semantic)
+   - See `subentity_layer.md` §2.6 for complete bootstrap specification
+
+2. **Formula discrepancy resolved:** Entity energy aggregation now uses **surplus-only with log damping**:
+   ```
+   E_entity = Σ_i m̃_iE · log1p( max(0, E_i - Θ_i) )
+   ```
+   Updated in both spec (lines 39-41) and field guide (§11).
+
+3. **Entity bootstrap fixed:** Felix implemented config-driven bootstrap in `entity_bootstrap.py`:
+   - Loads from `orchestration/config/functional_entities.yml`
+   - Creates Entity nodes directly (no Mechanism dependency)
+   - Seeds BELONGS_TO via keyword matching
+   - Status: Code complete, **untested** (awaiting system restart per Victor's SYNC.md update)
+
+**Remaining work:** System restart blocked by guardian lock verification bug (see SYNC.md Victor's 2025-10-24 19:56 update). Once system restarts, entity fix can be verified and PRs A-D implementation can proceed.
+
+---
+
 ## Executive Summary
 
 **Critical Finding:** The spec updates (PRs A-D) document FUTURE architecture. Current running code implements approximately **30% of foundation specs** and **0% of PRs A-D enhancements**.

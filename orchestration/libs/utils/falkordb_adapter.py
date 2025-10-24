@@ -1118,11 +1118,12 @@ class FalkorDBAdapter:
                 # Check if target is a Subentity (not Node)
                 target = graph.get_entity(link.target_id)
                 if target:
-                    # Create link in database
+                    # Create link in database (use SET instead of inline properties)
                     query = f"""
                     MATCH (source:Node {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
-                    CREATE (source)-[r:BELONGS_TO $props]->(target)
+                    CREATE (source)-[r:BELONGS_TO]->(target)
+                    SET r = $props
                     RETURN r
                     """
 
@@ -1149,11 +1150,12 @@ class FalkorDBAdapter:
                 target_entity = graph.get_entity(link.target_id)
 
                 if source_entity and target_entity:
-                    # Create link in database
+                    # Create link in database (use SET instead of inline properties)
                     query = f"""
                     MATCH (source:Subentity {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
-                    CREATE (source)-[r:RELATES_TO $props]->(target)
+                    CREATE (source)-[r:RELATES_TO]->(target)
+                    SET r = $props
                     RETURN r
                     """
 
