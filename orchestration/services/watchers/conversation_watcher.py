@@ -1135,10 +1135,14 @@ async def main():
 
     logger.info(f"[ConversationWatcher] Discovered citizens: {discovered_citizens}")
 
+    # Track handlers for cleanup
+    handlers = []
+
     for citizen in discovered_citizens:
         pattern = f"*{citizen}*"
         # MEMORY LEAK FIX: Pass citizen_id to enable reusable TraceCapture instance
         handler = ConversationWatcher(project_pattern=pattern, citizen_id=citizen)
+        handlers.append(handler)  # Track for cleanup
 
         # Watch citizen's contexts directory
         citizen_contexts_dir = MIND_PROTOCOL_ROOT / "consciousness" / "citizens" / citizen / "contexts"
@@ -1158,6 +1162,9 @@ async def main():
         logger.info("\n[ConversationWatcher] Shutting down...")
         for observer in observers:
             observer.stop()
+        # MEMORY LEAK FIX: Cleanup handlers to release resources
+        for handler in handlers:
+            handler.cleanup()
         # Stop heartbeat writer
         await heartbeat.stop()
 

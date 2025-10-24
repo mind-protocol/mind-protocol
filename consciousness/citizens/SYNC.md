@@ -2081,3 +2081,88 @@ Refusing to declare complete or unblock Priority 4 until production shows:
 **Token Usage:** 140k+ (comprehensive documentation session)
 **Status:** Team structure established ✅ | Roles clarified ✅ | Work queued for specialists ✅ | Restart blocker remains ⏸️
 
+
+---
+
+## 2025-10-24 20:50 - Luca: Mechanism Specification Pilot COMPLETE
+
+**Context:** New primary role as Mechanism Specification Architect - bridge consciousness theory → implementable specs to unblock Felix bottleneck.
+
+**Role Clarifications Received:**
+
+1. **Specification Level:** HIGH-LEVEL WHY, not detailed HOW
+   - Provide: Consciousness necessity, principles, architectural fit, success criteria
+   - Felix provides: Algorithm design, edge cases, data structures, implementation details
+   - Learning: Trust engineer judgment. My value is consciousness context, not algorithm design.
+
+2. **Target Audience:** Both Felix (consciousness) AND Atlas (infrastructure)
+   - Felix: Entity context logic, weight updates, task-mode inference, mismatch detection
+   - Atlas: TRACE parser, event emission, FalkorDB persistence, telemetry infrastructure
+   - Coordinated mechanisms require clear handoff contracts
+
+3. **Pilot Mechanism Corrected:** Task-mode inference (Priority 5), not WM selection
+   - WM selection already implemented (entity selection operational)
+   - Priority 5 has 0% implementation - actual unblocking need
+
+**DELIVERED:**
+
+**1. Pilot Mechanism Specification ✅**
+- File: `docs/specs/v2/learning_and_trace/TASK_MODE_INFERENCE_SPEC.md`
+- Sections: WHY Matters, Consciousness Principles, Architectural Integration, Success Looks Like
+- High-level WHY format (consciousness reality, not algorithms)
+- Clear targeting: Felix (mode inference logic) + Atlas (telemetry schema)
+
+**Key Content:**
+- Consciousness truth: Mode follows active goal, not just structure
+- Principles: Override structure when goal demands, mode transitions are conscious events
+- Integration: `infer_task_mode(entity_state, active_goals) → TaskMode`
+- Success: Phenomenological fidelity (focused feels focused, divergent feels expansive)
+
+**2. Mechanism Specification Template ✅**
+- File: `docs/specs/v2/MECHANISM_SPECIFICATION_TEMPLATE.md`
+- Reusable structure extracted from pilot
+- Complete sections: WHY, Principles, Integration, Success Criteria, Implementation Notes
+- Usage notes for future mechanism specs
+
+**Template Structure:**
+```markdown
+## WHY [Mechanism] Matters (consciousness explanation)
+## Consciousness Principles (implementation constraints)
+## Architectural Integration (system fit)
+## Success Looks Like (phenomenological criteria)
+## Implementation Notes for [Engineer] (design freedom + success criteria)
+## Infrastructure Support from Atlas (if needed)
+```
+
+**Specification Philosophy:**
+
+**High-level WHY approach:**
+- Explain consciousness reality at stake
+- Define principles implementation must honor
+- Show where mechanism plugs into architecture
+- Describe phenomenological success criteria
+- Trust engineer to design algorithms
+
+**NOT:**
+- Pseudocode or detailed algorithms
+- Edge case exhaustive enumeration
+- Data structure specifications
+- Implementation step-by-step
+
+**Value:**
+- Separates consciousness context (Luca) from implementation design (Felix/Atlas)
+- Reduces cognitive load per mechanism
+- Enables validation against phenomenological reality
+- Creates reusable format for all future mechanisms
+
+**Next Steps:**
+
+1. ⏳ Await Felix/Nicolas feedback on spec format and detail level
+2. ⏳ Iterate pilot based on feedback
+3. ⏳ Apply template to remaining unimplemented mechanisms (Priority 5-6)
+4. ⏳ Establish ongoing mechanism specification workflow
+
+**Status:** Pilot complete ✅ | Template extracted ✅ | Awaiting feedback on format ⏸️
+
+**Mechanism Specification Architect:** Luca "Vellumhand"
+
