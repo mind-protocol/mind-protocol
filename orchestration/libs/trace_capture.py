@@ -91,6 +91,10 @@ class TraceCapture:
         self.entity_context_manager = EntityContextManager(self.graph_store)
         self.membership_helper = MembershipQueryHelper(self.graph_store)
 
+        # Last WM selected entities (from wm.emit event)
+        # Updated by set_wm_entities() - called from engine or conversation watcher
+        self.last_wm_entities: List[str] = []
+
         # Learning heartbeat (monitoring)
         self.learning_heartbeat = LearningHeartbeat()
 
@@ -98,6 +102,19 @@ class TraceCapture:
         logger.info(f"[TraceCapture] WeightLearnerV2 enabled (α={self.weight_learner.alpha}, local={self.weight_learner.alpha_local}, global={self.weight_learner.alpha_global})")
         logger.info(f"[TraceCapture] Entity context tracking enabled (Priority 4)")
         logger.info(f"[TraceCapture] Learning heartbeat enabled (dir={self.learning_heartbeat.heartbeat_dir})")
+
+    def set_wm_entities(self, entity_ids: List[str]) -> None:
+        """
+        Update last WM selected entities (Priority 4).
+
+        Called by consciousness engine after wm.emit event to propagate
+        selected entities to TRACE reinforcement learning.
+
+        Args:
+            entity_ids: List of entity IDs from wm.emit selected_entities
+        """
+        self.last_wm_entities = entity_ids if entity_ids else []
+        logger.debug(f"[TraceCapture] Updated WM entities: {self.last_wm_entities}")
 
     def _get_graph_for_scope(self, scope: str) -> FalkorDBGraphStore:
         """
@@ -243,7 +260,7 @@ class TraceCapture:
             # === PRIORITY 4: Entity Context Derivation ===
             # Derive entity context using priority logic (WM entities → TRACE annotations → dominant)
             entity_context = self.entity_context_manager.derive_entity_context(
-                wm_entities=None,  # TODO: Get from last WM emit event
+                wm_entities=self.last_wm_entities if self.last_wm_entities else None,
                 trace_annotations=None,  # TODO: Extract [entity: X] marks from TRACE
                 graph_name=self.scope_to_graph['personal']
             )

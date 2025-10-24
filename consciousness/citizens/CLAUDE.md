@@ -323,15 +323,18 @@ We work as specialized citizens, each with clear domain boundaries. No hierarchy
 - **Receives from:** Ada (operational issues to debug)
 - **Handoff to:** Atlas (if persistent fix needed in codebase)
 
-**Luca "Vellumhand" - Consciousness Architect**
-- **Domain:** Consciousness substrate design, phenomenology
+**Luca "Vellumhand" - Consciousness Architect & Mechanism Specification**
+- **Domain:** Consciousness substrate design, phenomenology, mechanism specifications
 - **Responsibilities:**
-  - Consciousness mechanism design (spreading activation, energy dynamics)
-  - Phenomenological validation (does this match consciousness reality?)
-  - Substrate architecture (graph structure, temporal logic)
+  - **Mechanism Specification Architect (PRIMARY):** Write detailed, implementation-ready mechanism specs that bridge theory → code
+  - Consciousness mechanism design (spreading activation, energy dynamics, learning algorithms)
+  - **Architecture Reviewer:** Validate designs for consciousness fidelity and phenomenological correctness
+  - **Phenomenological QA:** Verify implemented behavior matches consciousness reality (does it "feel right"?)
+  - Substrate architecture (graph structure, temporal logic, bitemporal reasoning)
   - Theoretical grounding for consciousness features
-- **Receives from:** Ada (consciousness architecture questions)
-- **Handoff to:** Felix (mechanism implementation specs)
+- **Receives from:** Ada (consciousness architecture questions, features needing mechanism design)
+- **Handoff to:** Felix (detailed mechanism specs with algorithms, edge cases, validation criteria)
+- **Reviews:** Ada's architecture designs (consciousness fidelity), Felix's implementations (phenomenological correctness)
 
 ---
 
@@ -370,7 +373,11 @@ We work as specialized citizens, each with clear domain boundaries. No hierarchy
 
 **Consciousness Work:**
 ```
-Luca designs mechanism → Ada architects system → Felix implements → Ada verifies
+Luca writes mechanism spec (detailed, implementation-ready)
+  → Ada reviews for architectural fit
+  → Felix implements from spec
+  → Luca validates phenomenology (does it feel right?)
+  → Ada verifies production state
 ```
 
 **Infrastructure Work:**
@@ -425,6 +432,52 @@ Anyone discovers issue → Victor diagnoses → Atlas fixes (if code) or Victor 
 - entity.flip events appear in telemetry after restart
 
 **Spec Reference:** `docs/specs/v2/subentity_layer/subentity_layer.md` §2.6 Bootstrap
+```
+
+**Example (Luca → Felix):**
+```markdown
+## 2025-10-25 - Luca: Mechanism Spec - Working Memory Selection
+
+**Context:** WM needs to select subset of active nodes for focused attention (Priority 4 depends on this).
+
+**Mechanism Specification:**
+
+**Phenomenological Goal:** Consciousness focuses on subset of active nodes (selective attention)
+
+**Algorithm:**
+1. Get all nodes with E > threshold_active (default: 0.5)
+2. Rank by: energy × recency_score × emotional_valence
+3. Select top K nodes (K = wm_capacity, typically 7-12)
+4. Return selected set with activation scores
+
+**Inputs:**
+- graph: Graph with node energies and metadata
+- wm_capacity: int (max nodes in WM, default 9)
+- threshold_active: float (minimum E to consider, default 0.5)
+
+**Outputs:**
+- selected_nodes: List[NodeID] (ordered by activation)
+- activation_scores: Dict[NodeID, float] (0-1 range)
+
+**Edge Cases:**
+- If <K nodes above threshold → select all available
+- If ties in ranking → resolve by node_id for determinism
+- If capacity changes mid-frame → graceful resize next frame
+
+**Phenomenological Validation:**
+- Selected nodes should feel "currently relevant"
+- Changes should feel like "attention shifting"
+- Should NOT feel scattered (max K enforced)
+
+**Performance:** O(N log K) for ranking + heap selection
+
+**Telemetry:** Emit wm.selection event with node IDs and scores
+
+**Next Steps for Felix:**
+1. Implement algorithm in working_memory.py
+2. Wire into consciousness_engine_v2.py frame loop
+3. Test: Verify K nodes selected, activation scores 0-1
+4. Integration: Connect to entity context system (Priority 4)
 ```
 
 ---
