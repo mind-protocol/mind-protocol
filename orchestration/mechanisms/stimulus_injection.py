@@ -175,12 +175,22 @@ class StimulusInjector:
             f"ĉ={coverage_target:.2f}, selected {len(selected)}/{len(matches)} matches"
         )
 
-        # Step 2: Budget calculation
-        gap_mass = self._compute_gap_mass(selected)
+        # Step 2: Budget calculation (DUAL-CHANNEL: similarity-based, not gap-based)
+        # In dual-channel architecture, budget represents total relevance, not deficit
+        # Top-Up channel handles deficits internally; Amplifier needs budget regardless of gaps
+        similarity_mass = sum(m.similarity for m in selected)
+
+        # Debug: Log individual similarities
+        if similarity_mass == 0 and len(selected) > 0:
+            logger.warning(
+                f"[StimulusInjector] sim_mass=0 with {len(selected)} selected matches. "
+                f"First 5 similarities: {[m.similarity for m in selected[:5]]}"
+            )
+
         f_rho = self._health_modulation(rho_proxy)
         g_source = self._source_impact_gate(source_type)
 
-        budget_base = gap_mass * f_rho * g_source
+        budget_base = similarity_mass * f_rho * g_source
 
         # Step 3: Peripheral amplification (optional)
         alpha = 0.0
@@ -203,7 +213,7 @@ class StimulusInjector:
             )
 
         logger.info(
-            f"[StimulusInjector] Budget: sim_mass={gap_mass:.2f}, "
+            f"[StimulusInjector] Budget: sim_mass={similarity_mass:.2f}, "
             f"f(ρ)={f_rho:.2f}, g({source_type})={g_source:.2f} → B={budget:.2f}"
         )
 
@@ -221,7 +231,7 @@ class StimulusInjector:
             total_budget=budget,
             items_injected=len(injections),
             total_energy_injected=total_injected,
-            gap_mass=gap_mass,
+            gap_mass=similarity_mass,  # Now represents similarity mass in dual-channel
             health_factor=f_rho,
             source_factor=g_source,
             peripheral_factor=(1 + alpha),
