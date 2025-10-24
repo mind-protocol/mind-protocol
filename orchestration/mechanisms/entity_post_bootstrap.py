@@ -210,10 +210,10 @@ def initialize_entity_thresholds(graph: Graph) -> int:
             if not isinstance(node, Node):
                 continue
 
-            # Weighted node energy contribution
+            # Weighted node energy contribution (surplus-only with log damping)
             weight = link.weight
-            node_energy = max(0.0, node.E - node.theta)  # Effective energy
-            entity_energy += weight * node_energy
+            node_surplus = max(0.0, node.E - node.theta)  # Surplus energy only
+            entity_energy += weight * np.log1p(node_surplus)  # Log damping prevents single-node domination
 
         # Set initial runtime values
         entity.energy_runtime = entity_energy
