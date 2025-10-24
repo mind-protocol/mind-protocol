@@ -38,6 +38,10 @@ const MAX_STRIDE_SELECTION_EVENTS = 200; // Keep last 200 stride selection event
 const MAX_PHENOMENOLOGY_EVENTS = 200; // Keep last 200 phenomenology events (Priority 6 health viz)
 const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
+// 🔴 MEMORY LEAK FIX: TTL for emotion and flow maps to prevent unbounded growth
+const EMOTION_TTL_MS = 5 * 60 * 1000; // 5 minutes - remove stale emotion data
+const CLEANUP_INTERVAL_MS = 60 * 1000; // Run cleanup every 60 seconds
+
 /**
  * useWebSocket Hook
  *

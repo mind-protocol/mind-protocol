@@ -1113,7 +1113,7 @@ function computeSemanticPolarity(node: NodeData): number {
 
   // Signal 1: Weight-based polarity (40% weight)
   // Higher weight nodes cluster right, lower weight left
-  const weight = node.weight || node.base_weight || 0.5;
+  const weight = node.weight || (node as any).base_weight || 0.5;
   if (weight > 0) {
     polarity += (weight - 0.5) * 2 * 0.4; // Map [0,1] to [-1,1]
     totalWeight += 0.4;
