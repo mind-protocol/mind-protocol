@@ -1113,7 +1113,7 @@ function computeSemanticPolarity(node: NodeData): number {
 
   // Signal 1: Weight-based polarity (40% weight)
   // Higher weight nodes cluster right, lower weight left
-  const weight = node.weight || (node as any).base_weight || 0.5;
+  const weight = node.weight || node.base_weight || 0.5;
   if (weight > 0) {
     polarity += (weight - 0.5) * 2 * 0.4; // Map [0,1] to [-1,1]
     totalWeight += 0.4;
@@ -1131,7 +1131,7 @@ function computeSemanticPolarity(node: NodeData): number {
 
   // Signal 3: Last traversed subentity hash (20% weight)
   // Nodes last touched by same subentity cluster together
-  const lastSubentity = (node as any).last_traversed_by || (node as any).created_by;
+  const lastSubentity = node.last_traversed_by || node.created_by;
   if (lastSubentity) {
     const entityHash = hashString(lastSubentity);
     polarity += ((entityHash % 1000) / 500 - 1) * 0.2;
@@ -1140,7 +1140,7 @@ function computeSemanticPolarity(node: NodeData): number {
 
   // Signal 4: Text content hash (10% weight - fallback)
   // Very crude semantic proxy
-  const text = (node as any).text || node.name || node.description || node.id;
+  const text = node.text || node.name || node.description || node.id;
   if (text) {
     const textHash = hashString(text);
     polarity += ((textHash % 1000) / 500 - 1) * 0.1;
