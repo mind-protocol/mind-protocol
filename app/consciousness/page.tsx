@@ -304,20 +304,9 @@ export default function ConsciousnessPage() {
         {/* Right Sidebar Panels */}
         {!rightSidebarCollapsed && (
           <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
-            {/* Connection Status - Top */}
+            {/* System Status Panel - Comprehensive health monitoring */}
             <div className="mb-4">
-              <div
-                data-testid="ws-connected"
-                data-connected={connectionState === 'connected' ? 'true' : 'false'}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm ${
-                  connectionState === 'connected'
-                    ? 'bg-green-900/50 border border-green-500/30 text-green-100'
-                    : 'bg-red-900/50 border border-red-500/30 text-red-100'
-                }`}
-                title={`Consciousness WebSocket: ${connectionState}`}
-              >
-                {connectionState === 'connected' ? '● Live' : '○ Offline'}
-              </div>
+              <SystemStatusPanel />
             </div>
 
             {/* Tier Breakdown Panel - Priority 2 */}
