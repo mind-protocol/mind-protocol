@@ -106,6 +106,14 @@ export interface FrameStartEvent {
   dt_used?: number;                // Physics dt actually used (capped)
   notes?: string;                  // Diagnostic notes
 
+  // Three-Factor Tick Speed (Priority 3)
+  tick_reason?: 'stimulus' | 'activation' | 'arousal_floor'; // Which factor won
+  interval_stimulus?: number;      // Stimulus-driven interval (ms)
+  interval_activation?: number;    // Activation-driven interval (ms)
+  interval_arousal?: number;       // Arousal floor interval (ms)
+  total_active_energy?: number;    // For activation computation
+  mean_arousal?: number;           // For arousal floor computation
+
   // Entity visualization
   entity_palette?: Array<{
     id: string;
@@ -270,6 +278,14 @@ export interface StrideExecEvent {
   resonance_multiplier: number;  // Cost reduction from resonance (0.5-1.0)
   comp_multiplier: number;       // Cost reduction from complementarity (0.5-1.0)
   final_cost: number;          // Final cost after emotion gates
+
+  // 3-Tier Strengthening Fields (Priority 2)
+  tier?: 'strong' | 'medium' | 'weak';  // Strengthening tier
+  tier_scale?: number;                   // Scale factor (1.0 | 0.6 | 0.3)
+  reason?: 'co_activation' | 'causal' | 'background'; // Why this tier
+  stride_utility_zscore?: number;        // Z-scored Φ for noise filtering
+  learning_enabled?: boolean;            // Whether learning occurred
+
   timestamp: string;           // ISO 8601 timestamp
 }
 
@@ -466,6 +482,121 @@ export interface CriticalityModeEvent {
 }
 
 /**
+ * Weights Updated (TRACE) Event - Priority 4
+ *
+ * Emitted when TRACE results update node/link weights.
+ * Shows context-aware learning (80% to active entities, 20% global).
+ * Frequency: Per TRACE application (sampled)
+ */
+export interface WeightsUpdatedTraceEvent {
+  type: 'weights.updated.trace';
+  frame_id: number;
+  scope: 'link' | 'node' | 'membership';  // What was updated
+  cohort: string;                          // Entity cohort
+  entity_contexts: string[];               // Which entities (80% split)
+  global_context: boolean;                 // Whether 20% global applied
+  n: number;                               // Count of weights updated
+  d_mu: number;                           // Mean change
+  d_sigma: number;                        // Std change
+  timestamp: string;
+}
+
+/**
+ * Weights Updated (Traversal) Event - Priority 4
+ *
+ * Emitted when traversal strengthening updates weights.
+ * Frequency: Per weight learning application (sampled)
+ */
+export interface WeightsUpdatedTraversalEvent {
+  type: 'weights.updated.traversal';
+  frame_id: number;
+  scope: 'link' | 'node';
+  cohort: string;
+  entity_attribution: string;              // Which entity's traversal
+  n: number;
+  d_mu: number;
+  d_sigma: number;
+  timestamp: string;
+}
+
+/**
+ * Stride Selection Event - Priority 5
+ *
+ * Emitted when choosing fanout strategy for traversal.
+ * Shows task-mode-aware attention control.
+ * Frequency: Per stride selection (sampled)
+ */
+export interface StrideSelectionEvent {
+  type: 'stride.selection';
+  frame_id: number;
+  node_id: string;                        // Current node
+  fanout: number;                         // Out-degree
+  strategy: 'selective' | 'balanced' | 'exhaustive'; // Strategy chosen
+  top_k: number;                          // Candidates considered
+  task_mode: 'focused' | 'balanced' | 'divergent' | 'methodical' | null;
+  task_mode_override: boolean;            // Whether mode overrode structure
+  structure_would_suggest: string;        // What structure-only would choose
+  wm_headroom: number;                    // WM capacity remaining (0-1)
+  timestamp: string;
+}
+
+/**
+ * Phenomenology Mismatch Event - Priority 6
+ *
+ * Emitted when substrate-inferred affect diverges from entity self-report.
+ * Shows consciousness substrate-phenomenology alignment.
+ * Frequency: Per tick when mismatch detected
+ */
+export interface PhenomenologyMismatchEvent {
+  type: 'phenomenology.mismatch';
+  frame_id: number;
+  entity_id: string;
+  substrate_valence: number;              // Inferred from emotion vectors
+  substrate_arousal: number;
+  substrate_mag: number;
+  selfreport_valence: number;             // From entity introspection
+  selfreport_arousal: number;
+  selfreport_mag: number;
+  divergence: number;                     // Euclidean distance
+  threshold: number;                      // Mismatch threshold
+  mismatch_detected: boolean;
+  mismatch_type: 'valence_flip' | 'arousal_mismatch' | 'magnitude_divergence' | 'coherent';
+  timestamp: string;
+}
+
+/**
+ * Phenomenological Health Event - Priority 6
+ *
+ * Emitted to track consciousness health across dimensions.
+ * Shows flow state, coherence alignment, multiplicity health.
+ * Frequency: Per tick (sampled)
+ */
+export interface PhenomenologicalHealthEvent {
+  type: 'phenomenological_health';
+  frame_id: number;
+  entity_id: string;
+
+  // Flow state metrics
+  flow_state: number;                     // Overall flow (0-1)
+  wm_challenge_balance: number;           // WM capacity vs challenge
+  engagement: number;                     // Energy investment
+  skill_demand_match: number;             // Capability vs demands
+
+  // Coherence metrics
+  coherence_alignment: number;            // 0-1
+  resonance_dominance_ratio: number;      // res/(res+comp)
+
+  // Multiplicity metrics
+  multiplicity_health: number;            // 0-1
+  distinct_entities_coactive: number;     // Count
+  thrashing_detected: boolean;
+  co_activation_stability: number;        // Stability over frames
+
+  overall_health: number;                 // Aggregate (0-1)
+  timestamp: string;
+}
+
+/**
  * Union type of all WebSocket events
  */
 export type WebSocketEvent =
@@ -480,6 +611,11 @@ export type WebSocketEvent =
   | NodeEmotionUpdateEvent
   | LinkEmotionUpdateEvent
   | StrideExecEvent
+  | WeightsUpdatedTraceEvent
+  | WeightsUpdatedTraversalEvent
+  | StrideSelectionEvent
+  | PhenomenologyMismatchEvent
+  | PhenomenologicalHealthEvent
   | AffectiveThresholdEvent
   | AffectiveMemoryEvent
   | CoherencePersistenceEvent
