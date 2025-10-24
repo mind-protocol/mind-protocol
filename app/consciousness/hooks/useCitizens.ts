@@ -91,12 +91,15 @@ export function useCitizens() {
         });
 
         // Add N2 (organizational) graph as special "collective" citizen
+        // Only add if we don't already have a citizen with this ID (prevent duplicate keys)
         if (data.organizations.length > 0) {
           const orgGraph = data.organizations.find(org =>
             org.id === 'org_mind_protocol'
           );
 
-          if (orgGraph) {
+          const alreadyHasMindProtocol = transformedCitizens.some(c => c.id === 'mind_protocol');
+
+          if (orgGraph && !alreadyHasMindProtocol) {
             transformedCitizens.unshift({
               id: 'mind_protocol',
               name: 'Mind Protocol',
