@@ -74,6 +74,9 @@ export default function ConsciousnessPage() {
     consciousnessState,
     v2State,
     weightLearningEvents,
+    strideSelectionEvents,
+    phenomenologyMismatchEvents,
+    phenomenologyHealthEvents,
     connectionState,
     error: wsError
   } = useWebSocket();
@@ -332,8 +335,28 @@ export default function ConsciousnessPage() {
         <EntityContextLearningPanel weightEvents={weightLearningEvents} />
       </div>
 
-      {/* Citizen consciousness monitor (right sidebar, below entity learning panel) */}
+      {/* Fanout Strategy Panel (left sidebar, lower section) - Priority 5 */}
+      <div className="absolute bottom-[60rem] left-[26rem] w-80 z-40">
+        <FanoutStrategyPanel strideSelectionEvents={strideSelectionEvents} />
+      </div>
+
+      {/* Task Mode Influence Panel (left sidebar, lowest section) - Priority 5 */}
+      <div className="absolute bottom-[32rem] left-[26rem] w-80 z-40">
+        <TaskModeInfluencePanel strideSelectionEvents={strideSelectionEvents} />
+      </div>
+
+      {/* Phenomenology Mismatch Panel (right sidebar, lower section) - Priority 6 */}
       <div className="absolute top-[80rem] right-4 w-80 z-40">
+        <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
+      </div>
+
+      {/* Consciousness Health Dashboard (right sidebar, lowest section) - Priority 6 */}
+      <div className="absolute top-[116rem] right-4 w-80 z-40">
+        <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
+      </div>
+
+      {/* Citizen consciousness monitor (right sidebar, bottom) */}
+      <div className="absolute top-[152rem] right-4 w-80 z-40">
         <CitizenMonitor
           citizens={citizens}
           onFocusNode={handleFocusNode}
