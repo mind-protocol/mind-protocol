@@ -207,8 +207,8 @@ class StimulusInjector:
             f"f(ρ)={f_rho:.2f}, g({source_type})={g_source:.2f} → B={budget:.2f}"
         )
 
-        # Step 4: Distribute budget across selected matches
-        injections = self._distribute_budget(budget, selected)
+        # Step 4: Distribute budget across selected matches (DUAL-CHANNEL)
+        injections = self._distribute_budget_dual_channel(budget, selected)
 
         total_injected = sum(inj['delta_energy'] for inj in injections)
 
@@ -574,6 +574,188 @@ class StimulusInjector:
                 f"[StimulusInjector] {match.item_id}: "
                 f"E={match.current_energy:.2f} + ΔE={delta_energy:.2f} "
                 f"= {new_energy:.2f} (gap={match.gap:.2f}, sim={match.similarity:.2f})"
+            )
+
+        return injections
+
+    def _compute_threshold(
+        self,
+        node_type: str,
+        current_energy: float,
+        recency_score: float = 0.0,
+        quality_score: float = 0.5,
+        affinity_z: float = 0.0
+    ) -> Tuple[float, bool]:
+        """
+        Threshold Oracle: Compute activation floor (Θ) for a node.
+
+        Uses per-type baselines with bounded adjustments for recency, quality, and affinity.
+
+        Args:
+            node_type: Type of node (Realization, Memory, etc.)
+            current_energy: Node's current energy (for scale guard)
+            recency_score: 0-1, fresh=1
+            quality_score: 0-1, higher is better
+            affinity_z: Entity-affinity z-score, clamped to [-2, 2]
+
+        Returns:
+            (threshold, scale_mismatch_detected)
+        """
+        # Step 1: Type baseline
+        TYPE_BASELINES = {
+            "Realization": 30.0,
+            "Memory": 25.0,
+            "Concept": 28.0,
+            "Principle": 35.0,
+            "Mechanism": 38.0,
+            "Document": 22.0,
+            "Spec": 22.0,
+            "Event": 26.0,
+            "Post": 26.0,
+            "Signal": 26.0,
+            "Best_Practice": 32.0,
+            "Anti_Pattern": 30.0,
+        }
+        theta_base = TYPE_BASELINES.get(node_type, 30.0)
+
+        # Step 2: Adaptive adjustments (bounded)
+        delta_recency = -5.0 * recency_score
+        delta_quality = 4.0 * (1.0 - quality_score)
+        delta_affinity = -2.0 * max(-2.0, min(2.0, affinity_z))
+
+        # Step 3: Combine and clamp
+        theta = theta_base + delta_recency + delta_quality + delta_affinity
+        theta = max(15.0, min(45.0, theta))
+
+        # Step 4: Scale guard (detect E-Θ unit mismatch)
+        scale_mismatch = False
+        if current_energy > 1.0 and theta < 1.0:
+            logger.warning(
+                f"[StimulusInjector] Scale mismatch detected: E={current_energy:.2f}, Θ={theta:.2f}. "
+                f"Correcting to Θ=30.0"
+            )
+            theta = 30.0
+            scale_mismatch = True
+
+        return theta, scale_mismatch
+
+    def _distribute_budget_dual_channel(
+        self,
+        budget: float,
+        matches: List[InjectionMatch]
+    ) -> List[Dict[str, Any]]:
+        """
+        Dual-channel injection: Top-Up + Amplifier.
+
+        Top-Up channel (λ*B): Helps nodes below floor reach activation threshold.
+        Amplifier channel ((1-λ)*B): Boosts strong matches regardless of current energy.
+
+        Args:
+            budget: Total energy budget to distribute
+            matches: Selected matches with computed thresholds
+
+        Returns:
+            List of injections: [{item_id, delta_energy, new_energy, channel_breakdown}, ...]
+        """
+        if budget <= 0 or not matches:
+            return []
+
+        # Step 1: Compute weights for both channels
+        w_top = []
+        w_amp = []
+        gaps = []
+
+        for m in matches:
+            # Top-Up: sigmoid of deficit
+            deficit = m.threshold - m.current_energy
+            gaps.append(max(0.0, deficit))
+            # σ(x) = 1/(1+e^(-x)), k=8
+            w_top.append(1.0 / (1.0 + np.exp(-deficit / 8.0)))
+
+            # Amplifier: similarity^γ
+            gamma = 1.3
+            w_amp.append(pow(m.similarity, gamma))
+
+        # Normalize weights
+        sum_top = sum(w_top) or 1e-9
+        sum_amp = sum(w_amp) or 1e-9
+        w_top_norm = [w / sum_top for w in w_top]
+        w_amp_norm = [w / sum_amp for w in w_amp]
+
+        # Step 2: Adaptive λ (budget split)
+        # Coldness: average deficit among candidates
+        avg_deficit = sum(gaps) / max(len(gaps), 1)
+
+        # Similarity concentration (Herfindahl)
+        sum_sim = sum(m.similarity for m in matches) or 1e-9
+        s_norm = [m.similarity / sum_sim for m in matches]
+        H = sum(s * s for s in s_norm)
+
+        # Adaptive: raise λ if cold (more Top-Up), lower λ if concentrated (more Amplify)
+        lambda_base = 0.6
+        lambda_val = lambda_base + 0.2 * (1 if avg_deficit > 10 else 0) - 0.2 * (1 if H > 0.2 else 0)
+        lambda_val = max(0.3, min(0.8, lambda_val))
+
+        B_top = lambda_val * budget
+        B_amp = (1.0 - lambda_val) * budget
+
+        logger.info(
+            f"[StimulusInjector] Dual-channel: λ={lambda_val:.2f}, avg_deficit={avg_deficit:.2f}, "
+            f"H={H:.3f}, B_top={B_top:.2f}, B_amp={B_amp:.2f}"
+        )
+
+        # Step 3: Compute injections per node
+        injections = []
+        total_proposed = 0.0
+
+        for i, m in enumerate(matches):
+            # Top-Up: capped at gap
+            delta_top = min(gaps[i], w_top_norm[i] * B_top)
+
+            # Amplifier: no floor cap
+            delta_amp = w_amp_norm[i] * B_amp
+
+            # Combined
+            delta_proposed = delta_top + delta_amp
+
+            # Per-node cap
+            delta_proposed = min(delta_proposed, 10.0)
+
+            total_proposed += delta_proposed
+
+            injections.append({
+                'item_id': m.item_id,
+                'item_type': m.item_type,
+                'delta_energy': delta_proposed,
+                'delta_top': delta_top,
+                'delta_amp': delta_amp,
+                'current_energy': m.current_energy,
+                'new_energy': m.current_energy + delta_proposed,
+                'threshold': m.threshold,
+                'similarity': m.similarity,
+                'gap': gaps[i]
+            })
+
+        # Step 4: Renormalize if total exceeds budget
+        if total_proposed > budget and total_proposed > 0:
+            scale = budget / total_proposed
+            logger.debug(f"[StimulusInjector] Renormalizing: {total_proposed:.2f} → {budget:.2f} (scale={scale:.3f})")
+            for inj in injections:
+                inj['delta_energy'] *= scale
+                inj['delta_top'] *= scale
+                inj['delta_amp'] *= scale
+                inj['new_energy'] = inj['current_energy'] + inj['delta_energy']
+
+        # Filter negligible injections
+        injections = [inj for inj in injections if inj['delta_energy'] >= 1e-9]
+
+        # Logging
+        for inj in injections:
+            logger.debug(
+                f"[StimulusInjector] {inj['item_id']}: "
+                f"E={inj['current_energy']:.2f} + ΔE={inj['delta_energy']:.2f} "
+                f"(top={inj['delta_top']:.2f}, amp={inj['delta_amp']:.2f}) "
+                f"= {inj['new_energy']:.2f} (Θ={inj['threshold']:.2f}, gap={inj['gap']:.2f}, s={inj['similarity']:.2f})"
             )
 
         return injections
