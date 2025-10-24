@@ -247,10 +247,10 @@ def _select_workspace_entities(self, subentity: str):
 2. ✅ Implemented: Config-driven bootstrap with keyword-based membership seeding
 3. ✅ Verified: 8 entities with 357 memberships persisted and reload confirmed
 
-**Priority 2: Fix Core Learning** (BLOCKS EXPERTISE)
-1. Replace D020 rule with 3-tier strengthening (PR-A)
-2. Implement stride utility filtering
-3. Verify learning happens during traversal
+**Priority 2: Fix Core Learning** ✅ **COMPLETE** (2025-10-24)
+1. ✅ Replaced D020 rule with 3-tier strengthening (PR-A)
+2. ✅ Implemented stride utility filtering (< -1 sigma blocks)
+3. ⏳ Pending: Verify learning happens during traversal (awaiting engine restart)
 
 **Priority 3: Adaptive Tick Speed** (BLOCKS AUTONOMY)
 1. Implement `compute_interval_activation()`
