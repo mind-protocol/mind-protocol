@@ -1,0 +1,10 @@
+{
+  "context_id": "2025-10-25_00-41-31",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-24T22:41:31.380408+00:00",
+  "created_by": "precompact_hook",
+  "last_updated": "2025-10-24T22:41:31.380408+00:00",
+  "message_count": 0,
+  "has_tool_calls": false
+}

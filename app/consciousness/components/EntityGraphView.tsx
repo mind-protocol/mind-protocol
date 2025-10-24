@@ -189,13 +189,13 @@ export function EntityGraphView({
         </button>
       </div>
 
-      {/* Back button for expanded view */}
-      {viewMode === 'entity-expanded' && (
+      {/* Collapse button for expanded entity */}
+      {expandedEntityId && viewMode === 'entity-map' && (
         <button
           onClick={handleBackToEntityMap}
           className="absolute top-4 left-4 z-50 px-4 py-2 bg-slate-800/80 text-slate-200 rounded-lg text-sm font-medium backdrop-blur-sm border border-slate-700 hover:bg-slate-700/80 transition-colors"
         >
-          ← Back to Entity Map
+          ✕ Collapse Entity
         </button>
       )}
 
@@ -203,48 +203,98 @@ export function EntityGraphView({
       {viewMode === 'entity-map' && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900/80 text-slate-300 rounded-lg text-xs font-mono backdrop-blur-sm border border-slate-700">
           {entities.length} entities · {entities.filter(e => e.active).length} active
+          {expandedEntityId && ` · Expanded: ${entities.find(e => e.id === expandedEntityId)?.name || expandedEntityId}`}
         </div>
       )}
 
-      {/* Entity Mood Map View */}
+      {/* Entity Mood Map View - Always show when in entity-map mode */}
       {viewMode === 'entity-map' && (
-        <EntityMoodMap
-          entities={entities}
-          width={dimensions.width}
-          height={dimensions.height}
-          onEntityClick={handleEntityClick}
-        />
-      )}
-
-      {/* Expanded Member View */}
-      {viewMode === 'entity-expanded' && (
-        <div className="w-full h-full relative">
-          {/* Entity header */}
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 px-6 py-3 bg-slate-900/90 rounded-lg border border-slate-700 backdrop-blur-sm">
-            <div className="text-consciousness-green font-semibold">
-              {entities.find(e => e.id === expandedEntityId)?.name || expandedEntityId}
-            </div>
-            <div className="text-xs text-slate-400 mt-1">
-              {expandedMemberNodes.length} members · {expandedMemberLinks.length} active links
-            </div>
-          </div>
-
-          <PixiCanvas
-            nodes={expandedMemberNodes}
-            links={expandedMemberLinks}
-            operations={operations.filter(op => {
-              const memberIds = new Set(expandedMemberNodes.map(n => n.id || n.node_id));
-              return memberIds.has(op.node_id);
-            })}
-            subentities={[]}
-            workingMemory={workingMemory}
-            linkFlows={linkFlows}
-            recentFlips={recentFlips.filter(flip => {
-              const memberIds = new Set(expandedMemberNodes.map(n => n.id || n.node_id));
-              return memberIds.has(flip.node_id);
-            })}
+        <>
+          <EntityMoodMap
+            entities={entities}
+            width={dimensions.width}
+            height={dimensions.height}
+            onEntityClick={handleEntityClick}
           />
-        </div>
+
+          {/* Member nodes overlay - shown when entity is expanded */}
+          {expandedEntityId && expandedMemberNodes.length > 0 && (
+            <div className="absolute inset-0 pointer-events-none z-30">
+              {/* Semi-transparent overlay showing this is expanded state */}
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900/90 text-slate-300 rounded-lg text-xs font-mono backdrop-blur-sm border border-consciousness-green/50 pointer-events-auto">
+                {entities.find(e => e.id === expandedEntityId)?.name || expandedEntityId} inner structure: {expandedMemberNodes.length} nodes · {expandedMemberLinks.length} links
+              </div>
+
+              {/* Render member nodes as overlay */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-auto" style={{ zIndex: 25 }}>
+                {/* Draw member nodes as smaller circles */}
+                {expandedMemberNodes.map(node => {
+                  // Position nodes randomly around center for now (need proper layout)
+                  const x = dimensions.width / 2 + (Math.random() - 0.5) * 400;
+                  const y = dimensions.height / 2 + (Math.random() - 0.5) * 400;
+                  const energy = node.energy || 0;
+                  const radius = 8 + energy * 12;
+
+                  return (
+                    <g key={node.id || node.node_id}>
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={radius}
+                        fill="#5efc82"
+                        fillOpacity={0.3}
+                        stroke="#5efc82"
+                        strokeWidth={2}
+                      />
+                      <text
+                        x={x}
+                        y={y + radius + 12}
+                        textAnchor="middle"
+                        fill="#e2e8f0"
+                        fontSize="10"
+                        fontFamily="monospace"
+                      >
+                        {(node as any).name || node.node_id}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* Draw links between member nodes */}
+                {expandedMemberLinks.map((link, i) => {
+                  // Simplified link rendering (need actual node positions)
+                  const sourceNode = expandedMemberNodes.find(n =>
+                    (n.id || n.node_id) === (typeof link.source === 'string' ? link.source : (link.source as any).id)
+                  );
+                  const targetNode = expandedMemberNodes.find(n =>
+                    (n.id || n.node_id) === (typeof link.target === 'string' ? link.target : (link.target as any).id)
+                  );
+
+                  if (!sourceNode || !targetNode) return null;
+
+                  // Use same random positioning as nodes (temporary)
+                  const x1 = dimensions.width / 2 + (Math.random() - 0.5) * 400;
+                  const y1 = dimensions.height / 2 + (Math.random() - 0.5) * 400;
+                  const x2 = dimensions.width / 2 + (Math.random() - 0.5) * 400;
+                  const y2 = dimensions.height / 2 + (Math.random() - 0.5) * 400;
+
+                  return (
+                    <line
+                      key={`${sourceNode.id}-${targetNode.id}-${i}`}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="#5efc82"
+                      strokeOpacity={0.2}
+                      strokeWidth={1}
+                    />
+                  );
+                })}
+              </svg>
+            </div>
+          )}
+        </>
       )}
 
       {/* Full Node Graph View */}
@@ -261,11 +311,6 @@ export function EntityGraphView({
           />
           <StrideSparks nodes={nodes} links={links} />
         </>
-      )}
-
-      {/* Stride Sparks for expanded view */}
-      {viewMode === 'entity-expanded' && (
-        <StrideSparks nodes={expandedMemberNodes} links={expandedMemberLinks} />
       )}
     </div>
   );
