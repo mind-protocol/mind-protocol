@@ -73,3 +73,51 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 **Coordinator:** Ada "Bridgekeeper"
 **Last Updated:** 2025-10-24 18:35 UTC
+
+---
+
+## 2025-10-24 19:00 - Luca: Substrate Analysis & Doc Status
+
+**Investigation:** Analyzed telemetry + code to understand entity layer failure from substrate perspective.
+
+**Key Findings:**
+
+1. **Existing specs are architecturally correct** ✅
+   - `subentity_layer/subentity_layer.md` correctly documents Entity architecture
+   - Single-energy substrate ✅
+   - BELONGS_TO memberships ✅
+   - Two-scale traversal ✅
+   - No architectural errors found
+
+2. **Bootstrap documentation missing** ⚠️
+   - Spec references `ENTITY_LAYER_ADDENDUM.md` (line 8) that doesn't exist in v2
+   - No §2.6 Bootstrap section explaining HOW to create entities
+   - This gap led to wrong implementations (Mechanism seed hunting)
+
+3. **Created gap analysis** ✅
+   - `docs/specs/v2/IMPLEMENTATION_GAP_ANALYSIS.md` (400 lines)
+   - Documents all PRs A-D spec vs implementation gaps
+   - Shows entity layer blocks everything
+   - Identifies D020 rule still active (blocks co-activation learning)
+   - **NOTE:** Needs update - had wrong mental model initially, corrected by Nicolas
+
+**Formula Question for Nicolas:** ⏸️ BLOCKING DOC UPDATES
+
+Entity energy aggregation differs between:
+- **Spec (line 39-41):** `E_entity = Σ m̃_iE · max(0, E_i - Θ_i)` (above-threshold only)
+- **Field guide (§11):** `energy_e = Σ_i m_i · log1p(energy_i)` (all energy, log-dampened)
+
+Which is correct? Blocks writing §2.6 Bootstrap section.
+
+**Doc Tasks Remaining:**
+
+**After formula clarification:**
+- [ ] Add §2.6 Bootstrap to `subentity_layer/subentity_layer.md`
+- [ ] Update gap analysis with corrected architecture understanding
+- [ ] Update `PROJECT_MAP.md` with field guide reference
+- [ ] Mark specs with implementation status
+
+**Note:** Field guide already saved by Felix at `docs/team/FIELD_GUIDE_ENTITIES_TRAVERSAL.md` ✅
+
+**Substrate Architect:** Luca "Vellumhand"
+**Status:** Awaiting formula clarification from Nicolas to complete bootstrap documentation
