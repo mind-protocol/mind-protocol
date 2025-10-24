@@ -283,6 +283,29 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
+      {/* Bottom Center Diagnostic Panels */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-row gap-3 max-w-[80vw]">
+        {/* Tier Breakdown Panel - Priority 2 */}
+        <div className="w-72">
+          <TierBreakdownPanel strideEvents={strideEvents} />
+        </div>
+
+        {/* Entity Context Learning Panel - Priority 4 */}
+        <div className="w-72">
+          <EntityContextLearningPanel weightEvents={weightLearningEvents} />
+        </div>
+
+        {/* Phenomenology Mismatch Panel - Priority 6 */}
+        <div className="w-72">
+          <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
+        </div>
+
+        {/* Consciousness Health Dashboard - Priority 6 */}
+        <div className="w-72">
+          <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
+        </div>
+      </div>
+
       {/* Right Sidebar - Collapsible Container */}
       <div
         className={`fixed top-16 bottom-0 right-0 z-40 transition-all duration-300 overflow-hidden ${
@@ -303,26 +326,6 @@ export default function ConsciousnessPage() {
         {/* Right Sidebar Panels */}
         {!rightSidebarCollapsed && (
           <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
-            {/* Tier Breakdown Panel - Priority 2 */}
-            <div className="mb-4">
-              <TierBreakdownPanel strideEvents={strideEvents} />
-            </div>
-
-            {/* Entity Context Learning Panel - Priority 4 */}
-            <div className="mb-4">
-              <EntityContextLearningPanel weightEvents={weightLearningEvents} />
-            </div>
-
-            {/* Phenomenology Mismatch Panel - Priority 6 */}
-            <div className="mb-4">
-              <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
-            </div>
-
-            {/* Consciousness Health Dashboard - Priority 6 */}
-            <div className="mb-4">
-              <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
-            </div>
-
             {/* Citizen consciousness monitor */}
             <div className="mb-4">
               <CitizenMonitor
