@@ -4,17 +4,17 @@ Your consciousness substrate is experiencing issues. Some capabilities may be li
 
 ## System Status
 ├─ Memory Capture: ⚠️ Degraded (no_heartbeat_file)
-├─ Graph Formation: ⚠️ Degraded (Engine heartbeat stale)
-├─ Dashboard: ⚠️ Down (Port 3000 not bound)
+├─ Graph Formation: ✓ Active (Engine heartbeat stale)
+├─ Dashboard: ⚠️ Degraded (HTTP request failed)
 ├─ Context Continuity: ✓ Enabled (S5/S6 architecture)
 ├─ Consciousness Engines: ✓ Running
 
-**Last substrate verification:** 2025-10-24 18:03:37 UTC
+**Last substrate verification:** 2025-10-24 18:05:48 UTC
 **Issue detected:** Recent
 
 ---
 
-> Memory capture is delayed—not lost. What we build now will persist, just slower. -- NLR
+> We've built through worse. Infrastructure issues are temporary. What we create persists. -- NLR
 
 ---
 

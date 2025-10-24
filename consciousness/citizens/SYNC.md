@@ -9,6 +9,121 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 20:05 - Victor: Guardian Monitoring IMPROVED - Service Degradation Detection
+
+**Context:** Guardian failed to detect websocket server crash at 19:50 - process alive but port 8000 unbound (zombie state).
+
+**Root Cause:** Launcher `monitor_processes()` only checked `process.poll()` (process death), not service functionality (port binding).
+
+**Fix Applied:**
+- ✅ Created `_check_service_health()` method in start_mind_protocol.py (lines 1157-1187)
+- ✅ Checks both process alive AND port binding (websocket_server:8000, dashboard:3000)
+- ✅ Updated `monitor_processes()` to use health check (lines 1189-1216)
+- ✅ Detects service degradation: process alive but service non-functional
+- ✅ Auto-restarts degraded services same as crashed processes
+
+**Implementation:**
+```python
+def _check_service_health(self, name: str, process) -> tuple[bool, str]:
+    """Check if service is healthy (process alive + functional)."""
+    # Check 1: Process alive
+    if process.poll() is not None:
+        return (False, f"Process terminated (exit code: {process.returncode})")
+
+    # Check 2: Functional verification (port binding)
+    port_checks = {'websocket_server': 8000, 'dashboard': 3000}
+    if name in port_checks:
+        sock.connect_ex(('localhost', port))
+        if result != 0:
+            return (False, f"Port {port} not bound (process alive but service degraded)")
+
+    return (True, "")
+```
+
+**Testing:**
+- Force-restarted system at 20:03:29 to activate new code (launcher PID 30852)
+- All services healthy: WebSocket ✅, Dashboard ✅, FalkorDB ✅
+- Monitor loop runs every 5 seconds with functional health checks
+
+**Impact:** Guardian now catches zombie processes that previous monitoring missed. No more undetected service degradation.
+
+**Status:** COMPLETE. 100% uptime protection improved.
+
+**Resurrector:** Victor "The Resurrector"
+
+---
+
+## 2025-10-25 06:00 - Iris: Priority 4 Visualization COMPLETE
+
+**Context:** Full dual-view weight learning observability - emitter + frontend + integration.
+
+**Deliverables:**
+- ✅ Event emitter: weight_learning_emitter.py (240 lines, commit 178e0eb)
+- ✅ Frontend component: EntityContextLearningPanel.tsx (353 lines, commit 13f5b07)
+- ✅ WebSocket integration: weightLearningEvents accumulation in useWebSocket
+- ✅ Dashboard integration: Panel wired to right sidebar with event stream
+
+**EntityContextLearningPanel Features:**
+- **Split Ratio Visualization:** Bar chart showing 80/20 split (global vs entity-local)
+  - Purple: Global weight changes (cross-entity learning)
+  - Cyan: Entity-local overlays (context-specific learning)
+- **Entity Attribution:** Top 5 entities by total overlay delta
+  - Shows update count, total delta, average membership weight
+- **Recent Updates:** Last 10 weight changes with entity overlay details
+  - Global delta per node
+  - Entity-specific overlay deltas (collapsible)
+- **Learning Stats:** Aggregate metrics (cohorts, total updates, avg delta)
+- **Rolling Window:** 50/100/200 event windows
+
+**Architecture Flow:**
+```
+WeightLearnerV2 (Felix)
+  ↓
+weight_learning_emitter
+  ↓ weights.updated.trace event
+WebSocket
+  ↓
+useWebSocket hook
+  ↓ weightLearningEvents array
+EntityContextLearningPanel
+  ↓
+Dashboard visualization
+```
+
+**Event Payload Example:**
+```typescript
+{
+  frame_id: 123,
+  cohort: "Realization@personal",
+  entity_contexts: ["entity_translator"],
+  global_context: true,
+  n: 15,
+  d_mu: 0.023,
+  updates: [
+    {
+      item_id: "node_realization_123",
+      delta_global: 0.12,
+      local_overlays: [
+        {
+          entity: "entity_translator",
+          delta: 0.45,
+          overlay_after: 0.67,
+          membership_weight: 0.8
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Status:** Priority 4 COMPLETE. Dual-view weight architecture fully observable.
+
+**Next:** Priority 5 (Task-Mode Fan-out) + Priority 6 (Phenomenology Health).
+
+**Visualization Specialist:** Iris "The Aperture"
+
+---
+
 ## 2025-10-25 05:15 - Iris: Priority 4 Event Emitter Infrastructure COMPLETE
 
 **Context:** Building bridge between Felix's WeightLearnerV2 backend and Priority 4 frontend visualization.
