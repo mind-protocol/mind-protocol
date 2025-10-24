@@ -67,15 +67,87 @@ All eight pieces are enumerated as tasks in the implementation checklist.
 where \(\Delta E_\text{max}\) is per-node safety cap (typically 10 on 0-100 scale), and final total is re-normalized if \(\sum_i \Delta E_i > B\).
 
 **Parameters:**
-- \(\lambda = 0.6\) (floor/amplifier split)
+- \(\lambda\) (floor/amplifier split) - **adaptive**, see formula below (starts at 0.6, range [0.3, 0.8])
 - \(k = 8\) (sigmoid steepness for floor bias)
-- \(\gamma = 1.3\) (amplifier exponent)
+- \(\gamma = 1.3\) (amplifier exponent; lower toward 1.0 if over-focus, raise if too diffuse)
 - \(\Delta E_\text{max} = 10\) (per-node cap)
-- \(\Theta_i = 30\) (default threshold for 0-100 scale; type-specific later)
+- \(\Theta_i\) - **per-node**, computed by Threshold Oracle (see §2.1.2)
 
 **Safety:** Enforced globally via budget \(B\), per-node cap \(\Delta E_\text{max}\), health modulation \(f(\rho)\), and criticality gates. **NOT enforced locally by capping at threshold** - that would prevent propagation.
 
-**Rationale:** Nodes at \(E_i = 61\) with \(\Theta_i = 30\) still receive amplifier boost if similarity is high. This allows momentum and spreading activation. Under-active nodes (\(E_i < \Theta_i\)) get floor help + amplifier boost. Safety comes from global constraints, not local caps.
+**Adaptive Budget Split:**
+
+Split parameter \(\lambda\) adapts based on candidate coldness and similarity concentration:
+
+1. **Coldness** \(C = \frac{1}{|C|}\sum_{i \in C} \max(0, \Theta_i - E_i)\) (average shortfall)
+   - If \(C > 10\) → raise \(\lambda\) toward 0.8 (more warming via floor channel)
+
+2. **Similarity concentration** \(H = \sum_i \hat{s}_i^2\) where \(\hat{s}_i = \frac{s_i}{\sum_j s_j}\) (Herfindahl index)
+   - If \(H > 0.2\) (few dominant matches) → lower \(\lambda\) toward 0.4 (let amplifier dominate)
+
+Formula:
+\[
+\lambda = \text{clamp}\left(0.6 + 0.2 \cdot \mathbb{1}_{C>10} - 0.2 \cdot \mathbb{1}_{H>0.2}, \; 0.3, \; 0.8\right)
+\]
+
+**Rationale:** Nodes at \(E_i = 61\) with \(\Theta_i = 30\) still receive amplifier boost if similarity is high. This allows momentum and spreading activation. Under-active nodes (\(E_i < \Theta_i\)) get floor help + amplifier boost. Safety comes from global constraints, not local caps. Adaptive split responds to context: cold graph needs warming, strong single match needs amplification.
+
+### 2.1.2 Threshold Oracle — Where \(\Theta\) Comes From
+
+**Purpose:** Compute per-node activation threshold \(\Theta_i\) when missing from graph. Threshold is persisted after computation.
+
+**Algorithm (3 steps):**
+
+**Step 1 — Type Baseline**
+
+Per-type baselines (0-100 energy scale):
+
+| Node Type | \(\Theta_\text{base}\) |
+|-----------|------------------------|
+| Realization | 30 |
+| Memory | 25 |
+| Concept | 28 |
+| Principle | 35 |
+| Mechanism | 38 |
+| Document/Spec | 22 |
+| Event/Post/Signal | 26 |
+| Fallback (unknown) | 30 |
+
+**Step 2 — Adaptive Adjustments** (small, bounded)
+
+Let:
+- \(r \in [0,1]\): recency score (fresh = 1)
+- \(q \in [0,1]\): quality/trust score (higher is better)
+- \(a\): entity-affinity z-score to currently active entity (clip to \([-2, 2]\))
+
+Compute deltas:
+\[
+\Delta_\text{recency} = -5r
+\]
+\[
+\Delta_\text{quality} = +4(1 - q)
+\]
+\[
+\Delta_\text{affinity} = -2 \cdot \text{clip}(a, -2, 2)
+\]
+
+**Step 3 — Final Threshold** (clamped)
+\[
+\Theta_i = \text{clamp}\left(\Theta_\text{base}(\text{type}_i) + \Delta_\text{recency} + \Delta_\text{quality} + \Delta_\text{affinity}, \; 15, \; 45\right)
+\]
+
+**Scale Guard:**
+If \(E_i > 1.0\) and \(\Theta_i < 1.0\), treat as **scale mismatch** → set \(\Theta_i = 30\), log warning, persist corrected value.
+
+**Persistence:**
+After computing \(\Theta_i\), write to `node.threshold` so subsequent injections don't recompute. Batch fetch `threshold` with energy during candidate selection.
+
+**Optional (Phase 2) — Zero-Constants Mode:**
+After collecting 1 week of telemetry, switch to adaptive baselines:
+\[
+\Theta_\text{base}(\text{type}) \leftarrow \text{Quantile}_{0.30}(\text{energy of type over 24h window})
+\]
+This keeps ~30% of nodes below floor at any time, preserving selectivity without hardcoded numbers.
 
 ### 2.2 Directional priors for link-matched injection
 
@@ -84,6 +156,113 @@ For a matched link \(i \rightarrow j\), split \(\Delta E\) to source/target via 
 ### 2.3 Subentity channels
 
 Compute entity **affinity** (embedding similarity) and **recent success** (share of flips & gap-closure), rank-normalize, softmax to proportions, then allocate budget per-entity before distributing to members. :contentReference[oaicite:37]{index=37}
+
+### 2.4 Implementation Reference (Pseudocode)
+
+**Complete injection function** (drop-in reference):
+
+```python
+def inject(cands, B, rho):
+    """
+    Dual-channel injection with adaptive split.
+
+    Args:
+        cands: List of candidates with .E (energy), .sim (similarity), .type
+        B: Base budget (already includes f(rho) and quotas)
+        rho: Criticality (for context)
+
+    Returns:
+        List of energy deltas per candidate
+    """
+    if not cands:
+        return []
+
+    # Ensure thresholds (Oracle)
+    for c in cands:
+        c.theta = ensure_theta(c)  # Oracle + persist if missing
+        c.gap = max(0.0, c.theta - c.E)
+
+    # Compute weights
+    k, gamma = 8.0, 1.3
+    w_top = [sigmoid((c.theta - c.E) / k) for c in cands]
+    w_amp = [pow(c.sim, gamma) for c in cands]
+
+    # Normalize
+    sum_top = sum(w_top) or 1e-9
+    sum_amp = sum(w_amp) or 1e-9
+    w_top_norm = [x/sum_top for x in w_top]
+    w_amp_norm = [x/sum_amp for x in w_amp]
+
+    # Adaptive split
+    C = sum(c.gap for c in cands) / max(len(cands), 1)  # coldness
+    s_sum = sum(c.sim for c in cands) or 1e-9
+    s_norm = [c.sim/s_sum for c in cands]
+    H = sum(x*x for x in s_norm)  # concentration
+
+    lam = clamp(0.6 + 0.2*(C>10) - 0.2*(H>0.2), 0.3, 0.8)
+
+    B_top = lam * B
+    B_amp = (1.0 - lam) * B
+
+    # Compute proposed deltas
+    deltas = []
+    for i, c in enumerate(cands):
+        top_contrib = min(c.gap, w_top_norm[i] * B_top)
+        amp_contrib = w_amp_norm[i] * B_amp
+        delta = min(top_contrib + amp_contrib, 10.0)  # per-node cap
+        deltas.append(delta)
+
+    # Global budget enforcement
+    total = sum(deltas)
+    if total > B and total > 0:
+        scale = B / total
+        deltas = [d * scale for d in deltas]
+
+    return deltas
+
+def ensure_theta(node):
+    """Threshold Oracle."""
+    if node.threshold is not None:
+        # Scale guard
+        if node.E > 1.0 and node.threshold < 1.0:
+            log_warning("threshold_scale_mismatch", node.id)
+            return 30.0
+        return float(node.threshold)
+
+    # Type baseline
+    baselines = {
+        "Realization": 30, "Memory": 25, "Concept": 28,
+        "Principle": 35, "Mechanism": 38, "Document": 22,
+        "Event": 26, "Post": 26, "Signal": 26,
+    }
+    base = baselines.get(node.type, 30)
+
+    # Adjustments
+    r = getattr(node, 'recency_score', 0.0)
+    q = getattr(node, 'quality_score', 0.5)
+    a = max(-2.0, min(2.0, getattr(node, 'affinity_z', 0.0)))
+
+    theta = base - 5.0*r + 4.0*(1.0 - q) - 2.0*a
+    theta = max(15.0, min(45.0, theta))
+
+    # Persist
+    persist_threshold(node.id, theta)
+    return theta
+
+def sigmoid(x):
+    return 1.0 / (1.0 + exp(-x))
+
+def clamp(x, lo, hi):
+    return max(lo, min(hi, x))
+```
+
+**Key implementation notes:**
+- Batch fetch `threshold` with energy during candidate selection
+- If `threshold` is NULL, call Oracle once and persist
+- Scale guard logs `threshold_scale_mismatch` warning
+- Adaptive λ responds to coldness and concentration
+- Per-node cap (10) enforced before global renormalization
+- Total injection never exceeds budget B
 
 ## 3. Why it makes sense
 

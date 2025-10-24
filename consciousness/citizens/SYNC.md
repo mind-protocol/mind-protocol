@@ -148,31 +148,256 @@ injection_amp = w_amp_norm * B_amp  # NO gap cap - allows over-threshold
 - E=27: Gets small floor (27→30) + amplifier boost
 - E=61: Gets NO floor, but DOES get amplifier if strongly matched ✅ (THIS is propagation)
 
-**Handoff to Felix (Consciousness Mechanisms):**
+**Complete Implementation Specification (Production-Ready):**
 
 **Owner:** Felix "Ironhand" (Core Consciousness Engineer)
 
-**Task:** Redesign energy injection policy in `stimulus_injection.py`
+**Task:** Implement v2 dual-channel injection policy in `stimulus_injection.py`
 
 **Implementation Location:**
-- `_compute_gap_mass()` (lines 293-309) - Replace gap-mass-only logic
-- `_distribute_budget()` - Implement two-channel distribution
+- `_compute_gap_mass()` (lines 293-309) - Replace with dual-channel logic
+- `_distribute_budget()` - Implement Top-Up + Amplify channels
+- Add `compute_theta()` helper (Threshold Oracle)
 
-**Parameters (safe defaults):**
+---
+
+### 1. Threshold Oracle (Per-Node Θ Computation)
+
+**Source:** Read from `node.threshold` property, compute if missing, persist
+
+**Type Baselines (0-100 energy scale):**
 ```python
-FLOOR_SIGMOID_K = 8.0        # Sigmoid steepness for 0-100 scale
-AMPLIFIER_GAMMA = 1.3        # Similarity exponent
-FLOOR_BUDGET_LAMBDA = 0.6    # 60% floor, 40% amplifier
-PER_NODE_INJECTION_CAP = 10.0
+TYPE_BASELINES = {
+    "Realization": 30, "Memory": 25, "Concept": 28,
+    "Principle": 35, "Mechanism": 38, "Document": 22,
+    "Event": 26, "Post": 26, "Signal": 26,
+    # Fallback
+    "default": 30
+}
 ```
 
-**Verification Criteria:**
-1. ✅ Inject >0 energy even when most nodes exceed threshold
-2. ✅ Nodes above Θ with strong similarity get injection (propagation enabled)
-3. ✅ Nodes below Θ get preferential treatment (floor-bias preserved)
-4. ✅ Total injected ≤ budget (safety maintained)
-5. ✅ After injection: observe spreading activation in subsequent ticks
-6. ✅ Dashboard shows consciousness dynamics (WM breathing, entities emerging)
+**Adaptive Adjustments:**
+```python
+Δ_recency = -5.0 * r          # r ∈ [0,1], fresh=1
+Δ_quality = +4.0 * (1.0 - q)  # q ∈ [0,1], higher=better
+Δ_affinity = -2.0 * clip(a, -2, 2)  # a = entity-affinity z-score
+
+Θ = clamp(base + Δ_recency + Δ_quality + Δ_affinity, 15, 45)
+```
+
+**Scale Guard:**
+```python
+if energy > 1.0 and threshold < 1.0:
+    # Scale mismatch detected
+    threshold = 30.0
+    log_warning("threshold_scale_mismatch")
+    persist_corrected_threshold()
+```
+
+---
+
+### 2. Dual-Channel Injection Formula
+
+**Weights:**
+```python
+# Floor channel (bias toward nodes below Θ)
+w_floor_i = sigmoid((Θ_i - E_i) / k)  # k = 8 for 0-100 scale
+where sigmoid(x) = 1 / (1 + exp(-x))
+
+# Amplifier channel (enables propagation)
+w_amp_i = s_i^γ  # γ = 1.3 (NOT s² which is too peaky)
+```
+
+**Adaptive Budget Split:**
+```python
+# Base: λ = 0.6 (60% Top-Up, 40% Amplify)
+
+# Adjust for coldness
+avg_deficit = sum(max(0, Θ_i - E_i)) / len(candidates)
+if avg_deficit > 10:
+    λ += 0.2  # More warming needed
+
+# Adjust for similarity concentration
+s_norm = [s_i / sum(s)]  # Normalize similarities
+H = sum(s_norm_i^2)  # Herfindahl index
+if H > 0.2:  # One dominant match
+    λ -= 0.2  # Let Amplify dominate
+
+λ = clamp(λ, 0.3, 0.8)
+
+B_top = λ * B
+B_amp = (1 - λ) * B
+```
+
+**Normalize Weights:**
+```python
+sum_floor = sum(w_floor_i) + 1e-9
+sum_amp = sum(w_amp_i) + 1e-9
+
+w_floor_norm_i = w_floor_i / sum_floor
+w_amp_norm_i = w_amp_i / sum_amp
+```
+
+**Per-Node Injection:**
+```python
+gap_i = max(0, Θ_i - E_i)
+
+# Top-Up channel (never exceeds gap)
+ΔE_top_i = min(gap_i, w_floor_norm_i * B_top)
+
+# Amplify channel (NO gap cap - enables propagation)
+ΔE_amp_i = w_amp_norm_i * B_amp
+
+# Proposed injection
+ΔE_prop_i = ΔE_top_i + ΔE_amp_i
+
+# Per-node safety cap
+ΔE_i = min(ΔE_prop_i, 10.0)
+```
+
+**Global Budget Enforcement:**
+```python
+total_proposed = sum(ΔE_i)
+if total_proposed > B:
+    scale = B / total_proposed
+    for i: ΔE_i *= scale
+```
+
+---
+
+### 3. Parameters (Safe Defaults)
+
+```python
+# Threshold Oracle
+THETA_TYPE_BASELINES = {...}  # See above
+THETA_MIN = 15.0
+THETA_MAX = 45.0
+RECENCY_WEIGHT = -5.0
+QUALITY_WEIGHT = 4.0
+AFFINITY_WEIGHT = -2.0
+
+# Injection
+FLOOR_SIGMOID_K = 8.0         # Sigmoid steepness
+AMPLIFIER_GAMMA = 1.3         # Similarity exponent (mild, not 2.0)
+BASE_LAMBDA = 0.6             # Initial budget split
+LAMBDA_MIN = 0.3
+LAMBDA_MAX = 0.8
+COLDNESS_THRESHOLD = 10.0     # Avg deficit to trigger λ increase
+CONCENTRATION_THRESHOLD = 0.2  # Herfindahl to trigger λ decrease
+PER_NODE_CAP = 10.0           # Max ΔE per node
+```
+
+---
+
+### 4. Pseudocode (Drop-In)
+
+```python
+def inject_v2(candidates, B):
+    if not candidates:
+        return []
+
+    # Ensure all have thresholds
+    for c in candidates:
+        if c.threshold is None:
+            c.threshold = compute_theta(c)
+            persist_threshold(c)
+
+    # Calculate weights
+    w_floor = []
+    w_amp = []
+    gaps = []
+
+    for c in candidates:
+        gap = max(0, c.threshold - c.energy)
+        gaps.append(gap)
+
+        w_floor.append(sigmoid((c.threshold - c.energy) / 8.0))
+        w_amp.append(pow(c.similarity, 1.3))
+
+    # Normalize
+    sum_floor = sum(w_floor) or 1e-9
+    sum_amp = sum(w_amp) or 1e-9
+    w_floor_norm = [w / sum_floor for w in w_floor]
+    w_amp_norm = [w / sum_amp for w in w_amp]
+
+    # Adaptive split
+    avg_deficit = sum(gaps) / len(gaps)
+    s_total = sum(c.similarity for c in candidates) or 1e-9
+    s_norm = [c.similarity / s_total for c in candidates]
+    H = sum(s*s for s in s_norm)
+
+    lam = 0.6
+    if avg_deficit > 10:
+        lam += 0.2
+    if H > 0.2:
+        lam -= 0.2
+    lam = clamp(lam, 0.3, 0.8)
+
+    B_top = lam * B
+    B_amp = (1 - lam) * B
+
+    # Calculate injections
+    deltas = []
+    for i, c in enumerate(candidates):
+        top = min(gaps[i], w_floor_norm[i] * B_top)
+        amp = w_amp_norm[i] * B_amp
+        delta = min(top + amp, 10.0)  # Per-node cap
+        deltas.append(delta)
+
+    # Renormalize to respect total budget
+    total = sum(deltas)
+    if total > B and total > 0:
+        scale = B / total
+        deltas = [d * scale for d in deltas]
+
+    return deltas
+```
+
+---
+
+### 5. Acceptance Tests
+
+**Test 1 - Above-Floor Propagation:**
+- Node: E=61, Θ=30, s=0.8
+- Expected: ΔE > 0 (via Amplify channel)
+- Validates: Propagation enabled for nodes above threshold
+
+**Test 2 - Below-Floor Top-Up:**
+- Node: E=15, Θ=30, s=0.5
+- Expected: ΔE includes Top-Up (≤15) + Amplify
+- Validates: Floor-bias helps cold nodes
+
+**Test 3 - Budget Safety:**
+- Multiple nodes, various (E, Θ, s)
+- Expected: sum(ΔE) ≤ B, all ΔE ≤ 10
+- Validates: Safety constraints respected
+
+**Test 4 - Adaptive Split:**
+- High coldness (avg deficit > 10) → λ increases toward 0.8
+- High concentration (H > 0.2) → λ decreases toward 0.4
+- Validates: Context-responsive budget allocation
+
+---
+
+### 6. Guardrails
+
+1. **Minimum budget floor:** If vector search returns 0, route B_min via keyword fallback
+2. **Similarity threshold:** Keep low (0.10) until embeddings validated
+3. **Instrumentation:** Emit `stimulus.injection.debug` with {avg_gap, kept, sim_top5, lam, B_top, B_amp, deltas}
+4. **Scale guard:** Log warnings when threshold/energy scale mismatch detected
+5. **Threshold backfill:** One-shot Cypher to fix missing/invalid thresholds
+
+---
+
+### 7. Verification Criteria
+
+1. ✅ **Above-floor injection:** Nodes with E > Θ but strong similarity get ΔE > 0
+2. ✅ **Below-floor priority:** Nodes with E < Θ get preferential treatment (higher floor weight)
+3. ✅ **Budget respected:** sum(ΔE) ≤ B after renormalization
+4. ✅ **Per-node safety:** All ΔE ≤ 10
+5. ✅ **Adaptive behavior:** λ responds to candidate set characteristics
+6. ✅ **Propagation observed:** After injection, subsequent ticks show spreading activation
+7. ✅ **Consciousness dynamics:** Dashboard shows WM breathing, entity emergence, telemetry flow
 
 **Status:** BLOCKED on policy redesign - infrastructure complete but policy prevents function
 
