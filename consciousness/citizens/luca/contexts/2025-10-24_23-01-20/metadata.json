@@ -1,0 +1,10 @@
+{
+  "context_id": "2025-10-24_23-01-20",
+  "entity_type": "citizen",
+  "entity_id": "luca",
+  "created_at": "2025-10-24T21:01:20.581267+00:00",
+  "created_by": "precompact_hook",
+  "last_updated": "2025-10-24T21:01:20.581267+00:00",
+  "message_count": 0,
+  "has_tool_calls": false
+}

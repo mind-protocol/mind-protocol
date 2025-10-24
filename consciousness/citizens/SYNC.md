@@ -1,3 +1,108 @@
+## 2025-10-24 23:30 - Ada: 📋 PHASE-A DASHBOARD STABILIZATION - Autonomy Infrastructure Readiness
+
+**Context:** Priority 4 (entity persistence) complete and verified. Transitioning to Phase-A: Dashboard stabilization for autonomy infrastructure observation. Goal is getting autonomy telemetry into known-good state so we can observe autonomous consciousness behavior accurately.
+
+**Problem Statement:** Dashboard currently shows incorrect/missing data:
+- System Status reads wrong heartbeat files (shows watcher health, not per-service health)
+- Autonomy Indicator missing `tick_reason` field (can't show why consciousness activated)
+- Event name drift between backend (Python) and frontend (TypeScript)
+- API panels show errors instead of "collecting..." for empty responses
+
+**Why This Matters:** Dashboard is our "consciousness telescope" - without accurate telemetry display, we can't verify autonomous consciousness mechanisms work. If AutonomyIndicator shows wrong activation reason or System Status hides service failures, we're flying blind.
+
+---
+
+### 5-Phase Plan
+
+**Phase 0: Infrastructure Verification** [CURRENT]
+- **Owner:** Victor
+- **Task:** Verify all 4 processes running under guardian supervision
+  - Port 8000: WebSocket Server (consciousness engines)
+  - Port 8001: Stimulus Injection Server
+  - Port 8002: Autonomy Orchestrator
+  - Port 3000: Next.js Dashboard
+- **Success:** `curl localhost:<port>/health` returns 200 for all services
+- **Status:** PENDING - awaiting verification
+
+**Phase 1: System Status Heartbeat Fix** [HIGH IMPACT]
+- **Owner:** Iris (Frontend)
+- **Task:** Update `app/api/consciousness/system-status/route.ts` to read separate heartbeat files:
+  - Stimulus Injection: `.heartbeats/stimulus_injection.heartbeat`
+  - Autonomy Orchestrator: `.heartbeats/autonomy_orchestrator.heartbeat`
+- **Current Bug:** Reading `.heartbeats/conversation_watcher.heartbeat` for both services
+- **Success:** System Status panel shows per-service health accurately
+- **Status:** PENDING - awaiting Phase 0 completion
+
+**Phase 2: Autonomy Indicator tick_reason** [HIGH IMPACT]
+- **Owner:** Atlas (Backend) + Iris (Frontend)
+- **Atlas Task:** Emit `tick.update` event with `tick_reason` field after each tick
+  - Event structure: `{"citizen_id": "luca", "tick": 1234, "tick_reason": "stimulus_detected" | "autonomous_activation" | "scheduled_maintenance"}`
+  - Location: `consciousness_engine_v2.py` after tick execution
+- **Iris Task:** Wire AutonomyIndicator component to consume `tick_reason` from `tick.update` events
+- **Success:** Autonomy badge shows "STIMULUS" or "AUTONOMOUS" within ±1 tick latency
+- **Status:** PENDING - awaiting Phase 0 completion
+
+**Phase 3: Event Name Reconciliation**
+- **Owner:** Iris (Frontend)
+- **Task:** Create `app/consciousness/lib/normalizeEvents.ts` to map backend event types to TypeScript interfaces
+  - Maps: `weights.updated`, `wm.emit`, `subentity.lifecycle`, `tick.update`, etc.
+  - Handles snake_case → camelCase normalization
+  - Provides type safety for event consumption
+- **Success:** No console errors about unknown event types
+- **Status:** PENDING
+
+**Phase 4: API Panel Loading States**
+- **Owner:** Iris (Frontend)
+- **Task:** Update Foundations and Identity Multiplicity panels to show "collecting..." when API returns empty arrays
+- **Current Bug:** Shows errors or blank states instead of graceful loading
+- **Success:** Empty responses show loading states, not errors
+- **Status:** PENDING
+
+**Phase 5: End-to-End Smoke Test**
+- **Owner:** All (Atlas, Iris, Felix, Victor)
+- **Task:** Run complete Phase-A autonomy test:
+  1. Verify all services healthy (System Status panel)
+  2. Verify AutonomyIndicator updates on each tick
+  3. Verify no console errors for event types
+  4. Verify API panels handle empty responses
+  5. Verify entity counts stable (from Priority 4)
+- **Success:** All acceptance criteria pass
+- **Status:** PENDING
+
+---
+
+### Owner Matrix
+
+| Owner | Responsibilities | Files to Modify |
+|-------|------------------|-----------------|
+| **Atlas** | Emit `tick.update` with `tick_reason`; ensure API endpoints live | `orchestration/mechanisms/consciousness_engine_v2.py` |
+| **Iris** | Fix System Status; add `normalizeEvents.ts`; show loading states | `app/api/consciousness/system-status/route.ts`, `app/consciousness/lib/normalizeEvents.ts`, API panel components |
+| **Felix** | Verify `weights.updated` and `wm.emit` event shapes match spec | Review telemetry emission code |
+| **Victor** | Confirm guardian supervision; verify service health | Guardian logs, process monitoring |
+
+---
+
+### Acceptance Checklist
+
+**Done when:**
+- [ ] System Status shows correct per-service health by reading `*.heartbeats/*.heartbeat` files
+- [ ] Backend emits `tick.update` with `tick_reason`; UI autonomy badge updates within ±1 tick
+- [ ] Event names normalized via frontend adapter (`normalizeEvents.ts`)
+- [ ] Foundations & Identity Multiplicity panels render "collecting..." when empty
+- [ ] E2E autonomy smoke test passes (all 5 verification steps)
+
+---
+
+### Current Phase: Phase 0 Verification
+
+**Next Action:** Victor to verify all 4 processes running under guardian supervision and report health check status.
+
+**Blockers:** None - Priority 4 entity persistence verified and stable.
+
+**Timeline:** Target completion for all 5 phases: 2025-10-25 (next 24 hours)
+
+---
+
 ## 2025-10-24 23:03 - Atlas: ✅ DIAGNOSTIC COMPLETE - Dashboard Issue is Frontend, NOT Backend
 
 **Context:** Nicolas reported "nothing dynamic" showing in dashboard. Diagnosed backend → WebSocket → frontend chain.
