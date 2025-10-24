@@ -137,31 +137,22 @@ def update_claude_md(status_section: str):
     lines = content.split('\n')
 
     # Find where status section ends
-    # Look for two blank lines after the status block, or next ## heading
-    end_idx = 0
+    # CLAUDE.md might be ONLY the status section, or have content after
+    end_idx = len(lines)  # Default: replace entire file
 
-    # Strategy 1: Find the summary line, then skip to next non-empty content
+    # Strategy: Find the summary line, then look for next section
     for i, line in enumerate(lines):
         if i > 15 and (line.startswith('**All services') or line.startswith('**Impact:')):
-            # Found summary, now find next section (skip blank lines)
+            # Found summary - check if there's content after
             for j in range(i+1, len(lines)):
-                if lines[j].strip() != '' and lines[j].strip() != '':
+                if lines[j].strip() != '':
+                    # Found non-empty line after summary
                     if lines[j].startswith('##'):
+                        # New section header
                         end_idx = j
                         break
-                    # If non-blank, non-heading content, must be next section
-                    elif not lines[j].startswith('**') and not lines[j].startswith('>'):
-                        end_idx = j
-                        break
+            # If we didn't find a new section, end_idx stays at len(lines)
             break
-
-    if end_idx == 0:
-        print("❌ Could not find status section boundary")
-        print("   Debug: looking for '**All services' or '**Impact' after line 15")
-        for i, line in enumerate(lines[15:30], start=15):
-            if '**' in line:
-                print(f"   Line {i}: {repr(line[:80])}")
-        return False
 
     # Replace status section
     new_content = status_section + '\n\n' + '\n'.join(lines[end_idx:])
