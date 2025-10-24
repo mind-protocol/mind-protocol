@@ -154,7 +154,11 @@ class WeightLearnerV2:
             )
 
             # Compute adaptive learning rate
-            last_update = node.get('last_update_timestamp')
+            last_update_ts = node.get('last_update_timestamp')
+            last_update = None
+            if last_update_ts is not None:
+                # Convert timestamp (milliseconds) to datetime
+                last_update = datetime.fromtimestamp(last_update_ts / 1000)
             eta = self._compute_learning_rate(last_update)
 
             # Total signal strength

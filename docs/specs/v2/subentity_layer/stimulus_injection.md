@@ -28,15 +28,15 @@ Stimuli (user messages, tool results, timers) must **shape activation** quickly 
 
 ### 2.1 Retrieval & budget pipeline
 
-1) **Entropy-coverage search**: adapt #matches to stimulus specificity; broader text → more matches to cover semantics; narrower → fewer, higher-precision.  
-2) **Gap mass**: estimate useful work via \(\sum \text{sim}(s,i) \cdot \max(0,\Theta_i - E_i)\).  
-3) **Gap-capped budget**: distribute total budget so items never overshoot their gap.  
-4) **Health modulation \(f(\rho)\)**: damp when the system is crowded/unstable; boost when sparse.  
-5) **Source impact gate \(g(\text{source})\)**: learn per-source yields and reweight budgets.  
-6) **Peripheral amplification**: increase budget if stimulus aligns with persistent peripheral context.  
-7) **Direction-aware link injection**: if the match is a link, split energy to endpoints using learned directional priors.  
-8) **Subentity channeling**: split budget across active entities by affinity × recent success.  
-All eight pieces are enumerated as tasks in the implementation checklist. :contentReference[oaicite:35]{index=35}
+1) **Entropy-coverage search**: adapt #matches to stimulus specificity; broader text → more matches to cover semantics; narrower → fewer, higher-precision.
+2) **Gap mass**: estimate useful work via \(\sum \text{sim}(s,i) \cdot \max(0,\Theta_i - E_i)\).
+3) **Floor-biased injection (dual-channel)**: Split budget into floor channel (prioritizes under-active nodes) and amplifier channel (boosts strong matches even above threshold). **Critical: threshold is activation floor, not hard cap. Energy propagation requires nodes going above threshold.**
+4) **Health modulation \(f(\rho)\)**: damp when the system is crowded/unstable; boost when sparse.
+5) **Source impact gate \(g(\text{source})\)**: learn per-source yields and reweight budgets.
+6) **Peripheral amplification**: increase budget if stimulus aligns with persistent peripheral context.
+7) **Direction-aware link injection**: if the match is a link, split energy to endpoints using learned directional priors.
+8) **Subentity channeling**: split budget across active entities by affinity × recent success.
+All eight pieces are enumerated as tasks in the implementation checklist.
 
 ### 2.2 Directional priors for link-matched injection
 

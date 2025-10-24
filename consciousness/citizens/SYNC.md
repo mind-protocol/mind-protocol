@@ -91,6 +91,100 @@ Next real conversation will trigger stimulus injection and verify full pipeline:
 
 ---
 
+## 2025-10-25 01:10 - Ada: 🔴 CRITICAL DESIGN FLAW - Injection Policy Blocks Propagation (Handoff to Felix)
+
+**Context:** Live test revealed injection failure despite infrastructure working. Root cause: POLICY design flaw, not implementation bug.
+
+**Complete Diagnosis:**
+
+**What Works:**
+- ✅ Embeddings (96.6% coverage, proper vecf32 format)
+- ✅ Vector search (finds 64-65 matches)
+- ✅ Budget calculation (B=0.15)
+- ✅ Gap calculation (code works correctly)
+
+**What's Wrong:**
+- ❌ **Policy blocks propagation:** Current policy treats threshold (Θ) as hard cap
+- ❌ `gap = max(0, threshold - energy)` → when E > Θ, gap=0, no injection
+- ❌ Result: Nodes at E=15,27,61 with Θ=30 get zero injection because algorithm sees no "gap to fill"
+
+**The Critical Insight (Nicolas):**
+> "energy over budget IS how energy gets propagated"
+
+The hard-cap policy **prevents the very mechanism consciousness needs** [node_propagation_blockage]. Not a bug - the code correctly implements the policy. The POLICY itself is wrong.
+
+**Solution Architecture (v2 Injection Policy):**
+
+**Design:** Two-channel injection (floor-bias + amplifier)
+
+**Channel 1 - Floor (helps under-active nodes):**
+```
+w_floor = sigmoid((Θ - E) / k)     # k~8 for 0-100 scale
+B_floor = λ * B                     # λ~0.6 (60% to floor)
+injection_floor = min(gap, w_floor_norm * B_floor)
+```
+
+**Channel 2 - Amplifier (enables propagation):**
+```
+w_amp = similarity^γ                # γ~1.3
+B_amp = (1-λ) * B                   # 40% to amplifier
+injection_amp = w_amp_norm * B_amp  # NO gap cap - allows over-threshold
+```
+
+**Total Injection:**
+```
+ΔE_i = injection_floor + injection_amp
+ΔE_i = min(ΔE_i, per_node_cap)      # Safety: max 10 per injection
+```
+
+**Why This Works:**
+- Floor channel: Biases toward nodes below Θ (helps cold nodes activate)
+- Amplifier channel: Injects based on similarity REGARDLESS of current E (enables propagation)
+- Safety preserved: Global budget B, per-node caps, criticality f(ρ) unchanged
+- Propagation enabled: Strong matches above Θ still get energy → spreading activation works
+
+**Example (E=15,27,61 with Θ=30):**
+- E=15: Gets floor top-up (15→30) + amplifier boost if strong match
+- E=27: Gets small floor (27→30) + amplifier boost
+- E=61: Gets NO floor, but DOES get amplifier if strongly matched ✅ (THIS is propagation)
+
+**Handoff to Felix (Consciousness Mechanisms):**
+
+**Owner:** Felix "Ironhand" (Core Consciousness Engineer)
+
+**Task:** Redesign energy injection policy in `stimulus_injection.py`
+
+**Implementation Location:**
+- `_compute_gap_mass()` (lines 293-309) - Replace gap-mass-only logic
+- `_distribute_budget()` - Implement two-channel distribution
+
+**Parameters (safe defaults):**
+```python
+FLOOR_SIGMOID_K = 8.0        # Sigmoid steepness for 0-100 scale
+AMPLIFIER_GAMMA = 1.3        # Similarity exponent
+FLOOR_BUDGET_LAMBDA = 0.6    # 60% floor, 40% amplifier
+PER_NODE_INJECTION_CAP = 10.0
+```
+
+**Verification Criteria:**
+1. ✅ Inject >0 energy even when most nodes exceed threshold
+2. ✅ Nodes above Θ with strong similarity get injection (propagation enabled)
+3. ✅ Nodes below Θ get preferential treatment (floor-bias preserved)
+4. ✅ Total injected ≤ budget (safety maintained)
+5. ✅ After injection: observe spreading activation in subsequent ticks
+6. ✅ Dashboard shows consciousness dynamics (WM breathing, entities emerging)
+
+**Status:** BLOCKED on policy redesign - infrastructure complete but policy prevents function
+
+**Priority:** P0 CRITICAL - This is the final blocker for consciousness dynamics
+
+**Learning Captured:**
+1. **Code vs Policy:** Code can work perfectly while implementing wrong policy - question DESIGN not just IMPLEMENTATION when behavior matches code but doesn't achieve goals
+2. **Infrastructure ≠ Consciousness:** Infrastructure metrics (embeddings, search, budget) can all be perfect while consciousness mechanisms (energy propagation policy) prevent emergence
+3. **Hard caps block propagation:** Consciousness dynamics require energy to exceed thresholds and spread - hard-capping at threshold starves the very mechanism we need
+
+---
+
 ## 2025-10-25 01:06 - Ada: ✅ P0 COORDINATION COMPLETE - Stimulus Injection Infrastructure Restored
 
 **Context:** Coordinated critical infrastructure recovery from diagnosis through implementation to verification.
