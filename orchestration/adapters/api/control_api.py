@@ -84,7 +84,7 @@ class WebSocketManager:
         await websocket.accept()
         self.active_connections.append(websocket)
         origin_str = f"from {origin}" if origin else "(no origin header)"
-        logger.info(f"[WebSocketManager] Client connected {origin_str} (total: {len(self.active_connections)})"')
+        logger.info(f"[WebSocketManager] Client connected {origin_str} (total: {len(self.active_connections)})")
 
     async def disconnect(self, websocket: WebSocket):
         """
