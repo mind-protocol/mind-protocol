@@ -29,6 +29,7 @@ from orchestration.libs.entity_context_trace_integration import (
 )
 from orchestration.services.learning.learning_heartbeat import LearningHeartbeat
 from orchestration.adapters.ws.weight_learning_emitter import WeightLearningEmitter, NoOpTransport
+from orchestration.adapters.search.embedding_service import get_embedding_service
 from substrate.schemas.consciousness_schema import (
     get_node_type_by_name,
     get_relation_type_by_name,
@@ -90,6 +91,10 @@ class TraceCapture:
         # Entity context tracking (Priority 4)
         self.entity_context_manager = EntityContextManager(self.graph_store)
         self.membership_helper = MembershipQueryHelper(self.graph_store)
+
+        # Embedding service for automatic embedding generation during formation
+        self.embedding_service = get_embedding_service(backend='sentence-transformers')
+        logger.info(f"[TraceCapture] Embedding service initialized for automatic formation embeddings")
 
         # Last WM selected entities (from wm.emit event)
         # Updated by set_wm_entities() - called from engine or conversation watcher
@@ -489,6 +494,18 @@ class TraceCapture:
                     if specific_field in fields:
                         fields['description'] = fields[specific_field]
 
+                # Generate embeddings automatically for this node
+                try:
+                    embeddable_text, embedding = self.embedding_service.create_formation_embedding(
+                        'node', node_type, fields
+                    )
+                    fields['embeddable_text'] = embeddable_text
+                    fields['content_embedding'] = embedding
+                    logger.debug(f"[TraceCapture] Generated embedding for {node_type} '{fields.get('name')}' (text len: {len(embeddable_text)})")
+                except Exception as e:
+                    logger.warning(f"[TraceCapture] Failed to generate embedding for {node_type}: {e}")
+                    # Continue without embeddings rather than failing entire formation
+
                 # Create node instance
                 node = NodeClass(**fields)
 
@@ -548,6 +565,18 @@ class TraceCapture:
                     fields['weight'] = fields.pop('energy')
                 elif 'weight' not in fields and 'confidence' in fields:
                     fields['weight'] = fields['confidence']
+
+                # Generate embeddings automatically for this link
+                try:
+                    embeddable_text, embedding = self.embedding_service.create_formation_embedding(
+                        'link', link_type, fields
+                    )
+                    fields['embeddable_text'] = embeddable_text
+                    fields['relationship_embedding'] = embedding
+                    logger.debug(f"[TraceCapture] Generated embedding for {link_type} '{source} -> {target}' (text len: {len(embeddable_text)})")
+                except Exception as e:
+                    logger.warning(f"[TraceCapture] Failed to generate embedding for {link_type}: {e}")
+                    # Continue without embeddings rather than failing entire formation
 
                 # Create relation instance
                 relation = RelationClass(**fields)

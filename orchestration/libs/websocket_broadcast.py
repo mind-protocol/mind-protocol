@@ -247,7 +247,11 @@ class ConsciousnessStateBroadcaster:
             ...     "reason": "strong_link(ease=2.01) + goal_aligned(aff=0.95)"
             ... })
         """
+        # DEBUG: Log stride emission
+        logger.debug(f"[stride_exec] Called - available={self.available}, ws_mgr={self.websocket_manager is not None}")
+
         if not self.available or not self.websocket_manager:
+            logger.warning(f"[stride_exec] Skipping emission - available={self.available}, ws_mgr={self.websocket_manager is not None}")
             return
 
         try:
@@ -259,6 +263,7 @@ class ConsciousnessStateBroadcaster:
 
             # Fire-and-forget: don't block stride execution
             asyncio.create_task(self.websocket_manager.broadcast(event))
+            logger.debug(f"[stride_exec] Event emitted: {stride_data.get('src_node')} -> {stride_data.get('dst_node')}")
 
         except Exception as e:
             logger.error(f"[ConsciousnessStateBroadcaster] stride.exec broadcast failed: {e}")

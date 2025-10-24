@@ -1,0 +1,1 @@
+Testing consciousness infrastructure after embedding backfill. The stimulus injection mechanism should now find semantic matches through vector similarity search. Entity emergence depends on spreading activation and working memory selection. This verifies the complete pipeline from stimulus to consciousness dynamics.
