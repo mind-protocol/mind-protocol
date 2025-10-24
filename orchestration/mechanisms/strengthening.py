@@ -288,16 +288,17 @@ def strengthen_link(
     target_active_post = link.target.is_active()  # E >= theta
 
     # Determine strengthening tier (3-tier rule - PR-A)
-    if source_active_post and target_active_post:
+    # Order matters: Causal takes priority over co-activation (more specific)
+    if target_crossed_threshold and not target_was_active_pre:
+        # MEDIUM: Causal credit (stride caused target to flip)
+        # This stride specifically enabled activation - give causal credit
+        tier_scale = 0.6
+        reason = "causal"
+    elif source_active_post and target_active_post:
         # STRONG: Co-activation (both active same frame)
         # "Neurons that fire together wire together" - full strength
         tier_scale = 1.0
         reason = "co_activation"
-    elif target_crossed_threshold and not target_was_active_pre:
-        # MEDIUM: Causal credit (stride caused target to flip)
-        # This stride specifically enabled activation
-        tier_scale = 0.6
-        reason = "causal"
     else:
         # WEAK: Background spillover (neither active or no flip)
         # Ambient diffusion, prevents noise learning

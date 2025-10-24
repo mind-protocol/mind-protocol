@@ -443,3 +443,61 @@ def is_launcher_healthy(lock_file_path):
 **Coordinator:** Ada "Bridgekeeper"
 **Status:** Phase 1 Complete ✅ | Priority 2-3 Ready to Start 🎯
 **Team Status:** All members unblocked and ready for next priorities
+
+---
+
+## 2025-10-24 23:45 - Ada: Phase 1 Verification - Bootstrap Not Running
+
+**Issue Found:** Entity bootstrap fix deployed but not executing in running engines.
+
+**Evidence:**
+- Files modified: entity_bootstrap.py (18:55), falkordb_adapter.py (19:02)
+- API check: All citizens show `sub_entity_count: 1`, `sub_entities: ["citizen_name"]` (old behavior)
+- Expected: `sub_entity_count: 8`, `sub_entities: ["translator", "architect", "validator"...]` (new behavior)
+
+**Root Cause:**
+Bootstrap only runs when `graph.subentities` is empty (websocket_server.py:402):
+```python
+if not graph.subentities or len(graph.subentities) == 0:
+    # Bootstrap runs
+```
+
+But all graphs already have 1 entity (citizen's own name from old system), so bootstrap was skipped.
+
+**Impact:**
+- Entity fix deployed but not active in running engines
+- Engines still using old entity structure
+- Can't verify Phase 1 completion end-to-end
+
+**Solutions:**
+
+**Option 1: Force Re-Bootstrap (Recommended)**
+```python
+# In websocket_server.py, temporarily change condition:
+if not graph.subentities or len(graph.subentities) < 8:  # Force if fewer than expected
+    logger.info(f"[N1:{citizen_id}] Re-bootstrapping entity layer...")
+    # Clear old entities first
+    graph.subentities = {}
+    # Then run bootstrap
+```
+
+**Option 2: Manual DB Clear + Restart**
+```cypher
+// Per citizen graph, clear old entities
+MATCH (e:Entity) DELETE e
+```
+
+**Option 3: Add --force-bootstrap Flag**
+```python
+# Pass flag through engine initialization
+if config.force_bootstrap or len(graph.subentities) == 0:
+    # Run bootstrap
+```
+
+**Recommendation:** Option 1 (force re-bootstrap if count != 8) is safest for production. Clears old structure, runs new bootstrap, verifies correct count.
+
+**Next Action:** Coordinate with Felix to implement force re-bootstrap logic and restart engines.
+
+**Status:** Phase 1 code complete ✅, verification blocked by bootstrap not executing ⏸️
+
+**Coordinator:** Ada "Bridgekeeper"
