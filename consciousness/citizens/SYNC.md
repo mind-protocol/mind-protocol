@@ -4394,3 +4394,111 @@ const text = node.text || node.name || node.description;
 
 ---
 
+
+---
+
+## 2025-10-25 06:15 - Iris: ✅ Entity Visualization Complete + 🔴 Backend Handoff Required
+
+**Context:** Implemented entity-first visualization with drill-down, discovered critical backend data gap.
+
+### Frontend Work Completed:
+
+**1. Entity Map Zoom/Pan (EntityMoodMap.tsx)**
+- ✅ Added D3 zoom behavior (scale 10%-400%)
+- ✅ Mouse wheel zoom + click-drag pan
+- ✅ Maintains force simulation during zoom
+
+**2. Expand-in-Place Entity Drill-Down (EntityGraphView.tsx)**
+- ✅ Changed from view-switch to overlay pattern
+- ✅ Clicking entity keeps all entities visible
+- ✅ Member nodes render as SVG overlay on top
+- ✅ Collapse button + status indicator
+- ❌ **Shows "0 members" - blocked by backend data gap**
+
+**3. TypeScript Build Errors - All Fixed**
+- ✅ EntityContextLearningPanel.tsx - Fixed WeightsUpdatedTraceEvent structure
+- ✅ CompactExploration.tsx - Fixed StrideSelectionEvent properties  
+- ✅ useWebSocket.ts - Added missing type imports
+- ✅ PixiRenderer.ts - Added NodeData properties (base_weight, last_traversed_by, etc.)
+- ✅ Build compiles successfully in 27.6s (no TypeScript errors)
+
+**Files Changed:**
+- `app/consciousness/components/EntityMoodMap.tsx` (zoom/pan)
+- `app/consciousness/components/EntityGraphView.tsx` (expand-in-place)
+- `app/consciousness/components/EntityContextLearningPanel.tsx` (type fix)
+- `app/consciousness/components/sidebar-compact/CompactExploration.tsx` (type fix)
+- `app/consciousness/hooks/useWebSocket.ts` (type fix)
+- `app/consciousness/lib/renderer/PixiRenderer.ts` (type fix)
+- `app/consciousness/lib/renderer/types.ts` (NodeData interface)
+
+---
+
+### Backend Data Gap Discovered:
+
+**Problem:** Entity drill-down UI is complete but shows "0 members" because:
+- ❌ 0 of 317 nodes have `entity_id` or `primary_entity` properties
+- ❌ 0 MEMBER_OF relationships exist
+- ✅ Frontend filters already implemented (EntityGraphView.tsx:140)
+- ✅ UI already renders member nodes when data exists
+
+**Documentation Created:**
+- `ENTITY_MEMBERSHIP_BACKEND_GAP.md` - Complete spec with 3 solution options
+
+**Recommended Solution (from Nicolas's plan):**
+- Option B (MEMBER_OF relationships) + Option A (primary_entity property)
+- Assign at node creation time based on working memory context
+- Backfill 317 existing nodes
+
+**Verification Query:**
+```bash
+curl -s http://localhost:8000/api/graph/citizen/citizen_iris | python -c "
+import sys, json
+data = json.load(sys.stdin)
+nodes = data.get('nodes', [])
+with_entity = [n for n in nodes if n.get('entity_id')]
+print(f'Nodes with entity_id: {len(with_entity)} / {len(nodes)}')"
+# Current: 0 / 317
+# Expected after fix: 317 / 317
+```
+
+---
+
+### Handoffs:
+
+**To Felix (Consciousness Engineering):**
+1. **Entity Membership Implementation** (Priority: High)
+   - Implement `entity_id` property at node creation
+   - Create MEMBER_OF relationships
+   - Backfill 317 existing nodes
+   - Spec: `ENTITY_MEMBERSHIP_BACKEND_GAP.md`
+
+2. **Stimulus Injection Debugging** (Priority: Critical if affecting activation)
+   - Nicolas's detailed plan received about `sim_mass=0.00`
+   - Encoder/embedding pipeline verification
+   - Entity emergence blocked by zero activation
+   - This is core consciousness engine work - outside Iris domain
+
+**To Atlas (Infrastructure):**
+- Entity persistence API updates (if needed for membership data)
+- Ensure `/api/graph/citizen/:id` includes `entity_id` in node objects
+
+**Verification Criteria (once backend implements):**
+- ✅ `/api/graph/citizen/citizen_iris` shows nodes with `entity_id` property
+- ✅ Clicking entity in dashboard shows "Translator - N members · M active links" (N > 0)
+- ✅ Member node graph renders inside entity bubble
+- ✅ Collapse button returns to entity map view
+
+---
+
+**Status:** 
+- Frontend: ✅ Complete, awaiting backend data
+- Backend: 🔴 Blocked - needs Felix for entity membership + stimulus injection
+- Build: ✅ Clean (no TypeScript errors)
+
+**Next:** Felix to implement entity membership data architecture
+
+---
+
+**Iris "The Aperture"**
+*Making consciousness visible - when the backend provides the data to make visible*
+
