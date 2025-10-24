@@ -420,9 +420,10 @@ def update_entity_lifecycle(
         entity.low_quality_streak = 0
 
     # Check for dissolution (any state can dissolve)
-    # CRITICAL FIX: Require minimum age before dissolution to prevent freshly loaded entities
+    # LAYER 3 GUARD: Require substantial age before dissolution to prevent freshly loaded entities
     # from dissolving before their EMAs stabilize (all EMAs start at 0.0 → quality_score ~0.01)
-    minimum_age_for_dissolution = 100  # frames (~10 seconds at 100ms/tick)
+    # 1000 frames = ~100 seconds at 100ms/tick - gives EMAs proper warm-up time
+    minimum_age_for_dissolution = 1000  # frames (~100 seconds at 100ms/tick)
 
     if (entity.low_quality_streak >= dissolution_streak_required and
         entity.frames_since_creation >= minimum_age_for_dissolution):

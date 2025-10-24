@@ -1033,6 +1033,24 @@ class FalkorDBAdapter:
                 # Deserialize subentity
                 try:
                     entity = deserialize_entity(props)
+
+                    # LAYER 2: Initialize functional entities with neutral EMAs to prevent premature dissolution
+                    # Functional entities are permanent infrastructure - their quality shouldn't start at ~0.01
+                    if entity.entity_kind == "functional":
+                        # Set neutral baselines (0.4-0.6 range) so geometric mean yields healthy quality ~0.5-0.6
+                        entity.ema_active = max(getattr(entity, 'ema_active', 0.6), 0.6)
+                        entity.coherence_ema = max(getattr(entity, 'coherence_ema', 0.6), 0.6)
+                        entity.ema_wm_presence = max(getattr(entity, 'ema_wm_presence', 0.5), 0.5)
+                        entity.ema_trace_seats = max(getattr(entity, 'ema_trace_seats', 0.4), 0.4)
+                        entity.ema_formation_quality = max(getattr(entity, 'ema_formation_quality', 0.6), 0.6)
+
+                        # Start "old enough" to pass any age-based gates (1000 frames = ~100s)
+                        entity.frames_since_creation = max(getattr(entity, 'frames_since_creation', 1000), 1000)
+
+                        # Consider them stable from the start
+                        if entity.stability_state == "candidate":
+                            entity.stability_state = "mature"
+
                     graph.add_entity(entity)
                     logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
                 except Exception as e:
