@@ -428,6 +428,11 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'tick_frame_v1':
+          // V1 tick frame events - silently ignore for now
+          // These are handled by frame.start events in V2 architecture
+          break;
+
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
       }

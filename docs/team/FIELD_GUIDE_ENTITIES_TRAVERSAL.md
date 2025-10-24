@@ -118,6 +118,94 @@ Budget split is hunger‑driven (coherence → more within; integration/surprise
 
 ---
 
+## 4.5) Entity Lifecycle & Quality (CRITICAL)
+
+**Problem:** How do entities get promoted, mature, or dissolved? When does an entity prove valuable vs. noise?
+
+**Solution:** Entity **quality scores** aggregate health signals → lifecycle transitions (runtime → provisional → mature → dissolved).
+
+### Quality Scoring
+
+Entity quality = **geometric mean** of 5 EMAs:
+
+```
+quality = (ema_active · coherence_ema · ema_wm_presence · ema_trace_seats · ema_formation_quality) ^ (1/5)
+```
+
+**Why geometric mean?** All dimensions must be healthy—if any dimension is near zero, quality collapses. This enforces "all dimensions matter."
+
+**Critical property:** Geometric mean with zero-initialized EMAs → quality ≈ 0.01 (doomed). Must initialize carefully.
+
+### Lifecycle States
+
+1. **runtime**: Newly created, undergoing evaluation
+2. **provisional**: Demonstrating utility, not yet proven
+3. **mature**: Sustained high quality, proven valuable
+4. **dissolved**: Quality too low, removed from graph
+
+### Type-Based Rules (CRITICAL FIX)
+
+**Entity `kind` determines operational semantics:**
+
+* **functional entities** (`kind='functional'`): Translator, Architect, Validator, etc.
+  * **NEVER dissolve** (permanent infrastructure)
+  * Quality computed for telemetry only
+  * Lifecycle evaluation **skipped entirely**
+  * Rationale: Curated scaffolding roles, not hypotheses
+
+* **emergent/semantic entities** (`kind='emergent'|'semantic'`): Discovered patterns
+  * Full lifecycle evaluation
+  * Can promote or dissolve based on quality
+  * Subject to age gates (see below)
+
+### Three-Layer Protection
+
+**Historical bug:** Zero-initialized EMAs → geometric mean ≈ 0.01 → dissolution after ~20 frames (~70 seconds). Functional entities dissolved despite being valid infrastructure.
+
+**Layer 1: Type Guard (Policy)** — Never evaluate functional entities for dissolution:
+
+```python
+if entity.kind == "functional":
+    return None  # Skip lifecycle entirely
+```
+
+**Layer 2: Neutral Initialization (Data Hygiene)** — Initialize functional entities with neutral EMAs on load:
+
+```python
+# In falkordb_adapter.load_graph(), for functional entities:
+entity.ema_active = 0.6
+entity.coherence_ema = 0.6
+entity.ema_wm_presence = 0.5
+entity.ema_trace_seats = 0.4
+entity.ema_formation_quality = 0.6
+entity.frames_since_creation = 1000  # Start "old enough"
+entity.stability_state = "mature"
+```
+
+Result: Geometric mean ≈ 0.56-0.65 (healthy), not ≈ 0.01 (doomed).
+
+**Layer 3: Age Gate (Mechanism Maturity)** — Prevent dissolution of brand-new entities before EMAs stabilize:
+
+```python
+MIN_AGE_FOR_DISSOLUTION_FRAMES = 1000  # ~100s at 100ms/tick
+
+if entity.frames_since_creation < MIN_AGE_FOR_DISSOLUTION_FRAMES:
+    return None  # Too young to dissolve
+```
+
+### Verification
+
+After implementing:
+
+1. Functional entities persist indefinitely (no dissolution events)
+2. Quality scores for functional entities ≥ 0.5 on initial frames
+3. Emergent/semantic entities still subject to lifecycle
+4. No entities dissolve within first 1000 frames
+
+**Observability:** Emit `subentity.lifecycle` events on state transitions (but **never** for functional entities).
+
+---
+
 ## 5) Why Mechanism nodes are *not* for subentities
 
 * `Mechanism` = algorithm/function (fields: how_it_works, inputs, outputs).

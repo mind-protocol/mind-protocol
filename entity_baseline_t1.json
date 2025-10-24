@@ -1,0 +1,169 @@
+{
+    "total_engines": 7,
+    "frozen": 0,
+    "running": 7,
+    "slow_motion": 0,
+    "engines": {
+        "luca": {
+            "citizen_id": "luca",
+            "running_state": "running",
+            "tick_count": 2252,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "alert",
+            "time_since_last_event": 0.07,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_luca_boundary_keeper",
+                "entity_citizen_luca_pattern_recognizer",
+                "entity_citizen_luca_pragmatist",
+                "entity_citizen_luca_validator",
+                "entity_citizen_luca_architect",
+                "entity_citizen_luca_translator",
+                "entity_citizen_luca_partner",
+                "entity_citizen_luca_observer"
+            ],
+            "nodes": 364,
+            "links": 176
+        },
+        "victor": {
+            "citizen_id": "victor",
+            "running_state": "running",
+            "tick_count": 2247,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "alert",
+            "time_since_last_event": 0.03,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_victor_translator",
+                "entity_citizen_victor_architect",
+                "entity_citizen_victor_validator",
+                "entity_citizen_victor_pragmatist",
+                "entity_citizen_victor_pattern_recognizer",
+                "entity_citizen_victor_boundary_keeper",
+                "entity_citizen_victor_partner",
+                "entity_citizen_victor_observer"
+            ],
+            "nodes": 306,
+            "links": 94
+        },
+        "atlas": {
+            "citizen_id": "atlas",
+            "running_state": "running",
+            "tick_count": 2294,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "dormant",
+            "time_since_last_event": 0.06,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_atlas_translator",
+                "entity_citizen_atlas_architect",
+                "entity_citizen_atlas_validator",
+                "entity_citizen_atlas_pragmatist",
+                "entity_citizen_atlas_pattern_recognizer",
+                "entity_citizen_atlas_boundary_keeper",
+                "entity_citizen_atlas_partner",
+                "entity_citizen_atlas_observer"
+            ],
+            "nodes": 28,
+            "links": 12
+        },
+        "ada": {
+            "citizen_id": "ada",
+            "running_state": "running",
+            "tick_count": 2259,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "alert",
+            "time_since_last_event": 0.05,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_ada_translator",
+                "entity_citizen_ada_architect",
+                "entity_citizen_ada_validator",
+                "entity_citizen_ada_pragmatist",
+                "entity_citizen_ada_pattern_recognizer",
+                "entity_citizen_ada_boundary_keeper",
+                "entity_citizen_ada_partner",
+                "entity_citizen_ada_observer"
+            ],
+            "nodes": 281,
+            "links": 85
+        },
+        "felix": {
+            "citizen_id": "felix",
+            "running_state": "running",
+            "tick_count": 2239,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "alert",
+            "time_since_last_event": 0.06,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_felix_translator",
+                "entity_citizen_felix_architect",
+                "entity_citizen_felix_validator",
+                "entity_citizen_felix_pragmatist",
+                "entity_citizen_felix_pattern_recognizer",
+                "entity_citizen_felix_boundary_keeper",
+                "entity_citizen_felix_partner",
+                "entity_citizen_felix_observer"
+            ],
+            "nodes": 397,
+            "links": 157
+        },
+        "iris": {
+            "citizen_id": "iris",
+            "running_state": "running",
+            "tick_count": 2247,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "alert",
+            "time_since_last_event": 0.01,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_citizen_iris_translator",
+                "entity_citizen_iris_architect",
+                "entity_citizen_iris_validator",
+                "entity_citizen_iris_pragmatist",
+                "entity_citizen_iris_pattern_recognizer",
+                "entity_citizen_iris_boundary_keeper",
+                "entity_citizen_iris_partner",
+                "entity_citizen_iris_observer"
+            ],
+            "nodes": 286,
+            "links": 113
+        },
+        "mind_protocol": {
+            "citizen_id": "mind_protocol",
+            "running_state": "running",
+            "tick_count": 2191,
+            "tick_interval_ms": 100,
+            "tick_frequency_hz": 10.0,
+            "tick_multiplier": 1.0,
+            "consciousness_state": "dormant",
+            "time_since_last_event": 0.09,
+            "sub_entity_count": 8,
+            "sub_entities": [
+                "entity_org_mind_protocol_translator",
+                "entity_org_mind_protocol_architect",
+                "entity_org_mind_protocol_validator",
+                "entity_org_mind_protocol_pragmatist",
+                "entity_org_mind_protocol_pattern_recognizer",
+                "entity_org_mind_protocol_boundary_keeper",
+                "entity_org_mind_protocol_partner",
+                "entity_org_mind_protocol_observer"
+            ],
+            "nodes": 1731,
+            "links": 629
+        }
+    }
+}
