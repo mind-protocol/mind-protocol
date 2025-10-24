@@ -33,7 +33,7 @@ The tick scheduler computes three candidate intervals and takes the **minimum** 
 interval_stimulus = clamp(
     time_since_last_stimulus,
     MIN_INTERVAL_MS,  # e.g., 100ms
-    MAX_INTERVAL_S    # e.g., 30000ms
+    MAX_INTERVAL_MS   # e.g., 30000ms
 )
 
 # 2. Activation-driven interval
@@ -397,7 +397,7 @@ def test_autonomy_indicator_sync():
 @dataclass
 class TickSpeedConfig:
     MIN_INTERVAL_MS: int = 100        # Fastest possible tick
-    MAX_INTERVAL_S: int = 30000       # Slowest possible tick (30s)
+    MAX_INTERVAL_MS: int = 30000      # Slowest possible tick (30s)
 
     # Activation-driven parameters
     ACTIVATION_ENERGY_THRESHOLD: float = 0.3
