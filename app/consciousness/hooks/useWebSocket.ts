@@ -225,21 +225,37 @@ export function useWebSocket(): WebSocketStreams {
 
         case 'frame.end': {
           const frameEndEvent = data as FrameEndEvent;
-          setV2State(prev => ({
-            ...prev,
+          setV2State(prev => {
+            // Check if any values actually changed
+            if (
+              prev.deltaE_total === frameEndEvent.deltaE_total &&
+              prev.conservation_error_pct === frameEndEvent.conservation_error_pct &&
+              prev.energy_in === frameEndEvent.energy_in &&
+              prev.energy_transferred === frameEndEvent.energy_transferred &&
+              prev.energy_decay === frameEndEvent.energy_decay &&
+              prev.active_count === frameEndEvent.active_count &&
+              prev.shadow_count === frameEndEvent.shadow_count &&
+              prev.diffusion_radius === frameEndEvent.diffusion_radius
+            ) {
+              return prev; // No changes, skip update
+            }
 
-            // Conservation metrics
-            deltaE_total: frameEndEvent.deltaE_total ?? prev.deltaE_total,
-            conservation_error_pct: frameEndEvent.conservation_error_pct ?? prev.conservation_error_pct,
-            energy_in: frameEndEvent.energy_in ?? prev.energy_in,
-            energy_transferred: frameEndEvent.energy_transferred ?? prev.energy_transferred,
-            energy_decay: frameEndEvent.energy_decay ?? prev.energy_decay,
+            return {
+              ...prev,
 
-            // Frontier metrics
-            active_count: frameEndEvent.active_count ?? prev.active_count,
-            shadow_count: frameEndEvent.shadow_count ?? prev.shadow_count,
-            diffusion_radius: frameEndEvent.diffusion_radius ?? prev.diffusion_radius
-          }));
+              // Conservation metrics
+              deltaE_total: frameEndEvent.deltaE_total ?? prev.deltaE_total,
+              conservation_error_pct: frameEndEvent.conservation_error_pct ?? prev.conservation_error_pct,
+              energy_in: frameEndEvent.energy_in ?? prev.energy_in,
+              energy_transferred: frameEndEvent.energy_transferred ?? prev.energy_transferred,
+              energy_decay: frameEndEvent.energy_decay ?? prev.energy_decay,
+
+              // Frontier metrics
+              active_count: frameEndEvent.active_count ?? prev.active_count,
+              shadow_count: frameEndEvent.shadow_count ?? prev.shadow_count,
+              diffusion_radius: frameEndEvent.diffusion_radius ?? prev.diffusion_radius
+            };
+          });
           break;
         }
 

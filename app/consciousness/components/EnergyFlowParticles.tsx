@@ -100,7 +100,10 @@ export function EnergyFlowParticles({ nodes, entityActivity }: EnergyFlowParticl
       // Add new particle
       return [...active, newParticle];
     });
-  }, [entityActivity, nodePositions, nodes]);
+    // NOTE: Only depend on entityActivity - nodes/nodePositions changing during
+    // D3 simulation ticks should NOT retrigger particle creation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityActivity]);
 
   // Clean up expired particles every second
   useEffect(() => {
