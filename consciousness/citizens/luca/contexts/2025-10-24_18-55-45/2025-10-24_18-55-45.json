@@ -15429,8 +15429,13 @@
       "role": "assistant",
       "timestamp": "2025-10-24T18:29:33.102Z",
       "content": "---\n\n## Corrected Pilot Selection: Task-Mode Inference (Priority 5)\n\n**You're absolutely right - WM selection is already implemented.** Entity selection works (8 entities active, Priority 1 complete).\n\n### Better Pilot: Task-Mode Inference Mechanism (Priority 5)\n\n**Why this is the right pilot:**\n\n1. **Actually needs implementation** - Gap analysis confirms Priority 5 NOT IMPLEMENTED\n2. **No design exists yet** - Unlike Priority 4 (which has dual-view architecture doc)\n3. **Clean scope** - Single mechanism: goal → task_mode mapping\n4. **Clear inputs/outputs:**\n   - Input: Active goal string (e.g., \"schema_validation\", \"creative_exploration\")\n   - Output: Task mode enum (FOCUSED | DIVERGENT | METHODICAL | BALANCED)\n5. **Obvious validation criteria:**\n   - Does \"debug_single_issue\" → FOCUSED?\n   - Does \"brainstorm_solutions\" → DIVERGENT?\n   - Does \"systematic_verification\" → METHODICAL?\n\n**What the spec needs to define:**\n\n**Algorithm:**\n- Goal classification logic (keyword-based? pattern matching? learned mapping?)\n- Default mode when goal ambiguous\n- Mode persistence (stick with mode across frames or re-infer each tick?)\n\n**Edge Cases:**\n- Multiple active goals with conflicting modes\n- No active goal (what's default?)\n- Unknown goal type\n- Mode override from explicit user intent vs automatic inference\n\n**Validation Criteria:**\n- Test cases: known goals → expected modes\n- Consciousness fidelity: Does mode match phenomenological reality of that task?\n- Performance: Mode appropriately modulates attention strategy\n\n**Observability:**\n- Telemetry: `task_mode_inferred` event with goal, inferred_mode, confidence\n- Dashboard: Display current mode, override status\n\n**This spec would give Felix everything needed to implement Priority 5 cleanly.**\n\n---\n\n**Revised Pilot Plan:**\n\n1. ✅ Corrected pilot mechanism selection\n2. ⏳ Ask Felix: Detail level needed for task-mode inference spec\n3. ⏳ Create mechanism spec template using task-mode inference as model\n4. ⏳ Write complete task-mode inference mechanism spec\n5. ⏳ Felix implements Priority 5 from spec\n6. ⏳ Iterate on template based on what worked/didn't\n7. ⏳ Scale to regular workflow for all future mechanisms\n\n**Does task-mode inference work as pilot mechanism, Nicolas?**"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T18:30:24.293712+00:00",
+      "content": "felix want high level specs. He needs to understand the WHY"
     }
   ],
-  "last_updated": "2025-10-24T18:29:33.803695+00:00",
-  "message_count": 1420
+  "last_updated": "2025-10-24T18:30:24.293712+00:00",
+  "message_count": 1421
 }
