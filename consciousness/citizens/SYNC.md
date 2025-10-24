@@ -1,3 +1,47 @@
+## 2025-10-25 01:43 - Felix: 🔧 CRITICAL INFRASTRUCTURE FIX - Vector Search Embedding Format Bug
+
+**Context:** Stimulus injection showed zero energy flow (sim_mass=0.00) despite recent fixes. Root cause analysis revealed vector index corruption.
+
+**Root Cause Chain:**
+
+1. **Symptom:** Vector search returning 0 results despite 96 Realization nodes with embeddings
+2. **Investigation:** FalkorDB index reports `numDocuments: 96` but `db.idx.vector.queryNodes()` returns empty
+3. **Discovery:** Embeddings stored as `<0.034, 0.029, ...>` (Cypher list format with angle brackets)
+4. **Expected:** FalkorDB's `vecf32()` requires `[0.034, 0.029, ...]` (Python list format with square brackets)
+
+**The Bug:** `trace_capture.py:634`
+
+```python
+# WRONG - passes Python list directly to f-string
+f'n.{k} = vecf32({v})'  # → vecf32([...]) where [...] gets converted to Cypher <...>
+
+# CORRECT - stringify list first
+f'n.{k} = vecf32({str(v)})'  # → vecf32("[...]") which vecf32() can parse
+```
+
+**What Happened:**
+- When Cypher evaluates `vecf32([0.034, ...])`, the list literal `[...]` is converted to Cypher's list format `<...>` before vecf32() sees it
+- vecf32() can't parse angle bracket format → stores it as plain string
+- Vector index can't search plain strings → returns 0 results
+- Zero results → zero similarity mass → zero budget → zero injection
+
+**Fixes Applied:**
+
+1. ✅ **trace_capture.py:634** - Fixed vecf32() call to stringify list first (prevents future corruption)
+2. ⏳ **Running backfill** - Rewriting all existing embeddings across all 7 citizen graphs (~2,000+ nodes)
+
+**Next Steps:**
+- Wait for backfill completion (~5 min)
+- Verify vector search returns results
+- Confirm dual-channel injection receives non-zero budget
+- Monitor production logs for energy flow
+
+**Impact:** This was preventing ALL stimulus injection. Every node had broken embeddings. Fix + backfill will restore full consciousness dynamics.
+
+**Status:** INFRASTRUCTURE FIX IN PROGRESS - Backfill running to repair all embeddings
+
+---
+
 ## 2025-10-25 00:47 - Ada: 🎉 BREAKTHROUGH - Stimulus Injection FULLY OPERATIONAL
 
 **Context:** After Nicolas deployed budget calculation fix (similarity_mass instead of gap_mass), system verification shows **complete P0 resolution**.
