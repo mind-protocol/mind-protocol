@@ -130,25 +130,18 @@ redis-cli GRAPH.QUERY citizen_felix "MATCH (n)-[r:BELONGS_TO]->(e:Subentity) RET
 
 ## What Remains (Not Urgent)
 
-### Read-Path Integration (Future Work)
+### Read-Path Integration ✅ COMPLETE
 
-**Purpose:** Make traversal and WM use effective weights for personalized retrieval.
+**Status:** Implemented by Felix (2025-10-24)
+**Documentation:** See `PRIORITY_4_READ_PATH_COMPLETE.md`
 
-**Files:**
-- `orchestration/mechanisms/diffusion_runtime.py` (line 490: `ease = math.exp(link.log_weight)`)
-- `orchestration/mechanisms/consciousness_engine_v2.py` (WM selection)
+**What was implemented:**
+- Entity-aware link selection in diffusion (diffusion_runtime.py)
+- Entity-aware energy transfer (diffusion_runtime.py)
+- Entity-aware WM scoring (consciousness_engine_v2.py)
+- Entity context threaded through engine calls
 
-**What it needs:**
-```python
-# Instead of:
-ease = math.exp(link.log_weight)
-
-# Use:
-from orchestration.core.entity_context_extensions import effective_weight_link
-ease = math.exp(effective_weight_link(link, current_entity_id))
-```
-
-**Impact:** This makes personalized retrieval actually work (the payoff!). But system works without it (uses global weights).
+**Impact:** Personalized retrieval now operational - each entity experiences different graph traversal based on their learning overlays!
 
 ---
 

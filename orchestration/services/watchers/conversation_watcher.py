@@ -95,19 +95,45 @@ file_positions = load_file_positions()
 class ConversationWatcher(FileSystemEventHandler):
     """Watches Claude Code conversation files for consciousness JSON blocks."""
 
-    def __init__(self, project_pattern: str = "*luca*"):
+    def __init__(self, project_pattern: str = "*luca*", citizen_id: str = None):
         """
         Initialize watcher.
 
         Args:
             project_pattern: Glob pattern to match project directories (e.g., "*luca*", "*felix*")
+            citizen_id: Citizen identifier for this watcher
         """
         self.project_pattern = project_pattern
         self.processing = set()
+        self.citizen_id = citizen_id
 
         # Initialize stimulus injection components (lazy loaded)
         self.stimulus_injector = None
         self.embedding_service = None
+
+        # MEMORY LEAK FIX: Reuse single TraceCapture instance instead of creating new ones
+        # Previous code created TraceCapture for every file modification (line 328)
+        # This accumulates FalkorDB connections and objects, causing memory leak
+        self.trace_capture = None
+        if citizen_id:
+            self.trace_capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
+            logger.info(f"[ConversationWatcher] Initialized reusable TraceCapture for {citizen_id}")
+
+        # MEMORY LEAK FIX: Reuse single event loop instead of creating new ones
+        # Previous code created event loops on-demand (line 335-336) but never closed them
+        self.event_loop = None
+
+    def cleanup(self):
+        """
+        Clean up resources to prevent memory leaks.
+        Call this when shutting down the watcher.
+        """
+        if self.event_loop and not self.event_loop.is_closed():
+            try:
+                self.event_loop.close()
+                logger.info(f"[ConversationWatcher] Closed event loop for {self.citizen_id}")
+            except Exception as e:
+                logger.warning(f"[ConversationWatcher] Error closing event loop: {e}")
 
     def on_modified(self, event):
         """Called when a conversation file is modified."""
@@ -323,19 +349,23 @@ class ConversationWatcher(FileSystemEventHandler):
             # Parse TRACE format
             parse_result = parse_trace_format(content)
 
-            # Create trace_capture with multi-graph routing support
-            # No longer needs specific graph_name - scope in formations determines routing
-            capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
+            # MEMORY LEAK FIX: Use reusable trace_capture instance
+            # Previous code created new TraceCapture for every call, accumulating connections
+            if not self.trace_capture:
+                # Fallback if not initialized (shouldn't happen with new __init__)
+                self.trace_capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
 
-            # Run async processing in sync context
+            # MEMORY LEAK FIX: Reuse event loop instead of creating new ones
+            # Previous code created new loops but never closed them
             import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            if not self.event_loop:
+                try:
+                    self.event_loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    self.event_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(self.event_loop)
 
-            stats = loop.run_until_complete(capture.process_response(content))
+            stats = self.event_loop.run_until_complete(self.trace_capture.process_response(content))
 
             # Report results
             logger.info(f"[ConversationWatcher] TRACE processing stats:")
@@ -1107,7 +1137,8 @@ async def main():
 
     for citizen in discovered_citizens:
         pattern = f"*{citizen}*"
-        handler = ConversationWatcher(project_pattern=pattern)
+        # MEMORY LEAK FIX: Pass citizen_id to enable reusable TraceCapture instance
+        handler = ConversationWatcher(project_pattern=pattern, citizen_id=citizen)
 
         # Watch citizen's contexts directory
         citizen_contexts_dir = MIND_PROTOCOL_ROOT / "consciousness" / "citizens" / citizen / "contexts"
