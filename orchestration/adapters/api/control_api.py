@@ -168,7 +168,7 @@ class WebSocketManager:
             try:
                 await connection.send_text(message)
             except Exception as e:
-                logger.error(f"[WebSocketManager] Failed to send to client: {e}")
+                logger.exception(f"[WebSocketManager] Failed to send to client ({type(e).__name__}): {e}")
                 disconnected.append(connection)
 
         # Remove failed connections
