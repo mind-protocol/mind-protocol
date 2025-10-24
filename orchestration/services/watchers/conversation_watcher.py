@@ -369,7 +369,7 @@ class ConversationWatcher(FileSystemEventHandler):
 
             # Report results
             logger.info(f"[ConversationWatcher] TRACE processing stats:")
-            logger.info(f"  - Reinforcement signals: {stats['reinforcement_signals']}")
+            logger.info(f"  - Reinforcement seats: {stats['reinforcement_seats']}")
             logger.info(f"  - Nodes created: {stats['nodes_created']}")
             logger.info(f"  - Links created: {stats['links_created']}")
             logger.info(f"  - Subentity activations: {stats['entity_activations']}")
@@ -380,7 +380,7 @@ class ConversationWatcher(FileSystemEventHandler):
                     logger.warning(f"    {error}")
 
             # Log success (don't pollute CLAUDE.md with processing stats)
-            logger.info(f"[ConversationWatcher] TRACE processing complete for {citizen_id}: {stats['nodes_created']} nodes, {stats['links_created']} links, {stats['reinforcement_signals']} reinforcements")
+            logger.info(f"[ConversationWatcher] TRACE processing complete for {citizen_id}: {stats['nodes_created']} nodes, {stats['links_created']} links, {stats['reinforcement_seats']} reinforcements")
 
             return True
 

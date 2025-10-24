@@ -234,8 +234,17 @@ class TraceCapture:
 
                 result = graph.query(query)
 
-                if result and result.result_set:
-                    for row in result.result_set:
+                # DEFENSIVE PATTERN: Handle both QueryResult and list return types
+                # FalkorDB Python API changed to return list directly, but old code expects QueryResult
+                result_set = []
+                if result:
+                    if isinstance(result, list):
+                        result_set = result
+                    elif hasattr(result, 'result_set'):
+                        result_set = result.result_set
+
+                if result_set:
+                    for row in result_set:
                         # FalkorDB returns rows as lists, not dicts
                         # Query returns: name, node_type, scope, log_weight, ema_trace_seats, ema_formation_quality, ema_wm_presence, last_update_timestamp
                         node_dict = {

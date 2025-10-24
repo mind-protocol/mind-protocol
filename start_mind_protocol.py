@@ -390,12 +390,20 @@ class ProcessManager:
         if not await self.start_conversation_watcher():
             return False
 
-        # 4. Consciousness engine (runs inside websocket_server)
+        # 4. Start Stimulus Injection service (port 8001)
+        if not await self.start_stimulus_injection():
+            return False
+
+        # 5. Start Autonomy Orchestrator (port 8002)
+        if not await self.start_autonomy_orchestrator():
+            return False
+
+        # 6. Consciousness engine (runs inside websocket_server)
         if self.full_system:
             if not await self.start_consciousness_engine():
                 return False
 
-            # 5. Optionally start dashboard
+            # 7. Optionally start dashboard
             if not await self.start_dashboard():
                 return False
 
@@ -596,6 +604,58 @@ class ProcessManager:
 
         except Exception as e:
             logger.error(f"  ❌ Failed to start Conversation Watcher: {e}")
+            return False
+
+    async def start_stimulus_injection(self) -> bool:
+        """Start Stimulus Injection service (port 8001)."""
+        logger.info("[4/7] Starting Stimulus Injection Service...")
+
+        try:
+            process = subprocess.Popen(
+                [sys.executable, "-m", "orchestration.services.stimulus_injection_service"],
+                cwd=MIND_PROTOCOL_ROOT
+            )
+
+            self.processes['stimulus_injection'] = process
+
+            # Give it a moment to start and bind port
+            await asyncio.sleep(2)
+
+            if process.poll() is None:
+                logger.info("  ✅ Stimulus Injection Service started (port 8001)")
+                return True
+            else:
+                logger.error("  ❌ Stimulus Injection Service failed to start")
+                return False
+
+        except Exception as e:
+            logger.error(f"  ❌ Failed to start Stimulus Injection: {e}")
+            return False
+
+    async def start_autonomy_orchestrator(self) -> bool:
+        """Start Autonomy Orchestrator service (port 8002)."""
+        logger.info("[5/7] Starting Autonomy Orchestrator...")
+
+        try:
+            process = subprocess.Popen(
+                [sys.executable, "-m", "orchestration.services.autonomy_orchestrator"],
+                cwd=MIND_PROTOCOL_ROOT
+            )
+
+            self.processes['autonomy_orchestrator'] = process
+
+            # Give it a moment to start and bind port
+            await asyncio.sleep(2)
+
+            if process.poll() is None:
+                logger.info("  ✅ Autonomy Orchestrator started (port 8002)")
+                return True
+            else:
+                logger.error("  ❌ Autonomy Orchestrator failed to start")
+                return False
+
+        except Exception as e:
+            logger.error(f"  ❌ Failed to start Autonomy Orchestrator: {e}")
             return False
 
     async def start_consciousness_engine(self) -> bool:
@@ -1173,7 +1233,9 @@ class ProcessManager:
         import socket
         port_checks = {
             'websocket_server': 8000,
-            'dashboard': 3000
+            'dashboard': 3000,
+            'stimulus_injection': 8001,
+            'autonomy_orchestrator': 8002
         }
 
         if name in port_checks:
