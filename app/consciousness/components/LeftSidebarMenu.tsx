@@ -37,6 +37,7 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
   const [expandedSubPanels, setExpandedSubPanels] = useState<Set<string>>(
     new Set(['regulation', 'telemetry'])  // Start with both expanded
   );
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleSection = (section: Section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -54,10 +55,30 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
     });
   };
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-[20rem] consciousness-panel border-r border-observatory-teal overflow-hidden flex flex-col z-20">
+    <div
+      className={`fixed left-0 top-16 bottom-0 consciousness-panel border-r border-observatory-teal flex flex-col z-20 transition-all duration-300 overflow-hidden ${
+        isCollapsed ? 'w-12' : 'w-[20rem]'
+      }`}
+    >
+      {/* Toggle Button */}
+      <button
+        onClick={toggleCollapse}
+        className="absolute top-4 right-2 z-30 p-1.5 rounded hover:bg-observatory-cyan/20 transition-colors"
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <span className="text-observatory-text/70 text-sm">
+          {isCollapsed ? '▶' : '◀'}
+        </span>
+      </button>
+
       {/* Collapsible Sections */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
+      {!isCollapsed && (
+        <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
 
         {/* Affective Systems Section */}
         <SectionAccordion
@@ -121,7 +142,8 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
           </div>
         </SectionAccordion>
 
-      </div>
+        </div>
+      )}
     </div>
   );
 }
