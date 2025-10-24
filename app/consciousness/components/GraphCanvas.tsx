@@ -289,13 +289,12 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
         .distance(3) // Short link distance for tight global clustering
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
-      .force('center', d3.forceCenter(width / 2, height / 2).strength(2.0)) // Strong pull to compress clusters together
+      .force('center', d3.forceCenter(width / 2, height / 2).strength(10.0)) // Very strong pull to overcome temporal/valence spread
       .force('collision', d3.forceCollide()
         .radius(32) // Larger radius to space out nodes within clusters
-        .iterations(collisionIterations));
-      // Temporal and valence forces disabled - pure center attraction
-      // .force('temporal', forceTemporalX(width))
-      // .force('valence', forceValenceY(height));
+        .iterations(collisionIterations))
+      .force('temporal', forceTemporalX(width))
+      .force('valence', forceValenceY(height));
 
     // Render links with wireframe aesthetic (Venice consciousness flows)
     // Now with emotion-based coloring when available
