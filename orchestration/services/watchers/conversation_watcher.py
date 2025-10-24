@@ -435,8 +435,56 @@ class ConversationWatcher(FileSystemEventHandler):
                     logger.debug(f"[ConversationWatcher] No {node_type} matches: {e}")
 
             if not all_matches:
-                logger.info(f"[ConversationWatcher] No vector matches found for stimulus - skipping injection")
-                return True  # Not an error, just no matches
+                # P1 HOTFIX: Keyword fallback when vector search broken/empty
+                logger.warning(f"[ConversationWatcher] No vector matches - attempting keyword fallback")
+
+                import redis
+                r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+                # Extract keywords from stimulus (simple tokenization)
+                import re
+                keywords = re.findall(r'\b\w{4,}\b', stimulus_text.lower())[:10]  # Top 10 keywords, min 4 chars
+
+                if keywords:
+                    # Search for nodes matching ANY keyword in name or description
+                    keyword_matches = []
+                    for kw in keywords[:5]:  # Limit to 5 keywords to keep query manageable
+                        try:
+                            query = f"""
+                            MATCH (n)
+                            WHERE toLower(n.name) CONTAINS '{kw}'
+                               OR toLower(n.description) CONTAINS '{kw}'
+                            RETURN n.name, labels(n)
+                            LIMIT 10
+                            """
+                            result = r.execute_command('GRAPH.QUERY', graph_name, query)
+
+                            if result and result[1]:
+                                for row in result[1]:
+                                    name = row[0].decode() if isinstance(row[0], bytes) else row[0]
+                                    labels = [l.decode() if isinstance(l, bytes) else l for l in row[1]] if row[1] else []
+                                    keyword_matches.append({
+                                        'name': name,
+                                        'description': f'Keyword match: {kw}',
+                                        'embeddable_text': '',
+                                        'type': labels[0] if labels else None,
+                                        'similarity': 0.3  # Low similarity score for keyword matches
+                                    })
+                        except Exception as e:
+                            logger.debug(f"[ConversationWatcher] Keyword search failed for '{kw}': {e}")
+
+                    # Deduplicate by name
+                    unique_matches = {m['name']: m for m in keyword_matches}.values()
+                    all_matches = list(unique_matches)[:10]  # Limit to 10 keyword matches
+
+                    if all_matches:
+                        logger.info(f"[ConversationWatcher] HOTFIX: Keyword fallback found {len(all_matches)} matches")
+                    else:
+                        logger.info(f"[ConversationWatcher] No vector OR keyword matches - skipping injection")
+                        return True
+                else:
+                    logger.info(f"[ConversationWatcher] No keywords extractable - skipping injection")
+                    return True
 
             logger.info(f"[ConversationWatcher] Found {len(all_matches)} vector matches")
 
