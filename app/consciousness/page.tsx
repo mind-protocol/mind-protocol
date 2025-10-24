@@ -222,22 +222,6 @@ export default function ConsciousnessPage() {
         nodes={nodes}
       />
 
-      {/* Connection status indicator (top-right, for testing) */}
-      <div className="absolute top-4 right-[32rem] z-50">
-        <div
-          data-testid="ws-connected"
-          data-connected={connectionState === 'connected' ? 'true' : 'false'}
-          className={`px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm ${
-            connectionState === 'connected'
-              ? 'bg-green-900/50 border border-green-500/30 text-green-100'
-              : 'bg-red-900/50 border border-red-500/30 text-red-100'
-          }`}
-          title={`Consciousness WebSocket: ${connectionState}`}
-        >
-          {connectionState === 'connected' ? '● Live' : '○ Offline'}
-        </div>
-      </div>
-
       {/* Error overlay (for testing) */}
       {(error || wsError || citizensError) && (
         <div
@@ -320,6 +304,22 @@ export default function ConsciousnessPage() {
         {/* Right Sidebar Panels */}
         {!rightSidebarCollapsed && (
           <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
+            {/* Connection Status - Top */}
+            <div className="mb-4">
+              <div
+                data-testid="ws-connected"
+                data-connected={connectionState === 'connected' ? 'true' : 'false'}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono backdrop-blur-sm ${
+                  connectionState === 'connected'
+                    ? 'bg-green-900/50 border border-green-500/30 text-green-100'
+                    : 'bg-red-900/50 border border-red-500/30 text-red-100'
+                }`}
+                title={`Consciousness WebSocket: ${connectionState}`}
+              >
+                {connectionState === 'connected' ? '● Live' : '○ Offline'}
+              </div>
+            </div>
+
             {/* Tier Breakdown Panel - Priority 2 */}
             <div className="mb-4">
               <TierBreakdownPanel strideEvents={strideEvents} />
