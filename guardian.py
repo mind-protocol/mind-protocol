@@ -187,8 +187,27 @@ def uninstall_scheduled_task():
         logger.error(f"Uninstall error: {e}")
 
 
+def check_port_bound(port):
+    """Check if a port is bound (service listening)."""
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    try:
+        result = sock.connect_ex(('localhost', port))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
+
 def check_launcher_already_running():
-    """Check if launcher is already running by reading lock file."""
+    """
+    Check if launcher is already running AND HEALTHY.
+
+    Victor "The Resurrector" Fix - 2025-10-24
+    Previous version only checked if PID exists, allowing zombie launchers
+    to block resurrection. Now verifies launcher is actually functional.
+    """
     try:
         lock = MIND_PROTOCOL_ROOT / ".launcher.lock"
         if not lock.exists():
@@ -197,7 +216,7 @@ def check_launcher_already_running():
         # Read PID from lock file
         pid = int(lock.read_text().strip())
 
-        # Check if process with that PID exists
+        # Check 1: Process with that PID exists
         result = subprocess.run(
             ["tasklist", "/FI", f"PID eq {pid}"],
             capture_output=True,
@@ -205,10 +224,50 @@ def check_launcher_already_running():
             timeout=2
         )
 
-        # If PID appears in output, process is alive
-        return str(pid) in result.stdout
+        if str(pid) not in result.stdout:
+            # PID is dead but lock file exists - remove stale lock
+            logger.warning(f"⚠️  Lock file exists but PID {pid} is dead - removing stale lock")
+            try:
+                lock.unlink()
+            except Exception as e:
+                logger.error(f"❌ Could not remove stale lock: {e}")
+            return False
 
-    except Exception:
+        # Check 2: Verify launcher functionality via port binding
+        # Websocket server should be bound to port 8000 if launcher is working
+        if not check_port_bound(8000):
+            logger.warning(f"⚠️  Launcher PID {pid} exists but port 8000 not bound - ZOMBIE DETECTED")
+            logger.warning(f"⚠️  Killing zombie launcher and removing lock")
+
+            # Kill the zombie launcher
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/PID", str(pid)],
+                    capture_output=True,
+                    timeout=5
+                )
+                logger.info(f"✅ Killed zombie launcher PID {pid}")
+            except Exception as e:
+                logger.error(f"❌ Failed to kill zombie launcher: {e}")
+
+            # Remove stale lock
+            try:
+                # Force removal even if process holds it
+                time.sleep(1)  # Give process time to die
+                lock.unlink()
+                logger.info(f"✅ Removed stale lock file")
+            except Exception as e:
+                logger.error(f"❌ Could not remove lock file: {e}")
+                # Even if we can't remove the lock, we killed the zombie
+                # Next iteration will try again
+
+            return False
+
+        # Both checks passed - launcher is alive AND functional
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ Error checking launcher status: {e}")
         return False
 
 
