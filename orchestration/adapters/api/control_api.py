@@ -41,6 +41,32 @@ from orchestration.mechanisms.affective_telemetry_buffer import get_affective_bu
 logger = logging.getLogger(__name__)
 
 
+# === Telemetry Event Types ===
+# Events that should be buffered for affective telemetry
+TELEMETRY_EVENT_TYPES = {
+    # V2 core consciousness events
+    "frame.start", "frame.end",
+    "decay.tick", "stride.exec",
+    "entity.flip", "wm.emit",
+    "criticality.state",
+    "link.flow.summary",
+    "node.flip",
+
+    # Affective coupling events (PR-A)
+    "affective.threshold", "affective.memory",
+    "coherence.persistence", "pattern.multiresponse",
+    "identity.multiplicity", "consolidation",
+    "decay.resistance", "diffusion.stickiness",
+    "affective.priming", "coherence.metric",
+    "criticality.mode",
+
+    # Legacy V1 events (for backward compatibility)
+    "entity_activity", "threshold_crossing",
+    "consciousness_state", "node_activation",
+    "link_traversal"
+}
+
+
 # === WebSocket Manager (Singleton) ===
 
 class WebSocketManager:
