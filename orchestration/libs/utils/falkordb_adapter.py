@@ -1051,6 +1051,118 @@ class FalkorDBAdapter:
         for link in graph.links:
             self.update_link_weight(link)
 
+
+    def persist_subentities(self, graph: 'Graph'):
+        """
+        Persist all subentities from graph to FalkorDB.
+
+        Creates Subentity nodes and their BELONGS_TO/RELATES_TO links.
+        Used after bootstrap to make subentities permanent.
+
+        Args:
+            graph: Graph with bootstrapped subentities
+
+        Returns:
+            Dict with persistence statistics
+
+        Example:
+            >>> # After entity bootstrap
+            >>> stats = adapter.persist_subentities(graph)
+            >>> print(f"Persisted {stats['entities_created']} subentities")
+        """
+        stats = {
+            'entities_created': 0,
+            'belongs_to_links': 0,
+            'relates_to_links': 0,
+            'errors': 0
+        }
+
+        # Check if subentities already exist in database
+        check_query = "MATCH (e:Subentity) RETURN count(e) as count"
+        result = self.graph_store.query(check_query)
+        existing_count = result[0][0] if result and len(result) > 0 else 0
+
+        if existing_count > 0:
+            logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping persistence")
+            return stats
+
+        logger.info(f"Persisting {len(graph.subentities)} subentities to FalkorDB...")
+
+        # Create all subentity nodes
+        for entity in graph.subentities.values():
+            try:
+                query, params = build_entity_creation_query(entity)
+                self.graph_store.query(query, params)
+                stats['entities_created'] += 1
+                logger.debug(f"  Created subentity: {entity.id}")
+            except Exception as e:
+                logger.error(f"  Failed to create subentity {entity.id}: {e}")
+                stats['errors'] += 1
+
+        # Create BELONGS_TO links (Node -> Subentity)
+        from orchestration.core.types import LinkType
+        belongs_to_links = graph.get_links_by_type(LinkType.BELONGS_TO)
+
+        for link in belongs_to_links:
+            try:
+                # Check if target is a Subentity (not Node)
+                target = graph.get_entity(link.target_id)
+                if target:
+                    # Create link in database
+                    query = f"""
+                    MATCH (source:Node {{id: $source_id}})
+                    MATCH (target:Subentity {{id: $target_id}})
+                    CREATE (source)-[r:BELONGS_TO $props]->(target)
+                    RETURN r
+                    """
+
+                    props = serialize_link(link)
+                    params = {
+                        'source_id': link.source_id,
+                        'target_id': link.target_id,
+                        'props': props
+                    }
+
+                    self.graph_store.query(query, params)
+                    stats['belongs_to_links'] += 1
+            except Exception as e:
+                logger.error(f"  Failed to create BELONGS_TO link {link.id}: {e}")
+                stats['errors'] += 1
+
+        # Create RELATES_TO links (Subentity -> Subentity)
+        relates_to_links = graph.get_links_by_type(LinkType.RELATES_TO)
+
+        for link in relates_to_links:
+            try:
+                # Check if both source and target are Subentities
+                source_entity = graph.get_entity(link.source_id)
+                target_entity = graph.get_entity(link.target_id)
+
+                if source_entity and target_entity:
+                    # Create link in database
+                    query = f"""
+                    MATCH (source:Subentity {{id: $source_id}})
+                    MATCH (target:Subentity {{id: $target_id}})
+                    CREATE (source)-[r:RELATES_TO $props]->(target)
+                    RETURN r
+                    """
+
+                    props = serialize_link(link)
+                    params = {
+                        'source_id': link.source_id,
+                        'target_id': link.target_id,
+                        'props': props
+                    }
+
+                    self.graph_store.query(query, params)
+                    stats['relates_to_links'] += 1
+            except Exception as e:
+                logger.error(f"  Failed to create RELATES_TO link {link.id}: {e}")
+                stats['errors'] += 1
+
+        logger.info(f"Subentity persistence complete: {stats}")
+        return stats
+
     def get_node_count(self, graph_name: str) -> int:
         """
         Get number of nodes in graph.
