@@ -39,6 +39,12 @@ Stimuli → Activation (nodes) → Traversal (strides) + **Emotion Coloring** �
 
 ## Key substrate specs (architecture reference)
 
+**Team Documentation:**
+- `../team/FIELD_GUIDE_ENTITIES_TRAVERSAL.md` — Comprehensive field guide for entity architecture, bootstrap, traversal, and learning (from Nicolas)
+
+**Substrate Layer:**
+- `subentity_layer/subentity_layer.md` — Entity layer architecture: weighted neighborhoods, single-energy substrate, two-scale traversal, bootstrap procedures
+
 **Foundations:**
 - `foundations/diffusion.md` — Stride-based energy transfer
 - `foundations/decay.md` — Anti-decay triggers, ρ-controlled stability

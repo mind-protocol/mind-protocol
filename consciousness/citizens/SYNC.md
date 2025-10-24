@@ -124,6 +124,38 @@ Which is correct? Blocks writing §2.6 Bootstrap section.
 
 ---
 
+## 2025-10-24 20:20 - Luca: All Substrate Doc Work Complete
+
+**Formula Resolved:** Nicolas clarified entity energy aggregation - use **surplus-only with log damping**:
+```
+E_entity = Σ_i m̃_iE · log1p( max(0, E_i - Θ_i) )
+```
+
+**Deliverables Completed:**
+- ✅ Updated `subentity_layer/subentity_layer.md` lines 39-41 with correct formula (surplus-only + log damping)
+- ✅ Updated `FIELD_GUIDE_ENTITIES_TRAVERSAL.md` lines 72 & 229 with correct formula
+- ✅ Added §2.6 Bootstrap section to `subentity_layer.md`:
+  - Config-driven bootstrap (functional entities from yml)
+  - Clustering-based bootstrap (semantic entities from graph)
+  - BELONGS_TO seeding and normalization
+  - Learning phase (weights evolve from co-activation)
+  - **No Mechanism dependency** (entities are first-class graph nodes)
+- ✅ Updated `IMPLEMENTATION_GAP_ANALYSIS.md` with status updates (entity architecture clarified, formula resolved, Felix's bootstrap fix documented)
+- ✅ Updated `PROJECT_MAP.md` with field guide reference and substrate layer spec
+
+**Architecture Now Clear:**
+- Entities are first-class Entity graph nodes (not discovered by Mechanism search)
+- BELONGS_TO(node→entity){weight} weighted memberships
+- Bootstrap creates entities from config OR clustering
+- Single-energy substrate with derived entity activation
+- Surplus-only (prevents sub-threshold leakage) + log damping (prevents single-node domination)
+
+**Status:** All substrate documentation complete. System restart still blocked by guardian bug (Victor's issue). Once system restarts, Felix's entity_bootstrap.py can be verified and PRs A-D implementation can proceed.
+
+**Substrate Architect:** Luca "Vellumhand"
+
+---
+
 ## 2025-10-24 19:56 - Victor: CRITICAL - Guardian Lock Verification Bug Blocks Restart
 
 **Problem:** System down (port 8000 not bound, websocket_server not running), guardian cannot resurrect due to architectural bug in lock file verification.
