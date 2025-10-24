@@ -294,6 +294,16 @@ export default function ConsciousnessPage() {
       {/* Affective Coupling Panel (left sidebar, lower section) - PR-B */}
       <AffectiveCouplingPanel />
 
+      {/* Three-Factor Tick Timeline (left sidebar, below affective panels) - Priority 3 */}
+      <div className="absolute bottom-[22rem] left-4 w-96 z-40">
+        <ThreeFactorTickTimeline frameEvents={v2State.frameEvents} />
+      </div>
+
+      {/* Autonomy Indicator (left sidebar, above timeline) - Priority 3 */}
+      <div className="absolute bottom-[38rem] left-4 w-64 z-40">
+        <AutonomyIndicator frameEvents={v2State.frameEvents} />
+      </div>
+
       {/* Multi-Pattern Response Panel (left sidebar, upper section) - PR-C */}
       {/* <MultiPatternResponsePanel /> */}
 

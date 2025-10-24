@@ -648,6 +648,7 @@ export enum WebSocketState {
 export interface V2ConsciousnessState {
   // Frame tracking
   currentFrame: number | null;     // Current frame ID
+  frameEvents: FrameStartEvent[];  // Recent frame.start events (for Priority 3 tick speed viz)
 
   // Criticality metrics (from frame.start)
   rho: number | null;               // Branching ratio (ρ) - thought expansion metric

@@ -27,6 +27,7 @@ const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 subentity activities
 const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
 const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
 const MAX_RECENT_STRIDES = 100; // Keep last 100 strides for attribution
+const MAX_FRAME_EVENTS = 200; // Keep last 200 frame.start events (Priority 3 tick speed viz)
 const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
 /**
@@ -61,6 +62,7 @@ export function useWebSocket(): WebSocketStreams {
   const [v2State, setV2State] = useState<V2ConsciousnessState>({
     // Frame tracking
     currentFrame: null,
+    frameEvents: [],
 
     // Criticality metrics
     rho: null,
@@ -141,9 +143,13 @@ export function useWebSocket(): WebSocketStreams {
               return prev; // Same frame, skip update to prevent re-render loop
             }
 
+            // Accumulate frame events for Priority 3 tick speed visualization
+            const updatedFrameEvents = [...prev.frameEvents, frameEvent].slice(-MAX_FRAME_EVENTS);
+
             return {
               ...prev,
               currentFrame: frameEvent.frame_id,
+              frameEvents: updatedFrameEvents,
 
               // Criticality metrics
               rho: frameEvent.rho ?? prev.rho,
