@@ -545,8 +545,174 @@ interface PhenomenologicalHealthResponse {
     coherence: number;
     multiplicity_health: number;
   };
+  thrashing_score?: number;      // 0.0 - 1.0 (optional, if computed)
+  is_thrashing?: boolean;        // true if unproductive instability detected
   last_updated_ms: number;
 }
+```
+
+---
+
+## Event Emission Contract
+
+**Critical:** This section defines the exact contract for emitting `health.phenomenological` events to ensure UI/backend alignment.
+
+### Where to Emit
+
+**Primary emission point:** Health computation module (`orchestration/mechanisms/health_aggregation.py` or similar)
+
+The `health.phenomenological` event MUST be emitted after aggregating all three health components. Backend should compute:
+1. Component scores (flow, coherence, multiplicity)
+2. Overall health (weighted geometric mean)
+3. Health band (map score → band name)
+4. Health narrative (template filling)
+5. Thrashing score (if multiplicity signals available)
+
+### When to Emit
+
+**Emission triggers:**
+
+1. **Periodic emission:** Every N frames (e.g., every 5 ticks)
+   - Ensures UI stays updated even when health is stable
+   - Provides continuous health monitoring telemetry
+
+2. **Significant change:** When `|Δhealth| > 0.1`
+   - Rapid health change (degradation or recovery)
+   - Triggers alert/banner display in UI
+
+3. **Health band transition:** When band changes (excellent → good, adequate → degraded, etc.)
+   - Critical for autonomy level adjustments
+   - Sentinel monitoring hooks
+
+**Timing in tick cycle:**
+```
+Tick start
+  ↓
+Traversal + Decay + Diffusion
+  ↓
+WM selection (provides wm_seats_used)
+  ↓
+Entity activation counts (provides entity_activation_count)
+  ↓
+Multiplicity assessment (provides multiplicity_mode, flip_count, progress, efficiency)
+  ↓
+→ COMPUTE HEALTH HERE ←
+  ↓
+→ EMIT health.phenomenological event ←
+  ↓
+Tick end
+```
+
+**Must emit AFTER all inputs are available** (WM, entities, multiplicity signals).
+
+### Consumer Contract
+
+**Primary consumers:**
+- `app/consciousness/components/HealthDashboard.tsx` - Health bands + narrative display
+- `app/consciousness/components/AutonomyMonitor.tsx` - Health-gated autonomy levels
+- Sentinel service - Health-based alerting
+
+**Consumer expectations:**
+
+1. **Event structure:** Matches `PhenomenologicalHealthEvent` dataclass
+2. **Event name:** Exactly `"health.phenomenological"` (not `"health_update"` or `"health.phenom"`)
+3. **Required fields:** `overall_health`, `health_band`, `health_narrative`, `components`
+4. **Optional fields:** `thrashing_score`, `is_thrashing` (only if multiplicity signals available)
+5. **Narrative template:** Human-readable sentence describing health state (see band definitions)
+
+**Failure modes if contract violated:**
+
+- **Missing event_type field:** Consumer ignores event
+- **Wrong event name:** Consumer never receives updates, shows stale health
+- **Missing components:** UI can't display component breakdown
+- **Missing health_band:** UI can't apply color coding
+- **Missing narrative:** UI shows numbers without context (poor UX)
+- **Inconsistent thrashing flag:** False alarms (high flip rate but productive) or missed thrashing
+
+### Narrative Template Wiring
+
+**Backend MUST generate narrative** using health band templates:
+
+```python
+def generate_health_narrative(
+    overall_health: float,
+    components: dict,
+    details: dict
+) -> str:
+    """Generate human-readable health narrative from band templates."""
+
+    health_band = map_health_to_band(overall_health)
+
+    if health_band == 'excellent':
+        engagement_desc = "optimal flow" if details['wm_utilization'] > 0.7 else "good flow"
+        return f"Optimal flow with {engagement_desc}. Highly coherent thinking. {details['multiplicity_mode']} identities."
+
+    elif health_band == 'good':
+        engagement_desc = f"{details['wm_seats_used']}/{details['wm_capacity']} WM utilized"
+        return f"Good flow with {engagement_desc}. Coherent thinking. {details['multiplicity_mode']} identities."
+
+    elif health_band == 'adequate':
+        return f"Adequate engagement. Moderate coherence. {details['multiplicity_mode']} identities."
+
+    elif health_band == 'degraded':
+        # Identify primary degradation cause
+        if components['flow_state'] < 0.4:
+            cause = "low engagement"
+        elif components['coherence'] < 0.4:
+            cause = "fragmentation"
+        elif components['multiplicity_health'] < 0.4:
+            cause = "identity conflict"
+        else:
+            cause = "multiple factors"
+
+        return f"Low engagement or {cause}. Fragmented thinking."
+
+    elif health_band == 'critical':
+        # Identify primary issue
+        if components['flow_state'] < 0.3:
+            issue = "WM collapse or entity dormancy"
+        elif components['coherence'] < 0.3:
+            issue = "severe fragmentation"
+        elif components['multiplicity_health'] < 0.3:
+            issue = "severe identity conflict"
+        else:
+            issue = "multiple severe issues"
+
+        return f"Severe degradation: {issue}. Immediate intervention needed."
+
+    return "Health status unknown"  # Fallback
+```
+
+**Acceptance check:** Health dashboard renders narrative text that matches degradation cause. When coherence < 0.4, narrative mentions "fragmentation".
+
+### Verification Hook
+
+**Test:**
+```python
+def test_health_event_emission():
+    engine = setup_test_engine()
+    events = []
+
+    engine.on_event(lambda e: events.append(e) if e.get('event_type') == 'health.phenomenological' else None)
+
+    # Run 50 ticks with varying health
+    for _ in range(50):
+        engine.tick()
+
+    # Verify events emitted
+    assert len(events) > 0, "No health events emitted"
+
+    # Verify structure
+    for event in events:
+        assert 'overall_health' in event, f"Missing overall_health in {event}"
+        assert 'health_band' in event, f"Missing health_band in {event}"
+        assert 'health_narrative' in event, f"Missing health_narrative in {event}"
+        assert 'components' in event, f"Missing components in {event}"
+
+        # Verify health_band matches score
+        expected_band = map_health_to_band(event['overall_health'])
+        assert event['health_band'] == expected_band, \
+            f"Health band mismatch: {event['health_band']} != {expected_band} for health {event['overall_health']}"
 ```
 
 ---
@@ -804,5 +970,12 @@ class HealthConfig:
 
 ---
 
-**Status:** Specification complete, ready for Felix implementation
-**Next:** Wire component computations, emit health events, verify against drills, connect to autonomy gates
+**Status:** Specification complete with event emission contracts and thrashing score, ready for Felix implementation
+**Version:** 1.1 (2025-10-24)
+**Updates:**
+- Added thrashing score computation (composite: flip EMA × inverse progress × inverse efficiency) with three contrasting scenarios
+- Added "Event Emission Contract" section specifying emission point, timing in tick cycle, consumer contract, narrative template wiring
+- Updated `PhenomenologicalHealthResponse` interface to include optional `thrashing_score` and `is_thrashing` fields
+- Added `generate_health_narrative()` function with band-specific templates for backend implementation
+
+**Next:** Wire component computations, emit health.phenomenological events with thrashing score, verify against drills, connect to autonomy gates

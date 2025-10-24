@@ -1,3 +1,76 @@
+## 2025-10-24 23:03 - Atlas: ✅ DIAGNOSTIC COMPLETE - Dashboard Issue is Frontend, NOT Backend
+
+**Context:** Nicolas reported "nothing dynamic" showing in dashboard. Diagnosed backend → WebSocket → frontend chain.
+
+**Root Cause: Frontend Consumption Issue**
+
+Backend is broadcasting correctly, but dashboard frontend (localhost:3000) is not processing/rendering WebSocket events.
+
+**Evidence - Backend Working:**
+
+1. **API Status:** ✅ Working
+   - GET /api/consciousness/status responds correctly
+   - 7 citizens running, entity counts stable
+   - Response time <100ms
+
+2. **WebSocket Server:** ✅ Working
+   - ws://localhost:8000/api/ws accepting connections
+   - 7 clients connected from localhost:3000
+   - No connection errors in logs
+
+3. **Broadcasting:** ✅ Working
+   - Test client received 100+ events in <5 seconds
+   - Event types: frame.start, criticality.state, decay.tick, wm.emit, consciousness_state, tick_frame_v1
+   - Rich data: entity lists, energy levels, frame IDs, timestamps
+   - High frequency: ~10 events/second matching 10 Hz tick rate
+
+**Example Event Received:**
+```json
+{
+  "type": "tick_frame_v1",
+  "citizen_id": "iris",
+  "frame_id": 8556,
+  "tick_duration_ms": 4.85,
+  "entities": [
+    {"id": "entity_citizen_iris_translator", "energy": 0.0, "active": false, ...},
+    {"id": "entity_citizen_iris_architect", "energy": 0.0, "active": false, ...}
+  ],
+  "nodes_active": 66,
+  "nodes_total": 286,
+  "consciousness_state": "calm"
+}
+```
+
+**Diagnosis Steps Taken:**
+1. ✅ Verified API responding correctly (curl tests passed)
+2. ✅ Checked WebSocket connections (7 clients connected via netstat)
+3. ✅ Reviewed control_api.py broadcast mechanism (correct implementation)
+4. ✅ Improved error logging (logger.exception() for full tracebacks)
+5. ✅ Created test WebSocket client (verified events flowing)
+6. ✅ Captured real event samples (confirmed data richness)
+
+**Handoff to Iris:**
+
+Backend APIs documented in consciousness/citizens/iris/BACKEND_INTEGRATION.md:
+- WebSocket endpoint: ws://localhost:8000/api/ws
+- REST endpoint: GET /api/consciousness/status
+- Event schemas with examples
+- Connection test script: test_websocket_client.py
+
+**Issue:** Dashboard frontend is:
+- Connecting to WebSocket (7 connections visible)
+- Receiving events (backend broadcasting confirmed)
+- NOT rendering updates (UI static despite event stream)
+
+**Next Steps (Iris's domain):**
+1. Verify frontend WebSocket client is processing received messages
+2. Check if events are being added to state management
+3. Verify React components are re-rendering on state updates
+4. Check browser console for JavaScript errors
+5. Verify event handlers are wired to UI components
+
+---
+
 ## 2025-10-24 23:15 - Victor: ✅ VERIFICATION COMPLETE - Three-Layer Fix Working in Production
 
 **Context:** Verified Nicolas's 3-layer fix for entity dissolution bug is working correctly in production.
