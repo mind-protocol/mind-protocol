@@ -33,6 +33,11 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
   const svgRef = useRef<SVGSVGElement>(null);
   const [selectedSubentity, setSelectedSubentity] = useState<string>('structural');
 
+  // 2-layer simulation state
+  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(new Set());
+  const clusterAnchors = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const innerSimulations = useRef<Map<string, d3.Simulation<any, any>>>(new Map());
+
   // Emotion coloring state
   const { emotionState } = useWebSocket();
 
@@ -274,14 +279,14 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       console.warn(`[GraphCanvas] Filtered ${links.length - validLinks.length} invalid links (${validLinks.length}/${links.length} valid)`);
     }
 
-    // Force simulation with CLUSTER-AWARE LAYOUT
-    // Solution: Use differential link forces to pull clusters together
-    // while keeping nodes spaced within clusters
-    const nodeCount = nodes.length;
+    // ========================================================================
+    // TWO-LAYER FORCE SIMULATION ARCHITECTURE
+    // ========================================================================
+    // Outer sim: Cluster meta-graph (always running, controls inter-cluster spacing)
+    // Inner sim(s): Node layout within expanded clusters (anchored to outer positions)
+
     const nodeR = 6; // Visual node radius
-    const pad = 2;   // Padding to prevent overlap
-    const collisionIterations = nodeCount > 500 ? 1 : nodeCount > 100 ? 1 : 2;
-    const linkIterations = nodeCount > 500 ? 1 : 2;
+    const pad = 2;   // Padding
 
     // Helper: Get primary cluster (entity with highest energy) for a node
     const getPrimaryCluster = (node: any): string | null => {
@@ -297,36 +302,119 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       return primaryEntity;
     };
 
-    // Helper: Check if link connects different clusters
-    const isInterCluster = (link: any): boolean => {
+    // ========================================================================
+    // PHASE 1: Build Cluster Meta-Graph
+    // ========================================================================
+
+    // Group nodes by primary entity
+    const clusterMap = new Map<string, any[]>();
+    nodes.forEach((node: any) => {
+      const clusterId = getPrimaryCluster(node);
+      if (!clusterId) return;
+      if (!clusterMap.has(clusterId)) {
+        clusterMap.set(clusterId, []);
+      }
+      clusterMap.get(clusterId)!.push(node);
+    });
+
+    // Create cluster meta-nodes
+    const clusterNodes = Array.from(clusterMap.entries()).map(([id, members]) => ({
+      id,
+      size: members.length,
+      members
+    }));
+
+    // Build inter-cluster links (aggregated)
+    const interClusterLinkMap = new Map<string, { source: string; target: string; weight: number }>();
+    validLinks.forEach((link: any) => {
       const sourceCluster = getPrimaryCluster(link.source);
       const targetCluster = getPrimaryCluster(link.target);
-      if (!sourceCluster || !targetCluster) return false;
-      return sourceCluster !== targetCluster;
+      if (!sourceCluster || !targetCluster || sourceCluster === targetCluster) return;
+
+      const key = sourceCluster < targetCluster
+        ? `${sourceCluster}→${targetCluster}`
+        : `${targetCluster}→${sourceCluster}`;
+
+      if (!interClusterLinkMap.has(key)) {
+        interClusterLinkMap.set(key, {
+          source: sourceCluster,
+          target: targetCluster,
+          weight: 0
+        });
+      }
+      interClusterLinkMap.get(key)!.weight++;
+    });
+    const interClusterLinks = Array.from(interClusterLinkMap.values());
+
+    // ========================================================================
+    // PHASE 2: Outer Simulation (Cluster Positions)
+    // ========================================================================
+
+    const outerSim = d3.forceSimulation(clusterNodes as any)
+      .force('link', d3.forceLink(interClusterLinks)
+        .id((d: any) => d.id)
+        .distance(40)
+        .strength((l: any) => 0.8 + 0.2 * Math.min(l.weight / 5, 1)))
+      .force('charge', d3.forceManyBody()
+        .strength(5)           // Slight attraction between clusters
+        .distanceMax(120))     // Cap range to prevent ocean gaps
+      .force('collide', d3.forceCollide()
+        .radius((d: any) => 12 + 2 * Math.sqrt(d.size)))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .alphaDecay(0.05)
+      .stop();
+
+    // Run outer sim to convergence
+    for (let i = 0; i < 250; ++i) outerSim.tick();
+
+    // Store cluster anchors
+    clusterNodes.forEach((cluster: any) => {
+      clusterAnchors.current.set(cluster.id, { x: cluster.x, y: cluster.y });
+    });
+
+    // ========================================================================
+    // PHASE 3: Inner Simulation Generator (for expanded clusters)
+    // ========================================================================
+
+    const createInnerSim = (clusterId: string, members: any[], anchor: { x: number; y: number }) => {
+      // Get intra-cluster links
+      const memberIds = new Set(members.map(n => n.id));
+      const intraLinks = validLinks.filter((l: any) => {
+        const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+        const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+        return memberIds.has(sourceId) && memberIds.has(targetId);
+      });
+
+      return d3.forceSimulation(members as any)
+        .force('link', d3.forceLink(intraLinks)
+          .id((d: any) => d.id)
+          .distance(30)
+          .strength(0.4))
+        .force('charge', d3.forceManyBody()
+          .strength(-14)
+          .distanceMin(8)
+          .distanceMax(80))
+        .force('collide', d3.forceCollide()
+          .radius(nodeR + pad))
+        .force('x', d3.forceX(anchor.x).strength(0.2))  // Anchor to cluster position
+        .force('y', d3.forceY(anchor.y).strength(0.2))
+        .alpha(1)
+        .alphaDecay(0.05);
     };
 
-    const simulation = d3.forceSimulation(nodes as any)
-      .force('link', d3.forceLink(validLinks)
-        .id((d: any) => d.id)
-        // Inter-cluster links: SHORT and STRONG (pull clusters together)
-        // Intra-cluster links: LONGER and WEAK (allow breathing room)
-        .distance(l => isInterCluster(l) ? 18 : 34)
-        .strength(l => isInterCluster(l) ? 1.2 : 0.4)
-        .iterations(linkIterations))
-      .force('charge', d3.forceManyBody()
-        .strength(-16)        // Moderate repulsion
-        .distanceMin(8)       // Prevent extreme closeness
-        .distanceMax(80))     // CAP RANGE: stop far clusters from repelling
-      .force('collision', d3.forceCollide()
-        .radius(nodeR + pad)  // Small: prevent overlap without forcing clusters apart
-        .strength(1)
-        .iterations(collisionIterations))
-      .force('x', d3.forceX(width / 2).strength(0.05))   // Gentle centering
-      .force('y', d3.forceY(height / 2).strength(0.05))
-      .force('temporal', forceTemporalX(width))
-      .force('valence', forceValenceY(height))
-      .alpha(1)
-      .alphaDecay(0.05);  // Let system settle
+    // Create inner sims for expanded clusters
+    expandedClusters.forEach(clusterId => {
+      const cluster = clusterNodes.find((c: any) => c.id === clusterId);
+      if (!cluster) return;
+      const anchor = clusterAnchors.current.get(clusterId);
+      if (!anchor) return;
+
+      const innerSim = createInnerSim(clusterId, cluster.members, anchor);
+      innerSimulations.current.set(clusterId, innerSim);
+    });
+
+    // Main simulation reference (for compatibility with existing rendering)
+    const simulation = outerSim as any;  // Will update rendering to handle both layers
 
     // Render links with wireframe aesthetic (Venice consciousness flows)
     // Now with emotion-based coloring when available
