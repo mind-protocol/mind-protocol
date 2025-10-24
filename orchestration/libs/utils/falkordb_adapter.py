@@ -853,9 +853,8 @@ class FalkorDBAdapter:
             for row in result_set:
                 node_obj = row[0]  # First column is the FalkorDB Node object
 
-                # Get node type from label or properties
+                # Get node labels to check if this is a Subentity
                 labels = node_obj.labels if hasattr(node_obj, 'labels') else []
-                node_type_str = labels[0] if labels else props.get('node_type', 'Unknown')
 
                 # Skip Subentity nodes - they're loaded separately below
                 if 'Subentity' in labels:
@@ -867,6 +866,9 @@ class FalkorDBAdapter:
                 # Use ID from props, or generate unique one from internal db id
                 node_id = props.get('id') or props.get('node_id') or f"node_{node_obj.id}"
                 node_name = props.get('name', props.get('text', node_id))
+
+                # Get node type from label or properties
+                node_type_str = labels[0] if labels else props.get('node_type', 'Unknown')
 
                 # Try to get NodeType enum, fallback to a default
                 try:
