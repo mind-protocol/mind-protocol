@@ -416,6 +416,54 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     // Main simulation reference (for compatibility with existing rendering)
     const simulation = outerSim as any;  // Will update rendering to handle both layers
 
+    // ========================================================================
+    // RENDER CLUSTER HULLS (for collapsed clusters)
+    // ========================================================================
+
+    const clusterHulls = g.append('g')
+      .attr('class', 'cluster-hulls')
+      .selectAll('g.cluster-hull')
+      .data(clusterNodes.filter((c: any) => !expandedClusters.has(c.id)))
+      .join('g')
+      .attr('class', 'cluster-hull')
+      .style('cursor', 'pointer')
+      .on('click', (event, d: any) => {
+        event.stopPropagation();
+        // Toggle expansion
+        setExpandedClusters(prev => {
+          const next = new Set(prev);
+          if (next.has(d.id)) {
+            next.delete(d.id);
+          } else {
+            next.add(d.id);
+          }
+          return next;
+        });
+      });
+
+    // Hull circles
+    clusterHulls.append('circle')
+      .attr('cx', (d: any) => d.x)
+      .attr('cy', (d: any) => d.y)
+      .attr('r', (d: any) => 12 + 2 * Math.sqrt(d.size))
+      .attr('fill', '#1e293b')
+      .attr('fill-opacity', 0.3)
+      .attr('stroke', '#64748b')
+      .attr('stroke-width', 2)
+      .attr('stroke-opacity', 0.6);
+
+    // Hull labels
+    clusterHulls.append('text')
+      .attr('x', (d: any) => d.x)
+      .attr('y', (d: any) => d.y)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('fill', '#94a3b8')
+      .attr('font-size', '10px')
+      .attr('font-weight', 'bold')
+      .attr('pointer-events', 'none')
+      .text((d: any) => `${d.id} (${d.size})`);
+
     // Render links with wireframe aesthetic (Venice consciousness flows)
     // Now with emotion-based coloring when available
     const linkElements = g.append('g')
@@ -464,9 +512,15 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       });
 
     // Render nodes (groups with emotion-colored circles + emoji)
+    // ONLY show nodes from expanded clusters
+    const visibleNodes = nodes.filter((node: any) => {
+      const clusterId = getPrimaryCluster(node);
+      return clusterId && expandedClusters.has(clusterId);
+    });
+
     const nodeGroups = g.append('g')
       .selectAll('g.node-group')
-      .data(nodes)
+      .data(visibleNodes)
       .join('g')
       .attr('class', 'node-group')
       .style('cursor', 'pointer')
@@ -652,7 +706,13 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     }, 2000); // Update every 2 seconds
 
     // Simulation tick
-    simulation.on('tick', () => {
+    // Outer sim already converged (ran to completion)
+    // Tick inner simulations for expanded clusters
+    const tickAll = () => {
+      // Tick all active inner simulations
+      innerSimulations.current.forEach(sim => sim.tick());
+
+      // Update link positions
       linkElements
         .attr('x1', (d: any) => d.source.x)
         .attr('y1', (d: any) => d.source.y)
@@ -662,7 +722,19 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       // Position node groups (contains circle + emoji)
       nodeGroups
         .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
-    });
+    };
+
+    // Use requestAnimationFrame for smooth ticking
+    let rafId: number;
+    const tick = () => {
+      tickAll();
+      if (innerSimulations.current.size > 0) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+    if (innerSimulations.current.size > 0) {
+      rafId = requestAnimationFrame(tick);
+    }
 
     // PERFORMANCE: Start simulation with faster settling and stop when stable
     const alphaMin = nodeCount > 500 ? 0.05 : 0.01; // Stop earlier for large graphs
@@ -677,8 +749,15 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     // CRITICAL: Cleanup function that properly stops simulation and clears interval
     // This runs BEFORE the effect re-runs (not just on unmount)
     return () => {
-      // Stop the simulation completely
+      // Cancel animation frame
+      if (rafId) cancelAnimationFrame(rafId);
+
+      // Stop outer simulation
       simulation.stop();
+
+      // Stop all inner simulations
+      innerSimulations.current.forEach(sim => sim.stop());
+      innerSimulations.current.clear();
 
       // Clear the interval to prevent accumulation
       clearInterval(effectInterval);
@@ -686,17 +765,12 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       // Remove all SVG elements to prevent memory accumulation
       svg.selectAll('*').remove();
 
-      // Clear any pending simulation ticks
-      simulation.on('tick', null);
-
       // Nullify large objects to help garbage collection
       (simulation as any).nodes([]);
       (simulation as any).force('link', null);
       (simulation as any).force('charge', null);
       (simulation as any).force('center', null);
       (simulation as any).force('collision', null);
-      (simulation as any).force('temporal', null);
-      (simulation as any).force('valence', null);
     };
   }, [nodes, links, selectedSubentity]);
 
