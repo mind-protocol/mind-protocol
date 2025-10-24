@@ -724,5 +724,12 @@ When reinforcing:
 
 ---
 
-**Status:** Authoring guide complete, ready for citizen use
-**Next:** Citizens practice with golden examples, verify formations succeed
+**Status:** Authoring guide complete with "when not to form" decision guide, ready for citizen use
+**Version:** 1.1 (2025-10-24)
+**Updates:**
+- Added "When NOT to Form" section with 5 side-by-side contrasting scenarios
+- Added decision matrix showing wrong vs correct approaches
+- Added key heuristics (form when/reinforce when/don't form when)
+- Added "Grandmother Test" for insight detection
+
+**Next:** Citizens practice with golden examples (Phase 2), verify formations succeed
