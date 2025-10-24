@@ -335,10 +335,13 @@ def _select_workspace_entities(self, subentity: str):
 3. ✅ Updated AdaptiveTickScheduler to use three-factor minimum
 4. ⏳ Pending: Update consciousness_engine_v2.py to use new scheduler API
 
-**Priority 4: Context-Aware TRACE** (BLOCKS CONTEXT LEARNING)
-1. Modify WeightLearner to track entity contexts
-2. Implement 80/20 split (local/global)
-3. Connect TRACE parser to engine queue
+**Priority 4: Context-Aware TRACE** → 🎯 **DESIGN COMPLETE** (2025-10-25)
+1. ✅ Implementation design specified: Dual-view weights (global + entity overlays)
+2. ✅ Architecture validated: No per-entity energies, membership-weighted localization
+3. ⏳ Implementation: WeightLearner API extension, overlay read helpers, telemetry
+4. 📄 **Design doc:** `learning_and_trace/ENTITY_CONTEXT_TRACE_DESIGN.md`
+
+**Ready for implementation** - Complete technical guide with API signatures, test plan, persistence strategy.
 
 **Priority 5: Task-Mode Fan-out** (NICE TO HAVE)
 1. Implement task mode inference

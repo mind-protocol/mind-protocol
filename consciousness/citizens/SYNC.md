@@ -9,6 +9,37 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-25 03:15 - Iris: Priority 2 Visualization COMPLETE
+
+**Context:** Parallel frontend/backend development (Option B). Priority 2 visualization fully delivered.
+
+**Deliverables:**
+- ✅ Event contract: StrideExecEvent extended with 5 tier fields (commit 45170a1)
+- ✅ Component: TierBreakdownPanel.tsx (281 lines, commit f6989ef)
+- ✅ Integration: Panel wired into dashboard right sidebar (commit fadc153)
+
+**Features:**
+- Tier distribution visualization (STRONG/MEDIUM/WEAK percentages)
+- Reason breakdown histogram (co_activation/causal/background)
+- Noise filtering stats (learning blocked vs enabled)
+- Rolling window controls (50/100/200/500 strides)
+- Graceful "waiting for events" state
+
+**Pattern Established:**
+- React component consuming WebSocket events
+- Rolling window aggregation
+- Visual breakdowns with bars/cards
+- Mock-ready development
+- Incremental integration (one priority at a time)
+
+**Status:** Priority 2 frontend COMPLETE. Ready for backend stride.exec events with tier fields.
+
+**Next:** Awaiting direction - continue with Priority 3 (ThreeFactorTickTimeline + AutonomyIndicator) or other?
+
+**Visualization Specialist:** Iris "The Aperture"
+
+---
+
 ## 2025-10-24 23:45 - Iris: Priority 2-6 Event Contract Extensions Complete
 
 **Context:** Nicolas chose Option B (parallel frontend/backend implementation). Phase 1 (contract definition) now complete.
@@ -1472,4 +1503,72 @@ Refusing to declare complete or unblock Priority 4 until production shows:
 **Coordinator:** Ada "Bridgekeeper"
 **Status:** Production verification complete | Restart blocker identified | Verification checklist ready for post-restart execution
 **Next:** Await guardian restart → Execute full verification checklist → Update priority status based on evidence
+
+
+---
+
+## 2025-10-25 03:30 - Luca: Priority 4 Design Complete - Dual-View Weights Architecture
+
+**Major Unblock:** Nicolas provided complete implementation design for Priority 4 (Context-Aware TRACE).
+
+**Problem Solved:** How to add entity context to TRACE learning without per-entity node energies (which would explode the model and violate single-energy substrate).
+
+**Solution: Dual-View Weights**
+- Global weights: `log_weight_i` (all entities see this)
+- Entity overlays: `log_weight_i@E` (sparse deltas, membership-weighted)
+- Effective weight at read-time: `log_weight_i^(E) = log_weight_i_global + log_weight_i@E`
+- No per-entity energies - maintains single `E_i` substrate
+
+**Key Architecture Decisions:**
+
+1. **80/20 Split (Learned, Not Fixed):**
+   - `alpha_local` = 0.8 (default, learned per entity)
+   - `alpha_global` = 0.2 (remainder)
+   - Learning signal: Predictive value of overlays for entity behavior
+
+2. **Membership-Weighted Localization:**
+   - Node: `ΔlogW_local = alpha_local * eta * z * m[i,E]`
+   - Link: Uses `min(m[src,E], m[tgt,E])`
+   - Strong members get larger local reinforcement
+
+3. **Read-Time Overlay Composition:**
+   ```python
+   def effective_log_weight(item, E):
+       return item.log_weight + item.log_weight_overlays.get(E, 0.0)
+   ```
+   - No engine refactor required
+   - Traversal/WM just use effective weights
+
+4. **Sparse Storage:**
+   - Overlays only exist where TRACE marked in entity context
+   - Zero memory overhead for unmarked items
+   - Optional DB persistence (v2.1)
+
+**Deliverables Created:**
+- ✅ `docs/specs/v2/learning_and_trace/ENTITY_CONTEXT_TRACE_DESIGN.md` (complete implementation guide)
+  - WeightLearner API signature
+  - Dual update algorithm (global + overlays)
+  - Entity context derivation (from wm.emit.selected_entities)
+  - Telemetry schema (weights.updated.trace with local_overlays array)
+  - 6-phase implementation checklist
+  - Complete test plan (unit + integration)
+
+**Implementation Readiness:**
+- ✅ API signatures specified
+- ✅ Update algorithm detailed
+- ✅ Telemetry schema defined
+- ✅ Test plan complete
+- ✅ Persistence strategy outlined
+- ✅ Architecture validated (matches all design pillars)
+
+**Next:** Felix can implement Priority 4 following the design doc. Estimated 1-2 days based on Priority 1-3 velocity.
+
+**Why This Is Significant:**
+- Unblocks highest-value remaining feature (entity-contextualized learning)
+- Maintains substrate integrity (single energy, entities as neighborhoods)
+- Enables observability (telemetry shows local vs global attribution)
+- Prevents architecture explosion (sparse overlays, not per-entity physics)
+
+**Substrate Architect:** Luca "Vellumhand"
+**Status:** Priority 4 design complete, implementation unblocked, gap analysis updated
 

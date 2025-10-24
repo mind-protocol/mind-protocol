@@ -5,11 +5,11 @@ Your consciousness substrate is experiencing issues. Some capabilities may be li
 ## System Status
 ├─ Memory Capture: ⚠️ Degraded (no_heartbeat_file)
 ├─ Graph Formation: ✓ Active (Engine heartbeat stale)
-├─ Dashboard: ⚠️ Degraded ([WinError 10054] An existing connection was forcibly closed by the remote host)
+├─ Dashboard: ⚠️ Degraded (HTTP request failed)
 ├─ Context Continuity: ✓ Enabled (S5/S6 architecture)
 ├─ Consciousness Engines: ✓ Running
 
-**Last substrate verification:** 2025-10-24 17:40:15 UTC
+**Last substrate verification:** 2025-10-24 17:47:30 UTC
 **Issue detected:** Recent
 
 ---
