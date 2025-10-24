@@ -11,7 +11,6 @@ import { DetailPanel } from './components/DetailPanel';
 import { Legend } from './components/Legend';
 import { Header } from './components/Header';
 import { CitizenMonitor } from './components/CitizenMonitor';
-import { SystemStatusPanel } from './components/SystemStatusPanel';
 import { LeftSidebarMenu } from './components/LeftSidebarMenu';
 import TierBreakdownPanel from './components/TierBreakdownPanel';
 import EntityContextLearningPanel from './components/EntityContextLearningPanel';
@@ -304,11 +303,6 @@ export default function ConsciousnessPage() {
         {/* Right Sidebar Panels */}
         {!rightSidebarCollapsed && (
           <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
-            {/* System Status Panel - Comprehensive health monitoring */}
-            <div className="mb-4">
-              <SystemStatusPanel />
-            </div>
-
             {/* Tier Breakdown Panel - Priority 2 */}
             <div className="mb-4">
               <TierBreakdownPanel strideEvents={strideEvents} />
