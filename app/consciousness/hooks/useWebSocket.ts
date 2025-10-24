@@ -441,16 +441,9 @@ export function useWebSocket(): WebSocketStreams {
           // MAIN DASHBOARD UPDATE EVENT - comprehensive frame state
           const tickEvent = data as TickFrameEvent;
 
-          // Log occasionally for debugging (every 10th frame)
-          if (tickEvent.frame_id % 10 === 0) {
-            console.log('[WebSocket] tick_frame_v1:', {
-              citizen: tickEvent.citizen_id,
-              frame: tickEvent.frame_id,
-              entities: tickEvent.entities.length,
-              nodesActive: tickEvent.nodes_active,
-              consciousnessState: tickEvent.consciousness_state
-            });
-          }
+          // Removed frequent console.log to prevent memory leak
+          // Was logging every 10th frame (7/sec with 7 engines) = 25k logs/hour
+          // Only log on errors or when explicitly debugging specific issues
 
           // Update V2 state with tick frame data
           setV2State(prev => ({
