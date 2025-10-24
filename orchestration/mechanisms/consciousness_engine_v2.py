@@ -305,6 +305,14 @@ class ConsciousnessEngineV2:
         tick_start = time.time()
         subentity = self.config.entity_id
 
+        # DEBUG CHECKPOINT D: Track subentities at tick start (every 100th tick to avoid spam)
+        if self.tick_count % 100 == 0:
+            entity_count = len(self.graph.subentities) if self.graph.subentities else 0
+            if entity_count == 0:
+                logger.error(f"[tick] CHECKPOINT D: {subentity} tick {self.tick_count}: graph.subentities is EMPTY!")
+            else:
+                logger.info(f"[tick] CHECKPOINT D: {subentity} tick {self.tick_count}: graph.subentities has {entity_count} items")
+
         # === V2 Event: frame.start ===
         if self.broadcaster and self.broadcaster.is_available():
             # Include entity index for Iris viz (first frame or when entities change)
@@ -1030,14 +1038,14 @@ class ConsciousnessEngineV2:
 
                         entity_data = EntityData(
                             id=entity_id,
-                            name=entity.name if hasattr(entity, 'name') else entity_id,
-                            kind=entity.kind.value if hasattr(entity, 'kind') and hasattr(entity.kind, 'value') else "functional",
-                            color=entity.color if hasattr(entity, 'color') else "#808080",
-                            energy=float(entity.E),
-                            theta=float(entity.theta),
-                            active=entity.is_active(),
+                            name=entity.role_or_topic if hasattr(entity, 'role_or_topic') else entity_id,
+                            kind=entity.entity_kind if hasattr(entity, 'entity_kind') else "functional",
+                            color=entity.properties.get('color', "#808080") if hasattr(entity, 'properties') else "#808080",
+                            energy=float(entity.energy_runtime),
+                            theta=float(entity.threshold_runtime),
+                            active=entity.energy_runtime >= entity.threshold_runtime,
                             members_count=len(entity.extent) if hasattr(entity, 'extent') else 0,
-                            coherence=entity.coherence if hasattr(entity, 'coherence') else 0.0,
+                            coherence=entity.coherence_ema if hasattr(entity, 'coherence_ema') else 0.0,
                             emotion_valence=emotion_valence,
                             emotion_arousal=emotion_arousal,
                             emotion_magnitude=emotion_magnitude
@@ -1046,7 +1054,7 @@ class ConsciousnessEngineV2:
 
                 # Create tick_frame.v1 event
                 tick_event = TickFrameV1Event(
-                    citizen_id=self.config.citizen_id,
+                    citizen_id=self.config.entity_id,
                     frame_id=self.tick_count,
                     t_ms=int(time_module.time() * 1000),
                     tick_duration_ms=round(tick_duration, 2),
@@ -1593,8 +1601,16 @@ class ConsciousnessEngineV2:
         time_since_last_tick = (datetime.now() - self.last_tick_time).total_seconds()
 
         # Get actual subentity count and IDs (per Nicolas's task specification)
+        # DEBUG: Log what we're seeing
+        logger.warning(f"[get_status] DEBUG CHECKPOINT C: {subentity}: graph.subentities len={len(self.graph.subentities) if self.graph.subentities else 0}, "
+                     f"graph id={id(self.graph)}")
+        if self.graph.subentities:
+            logger.warning(f"[get_status] DEBUG: {subentity}: subentities keys={list(self.graph.subentities.keys())[:3]}")
+        else:
+            logger.error(f"[get_status] CRITICAL: {subentity}: graph.subentities is EMPTY/NONE when get_status() called!")
         sub_entity_count = len(self.graph.subentities) if self.graph.subentities else 1
         sub_entity_ids = list(self.graph.subentities.keys()) if self.graph.subentities else [subentity]
+        logger.warning(f"[get_status] DEBUG: {subentity}: RETURNING sub_entity_count={sub_entity_count}, ids={sub_entity_ids[:3] if len(sub_entity_ids) > 3 else sub_entity_ids}")
 
         return {
             "citizen_id": subentity,
