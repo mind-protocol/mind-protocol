@@ -955,6 +955,29 @@ class FalkorDBAdapter:
                             else:
                                 raise
 
+
+        # Load all subentities
+        query_subentities = "MATCH (e:Subentity) RETURN e"
+        result_subentities = self.graph_store.query(query_subentities)
+
+        if result_subentities:
+            logger.debug(f"Loading {len(result_subentities)} subentities from FalkorDB")
+            for row in result_subentities:
+                entity_obj = row[0]
+                props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}
+
+                # Deserialize subentity
+                try:
+                    entity = deserialize_entity(props)
+                    graph.add_entity(entity)
+                    logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
+                except Exception as e:
+                    logger.warning(f"  Failed to deserialize subentity {props.get('id', 'unknown')}: {e}")
+
+            logger.info(f"Loaded {len(graph.subentities)} subentities from FalkorDB")
+        else:
+            logger.debug("No subentities found in FalkorDB")
+
         return graph
 
     def update_node_energy(self, node: 'Node'):
