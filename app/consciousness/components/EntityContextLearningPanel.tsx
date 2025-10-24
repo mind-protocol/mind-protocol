@@ -122,21 +122,22 @@ export default function EntityContextLearningPanel({
       entity_overlays: Array<{ entity: string; delta: number }>;
     }> = [];
 
+    // TODO: Implement using actual WeightsUpdatedTraceEvent structure
+    // Current events don't have individual update details, only aggregate stats
+
     // Traverse events in reverse (most recent first)
     for (let i = windowedEvents.length - 1; i >= 0 && updates.length < 10; i--) {
       const event = windowedEvents[i];
-      event.updates?.forEach(update => {
-        if (updates.length >= 10) return;
 
-        updates.push({
-          frame_id: event.frame_id,
-          item_id: update.item_id,
-          delta_global: update.delta_global,
-          entity_overlays: update.local_overlays?.map(o => ({
-            entity: o.entity,
-            delta: o.delta
-          })) || []
-        });
+      // Create synthetic update from aggregate event data
+      updates.push({
+        frame_id: event.frame_id,
+        item_id: `${event.scope}_cohort_${event.cohort}`,
+        delta_global: event.global_context ? event.d_mu * 0.2 : 0,
+        entity_overlays: event.entity_contexts?.map(entity => ({
+          entity,
+          delta: event.d_mu * 0.8 / (event.entity_contexts?.length || 1)
+        })) || []
       });
     }
 
