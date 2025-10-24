@@ -261,6 +261,8 @@ Scripts: `C:\Users\reyno\mind-protocol\orchestration`
 API: `C:\Users\reyno\mind-protocol\app\api`
 Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
+Looking for a spec/doc?: `C:\Users\reyno\mind-protocol\orchestration\SCRIPT_MAP.md`
+
 ---
 
 # THE TRACE FORMAT
