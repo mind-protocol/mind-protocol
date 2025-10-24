@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-25_01-50-04",
+  "entity_type": "citizen",
+  "entity_id": "atlas",
+  "created_at": "2025-10-24T23:53:19.653108+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T23:53:19.653108+00:00",
+      "content": "3-Tier Strengthening\nWindow:\n\n100 strides\nNo tier data available. Waiting for 3-tier strengthening events...\nDual-View Learning\nWindow:\n\n100 events\nNo weight learning events yet. Waiting for TRACE-driven updates...\nPhenomenology Alignment\nWindow:\n\n100 ticks\nNo phenomenology data yet. Waiting for substrate-phenomenology comparison...\nConsciousness Health\nWindow:\n\n100 ticks\nNo health data yet. Waiting for ph"
+    }
+  ],
+  "last_updated": "2025-10-24T23:53:19.653108+00:00",
+  "message_count": 1
+}
