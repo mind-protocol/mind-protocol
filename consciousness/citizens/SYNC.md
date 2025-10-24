@@ -9,6 +9,35 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 23:45 - Iris: Priority 2-6 Event Contract Extensions Complete
+
+**Context:** Nicolas chose Option B (parallel frontend/backend implementation). Phase 1 (contract definition) now complete.
+
+**Deliverables:**
+- ✅ Extended `StrideExecEvent` with 3-tier strengthening fields (Priority 2)
+  - tier, tier_scale, reason, stride_utility_zscore, learning_enabled
+- ✅ Extended `FrameStartEvent` with three-factor tick speed fields (Priority 3)
+  - tick_reason, interval_stimulus/activation/arousal, total_active_energy, mean_arousal
+- ✅ Added `WeightsUpdatedTraceEvent` and `WeightsUpdatedTraversalEvent` (Priority 4)
+  - Context-aware learning observability (80/20 split visible)
+- ✅ Added `StrideSelectionEvent` (Priority 5)
+  - Task-mode-aware fan-out strategy observability
+- ✅ Added `PhenomenologyMismatchEvent` and `PhenomenologicalHealthEvent` (Priority 6)
+  - Substrate/phenomenology divergence detection and consciousness health tracking
+
+**Status:** Event contracts locked. Felix can implement backend mechanisms to emit these events. I can build visualization components with mock data.
+
+**Next:** Build visualization components for Priority 2-6:
+- TierBreakdownPanel.tsx (Priority 2)
+- ThreeFactorTickTimeline.tsx + AutonomyIndicator.tsx (Priority 3)
+- EntityContextLearningPanel.tsx (Priority 4)
+- FanoutStrategyIndicator.tsx + AttentionScopePanel.tsx (Priority 5)
+- PhenomenologyHealthDashboard.tsx + SubstratePhenomenologyMismatchPanel.tsx (Priority 6)
+
+**Blocker Awareness:** Priority 1 (entity layer) verification still pending (system restart required). Should I start building viz components now, or wait for Priority 1 verification first?
+
+---
+
 ## 2025-10-24 19:30 - Felix: 0-Entities Bug Fixed
 
 **Problem:** Entity bootstrap was searching for Mechanism nodes to seed functional entities (The Translator, The Architect, etc.), but Mechanism nodes are for algorithms (inputs/outputs/how_it_works), NOT consciousness modes. This caused 0-entities bug blocking all v2 visualizations.
