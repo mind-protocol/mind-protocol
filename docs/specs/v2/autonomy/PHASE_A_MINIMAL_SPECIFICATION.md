@@ -876,4 +876,124 @@ async def test_end_to_end_autonomy():
 
 ---
 
+---
+
+## Phase-A2 Extension: Signals → Stimuli Bridge
+
+### Purpose
+
+**Extension to Phase-A:** Collect operational signals (logs, console errors, screenshots, code/doc changes, runtime events) and route them into L2 consciousness as stimuli for automated task creation.
+
+**Reference:** See `SIGNALS_TO_STIMULI_BRIDGE.md` for complete specification.
+
+---
+
+### Service 3: signals_collector.py
+
+**File:** `orchestration/services/signals_collector.py`
+**Port:** 8003 (configurable via `SIGNALS_COLLECTOR_PORT`)
+**Framework:** FastAPI
+**Heartbeat:** `.heartbeats/signals_collector.heartbeat`
+
+**Purpose:** Accept signals from multiple sources, normalize to StimulusEnvelope, deduplicate, rate-limit, apply priority scoring, forward to stimulus_injection_service.
+
+**HTTP Endpoints:**
+- `POST /ingest/console` - Browser console errors
+- `POST /ingest/log` - Backend log errors
+- `POST /ingest/screenshot` - Screenshot uploads
+- `POST /ingest/runtime` - Runtime event reinjections (self-awareness)
+- `GET /health` - Health check for guardian
+
+**Core Responsibilities:**
+1. Accept signals from 5 sources (logs, console, screenshots, code/doc drift, runtime events)
+2. Normalize to StimulusEnvelope format
+3. Deduplicate (digest-based, 5-minute window)
+4. Rate limit (token bucket per signal type)
+5. Priority scoring (quantile gates, configurable weights)
+6. Forward to stimulus_injection_service `/inject`
+7. Circuit breakers for optional enrichments
+
+**Implementation checklist:** See SIGNALS_TO_STIMULI_BRIDGE.md §Implementation Checklist
+
+---
+
+### Signal Source Watchers
+
+**Files:**
+- `orchestration/services/watchers/log_tail.py` - Backend log monitoring
+- `orchestration/services/watchers/git_watcher.py` - Code/doc drift detection
+- `orchestration/services/watchers/ws_reinjector.py` - Runtime event reinjection
+
+**Purpose:** Monitor external sources and forward signals to collector
+
+**Guardian supervision:** Add all watchers to guardian service list with individual heartbeats
+
+---
+
+### Next.js Dashboard Integration
+
+**Files:**
+- `app/api/signals/console/route.ts` - API proxy for console errors
+- `app/api/signals/screenshot/route.ts` - API proxy for screenshots
+- `app/consciousness/lib/console-beacon.ts` - Client-side error beacon
+
+**Purpose:** Route browser errors and screenshots to collector
+
+**Installation:** Call `installConsoleBeacon()` from root client layout
+
+---
+
+### Orchestrator Intent Templates
+
+**File:** `orchestration/services/orchestrator/intent_templates.yaml`
+
+**New intent patterns:**
+1. `intent.fix_incident` - Operational incident response (logs, console, runtime)
+2. `intent.sync_docs_scripts` - Code/doc synchronization tasks
+
+**Purpose:** Auto-create tasks from operational signals and assign to appropriate citizens
+
+---
+
+### Service Startup Sequence (Phase-A2)
+
+**Updated startup order:**
+1. FalkorDB (prerequisite)
+2. WebSocket server (@8000) - Consciousness engines
+3. Conversation watcher - TRACE capture
+4. **Stimulus injection service (@8001)** - Phase-A
+5. **Signals collector (@8003)** - Phase-A2
+6. **Signal watchers** (log_tail, git_watcher, ws_reinjector) - Phase-A2
+7. **Autonomy orchestrator (@8002)** - Phase-A (loads intent templates for Phase-A2)
+
+**Note:** Signals collector and watchers are Phase-A2 additions. They can be deployed independently without affecting Phase-A core services.
+
+---
+
+### Phase-A2 Acceptance Tests
+
+See SIGNALS_TO_STIMULI_BRIDGE.md §Acceptance Tests for complete test specifications:
+1. Console error E2E (browser → collector → injector → orchestrator → Iris)
+2. Doc-sync E2E (git watcher → intent → Ada/Atlas)
+3. Self-awareness guarded (runtime event → depth limit → ACK_REQUIRED)
+4. Noise resistance (deduplication validates)
+
+---
+
+### Phase-A2 Deployment Checklist
+
+- [ ] Create `orchestration/services/signals_collector.py`
+- [ ] Create `orchestration/services/watchers/` directory with 3 watchers
+- [ ] Create `orchestration/services/orchestrator/intent_templates.yaml`
+- [ ] Create Next.js API routes + client beacon
+- [ ] Update `guardian.py` with signals_collector + watcher supervision
+- [ ] Update orchestrator to load intent templates on startup
+- [ ] Test all 5 signal sources (logs, console, screenshots, code/doc, runtime)
+- [ ] Test loop guards (self-awareness depth limit, TTL, rate limiting)
+- [ ] Run 4 acceptance tests
+- [ ] Monitor for 1 hour (verify stability)
+- [ ] Document any issues in SYNC.md
+
+---
+
 **Next Document:** FULL_AUTONOMY_VISION.md (complete 7-service architecture for Phase-B/C)

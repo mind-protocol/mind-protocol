@@ -81,6 +81,9 @@ export default function ConsciousnessPage() {
   // Node focus state (for click-to-focus from CLAUDE_DYNAMIC.md)
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
 
+  // Right sidebar collapse state
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+
   // Stride events for TierBreakdownPanel (Priority 2)
   // TODO: Integrate with useWebSocket when backend emits stride.exec events
   const [strideEvents, setStrideEvents] = useState<any[]>([]);
@@ -297,35 +300,58 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
-      {/* Tier Breakdown Panel (right sidebar, upper section) - Priority 2 */}
-      <div className="absolute top-24 right-4 w-80 z-40">
-        <TierBreakdownPanel strideEvents={strideEvents} />
-      </div>
+      {/* Right Sidebar - Collapsible Container */}
+      <div
+        className={`fixed top-16 bottom-0 right-0 z-40 transition-all duration-300 overflow-hidden ${
+          rightSidebarCollapsed ? 'w-12' : 'w-[22rem]'
+        }`}
+      >
+        {/* Toggle Button */}
+        <button
+          onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          className="absolute top-4 left-2 z-50 p-1.5 rounded hover:bg-observatory-cyan/20 transition-colors"
+          title={rightSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <span className="text-observatory-text/70 text-sm">
+            {rightSidebarCollapsed ? '◀' : '▶'}
+          </span>
+        </button>
 
-      {/* Entity Context Learning Panel (right sidebar) - Priority 4 */}
-      <div className="absolute top-96 right-4 w-80 z-40">
-        <EntityContextLearningPanel weightEvents={weightLearningEvents} />
-      </div>
+        {/* Right Sidebar Panels */}
+        {!rightSidebarCollapsed && (
+          <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
+            {/* Tier Breakdown Panel - Priority 2 */}
+            <div className="mb-4">
+              <TierBreakdownPanel strideEvents={strideEvents} />
+            </div>
 
-      {/* Phenomenology Mismatch Panel (right sidebar) - Priority 6 */}
-      <div className="absolute top-[32rem] right-4 w-80 z-40">
-        <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
-      </div>
+            {/* Entity Context Learning Panel - Priority 4 */}
+            <div className="mb-4">
+              <EntityContextLearningPanel weightEvents={weightLearningEvents} />
+            </div>
 
-      {/* Consciousness Health Dashboard (right sidebar) - Priority 6 */}
-      <div className="absolute top-[48rem] right-4 w-80 z-40">
-        <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
-      </div>
+            {/* Phenomenology Mismatch Panel - Priority 6 */}
+            <div className="mb-4">
+              <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
+            </div>
 
-      {/* Citizen consciousness monitor (right sidebar, bottom) */}
-      <div className="absolute top-[64rem] right-4 w-80 z-40">
-        <CitizenMonitor
-          citizens={citizens}
-          onFocusNode={handleFocusNode}
-          onSelectCitizen={handleSelectCitizen}
-          activeCitizenId={currentGraphId}
-          v2State={v2State}
-        />
+            {/* Consciousness Health Dashboard - Priority 6 */}
+            <div className="mb-4">
+              <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
+            </div>
+
+            {/* Citizen consciousness monitor */}
+            <div className="mb-4">
+              <CitizenMonitor
+                citizens={citizens}
+                onFocusNode={handleFocusNode}
+                onSelectCitizen={handleSelectCitizen}
+                activeCitizenId={currentGraphId}
+                v2State={v2State}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Detail panel - Modal overlay on node click */}
