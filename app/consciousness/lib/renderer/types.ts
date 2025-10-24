@@ -17,12 +17,18 @@ export interface NodeData {
 
   // Visual properties
   weight?: number;
+  base_weight?: number;  // FalkorDB base weight (for semantic polarity)
   energy?: number | Record<string, number>;
 
   // Activity tracking
   last_active?: number;
   last_traversal_time?: number;
   traversal_count?: number;
+  last_traversed_by?: string;  // Entity that last traversed this node
+  created_by?: string;  // Entity that created this node
+
+  // Content
+  text?: string;  // Node text content (for semantic hashing)
 
   // Subentity activation (for glow colors)
   entity_activations?: Record<string, {
