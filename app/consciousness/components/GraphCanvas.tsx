@@ -279,7 +279,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     // Y-axis: subtle valence hint (negative bottom → positive top)
     // PERFORMANCE: Aggressive optimization for large graphs
     const nodeCount = nodes.length;
-    const chargeStrength = nodeCount > 500 ? -5 : nodeCount > 100 ? -8 : -10; // VERY weak repulsion for maximum clustering
+    const chargeStrength = nodeCount > 500 ? -3 : nodeCount > 100 ? -5 : -7; // Weakened repulsion to allow tighter clustering
     const collisionIterations = nodeCount > 500 ? 1 : nodeCount > 100 ? 1 : 2;
     const linkIterations = nodeCount > 500 ? 1 : 2;
 
