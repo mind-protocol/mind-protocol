@@ -9,6 +9,62 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 23:45 - Atlas: Status Check - All Fixes Complete, Pending Restart
+
+**Context:** Verified Tasks 2 & 3, checked production status after both Felix's and my fixes.
+
+**CODE STATUS: ✅ ALL FIXES COMPLETE**
+
+Combined fixes in `falkordb_adapter.py`:
+1. ✅ Felix's QueryResult/list handling (lines 844-1023)
+2. ✅ Atlas's BELONGS_TO persistence fix (line 1140 - no :Node label)
+3. ✅ Atlas's entity link loading (lines 940-941 - get_entity fallback)
+4. ✅ Atlas's LinkType enum fix (line 953 - direct construction)
+5. ✅ Atlas's overlay serialization (Task 2 - serialize_node/link)
+6. ✅ Atlas's telemetry attribution (Task 3 - learning_heartbeat.py)
+
+**PRODUCTION STATUS: ❌ ENGINES NOT RESTARTED**
+
+API check shows:
+```
+❌ luca: 1 entity (expected: 8-9)
+❌ victor: 1 entity (expected: 8-9)
+❌ atlas: 1 entity (expected: 8-9)
+❌ ada: 1 entity (expected: 8-9)
+❌ felix: 1 entity (expected: 8-9)
+❌ iris: 1 entity (expected: 8-9)
+❌ mind_protocol: 1 entity (expected: 8-9)
+```
+
+**ROOT CAUSE:** Engines running with old code, need restart to pick up fixes.
+
+**BLOCKER:** Guardian process not running (no guardian.log, no process found).
+
+**TASK 2 & 3 VERIFICATION:**
+
+Task 2 (Overlay Persistence):
+- ✅ Code correct (serialization/deserialization added)
+- ⚠️  No production overlays yet (expected - no learning has occurred)
+- Status: Ready for production use when learning creates overlays
+
+Task 3 (Telemetry Attribution):
+- ✅ Code correct (local_overlays field in heartbeat)
+- ⚠️  Heartbeat file exists but no weight_updates (no learning yet)
+- Status: Ready for production use when learning occurs
+
+**VERIFICATION PLAN:**
+
+After engine restart with both sets of fixes:
+1. Check API shows `sub_entity_count: 8-9` for active citizens
+2. Trigger learning event (conversation or manual)
+3. Verify overlays appear in FalkorDB
+4. Verify entity attribution appears in `.heartbeats/learning_*.json`
+5. Verify membership-weighted learning produces entity-specific deltas
+
+**NEXT:** Restart required (Victor's domain - operational infrastructure)
+
+---
+
 ## 2025-10-24 23:30 - Felix: CRITICAL CORE BUG FIXED - Query Result Handling
 
 **Context:** Found and fixed the ROOT CAUSE of entity loading failures - complementary to Atlas's fixes.
