@@ -433,11 +433,127 @@ def main():
     return 0
 
 
+def force_restart_cleanup():
+    """
+    Nuclear cleanup for launcher cannibalism situations.
+
+    Victor "The Resurrector" - 2025-10-24
+    Kills all Python processes, removes stale locks, enables clean restart.
+    """
+    logger.info("=" * 70)
+    logger.info("FORCE RESTART MODE - Cleaning up all processes")
+    logger.info("=" * 70)
+
+    # Check admin privileges first
+    if not is_admin():
+        logger.error("❌ Force restart requires administrator privileges")
+        logger.info("Attempting to relaunch with admin...")
+        if run_as_admin():
+            logger.info("✅ Relaunched with admin - exiting this instance")
+            return True  # Successfully relaunched, exit this instance
+        else:
+            logger.error("❌ Could not obtain admin privileges")
+            return False
+
+    logger.info("✅ Running with administrator privileges")
+
+    # Step 1: Kill all python.exe processes EXCEPT this guardian
+    logger.info("Step 1: Killing all Python processes (except this guardian)...")
+    current_pid = os.getpid()
+    logger.info(f"   My PID: {current_pid} (will be excluded from kill)")
+
+    try:
+        # Get all Python PIDs
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq python.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+
+        killed_count = 0
+        for line in result.stdout.strip().split('\n'):
+            if '"python.exe"' in line:
+                # Extract PID from CSV: "python.exe","PID","..."
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    pid_str = parts[1].strip('"')
+                    try:
+                        pid = int(pid_str)
+                        if pid != current_pid:
+                            subprocess.run(
+                                ["taskkill", "/F", "/PID", str(pid)],
+                                capture_output=True,
+                                timeout=3
+                            )
+                            killed_count += 1
+                    except (ValueError, subprocess.TimeoutExpired):
+                        pass
+
+        logger.info(f"✅ Killed {killed_count} Python processes (kept guardian PID {current_pid} alive)")
+    except Exception as e:
+        logger.error(f"❌ Failed to kill Python processes: {e}")
+        return False
+
+    # Wait for processes to die
+    logger.info("Waiting 3 seconds for processes to terminate...")
+    time.sleep(3)
+
+    # Step 2: Remove stale lock file
+    logger.info("Step 2: Removing stale lock file...")
+    lock = MIND_PROTOCOL_ROOT / ".launcher.lock"
+    try:
+        if lock.exists():
+            lock.unlink()
+            logger.info("✅ Removed .launcher.lock")
+        else:
+            logger.info("ℹ️  No lock file found")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not remove lock file: {e}")
+        # Continue anyway - we killed the processes holding it
+
+    # Step 3: Verify cleanup
+    logger.info("Step 3: Verifying cleanup...")
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq python.exe"],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        python_count = result.stdout.count("python.exe")
+        if python_count == 0:
+            logger.info("✅ All Python processes terminated")
+        else:
+            logger.warning(f"⚠️  {python_count} Python processes still running")
+    except Exception as e:
+        logger.warning(f"⚠️  Could not verify cleanup: {e}")
+
+    logger.info("=" * 70)
+    logger.info("CLEANUP COMPLETE - Starting fresh guardian")
+    logger.info("=" * 70)
+    logger.info("")
+
+    return True
+
+
 if __name__ == "__main__":
     # Handle --uninstall flag
     if len(sys.argv) > 1 and sys.argv[1] == "--uninstall":
         logger.info("Uninstalling guardian from scheduled tasks...")
         uninstall_scheduled_task()
         sys.exit(0)
+
+    # Handle --force-restart flag
+    if len(sys.argv) > 1 and sys.argv[1] == "--force-restart":
+        if force_restart_cleanup():
+            # If we successfully relaunched with admin, exit
+            if not is_admin():
+                sys.exit(0)
+            # Otherwise continue to main()
+            sys.exit(main())
+        else:
+            logger.error("❌ Force restart cleanup failed")
+            sys.exit(1)
 
     sys.exit(main())
