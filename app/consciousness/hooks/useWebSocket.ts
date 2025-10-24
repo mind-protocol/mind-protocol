@@ -135,13 +135,10 @@ export function useWebSocket(): WebSocketStreams {
         case 'frame.start': {
           const frameEvent = data as FrameStartEvent;
           setV2State(prev => {
-            // Only update if frame actually changed OR critical values changed
-            if (
-              prev.currentFrame === frameEvent.frame_id &&
-              prev.rho === frameEvent.rho &&
-              prev.safety_state === frameEvent.safety_state
-            ) {
-              return prev; // No changes, skip update to prevent re-render loop
+            // Only update if frame actually changed (frame_id is unique per frame)
+            // NOTE: Cannot compare rho/safety_state with === (object reference inequality)
+            if (prev.currentFrame === frameEvent.frame_id) {
+              return prev; // Same frame, skip update to prevent re-render loop
             }
 
             return {
