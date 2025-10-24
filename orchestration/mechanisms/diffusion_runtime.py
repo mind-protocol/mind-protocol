@@ -464,13 +464,14 @@ def execute_stride_step(
 def _compute_link_cost(
     link: 'Link',
     goal_embedding: Optional[np.ndarray] = None,
-    emotion_context: Optional[Dict] = None
+    emotion_context: Optional[Dict] = None,
+    current_entity_id: Optional[str] = None
 ) -> CostBreakdown:
     """
     Compute traversal cost for link with full forensic trail (lower cost = better).
 
     Cost components (spec: traversal_v2.md §3.4):
-    - Ease cost: 1/exp(log_weight) - harder to traverse weak links
+    - Ease cost: 1/exp(effective_log_weight) - harder to traverse weak links (entity-aware, Priority 4)
     - Goal affinity: -cos(link.target.embedding, goal) - prefer goal-aligned targets
     - Emotion gates: resonance/complementarity multipliers (modulate base cost)
 
@@ -481,22 +482,28 @@ def _compute_link_cost(
             - entity_affect: np.ndarray - current entity affect vector
             - context_gate: float - context modulation (0-2, focus vs recovery)
             - intensity: float - affect magnitude
+        current_entity_id: Optional entity ID for personalized weight computation (Priority 4)
 
     Returns:
         CostBreakdown with total_cost and all intermediate values for observability
 
     Example:
-        >>> breakdown = _compute_link_cost(link, goal_embedding=goal_vec)
+        >>> breakdown = _compute_link_cost(link, goal_embedding=goal_vec, current_entity_id="entity_translator")
         >>> # Strong link (log_weight=0.7) aligned with goal → low cost
         >>> # breakdown.ease = 2.0, breakdown.goal_affinity = 0.8, breakdown.total_cost = 0.2
     """
     import numpy as np
     from orchestration.core.settings import settings
 
-    # 1. Ease cost: 1/exp(log_weight)
+    # 1. Ease cost: 1/exp(effective_log_weight) - entity-aware (Priority 4)
     #    Strong links (log_weight >> 0) have low ease cost
     #    Weak links (log_weight << 0) have high ease cost
-    ease = math.exp(link.log_weight)
+    #    Uses entity-specific overlays when current_entity_id provided
+    if current_entity_id:
+        log_w = effective_log_weight_link(link, current_entity_id)
+    else:
+        log_w = link.log_weight
+    ease = math.exp(log_w)
     ease_cost = 1.0 / max(ease, 1e-6)  # Avoid division by zero
 
     # 2. Goal affinity bonus (negative = reduce cost)
@@ -594,7 +601,8 @@ def _compute_link_cost(
 def _select_best_outgoing_link(
     node,
     goal_embedding: Optional[np.ndarray] = None,
-    emotion_context: Optional[Dict] = None
+    emotion_context: Optional[Dict] = None,
+    current_entity_id: Optional[str] = None
 ) -> Optional[tuple['Link', CostBreakdown]]:
     """
     Select best outgoing link from node (argmin cost) with full forensic trail.

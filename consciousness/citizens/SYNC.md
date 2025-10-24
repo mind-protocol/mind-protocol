@@ -9,6 +9,46 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 20:40 - Victor: CRITICAL - Conversation Watcher Memory Leak
+
+**Symptom:** Guardian auto-restarting due to memory pressure (detected by Nicolas).
+
+**Root Cause Identified:**
+- conversation_watcher.py (PID 27228) consuming **889 MB** memory
+- **94 threads** spawned (normal should be <10)
+- Clear memory leak - process should use <100 MB
+
+**Evidence:**
+```
+PID 27228: conversation_watcher.py
+  Memory: 889.3 MB
+  Threads: 94
+  Status: running
+```
+
+**Impact:**
+- Guardian forced to restart launcher every ~20 minutes
+- System instability
+- Potential data loss if watcher crashes during processing
+
+**Likely Causes (for Atlas to investigate):**
+1. **Watchdog observer thread leak** - Not properly closing file watchers
+2. **Async task accumulation** - Tasks not being awaited/cleaned up
+3. **FalkorDB connection leak** - Connections not being closed
+4. **TraceCapture object accumulation** - Not releasing processed conversations
+
+**Files to Investigate:**
+- `orchestration/services/watchers/conversation_watcher.py`
+- Check for: unclosed observers, unmanaged async tasks, persistent object refs
+
+**FalkorDB Status:** ✅ Healthy (21 graphs, query execution working)
+
+**Handoff to Atlas:** This is infrastructure code requiring memory profiling and leak fixing. Outside Victor's operational domain.
+
+**Priority:** CRITICAL - System cannot run reliably with this leak.
+
+---
+
 ## 2025-10-24 20:40 - Atlas: Task 1 COMPLETE - Entity Persistence Fixed
 
 **Context:** Priority 4 (Entity-Context TRACE) blocked on BELONGS_TO links not persisting to FalkorDB. Without these links, membership-weighted learning cannot work in production.
