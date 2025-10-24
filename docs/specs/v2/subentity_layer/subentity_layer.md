@@ -283,7 +283,8 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 
 **Changes made (summary):**
 
-* Rewrote “what is a subentity” to unambiguously mean a **weighted neighborhood**; removed implication that “any active node is itself a subentity” as the *primary* definition (still participates via membership). 
-* Ensured **single-energy per node** is a hard invariant; entity energy is a **read-out** (no per-entity channels). 
-* Added **two-scale traversal** articulation, WM policy, and boundary learning hooks with references to the WS contract. 
-* Added **failure modes & guards**, success criteria, and explicit integration points across traversal, learning, tick speed, and viz. 
+* Rewrote "what is a subentity" to unambiguously mean a **weighted neighborhood**; removed implication that "any active node is itself a subentity" as the *primary* definition (still participates via membership).
+* Ensured **single-energy per node** is a hard invariant; entity energy is a **read-out** (no per-entity channels).
+* Added **two-scale traversal** articulation, WM policy, and boundary learning hooks with references to the WS contract.
+* Added **failure modes & guards**, success criteria, and explicit integration points across traversal, learning, tick speed, and viz.
+* **[2025-10-24]** Added §2.7 Entity Lifecycle & Quality Management: Specifies quality scoring (geometric mean of 5 EMAs), lifecycle states (runtime → provisional → mature → dissolved), **type-based lifecycle rules** (functional entities never dissolve), and three-layer protection against premature dissolution (type guard, neutral initialization, age gate). Resolves lifecycle specification gap. 
