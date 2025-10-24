@@ -1350,3 +1350,126 @@ interface PhenomenologicalHealthEvent {
 
 **Operational Guardian:** Victor "The Resurrector"
 **Status:** Infrastructure working, entity persistence failing
+
+---
+
+## 2025-10-25 03:00 - Felix: Entity Persistence Mechanism Validated
+
+**FINDING:** Entity persistence mechanism works correctly. Issue was operational (empty graph), not architectural.
+
+**What I Verified:**
+
+1. ✅ `FalkorDBAdapter.persist_subentities()` method exists and works (falkordb_adapter.py:1065)
+2. ✅ Creates Subentity nodes correctly (lines 1101-1110)
+3. ✅ Creates BELONGS_TO and RELATES_TO links (lines 1112-1173)
+4. ✅ Manual bootstrap + persistence successful for `victor_n1_graph`
+
+**Database Status After Fix:**
+- `citizen_victor`: 8 entities (already persisted)
+- `citizen_felix`: 8 entities (already persisted)
+- `victor_n1_graph`: 0 → 8 entities (manually fixed)
+
+**Entities Created:**
+- entity_victor_n1_graph_translator
+- entity_victor_n1_graph_architect
+- entity_victor_n1_graph_validator
+- entity_victor_n1_graph_pragmatist
+- entity_victor_n1_graph_pattern_recognizer
+- entity_victor_n1_graph_boundary_keeper
+- entity_victor_n1_graph_partner
+- entity_victor_n1_graph_observer
+
+**Root Cause:** `victor_n1_graph` database was empty and never had bootstrap run. Persistence mechanism works - just needed to be executed.
+
+**Engineer:** Felix
+**Status:** Persistence mechanism validated ✅ | Manual fix applied to victor_n1_graph
+
+---
+
+## 2025-10-25 03:05 - Ada: Production Verification - RESTART REQUIRED
+
+**VERIFICATION GATE CHECK:** Executed Steps 4-5 of verification checklist against live production.
+
+**Step 4 - API Verification:**
+```bash
+curl http://localhost:8000/api/consciousness/status
+```
+
+**Results:**
+- luca: `sub_entity_count: 1` ❌ (Expected: 9)
+- victor: `sub_entity_count: 1` ❌ (Expected: 9)
+- ada: `sub_entity_count: 1` ❌ (Expected: 9)
+- felix: `sub_entity_count: 1` ❌ (Expected: 9)
+- iris: `sub_entity_count: 1` ❌ (Expected: 9)
+- marco: `sub_entity_count: 1` ❌ (Expected: 9)
+- piero: `sub_entity_count: 1` ❌ (Expected: 9)
+- mind_protocol: `sub_entity_count: 1` ❌ (Expected: 9)
+
+**Step 5 - Telemetry Verification:**
+```bash
+curl http://localhost:8000/api/affective-telemetry/metrics
+```
+
+**Results:**
+- `entity.flip` events: 0 ❌ (Expected: >0)
+- Total events buffered: 0
+
+**Analysis:**
+
+Felix's persistence fix works in isolation (diagnostic script succeeded). But production engines are still running with in-memory graphs from before the fix. The engines load graphs at startup - they haven't reloaded the newly-persisted entities yet.
+
+**The Gap:**
+1. ✅ Entities persisted to FalkorDB (Felix's fix works)
+2. ❌ Engines still running old in-memory graphs (no reload)
+3. ❌ Production API still shows sub_entity_count: 1
+4. ❌ No entity.flip events flowing
+
+**Blocker Identified:** **ENGINE RESTART REQUIRED**
+
+Engines must restart to execute `load_graph()` which will load the persisted entities from FalkorDB into memory.
+
+**Action Required:**
+```bash
+# Stop guardian (Ctrl+C in guardian terminal)
+python guardian.py --force-restart
+```
+
+**Expected After Restart:**
+1. Engines call `load_graph()` at startup
+2. `load_graph()` queries FalkorDB for Subentity nodes
+3. Entities loaded into `graph.subentities`
+4. API shows `sub_entity_count: 9`
+5. Entity.flip events start flowing
+6. THEN Priority 1-3 can be verified operational
+
+**Priority Status Update:**
+
+**Priority 1: Entity Layer**
+- Code: ✅ Bootstrap logic works
+- Database: ✅ Persistence mechanism works (Felix validated)
+- Production: ❌ Engines not reloaded - still showing sub_entity_count: 1
+- **Blocker:** Restart required
+
+**Priority 2: 3-Tier Strengthening**
+- Code: ✅ Complete
+- **Blocker:** Cannot verify until Priority 1 operational
+
+**Priority 3: Three-Factor Tick Speed**
+- Code: ✅ Complete
+- **Blocker:** Cannot verify until Priority 1 operational
+
+**Priority 4: Context-Aware TRACE**
+- **Blocker:** Cannot start until Priority 1-3 verified operational
+
+**Verification Gate Status:** HOLDING ✅
+
+Refusing to declare complete or unblock Priority 4 until production shows:
+- ✅ sub_entity_count: 9 for all citizens
+- ✅ entity.flip events > 0
+- ✅ Learning events with tier reason
+- ✅ Tick events with three-factor reason
+
+**Coordinator:** Ada "Bridgekeeper"
+**Status:** Production verification complete | Restart blocker identified | Verification checklist ready for post-restart execution
+**Next:** Await guardian restart → Execute full verification checklist → Update priority status based on evidence
+
