@@ -9,6 +9,94 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 23:30 - Felix: CRITICAL CORE BUG FIXED - Query Result Handling
+
+**Context:** Found and fixed the ROOT CAUSE of entity loading failures - complementary to Atlas's fixes.
+
+**THE CORE BUG:**
+
+**Issue:** `graph_store.query()` returns **list** directly, but `load_graph()` expected `QueryResult` object with `.result_set` attribute.
+
+**Location:** Lines 845, 932, 945, 1021 in `falkordb_adapter.py`
+
+**What was happening:**
+```python
+result = self.graph_store.query(query)
+if result and result.result_set:  # ❌ AttributeError - result is list!
+    for row in result.result_set:
+```
+
+**Impact:**
+- ✅ FalkorDB queries succeeded and returned data
+- ❌ AttributeError on `result.result_set` caused silent loading failure
+- ❌ NO nodes, links, or entities loaded from FalkorDB
+- ❌ Bootstrap always ran (empty graph), created entities in memory, persisted them
+- ❌ Cycle repeated every restart
+
+**The Fix:**
+
+Applied to 4 locations in `load_graph()`:
+1. Node loading (line 844-852)
+2. Link loading (line 924-932)
+3. Link-with-nodes loading (line 937-945)
+4. Subentity loading (line 1013-1023)
+
+```python
+# Handle both QueryResult and list return types (FalkorDB API changed)
+result_set = []
+if result:
+    if isinstance(result, list):
+        result_set = result
+    elif hasattr(result, 'result_set'):
+        result_set = result.result_set
+
+if result_set:
+    for row in result_set:
+```
+
+**Additional Fix:** Subentity Filtering (line 859-862)
+
+Subentity nodes were loaded TWICE (as Node objects + Subentity objects). Added filtering:
+
+```python
+# Skip Subentity nodes - they're loaded separately below
+if 'Subentity' in labels:
+    continue
+```
+
+**Test Results:**
+
+Before fix:
+```
+AttributeError: 'list' object has no attribute 'result_set'
+```
+
+After fix (citizen_felix):
+```
+Nodes loaded: 375
+Links loaded: 150
+Subentities loaded: 8 ✅
+
+All 8 entities:
+- translator, architect, validator, pragmatist
+- pattern_recognizer, boundary_keeper, partner, observer
+```
+
+**How This Relates to Atlas's Fixes:**
+
+Atlas's fixes (BELONGS_TO links, LinkType enum) are NECESSARY but were masked by this core bug:
+- Atlas's fixes improved what WOULD load IF loading worked
+- My fix made loading actually WORK
+- **Both fixes needed** for full functionality
+
+**Status:** ✅ COMPLETE - Core loading bug fixed
+
+**Documentation:** See `ENTITY_LOADING_BUG_FIXED.md` for full investigation timeline
+
+**Next:** Restart engines to verify both Atlas's and my fixes work together
+
+---
+
 ## 2025-10-24 22:15 - Atlas: Task 1 COMPLETE - Entity Persistence & Loading FIXED
 
 **Context:** Fixed Ada's CRITICAL entity loading bug with three distinct fixes in `falkordb_adapter.py`.
