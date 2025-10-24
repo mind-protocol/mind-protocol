@@ -1150,15 +1150,29 @@ class ConsciousnessEngineV2:
                 "token_budget_total": 2000
             })
 
-        # Score each entity
+        # Candidate entities: active first, fallback to top-K by energy if none active
+        active_entities = [
+            e for e in self.graph.subentities.values()
+            if e.energy_runtime >= e.threshold_runtime
+        ]
+
+        if not active_entities:
+            # Fallback: select top 7 by energy (cold start / low activity)
+            all_entities = sorted(
+                self.graph.subentities.values(),
+                key=lambda e: e.energy_runtime,
+                reverse=True
+            )
+            candidate_entities = all_entities[:7]
+            logger.debug("[WM] No active entities, using top-7 by energy fallback")
+        else:
+            candidate_entities = active_entities
+
+        # Score each candidate entity
         scored_entities = []
         selected_embeddings = []  # Track for diversity bonus
 
-        for entity in self.graph.subentities.values():
-            # Skip entities below threshold
-            if entity.energy_runtime < entity.threshold_runtime:
-                continue
-
+        for entity in candidate_entities:
             # Estimate token cost (rough: 50 tokens per entity summary + 10 per top member)
             top_member_count = min(5, entity.member_count)
             token_cost = 50 + (top_member_count * 10)
@@ -1167,7 +1181,7 @@ class ConsciousnessEngineV2:
                 continue
 
             # Energy per token
-            energy_per_token = entity.energy_runtime / token_cost
+            energy_per_token = entity.energy_runtime / token_cost if token_cost > 0 else 0.0
 
             # Diversity bonus (semantic distance from already-selected)
             diversity_bonus = 0.0

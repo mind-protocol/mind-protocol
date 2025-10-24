@@ -485,10 +485,21 @@ async def start_organizational_consciousness(
         logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
         from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
         bootstrap = EntityBootstrap(graph)
-        stats = bootstrap.run_complete_bootstrap()
-        logger.info(f"[N2:{org_id}] Bootstrap complete: {stats}")
+        bootstrap_stats = bootstrap.run_complete_bootstrap()
+        logger.info(f"[N2:{org_id}] entity_bootstrap: created={bootstrap_stats}, persisted=false")
+
+        # Run post-bootstrap initialization
+        from orchestration.mechanisms.entity_post_bootstrap import run_post_bootstrap_initialization
+        post_stats = run_post_bootstrap_initialization(graph)
+        logger.info(f"[N2:{org_id}] post_bootstrap: {post_stats}")
     else:
         logger.info(f"[N2:{org_id}] Subentities already present: {len(graph.subentities)}")
+
+    # Metrics: entities.total gauge
+    if graph.subentities:
+        logger.info(f"[N2:{org_id}] entities.total={len(graph.subentities)}")
+    else:
+        logger.warning(f"[N2:{org_id}] entities.total=0 - WM will fallback to node-only mode")
 
     # Create engine configuration
     config = EngineConfig(
