@@ -1,51 +1,81 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { Node } from '../hooks/useGraphData';
 
 interface SearchBarProps {
   nodes: Node[];
+  currentGraphId?: string | null;
+}
+
+interface SemanticResult {
+  name: string;
+  description: string;
+  type: string;
+  similarity: number;
+  embeddable_text?: string;
 }
 
 /**
  * SearchBar Component
  *
- * Search and filter nodes by text content.
- * Displays results and allows zooming to specific node.
+ * Semantic search using vector similarity.
+ * Enables conceptual queries like "spreading activation" to find related nodes.
+ *
+ * Author: Iris "The Aperture" - Modified 2025-10-24
+ * Feature: Vector search integration for semantic exploration
  */
-export function SearchBar({ nodes }: SearchBarProps) {
+export function SearchBar({ nodes, currentGraphId }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
+  const [results, setResults] = useState<SemanticResult[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const results = useMemo(() => {
-    if (!query || query.length < 2) return [];
+  // Debounced semantic search
+  useEffect(() => {
+    if (!query || query.length < 3 || !currentGraphId) {
+      setResults([]);
+      return;
+    }
 
-    const lowerQuery = query.toLowerCase();
-    return nodes
-      .filter(node => {
-        const text = (node.text || node.node_id || node.id || '').toLowerCase();
-        // Use node_type instead of labels[0] (FalkorDB returns labels as string)
-        const type = (node.node_type || '').toLowerCase();
-        return text.includes(lowerQuery) || type.includes(lowerQuery);
-      })
-      .slice(0, 10) // Max 10 results
-      .sort((a, b) => {
-        // Prioritize by traversal count
-        const aTraversals = a.traversal_count || 0;
-        const bTraversals = b.traversal_count || 0;
-        return bTraversals - aTraversals;
-      });
-  }, [query, nodes]);
+    const timeoutId = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/search/semantic?query=${encodeURIComponent(query)}&graph_id=${encodeURIComponent(currentGraphId)}&limit=10&threshold=0.60`
+        );
 
-  const handleSelectNode = (node: Node) => {
-    // Emit event to zoom to node
-    const event = new CustomEvent('search:select', { detail: { node } });
-    window.dispatchEvent(event);
+        if (response.ok) {
+          const data = await response.json();
+          setResults(data.results || []);
+        } else {
+          console.error('[SearchBar] Semantic search failed:', response.status);
+          setResults([]);
+        }
+      } catch (error) {
+        console.error('[SearchBar] Semantic search error:', error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [query, currentGraphId]);
+
+  const handleSelectResult = (result: SemanticResult) => {
+    // Find the actual node object by name
+    const node = nodes.find(n => n.id === result.name || n.node_id === result.name);
+    if (node) {
+      // Emit event to zoom to node
+      const event = new CustomEvent('search:select', { detail: { node } });
+      window.dispatchEvent(event);
+    }
     setQuery('');
     setFocused(false);
   };
 
-  const showResults = focused && query.length >= 2 && results.length > 0;
+  const showResults = focused && query.length >= 3;
 
   return (
     <div className="relative w-full">
@@ -59,14 +89,18 @@ export function SearchBar({ nodes }: SearchBarProps) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
-            placeholder="Search nodes..."
-            className="flex-1 bg-transparent text-observatory-text placeholder-observatory-text/40 focus:outline-none"
+            placeholder="Semantic search (e.g., 'spreading activation')..."
+            className="flex-1 bg-transparent text-observatory-text placeholder-observatory-text/40 focus:outline-none text-sm"
           />
-          {query && (
+          {loading && (
+            <span className="text-observatory-cyan/60 text-xs">Searching...</span>
+          )}
+          {query && !loading && (
             <button
               onClick={() => {
                 setQuery('');
                 setFocused(false);
+                setResults([]);
               }}
               className="text-observatory-text/60 hover:text-observatory-text transition-colors"
             >
@@ -77,26 +111,30 @@ export function SearchBar({ nodes }: SearchBarProps) {
       </div>
 
       {/* Results Dropdown */}
-      {showResults && (
+      {showResults && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 consciousness-panel mt-2 max-h-80 overflow-y-auto custom-scrollbar z-50">
           <div className="py-2">
-            {results.map((node, index) => (
+            {results.map((result, index) => (
               <button
-                key={node.id}
-                onClick={() => handleSelectNode(node)}
+                key={`${result.name}-${index}`}
+                onClick={() => handleSelectResult(result)}
                 className="w-full px-4 py-3 hover:bg-observatory-cyan/10 transition-colors text-left"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">
-                    {getNodeEmoji(node)}
+                    {getNodeEmoji(result.type || '')}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-observatory-text truncate">
-                      {node.text || node.node_id || node.id}
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium text-observatory-text truncate flex-1">
+                        {result.description || result.name}
+                      </div>
+                      <div className="text-xs font-mono text-consciousness-green">
+                        {(result.similarity * 100).toFixed(0)}%
+                      </div>
                     </div>
                     <div className="text-xs text-observatory-text/60 mt-1">
-                      {node.node_type || 'Node'}
-                      {node.traversal_count ? ` • ${node.traversal_count} traversals` : ''}
+                      {result.type || 'Node'}
                     </div>
                   </div>
                 </div>
@@ -106,16 +144,16 @@ export function SearchBar({ nodes }: SearchBarProps) {
 
           {/* Show count */}
           <div className="px-4 py-2 border-t border-observatory-teal/30 text-xs text-observatory-text/50">
-            {results.length} result{results.length !== 1 ? 's' : ''}
+            {results.length} semantic match{results.length !== 1 ? 'es' : ''}
           </div>
         </div>
       )}
 
       {/* No results */}
-      {focused && query.length >= 2 && results.length === 0 && (
+      {showResults && !loading && results.length === 0 && (
         <div className="consciousness-panel mt-2 px-4 py-3">
           <div className="text-sm text-observatory-text/60 text-center">
-            No nodes found matching "{query}"
+            No semantic matches for "{query}"
           </div>
         </div>
       )}
@@ -123,9 +161,7 @@ export function SearchBar({ nodes }: SearchBarProps) {
   );
 }
 
-function getNodeEmoji(node: Node): string {
-  // Use node_type instead of labels[0] (FalkorDB returns labels as string)
-  const nodeType = node.node_type || 'Node';
+function getNodeEmoji(nodeType: string): string {
   const EMOJIS: Record<string, string> = {
     // N1 - Personal/Individual Consciousness
     'Memory': '💭',

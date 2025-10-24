@@ -59,7 +59,7 @@ export function Header({
               <div className="h-4 w-px bg-observatory-teal/30"></div>
             </>
           )}
-          <SearchBar nodes={nodes} />
+          <SearchBar nodes={nodes} currentGraphId={currentGraphId} />
         </div>
 
         {/* Right - Stats & System Status */}

@@ -313,6 +313,70 @@ async def get_available_graphs():
         raise HTTPException(status_code=500, detail=f"Failed to query FalkorDB: {str(e)}")
 
 
+@router.get("/search/semantic")
+async def semantic_search(
+    query: str,
+    graph_id: str,
+    node_type: Optional[str] = None,
+    limit: int = 10,
+    threshold: float = 0.70
+):
+    """
+    Semantic search for nodes using vector similarity.
+
+    Enables conceptual exploration: "spreading activation" finds related nodes
+    even without exact keyword matches.
+
+    Args:
+        query: Natural language search query
+        graph_id: Graph to search (e.g., "citizen_iris")
+        node_type: Optional filter by node type (e.g., "Realization", "Decision")
+        limit: Maximum results to return (default: 10)
+        threshold: Minimum similarity score 0-1 (default: 0.70)
+
+    Returns:
+        {
+            "query": str,
+            "results": [
+                {
+                    "name": str,
+                    "description": str,
+                    "type": str,
+                    "similarity": float  # 0-1, higher = more similar
+                },
+                ...
+            ]
+        }
+
+    Example:
+        GET /api/search/semantic?query=spreading+activation&graph_id=citizen_iris&limit=5
+    """
+    from orchestration.adapters.search.semantic_search import SemanticSearch
+
+    try:
+        # Initialize semantic search for the specified graph
+        search = SemanticSearch(graph_name=graph_id)
+
+        # Perform vector similarity search
+        results = search.find_similar_nodes(
+            query_text=query,
+            node_type=node_type,
+            threshold=threshold,
+            limit=limit
+        )
+
+        return {
+            "query": query,
+            "graph_id": graph_id,
+            "node_type": node_type,
+            "results": results
+        }
+
+    except Exception as e:
+        logger.error(f"[API] Semantic search failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Semantic search failed: {str(e)}")
+
+
 def _normalize_timestamp(value):
     """
     Normalize timestamp to milliseconds (numeric).
