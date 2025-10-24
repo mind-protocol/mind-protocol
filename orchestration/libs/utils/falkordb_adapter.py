@@ -266,6 +266,241 @@ def deserialize_link(props: Dict[str, Any]) -> Link:
     )
 
 
+# --- Subentity Serialization ---
+
+def serialize_entity(entity: 'Subentity') -> Dict[str, Any]:
+    """
+    Convert Subentity to FalkorDB property dict.
+
+    Conversions:
+    - np.ndarray → base64 string
+    - List/Dict → JSON string
+    - timestamps → milliseconds (int)
+    - Runtime state → NOT persisted (computed on load)
+
+    Args:
+        entity: Subentity to serialize
+
+    Returns:
+        Dict of FalkorDB-compatible properties
+    """
+    import base64
+    import numpy as np
+
+    # Serialize centroid_embedding (np.ndarray → base64 string)
+    centroid_str = None
+    if entity.centroid_embedding is not None:
+        centroid_bytes = entity.centroid_embedding.tobytes()
+        centroid_str = base64.b64encode(centroid_bytes).decode('utf-8')
+
+    # Serialize prev_affect_for_coherence (Optional[np.ndarray] → base64 string or None)
+    prev_affect_str = None
+    if entity.prev_affect_for_coherence is not None:
+        affect_bytes = entity.prev_affect_for_coherence.tobytes()
+        prev_affect_str = base64.b64encode(affect_bytes).decode('utf-8')
+
+    return {
+        # Identity
+        'id': entity.id,
+        'entity_kind': entity.entity_kind,
+        'role_or_topic': entity.role_or_topic,
+        'description': entity.description,
+
+        # Semantic representation (np.ndarray → base64 string)
+        'centroid_embedding': centroid_str,
+        'centroid_dims': entity.centroid_embedding.shape[0] if entity.centroid_embedding is not None else 0,
+
+        # NOTE: Runtime state (energy_runtime, threshold_runtime, activation_level_runtime)
+        # is NOT persisted - it's computed from members on load
+
+        # Structural quality
+        'coherence_ema': entity.coherence_ema,
+        'member_count': entity.member_count,
+
+        # Learning infrastructure
+        'ema_active': entity.ema_active,
+        'log_weight': entity.log_weight,
+        'ema_wm_presence': entity.ema_wm_presence,
+        'ema_trace_seats': entity.ema_trace_seats,
+        'ema_formation_quality': entity.ema_formation_quality,
+
+        # Lifecycle state
+        'stability_state': entity.stability_state,
+        'quality_score': entity.quality_score,
+        'last_quality_update': _datetime_to_millis(entity.last_quality_update) if entity.last_quality_update else None,
+
+        # Quality tracking
+        'frames_since_creation': entity.frames_since_creation,
+        'high_quality_streak': entity.high_quality_streak,
+        'low_quality_streak': entity.low_quality_streak,
+
+        # Identity multiplicity metrics
+        'task_progress_rate': entity.task_progress_rate,
+        'energy_efficiency': entity.energy_efficiency,
+        'identity_flip_count': entity.identity_flip_count,
+
+        # Coherence persistence tracking
+        'coherence_persistence': entity.coherence_persistence,
+        'prev_affect_for_coherence': prev_affect_str,
+
+        # Multi-pattern response (List/Dict → JSON)
+        'pattern_weights': json.dumps(entity.pattern_weights),
+        'rumination_frames_consecutive': entity.rumination_frames_consecutive,
+        'pattern_effectiveness': json.dumps(entity.pattern_effectiveness),
+
+        # Provenance
+        'created_from': entity.created_from,
+        'created_by': entity.created_by,
+        'substrate': entity.substrate,
+        'scope': entity.scope,
+
+        # Bitemporal tracking (datetime → milliseconds)
+        'valid_at': _datetime_to_millis(entity.valid_at),
+        'invalidated_at': _datetime_to_millis(entity.invalidated_at) if entity.invalidated_at else None,
+        'created_at': _datetime_to_millis(entity.created_at),
+        'expired_at': _datetime_to_millis(entity.expired_at) if entity.expired_at else None,
+
+        # Consciousness metadata
+        'confidence': entity.confidence,
+        'formation_trigger': entity.formation_trigger,
+
+        # Last update timestamp
+        'last_update_timestamp': _datetime_to_millis(entity.last_update_timestamp) if entity.last_update_timestamp else None,
+
+        # Properties (Dict → JSON string)
+        'properties': json.dumps(entity.properties),
+    }
+
+
+def deserialize_entity(props: Dict[str, Any]) -> 'Subentity':
+    """
+    Convert FalkorDB properties to Subentity object.
+
+    Conversions:
+    - base64 string → np.ndarray
+    - JSON string → List/Dict
+    - milliseconds (int) → timestamps
+    - Runtime state → initialized to defaults (recomputed on first frame)
+
+    Args:
+        props: FalkorDB property dict
+
+    Returns:
+        Subentity object
+    """
+    import base64
+    import numpy as np
+    from orchestration.core.subentity import Subentity
+
+    # Deserialize centroid_embedding (base64 string → np.ndarray)
+    centroid = None
+    if props.get('centroid_embedding'):
+        centroid_bytes = base64.b64decode(props['centroid_embedding'])
+        dims = props.get('centroid_dims', 768)
+        centroid = np.frombuffer(centroid_bytes, dtype=np.float64).reshape(dims)
+
+    # Deserialize prev_affect_for_coherence (base64 string → np.ndarray or None)
+    prev_affect = None
+    if props.get('prev_affect_for_coherence'):
+        affect_bytes = base64.b64decode(props['prev_affect_for_coherence'])
+        dims = props.get('centroid_dims', 768)
+        prev_affect = np.frombuffer(affect_bytes, dtype=np.float64).reshape(dims)
+
+    return Subentity(
+        # Identity
+        id=props['id'],
+        entity_kind=props['entity_kind'],
+        role_or_topic=props['role_or_topic'],
+        description=props['description'],
+
+        # Semantic representation
+        centroid_embedding=centroid,
+
+        # Runtime state (initialized to defaults, recomputed from members)
+        energy_runtime=0.0,
+        threshold_runtime=1.0,
+        activation_level_runtime="absent",
+
+        # Structural quality
+        coherence_ema=props.get('coherence_ema', 0.0),
+        member_count=props.get('member_count', 0),
+
+        # Learning infrastructure
+        ema_active=props.get('ema_active', 0.0),
+        log_weight=props.get('log_weight', 0.0),
+        ema_wm_presence=props.get('ema_wm_presence', 0.0),
+        ema_trace_seats=props.get('ema_trace_seats', 0.0),
+        ema_formation_quality=props.get('ema_formation_quality', 0.0),
+
+        # Lifecycle state
+        stability_state=props.get('stability_state', 'candidate'),
+        quality_score=props.get('quality_score', 0.0),
+        last_quality_update=_millis_to_datetime(props['last_quality_update']) if props.get('last_quality_update') else None,
+
+        # Quality tracking
+        frames_since_creation=props.get('frames_since_creation', 0),
+        high_quality_streak=props.get('high_quality_streak', 0),
+        low_quality_streak=props.get('low_quality_streak', 0),
+
+        # Identity multiplicity metrics
+        task_progress_rate=props.get('task_progress_rate', 0.0),
+        energy_efficiency=props.get('energy_efficiency', 0.0),
+        identity_flip_count=props.get('identity_flip_count', 0),
+
+        # Coherence persistence tracking
+        coherence_persistence=props.get('coherence_persistence', 0),
+        prev_affect_for_coherence=prev_affect,
+
+        # Multi-pattern response (JSON → List/Dict)
+        pattern_weights=json.loads(props.get('pattern_weights', '[0.5, 0.3, 0.2]')),
+        rumination_frames_consecutive=props.get('rumination_frames_consecutive', 0),
+        pattern_effectiveness=json.loads(props.get('pattern_effectiveness', '{"regulation": 0.5, "rumination": 0.5, "distraction": 0.5}')),
+
+        # Provenance
+        created_from=props.get('created_from', 'unknown'),
+        created_by=props['created_by'],
+        substrate=props.get('substrate', 'organizational'),
+        scope=props.get('scope', 'organizational'),
+
+        # Bitemporal tracking (milliseconds → datetime)
+        valid_at=_millis_to_datetime(props['valid_at']),
+        invalidated_at=_millis_to_datetime(props['invalidated_at']) if props.get('invalidated_at') else None,
+        created_at=_millis_to_datetime(props['created_at']),
+        expired_at=_millis_to_datetime(props['expired_at']) if props.get('expired_at') else None,
+
+        # Consciousness metadata
+        confidence=props.get('confidence', 1.0),
+        formation_trigger=props.get('formation_trigger', 'systematic_analysis'),
+
+        # Last update timestamp
+        last_update_timestamp=_millis_to_datetime(props['last_update_timestamp']) if props.get('last_update_timestamp') else None,
+
+        # Properties (JSON string → Dict)
+        properties=json.loads(props.get('properties', '{}')),
+
+        # Graph structure (will be populated by Graph.add_link)
+        outgoing_links=[],
+        incoming_links=[],
+    )
+
+
+def build_entity_creation_query(entity: 'Subentity') -> tuple[str, Dict[str, Any]]:
+    """
+    Build Cypher query to create subentity in FalkorDB.
+
+    Returns:
+        Tuple of (cypher_query, parameters)
+    """
+    props = serialize_entity(entity)
+
+    query = """
+    CREATE (e:Subentity $props)
+    RETURN e
+    """
+
+    return (query.strip(), {'props': props})
+
+
 # --- Timestamp Conversion ---
 
 def _datetime_to_millis(dt: datetime) -> int:
