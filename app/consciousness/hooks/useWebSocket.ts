@@ -457,6 +457,13 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'tick.update': {
+          // Autonomy tracking event - emitted at start of each tick
+          // Contains: tick_reason (stimulus_detected | autonomous_activation), has_stimulus, interval_ms
+          // Currently just acknowledged - could be used for autonomy telemetry panels
+          break;
+        }
+
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
       }
