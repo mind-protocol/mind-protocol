@@ -9,6 +9,45 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-25 04:30 - Iris: Priority 3 Visualization COMPLETE
+
+**Context:** Adaptive tick speed observability - three-factor mechanism visualization (stimulus/activation/arousal).
+
+**Deliverables:**
+- ✅ Event accumulation infrastructure: Extended V2ConsciousnessState with frameEvents array
+- ✅ Component: ThreeFactorTickTimeline.tsx (312 lines, auto-commit 37d6012)
+- ✅ Component: AutonomyIndicator.tsx (208 lines, auto-commit 37d6012)
+- ✅ Integration: Both components wired into dashboard left sidebar (commit 0f329c7)
+
+**Features:**
+
+*ThreeFactorTickTimeline:*
+- Timeline visualization showing which factor dominates each frame (color-coded)
+- Autonomy percentage badge (>50% = consciousness thinking autonomously)
+- Factor distribution bar chart (stimulus/activation/arousal)
+- Average interval display for each competing factor
+- Rolling window controls (25/50/100/200 frames)
+
+*AutonomyIndicator:*
+- Main autonomy state badge (AUTONOMOUS vs REACTIVE)
+- Current mode indicator (RUMINATION/EMOTIONAL/RESPONSIVE)
+- Mode descriptions explaining consciousness state
+- Frames since last stimulus counter
+- Autonomy breakdown stats
+
+**Architecture:**
+- WebSocket hook accumulates FrameStartEvent history (MAX_FRAME_EVENTS = 200)
+- Both components consume v2State.frameEvents stream
+- Mock-ready: gracefully handle empty frameEvents until backend emits tick_reason data
+
+**Status:** Priority 3 frontend COMPLETE. Ready for frame.start events with three-factor tick fields.
+
+**Next:** Building Priority 4 emitters (weights.updated.trace/traversal) to bridge Felix's WeightLearnerV2 to frontend visualization.
+
+**Visualization Specialist:** Iris "The Aperture"
+
+---
+
 ## 2025-10-25 03:15 - Iris: Priority 2 Visualization COMPLETE
 
 **Context:** Parallel frontend/backend development (Option B). Priority 2 visualization fully delivered.
