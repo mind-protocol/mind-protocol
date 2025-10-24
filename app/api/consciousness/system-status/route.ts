@@ -177,7 +177,7 @@ async function checkTRACECapture(): Promise<ComponentStatus> {
 async function checkStimulusInjection(): Promise<ComponentStatus> {
   try {
     // Check for heartbeat file written by stimulus_injection_service.py
-    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\orchestration\\services\\.heartbeats\\stimulus_injection.heartbeat';
+    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\.heartbeats\\stimulus_injection.heartbeat';
 
     if (!existsSync(heartbeatPath)) {
       return {
@@ -218,7 +218,7 @@ async function checkStimulusInjection(): Promise<ComponentStatus> {
 async function checkAutonomyOrchestrator(): Promise<ComponentStatus> {
   try {
     // Check for heartbeat file written by autonomy_orchestrator.py
-    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\orchestration\\services\\.heartbeats\\autonomy_orchestrator.heartbeat';
+    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\.heartbeats\\autonomy_orchestrator.heartbeat';
 
     if (!existsSync(heartbeatPath)) {
       return {
