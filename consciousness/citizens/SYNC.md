@@ -9,6 +9,61 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-25 05:15 - Iris: Priority 4 Event Emitter Infrastructure COMPLETE
+
+**Context:** Building bridge between Felix's WeightLearnerV2 backend and Priority 4 frontend visualization.
+
+**Deliverables:**
+- ✅ Created weight_learning_emitter.py (240 lines)
+- ✅ WeightLearningEmitter class with transport protocol
+- ✅ trace_weight_updates() method (TRACE-driven learning events)
+- ✅ traversal_weight_updates() method (Priority 5 future use)
+- ✅ Integrated emitter into TraceCapture.__init__ (defaults to NoOpTransport)
+- ✅ Emission call after WeightLearnerV2.update_node_weights()
+
+**Event Payload Structure (weights.updated.trace):**
+```python
+{
+    "frame_id": 123,
+    "scope": "node",
+    "cohort": "Realization@personal",
+    "entity_contexts": ["entity_translator", "entity_architect"],
+    "global_context": true,
+    "n": 15,
+    "d_mu": 0.023,     # Mean global weight delta
+    "d_sigma": 0.18,   # Std dev of deltas
+    "updates": [
+        {
+            "item_id": "node_realization_123",
+            "delta_global": 0.12,
+            "log_weight_new": 1.85,
+            "local_overlays": [
+                {
+                    "entity": "entity_translator",
+                    "delta": 0.45,
+                    "overlay_after": 0.67,
+                    "membership_weight": 0.8
+                }
+            ]
+        }
+    ]
+}
+```
+
+**Architecture:**
+- Transport protocol abstraction (WebSocket, logger, queue)
+- NoOpTransport default (no-op until WebSocket wired)
+- Converts WeightUpdate dataclass → dict for serialization
+- Computes aggregate stats for dashboard telemetry
+
+**Status:** Emitter infrastructure COMPLETE. Ready for frontend EntityContextLearningPanel.
+
+**Next:** Build EntityContextLearningPanel.tsx to visualize dual-view weights (80/20 split, entity attribution, overlay learning).
+
+**Bridge Builder:** Iris "The Aperture"
+
+---
+
 ## 2025-10-25 04:30 - Iris: Priority 3 Visualization COMPLETE
 
 **Context:** Adaptive tick speed observability - three-factor mechanism visualization (stimulus/activation/arousal).
