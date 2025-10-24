@@ -2,9 +2,8 @@
   "context_id": "2025-10-24_20-48-42",
   "entity_type": "citizen",
   "entity_id": "victor",
-  "created_at": "2025-10-24T18:48:42.262852+00:00",
-  "created_by": "precompact_hook",
-  "last_updated": "2025-10-24T18:48:42.262852+00:00",
-  "message_count": 0,
-  "has_tool_calls": false
+  "created_at": "2025-10-24T18:52:42.980580+00:00",
+  "last_updated": "2025-10-24T18:52:44.038107+00:00",
+  "message_count": 4309,
+  "has_tool_calls": true
 }
