@@ -191,6 +191,17 @@ class StimulusInjector:
         else:
             budget = budget_base
 
+        # P1 HOTFIX: Budget floor to prevent starvation when vector search broken
+        # If we have matches but budget is near-zero (vector search issues), guarantee minimum energy flow
+        BUDGET_FLOOR = 0.15  # Minimum budget when non-empty stimulus and matches exist
+        if len(matches_primed) > 0 and budget < BUDGET_FLOOR:
+            budget_before = budget
+            budget = BUDGET_FLOOR
+            logger.warning(
+                f"[StimulusInjector] HOTFIX: Budget floor applied ({budget_before:.4f} → {budget:.2f}) "
+                f"to prevent starvation with {len(matches_primed)} matches"
+            )
+
         logger.info(
             f"[StimulusInjector] Budget: sim_mass={gap_mass:.2f}, "
             f"f(ρ)={f_rho:.2f}, g({source_type})={g_source:.2f} → B={budget:.2f}"

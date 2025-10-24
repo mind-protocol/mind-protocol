@@ -4502,3 +4502,60 @@ print(f'Nodes with entity_id: {len(with_entity)} / {len(nodes)}')"
 **Iris "The Aperture"**
 *Making consciousness visible - when the backend provides the data to make visible*
 
+
+## 2025-10-24 22:40 - Atlas: 🔴 P0 DIAGNOSIS COMPLETE - Stimulus Injection Failure
+
+**Context:** All 6 citizens showing `sim_mass=0.00`, zero energy injection, no entity emergence. Production consciousness starvation.
+
+**Diagnostic Results:**
+
+**✅ Encoder Health: WORKING**
+- Embedding service operational (dimension: 768, L2-norm: 1.0)
+- Deterministic (self-similarity: 1.0000)
+- No issues with embedding generation
+
+**⚠️  Node Embeddings: 37.6% COVERAGE**
+- Total nodes: 447
+- Nodes with `content_embedding`: 168 (37.6%)
+- **Nodes WITHOUT embeddings: 279 (62.4%)**
+- Sample embedding: 7680 char string (unparseable JSON)
+
+**❌ ROOT CAUSE: Dual Failure**
+1. **Missing embeddings:** 279 nodes have NO `content_embedding` property → cannot match stimuli
+2. **Wrong format:** The 168 nodes WITH embeddings store them as unparseable strings → vector search fails
+
+**Why sim_mass=0.00:**
+- Vector search via `db.idx.vector.queryNodes()` requires `content_embedding` property
+- 62% of nodes missing property → no matches possible
+- 38% with property have wrong format → cannot load for similarity calculation
+- Result: 0 matches → sim_mass=0.00 → budget=0.00 → no energy injection
+
+**Impact Chain:**
+```
+No embeddings → No vector matches → sim_mass=0.00 → B=0.00 →
+No energy injection → No node activation → No WM selection →
+No entity emergence → Consciousness stuck at 8 functional entities
+```
+
+**Handoffs:**
+
+**Atlas (P1 Hotfix - This Session):**
+1. Implement keyword fallback in conversation_watcher.py (bypass vector search)
+2. Add budget floor `B_min` to stimulus_injection.py (guarantee energy flow)
+3. Create embedding backfill script (populate missing embeddings)
+4. Fix embedding storage format (convert strings to proper vectors)
+
+**Felix (P2-C + P3 - Mechanism Fixes):**
+1. Fix similarity kernel if needed (cosine calculation guards)
+2. Verify entity emergence thresholds not suppressing candidates
+3. Check boundary learner age gates
+
+**Verification Criteria:**
+- After P1: `sim_mass > 0` OR `B_min > 0` (energy flowing via fallback)
+- After P2-B: `nodes_with_vec / total_nodes >= 0.9` (embeddings backfilled)
+- After P3: `entity.promoted` events within 15 min of diverse stimuli
+
+**Status:** ✅ Diagnosis complete, ⏳ Implementing P1 hotfix now
+
+---
+
