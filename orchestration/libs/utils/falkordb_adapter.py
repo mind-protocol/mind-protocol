@@ -208,6 +208,13 @@ def serialize_link(link: Link) -> Dict[str, Any]:
         'formation_trigger': link.formation_trigger,
         'confidence': link.confidence,
 
+        # Learning infrastructure
+        'log_weight': link.log_weight,
+        'log_weight_overlays': json.dumps(link.log_weight_overlays),  # Dict[str, float] → JSON
+        'ema_trace_seats': link.ema_trace_seats,
+        'ema_phi': link.ema_phi,
+        'ema_formation_quality': link.ema_formation_quality,
+
         # Properties (Dict → JSON string)
         'properties': json.dumps(link.properties),
     }
@@ -262,6 +269,13 @@ def deserialize_link(props: Dict[str, Any]) -> Link:
         mindstate=props.get('mindstate'),
         formation_trigger=props.get('formation_trigger'),
         confidence=props.get('confidence', 1.0),
+
+        # Learning infrastructure
+        log_weight=props.get('log_weight', 0.0),
+        log_weight_overlays=json.loads(props.get('log_weight_overlays', '{}')),  # JSON → Dict[str, float]
+        ema_trace_seats=props.get('ema_trace_seats', 0.0),
+        ema_phi=props.get('ema_phi', 0.0),
+        ema_formation_quality=props.get('ema_formation_quality', 0.0),
 
         # Properties (JSON string → Dict)
         properties=json.loads(props.get('properties', '{}')),
