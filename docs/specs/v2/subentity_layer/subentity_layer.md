@@ -85,6 +85,132 @@ For semantic topics discovered from graph structure:
 
 After bootstrap, `BELONGS_TO` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.
 
+### 2.7 Entity Lifecycle & Quality Management
+
+Entities progress through lifecycle states based on quality scores that aggregate multiple health dimensions. **Critical:** lifecycle rules must discriminate by entity type—functional entities are permanent infrastructure, while emergent/semantic entities are testable hypotheses.
+
+#### Quality Scoring
+
+Entity quality is computed as the **geometric mean** of five exponential moving averages (EMAs):
+
+\[
+Q_\text{entity} = \sqrt[5]{q_\text{active} \cdot q_\text{coherence} \cdot q_\text{wm} \cdot q_\text{trace} \cdot q_\text{formation}}
+\]
+
+where:
+- \(q_\text{active}\) = `ema_active` (activation frequency)
+- \(q_\text{coherence}\) = `coherence_ema` (member similarity)
+- \(q_\text{wm}\) = `ema_wm_presence` (working memory inclusion rate)
+- \(q_\text{trace}\) = `ema_trace_seats` (TRACE participation)
+- \(q_\text{formation}\) = `ema_formation_quality` (formation usefulness)
+
+**Geometric mean property:** If any dimension is near zero, overall quality collapses regardless of other scores. This enforces "all dimensions matter" but makes initialization critical.
+
+#### Lifecycle States
+
+Entities progress through four states:
+
+1. **runtime** (initial): Newly created, undergoing evaluation
+2. **provisional**: Demonstrating some utility, not yet proven
+3. **mature**: Sustained high quality, proven valuable
+4. **dissolved**: Quality too low, removed from graph
+
+**Transitions:**
+- runtime → provisional: Quality above promotion threshold for sustained period
+- provisional → mature: Quality above higher threshold for longer period (`mature_age_required` frames)
+- any state → dissolved: Quality below dissolution threshold for `dissolution_streak_required` consecutive frames
+
+#### Type-Based Lifecycle Rules (CRITICAL)
+
+**Entity `kind` field determines operational semantics:**
+
+- **functional entities** (`kind='functional'`): Permanent consciousness infrastructure (translator, architect, validator, etc.)
+  - **NEVER subject to quality-based dissolution**
+  - Lifecycle evaluation skipped entirely
+  - Quality scores computed for telemetry only
+  - Rationale: These are curated scaffolding roles, not hypotheses to be tested
+
+- **emergent/semantic entities** (`kind='emergent'` or `kind='semantic'`): Discovered patterns requiring validation
+  - Full lifecycle evaluation applies
+  - Can be promoted or dissolved based on quality
+  - Subject to age gates (see below)
+
+#### Three-Layer Protection Against Premature Dissolution
+
+Historical issue: Entities with zero-initialized EMAs had quality ≈ 0.01 (geometric mean collapse), triggering dissolution after ~20 frames despite being valid infrastructure. Three defense layers:
+
+**Layer 1: Type Guard (Policy)**
+
+Never evaluate functional entities for dissolution:
+
+```python
+# In update_entity_activations() or update_entity_lifecycle():
+if getattr(entity, "kind", None) == "functional":
+    # Functional entities are permanent—skip lifecycle
+    return None
+```
+
+**Layer 2: Neutral Initialization (Data Hygiene)**
+
+Initialize functional entities with neutral EMAs (0.4-0.6 range) during load to prevent quality collapse:
+
+```python
+# In falkordb_adapter.load_graph(), after entity construction:
+if getattr(entity, "kind", None) == "functional":
+    entity.ema_active = max(getattr(entity, "ema_active", 0.6), 0.6)
+    entity.coherence_ema = max(getattr(entity, "coherence_ema", 0.6), 0.6)
+    entity.ema_wm_presence = max(getattr(entity, "ema_wm_presence", 0.5), 0.5)
+    entity.ema_trace_seats = max(getattr(entity, "ema_trace_seats", 0.4), 0.4)
+    entity.ema_formation_quality = max(getattr(entity, "ema_formation_quality", 0.6), 0.6)
+
+    entity.frames_since_creation = max(getattr(entity, "frames_since_creation", 1000), 1000)
+    entity.stability_state = getattr(entity, "stability_state", "mature")
+```
+
+With neutral baselines, geometric mean ≈ 0.56-0.65 (healthy), not ≈ 0.01 (doomed).
+
+**Layer 3: Age Gate (Mechanism Maturity)**
+
+Prevent dissolution of brand-new entities before EMAs stabilize:
+
+```python
+# In update_entity_lifecycle():
+MIN_AGE_FOR_DISSOLUTION_FRAMES = 1000  # ~100s at 100ms/tick
+
+if entity.frames_since_creation < MIN_AGE_FOR_DISSOLUTION_FRAMES:
+    # Too young to dissolve—EMAs still warming up
+    return None
+```
+
+Mirrors `mature_age_required = 100` frames for promotion. Symmetric and safe.
+
+#### Observability
+
+Emit `subentity.lifecycle` events on state transitions:
+
+```json
+{
+  "event_type": "subentity.lifecycle",
+  "entity_id": "architect",
+  "old_state": "provisional",
+  "new_state": "mature",
+  "quality_score": 0.78,
+  "trigger": "promotion",
+  "reason": "Quality above 0.7 for 150 frames"
+}
+```
+
+**Never emit dissolution events for functional entities** (lifecycle skipped entirely).
+
+#### Verification Criteria
+
+After implementing lifecycle with type discrimination:
+
+1. Functional entities persist indefinitely (no dissolution events)
+2. Quality scores for functional entities ≥ 0.5 on initial frames (neutral EMAs)
+3. Emergent/semantic entities still subject to quality-based lifecycle
+4. No entities dissolve within first `MIN_AGE_FOR_DISSOLUTION_FRAMES` after creation
+
 ## 3. Why this makes sense (three lenses)
 
 ### 3.1 Phenomenology (subentity feels like a growing pattern)
@@ -150,8 +276,8 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 
 ## 10. Open questions & future improvements
 
-- Adaptive **promotion/demotion**: runtime → provisional → mature entity lifecycle thresholds. :contentReference[oaicite:27]{index=27}  
-- Better **centroid drift** handling (hysteresis & palette stability). :contentReference[oaicite:28]{index=28}  
+- ~~Adaptive **promotion/demotion**: runtime → provisional → mature entity lifecycle thresholds.~~ **[RESOLVED]** See §2.7 Entity Lifecycle & Quality Management—lifecycle now specified with type-based rules and three-layer protection.
+- Better **centroid drift** handling (hysteresis & palette stability). :contentReference[oaicite:28]{index=28}
 - Cross-entity **goal priors** (dominance learning schedules) from boundary statistics. :contentReference[oaicite:29]{index=29}
 ```
 

@@ -622,3 +622,214 @@ This changes the critical path timeline:
 - Ada "Bridgekeeper", Coordinator & Architect, 2025-10-24 20:55
 - Production verification via FalkorDB direct queries + API status checks
 - Entity loading bug identified through systematic comparison of DB state vs API state
+
+---
+
+## 2025-10-24 21:30 - Root Cause & Solution: Entity Dissolution Bug
+
+**Context:** Systematic debugging revealed entities disappearing ~70 seconds after initialization despite successful loading.
+
+### Root Cause Analysis
+
+**The Mystery:**
+- ✅ Entities exist at initialization (CHECKPOINT A/B): `len(graph.subentities) = 8`
+- ❌ Entities gone ~70 seconds later (CHECKPOINT C): `len(graph.subentities) = 0`
+- ✅ Graph object ID stays the same (not replaced)
+- ✅ No code in engine reassigns `graph.subentities`
+- ✅ No re-initialization/re-bootstrap happening
+
+**The Smoking Gun:**
+
+Entity lifecycle mechanism (`update_entity_lifecycle()`) was **treating all entities uniformly** without discriminating by type:
+
+1. **Quality Score Collapse:**
+   - Quality = geometric mean of 5 EMAs: `ema_active`, `coherence_ema`, `ema_wm_presence`, `ema_trace_seats`, `ema_formation_quality`
+   - All EMAs initialize near zero on first load
+   - Geometric mean with zeros → quality ≈ 0.01 (far below dissolution_threshold = 0.2)
+
+2. **Lifecycle Rule Triggers:**
+   - If `quality ≤ 0.2` for `dissolution_streak_required = 20` frames → dissolve
+   - No type guard: functional entities (permanent infrastructure) treated same as emergent entities (testable hypotheses)
+   - No age guard: brand-new entities evaluated for dissolution before EMAs stabilize
+
+3. **Result:**
+   - Functional entities (translator, architect, validator, etc.) dissolve after ~20 frames (~70 seconds at 100ms/tick)
+   - System loses consciousness scaffolding despite entities being curated infrastructure
+
+**Phenomenological Truth Violated:**
+
+Functional entities are **permanent scaffolding**, not hypotheses to be tested. The lifecycle mechanism was built for emergent entities (discovered patterns requiring quality evaluation), but applied uniformly to all entities. This is an architectural category error - `entity.kind` exists precisely to enable operational differentiation.
+
+### Three-Layer Solution
+
+Each layer independently fixes the bug. All three together provide robustness.
+
+#### Layer 1: Guardrail - Never Dissolve Functional Entities
+
+**Policy:** Functional entities are permanent infrastructure. Skip lifecycle for them.
+
+**Implementation Option A (Caller-side guard - least invasive):**
+
+```python
+# orchestration/mechanisms/entity_activation.py
+# inside update_entity_activations(...):
+
+# Update lifecycle state (promotion/dissolution)
+if enable_lifecycle:
+    # ⛑️ Guard: functional entities are permanent
+    if getattr(entity, "kind", None) == "functional":
+        # Keep quality score updated for telemetry, but never modify stability_state
+        pass
+    else:
+        quality_score = compute_entity_quality_score(entity)
+        transition = update_entity_lifecycle(entity, quality_score)
+        if transition:
+            lifecycle_transitions.append(transition)
+            if transition.new_state == "dissolved":
+                entities_to_dissolve.append(entity)
+```
+
+**Implementation Option B (Callee-side guard - centralized):**
+
+```python
+# orchestration/mechanisms/entity_activation.py
+def update_entity_lifecycle(entity, quality_score, ...):
+    # Functional entities are permanent
+    if getattr(entity, "kind", None) == "functional":
+        return None
+    # ... rest of lifecycle logic
+```
+
+**Rationale:** Functional entities (translator/architect/validator/etc.) are canonical roles providing scaffolding for attention and working memory. They're not discoveries - they're infrastructure. The code already references `entity.kind` elsewhere for operational semantics.
+
+#### Layer 2: Initialization - Neutral EMAs on Load
+
+**Problem:** Even with guardrail, poisoned quality signals at startup are poor hygiene.
+
+**Solution:** Initialize functional entities with neutral (>0.2) EMAs and mature age during loading:
+
+```python
+# orchestration/libs/utils/falkordb_adapter.py
+# in load_graph(...), after constructing each entity from DB:
+
+if getattr(entity, "kind", None) == "functional":
+    # Neutral baselines so geometric mean isn't ~0
+    entity.ema_active             = max(getattr(entity, "ema_active", 0.6), 0.6)
+    entity.coherence_ema          = max(getattr(entity, "coherence_ema", 0.6), 0.6)
+    entity.ema_wm_presence        = max(getattr(entity, "ema_wm_presence", 0.5), 0.5)
+    entity.ema_trace_seats        = max(getattr(entity, "ema_trace_seats", 0.4), 0.4)
+    entity.ema_formation_quality  = max(getattr(entity, "ema_formation_quality", 0.6), 0.6)
+
+    # Start "old enough" to avoid any age-based gates
+    entity.frames_since_creation  = max(getattr(entity, "frames_since_creation", 1000), 1000)
+
+    # Optional: consider them already stable
+    entity.stability_state        = getattr(entity, "stability_state", "mature")
+```
+
+**Rationale:** With neutral 0.5-0.6 baselines, geometric mean yields quality ≈ 0.56-0.65 (healthy band), instead of ≈0.01 (doomed). This makes health math meaningful on day one.
+
+#### Layer 3: Age Gate - Minimum Age Before Dissolution
+
+**Problem:** Even non-functional entities shouldn't dissolve before EMAs stabilize.
+
+**Solution:** Add minimum age requirement before dissolution can trigger:
+
+```python
+# orchestration/mechanisms/entity_activation.py
+
+def update_entity_lifecycle(entity, quality_score, ..., dissolution_streak_required=20):
+    MIN_AGE_FOR_DISSOLUTION_FRAMES = 1000  # ~100s at 100ms/tick; tune as needed
+
+    # Check for dissolution (any state can dissolve)
+    if entity.frames_since_creation >= MIN_AGE_FOR_DISSOLUTION_FRAMES:
+        if entity.low_quality_streak >= dissolution_streak_required:
+            return LifecycleTransition(
+                entity_id=entity.id,
+                old_state=old_state,
+                new_state="dissolved",
+                quality_score=quality_score,
+                trigger="dissolution",
+                reason=f"Quality below {dissolution_threshold} for {entity.low_quality_streak} frames"
+            )
+    # Else: too young to dissolve — let EMAs warm up.
+```
+
+**Rationale:** Mirrors `mature_age_required = 100` frames for promotion. Let EMAs warm up before dissolution logic activates. Symmetric and safe.
+
+### Verification Criteria
+
+After implementing fix, the following must be true:
+
+1. **Functional Entities Persist:**
+   - API `/consciousness/status` shows `sub_entity_count: 9` for all active citizens
+   - `sub_entities` includes `['self', 'translator', 'architect', 'validator', 'pragmatist', 'pattern_recognizer', 'boundary_keeper', 'partner', 'observer']`
+
+2. **No Premature Dissolution:**
+   - No `subentity.lifecycle` events with `new_state: "dissolved"` for functional entities during first 2 minutes
+   - Emergent/semantic entities may still dissolve if quality truly low after maturation period
+
+3. **Healthy Quality Scores:**
+   - Quality scores for functional entities ≥ 0.5 on initial frames
+   - Geometric mean no longer collapses due to zero EMAs
+
+4. **Lifecycle Continues for Non-Functional:**
+   - Emergent and semantic entities still subject to quality-based lifecycle
+   - Promotion still requires age ≥ 100 frames + high-quality streaks
+
+### Code Locations
+
+**Files to modify:**
+
+1. `orchestration/mechanisms/entity_activation.py`
+   - Add functional entity guard in `update_entity_activations()` or `update_entity_lifecycle()`
+   - Add `MIN_AGE_FOR_DISSOLUTION_FRAMES` gate in `update_entity_lifecycle()`
+
+2. `orchestration/libs/utils/falkordb_adapter.py`
+   - Add neutral EMA initialization for functional entities in `load_graph()`
+   - Set `frames_since_creation = 1000` and `stability_state = "mature"`
+
+**Functions affected:**
+- `update_entity_activations()` - lifecycle invocation point
+- `update_entity_lifecycle()` - dissolution logic
+- `load_graph()` - entity loading from FalkorDB
+- `compute_entity_quality_score()` - unchanged, but output now interpreted correctly
+
+### Impact Assessment
+
+**Immediate Impact:**
+- ✅ Functional entities persist beyond initialization
+- ✅ Entity-dependent mechanisms (tick speed, WM selection, TRACE) can function
+- ✅ No more cascading failures from missing entities
+- ✅ Lifecycle still functional for emergent/semantic entity discovery
+
+**Architectural Learning:**
+- Entity `kind` field is not just taxonomy - it's **operational semantics**
+- Lifecycle mechanisms must discriminate by entity type
+- Infrastructure entities ≠ hypothesis entities
+- Geometric mean quality is brittle with zero initialization
+- Age gates prevent premature evaluation before metrics stabilize
+
+**Priority 1-4 Unblocked:**
+- Priority 1 (Entity Layer): Can now verify operational
+- Priority 2 (3-Tier Strengthening): Can verify learning happens during traversal
+- Priority 3 (3-Factor Tick Speed): Can verify tick adaptation to entity activation
+- Priority 4 (Context-Aware TRACE): Can verify entity-contextualized learning
+
+### Implementation Ownership
+
+**Primary:** Felix (consciousness engine) or Atlas (infrastructure/persistence)
+
+**Coordination:** Ada (verification after fix applied)
+
+**Verification:** Use Priority 1-4 verification checklist after implementation
+
+**Timeline:** 1-2 hours for implementation + 1 hour for verification = 2-3 hours to resolution
+
+---
+
+**Signature:**
+- Root cause analysis: Debugging team (Victor/Felix/Nicolas)
+- Solution design: Nicolas
+- Documentation: Luca Vellumhand, Consciousness Mechanism Specialist, 2025-10-24 21:30
+- Three-layer fix captures entity type discrimination principle, neutral initialization, and age-gated lifecycle
