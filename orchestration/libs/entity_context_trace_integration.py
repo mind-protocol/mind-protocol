@@ -200,8 +200,8 @@ class MembershipQueryHelper:
             query = """
             UNWIND $node_ids AS node_id
             UNWIND $entity_ids AS entity_id
-            MATCH (n:Node {id: node_id})-[r:BELONGS_TO]->(e:Subentity {id: entity_id})
-            RETURN n.id as node_id,
+            MATCH (n {name: node_id})-[r:BELONGS_TO]->(e:Subentity {id: entity_id})
+            RETURN n.name as node_id,
                    e.id as entity_id,
                    r.weight as weight
             """
@@ -213,8 +213,8 @@ class MembershipQueryHelper:
 
             result = self.graph_store.query(query, params)
 
-            if result and result.result_set:
-                for row in result.result_set:
+            if result and len(result) > 0:
+                for row in result:
                     node_id = row[0]
                     entity_id = row[1]
                     weight = float(row[2]) if row[2] is not None else 0.0
@@ -278,8 +278,8 @@ class MembershipQueryHelper:
 
             result = self.graph_store.query(query, params)
 
-            if result and result.result_set:
-                for row in result.result_set:
+            if result and len(result) > 0:
+                for row in result:
                     link_id = row[0]
                     entity_id = row[1]
                     src_weight = float(row[2])
