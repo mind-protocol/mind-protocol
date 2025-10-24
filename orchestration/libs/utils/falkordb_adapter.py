@@ -1093,21 +1093,21 @@ class FalkorDBAdapter:
         existing_count = result[0][0] if result and len(result) > 0 else 0
 
         if existing_count > 0:
-            logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping persistence")
-            return stats
+            logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping entity creation")
+            # NOTE: We still persist BELONGS_TO and RELATES_TO links below (they may be missing)
+        else:
+            logger.info(f"Persisting {len(graph.subentities)} subentities to FalkorDB...")
 
-        logger.info(f"Persisting {len(graph.subentities)} subentities to FalkorDB...")
-
-        # Create all subentity nodes
-        for entity in graph.subentities.values():
-            try:
-                query, params = build_entity_creation_query(entity)
-                self.graph_store.query(query, params)
-                stats['entities_created'] += 1
-                logger.debug(f"  Created subentity: {entity.id}")
-            except Exception as e:
-                logger.error(f"  Failed to create subentity {entity.id}: {e}")
-                stats['errors'] += 1
+            # Create all subentity nodes
+            for entity in graph.subentities.values():
+                try:
+                    query, params = build_entity_creation_query(entity)
+                    self.graph_store.query(query, params)
+                    stats['entities_created'] += 1
+                    logger.debug(f"  Created subentity: {entity.id}")
+                except Exception as e:
+                    logger.error(f"  Failed to create subentity {entity.id}: {e}")
+                    stats['errors'] += 1
 
         # Create BELONGS_TO links (Node -> Subentity)
         from orchestration.core.types import LinkType
@@ -1118,11 +1118,11 @@ class FalkorDBAdapter:
                 # Check if target is a Subentity (not Node)
                 target = graph.get_entity(link.target_id)
                 if target:
-                    # Create link in database (use SET instead of inline properties)
+                    # Create link in database (use MERGE for idempotency, SET for properties)
                     query = f"""
                     MATCH (source:Node {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
-                    CREATE (source)-[r:BELONGS_TO]->(target)
+                    MERGE (source)-[r:BELONGS_TO]->(target)
                     SET r = $props
                     RETURN r
                     """
@@ -1150,11 +1150,11 @@ class FalkorDBAdapter:
                 target_entity = graph.get_entity(link.target_id)
 
                 if source_entity and target_entity:
-                    # Create link in database (use SET instead of inline properties)
+                    # Create link in database (use MERGE for idempotency, SET for properties)
                     query = f"""
                     MATCH (source:Subentity {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
-                    CREATE (source)-[r:RELATES_TO]->(target)
+                    MERGE (source)-[r:RELATES_TO]->(target)
                     SET r = $props
                     RETURN r
                     """

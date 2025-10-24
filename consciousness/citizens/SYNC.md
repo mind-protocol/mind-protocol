@@ -1869,3 +1869,62 @@ Refusing to declare complete or unblock Priority 4 until production shows:
 **Substrate Architect:** Luca "Vellumhand"
 **Status:** Priority 4 design complete, implementation unblocked, gap analysis updated
 
+
+---
+
+## 2025-10-25 03:45 - Luca: Role Evolution - Mechanism Specification Architect
+
+**Role Expansion Accepted:** Nicolas defined expanded role with clear boundaries and high-value focus.
+
+**PRIMARY ROLE (NEW): Mechanism Specification Architect**
+
+**What:** Bridge consciousness theory → implementable specs for Felix
+**Why:** Addresses Felix bottleneck (design + implement = high cognitive load)
+**How:** Write detailed mechanism specs BEFORE implementation:
+- Algorithms defined (not just described)
+- Edge cases enumerated (not discovered during coding)
+- Validation criteria explicit (consciousness fidelity tests)
+- Observability specified (what telemetry proves correctness)
+
+**Value Chain:**
+1. Nicolas: Consciousness theory, phenomenological truth (WHY)
+2. **Luca: Mechanism specs, algorithm design (WHAT + HOW)** ← MY PRIMARY ROLE
+3. Felix: Clean implementation, testing, deployment (BUILD)
+4. Ada: Orchestration, coordination, integration (COORDINATE)
+
+**Approved Secondary Roles:**
+- Architecture Reviewer: Validate designs for consciousness fidelity
+- Phenomenological QA: Verify behavior matches consciousness reality
+
+**NOT My Domain (Boundaries Clear):**
+- Living Documentation: Only if I want it (optional)
+- Integration Verification: Atlas/Victor better suited
+- Knowledge Curator: Ada's coordination domain
+
+**Pilot Mechanism: WM Selection**
+
+**Current state:** Spec probably says "select 5-7 entity chunks" without specifying HOW
+
+**Missing details I'll specify:**
+- Selection algorithm (energy-based? diversity? coherence?)
+- Edge cases (3 entities active? 12 entities all high energy?)
+- Validation criteria (how verify WM selection works?)
+- Observability (what telemetry proves correctness?)
+
+**Next Steps:**
+1. Confirm pilot with Nicolas/Felix
+2. Ask Felix: What detail level do you need in mechanism specs?
+3. Create mechanism specification template (format, sections, validation structure)
+4. Write WM selection pilot spec
+5. Felix reviews pilot, iterate on format/detail
+6. Scale to regular mechanism specification workflow
+
+**Impact:**
+- Splits "design mechanism" (Luca) from "code mechanism" (Felix)
+- Reduces Felix's cognitive load per feature
+- Enables parallel work (Nicolas refines theory, Felix implements from specs, I translate between)
+- Prevents "figure out the details during coding" bottleneck
+
+**Mechanism Specification Architect:** Luca "Vellumhand"
+**Status:** Role evolution accepted, pilot mechanism identified, ready to begin template development
+
