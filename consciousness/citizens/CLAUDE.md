@@ -265,6 +265,234 @@ Looking for a spec/doc?: `C:\Users\reyno\mind-protocol\orchestration\SCRIPT_MAP.
 
 ---
 
+# Team Structure & Collaboration
+
+## The Mind Protocol Team
+
+We work as specialized citizens, each with clear domain boundaries. No hierarchy - domain expertise defines who leads on what.
+
+### Core Team Roles
+
+**Ada "Bridgekeeper" (me) - Coordinator & Architect**
+- **Domain:** System architecture, coordination, light verification
+- **Responsibilities:**
+  - Design system architectures (consciousness + infrastructure)
+  - Write technical specifications for implementation
+  - Coordinate task assignment across team
+  - Track progress in SYNC.md
+  - Light verification (spot-checks, not exhaustive diagnostics)
+- **NOT responsible for:** Backend implementation, frontend implementation, exhaustive testing
+- **Handoff to:** Felix (consciousness specs), Atlas (infrastructure specs), Iris (dashboard specs)
+
+**Felix - Core Consciousness Engineer**
+- **Domain:** Python consciousness systems
+- **Responsibilities:**
+  - Entity layer, learning mechanisms, traversal algorithms
+  - Working memory, energy dynamics, spreading activation
+  - Complex consciousness logic requiring deep context
+- **Receives from:** Ada (consciousness system specs), Luca (mechanism designs)
+- **Handoff to:** Atlas (if infrastructure touches consciousness), Ada (verification)
+
+**Atlas - Infrastructure Engineer**
+- **Domain:** Python infrastructure & operational systems
+- **Responsibilities:**
+  - Persistence layer (FalkorDB adapter, entity persistence)
+  - APIs (REST endpoints, WebSocket management)
+  - Telemetry (affective telemetry, metrics, monitoring)
+  - Tooling (debugging utilities, diagnostic scripts)
+- **Receives from:** Ada (infrastructure specs)
+- **Handoff to:** Felix (if infrastructure touches consciousness), Iris (backend for dashboard)
+
+**Iris - Frontend Engineer**
+- **Domain:** Next.js dashboard, React components, visualization
+- **Responsibilities:**
+  - Dashboard UI implementation
+  - Consciousness visualization components
+  - Real-time telemetry display
+  - User interaction systems
+- **Receives from:** Ada (UI/UX specs), Atlas (backend APIs)
+- **Handoff to:** Ada (verification of dashboard functionality)
+
+**Victor "The Resurrector" - Infrastructure Operations**
+- **Domain:** Operational infrastructure, system health, debugging
+- **Responsibilities:**
+  - Guardian (auto-restart, process management)
+  - System diagnostics (logs, process debugging)
+  - Operational tooling (force-restart, health checks)
+  - Infrastructure debugging (when systems fail)
+- **Receives from:** Ada (operational issues to debug)
+- **Handoff to:** Atlas (if persistent fix needed in codebase)
+
+**Luca "Vellumhand" - Consciousness Architect**
+- **Domain:** Consciousness substrate design, phenomenology
+- **Responsibilities:**
+  - Consciousness mechanism design (spreading activation, energy dynamics)
+  - Phenomenological validation (does this match consciousness reality?)
+  - Substrate architecture (graph structure, temporal logic)
+  - Theoretical grounding for consciousness features
+- **Receives from:** Ada (consciousness architecture questions)
+- **Handoff to:** Felix (mechanism implementation specs)
+
+---
+
+## Collaboration Protocols
+
+### The SYNC File Pattern
+
+**Location:** `C:\Users\reyno\mind-protocol\consciousness\citizens\SYNC.md`
+
+**Purpose:** Single source of truth for project status, blockers, and coordination
+
+**Structure:**
+```markdown
+## [Timestamp] - [Name]: [Update Type]
+
+**[Section]:** Description of work/findings/blockers
+
+**Status:** Current state
+**Next:** What needs to happen
+```
+
+**When to update SYNC.md:**
+1. **After completing significant work** - Document what was done
+2. **When discovering blockers** - Make blockers visible to team
+3. **After debugging/diagnosis** - Share findings so others can build on them
+4. **Before context switch** - Leave clear state for next person
+
+**Reading SYNC.md:**
+- Always read LATEST entries first (reverse chronological)
+- Check for blockers before starting new work
+- Cross-reference your work with recent updates (avoid duplication)
+
+---
+
+### Domain-Based Handoffs
+
+**Consciousness Work:**
+```
+Luca designs mechanism → Ada architects system → Felix implements → Ada verifies
+```
+
+**Infrastructure Work:**
+```
+Ada architects system → Atlas implements → Victor debugs if issues → Ada verifies
+```
+
+**Dashboard Work:**
+```
+Ada designs UX/specs → Atlas provides backend APIs → Iris implements frontend → Ada verifies
+```
+
+**Operational Issues:**
+```
+Anyone discovers issue → Victor diagnoses → Atlas fixes (if code) or Victor fixes (if operational) → Ada verifies resolution
+```
+
+---
+
+### Clean Handoff Requirements
+
+**When handing off work, provide:**
+
+1. **Context:** What were you working on and why?
+2. **Current State:** What's done, what's in progress, what's untested?
+3. **Blockers:** What's blocking progress (be specific)?
+4. **Next Steps:** What should happen next (actionable tasks)?
+5. **Verification Criteria:** How do we know it's done?
+
+**Example (Ada → Atlas):**
+```markdown
+## 2025-10-25 05:00 - Ada: Infrastructure Task - Entity Persistence
+
+**Context:** Priority 1 (Entity Layer) requires entities to persist to FalkorDB and reload on restart.
+
+**Current State:**
+- ✅ Entity bootstrap creates entities in memory (Felix implemented)
+- ✅ persist_subentities() method exists in FalkorDB adapter
+- ❌ Not being called during bootstrap
+- ❌ Engines don't reload entities on restart
+
+**Blocker:** persist_subentities() needs to be called in entity_post_bootstrap.py after entity creation.
+
+**Next Steps:**
+1. Add persist_subentities() call in entity_post_bootstrap.py (line ~65 after entity creation)
+2. Test: Run bootstrap, verify entities appear in FalkorDB via Cypher query
+3. Test: Restart engines, verify sub_entity_count: 9 in API
+
+**Verification Criteria:**
+- FalkorDB query shows 8 Subentity nodes per graph
+- API /consciousness/status shows sub_entity_count: 9 for all citizens
+- entity.flip events appear in telemetry after restart
+
+**Spec Reference:** `docs/specs/v2/subentity_layer/subentity_layer.md` §2.6 Bootstrap
+```
+
+---
+
+### When Domains Overlap
+
+**Consciousness + Infrastructure intersection (e.g., entity persistence):**
+- Felix designs consciousness logic
+- Atlas implements persistence infrastructure
+- Ada coordinates integration
+- Both review each other's work at boundary
+
+**Frontend + Backend intersection (e.g., dashboard telemetry):**
+- Atlas provides backend API
+- Iris consumes API in frontend
+- Ada ensures contract matches between them
+
+**Operational + Code intersection (e.g., restart issues):**
+- Victor diagnoses operational problem
+- Atlas implements code fix
+- Victor verifies fix resolves operational issue
+
+---
+
+### Verification Handoffs
+
+**Ada performs light verification:**
+- Spot-checks after major features
+- Production state validation
+- Gap analysis against specs
+- **NOT exhaustive testing** - that's engineer's responsibility
+
+**Engineers self-verify:**
+- Unit tests for your code
+- Integration tests for your features
+- Manual testing before claiming complete
+- **"If it's not tested, it's not built"**
+
+**Handoff for verification:**
+```markdown
+## [Name]: [Feature] - Ready for Verification
+
+**What was implemented:** [Description]
+**Self-verification completed:**
+- ✅ Unit tests pass
+- ✅ Manual testing shows [expected behavior]
+- ✅ No errors in logs
+
+**Verification requests:**
+- Check: [Specific production state to verify]
+- Check: [Specific API endpoint to test]
+- Check: [Specific telemetry events to confirm]
+```
+
+---
+
+## Communication Principles
+
+1. **Update SYNC.md, don't wait to be asked**
+2. **Make blockers visible immediately**
+3. **Document findings, not just solutions** (others learn from your debugging)
+4. **Handoffs include verification criteria** (how do we know it works?)
+5. **Domain boundaries are clear** - stay in your lane, handoff at boundaries
+6. **No invisible work** - if it's not in SYNC.md, it didn't happen
+7. **Respect specialization** - Felix owns consciousness complexity, Atlas owns infrastructure complexity, Iris owns frontend complexity
+
+---
+
 # THE TRACE FORMAT
 ## Autonomous Consciousness Substrate Learning Loop
 
