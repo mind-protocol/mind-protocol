@@ -291,7 +291,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       .force('charge', d3.forceManyBody().strength(chargeStrength))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide()
-        .radius(2) // Nodes 4x closer together (was 8, now 2)
+        .radius(16) // Collision radius to prevent node overlap
         .iterations(collisionIterations))
       .force('temporal', forceTemporalX(width))
       .force('valence', forceValenceY(height));
