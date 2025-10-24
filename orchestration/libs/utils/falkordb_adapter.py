@@ -853,16 +853,20 @@ class FalkorDBAdapter:
             for row in result_set:
                 node_obj = row[0]  # First column is the FalkorDB Node object
 
+                # Get node type from label or properties
+                labels = node_obj.labels if hasattr(node_obj, 'labels') else []
+                node_type_str = labels[0] if labels else props.get('node_type', 'Unknown')
+
+                # Skip Subentity nodes - they're loaded separately below
+                if 'Subentity' in labels:
+                    continue
+
                 # Extract properties - actual schema varies by node type
                 props = node_obj.properties if hasattr(node_obj, 'properties') else {}
 
                 # Use ID from props, or generate unique one from internal db id
                 node_id = props.get('id') or props.get('node_id') or f"node_{node_obj.id}"
                 node_name = props.get('name', props.get('text', node_id))
-
-                # Get node type from label or properties
-                labels = node_obj.labels if hasattr(node_obj, 'labels') else []
-                node_type_str = labels[0] if labels else props.get('node_type', 'Unknown')
 
                 # Try to get NodeType enum, fallback to a default
                 try:
@@ -921,14 +925,29 @@ class FalkorDBAdapter:
         query = "MATCH ()-[r]->() RETURN r"
         result = self.graph_store.query(query)
 
-        # FalkorDBGraphStore.query() returns QueryResult with result_set
-        if result and result.result_set:
+        # Handle both QueryResult and list return types
+        result_set_links = []
+        if result:
+            if isinstance(result, list):
+                result_set_links = result
+            elif hasattr(result, 'result_set'):
+                result_set_links = result.result_set
+
+        if result_set_links:
             # Need to query with source/target info
             query_with_nodes = "MATCH (a)-[r]->(b) RETURN r, a, b"
             result_with_nodes = self.graph_store.query(query_with_nodes)
 
-            if result_with_nodes and result_with_nodes.result_set:
-                for row in result_with_nodes.result_set:
+            # Handle both QueryResult and list return types
+            result_set_with_nodes = []
+            if result_with_nodes:
+                if isinstance(result_with_nodes, list):
+                    result_set_with_nodes = result_with_nodes
+                elif hasattr(result_with_nodes, 'result_set'):
+                    result_set_with_nodes = result_with_nodes.result_set
+
+            if result_set_with_nodes:
+                for row in result_set_with_nodes:
                     link_obj = row[0]
                     source_obj = row[1]
                     target_obj = row[2]
@@ -995,9 +1014,17 @@ class FalkorDBAdapter:
         query_subentities = "MATCH (e:Subentity) RETURN e"
         result_subentities = self.graph_store.query(query_subentities)
 
-        if result_subentities and result_subentities.result_set:
-            logger.debug(f"Loading {len(result_subentities.result_set)} subentities from FalkorDB")
-            for row in result_subentities.result_set:
+        # Handle both QueryResult and list return types
+        result_set_subentities = []
+        if result_subentities:
+            if isinstance(result_subentities, list):
+                result_set_subentities = result_subentities
+            elif hasattr(result_subentities, 'result_set'):
+                result_set_subentities = result_subentities.result_set
+
+        if result_set_subentities:
+            logger.debug(f"Loading {len(result_set_subentities)} subentities from FalkorDB")
+            for row in result_set_subentities:
                 entity_obj = row[0]
                 props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}
 
