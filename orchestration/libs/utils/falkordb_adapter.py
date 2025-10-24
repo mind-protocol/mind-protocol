@@ -501,8 +501,10 @@ def build_entity_creation_query(entity: 'Subentity') -> tuple[str, Dict[str, Any
     """
     props = serialize_entity(entity)
 
+    # Use SET instead of inline properties - FalkorDB doesn't support $props for CREATE
     query = """
-    CREATE (e:Subentity $props)
+    CREATE (e:Subentity)
+    SET e = $props
     RETURN e
     """
 
