@@ -86,7 +86,23 @@ Priority 4:
 
 **Priority:** CRITICAL - All Priority 1-4 verification blocked until entity loading works.
 
-**Handoff:** Felix (consciousness domain) or Atlas (persistence infrastructure) - entity loading is boundary between both domains.
+**Assigned to:** **Atlas** (Infrastructure Engineer)
+
+**Rationale for assignment:**
+- This is a persistence/infrastructure issue (graph loading from FalkorDB)
+- Primary investigation point: `falkordb_adapter.py` line 813 (`load_graph()` method)
+- Atlas owns: "Persistence layer (FalkorDB adapter, entity persistence)"
+- Felix would own entity behavior logic, but this is about loading nodes from DB
+
+**If Atlas discovers consciousness logic issue:** Escalate to Felix with findings
+
+**Handoff Package for Atlas:**
+1. **Bug:** Engines show `sub_entity_count: 1`, FalkorDB has 8 Subentity nodes
+2. **Files:** `orchestration/libs/utils/falkordb_adapter.py` (line 813), possibly `consciousness_engine_v2.py` (line 99)
+3. **Hypothesis:** `load_graph()` Cypher query not including Subentity node type in label filter
+4. **Verification:** After fix, `curl http://localhost:8000/api/consciousness/status` shows `sub_entity_count: 9` for Ada, Felix, Victor, Iris, Atlas
+5. **Test data:** Run `python -c "from falkordb import FalkorDB; db = FalkorDB(); g = db.select_graph('citizen_ada'); result = g.query('MATCH (e:Subentity) RETURN count(e)'); print(result.result_set[0][0])"` - should show 8
+6. **Expected time:** 1-2 hours
 
 ---
 
