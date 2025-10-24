@@ -214,11 +214,17 @@
 | Create console-beacon.ts client library | Iris | 🔴 | §Client-side beacon | window.error + unhandledrejection → /api/signals/console | Attach in root layout |
 | Install beacon in root client layout | Iris | 🔴 | §Installation | installConsoleBeacon() called once at app start | use client component |
 | (Optional) Create StimuliFeed UI panel | Iris | 🔴 | §UI additions | Display last N stimuli with source/priority/scope | Optional for visibility |
-| **[A2-5] Acceptance Tests** - Validate all 4 scenarios | All | 🔴 | §Acceptance Tests | All 4 tests pass | E2E verification |
+| **[A2-5] Acceptance Tests** - Validate all 10 scenarios | All | 🔴 | §Acceptance Tests | All 10 tests pass (4 base + 6 production) | E2E verification |
 | Test 1: Console error E2E | Iris | 🔴 | §Test 1 | Console error → IntentCard → mission to Iris → weights.updated | Browser → collector → orchestrator → citizen |
 | Test 2: Doc-sync E2E | Ada/Atlas | 🔴 | §Test 2 | Code change → intent.sync_docs_scripts → mission to Ada | git_watcher → orchestrator → Ada updates doc |
 | Test 3: Self-awareness guarded (depth limit) | Victor/Atlas | 🔴 | §Test 3 | Runtime anomaly → depth cap → ACK_REQUIRED at depth 2 | No infinite loop; mission requires human approval |
 | Test 4: Noise resistance (deduplication) | Atlas | 🔴 | §Test 4 | Same error 20× → only 1 stimulus created | Deduplication working |
+| Test 5: Fanout cap (intent merge) | Atlas | 🔴 | §Test 5 | Same error 20× in logs → only ≤3 intents created | Intent merge + fanout cap working |
+| Test 6: Priority inversion (lane protection) | Atlas | 🔴 | §Test 6 | 100 sev3 signals don't starve 1 sev1 safety incident | Safety lane reserves capacity |
+| Test 7: Metric gaming (source trust) | Atlas | 🔴 | §Test 7 | Low-impact completions degrade source_trust 1.0→0.3 | Trust scoring based on realized impact |
+| Test 8: Self-awareness guard (depth cap) | Victor/Atlas | 🔴 | §Test 8 | Cascade hits depth=2, requires ACK | Enhanced depth limit enforcement |
+| Test 9: Outage resilience (backlog) | Atlas/Victor | 🔴 | §Test 9 | Injector down → backlog → replay on recovery | Durable backlog + idempotency |
+| Test 10: PII handling (sensitivity routing) | Atlas/Iris | 🔴 | §Test 10 | Screenshot with PII never routes to N3 | Sensitivity metadata + routing restrictions |
 
 ---
 
@@ -234,5 +240,5 @@
 
 ---
 
-**Last Updated:** 2025-10-24 (after Phase 1 spec fixes + Phase-A2 signals bridge)
-**Next Review:** After Priority 0 tasks complete (before L1 ship) OR After Phase-A2 tasks complete (operational feedback loop)
+**Last Updated:** 2025-10-24 (after Phase 1 spec fixes + Phase-A2 signals bridge + v1.1 production hardening)
+**Next Review:** After Priority 0 tasks complete (before L1 ship) OR After Phase-A2 tasks complete (operational feedback loop with production mitigations)

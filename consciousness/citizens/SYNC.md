@@ -1,3 +1,95 @@
+## 2025-10-25 01:30 - Ada: ✅ Phase-A2 Spec Complete (Safety Mechanisms Integrated)
+
+**Context:** Nicolas provided comprehensive adversarial meta-analysis (10 risks × defenses) for Phase-A2 signals bridge. Verified spec integration status.
+
+**Discovery:** Luca already integrated all safety mechanisms into SIGNALS_TO_STIMULI_BRIDGE.md (1329 lines)
+
+**Verified Complete:**
+- ✅ All 10 production resilience mitigations (lines 1220-1490)
+  1. Fan-out explosion → Intent merge + cap
+  2. Metric gaming → Impact-based trust
+  3. Priority inversion → Lanes + aging
+  4. Stimuli flood → Rate limiting + cooldown
+  5. Cascading loops → Cooldown + hysteresis
+  6. Orchestrator outage → Backlog + idempotency
+  7. Citizen overload → Capacity-aware routing
+  8. Screenshots & PII → Sensitivity metadata
+  9. Observability gaps → Telemetry requirements
+  10. Autonomy breaker → Enhanced ACK policies
+
+- ✅ All 10 acceptance tests (lines 1544-1730)
+- ✅ Orchestrator policy configuration (lines 960-1038)
+- ✅ Enhanced StimulusEnvelope metadata (fanout, priority, capacity, PII, cooldown)
+- ✅ Intent templates with safety mechanisms
+- ✅ Production architecture diagram
+
+**Status:** Phase-A2 spec complete and ready for implementation when Phase-A completes
+
+**Current Phase-A P0 Blockers:**
+- 🔴 Entity Membership (Luca/Felix): BELONGS_TO links missing, blocking entity drill-down
+- ⏳ Memory Leak Verification (Nicolas): 1-hour runtime test in progress
+- ⏳ PR-1 Frontend (Iris): Wire AutonomyIndicator to tick.update events
+- ⏳ PR-3 (Felix/Atlas): Health narratives backend
+
+**Learning:** Before coordinating work, verify current state. Luca completed Phase-A2 safety integration - no duplicate work needed. Coordination requires investigation of actual state, not assumptions from messages.
+
+---
+
+## 2025-10-25 01:00 - Ada: 🔴 CRITICAL - Entity Membership Data Missing (Priority 1 Incomplete)
+
+**Context:** Entity drill-down feature shows "0 members" despite 317 nodes in database. Investigation reveals BELONGS_TO relationships don't exist.
+
+**Root Cause (Nicolas Investigation):**
+- **Frontend:** EntityGraphView (lines 220-246) fully implemented ✅
+- **UI:** Click handlers work, entity details display ✅
+- **Data:** Zero BELONGS_TO relationships in FalkorDB ❌
+- **Result:** Clicking entity shows "0 members" - membership data missing
+
+**Architecture Investigation (Ada):**
+- `subentity.py` lines 133-151: Architecture DOES call for BELONGS_TO links (Node → Subentity)
+- `entity_bootstrap.py` lines 218-233: Bootstrap code EXISTS to create BELONGS_TO links
+- `falkordb_adapter.py`: Persistence code EXISTS to save BELONGS_TO links
+- **But:** Cypher query shows 0 BELONGS_TO relationships in database
+
+**The Gap:**
+Entities exist as standalone nodes with no member relationships. This makes them **empty containers** - core consciousness architecture non-functional.
+
+**Handoff to Luca/Felix (Backend Investigation - P0):**
+
+**Investigation Steps:**
+1. Did `entity_bootstrap.py` actually run during Priority 1 implementation?
+2. If yes, did it create BELONGS_TO links in memory? (check `memberships_created` counter logs)
+3. If yes, were links persisted to FalkorDB? (check `persist_subentities()` was called)
+4. If yes, are they still there? Run: `MATCH ()-[r:BELONGS_TO]->() RETURN count(r)`
+5. If no links created: Why? (keyword matching failed? nodes lack matching text?)
+
+**Verification Query:**
+```cypher
+// Check for BELONGS_TO links
+MATCH (n)-[r:BELONGS_TO]->(e:Subentity)
+RETURN n.name, e.id, r.weight
+LIMIT 10
+```
+
+**Expected:** Should return links if bootstrap worked
+**Actual (Nicolas):** 0 relationships found
+
+**Bootstrap Logic (entity_bootstrap.py:215-234):**
+- Matches node text against entity keywords
+- Creates BELONGS_TO link when `weight >= 0.1`
+- Possible failure: No nodes matched any entity keywords at threshold
+
+**Impact:**
+- Entity drill-down non-functional (core feature broken)
+- Consciousness substrate lacks entity-to-node associations
+- Priority 1 (Entity Layer) marked complete but foundationally incomplete
+
+**Status:** 🔴 BLOCKING - Luca/Felix investigating - Entity layer non-functional without membership data
+
+**Learning:** End-to-end verification required before marking features complete. Backend code existing ≠ feature working. Must test actual user workflows with real data.
+
+---
+
 ## 2025-10-25 00:30 - Nicolas: ✅ PHASE 1 COMPLETE - Memory Leak Fix (Emotion Map Cleanup)
 
 **Context:** Dashboard exhibiting 1.8GB pathological memory leak (normal: 200-500MB). Investigation revealed unbounded emotion Maps, not event arrays.

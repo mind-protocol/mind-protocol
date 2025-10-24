@@ -70,6 +70,7 @@ export function EntityMoodMap({
   const svgRef = useRef<SVGSVGElement>(null);
   const simulationRef = useRef<d3.Simulation<EntityNode, undefined> | null>(null);
   const nodesRef = useRef<Map<string, EntityNode>>(new Map());
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Initialize SVG structure and simulation ONCE
   useEffect(() => {
@@ -80,6 +81,20 @@ export function EntityMoodMap({
     // Create main group (only once)
     if (svg.select('g.entities').empty()) {
       svg.append('g').attr('class', 'entities');
+    }
+
+    const g = svg.select<SVGGElement>('g.entities');
+
+    // Create zoom behavior (only once)
+    if (!zoomRef.current) {
+      const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.1, 4]) // Allow zoom from 10% to 400%
+        .on('zoom', (event) => {
+          g.attr('transform', event.transform);
+        });
+
+      svg.call(zoom);
+      zoomRef.current = zoom;
     }
 
     // Create force simulation (only once)
