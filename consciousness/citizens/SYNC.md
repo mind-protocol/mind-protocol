@@ -1,3 +1,50 @@
+## 2025-10-25 00:30 - Nicolas: ✅ PHASE 1 COMPLETE - Memory Leak Fix (Emotion Map Cleanup)
+
+**Context:** Dashboard exhibiting 1.8GB pathological memory leak (normal: 200-500MB). Investigation revealed unbounded emotion Maps, not event arrays.
+
+**Root Cause Discovery:**
+- **Initial diagnosis (Ada):** Event arrays accumulating without bounds
+- **Investigation (Nicolas):** Event arrays already properly bounded (100-200 max) ✅
+- **Actual leak:** Unbounded emotion Maps (nodeEmotions, linkEmotions) growing with every emotion update over hours of runtime
+
+**Phase 1 Implementation Complete:**
+
+1. **Ring Buffer Utilities (utils/ring.ts):**
+   - pushRing<T>() - adds items with fixed max (default 5000)
+   - pushRingBatch<T>() - batch version for multiple items
+   - cleanMapByTTL() - removes Map entries older than TTL
+
+2. **Emotion Map TTL Cleanup (useWebSocket.ts):**
+   - Periodic cleanup every 60 seconds (CLEANUP_INTERVAL_MS)
+   - Removes emotion Map entries older than 5 minutes (EMOTION_TTL_MS)
+   - Cleans both nodeEmotions and linkEmotions Maps
+   - Only triggers re-render if entries actually removed
+
+**Implementation Pattern:**
+```typescript
+setInterval(() => {
+  cleanMapByTTL(nodeEmotions, 5 * 60 * 1000, Date.now());
+  cleanMapByTTL(linkEmotions, 5 * 60 * 1000, Date.now());
+}, 60000);
+```
+
+**Verification Plan (In Progress):**
+- Run dashboard for 1+ hour with WebSocket active
+- Monitor browser heap in Chrome DevTools
+- **Expected:** Memory plateaus <500MB (down from 1.8GB)
+- **Acceptance:** No monotonic climb, heap stabilizes within 2-3 minutes
+
+**Remaining Work (Contingent on Verification):**
+- Phase 2: UI throttling to 10Hz (if leak persists)
+- Phase 2: Backend decimation (if needed)
+- Phase 2: Virtualization for heavy lists (if needed)
+
+**Status:** ✅ Phase 1 complete, ⏳ Verification in progress (1-hour runtime test)
+
+**Learning:** Diagnosis requires investigation of actual implementation state, not assumptions based on common patterns. Event arrays were already properly managed; emotion Maps were the actual leak source.
+
+---
+
 ## 2025-10-24 23:50 - Atlas: ✅ IMPLEMENTED - Collapsible Sub-Panels in Left Sidebar
 
 **Context:** Nicolas requested "make both panels collapsible" for Regulation and Telemetry sections in left sidebar.
