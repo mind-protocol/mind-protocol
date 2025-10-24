@@ -172,16 +172,15 @@ class EntityBootstrap:
             return 0
 
         # Content-bearing node types for membership
+        # Using actual NodeType enum values (some types from schema don't exist in enum yet)
         content_types = [
             NodeType.CONCEPT,
             NodeType.REALIZATION,
-            NodeType.PERSONAL_PATTERN,
+            NodeType.PATTERN,  # Covers Personal_Pattern
             NodeType.PRINCIPLE,
             NodeType.ANTI_PATTERN,
             NodeType.MEMORY,
-            NodeType.COPING_MECHANISM,
-            NodeType.PERSONAL_GOAL,
-            NodeType.WOUND
+            NodeType.GOAL  # Covers Personal_Goal
         ]
 
         # Compute keyword scores for all nodes
