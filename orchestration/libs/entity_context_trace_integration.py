@@ -122,8 +122,8 @@ class EntityContextManager:
             self.graph_store.switch_graph(graph_name)
             result = self.graph_store.query(query)
 
-            if result and result.result_set and len(result.result_set) > 0:
-                row = result.result_set[0]
+            if result and len(result) > 0:
+                row = result[0]
                 entity_id = row[0]  # entity_id
                 ratio = row[3]  # ratio
 
