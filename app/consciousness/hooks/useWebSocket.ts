@@ -29,6 +29,8 @@ const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
 const MAX_RECENT_STRIDES = 100; // Keep last 100 strides for attribution
 const MAX_FRAME_EVENTS = 200; // Keep last 200 frame.start events (Priority 3 tick speed viz)
 const MAX_WEIGHT_LEARNING_EVENTS = 200; // Keep last 200 weight learning events (Priority 4 dual-view viz)
+const MAX_STRIDE_SELECTION_EVENTS = 200; // Keep last 200 stride selection events (Priority 5 fan-out viz)
+const MAX_PHENOMENOLOGY_EVENTS = 200; // Keep last 200 phenomenology events (Priority 6 health viz)
 const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
 /**
@@ -104,6 +106,13 @@ export function useWebSocket(): WebSocketStreams {
 
   // Priority 4: Weight learning events
   const [weightLearningEvents, setWeightLearningEvents] = useState<WeightsUpdatedTraceEvent[]>([]);
+
+  // Priority 5: Stride selection events
+  const [strideSelectionEvents, setStrideSelectionEvents] = useState<StrideSelectionEvent[]>([]);
+
+  // Priority 6: Phenomenology health events
+  const [phenomenologyMismatchEvents, setPhenomenologyMismatchEvents] = useState<PhenomenologyMismatchEvent[]>([]);
+  const [phenomenologyHealthEvents, setPhenomenologyHealthEvents] = useState<PhenomenologicalHealthEvent[]>([]);
 
   // WebSocket reference (persists across renders)
   const wsRef = useRef<WebSocket | null>(null);
@@ -377,6 +386,35 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        // Priority 5: Stride selection events
+        case 'stride.selection': {
+          const strideSelectionEvent = data as StrideSelectionEvent;
+          setStrideSelectionEvents(prev => {
+            const updated = [...prev, strideSelectionEvent];
+            return updated.slice(-MAX_STRIDE_SELECTION_EVENTS);
+          });
+          break;
+        }
+
+        // Priority 6: Phenomenology health events
+        case 'phenomenology.mismatch': {
+          const mismatchEvent = data as PhenomenologyMismatchEvent;
+          setPhenomenologyMismatchEvents(prev => {
+            const updated = [...prev, mismatchEvent];
+            return updated.slice(-MAX_PHENOMENOLOGY_EVENTS);
+          });
+          break;
+        }
+
+        case 'phenomenological_health': {
+          const healthEvent = data as PhenomenologicalHealthEvent;
+          setPhenomenologyHealthEvents(prev => {
+            const updated = [...prev, healthEvent];
+            return updated.slice(-MAX_PHENOMENOLOGY_EVENTS);
+          });
+          break;
+        }
+
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
       }
@@ -493,6 +531,13 @@ export function useWebSocket(): WebSocketStreams {
 
     // Priority 4: Weight learning
     weightLearningEvents,
+
+    // Priority 5: Stride selection
+    strideSelectionEvents,
+
+    // Priority 6: Phenomenology health
+    phenomenologyMismatchEvents,
+    phenomenologyHealthEvents,
 
     // Connection
     connectionState,

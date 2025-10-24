@@ -724,6 +724,13 @@ export interface WebSocketStreams {
   // Priority 4: Weight learning events
   weightLearningEvents: WeightsUpdatedTraceEvent[];
 
+  // Priority 5: Stride selection events
+  strideSelectionEvents: StrideSelectionEvent[];
+
+  // Priority 6: Phenomenology health events
+  phenomenologyMismatchEvents: PhenomenologyMismatchEvent[];
+  phenomenologyHealthEvents: PhenomenologicalHealthEvent[];
+
   // Connection state
   connectionState: WebSocketState;
   error: string | null;
