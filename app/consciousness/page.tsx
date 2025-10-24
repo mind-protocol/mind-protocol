@@ -16,6 +16,8 @@ import { InstrumentPanel } from './components/InstrumentPanel';
 import { AffectiveTelemetryPanel } from './components/AffectiveTelemetryPanel';
 import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
 import { TierBreakdownPanel } from './components/TierBreakdownPanel';
+import ThreeFactorTickTimeline from './components/ThreeFactorTickTimeline';
+import AutonomyIndicator from './components/AutonomyIndicator';
 // import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
 // import { IdentityMultiplicityPanel } from './components/IdentityMultiplicityPanel';
 // import { FoundationsEnrichmentsPanel } from './components/FoundationsEnrichmentsPanel';
