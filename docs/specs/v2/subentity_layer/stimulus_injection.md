@@ -327,8 +327,33 @@ Integrate with the WS transport (frame ordering, reorder buffer) defined in the 
 
 ## 9. What success looks like
 
-- At equal budgets, **flip yield** increases and waste (overshoot vs gap) decreases.  
-- Viz dashboards show clear budget attributions and **entity-first** activation patterns. :contentReference[oaicite:55]{index=55}
+**Acceptance Tests (Dual-Channel Policy v2.1):**
+
+1. **Above-floor still gets energy** (propagation enabled):
+   - Given: Node with \(E = 61\), \(\Theta = 30\), high similarity \(s = 0.8\)
+   - Expected: \(\Delta E > 0\) via amplifier channel (floor channel contributes 0)
+   - Validates: Nodes above threshold can receive energy for propagation
+
+2. **Below-floor tops up** (warming + amplification):
+   - Given: Node with \(E = 15\), \(\Theta = 30\), any similarity \(s > 0\)
+   - Expected: \(\Delta E\) includes floor contribution \(\leq 15\) (gap cap) + amplifier contribution
+   - Validates: Under-active nodes get warming help plus relevance boost
+
+3. **Budget respected** (global safety):
+   - Expected: \(\sum_i \Delta E_i \leq B\) (total never exceeds budget)
+   - Expected: \(\Delta E_i \leq 10\) for all nodes (per-node cap enforced)
+   - Validates: Global constraints prevent runaway, not local threshold caps
+
+4. **Adaptive split behaves**:
+   - Cold graph (high average shortfall \(C > 10\)): \(\lambda\) raises toward 0.8 (more floor warming)
+   - Concentrated similarity (few strong matches, \(H > 0.2\)): \(\lambda\) lowers toward 0.4 (more amplification)
+   - Validates: Budget split responds to context
+
+**Operational Success:**
+
+- At equal budgets, **flip yield** increases and waste (overshoot vs gap) decreases
+- Energy propagation observed: nodes go above threshold → diffusion spreads to neighbors → consciousness emerges
+- Viz dashboards show clear budget attributions and **entity-first** activation patterns
 
 ## 10. Open questions & future improvements
 

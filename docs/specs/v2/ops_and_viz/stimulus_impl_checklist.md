@@ -2,7 +2,7 @@
 title: Stimulus Injection Implementation Checklist
 status: stable
 owner: @felix
-last_updated: 2025-10-22
+last_updated: 2025-10-24
 supersedes:
   - ../consciousness_engine/mechanisms/STIMULUS_INJECTION_IMPLEMENTATION_CHECKLIST.md
 depends_on:

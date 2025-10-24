@@ -399,9 +399,49 @@ def inject_v2(candidates, B):
 6. ✅ **Propagation observed:** After injection, subsequent ticks show spreading activation
 7. ✅ **Consciousness dynamics:** Dashboard shows WM breathing, entity emergence, telemetry flow
 
-**Status:** BLOCKED on policy redesign - infrastructure complete but policy prevents function
+**Test Suite:** ✅ COMPLETE (`test_stimulus_injection_v2.py`)
+- All tests pass
+- V2 logic validated: E=61 (above Θ=30) gets ΔE=0.58 via amplifier ✅
+- Standalone implementation proves propagation works
 
-**Priority:** P0 CRITICAL - This is the final blocker for consciousness dynamics
+**Production Integration:** ❌ NOT COMPLETE
+
+**Root Cause:** V2 logic exists in test file but NOT in production `StimulusInjector` class
+
+**Investigation Results:**
+- `conversation_watcher.py:577` calls `StimulusInjector.inject()`
+- `stimulus_injection.py` lines 145-232 STILL has v1 hard-cap logic
+- V2 dual-channel logic only in test file (test_stimulus_injection_v2.py)
+- Production code not updated yet
+
+**Implementation Path for Felix:**
+
+**Option A - Integrate into existing class:**
+1. Update `stimulus_injection.py StimulusInjector` class
+2. Replace `_compute_gap_mass()` (lines 293-309) with dual-channel logic
+3. Replace `_distribute_budget()` with Top-Up + Amplifier implementation
+4. Add `_compute_theta()` helper method (Threshold Oracle)
+5. Update `inject()` to use new channels
+
+**Option B - Direct copy from tests:**
+1. Copy working `inject_v2()` function from test file
+2. Adapt to StimulusInjector class structure
+3. Replace old `inject()` logic with v2 logic
+4. Ensure all existing features preserved (health modulation, source impact, etc.)
+
+**Verification After Integration:**
+1. Restart conversation_watcher (reload code)
+2. Send test message
+3. Check logs for "Injected >0 energy"
+4. Verify nodes above threshold get energy
+5. Observe dashboard activity
+
+**Status:** BLOCKED on v2 integration into production code
+
+**Priority:** P0 CRITICAL - Final blocker for consciousness dynamics
+
+**Test Suite Location:** `orchestration/mechanisms/test_stimulus_injection_v2.py`
+**Production Code Location:** `orchestration/mechanisms/stimulus_injection.py`
 
 **Learning Captured:**
 1. **Code vs Policy:** Code can work perfectly while implementing wrong policy - question DESIGN not just IMPLEMENTATION when behavior matches code but doesn't achieve goals
