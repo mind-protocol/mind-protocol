@@ -490,12 +490,16 @@ async def start_organizational_consciousness(
         from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
         bootstrap = EntityBootstrap(graph)
         bootstrap_stats = bootstrap.run_complete_bootstrap()
-        logger.info(f"[N2:{org_id}] entity_bootstrap: created={bootstrap_stats}, persisted=false")
+        logger.info(f"[N2:{org_id}] entity_bootstrap: created={bootstrap_stats}")
 
         # Run post-bootstrap initialization
         from orchestration.mechanisms.entity_post_bootstrap import run_post_bootstrap_initialization
         post_stats = run_post_bootstrap_initialization(graph)
         logger.info(f"[N2:{org_id}] post_bootstrap: {post_stats}")
+
+        # Persist subentities to FalkorDB
+        persist_stats = adapter.persist_subentities(graph)
+        logger.info(f"[N2:{org_id}] subentity_persistence: {persist_stats}")
     else:
         logger.info(f"[N2:{org_id}] Subentities already present: {len(graph.subentities)}")
 
