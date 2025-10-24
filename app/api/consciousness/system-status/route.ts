@@ -176,28 +176,41 @@ async function checkTRACECapture(): Promise<ComponentStatus> {
 
 async function checkStimulusInjection(): Promise<ComponentStatus> {
   try {
-    // Stimulus injection is part of conversation_watcher
-    // Uses the same heartbeat, but represents a separate capability
-    const watcherStatus = await checkConversationWatcher();
+    // Check for heartbeat file written by stimulus_injection_service.py
+    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\orchestration\\services\\.heartbeats\\stimulus_injection.heartbeat';
 
-    if (watcherStatus.status === 'running') {
+    if (!existsSync(heartbeatPath)) {
+      return {
+        name: 'Stimulus Injection',
+        status: 'stopped',
+        details: 'No heartbeat file found',
+      };
+    }
+
+    const stats = await readFile(heartbeatPath, 'utf-8');
+    const heartbeatData = JSON.parse(stats);
+    const lastBeat = new Date(heartbeatData.timestamp);
+    const now = new Date();
+    const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;
+
+    if (ageSeconds < 30) {
       return {
         name: 'Stimulus Injection',
         status: 'running',
-        details: 'Energy injection active',
+        details: `Service active (${Math.floor(ageSeconds)}s ago)`,
       };
     } else {
       return {
         name: 'Stimulus Injection',
-        status: watcherStatus.status,
-        details: watcherStatus.status === 'stopped' ? 'Inactive' : 'Error',
+        status: 'stopped',
+        details: `Stale heartbeat (${Math.floor(ageSeconds)}s old)`,
       };
     }
   } catch (error) {
     return {
       name: 'Stimulus Injection',
       status: 'error',
-      details: 'Status check failed',
+      details: 'Could not read heartbeat file',
     };
   }
 }

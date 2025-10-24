@@ -2,9 +2,10 @@
   "context_id": "2025-10-24_23-28-24",
   "entity_type": "citizen",
   "entity_id": "atlas",
-  "created_at": "2025-10-24T21:28:24.314705+00:00",
-  "created_by": "precompact_hook",
-  "last_updated": "2025-10-24T21:28:24.314705+00:00",
-  "message_count": 0,
-  "has_tool_calls": false
+  "created_at": "2025-10-24T21:29:14.779256+00:00",
+  "last_updated": "2025-10-24T21:29:14.779256+00:00",
+  "message_count": 1,
+  "has_tool_calls": false,
+  "closed_at": "2025-10-24T21:29:15.380104+00:00",
+  "closed_reason": "compact"
 }
