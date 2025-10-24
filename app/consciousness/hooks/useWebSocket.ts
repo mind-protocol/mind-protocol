@@ -17,7 +17,8 @@ import type {
   NodeEmotionUpdateEvent,
   LinkEmotionUpdateEvent,
   StrideExecEvent,
-  EmotionMetadata
+  EmotionMetadata,
+  TickFrameEvent
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 
@@ -428,10 +429,30 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
-        case 'tick_frame_v1':
-          // V1 tick frame events - silently ignore for now
-          // These are handled by frame.start events in V2 architecture
+        case 'tick_frame_v1': {
+          // MAIN DASHBOARD UPDATE EVENT - comprehensive frame state
+          const tickEvent = data as TickFrameEvent;
+
+          console.log('[WebSocket] tick_frame_v1:', {
+            citizen: tickEvent.citizen_id,
+            frame: tickEvent.frame_id,
+            entities: tickEvent.entities.length,
+            nodesActive: tickEvent.nodes_active,
+            consciousnessState: tickEvent.consciousness_state
+          });
+
+          // Update V2 state with tick frame data
+          setV2State(prev => ({
+            ...prev,
+            currentFrame: tickEvent.frame_id,
+            rho: tickEvent.rho ?? prev.rho,
+            // Could add more tick_frame_v1 specific state here if needed
+          }));
+
+          // Note: Entity data from tick_frame_v1 is not currently stored in state
+          // but could be used for entity visualization if needed
           break;
+        }
 
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);

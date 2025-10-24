@@ -597,6 +597,47 @@ export interface PhenomenologicalHealthEvent {
 }
 
 /**
+ * Tick Frame Event (V1 Format)
+ *
+ * Complete frame summary with all metrics - MAIN DASHBOARD UPDATE EVENT
+ * This is the primary event for dashboard rendering with comprehensive state.
+ *
+ * Source: Backend control_api.py consciousness engine broadcasts
+ * Frequency: ~10 Hz (once per consciousness frame)
+ */
+export interface TickFrameEvent {
+  type: 'tick_frame_v1';
+  event_type: 'tick_frame_v1';
+  timestamp: string;
+  citizen_id: string;
+  frame_id: number;
+  v: '1';
+  t_ms: number;
+  tick_duration_ms: number;
+  entities: Array<{
+    id: string;
+    name: string;
+    kind: 'functional' | 'semantic';
+    color: string;
+    energy: number;
+    theta: number;
+    active: boolean;
+    members_count: number;
+    coherence: number;
+    emotion_valence: number | null;
+    emotion_arousal: number | null;
+    emotion_magnitude: number | null;
+  }>;
+  nodes_active: number;
+  nodes_total: number;
+  strides_executed: number;
+  stride_budget: number;
+  rho: number;
+  coherence: number;
+  consciousness_state?: string;
+}
+
+/**
  * Union type of all WebSocket events
  */
 export type WebSocketEvent =
@@ -610,6 +651,7 @@ export type WebSocketEvent =
   | FrameEndEvent
   | NodeEmotionUpdateEvent
   | LinkEmotionUpdateEvent
+  | TickFrameEvent
   | StrideExecEvent
   | WeightsUpdatedTraceEvent
   | WeightsUpdatedTraversalEvent
