@@ -210,6 +210,101 @@ def compute_multiplicity_health(
 - Conflict + good outcomes → productive tension (can be healthy)
 - Excessive flipping → instability (degraded regardless of outcomes)
 
+#### 4. Thrashing Score (Composite Instability Detection)
+
+**Critical distinction:** High flip rate alone doesn't mean thrashing. Thrashing means **unproductive instability** - frequent switching WITH low progress and low efficiency.
+
+```python
+def compute_thrashing_score(
+    flip_count: int,
+    window_size: int,
+    task_progress_rate: float,   # 0.0-1.0 recent progress
+    energy_efficiency: float       # 0.0-1.0 energy → outcomes
+) -> tuple[float, bool]:
+    """
+    Compute thrashing score from identity flip rate and productivity signals.
+
+    Thrashing = high flip rate + low progress + low efficiency
+    NOT thrashing = high flip rate + high progress/efficiency (productive switching)
+
+    Returns:
+        (thrashing_score, is_thrashing)
+    """
+    # Flip EMA (exponential moving average of flip rate)
+    flip_rate = flip_count / window_size
+    flip_ema = flip_rate  # In practice, maintain running EMA
+
+    # Inverse productivity (low progress/efficiency → high score)
+    inverse_progress = 1.0 - task_progress_rate
+    inverse_efficiency = 1.0 - energy_efficiency
+
+    # Composite thrashing score
+    # Formula: σ_flip * (1 - progress) * (1 - efficiency)
+    # Range: 0.0 (no thrashing) to 1.0 (severe thrashing)
+    thrashing_score = flip_ema * inverse_progress * inverse_efficiency
+
+    # Threshold for "is_thrashing" flag
+    # Requires ALL THREE factors elevated:
+    # - flip_rate > 0.15 (>15% of frames flip)
+    # - progress < 0.5 (low progress)
+    # - efficiency < 0.5 (low efficiency)
+    is_thrashing = (
+        flip_rate > 0.15 and
+        task_progress_rate < 0.5 and
+        energy_efficiency < 0.5
+    )
+
+    return thrashing_score, is_thrashing
+```
+
+**Why this prevents false alarms:**
+
+**Scenario 1: Busy but productive (NOT thrashing)**
+- flip_rate: 0.20 (high switching)
+- task_progress_rate: 0.80 (good progress)
+- energy_efficiency: 0.75 (efficient)
+- thrashing_score: 0.20 * (1-0.80) * (1-0.75) = 0.20 * 0.20 * 0.25 = **0.01** (low)
+- is_thrashing: **FALSE** (progress is high)
+
+**Scenario 2: Stable but stuck (NOT thrashing)**
+- flip_rate: 0.05 (low switching)
+- task_progress_rate: 0.20 (low progress)
+- energy_efficiency: 0.30 (low efficiency)
+- thrashing_score: 0.05 * (1-0.20) * (1-0.30) = 0.05 * 0.80 * 0.70 = **0.028** (low)
+- is_thrashing: **FALSE** (flip rate is low - just stuck, not thrashing)
+
+**Scenario 3: Unproductive thrashing (TRUE thrashing)**
+- flip_rate: 0.25 (high switching)
+- task_progress_rate: 0.15 (low progress)
+- energy_efficiency: 0.20 (low efficiency)
+- thrashing_score: 0.25 * (1-0.15) * (1-0.20) = 0.25 * 0.85 * 0.80 = **0.17** (high)
+- is_thrashing: **TRUE** (all three factors elevated)
+
+**Telemetry emission:**
+
+Include thrashing score in `health.phenomenological` events:
+```json
+{
+  "event_type": "health.phenomenological",
+  "thrashing_score": 0.17,
+  "is_thrashing": true,
+  "thrashing_details": {
+    "flip_rate": 0.25,
+    "task_progress_rate": 0.15,
+    "energy_efficiency": 0.20
+  }
+}
+```
+
+**UI Integration:**
+
+Display thrashing banner when `is_thrashing === true`:
+```
+⚠️ THRASHING DETECTED: High identity switching with low progress/efficiency
+   Flip rate: 25% | Progress: 15% | Efficiency: 20%
+   Recommendation: Reduce task complexity or take break
+```
+
 ---
 
 ## Inputs/Outputs
