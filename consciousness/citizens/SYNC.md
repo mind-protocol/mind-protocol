@@ -9,6 +9,87 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 20:50 - Ada: CRITICAL FINDING - Entity Loading Bug Identified
+
+**Context:** Executed Priority 1-3 verification checklist after restart resolution.
+
+**CRITICAL DISCOVERY:**
+
+**Issue:** Entities persist to FalkorDB successfully BUT engines don't load them on startup.
+
+**Evidence:**
+
+FalkorDB Entity Counts (Direct Query):
+- ✅ Ada: 8 Subentity nodes
+- ✅ Felix: 8 Subentity nodes
+- ✅ Victor: 8 Subentity nodes
+- ✅ Iris: 8 Subentity nodes
+- ✅ Atlas: 8 Subentity nodes
+- ❌ Luca: 0 Subentity nodes
+- ❌ Marco: 0 Subentity nodes
+- ❌ Piero: 0 Subentity nodes
+- ❌ mind_protocol: 0 Subentity nodes
+
+API Status (All Citizens):
+- ❌ ALL showing `sub_entity_count: 1` (only self-entity)
+- Expected: `sub_entity_count: 9` (self + 8 functional entities)
+
+**Root Cause Analysis:**
+
+Two distinct bugs identified:
+
+1. **ENGINE LOADING BUG (CRITICAL):**
+   - Active citizens HAVE entities in FalkorDB (8 each)
+   - But engines show count: 1 (only self-entity loaded)
+   - Entity reload logic missing or failing in engine initialization
+   - Location: `consciousness_engine_v2.py` initialization or graph loading
+
+2. **INCOMPLETE BOOTSTRAP (LOWER PRIORITY):**
+   - Dormant citizens (Luca, Marco, Piero, mind_protocol) never got entity bootstrap
+   - This is expected - they need active conversation to trigger bootstrap
+   - Not blocking Priority 1-3 verification
+
+**Impact:**
+
+Priority 1 (Entity Layer):
+- ❌ Entities not operational in engines (blocking)
+- ❌ BELONGS_TO links exist in DB but not loaded
+- ❌ Entity.flip events won't fire (no entities activated)
+
+Priority 2-3:
+- ⚠️ Backend code complete but cannot verify without entities loaded
+- ⚠️ Three-factor tick, 3-tier strengthening blocked by entity loading
+
+Priority 4:
+- ⚠️ Write-path complete (Felix) but entity context requires loaded entities
+
+**Next Actions:**
+
+**CRITICAL PATH (Felix or Atlas):**
+1. Find where engines load graph on startup
+2. Check if Subentity nodes are being loaded from FalkorDB
+3. Fix: Ensure `graph.load()` includes Subentity nodes and BELONGS_TO links
+4. Verify: After fix, check API shows `sub_entity_count: 9` for active citizens
+
+**Files to Investigate:**
+- `orchestration/mechanisms/consciousness_engine_v2.py` (engine init)
+- `orchestration/libs/utils/falkordb_adapter.py` (graph loading at line 813)
+- Entity bootstrap script (check if it's calling persist after creation)
+
+**Verification Checklist Status:**
+
+- ✅ Step 1: Guardian restart (operational)
+- ⚠️ Step 2: Bootstrap logs (entities created in memory)
+- ✅ Step 3: FalkorDB verification (8 entities present for active citizens)
+- ❌ Step 4: API verification (FAILING - count: 1 instead of 9)
+- ⏸️ Steps 5-10: Blocked until entity loading fixed
+
+**Priority:** CRITICAL - All Priority 1-4 verification blocked until entity loading works.
+
+**Handoff:** Felix (consciousness domain) or Atlas (persistence infrastructure) - entity loading is boundary between both domains.
+
+---
+
 ## 2025-10-24 20:40 - Victor: CRITICAL - Conversation Watcher Memory Leak
 
 **Symptom:** Guardian auto-restarting due to memory pressure (detected by Nicolas).
