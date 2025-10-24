@@ -286,7 +286,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     const simulation = d3.forceSimulation(nodes as any)
       .force('link', d3.forceLink(validLinks)
         .id((d: any) => d.id)
-        .distance(12) // Links 4x longer than previous value of 3
+        .distance(3) // Short link distance for tight global clustering
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
       .force('center', d3.forceCenter(width / 2, height / 2))
