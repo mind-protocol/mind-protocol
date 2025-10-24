@@ -320,6 +320,14 @@ class WeightLearnerV2:
         if last_update is None:
             return 1.0  # First update
 
+        # Defensive: Handle case where last_update is int/float (timestamp) instead of datetime
+        if isinstance(last_update, (int, float)):
+            # Convert Unix timestamp (seconds) to datetime
+            last_update = datetime.fromtimestamp(last_update)
+        elif not isinstance(last_update, datetime):
+            # Unknown type, treat as first update
+            return 1.0
+
         delta_t = (datetime.now() - last_update).total_seconds()
         tau = 86400.0  # 1 day half-life
         eta = 1.0 - np.exp(-delta_t / tau)

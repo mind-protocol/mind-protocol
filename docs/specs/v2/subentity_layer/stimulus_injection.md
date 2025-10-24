@@ -1,17 +1,20 @@
 ---
-title: Stimulus Injection (Spec v2)
+title: Stimulus Injection (Spec v2.1)
 status: stable (spec), draft (impl)
 owner: @felix
-last_updated: 2025-10-22
+last_updated: 2025-10-24
+version_history:
+  - v2.1 (2025-10-24): Critical policy fix - replaced "gap-capped budget" with "floor-biased dual-channel injection". Threshold is activation floor, not hard cap. Propagation requires energy above threshold.
+  - v2.0 (2025-10-22): Initial stable spec
 depends_on:
   - ../entity_layer/subentity_layer.md
   - ../runtime_engine/traversal_v2.md
   - ../ops_and_viz/observability_events.md
 summary: >
   Convert incoming reality (stimuli) into targeted energy injections over nodes (and
-  via subentity channels) using entropy-aware retrieval, gap-capped budgeting, health
-  & source gates, directional link priors, and peripheral amplification. Emits rich
-  observability for viz/telemetry.
+  via subentity channels) using entropy-aware retrieval, floor-biased dual-channel
+  injection (NOT gap-capped), health & source gates, directional link priors, and
+  peripheral amplification. Emits rich observability for viz/telemetry.
 ---
 
 # Stimulus Injection (Spec v2)
@@ -37,6 +40,42 @@ Stimuli (user messages, tool results, timers) must **shape activation** quickly 
 7) **Direction-aware link injection**: if the match is a link, split energy to endpoints using learned directional priors.
 8) **Subentity channeling**: split budget across active entities by affinity × recent success.
 All eight pieces are enumerated as tasks in the implementation checklist.
+
+### 2.1.1 Floor-Biased Injection Policy (Dual-Channel)
+
+**Motivation:** Threshold (\(\Theta\)) is the **activation floor**, not a hard cap. Energy propagation requires nodes to go **above** threshold so diffusion can spread activation to neighbors. A hard cap at threshold starves propagation and prevents emergence.
+
+**Policy:** Split budget \(B\) into two channels after health/source/peripheral modulation:
+
+**Floor Channel** (\(\lambda B\), typically \(\lambda = 0.6\)):
+- **Purpose:** Prioritize under-active nodes (below threshold)
+- **Weight:** \(w_i^\text{floor} = \sigma\left(\frac{\Theta_i - E_i}{k}\right)\) where \(\sigma(x) = \frac{1}{1 + e^{-x}}\) and \(k \approx 8\) (for 0-100 energy scale)
+- **Injection:** \(\Delta E_i^\text{floor} = \min(\text{gap}_i, \hat{w}_i^\text{floor} \cdot B_\text{floor})\) where \(\text{gap}_i = \max(0, \Theta_i - E_i)\)
+- **Cap:** Never exceeds gap (prevents overshooting under-active nodes)
+
+**Amplifier Channel** (\((1-\lambda) B\)):
+- **Purpose:** Boost strong matches **regardless of threshold** (enables propagation)
+- **Weight:** \(w_i^\text{amp} = s_i^\gamma\) where \(s_i\) is similarity score and \(\gamma \in [1.2, 1.6]\)
+- **Injection:** \(\Delta E_i^\text{amp} = \hat{w}_i^\text{amp} \cdot B_\text{amp}\)
+- **No cap at threshold** (this is critical - allows momentum above floor)
+
+**Total Injection:**
+\[
+\Delta E_i = \min\left(\Delta E_i^\text{floor} + \Delta E_i^\text{amp}, \Delta E_\text{max}\right)
+\]
+
+where \(\Delta E_\text{max}\) is per-node safety cap (typically 10 on 0-100 scale), and final total is re-normalized if \(\sum_i \Delta E_i > B\).
+
+**Parameters:**
+- \(\lambda = 0.6\) (floor/amplifier split)
+- \(k = 8\) (sigmoid steepness for floor bias)
+- \(\gamma = 1.3\) (amplifier exponent)
+- \(\Delta E_\text{max} = 10\) (per-node cap)
+- \(\Theta_i = 30\) (default threshold for 0-100 scale; type-specific later)
+
+**Safety:** Enforced globally via budget \(B\), per-node cap \(\Delta E_\text{max}\), health modulation \(f(\rho)\), and criticality gates. **NOT enforced locally by capping at threshold** - that would prevent propagation.
+
+**Rationale:** Nodes at \(E_i = 61\) with \(\Theta_i = 30\) still receive amplifier boost if similarity is high. This allows momentum and spreading activation. Under-active nodes (\(E_i < \Theta_i\)) get floor help + amplifier boost. Safety comes from global constraints, not local caps.
 
 ### 2.2 Directional priors for link-matched injection
 
@@ -90,10 +129,16 @@ Integrate with the WS transport (frame ordering, reorder buffer) defined in the 
 
 ## 7. Failure Modes & Guards
 
-- **Over-injection / runaway:** clamp by health \(f(\rho)\) with isotonic regression; cap per-tick effective duration. :contentReference[oaicite:48]{index=48}  
-- **Under-coverage:** entropy floor for broad stimuli. :contentReference[oaicite:49]{index=49}  
-- **Direction mistakes on links:** Beta bootstrap (α=β) until evidence accumulates. :contentReference[oaicite:50]{index=50}  
-- **Attribution opacity:** require `stimulus.item_injected` for top-N budgeted items. :contentReference[oaicite:51]{index=51}
+- **Over-injection / runaway:** Prevented by **global constraints**, not local threshold caps:
+  - Health modulation \(f(\rho)\) damps budget when supercritical (isotonic regression on \(\rho\))
+  - Per-node delta cap \(\Delta E_\text{max}\) (typically 10 on 0-100 scale)
+  - Per-tick effective duration cap
+  - Global budget re-normalization if \(\sum_i \Delta E_i > B\)
+  - **NOT by capping injection at threshold** - that would starve propagation
+- **Under-coverage:** entropy floor for broad stimuli
+- **Direction mistakes on links:** Beta bootstrap (α=β) until evidence accumulates
+- **Attribution opacity:** require `stimulus.item_injected` for top-N budgeted items
+- **False "zero injection" due to scale mismatch:** Guard against threshold in wrong units (e.g., \(\Theta = 0.1\) on 0-100 scale). If \(E > 1.0\) and \(\Theta < 1.0\), treat as scale mismatch and replace \(\Theta\) with \(DEFAULT\_THRESHOLD = 30\). Log `threshold_scale_mismatch`.
 
 ## 8. Integration points
 
