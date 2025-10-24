@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import type { Subentity } from '../hooks/useGraphData';
 import type { V2ConsciousnessState } from '../hooks/websocket-types';
 
@@ -76,7 +76,7 @@ export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeC
   );
 }
 
-function CitizenAccordionItem({
+const CitizenAccordionItem = memo(function CitizenAccordionItem({
   citizen,
   isExpanded,
   isActive,
@@ -251,7 +251,7 @@ function CitizenAccordionItem({
       )}
     </div>
   );
-}
+});
 
 function EntityActivityCard({
   subentity,
