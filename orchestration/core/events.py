@@ -22,6 +22,7 @@ EventType = Literal[
     "frame_start",
     "frame_complete",
     "frame_error",
+    "tick_frame_v1",  # Entity-first frame telemetry (replaces frame.end)
 
     # Node/Link events
     "node_activated",
@@ -98,6 +99,64 @@ class FrameCompleteEvent(BaseEvent):
     nodes_activated: int = 0
     links_traversed: int = 0
     response_generated: bool = False
+
+
+@dataclass
+class EntityData:
+    """Entity data structure for tick_frame.v1 events (matches frontend Entity interface)."""
+
+    id: str
+    name: str
+    kind: str = "functional"  # "functional", "identity", etc.
+    color: str = "#808080"    # Default gray
+    energy: float = 0.0       # Derived aggregate energy
+    theta: float = 0.0        # Activation threshold
+    active: bool = False      # Above threshold
+    members_count: int = 0    # Number of member nodes
+    coherence: float = 0.0    # Pattern coherence [0-1]
+    # Optional emotion aggregate
+    emotion_valence: Optional[float] = None
+    emotion_arousal: Optional[float] = None
+    emotion_magnitude: Optional[float] = None
+
+
+@dataclass
+class TickFrameV1Event(BaseEvent):
+    """
+    Entity-first frame telemetry (replaces legacy frame.end).
+
+    Per visualization_patterns.md §2, provides entity-scale observability:
+    - Entity aggregates (energy, coherence, emotion)
+    - Active members per entity
+    - Boundary crossings between entities
+
+    Consumed by EntityMoodMap.tsx for entity bubble visualization.
+    """
+
+    event_type: Literal["tick_frame_v1"] = "tick_frame_v1"
+    v: str = "1"                          # Schema version
+    frame_id: int = 0                     # Tick count
+    t_ms: int = 0                         # Unix timestamp (ms)
+    tick_duration_ms: float = 0.0         # Frame processing time
+
+    # Entity aggregates (entity-scale view)
+    entities: List[EntityData] = None     # All entities with metadata
+
+    # Node counts (atomic-scale summary)
+    nodes_active: int = 0                 # Nodes above threshold
+    nodes_total: int = 0                  # Total graph nodes
+
+    # Stride budget
+    strides_executed: int = 0             # Actual strides this frame
+    stride_budget: int = 0                # Max strides per frame
+
+    # Criticality metrics
+    rho: float = 1.0                      # Spectral radius estimate
+    coherence: float = 0.0                # System coherence [0-1]
+
+    def __post_init__(self):
+        if self.entities is None:
+            self.entities = []
 
 
 # === Node/Link Events ===
@@ -386,6 +445,7 @@ def create_event(
     event_classes = {
         "frame_start": FrameStartEvent,
         "frame_complete": FrameCompleteEvent,
+        "tick_frame_v1": TickFrameV1Event,
         "node_activated": NodeActivatedEvent,
         "link_traversed": LinkTraversedEvent,
         "entity_activated": EntityActivatedEvent,
