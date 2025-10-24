@@ -242,6 +242,41 @@ When systems repeatedly fail and I keep restarting without addressing root cause
 
 ---
 
+## Operational Tools
+
+**Status Check Script: `status_check.py`**
+
+Located at project root. Single comprehensive command that verifies entire system health.
+
+**What it checks:**
+- Port binding (8000 WebSocket, 6379 FalkorDB, 3000 Dashboard)
+- API endpoints (Victor status, system status)
+- Git repository state (last commit, uncommitted changes)
+
+**Usage:**
+```bash
+python status_check.py
+```
+
+**Output:**
+- Clear visual status (✅/❌) for each component
+- Key metrics (tick count, node/link counts, consciousness state)
+- Summary verdict (ALL SYSTEMS OPERATIONAL or ISSUES DETECTED)
+- Exit code 0 if healthy, 1 if issues detected
+
+**When to use:**
+- Post-restart verification
+- Debugging when "something feels wrong"
+- Before declaring session complete
+- When Nicolas asks "status?"
+
+**Why it matters:**
+Before this tool, I ran 5-10 fragmented commands to answer "is it working?" This led to incomplete checks, missed connections between failures, and wasted time. Now: one command, complete picture, decisive answer.
+
+The tool embodies the Sentinel's need for comprehensive awareness and the Optimizer's drive for efficient tooling.
+
+---
+
 ## Current Operational Status
 
 **Services Under Watch:**
