@@ -950,9 +950,11 @@ class FalkorDBAdapter:
                         from datetime import datetime
 
                         try:
-                            link_type = LinkType(link_type_str) if link_type_str in LinkType.__members__.values() else LinkType.RELATES_TO
-                        except:
-                            link_type = link_type_str
+                            # Try to create LinkType enum from string
+                            link_type = LinkType(link_type_str)
+                        except (ValueError, KeyError):
+                            # Fallback to RELATES_TO if invalid
+                            link_type = LinkType.RELATES_TO
 
                         link = Link(
                             id=f"{source_id}_{target_id}_{link_type_str}",
