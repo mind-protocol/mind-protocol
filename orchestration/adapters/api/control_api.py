@@ -58,14 +58,33 @@ class WebSocketManager:
 
     async def connect(self, websocket: WebSocket):
         """
-        Accept new WebSocket connection.
+        Accept new WebSocket connection with Origin validation.
 
         Args:
             websocket: WebSocket connection to add
+
+        Security:
+            Validates Origin header to prevent unauthorized cross-origin WebSocket connections.
+            Browsers send Origin during upgrade handshake - must be validated before accept().
         """
+        # Validate Origin header (browsers send this, Python clients may not)
+        origin = websocket.headers.get("origin")
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3002"
+        ]
+
+        # If Origin present, must be in allowed list
+        if origin is not None and origin not in allowed_origins:
+            logger.warning(f"[WebSocketManager] Rejected connection from unauthorized origin: {origin}")
+            await websocket.close(code=1008)  # Policy violation
+            return
+
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(f"[WebSocketManager] Client connected (total: {len(self.active_connections)})")
+        origin_str = f"from {origin}" if origin else "(no origin header)"
+        logger.info(f"[WebSocketManager] Client connected {origin_str} (total: {len(self.active_connections)})"')
 
     async def disconnect(self, websocket: WebSocket):
         """
