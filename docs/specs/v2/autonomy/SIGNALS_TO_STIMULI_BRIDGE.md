@@ -26,51 +26,54 @@
 ### Architecture at a Glance
 
 ```
-┌─────────────────┐
-│ Signal Sources  │
-│ - Logs          │
-│ - Console       │
-│ - Screenshots   │
-│ - Git changes   │
-│ - Runtime events│
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────┐
-│ Signals Collector   │
-│ (NEW microservice)  │
-│ - Dedupe (5 min)    │
-│ - Circuit breakers  │
-│ - Quantile gates    │
-│ - Priority scoring  │
-└────────┬────────────┘
-         │
-         ▼ StimulusEnvelope
-┌─────────────────────┐
-│ Stimulus Injection  │
-│ @8001 (EXISTING)    │
-│ - Validation        │
-│ - Scope routing     │
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│ Autonomy Orchestrator│
-│ @8002 (EXISTING)    │
-│ - Intent formation  │
-│ - Mission creation  │
-│ - Citizen auto-wake │
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│ L1 Citizens         │
-│ - Execute missions  │
-│ - Form learnings    │
-└─────────────────────┘
+ [Logs/Console/Screenshots/CodeDiffs/RuntimeEvents]
+                 │
+                 ▼
+        ┌───────────────────────┐
+        │  Signals Collector    │  FastAPI @8003
+        │  - dedupe/rate/quant  │  backlog on outage
+        │  - cooldown/merge     │  circuit breakers
+        └─────────┬─────────────┘
+                  │ StimulusEnvelope (N2)
+                  ▼
+        ┌───────────────────────┐
+        │  Stimulus Injection   │ @8001
+        │  - Validation         │ at-least-once
+        └─────────┬─────────────┘
+                  │
+                  ▼
+        ┌───────────────────────┐
+        │   N2 Graph (Org)      │  evidence + routing
+        └─────────┬─────────────┘
+                  │
+                  ▼
+        ┌───────────────────────┐
+        │ Autonomy Orchestrator │ @8002
+        │ - Intent templates    │ fanout cap/lanes/ACK
+        │ - Priority + impact   │ capacity-aware routing
+        └─────────┬─────────────┘
+                  │ Mission
+                  ▼
+        ┌───────────────────────┐
+        │   L1 Citizen Engines  │  auto-wake with backpressure
+        └─────────┬─────────────┘
+                  │ Actions/TRACE
+                  ▼
+        ┌───────────────────────┐
+        │   Runtime Events WS   │ @8000
+        └──────┬────────────────┘
+               │ (guarded reinjection)
+               ▼
+        ┌───────────────────────┐
+        │  Self-awareness path  │ origin/TTL/depth/cooldown
+        └───────────────────────┘
 ```
 
-**Key insight:** Reuse existing StimulusEnvelope + Stimulus Injection + Orchestrator infrastructure. Only add thin **Signals Collector** layer for normalization + noise control.
+**Key insights:**
+- Reuse existing StimulusEnvelope + Stimulus Injection + Orchestrator infrastructure
+- Add thin **Signals Collector** layer for normalization + noise control + production resilience
+- **Production hardening:** Backlog on outage, fanout caps, capacity-aware routing, impact-based trust
+- **Self-awareness guards:** Origin tagging, depth limits, cooldown, hysteresis prevent runaway loops
 
 ---
 
