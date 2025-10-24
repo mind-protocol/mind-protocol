@@ -1592,6 +1592,15 @@ class ConsciousnessEngineV2:
         # Time since last tick
         time_since_last_tick = (datetime.now() - self.last_tick_time).total_seconds()
 
+        # Get actual subentity count and IDs
+        sub_entity_count = len(self.graph.subentities) if self.graph.subentities else 0
+        sub_entity_ids = list(self.graph.subentities.keys()) if self.graph.subentities else []
+
+        # Add 1 for self if not already in list
+        if subentity not in sub_entity_ids:
+            sub_entity_count += 1
+            sub_entity_ids.insert(0, subentity)
+
         return {
             "citizen_id": subentity,
             "running_state": "running" if self.running else "paused",
@@ -1601,8 +1610,8 @@ class ConsciousnessEngineV2:
             "tick_multiplier": 1.0,  # V2 doesn't support speed multiplier yet
             "consciousness_state": consciousness_state,
             "time_since_last_event": round(time_since_last_tick, 2),
-            "sub_entity_count": 1,  # V2 doesn't support multiple sub-entities yet
-            "sub_entities": [subentity],
+            "sub_entity_count": sub_entity_count,
+            "sub_entities": sub_entity_ids,
             "nodes": len(self.graph.nodes),
             "links": len(self.graph.links)
         }
