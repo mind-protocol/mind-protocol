@@ -343,10 +343,13 @@ def _select_workspace_entities(self, subentity: str):
 
 **Ready for implementation** - Complete technical guide with API signatures, test plan, persistence strategy.
 
-**Priority 5: Task-Mode Fan-out** (NICE TO HAVE)
-1. Implement task mode inference
-2. Add mode override to fan-out strategy
-3. Emit observability events
+**Priority 5: Task-Mode Fan-out** → 🎯 **SPECIFICATION COMPLETE** (2025-10-24)
+1. ✅ Mechanism specification complete: High-level WHY approach
+2. ✅ Consciousness principles documented: Mode follows goal, override structure
+3. ⏳ Implementation: Task mode inference logic, fan-out integration, telemetry
+4. 📄 **Mechanism spec:** `learning_and_trace/TASK_MODE_INFERENCE_SPEC.md`
+
+**Ready for implementation** - Complete consciousness context with principles, integration points, phenomenological success criteria.
 
 **Priority 6: Phenomenology Monitoring** (NICE TO HAVE)
 1. Implement mismatch detection

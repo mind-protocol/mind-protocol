@@ -82,6 +82,7 @@ def serialize_node(node: Node) -> Dict[str, Any]:
 
         # Learning infrastructure
         'log_weight': node.log_weight,
+        'log_weight_overlays': json.dumps(node.log_weight_overlays),  # Dict[str, float] → JSON
         'ema_trace_seats': node.ema_trace_seats,
         'ema_wm_presence': node.ema_wm_presence,
         'ema_formation_quality': node.ema_formation_quality,
@@ -142,6 +143,7 @@ def deserialize_node(props: Dict[str, Any]) -> Node:
 
         # Learning infrastructure
         log_weight=props.get('log_weight', 0.0),
+        log_weight_overlays=json.loads(props.get('log_weight_overlays', '{}')),  # JSON → Dict[str, float]
         ema_trace_seats=props.get('ema_trace_seats', 0.0),
         ema_wm_presence=props.get('ema_wm_presence', 0.0),
         ema_formation_quality=props.get('ema_formation_quality', 0.0),
