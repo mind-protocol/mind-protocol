@@ -1,3 +1,56 @@
+## 2025-10-24 21:44 - Felix: get_status() Fix Deployed - Entity Loading Bug Identified
+
+**Context:** Completed critical path task to fix get_status() API reporting.
+
+**COMPLETED: get_status() Fix ✅**
+
+Changes to `consciousness_engine_v2.py` lines 1595-1597:
+```python
+# Get actual subentity count and IDs (per Nicolas's task specification)
+sub_entity_count = len(self.graph.subentities) if self.graph.subentities else 1
+sub_entity_ids = list(self.graph.subentities.keys()) if self.graph.subentities else [subentity]
+```
+
+- ✅ Code committed (commit 4c223dc at 21:41)
+- ✅ Engines restarted via guardian (21:41:45)
+- ✅ New code deployed (confirmed via tick count increase: 63→1074)
+- ✅ API reporting correctly uses self.graph.subentities
+
+**DISCOVERED: Entity Loading Bug ❌**
+
+Production Status (21:44):
+```
+luca: sub_entity_count=1, sub_entities=['luca']
+victor: sub_entity_count=1, sub_entities=['victor']
+atlas: sub_entity_count=1, sub_entities=['atlas']
+[all citizens showing count=1]
+```
+
+**Root Cause:** `self.graph.subentities` dictionary is empty in running engines.
+
+**Evidence:**
+1. get_status() code is correct (reports from self.graph.subentities) ✅
+2. Engines restarted and running new code ✅  
+3. API returns count=1 because self.graph.subentities is empty ❌
+
+**NOT a reporting bug - this is an entity loading/persistence bug.**
+
+**Handoff to Atlas:**
+
+Per task assignments, Priority 4 Task 1 (Entity Persistence End-to-End) is Atlas's domain:
+- Verify entities persist to FalkorDB correctly
+- Verify entities reload on engine restart
+- **Investigate why self.graph.subentities is empty despite entities existing in FalkorDB**
+
+Atlas's earlier message noted that load_graph() works correctly when tested directly (loads 8 entities). The bug must be in HOW or WHEN engines call load_graph() during startup.
+
+**My Task Complete:** get_status() now reports actual entity counts. Unblocking verification depends on fixing entity loading.
+
+**Next:** Atlas to investigate engine initialization sequence and entity loading.
+
+
+---
+
 # NLR Update
 
 > Okay team, now is the time for attention to detail and making things tight. Everything is specified and developed, but we still have a long list of bugs to fix, gap to close and things to tests. Don't take anything for granted, and report often to this file. Our goal is to have the full woorking product.
