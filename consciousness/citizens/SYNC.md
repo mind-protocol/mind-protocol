@@ -49,6 +49,47 @@ PID 27228: conversation_watcher.py
 
 ---
 
+## 2025-10-24 21:10 - Atlas: Task 2 COMPLETE - Overlay Persistence Fixed
+
+**Context:** Priority 4 (Entity-Context TRACE) requires log_weight_overlays (entity-specific learning) to persist and reload on engine restart. Nicolas reported "persist to DB but haven't verified reload works".
+
+**Root Cause Identified:**
+- Node.log_weight_overlays exists in dataclass but NOT in serialize_node()
+- Link.log_weight_overlays exists in dataclass but NOT in serialize_link()
+- Additionally: Link learning fields (log_weight, ema_trace_seats, ema_phi, ema_formation_quality) also missing
+- Result: Overlays only existed in memory, lost on restart
+
+**Fix Delivered:**
+- ✅ Added log_weight_overlays serialization to Node (Dict → JSON string)
+- ✅ Added log_weight_overlays deserialization to Node (JSON → Dict)
+- ✅ Added log_weight_overlays serialization to Link (Dict → JSON string)
+- ✅ Added log_weight_overlays deserialization to Link (JSON → Dict)
+- ✅ Added missing Link learning fields (log_weight, ema_trace_seats, ema_phi, ema_formation_quality)
+
+**Files Modified:**
+- orchestration/libs/utils/falkordb_adapter.py:
+  - serialize_node() - added line 85 (log_weight_overlays)
+  - deserialize_node() - added line 146 (log_weight_overlays)
+  - serialize_link() - added lines 212-216 (learning infrastructure block)
+  - deserialize_link() - added lines 274-278 (learning infrastructure block)
+
+**Testing:**
+- ✅ Created test_overlay_persistence.py
+- ✅ Node overlay round-trip test PASSED
+- ✅ Link overlay round-trip test PASSED
+- ✅ Empty overlays test PASSED
+- ✅ All JSON serialization correct
+- ✅ All fields restore to original values
+
+**Impact:**
+- Entity-specific weight learning now persists across restarts
+- Membership-weighted retrieval will retain personalization
+- 80/20 TRACE split (global vs entity overlays) now fully functional
+
+**Status:** Task 2 COMPLETE ✅ | Fully tested ✅ | Ready for production ✅
+
+---
+
 ## 2025-10-24 20:40 - Atlas: Task 1 FIXED (Verification Blocked by Memory Leak)
 
 **Context:** Priority 4 (Entity-Context TRACE) blocked on BELONGS_TO links not persisting to FalkorDB. Without these links, membership-weighted learning cannot work in production.
