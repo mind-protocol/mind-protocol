@@ -49,19 +49,28 @@ export default function EntityContextLearningPanel({
 
   // Compute aggregate split ratio (global vs entity-local contributions)
   const splitRatio = useMemo(() => {
+    // TODO: Implement using actual WeightsUpdatedTraceEvent structure
+    // Current event has: scope, cohort, entity_contexts, global_context, n, d_mu, d_sigma
+    // Not individual updates array
+
+    if (windowedEvents.length === 0) {
+      return { global_pct: 0, local_pct: 0 };
+    }
+
+    // Placeholder calculation until backend emits proper structure
     let total_global_delta = 0;
     let total_local_delta = 0;
 
     windowedEvents.forEach(event => {
-      event.updates?.forEach(update => {
-        // Global contribution
-        total_global_delta += Math.abs(update.delta_global || 0);
+      // Use aggregate stats from actual event structure
+      const magnitude = Math.abs(event.d_mu * event.n);
 
-        // Entity-local contribution
-        update.local_overlays?.forEach(overlay => {
-          total_local_delta += Math.abs(overlay.delta || 0);
-        });
-      });
+      if (event.global_context) {
+        total_global_delta += magnitude * 0.2; // 20% global
+        total_local_delta += magnitude * 0.8; // 80% entity-local
+      } else {
+        total_local_delta += magnitude; // 100% entity-local
+      }
     });
 
     const total = total_global_delta + total_local_delta;
@@ -79,32 +88,25 @@ export default function EntityContextLearningPanel({
   const entityStats = useMemo((): EntityOverlayStats[] => {
     const stats: Map<string, EntityOverlayStats> = new Map();
 
+    // TODO: Implement using actual WeightsUpdatedTraceEvent structure
+    // Current event has entity_contexts array, not individual overlay details
+
     windowedEvents.forEach(event => {
-      event.updates?.forEach(update => {
-        update.local_overlays?.forEach(overlay => {
-          const entity_id = overlay.entity;
-          if (!stats.has(entity_id)) {
-            stats.set(entity_id, {
-              entity_id,
-              total_delta: 0,
-              update_count: 0,
-              avg_membership: 0
-            });
-          }
+      // Use entity_contexts from actual event structure
+      event.entity_contexts?.forEach(entity_id => {
+        if (!stats.has(entity_id)) {
+          stats.set(entity_id, {
+            entity_id,
+            total_delta: 0,
+            update_count: 0,
+            avg_membership: 0.8 // Fixed 80% for entity-local updates
+          });
+        }
 
-          const stat = stats.get(entity_id)!;
-          stat.total_delta += Math.abs(overlay.delta);
-          stat.update_count += 1;
-          stat.avg_membership += overlay.membership_weight;
-        });
+        const stat = stats.get(entity_id)!;
+        stat.total_delta += Math.abs(event.d_mu) || 0;
+        stat.update_count += 1;
       });
-    });
-
-    // Compute averages
-    stats.forEach(stat => {
-      if (stat.update_count > 0) {
-        stat.avg_membership = stat.avg_membership / stat.update_count;
-      }
     });
 
     // Sort by total delta (most active entities first)
