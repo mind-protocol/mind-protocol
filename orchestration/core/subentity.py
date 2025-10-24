@@ -150,6 +150,15 @@ class Subentity:
         return [link.source for link in self.incoming_links
                 if link.link_type == LinkType.BELONGS_TO]
 
+    @property
+    def extent(self) -> List['Node']:
+        """
+        Alias for get_members() - backward compatibility for telemetry code.
+
+        Returns list of member nodes (those with BELONGS_TO links to this subentity).
+        """
+        return self.get_members()
+
     def get_related_entities(self) -> List['Subentity']:
         """
         Get all subentities this subentity relates to.

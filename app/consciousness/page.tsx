@@ -298,27 +298,27 @@ export default function ConsciousnessPage() {
       <Tooltip />
 
       {/* Tier Breakdown Panel (right sidebar, upper section) - Priority 2 */}
-      <div className="absolute top-24 right-4 w-80 z-40">
+      <div className="absolute top-24 right-4 w-64 z-40">
         <TierBreakdownPanel strideEvents={strideEvents} />
       </div>
 
       {/* Entity Context Learning Panel (right sidebar, middle section) - Priority 4 */}
-      <div className="absolute top-[38rem] right-4 w-80 z-40">
+      <div className="absolute top-[38rem] right-4 w-64 z-40">
         <EntityContextLearningPanel weightEvents={weightLearningEvents} />
       </div>
 
       {/* Phenomenology Mismatch Panel (right sidebar, lower section) - Priority 6 */}
-      <div className="absolute top-[80rem] right-4 w-80 z-40">
+      <div className="absolute top-[80rem] right-4 w-64 z-40">
         <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
       </div>
 
       {/* Consciousness Health Dashboard (right sidebar, lowest section) - Priority 6 */}
-      <div className="absolute top-[116rem] right-4 w-80 z-40">
+      <div className="absolute top-[116rem] right-4 w-64 z-40">
         <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
       </div>
 
       {/* Citizen consciousness monitor (right sidebar, bottom) */}
-      <div className="absolute top-[152rem] right-4 w-80 z-40">
+      <div className="absolute top-[152rem] right-4 w-64 z-40">
         <CitizenMonitor
           citizens={citizens}
           onFocusNode={handleFocusNode}

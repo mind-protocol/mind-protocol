@@ -17,15 +17,12 @@
 'use client';
 
 import { useState } from 'react';
-import { InstrumentPanel } from './InstrumentPanel';
-import { AffectiveTelemetryPanel } from './AffectiveTelemetryPanel';
-import { AffectiveCouplingPanel } from './AffectiveCouplingPanel';
-import ThreeFactorTickTimeline from './ThreeFactorTickTimeline';
-import AutonomyIndicator from './AutonomyIndicator';
-import FanoutStrategyPanel from './FanoutStrategyPanel';
-import TaskModeInfluencePanel from './TaskModeInfluencePanel';
-import type { V2ConsciousnessState } from '../hooks/websocket-types';
-import type { FrameStartEvent, StrideSelectionEvent } from '../hooks/websocket-types';
+import { CompactRegulationIndex } from './sidebar-compact/CompactRegulationIndex';
+import { CompactAffectiveTelemetry } from './sidebar-compact/CompactAffectiveTelemetry';
+import { CompactTickTimeline } from './sidebar-compact/CompactTickTimeline';
+import { CompactAutonomy } from './sidebar-compact/CompactAutonomy';
+import { CompactExploration } from './sidebar-compact/CompactExploration';
+import type { V2ConsciousnessState, StrideSelectionEvent } from '../hooks/websocket-types';
 
 interface LeftSidebarMenuProps {
   v2State: V2ConsciousnessState;
@@ -42,7 +39,7 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
   };
 
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-[28rem] consciousness-panel border-r border-observatory-teal overflow-hidden flex flex-col z-20">
+    <div className="fixed left-0 top-16 bottom-0 w-[20rem] consciousness-panel border-r border-observatory-teal overflow-hidden flex flex-col z-20">
       {/* Collapsible Sections */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
 
@@ -53,10 +50,20 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
           isExpanded={expandedSection === 'affective'}
           onToggle={() => toggleSection('affective')}
         >
-          <div className="space-y-4 p-4">
-            <InstrumentPanel />
-            <AffectiveTelemetryPanel />
-            <AffectiveCouplingPanel />
+          <div className="space-y-4 p-4 bg-slate-900/30">
+            <div className="pb-3 border-b border-slate-800">
+              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
+                Regulation
+              </div>
+              <CompactRegulationIndex />
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
+                Telemetry
+              </div>
+              <CompactAffectiveTelemetry />
+            </div>
           </div>
         </SectionAccordion>
 
@@ -67,9 +74,20 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
           isExpanded={expandedSection === 'rhythms'}
           onToggle={() => toggleSection('rhythms')}
         >
-          <div className="space-y-4 p-4">
-            <AutonomyIndicator frameEvents={v2State.frameEvents} />
-            <ThreeFactorTickTimeline frameEvents={v2State.frameEvents} />
+          <div className="space-y-4 p-4 bg-slate-900/30">
+            <div className="pb-3 border-b border-slate-800">
+              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
+                Autonomy
+              </div>
+              <CompactAutonomy frameEvents={v2State.frameEvents} />
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
+                Tick Timeline
+              </div>
+              <CompactTickTimeline frameEvents={v2State.frameEvents} />
+            </div>
           </div>
         </SectionAccordion>
 
@@ -80,9 +98,8 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
           isExpanded={expandedSection === 'exploration'}
           onToggle={() => toggleSection('exploration')}
         >
-          <div className="space-y-4 p-4">
-            <FanoutStrategyPanel strideSelectionEvents={strideSelectionEvents} />
-            <TaskModeInfluencePanel strideSelectionEvents={strideSelectionEvents} />
+          <div className="space-y-4 p-4 bg-slate-900/30">
+            <CompactExploration strideSelectionEvents={strideSelectionEvents} />
           </div>
         </SectionAccordion>
 

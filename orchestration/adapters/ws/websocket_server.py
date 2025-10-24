@@ -440,8 +440,11 @@ async def start_citizen_consciousness(
     # Metrics: entities.total gauge
     if graph.subentities:
         logger.info(f"[N1:{citizen_id}] entities.total={len(graph.subentities)}")
+        logger.info(f"[N1:{citizen_id}] DEBUG CHECKPOINT A: graph.subentities has {len(graph.subentities)} items BEFORE engine creation")
+        logger.info(f"[N1:{citizen_id}] DEBUG: graph object id={id(graph)}, subentities object id={id(graph.subentities)}")
     else:
         logger.warning(f"[N1:{citizen_id}] entities.total=0 - WM will fallback to node-only mode")
+        logger.warning(f"[N1:{citizen_id}] DEBUG CHECKPOINT A: graph.subentities is EMPTY BEFORE engine creation!")
 
     # Create engine configuration
     config = EngineConfig(
@@ -456,6 +459,10 @@ async def start_citizen_consciousness(
 
     # Create V2 engine
     engine = ConsciousnessEngineV2(graph, adapter, config)
+
+    # DEBUG: Check graph state immediately after engine creation
+    logger.info(f"[N1:{citizen_id}] DEBUG CHECKPOINT B: AFTER engine creation, engine.graph.subentities has {len(engine.graph.subentities) if engine.graph.subentities else 0} items")
+    logger.info(f"[N1:{citizen_id}] DEBUG: engine.graph object id={id(engine.graph)}, same as loaded graph? {id(engine.graph) == id(graph)}")
 
     # Note: V2 doesn't have add_sub_entity or enable_dynamic_prompts methods
     # Sub-entities are managed internally by the engine
@@ -614,7 +621,8 @@ class HeartbeatWriter:
                             "tick_count": engine.tick_count,
                             "running": engine.running,
                             "nodes": len(engine.graph.nodes),
-                            "links": len(engine.graph.links)
+                            "links": len(engine.graph.links),
+                            "subentities": len(engine.graph.subentities) if hasattr(engine.graph, 'subentities') and engine.graph.subentities else 0
                         }
                         for citizen_id, engine in CONSCIOUSNESS_ENGINES.items()
                     }

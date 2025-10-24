@@ -54,7 +54,7 @@ export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeC
   const [expandedCitizen, setExpandedCitizen] = useState<string | null>(null);
 
   return (
-    <div className="fixed right-0 top-16 bottom-0 w-[28rem] consciousness-panel border-l border-observatory-teal overflow-hidden flex flex-col z-20">
+    <div className="fixed right-0 top-16 bottom-0 w-[20rem] consciousness-panel border-l border-observatory-teal overflow-hidden flex flex-col z-20">
       {/* Accordion - takes full height */}
       <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
         {citizens.map(citizen => (

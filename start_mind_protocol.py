@@ -507,10 +507,14 @@ class ProcessManager:
             logger.info(f"  Port {WS_PORT} verified free, starting server... (attempt {retry + 1}/{max_retries})")
 
             try:
+                # Open log files for websocket_server output (file handles prevent pipe buffer deadlock)
+                ws_stdout = open(MIND_PROTOCOL_ROOT / "ws_stdout.log", 'a', encoding='utf-8', buffering=1)
+                ws_stderr = open(MIND_PROTOCOL_ROOT / "ws_stderr.log", 'a', encoding='utf-8', buffering=1)
+
                 process = subprocess.Popen(
                     [sys.executable, str(server_script)],
-                    stdout=subprocess.DEVNULL,  # Discard output to prevent pipe buffer deadlock
-                    stderr=subprocess.DEVNULL   # Discard errors too
+                    stdout=ws_stdout,  # Log to file for debugging (line buffered to prevent deadlock)
+                    stderr=ws_stderr   # Separate error log
                 )
 
                 # Give it time to start and bind to port
