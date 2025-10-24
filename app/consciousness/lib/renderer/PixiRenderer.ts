@@ -742,12 +742,11 @@ export class PixiRenderer implements RendererAdapter {
     // Render links with unique colors
     this.viewModel.links.forEach((link) => {
       // Handle both string IDs and D3 object references
-      const sourceNode = this.viewModel.nodes.find((n) =>
-        n.id === link.source || n === link.source
-      );
-      const targetNode = this.viewModel.nodes.find((n) =>
-        n.id === link.target || n === link.target
-      );
+      const sourceId = typeof link.source === 'string' ? link.source : (link.source as any).id;
+      const targetId = typeof link.target === 'string' ? link.target : (link.target as any).id;
+
+      const sourceNode = this.viewModel.nodes.find((n) => n.id === sourceId);
+      const targetNode = this.viewModel.nodes.find((n) => n.id === targetId);
 
       if (!sourceNode || !targetNode) return;
 
