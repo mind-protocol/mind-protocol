@@ -24,6 +24,9 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 from collections import deque
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from orchestration.core.graph import Graph
@@ -585,15 +588,26 @@ def update_entity_activations(
 
         # Update lifecycle state (promotion/dissolution)
         if enable_lifecycle:
-            quality_score = compute_entity_quality_score(entity)
-            transition = update_entity_lifecycle(entity, quality_score)
+            # LAYER 1 GUARD: Functional entities are permanent infrastructure, never dissolve
+            # They provide scaffolding for attention/WM, not emergent hypotheses
+            if entity.entity_kind == "functional":
+                # Update quality score for telemetry, but skip lifecycle transitions
+                quality_score = compute_entity_quality_score(entity)
+                entity.quality_score = quality_score
+            else:
+                # Semantic/emergent entities follow normal lifecycle
+                quality_score = compute_entity_quality_score(entity)
+                transition = update_entity_lifecycle(entity, quality_score)
 
-            if transition:
-                lifecycle_transitions.append(transition)
+                if transition:
+                    lifecycle_transitions.append(transition)
 
-                # Mark for dissolution if state is "dissolved"
-                if transition.new_state == "dissolved":
-                    entities_to_dissolve.append(entity)
+                    # Mark for dissolution if state is "dissolved"
+                    if transition.new_state == "dissolved":
+                        logger.warning(f"[Lifecycle] Marking entity for dissolution: {entity.id} "
+                                      f"(quality={quality_score:.3f}, low_streak={entity.low_quality_streak}, "
+                                      f"frames={entity.frames_since_creation})")
+                        entities_to_dissolve.append(entity)
 
         # Detect flip
         was_active = energy_before >= threshold_before
@@ -633,6 +647,9 @@ def update_entity_activations(
 
     # Dissolve entities marked for removal
     for entity in entities_to_dissolve:
+        logger.warning(f"[Lifecycle] DISSOLVING entity: {entity.id} (role={entity.role_or_topic}, "
+                      f"quality={entity.quality_score:.3f}, frames_since_creation={entity.frames_since_creation}, "
+                      f"low_quality_streak={entity.low_quality_streak}, state={entity.stability_state})")
         dissolve_entity(graph, entity)
 
     return (metrics_list, lifecycle_transitions)
