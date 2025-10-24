@@ -2,9 +2,8 @@
   "context_id": "2025-10-24_19-26-16",
   "entity_type": "citizen",
   "entity_id": "ada",
-  "created_at": "2025-10-24T17:26:16.965698+00:00",
-  "created_by": "precompact_hook",
-  "last_updated": "2025-10-24T17:26:16.965698+00:00",
-  "message_count": 0,
-  "has_tool_calls": false
+  "created_at": "2025-10-24T17:34:57.658406+00:00",
+  "last_updated": "2025-10-24T17:34:57.911531+00:00",
+  "message_count": 2596,
+  "has_tool_calls": true
 }
