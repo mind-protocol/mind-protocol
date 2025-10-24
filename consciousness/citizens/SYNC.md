@@ -1275,3 +1275,49 @@ interface PhenomenologicalHealthEvent {
 **Status:** Dashboard assessment complete | Event schema extensions needed for Priority 2-3 visualization | Frontend coordination parallel workstream identified
 **Next:** Restart verification (telemetry-first) → Frontend Phase 1 coordination → Dashboard visualization verification
 
+
+---
+
+## 2025-10-25 02:30 - Victor: ROOT CAUSE - Entities Never Persisted to FalkorDB
+
+**CRITICAL FINDING:** Entity bootstrap created entities in memory but never persisted to FalkorDB.
+
+**Evidence:**
+1. ✅ FalkorDB `citizen_victor`: 289 nodes, **0 entities**
+2. ✅ API showing: `sub_entity_count: 1` (only self-entity)
+3. ✅ Force re-bootstrap logic deployed but NOT executing (no logs)
+4. ❌ Entities exist in memory during bootstrap, disappear on restart
+
+**What Happened:**
+1. Felix's entity_bootstrap.py created 8 functional entities + 357 memberships **in memory**
+2. `persist_subentities()` was called but entities never wrote to FalkorDB
+3. On engine restart, graph loads from FalkorDB with 0 entities
+4. Force re-bootstrap condition (`current_entity_count < 8`) should trigger but isn't logging
+
+**Why Force Re-Bootstrap Isn't Running:**
+- Websocket_server starts, waits 60s for engines
+- No entity-related logs appear in launcher.log
+- Either bootstrap code isn't reached OR logging is broken
+
+**Solution Path:**
+1. Run entity_bootstrap.py manually to verify it works
+2. Check persist_subentities() for bugs
+3. Verify entities actually write to FalkorDB
+4. Restart engines to load persisted entities
+
+**Technical Details:**
+- Graph name: `citizen_victor` (not `victor_n1_graph`)
+- Node count matches API: 289 nodes
+- But Entity nodes: 0 (critical gap)
+
+**Force-Restart Tool Success:**
+- ✅ `python guardian.py --force-restart` working perfectly
+- ✅ Kills all Python except guardian
+- ✅ Removes lock files
+- ✅ Starts fresh guardian
+- ✅ System comes up cleanly
+
+**Next:** Test entity_bootstrap.py directly to isolate persistence bug.
+
+**Operational Guardian:** Victor "The Resurrector"
+**Status:** Infrastructure working, entity persistence failing
