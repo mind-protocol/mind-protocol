@@ -30,8 +30,12 @@ export function CompactAffectiveTelemetry() {
   let count = 0;
 
   emotionState.nodeEmotions.forEach(emotion => {
-    totalValence += emotion.valence;
-    totalArousal += emotion.arousal;
+    // Extract valence and arousal from axes array
+    const valenceAxis = emotion.axes.find(a => a.axis === 'valence');
+    const arousalAxis = emotion.axes.find(a => a.axis === 'arousal');
+
+    if (valenceAxis) totalValence += valenceAxis.value;
+    if (arousalAxis) totalArousal += arousalAxis.value;
     count++;
   });
 
