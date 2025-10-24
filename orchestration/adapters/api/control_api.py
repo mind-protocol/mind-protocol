@@ -99,7 +99,7 @@ class WebSocketManager:
 
     async def broadcast(self, event: Dict[str, Any]):
         """
-        Broadcast event to all connected clients.
+        Broadcast event to all connected clients AND buffer for telemetry.
 
         Args:
             event: Event dict with 'type' and event-specific data
@@ -111,11 +111,24 @@ class WebSocketManager:
             - node_activation: Individual node activity changes
             - link_traversal: Link traversal events
         """
-        if not self.active_connections:
-            logger.debug(f"[WebSocketManager] Broadcast attempted but no clients connected (event: {event.get('type', 'unknown')})")
-            return  # No clients connected, skip broadcast
+        # CRITICAL FIX: Buffer for telemetry FIRST, before checking connections
+        # This ensures telemetry works even when no dashboard watching
+        event_type = event.get("type", "")
+        if event_type in TELEMETRY_EVENT_TYPES:
+            try:
+                from orchestration.mechanisms.affective_telemetry_buffer import get_affective_buffer
+                buffer = get_affective_buffer()
+                buffer.add_event(event_type, event)
+                logger.debug(f"[WebSocketManager] Buffered {event_type} for telemetry")
+            except Exception as e:
+                logger.error(f"[WebSocketManager] Failed to buffer telemetry: {e}")
 
-        logger.debug(f"[WebSocketManager] Broadcasting {event.get('type', 'unknown')} to {len(self.active_connections)} clients")
+        # THEN check WebSocket connections
+        if not self.active_connections:
+            logger.debug(f"[WebSocketManager] Broadcast attempted but no clients connected (event: {event_type}) - buffered anyway")
+            return  # No clients connected, skip WebSocket broadcast
+
+        logger.debug(f"[WebSocketManager] Broadcasting {event_type} to {len(self.active_connections)} clients")
 
         # Add timestamp if not present
         if "timestamp" not in event:
