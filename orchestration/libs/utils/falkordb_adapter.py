@@ -1025,7 +1025,7 @@ class FalkorDBAdapter:
                 result_set_subentities = result_subentities.result_set
 
         if result_set_subentities:
-            logger.debug(f"Loading {len(result_set_subentities)} subentities from FalkorDB")
+            logger.info(f"Loaded {len(result_set_subentities)} subentities from FalkorDB")
             for row in result_set_subentities:
                 entity_obj = row[0]
                 props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}

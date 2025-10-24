@@ -12,15 +12,9 @@ import { Legend } from './components/Legend';
 import { Header } from './components/Header';
 import { CitizenMonitor } from './components/CitizenMonitor';
 import { SystemStatusPanel } from './components/SystemStatusPanel';
-import { InstrumentPanel } from './components/InstrumentPanel';
-import { AffectiveTelemetryPanel } from './components/AffectiveTelemetryPanel';
-import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
+import { LeftSidebarMenu } from './components/LeftSidebarMenu';
 import TierBreakdownPanel from './components/TierBreakdownPanel';
-import ThreeFactorTickTimeline from './components/ThreeFactorTickTimeline';
-import AutonomyIndicator from './components/AutonomyIndicator';
 import EntityContextLearningPanel from './components/EntityContextLearningPanel';
-import FanoutStrategyPanel from './components/FanoutStrategyPanel';
-import TaskModeInfluencePanel from './components/TaskModeInfluencePanel';
 import PhenomenologyMismatchPanel from './components/PhenomenologyMismatchPanel';
 import ConsciousnessHealthDashboard from './components/ConsciousnessHealthDashboard';
 // import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
@@ -294,33 +288,11 @@ export default function ConsciousnessPage() {
       {/* Legend (bottom-left) */}
       <Legend />
 
-      {/* Emotion Regulation Instruments (left sidebar) */}
-      <InstrumentPanel />
-
-      {/* Affective Telemetry Panel (left sidebar, below instruments) - PR-A */}
-      <AffectiveTelemetryPanel />
-
-      {/* Affective Coupling Panel (left sidebar, lower section) - PR-B */}
-      <AffectiveCouplingPanel />
-
-      {/* Three-Factor Tick Timeline (left sidebar, below affective panels) - Priority 3 */}
-      <div className="absolute bottom-[22rem] left-4 w-96 z-40">
-        <ThreeFactorTickTimeline frameEvents={v2State.frameEvents} />
-      </div>
-
-      {/* Autonomy Indicator (left sidebar, above timeline) - Priority 3 */}
-      <div className="absolute bottom-[38rem] left-4 w-64 z-40">
-        <AutonomyIndicator frameEvents={v2State.frameEvents} />
-      </div>
-
-      {/* Multi-Pattern Response Panel (left sidebar, upper section) - PR-C */}
-      {/* <MultiPatternResponsePanel /> */}
-
-      {/* Foundations Enrichments Panel (right sidebar, upper section) - PR-E */}
-      {/* <FoundationsEnrichmentsPanel /> */}
-
-      {/* Identity Multiplicity Panel (right sidebar, lower section) - PR-D */}
-      {/* <IdentityMultiplicityPanel /> */}
+      {/* Left Sidebar - Organized collapsible menu */}
+      <LeftSidebarMenu
+        v2State={v2State}
+        strideSelectionEvents={strideSelectionEvents}
+      />
 
       {/* Tooltip for hover info */}
       <Tooltip />
@@ -333,16 +305,6 @@ export default function ConsciousnessPage() {
       {/* Entity Context Learning Panel (right sidebar, middle section) - Priority 4 */}
       <div className="absolute top-[38rem] right-4 w-80 z-40">
         <EntityContextLearningPanel weightEvents={weightLearningEvents} />
-      </div>
-
-      {/* Fanout Strategy Panel (left sidebar, lower section) - Priority 5 */}
-      <div className="absolute bottom-[60rem] left-[26rem] w-80 z-40">
-        <FanoutStrategyPanel strideSelectionEvents={strideSelectionEvents} />
-      </div>
-
-      {/* Task Mode Influence Panel (left sidebar, lowest section) - Priority 5 */}
-      <div className="absolute bottom-[32rem] left-[26rem] w-80 z-40">
-        <TaskModeInfluencePanel strideSelectionEvents={strideSelectionEvents} />
       </div>
 
       {/* Phenomenology Mismatch Panel (right sidebar, lower section) - Priority 6 */}

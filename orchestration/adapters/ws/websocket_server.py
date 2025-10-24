@@ -394,6 +394,15 @@ async def start_citizen_consciousness(
             timeout=30.0
         )
         logger.info(f"[N1:{citizen_id}] Graph loaded successfully")
+        # DEBUG: Log what was actually loaded
+        logger.info(f"[N1:{citizen_id}] DEBUG: Loaded {len(graph.nodes)} nodes, {len(graph.links)} links")
+        logger.info(f"[N1:{citizen_id}] DEBUG: graph.subentities type: {type(graph.subentities)}, is None: {graph.subentities is None}")
+        if graph.subentities:
+            logger.info(f"[N1:{citizen_id}] DEBUG: Loaded {len(graph.subentities)} subentities")
+            for eid in list(graph.subentities.keys())[:3]:
+                logger.info(f"[N1:{citizen_id}] DEBUG:   - {eid}")
+        else:
+            logger.warning(f"[N1:{citizen_id}] DEBUG: graph.subentities is EMPTY!")
     except asyncio.TimeoutError:
         logger.error(f"[N1:{citizen_id}] Graph load timed out after 30s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
@@ -402,6 +411,7 @@ async def start_citizen_consciousness(
     # Force re-bootstrap if entity count != 8 (fixes 0-entities bug from Mechanism confusion)
     current_entity_count = len(graph.subentities) if graph.subentities else 0
     expected_entity_count = 8  # 8 functional entities from config
+    logger.info(f"[N1:{citizen_id}] DEBUG: current_entity_count={current_entity_count}, expected={expected_entity_count}")
 
     if not graph.subentities or current_entity_count < expected_entity_count:
         if current_entity_count > 0:

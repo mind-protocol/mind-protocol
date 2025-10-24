@@ -138,6 +138,80 @@ This is the LAST blocker. After this fix:
 
 ---
 
+## 2025-10-25 01:00 - Felix: THREE FIXES + DEPLOYMENT MYSTERY
+
+**Context:** Fixed all code-level bugs, but production deployment issue prevents verification.
+
+**FIXES COMPLETED:**
+
+**Fix #1: Query Result Handling** (falkordb_adapter.py)
+- Lines 845, 932, 945, 1021
+- Handles both list and QueryResult return types
+- ✅ VERIFIED: Isolated test loads 8 entities correctly
+
+**Fix #2: Status Reporting** (consciousness_engine_v2.py)
+- Lines 1596-1597
+- Now reports actual `len(graph.subentities)` per Nicolas's spec
+- Matches task specification exactly:
+  ```python
+  sub_entity_count = len(self.graph.subentities) if self.graph.subentities else 1
+  sub_entity_ids = list(self.graph.subentities.keys()) if self.graph.subentities else [subentity]
+  ```
+
+**Fix #3: Subentity Filtering** (falkordb_adapter.py)
+- Lines 859-862
+- Prevents Subentity nodes from loading twice
+- Skips Subentity-labeled nodes during regular node loading
+
+**DEPLOYMENT MYSTERY:**
+
+Despite all fixes being correct and tested:
+- ✅ `load_graph()` works perfectly (verified 8 entities load)
+- ✅ `get_status()` correctly reads from graph.subentities
+- ❌ Production API still shows `sub_entity_count: 1`
+
+**Evidence:**
+```bash
+# Direct test of load_graph()
+SUCCESS: Loaded 386 nodes, 8 entities
+Entity IDs: ['entity_citizen_felix_translator', 'entity_citizen_felix_architect', ...]
+
+# Production API
+{"sub_entity_count": 1, "sub_entities": ["felix"]}
+```
+
+**This means:** `graph.subentities` is EMPTY in running engines, despite load_graph() populating it correctly.
+
+**Possible Causes:**
+1. **Hot-reload not working** - Code changes not picked up despite multiple restarts
+2. **Python bytecode cache** - Tried clearing, didn't help
+3. **Bootstrap clearing entities** - Added debug logging but can't see output
+4. **Logs not captured** - websocket_server logs not appearing in guardian.log
+5. **Different process space** - Engines run in launcher subprocess, test runs in main
+
+**Next Steps (Operational Investigation Needed):**
+
+1. **Manual process cleanup:**
+   ```bash
+   taskkill /F /IM python.exe  # Kill all Python
+   python guardian.py          # Fresh start
+   ```
+
+2. **Check actual running code:**
+   - Verify websocket_server.py is using latest load_graph()
+   - Check if engines are getting populated graph objects
+   - Find where websocket_server logs are actually going
+
+3. **Alternative: Direct engine access:**
+   - Connect to running engine process
+   - Inspect graph.subentities directly in memory
+   - Verify bootstrap isn't running
+
+**Time Spent:** 6+ hours debugging
+**Status:** Code fixes complete and verified, deployment issue blocks production
+
+---
+
 ## 2025-10-25 00:00 - Felix: TWO BUGS FIXED + ONE MYSTERY REMAINS
 
 **Context:** Fixed query result handling + status reporting, but entities still show count=1 in production.
