@@ -21,7 +21,12 @@ from datetime import datetime
 from pathlib import Path
 
 from orchestration.libs.trace_parser import parse_trace_format, TraceParseResult
-from orchestration.mechanisms.weight_learning import WeightLearner
+from orchestration.mechanisms.weight_learning_v2 import WeightLearnerV2
+from orchestration.libs.entity_context_trace_integration import (
+    EntityContextManager,
+    MembershipQueryHelper,
+    enhance_nodes_with_memberships
+)
 from orchestration.services.learning.learning_heartbeat import LearningHeartbeat
 from substrate.schemas.consciousness_schema import (
     get_node_type_by_name,
@@ -68,14 +73,25 @@ class TraceCapture:
             "ecosystem": "ecosystem_public"
         }
 
-        # Weight learning mechanism (Phase 1-6 integration)
-        self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
+        # Weight learning mechanism (Priority 4: Entity-context-aware)
+        self.weight_learner = WeightLearnerV2(
+            alpha=0.1,           # EMA decay
+            min_cohort_size=3,
+            alpha_local=0.8,     # 80% to entity overlays
+            alpha_global=0.2,    # 20% to global weight
+            overlay_cap=2.0      # Max absolute overlay
+        )
+
+        # Entity context tracking (Priority 4)
+        self.entity_context_manager = EntityContextManager(self.graph_store)
+        self.membership_helper = MembershipQueryHelper(self.graph_store)
 
         # Learning heartbeat (monitoring)
         self.learning_heartbeat = LearningHeartbeat()
 
         logger.info(f"[TraceCapture] Initialized for {citizen_id} with multi-niveau routing")
-        logger.info(f"[TraceCapture] Weight learning enabled (alpha={self.weight_learner.alpha})")
+        logger.info(f"[TraceCapture] WeightLearnerV2 enabled (α={self.weight_learner.alpha}, local={self.weight_learner.alpha_local}, global={self.weight_learner.alpha_global})")
+        logger.info(f"[TraceCapture] Entity context tracking enabled (Priority 4)")
         logger.info(f"[TraceCapture] Learning heartbeat enabled (dir={self.learning_heartbeat.heartbeat_dir})")
 
     def _get_graph_for_scope(self, scope: str) -> FalkorDBGraphStore:
