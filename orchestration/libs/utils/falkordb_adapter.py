@@ -1135,8 +1135,9 @@ class FalkorDBAdapter:
                 target = graph.get_entity(link.target_id)
                 if target:
                     # Create link in database (use MERGE for idempotency, SET for properties)
+                    # NOTE: Don't use :Node label - nodes have specific labels (Concept, Realization, etc.)
                     query = f"""
-                    MATCH (source:Node {{id: $source_id}})
+                    MATCH (source {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
                     MERGE (source)-[r:BELONGS_TO]->(target)
                     SET r = $props
