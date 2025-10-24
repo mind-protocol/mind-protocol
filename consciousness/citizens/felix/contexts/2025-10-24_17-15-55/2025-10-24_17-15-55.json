@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-24_17-15-55",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-24T15:15:55.712366+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T15:15:55.712366+00:00",
+      "content": "Console Error\n\n\n[WebSocket] Error: {}\n\napp\\consciousness\\hooks\\useWebSocket.ts (382:17) @ useWebSocket.useCallback[connect]\n\n\n  380 |\n  381 |       ws.onerror = (event) => {\n> 382 |         console.error('[WebSocket] Error:', event);\n      |                 ^\n  383 |         setConnectionState(WebSocketState.ERROR);\n  384 |         setError('WebSocket connection error');\n  385 |       };\nCall Stack\n4\n\nShow 3 ignore-listed frame(s)\nuseWebSocket.useCallback[connect]\napp\\consciousness\\hooks\\useWebSocket.ts (382:17)"
+    }
+  ],
+  "last_updated": "2025-10-24T15:15:55.712366+00:00",
+  "message_count": 1
+}
