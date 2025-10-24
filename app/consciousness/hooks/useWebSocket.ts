@@ -156,6 +156,13 @@ export function useWebSocket(): WebSocketStreams {
               return prev; // Same frame, skip update to prevent re-render loop
             }
 
+            // Check if this frame is already tracked in our history
+            // This prevents duplicate additions that cause infinite re-render loops
+            const alreadyTracked = prev.frameEvents.some(e => e.frame_id === frameEvent.frame_id);
+            if (alreadyTracked) {
+              return prev; // Skip duplicate frame
+            }
+
             // Accumulate frame events for Priority 3 tick speed visualization
             const updatedFrameEvents = [...prev.frameEvents, frameEvent].slice(-MAX_FRAME_EVENTS);
 

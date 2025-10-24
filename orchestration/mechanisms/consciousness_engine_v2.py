@@ -1068,13 +1068,14 @@ class ConsciousnessEngineV2:
 
     def _select_workspace(self, activated_node_ids: List[str], subentity: str) -> List[Node]:
         """
-        Select working memory nodes using weight-based scoring.
+        Select working memory nodes using weight-based scoring with entity-aware weights (Priority 4).
 
-        Score = (energy / tokens) * exp(z_W)
+        Score = (energy / tokens) * exp(z_W_effective)
+        where z_W_effective uses entity-specific overlays when available
 
         Args:
             activated_node_ids: IDs of nodes above threshold
-            subentity: Subentity to select workspace for
+            subentity: Subentity to select workspace for (used for entity-aware weight computation)
 
         Returns:
             List of Node objects selected for workspace
@@ -1105,9 +1106,13 @@ class ConsciousnessEngineV2:
             energy = node.E  # Single-energy architecture
             energy_per_token = energy / token_count
 
-            # Standardized weight
+            # Standardized weight (entity-aware for Priority 4)
+            # Use effective weight when subentity context available
+            from orchestration.core.entity_context_extensions import effective_log_weight_node
+            effective_log_w = effective_log_weight_node(node, subentity) if subentity else node.log_weight
+
             z_W = self.weight_learner.standardize_weight(
-                node.log_weight,
+                effective_log_w,
                 node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
                 node.scope
             )
