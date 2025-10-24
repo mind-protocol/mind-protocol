@@ -631,7 +631,7 @@ class TraceCapture:
             # Add embedding fields with vecf32() wrapper
             if embedding_fields:
                 embedding_assignments = ', '.join([
-                    f'n.{k} = vecf32({v})'
+                    f'n.{k} = vecf32({str(v)})'  # Convert list to string for vecf32()
                     for k, v in embedding_fields.items()
                 ])
                 if prop_assignments:
