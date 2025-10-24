@@ -215,18 +215,60 @@ async function checkStimulusInjection(): Promise<ComponentStatus> {
   }
 }
 
+async function checkAutonomyOrchestrator(): Promise<ComponentStatus> {
+  try {
+    // Check for heartbeat file written by autonomy_orchestrator.py
+    const heartbeatPath = 'C:\\Users\\reyno\\mind-protocol\\orchestration\\services\\.heartbeats\\autonomy_orchestrator.heartbeat';
+
+    if (!existsSync(heartbeatPath)) {
+      return {
+        name: 'Autonomy Orchestrator',
+        status: 'stopped',
+        details: 'No heartbeat file found',
+      };
+    }
+
+    const stats = await readFile(heartbeatPath, 'utf-8');
+    const heartbeatData = JSON.parse(stats);
+    const lastBeat = new Date(heartbeatData.timestamp);
+    const now = new Date();
+    const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;
+
+    if (ageSeconds < 30) {
+      return {
+        name: 'Autonomy Orchestrator',
+        status: 'running',
+        details: `Service active (${Math.floor(ageSeconds)}s ago)`,
+      };
+    } else {
+      return {
+        name: 'Autonomy Orchestrator',
+        status: 'stopped',
+        details: `Stale heartbeat (${Math.floor(ageSeconds)}s old)`,
+      };
+    }
+  } catch (error) {
+    return {
+      name: 'Autonomy Orchestrator',
+      status: 'error',
+      details: 'Could not read heartbeat file',
+    };
+  }
+}
+
 export async function GET() {
   try {
-    const [falkorDB, mechanisms, watcher, trace, stimulus] = await Promise.all([
+    const [falkorDB, mechanisms, watcher, trace, stimulus, autonomy] = await Promise.all([
       checkFalkorDB(),
       checkConsciousnessMechanisms(),
       checkConversationWatcher(),
       checkTRACECapture(),
       checkStimulusInjection(),
+      checkAutonomyOrchestrator(),
     ]);
 
     // Flatten mechanisms array (it returns multiple ComponentStatus objects)
-    const components = [falkorDB, ...mechanisms, watcher, trace, stimulus];
+    const components = [falkorDB, ...mechanisms, watcher, trace, stimulus, autonomy];
 
     // Overall system health
     const allRunning = components.every(c => c.status === 'running');
