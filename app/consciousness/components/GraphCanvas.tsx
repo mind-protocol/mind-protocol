@@ -292,9 +292,10 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       .force('center', d3.forceCenter(width / 2, height / 2).strength(2.0)) // Strong pull to compress clusters together
       .force('collision', d3.forceCollide()
         .radius(32) // Larger radius to space out nodes within clusters
-        .iterations(collisionIterations))
-      .force('temporal', forceTemporalX(width))
-      .force('valence', forceValenceY(height));
+        .iterations(collisionIterations));
+      // Temporal and valence forces disabled - pure center attraction
+      // .force('temporal', forceTemporalX(width))
+      // .force('valence', forceValenceY(height));
 
     // Render links with wireframe aesthetic (Venice consciousness flows)
     // Now with emotion-based coloring when available
