@@ -30,12 +30,28 @@ interface LeftSidebarMenuProps {
 }
 
 type Section = 'affective' | 'rhythms' | 'exploration' | null;
+type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | null;
 
 export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarMenuProps) {
   const [expandedSection, setExpandedSection] = useState<Section>('affective');
+  const [expandedSubPanels, setExpandedSubPanels] = useState<Set<string>>(
+    new Set(['regulation', 'telemetry'])  // Start with both expanded
+  );
 
   const toggleSection = (section: Section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const toggleSubPanel = (panel: string) => {
+    setExpandedSubPanels(prev => {
+      const next = new Set(prev);
+      if (next.has(panel)) {
+        next.delete(panel);
+      } else {
+        next.add(panel);
+      }
+      return next;
+    });
   };
 
   return (
@@ -50,20 +66,22 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
           isExpanded={expandedSection === 'affective'}
           onToggle={() => toggleSection('affective')}
         >
-          <div className="space-y-4 p-4 bg-slate-900/30">
-            <div className="pb-3 border-b border-slate-800">
-              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                Regulation
-              </div>
+          <div className="bg-slate-900/30">
+            <SubPanelAccordion
+              title="Regulation"
+              isExpanded={expandedSubPanels.has('regulation')}
+              onToggle={() => toggleSubPanel('regulation')}
+            >
               <CompactRegulationIndex />
-            </div>
+            </SubPanelAccordion>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                Telemetry
-              </div>
+            <SubPanelAccordion
+              title="Telemetry"
+              isExpanded={expandedSubPanels.has('telemetry')}
+              onToggle={() => toggleSubPanel('telemetry')}
+            >
               <CompactAffectiveTelemetry />
-            </div>
+            </SubPanelAccordion>
           </div>
         </SectionAccordion>
 
@@ -142,6 +160,42 @@ function SectionAccordion({
       {/* Section Content */}
       {isExpanded && (
         <div className="border-t border-observatory-teal/10">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubPanelAccordion({
+  title,
+  isExpanded,
+  onToggle,
+  children
+}: {
+  title: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-slate-800/50">
+      {/* Sub-Panel Header */}
+      <button
+        onClick={onToggle}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-800/30 transition-colors"
+      >
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+          {title}
+        </span>
+        <span className="text-slate-500 text-xs">
+          {isExpanded ? '▼' : '▶'}
+        </span>
+      </button>
+
+      {/* Sub-Panel Content */}
+      {isExpanded && (
+        <div className="px-4 pb-4">
           {children}
         </div>
       )}
