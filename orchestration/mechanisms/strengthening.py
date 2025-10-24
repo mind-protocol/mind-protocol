@@ -50,6 +50,8 @@ class StrengtheningEvent:
     energy_flow: float         # Energy that triggered strengthening
     source_active: bool        # Was source active?
     target_active: bool        # Was target active?
+    reason: str                # Strengthening reason: co_activation | causal | background
+    tier_scale: float          # Tier multiplier (1.0 | 0.6 | 0.3)
 
 
 @dataclass
@@ -236,14 +238,19 @@ def strengthen_link(
     learning_controller: LearningController,
     track_history: bool = False,
     citizen_id: str = "",
-    frame_id: Optional[str] = None
+    frame_id: Optional[str] = None,
+    stride_utility: float = 0.0,
+    source_was_active_pre: bool = False,
+    target_was_active_pre: bool = False,
+    target_crossed_threshold: bool = False
 ) -> Optional[StrengtheningEvent]:
     """
     Strengthen link proportional to energy flowing through it.
 
-    CRITICAL (D020): Strengthening only when BOTH nodes INACTIVE
-    - Active nodes (E >= theta): NO strengthening (normal dynamics)
-    - Inactive nodes being connected: YES strengthening (new pattern learning)
+    3-TIER STRENGTHENING (Replaces D020):
+    - STRONG (co_activation): Both nodes active → tier_scale = 1.0
+    - MEDIUM (causal): Stride caused target flip → tier_scale = 0.6
+    - WEAK (background): Neither active → tier_scale = 0.3
 
     This is Hebbian learning: "Neurons that fire together, wire together"
 
@@ -252,27 +259,48 @@ def strengthen_link(
         energy_flow: Amount of energy transferred this stride
         learning_controller: Controller for adaptive learning rates
         track_history: Whether to record this event in history
+        citizen_id: Citizen ID for telemetry
+        frame_id: Frame ID for telemetry
+        stride_utility: Z-score of stride value (filters noise, default 0.0 = neutral)
+        source_was_active_pre: Source was active before this stride
+        target_was_active_pre: Target was active before this stride
+        target_crossed_threshold: This stride caused target to activate
 
     Returns:
-        StrengtheningEvent if strengthening occurred, None otherwise
+        StrengtheningEvent if strengthening occurred, None if filtered
 
     Example:
         >>> controller = LearningController(base_rate=0.01)
-        >>> event = strengthen_link(link, energy_flow=0.05, learning_controller=controller)
+        >>> event = strengthen_link(link, energy_flow=0.05, learning_controller=controller,
+        ...                         stride_utility=1.5)  # Above average utility
         >>> if event:
-        ...     print(f"Strengthened: Δw={event.delta_weight:.4f}")
+        ...     print(f"Strengthened: Δw={event.delta_weight:.4f}, reason={event.reason}")
     """
-    # Check activation state (D020 decision)
-    source_active = link.source.is_active()  # E >= theta
-    target_active = link.target.is_active()  # E >= theta
+    # Check current activation states (post-stride)
+    source_active_post = link.source.is_active()  # E >= theta
+    target_active_post = link.target.is_active()  # E >= theta
 
-    if source_active and target_active:
-        # Both active: energy flows but NO strengthening
-        # This is normal dynamics, not learning moment
+    # Determine strengthening tier (3-tier rule - PR-A)
+    if source_active_post and target_active_post:
+        # STRONG: Co-activation (both active same frame)
+        # "Neurons that fire together wire together" - full strength
+        tier_scale = 1.0
+        reason = "co_activation"
+    elif target_crossed_threshold and not target_was_active_pre:
+        # MEDIUM: Causal credit (stride caused target to flip)
+        # This stride specifically enabled activation
+        tier_scale = 0.6
+        reason = "causal"
+    else:
+        # WEAK: Background spillover (neither active or no flip)
+        # Ambient diffusion, prevents noise learning
+        tier_scale = 0.3
+        reason = "background"
+
+    # Guard: require minimum stride utility to filter noise (PR-A)
+    # Below -1 sigma = noise, don't learn from it
+    if stride_utility < -1.0:
         return None
-
-    # At least one node inactive: strengthening can occur
-    # This is learning - forming new patterns
 
     # Get adaptive learning rate
     learning_rate = learning_controller.get_learning_rate(link)
@@ -281,11 +309,17 @@ def strengthen_link(
     # Apply to target node (where memory is being written)
     m_affect = compute_affective_memory_multiplier(link.target)
 
-    # Compute weight delta (base)
-    delta_log_w_base = learning_rate * energy_flow
+    # Compute weight delta with 3-tier scaling (PR-A)
+    # delta = learning_rate × energy_flow × tier_scale × max(0, stride_utility) × m_affect
+    delta_log_w_base = learning_rate * energy_flow * tier_scale
+
+    # Apply stride utility scaling (only positive utility contributes)
+    # This filters noise and rewards valuable flows
+    utility_scale = max(0.1, stride_utility) if stride_utility > 0 else 0.1  # Minimum 10% even for neutral utility
+    delta_log_w_utility = delta_log_w_base * utility_scale
 
     # Apply affective amplification
-    delta_log_w_amplified = delta_log_w_base * m_affect
+    delta_log_w_amplified = delta_log_w_utility * m_affect
 
     # Store old weight for event
     old_log_weight = link.log_weight
