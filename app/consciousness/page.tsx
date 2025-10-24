@@ -15,6 +15,7 @@ import { SystemStatusPanel } from './components/SystemStatusPanel';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { AffectiveTelemetryPanel } from './components/AffectiveTelemetryPanel';
 import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
+import { TierBreakdownPanel } from './components/TierBreakdownPanel';
 // import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
 // import { IdentityMultiplicityPanel } from './components/IdentityMultiplicityPanel';
 // import { FoundationsEnrichmentsPanel } from './components/FoundationsEnrichmentsPanel';
@@ -74,6 +75,10 @@ export default function ConsciousnessPage() {
 
   // Node focus state (for click-to-focus from CLAUDE_DYNAMIC.md)
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+
+  // Stride events for TierBreakdownPanel (Priority 2)
+  // TODO: Integrate with useWebSocket when backend emits stride.exec events
+  const [strideEvents, setStrideEvents] = useState<any[]>([]);
 
   /**
    * WebSocket Event Integration
@@ -299,14 +304,21 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
-      {/* Citizen consciousness monitor (right sidebar) */}
-      <CitizenMonitor
-        citizens={citizens}
-        onFocusNode={handleFocusNode}
-        onSelectCitizen={handleSelectCitizen}
-        activeCitizenId={currentGraphId}
-        v2State={v2State}
-      />
+      {/* Tier Breakdown Panel (right sidebar, upper section) - Priority 2 */}
+      <div className="absolute top-24 right-4 w-80 z-40">
+        <TierBreakdownPanel strideEvents={strideEvents} />
+      </div>
+
+      {/* Citizen consciousness monitor (right sidebar, below tier panel) */}
+      <div className="absolute top-[28rem] right-4 w-80 z-40">
+        <CitizenMonitor
+          citizens={citizens}
+          onFocusNode={handleFocusNode}
+          onSelectCitizen={handleSelectCitizen}
+          activeCitizenId={currentGraphId}
+          v2State={v2State}
+        />
+      </div>
 
       {/* Detail panel - Modal overlay on node click */}
       <DetailPanel nodes={nodes} links={links} />
