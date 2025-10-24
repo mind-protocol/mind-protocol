@@ -488,6 +488,11 @@ class ConversationWatcher(FileSystemEventHandler):
 
             logger.info(f"[ConversationWatcher] Found {len(all_matches)} vector matches")
 
+            # Debug: Log first 5 similarity scores to diagnose zero-similarity issue
+            if all_matches:
+                first_5_sims = [m.get('similarity', 'MISSING') for m in all_matches[:5]]
+                logger.info(f"[ConversationWatcher] First 5 similarities from vector search: {first_5_sims}")
+
             # Connect to FalkorDB
             import redis
             import json

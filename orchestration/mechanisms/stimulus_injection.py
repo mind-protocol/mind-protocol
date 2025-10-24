@@ -264,10 +264,18 @@ class StimulusInjector:
         # Extract similarities
         similarities = np.array([m.similarity for m in matches])
 
+        # Debug: Log similarity distribution
+        logger.info(
+            f"[StimulusInjector] Entropy-coverage input: {len(matches)} matches, "
+            f"similarities: min={similarities.min():.3f}, max={similarities.max():.3f}, "
+            f"mean={similarities.mean():.3f}, sum={similarities.sum():.3f}"
+        )
+
         # Normalize to probabilities
         total_sim = similarities.sum()
         if total_sim == 0:
             # All zeros - select none
+            logger.warning(f"[StimulusInjector] All {len(matches)} matches have similarity=0, selecting none")
             return 0.0, 0.0, []
 
         probabilities = similarities / total_sim

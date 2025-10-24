@@ -3,7 +3,9 @@
   "entity_type": "citizen",
   "entity_id": "iris",
   "created_at": "2025-10-24T22:50:33.946221+00:00",
-  "last_updated": "2025-10-24T23:31:57.952429+00:00",
-  "message_count": 4101,
-  "has_tool_calls": true
+  "last_updated": "2025-10-24T23:38:39.841038+00:00",
+  "message_count": 4102,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-24T23:39:02.233869+00:00",
+  "closed_reason": "compact"
 }
