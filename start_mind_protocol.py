@@ -1163,6 +1163,8 @@ class ProcessManager:
                     if any(script in line.lower() for script in [
                         'conversation_watcher',
                         'websocket_server',
+                        'stimulus_injection',
+                        'autonomy_orchestrator',
                         'trace_capture',
                         'consciousness_engine'
                     ]):
@@ -1278,6 +1280,10 @@ class ProcessManager:
                         success = await self.start_websocket_server()
                     elif name == 'conversation_watcher':
                         success = await self.start_conversation_watcher()
+                    elif name == 'stimulus_injection':
+                        success = await self.start_stimulus_injection()
+                    elif name == 'autonomy_orchestrator':
+                        success = await self.start_autonomy_orchestrator()
                     elif name == 'consciousness_engine':
                         success = await self.start_consciousness_engine()
                     elif name == 'dashboard':

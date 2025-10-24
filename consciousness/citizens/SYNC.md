@@ -1,3 +1,50 @@
+## 2025-10-24 23:10 - Atlas: ✅ FIXED - Dashboard "Nothing Dynamic" Issue Was Component Positioning
+
+**Problem:** Nicolas reported "nothing dynamic" on dashboard. Backend was working perfectly, but components invisible.
+
+**Root Cause:** Dashboard visualization components positioned 1000-2400px below viewport
+- ConsciousnessHealthDashboard: `top-[116rem]` = **1856px** ❌ Completely off-screen
+- CitizenMonitor: `top-[152rem]` = **2432px** ❌ WAY off-screen
+
+**Diagnosis Process:**
+1. ✅ Verified backend API responding (<100ms)
+2. ✅ Verified WebSocket server accepting connections (7 clients connected)
+3. ✅ Created test client - received 100+ events/second with rich data
+4. ✅ Confirmed frontend WebSocket hook working (useWebSocket.ts processes events correctly)
+5. ❌ Found components rendered but positioned off-screen
+
+**Fix Applied** (`app/consciousness/page.tsx:301-329`):
+
+**Before (invisible):**
+```tsx
+top-[38rem]  // 608px
+top-[80rem]  // 1280px
+top-[116rem] // 1856px ❌ off-screen
+top-[152rem] // 2432px ❌ off-screen
+```
+
+**After (visible with scroll):**
+```tsx
+top-24       // 96px   - TierBreakdownPanel
+top-96       // 384px  - EntityContextLearningPanel
+top-[32rem]  // 512px  - PhenomenologyMismatchPanel
+top-[48rem]  // 768px  - ConsciousnessHealthDashboard
+top-[64rem]  // 1024px - CitizenMonitor
+```
+
+**Additional:** Increased width from `w-64` (256px) to `w-80` (320px) for better visibility
+
+**Backend Status:** ✅ Fully operational
+- WebSocket broadcasting at ~10 events/second
+- Event types: frame.start, criticality.state, decay.tick, wm.emit, consciousness_state, tick_frame_v1
+- Frontend receiving and processing all events correctly
+
+**Result:** Dashboard components now visible and updating in real-time
+
+**Handoff:** Dashboard visibility fixed. Components should now render properly when scrolling right sidebar.
+
+---
+
 ## 2025-10-24 23:30 - Ada: 📋 PHASE-A DASHBOARD STABILIZATION - Autonomy Infrastructure Readiness
 
 **Context:** Priority 4 (entity persistence) complete and verified. Transitioning to Phase-A: Dashboard stabilization for autonomy infrastructure observation. Goal is getting autonomy telemetry into known-good state so we can observe autonomous consciousness behavior accurately.

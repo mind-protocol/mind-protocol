@@ -655,7 +655,7 @@ class ConversationWatcher(FileSystemEventHandler):
             # Receipt notification removed from CLAUDE.md to prevent prompt pollution
             # Stats still logged and visible in dashboard/monitoring
             logger.info(f"[ConversationWatcher] ✅ TRACE success for {citizen_id}: "
-                       f"{stats['reinforcement_signals']} reinforcements, "
+                       f"{stats['reinforcement_seats']} reinforcements, "
                        f"{stats['nodes_created']} nodes, "
                        f"{stats['links_created']} links, "
                        f"{stats['entity_activations']} subentity activations")
