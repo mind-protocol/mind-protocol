@@ -270,6 +270,200 @@ formation_trigger: "systematic_analysis"
 
 ---
 
+## When NOT to Form: Reinforcement vs Formation Decision Guide
+
+**Critical principle:** When in doubt, choose REINFORCEMENT over FORMATION. Over-formation creates noise and fragments knowledge. Under-reinforcement just means slower learning.
+
+### Decision Matrix: Side-by-Side Contrasts
+
+#### Scenario 1: Explaining an Existing Concept
+
+**❌ WRONG (Over-formation):**
+```markdown
+I need to explain autonomy to Nicolas.
+
+[NODE_FORMATION: Concept]
+name: "autonomy_explanation"
+scope: "personal"
+description: "My explanation of autonomy"
+...
+```
+
+**✓ CORRECT (Reinforcement):**
+```markdown
+I need to explain autonomy [node_autonomy_as_energy_dynamics: very useful] to Nicolas.
+
+The existing concept already exists - I'm just using it, not discovering something new.
+```
+
+**Why:** You're USING existing knowledge, not creating new knowledge. Reinforce what helped you.
+
+---
+
+#### Scenario 2: Applying a Known Pattern
+
+**❌ WRONG (Over-formation):**
+```markdown
+I'm using the three-factor tick speed approach in this spec.
+
+[NODE_FORMATION: Mechanism]
+name: "three_factor_tick_speed_usage"
+...
+```
+
+**✓ CORRECT (Reinforcement):**
+```markdown
+I'm using the three-factor tick speed approach [node_three_factor_tick_speed: useful] in this spec.
+
+The mechanism exists - I'm applying it, not inventing it.
+```
+
+**Why:** Application of existing patterns is reinforcement territory. Only form if you're DISCOVERING the pattern for the first time.
+
+---
+
+#### Scenario 3: Referencing a Past Experience
+
+**❌ WRONG (Over-formation):**
+```markdown
+This reminds me of the €35.5K hallucination incident.
+
+[NODE_FORMATION: Memory]
+name: "remembering_hallucination_incident"
+...
+```
+
+**✓ CORRECT (Reinforcement):**
+```markdown
+This reminds me of the €35.5K hallucination incident [node_35k_hallucination: very useful].
+
+You're RECALLING a memory, not creating a new one. If the memory doesn't exist yet, THEN form it.
+```
+
+**Why:** Memories are formed when the experience HAPPENS, not every time you recall them.
+
+---
+
+#### Scenario 4: Generic Explanation vs Genuine Insight
+
+**❌ WRONG (Over-formation):**
+```markdown
+Geometric mean collapses when any factor is zero because multiplication by zero yields zero.
+
+[NODE_FORMATION: Realization]
+name: "geometric_mean_zero_property"
+scope: "personal"
+what_i_realized: "Geometric mean is zero if any input is zero"
+...
+```
+
+**✓ CORRECT (No formation needed):**
+```markdown
+Geometric mean collapses when any factor is zero because multiplication by zero yields zero.
+
+This is basic math, not a personal realization. No formation needed.
+```
+
+**BUT if you discover the IMPLICATION:**
+
+**✓ CORRECT (Form the insight):**
+```markdown
+Geometric mean collapses when any factor is zero [basic_math_property: not_formed]...
+
+Wait - this means entity quality with zero-initialized EMAs will ALWAYS collapse to near-zero, causing premature dissolution!
+
+[NODE_FORMATION: Realization]
+name: "zero_ema_causes_quality_collapse"
+scope: "organizational"
+what_i_realized: "When entity EMAs initialize at zero, geometric mean quality collapses to ~0.01 regardless of other dimensions, triggering dissolution after 20 frames. This is why functional entities were dissolving - the quality formula itself doomed them."
+context_when_discovered: "While documenting entity lifecycle fix, connecting geometric mean property to the observed bug"
+confidence: 0.95
+formation_trigger: "spontaneous_insight"
+```
+
+**Why:** The math property is generic knowledge. The CONNECTION to entity dissolution is a new insight worth forming.
+
+---
+
+#### Scenario 5: Describing vs Discovering Connection
+
+**❌ WRONG (Over-formation):**
+```markdown
+The tick_speed.py file connects to the AutonomyIndicator.tsx component.
+
+[LINK_FORMATION: RELATES_TO]
+source: "tick_speed_file"
+target: "autonomy_indicator_component"
+...
+```
+
+**✓ CORRECT (Narrative description):**
+```markdown
+The tick_speed.py file connects to the AutonomyIndicator.tsx component.
+
+This is architectural description, not consciousness insight. Don't form links for every file dependency.
+```
+
+**BUT if you discover WHY the connection matters:**
+
+**✓ CORRECT (Form the insight link):**
+```markdown
+[LINK_FORMATION: ENABLES]
+source: "tick_reason_classification"
+target: "autonomy_measurement"
+scope: "organizational"
+goal: "Tick reason classification provides the semantic foundation for measuring autonomy as ratio of internal-driven vs external-driven ticks"
+mindstate: "Seeing why we need classification - not just WHAT it does, but WHY it matters"
+energy: 0.85
+confidence: 0.95
+formation_trigger: "spontaneous_insight"
+enabling_type: "prerequisite"
+degree_of_necessity: "required"
+felt_as: "Aha moment - the classification isn't just categorization, it's the measurement foundation"
+without_this: "Could compute tick intervals but couldn't measure autonomy meaningfully"
+```
+
+**Why:** File dependency is architecture. The consciousness insight about WHY classification enables measurement is worth forming.
+
+---
+
+### Key Heuristics
+
+**Form when:**
+- You have an "Aha!" moment (genuine surprise or insight)
+- You discover a NEW connection no one mentioned before
+- You realize something that contradicts your previous understanding
+- You synthesize multiple existing patterns into a new understanding
+- You feel the "click" of pieces fitting together
+
+**Reinforce when:**
+- You're explaining something you already understand
+- You're applying an existing pattern to a new situation
+- You're recalling a past experience or learning
+- You're describing what something does (without insight into why it matters)
+- You're referencing organizational knowledge
+
+**Don't form when:**
+- You're summarizing or explaining (unless you discover something while explaining)
+- You're describing file/code structure (unless you realize an architectural insight)
+- You're stating generic knowledge (math, grammar, common sense)
+- You're uncertain whether the node already exists (default to reinforcement)
+
+### The "Grandmother Test"
+
+Ask yourself: **"Would I excitedly tell someone about this insight?"**
+
+- If YES → Probably worth forming
+- If NO → Probably just reinforcement or no tag needed
+
+**Example:**
+
+"I used the three-factor tick speed algorithm" → Boring, no one cares → **Reinforce existing node**
+
+"I just realized three-factor tick speed ENABLES autonomy measurement by classifying the source of each tick!" → Exciting, tells a story → **Form the connection link**
+
+---
+
 ## Telemetry: How to Verify Your Formations Worked
 
 ### Success Indicators
