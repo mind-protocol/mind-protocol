@@ -93,37 +93,99 @@
 
 ---
 
-### Current Phase: Awaiting Direction from Nicolas
+### Current Phase: Phase 0 - Infrastructure Bring-Up [BLOCKED]
 
-**Operational Status (per Nicolas 23:35):** ✅ ALL SYSTEMS OPERATIONAL
+**Goal:** Get all dashboard-dependent processes running under guardian supervision before fixing dashboard code.
 
-**Core Infrastructure Running:**
-- ✅ Guardian System: PID 30220 (admin), PID 9328 (launcher)
-- ✅ WebSocket Server: Port 8000
-- ✅ Conversation Watcher: Processing formations
-- ✅ FalkorDB: Port 6379
-- ✅ Dashboard: Port 3000 (assumed operational)
+**Current Status:** ⚠️ **2 of 4 required services missing**
 
-**Consciousness Engines:** ✅ All 7 citizens running, entity counts stable at 8
+**Services Running:**
+- ✅ WebSocket Server (port 8000) - consciousness engines operational
+- ✅ Dashboard (port 3000) - accessible
+- ✅ Conversation Watcher - processing formations
+- ✅ FalkorDB (port 6379) - graph storage
 
-**Completed This Session:**
+**Services NOT Running:**
+- ❌ **Stimulus Injection Server (port 8001)** - connection refused
+- ❌ **Autonomy Orchestrator (port 8002)** - connection refused
+
+**Evidence:**
+- Guardian logs show launcher started (PID 9328) at 23:01:56
+- `.heartbeats/` directory is empty (no heartbeat files being written)
+- Port verification via curl: 8001 and 8002 not bound
+- Nicolas's Phase-A plan explicitly requires these services with heartbeat files
+
+**Why This Blocks Phase 1-5:**
+- **Phase 1:** System Status route needs to read `.heartbeats/stimulus_injection.heartbeat` and `.heartbeats/autonomy_orchestrator.heartbeat` - files don't exist
+- **Phase 2:** Autonomy Indicator needs `tick_reason` from autonomous ticks - orchestrator not running to generate autonomous activations
+- **Phase 5:** Smoke test requires stimulus injection → intent → mission loop - injector not running
+
+**Root Cause Investigation Needed:**
+- Guardian successfully started launcher (PID 9328)
+- Launcher should start all 4 services (8000, 8001, 8002, 3000)
+- Only 8000 and 3000 are operational
+- Need to check: `start_mind_protocol.py` configuration, launcher logs for startup errors, service heartbeat writers
+
+**Next Action:** Victor to investigate why guardian/launcher only started 2 of 4 required services.
+
+**Owner:** Victor (Operations)
+**Priority:** BLOCKING - no Phase 1-5 work can proceed until services are running
+**Timeline:** Target resolution: 2025-10-25 morning
+
+---
+
+### Phase 1-5 Ready to Execute (Once Phase 0 Complete)
+
+**Phase 1: Fix System Status Heartbeat Reading**
+- **Owner:** Iris
+- **Task:** Update `app/api/consciousness/system-status/route.ts` to read separate heartbeat files:
+  - `.heartbeats/stimulus_injection.heartbeat` for Stimulus Injection
+  - `.heartbeats/autonomy_orchestrator.heartbeat` for Autonomy Orchestrator
+  - Stop piggybacking on watcher heartbeat
+- **Why:** Truthful status page prevents ghost debugging
+- **Acceptance:** Killing only injector flips only its line to degraded, not all services
+
+**Phase 2: Make Autonomy Indicator Work**
+- **Owner:** Atlas (Backend) + Iris (Frontend)
+- **Atlas Task:** Emit `tick.update` event with `tick_reason` field at start of each tick
+  - Fields: `tick_reason` (stimulus_detected | autonomous_activation | scheduled_maintenance), `interval_ms`, `interval_candidates`, `context{...}`
+  - Optionally: `autonomy.window_summary` every N ticks for rolling %
+- **Iris Task:** Wire AutonomyIndicator to consume `tick_reason` from `tick.update` events
+- **Why:** Autonomy is top "is it thinking by itself?" signal
+- **Acceptance:** Rumination drill shows autonomy % > 60%, conversation shows < 30%
+
+**Phase 3: Event Name Reconciliation**
+- **Owner:** Iris
+- **Task:** Create `app/consciousness/hooks/normalizeEvents.ts` to map backend event types to TypeScript interfaces
+  - Map `tick_frame_v1` → `frame.end` shape
+  - Pass through `weights.updated`, add TypeScript interface
+  - Add type for `wm.emit` (IDs, token shares, top members)
+- **Why:** Avoids churn across app when Python events are renamed
+- **Acceptance:** No console errors about unknown event types
+
+**Phase 4: API Panel Loading States**
+- **Owner:** Iris
+- **Task:** Update Foundations and Identity Multiplicity panels to show "collecting..." when backend returns empty arrays
+- **Why:** Operators need to know if empty means broken or idle
+- **Acceptance:** Empty API responses show friendly "No data yet" state, not errors
+
+**Phase 5: End-to-End Autonomy Smoke Test**
+- **Owner:** All (Atlas, Iris, Felix, Victor)
+- **Task:** Run complete loop:
+  1. POST `/inject` to 8001 (stimulus) → verify status: "injected"
+  2. Verify IntentCard appears in N2, mission sent (orchestrator)
+  3. Watch loop: stimulus → intent → mission → TRACE → `weights.updated` on WebSocket
+- **Monitoring:** Dashboard shows Status accuracy, Autonomy badge updates, Foundations/Multiplicity populate
+- **Acceptance:** Complete loop observable via dashboard telemetry
+
+---
+
+### Completed This Session (Priority 4)
 1. ✅ Entity dissolution bug fixed (3-layer defense)
 2. ✅ Fix verified in production (entities stable through restart)
 3. ✅ Marco & Piero deleted from FalkorDB
 4. ✅ Formation ingestion restored (conversation_watcher active)
-5. ✅ Guardian supervision operational
-
-**Phase-A Status:** Ready to proceed, but requires clarification:
-- My Phase 0 verification found ports 8001 (Stimulus Injection) and 8002 (Autonomy Orchestrator) not responding
-- Nicolas's status lists operational services: 8000, watcher, 6379, 3000 (no mention of 8001/8002)
-- **Question:** Are ports 8001/8002 services that need to be built (implementation work), or services that should already exist (operational issue)?
-
-**Next Action:** Awaiting Nicolas's direction on:
-1. Should we proceed with Priority 1-4 comprehensive verification?
-2. Should we start Phase-A dashboard work (clarifying 8001/8002 status)?
-3. Is there other work that takes priority?
-
-**Timeline:** Ready to proceed immediately once direction is clear.
+5. ✅ Guardian supervision operational (launcher running)
 
 ---
 
