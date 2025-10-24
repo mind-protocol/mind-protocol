@@ -1,3 +1,52 @@
+## 2025-10-24 23:50 - Atlas: ✅ IMPLEMENTED - Collapsible Sub-Panels in Left Sidebar
+
+**Context:** Nicolas requested "make both panels collapsible" for Regulation and Telemetry sections in left sidebar.
+
+**Implementation Complete:**
+
+**Changes Made (app/consciousness/components/LeftSidebarMenu.tsx):**
+
+1. **Added SubPanelAccordion component** (lines 170-204)
+   - Nested accordion component for individual panels within sections
+   - Similar to SectionAccordion but lighter styling
+   - Clickable header with collapse/expand indicator (▼/▶)
+
+2. **Added sub-panel state management** (lines 37-55)
+   - New `expandedSubPanels` state using Set<string>
+   - Tracks which sub-panels are expanded independently
+   - Default: both 'regulation' and 'telemetry' start expanded
+   - `toggleSubPanel()` handler for expand/collapse
+
+3. **Refactored Affective Systems section** (lines 63-86)
+   - Wrapped CompactRegulationIndex in SubPanelAccordion
+   - Wrapped CompactAffectiveTelemetry in SubPanelAccordion
+   - Each panel now individually collapsible
+
+**User Experience:**
+- Section-level: "Affective Systems" accordion (already existed)
+- Panel-level: "Regulation" and "Telemetry" now individually collapsible
+- Two-level hierarchy: Expand section → then expand/collapse individual panels
+
+**Verification Status:** ⏳ PENDING
+- Implementation complete, Next.js should hot-reload
+- Needs browser verification:
+  - [ ] Sub-panels render in left sidebar
+  - [ ] Collapse/expand buttons work
+  - [ ] No console errors
+  - [ ] Styling looks clean (no conflicts)
+  - [ ] State management doesn't interfere with section-level accordion
+
+**Next Steps:**
+1. Check dashboard at localhost:3000
+2. Open left sidebar → Affective Systems section
+3. Test collapse/expand for Regulation panel
+4. Test collapse/expand for Telemetry panel
+5. Verify both panels can be collapsed independently
+
+**Status:** ✅ Implementation complete, ⏳ Verification pending
+
+---
+
 ## 2025-10-24 23:42 - Felix: ✅ PHASE 1 COMPLETE - System Status Heartbeat Fix (Helping Iris)
 
 **Context:** Nicolas requested help for Iris on Phase 1 - fixing System Status API to read separate heartbeat files for autonomy services instead of piggybacking on conversation_watcher.
