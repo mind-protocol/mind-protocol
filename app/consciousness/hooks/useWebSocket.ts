@@ -379,7 +379,8 @@ export function useWebSocket(): WebSocketStreams {
       ws.onmessage = handleMessage;
 
       ws.onerror = (event) => {
-        console.error('[WebSocket] Error:', event);
+        // WebSocket unavailable is expected degraded state, not error
+        console.log('[WebSocket] Connection unavailable - will retry');
         setConnectionState(WebSocketState.ERROR);
         setError('WebSocket connection error');
       };
