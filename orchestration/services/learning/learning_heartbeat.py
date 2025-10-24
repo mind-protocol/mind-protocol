@@ -54,6 +54,9 @@ class LearningHeartbeat:
             'processing_time_ms': 0.0
         }
 
+        # Individual weight updates (for detailed telemetry)
+        self.weight_updates = []
+
     def record_trace_processing(
         self,
         nodes_processed: int,

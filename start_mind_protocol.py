@@ -1154,19 +1154,54 @@ class ProcessManager:
                     except Exception as e:
                         logger.error(f"[Guardian] Failed to kill rogue {pid}: {e}")
 
+    def _check_service_health(self, name: str, process) -> tuple[bool, str]:
+        """
+        Check if service is healthy (process alive + functional).
+
+        Victor "The Resurrector" Fix - 2025-10-24
+        Returns (is_healthy, reason_if_unhealthy)
+        """
+        # Check 1: Process alive
+        if process.poll() is not None:
+            return (False, f"Process terminated (exit code: {process.returncode})")
+
+        # Check 2: Functional verification (port binding)
+        import socket
+        port_checks = {
+            'websocket_server': 8000,
+            'dashboard': 3000
+        }
+
+        if name in port_checks:
+            port = port_checks[name]
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            try:
+                result = sock.connect_ex(('localhost', port))
+                sock.close()
+                if result != 0:
+                    return (False, f"Port {port} not bound (process alive but service degraded)")
+            except Exception as e:
+                return (False, f"Port check failed: {e}")
+
+        return (True, "")
+
     async def monitor_processes(self):
-        """Monitor processes and restart on crash."""
+        """Monitor processes and restart on crash or degradation."""
         while self.running:
             await asyncio.sleep(5)
 
             for name, process in list(self.processes.items()):
-                if process.poll() is not None:
-                    logger.error(f"❌ {name} crashed! Exit code: {process.returncode}")
+                # Check both process death AND service degradation
+                is_healthy, failure_reason = self._check_service_health(name, process)
 
-                    # Send notification about crash
+                if not is_healthy:
+                    logger.error(f"❌ {name} unhealthy: {failure_reason}")
+
+                    # Send notification about failure
                     self.notifier.notify_critical(
-                        f"{name.capitalize()} Crashed",
-                        f"Exit code: {process.returncode}\nAttempting auto-restart..."
+                        f"{name.capitalize()} Unhealthy",
+                        f"{failure_reason}\nAttempting auto-restart..."
                     )
 
                     # Auto-restart

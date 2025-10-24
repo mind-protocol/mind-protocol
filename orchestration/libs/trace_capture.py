@@ -235,14 +235,38 @@ class TraceCapture:
                 logger.warning("[TraceCapture] No nodes loaded - skipping weight learning")
                 return
 
-            # Call WeightLearner to compute updates
+            # === PRIORITY 4: Entity Context Derivation ===
+            # Derive entity context using priority logic (WM entities → TRACE annotations → dominant)
+            entity_context = self.entity_context_manager.derive_entity_context(
+                wm_entities=None,  # TODO: Get from last WM emit event
+                trace_annotations=None,  # TODO: Extract [entity: X] marks from TRACE
+                graph_name=self.scope_to_graph['personal']
+            )
+
+            logger.info(f"[TraceCapture] Entity context derived: {entity_context}")
+
+            # Query BELONGS_TO memberships for all nodes being updated
+            node_ids_to_update = list(reinforcement_seats.keys())
+            memberships = self.membership_helper.get_node_memberships(
+                node_ids=node_ids_to_update,
+                entity_ids=entity_context,
+                graph_name=self.scope_to_graph['personal']
+            )
+
+            logger.info(f"[TraceCapture] Queried memberships for {len(node_ids_to_update)} nodes")
+
+            # Enhance nodes with membership data for WeightLearnerV2
+            all_nodes = enhance_nodes_with_memberships(all_nodes, memberships)
+
+            # Call WeightLearnerV2 to compute updates with entity context
             updates = self.weight_learner.update_node_weights(
                 nodes=all_nodes,
                 reinforcement_seats=reinforcement_seats,
-                formations=node_formations
+                formations=node_formations,
+                entity_context=entity_context  # NEW: Entity-aware learning
             )
 
-            logger.info(f"[TraceCapture] Weight learner produced {len(updates)} updates")
+            logger.info(f"[TraceCapture] WeightLearnerV2 produced {len(updates)} updates with entity attribution")
 
             # Apply updates back to FalkorDB
             for update in updates:
@@ -255,13 +279,20 @@ class TraceCapture:
 
                 graph = self._get_graph_for_scope(scope)
 
-                # Build update query
+                # Build entity overlays dict from local_overlays list
+                overlays_dict = {}
+                if update.local_overlays:
+                    for overlay in update.local_overlays:
+                        overlays_dict[overlay['entity']] = overlay['overlay_after']
+
+                # Build update query with log_weight_overlays persistence
+                import json
                 update_query = """
                 MATCH (n {name: $node_id})
                 SET n.log_weight = $log_weight,
+                    n.log_weight_overlays = $log_weight_overlays,
                     n.ema_trace_seats = $ema_trace_seats,
                     n.ema_formation_quality = $ema_formation_quality,
-                    n.ema_wm_presence = $ema_wm_presence,
                     n.last_update_timestamp = timestamp()
                 RETURN n.name as name, n.log_weight as log_weight
                 """
@@ -269,21 +300,44 @@ class TraceCapture:
                 result = graph.query(update_query, params={
                     'node_id': node_id,
                     'log_weight': float(update.log_weight_new),
+                    'log_weight_overlays': json.dumps(overlays_dict),
                     'ema_trace_seats': float(update.ema_trace_seats_new),
-                    'ema_formation_quality': float(update.ema_formation_quality_new),
-                    'ema_wm_presence': float(update.ema_wm_presence_new)
+                    'ema_formation_quality': float(update.ema_formation_quality_new or 0.0)
                 })
 
                 if result and len(result) > 0:
-                    delta_log_weight = update.log_weight_new - update.log_weight_old
+                    delta_log_weight = update.delta_log_weight_global
                     total_log_weight_delta += abs(delta_log_weight)
 
-                    logger.debug(
-                        f"[TraceCapture] Updated {node_id} in {scope}: "
-                        f"log_weight={update.log_weight_new:.3f} (Δ{delta_log_weight:+.3f}), "
-                        f"ema_trace={update.ema_trace_seats_new:.2f}, "
-                        f"ema_form={update.ema_formation_quality_new:.2f}"
+                    # Log with entity attribution
+                    if update.local_overlays:
+                        overlays_str = ", ".join([
+                            f"{o['entity']}: Δ{o['delta']:+.3f}"
+                            for o in update.local_overlays
+                        ])
+                        logger.debug(
+                            f"[TraceCapture] Updated {node_id} in {scope}: "
+                            f"global={update.log_weight_new:.3f} (Δ{delta_log_weight:+.3f}), "
+                            f"overlays=[{overlays_str}], "
+                            f"ema_trace={update.ema_trace_seats_new:.2f}"
+                        )
+                    else:
+                        logger.debug(
+                            f"[TraceCapture] Updated {node_id} in {scope}: "
+                            f"log_weight={update.log_weight_new:.3f} (Δ{delta_log_weight:+.3f}), "
+                            f"ema_trace={update.ema_trace_seats_new:.2f}"
+                        )
+
+                    # Emit telemetry with entity attribution
+                    self.learning_heartbeat.record_weight_update(
+                        node_id=node_id,
+                        channel="trace",
+                        delta_log_weight=delta_log_weight,
+                        z_score=update.z_rein,
+                        learning_rate=update.learning_rate,
+                        local_overlays=update.local_overlays  # NEW: Entity attribution
                     )
+
                     stats['nodes_reinforced'] += 1
                 else:
                     logger.warning(f"[TraceCapture] Failed to update node {node_id} in {scope}")
