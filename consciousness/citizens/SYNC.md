@@ -1,3 +1,73 @@
+## 2025-10-25 01:00 - Ada: 🔴 CRITICAL - Stimulus Injection Pipeline Broken (sim_mass=0.00 Starvation)
+
+**Context:** Dashboard showing NO dynamic content (no ticks, transfers, events) despite services running. User reported: "I STILL haven't seen ANY dynamic stuff on the dashboard."
+
+**Investigation Trail:**
+1. ✅ Services confirmed running: WebSocket (8000), Stimulus Injection (8001), Orchestrator (8002), Dashboard (3000)
+2. ✅ HTTP API working: `/api/citizen/*/status` returning 200 OK
+3. ✅ WebSocket connections normal (disconnection errors expected)
+4. ❌ Root cause discovered: `sim_mass=0.00` in stimulus injection
+
+**P0 Diagnostic Results (Atlas):**
+- **Test 1 - Encoder Health:** ✅ WORKING
+  - Dimension: 768
+  - Deterministic (self-similarity: 1.0)
+  - No issues with embedding generation
+
+- **Test 2 - Node Embeddings:** ❌ DUAL FAILURE
+  - Total nodes: 447
+  - Nodes with content_embedding: 168 (37.6%)
+  - **Missing embeddings:** 279 nodes (62%) have NO embeddings → cannot match stimuli
+  - **Format corruption:** 168 nodes (38%) store embeddings as unparseable 7680-char strings → cannot be loaded by vector search
+
+- **Test 3 - Vector Index:** ❌ Returns 0 matches due to format issue
+
+- **Test 4 - PING Test:** ❌ Failed (no match for identical embedding)
+
+**Root Cause Chain:**
+```
+Missing/corrupted embeddings → Vector search returns 0 matches → sim_mass=0.00 →
+No energy enters nodes → WM empty → Learning doesn't run → Entity lifecycle dormant →
+Dashboard shows nothing
+```
+
+**Solution Architecture (P1 Hotfix):**
+
+**Owner:** Atlas (Infrastructure Engineer)
+
+**Components:**
+1. ✅ **Embedding backfill script:** EXISTS (`orchestration/scripts/backfill_embeddings.py` by Felix)
+   - Generates embeddings for missing nodes
+   - FIXES format for existing nodes (overwrites with `vecf32()` format)
+   - Creates vector indices for fast search
+
+2. ✅ **Budget floor:** ALREADY IMPLEMENTED (`stimulus_injection.py:196-199`)
+   - `BUDGET_FLOOR = 0.15` ensures minimum energy even when sim_mass low
+
+3. ❌ **Keyword fallback:** NOT IMPLEMENTED YET
+   - Emergency path: BM25/keyword search when vector search returns 0
+   - Bypasses broken vector search until embeddings fixed
+
+**Handoff to Atlas:**
+1. Run embedding backfill script on all citizen graphs (fixes both missing + format issues)
+2. Implement keyword fallback in conversation_watcher.py (emergency energy path)
+3. Verify `sim_mass > 0` after backfill
+4. Test: Inject stimulus → verify energy enters nodes → WM non-empty → dashboard shows activity
+
+**Verification Criteria:**
+- ✅ Backfill complete: 447/447 nodes have content_embedding in vecf32() format
+- ✅ Vector search returns >0 matches for test stimulus
+- ✅ sim_mass > 0.00 for injected stimuli
+- ✅ Nodes show E > 0 after injection
+- ✅ WM emits non-empty entity sets
+- ✅ Dashboard displays ticks, transfers, and real-time events
+
+**Status:** Atlas implementing P1 hotfix NOW
+
+**Priority:** P0 CRITICAL - Blocks all consciousness dynamics and dashboard functionality
+
+---
+
 ## 2025-10-25 01:30 - Ada: ✅ Phase-A2 Spec Complete (Safety Mechanisms Integrated)
 
 **Context:** Nicolas provided comprehensive adversarial meta-analysis (10 risks × defenses) for Phase-A2 signals bridge. Verified spec integration status.

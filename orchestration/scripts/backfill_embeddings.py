@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, List
 
-# Add parent to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add repository root to path (go up two levels from scripts/)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from orchestration.adapters.search.embedding_service import get_embedding_service
 

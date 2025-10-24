@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-25_00-48-05",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-24T22:58:30.804656+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T22:58:30.804656+00:00",
+      "content": "why were the new nodes and links not automatically embedded?"
+    }
+  ],
+  "last_updated": "2025-10-24T22:58:30.804656+00:00",
+  "message_count": 1
+}
