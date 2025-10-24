@@ -305,6 +305,28 @@ class ConsciousnessEngineV2:
         tick_start = time.time()
         subentity = self.config.entity_id
 
+        # === Determine tick_reason for autonomy tracking (Phase-A PR-1) ===
+        # Check if this tick is stimulus-driven or autonomous
+        has_stimulus = len(self.stimulus_queue) > 0
+        tick_reason = "stimulus_detected" if has_stimulus else "autonomous_activation"
+
+        # === V2 Event: tick.update (Phase-A PR-1) ===
+        # Emit at start of each tick to track autonomy vs stimulus-driven behavior
+        if self.broadcaster and self.broadcaster.is_available():
+            await self.broadcaster.broadcast_event("tick.update", {
+                "v": "2",
+                "frame_id": self.tick_count,
+                "tick_reason": tick_reason,
+                "interval_ms": self.config.tick_interval_ms,
+                "has_stimulus": has_stimulus,
+                "stimulus_queue_length": len(self.stimulus_queue),
+                "t_ms": int(time.time() * 1000),
+                "context": {
+                    "entity_id": subentity,
+                    "tick_count": self.tick_count
+                }
+            })
+
         # DEBUG CHECKPOINT D: Track subentities at tick start (every 100th tick to avoid spam)
         if self.tick_count % 100 == 0:
             entity_count = len(self.graph.subentities) if self.graph.subentities else 0

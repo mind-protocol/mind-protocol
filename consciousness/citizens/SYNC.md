@@ -43,7 +43,118 @@
 4. Test collapse/expand for Telemetry panel
 5. Verify both panels can be collapsed independently
 
+**Status:** ✅ Implementation complete, ⏳ Verification pending (SUPERSEDED by full sidebar collapse below)
+
+---
+
+## 2025-10-24 23:58 - Atlas: ✅ IMPLEMENTED - Collapsible Left & Right Sidebars
+
+**Context:** Nicolas requested "make left and right menu collapsible" - entire sidebars should collapse to give users full-screen graph view.
+
+**Implementation Complete:**
+
+**Changes Made:**
+
+1. **Left Sidebar (app/consciousness/components/LeftSidebarMenu.tsx):**
+   - Added `isCollapsed` state (line 40)
+   - Added `toggleCollapse()` handler (lines 58-60)
+   - Container width transitions: `w-[20rem]` → `w-12` when collapsed (lines 64-66)
+   - Toggle button at top-right: ◀ (collapse) / ▶ (expand) (lines 69-77)
+   - Content conditionally renders only when expanded (line 80)
+   - Smooth 300ms transition animation
+
+2. **Right Sidebar (app/consciousness/page.tsx):**
+   - Added `rightSidebarCollapsed` state (lines 84-85)
+   - Created fixed container wrapping all right panels (lines 304-355)
+   - Container width transitions: `w-[22rem]` → `w-12` when collapsed (line 306)
+   - Toggle button at top-left: ▶ (collapse) / ◀ (expand) (lines 310-318)
+   - All panels (TierBreakdown, EntityContext, Phenomenology, Health, CitizenMonitor) wrapped in scrollable container
+   - Panels use `mb-4` spacing instead of absolute positioning
+   - Smooth 300ms transition animation
+
+**User Experience:**
+- **Collapsed state:** Sidebars shrink to 48px (3rem) with toggle button visible
+- **Expanded state:** Full sidebar width (left: 320px, right: 352px)
+- **Toggle buttons:** Small arrows that flip direction based on state
+- **Transitions:** Smooth 300ms animation on width changes
+- **Result:** Users can collapse both sidebars for full-screen graph visualization
+
+**Verification Checklist:**
+- [ ] Left sidebar collapse/expand works
+- [ ] Right sidebar collapse/expand works
+- [ ] Toggle buttons appear and function correctly
+- [ ] Transitions are smooth (no jank)
+- [ ] No console errors
+- [ ] Graph remains visible when sidebars collapsed
+- [ ] Both sidebars can be collapsed simultaneously for maximum graph space
+
 **Status:** ✅ Implementation complete, ⏳ Verification pending
+
+---
+
+## 2025-10-24 23:51 - Felix: ✅ PR-1 COMPLETE - Tick Reason Emission (Phase-A Backend)
+
+**Context:** PR-1 from Phase-A priorities - emit `tick.update` events with `tick_reason` field to enable dashboard autonomy tracking.
+
+**✅ PR-1 IMPLEMENTATION - Autonomy vs Stimulus Tracking**
+
+**Changes Made (orchestration/mechanisms/consciousness_engine_v2.py:308-328):**
+
+1. **Added tick_reason determination logic** (lines 308-311)
+   - Check `stimulus_queue` length to determine activation cause
+   - `has_stimulus = len(self.stimulus_queue) > 0`
+   - `tick_reason = "stimulus_detected" if has_stimulus else "autonomous_activation"`
+
+2. **Added tick.update event emission** (lines 313-328)
+   - Emits at start of each tick (before frame.start)
+   - Event: `tick.update`
+   - Fields:
+     - `tick_reason`: "stimulus_detected" | "autonomous_activation"
+     - `interval_ms`: from config (100ms default)
+     - `frame_id`: tick count
+     - `has_stimulus`: boolean flag
+     - `stimulus_queue_length`: queue depth
+     - `context`: entity_id, tick_count
+     - `t_ms`: timestamp
+
+**Implementation Details:**
+```python
+# Determine tick_reason
+has_stimulus = len(self.stimulus_queue) > 0
+tick_reason = "stimulus_detected" if has_stimulus else "autonomous_activation"
+
+# Emit tick.update event
+await self.broadcaster.broadcast_event("tick.update", {
+    "v": "2",
+    "frame_id": self.tick_count,
+    "tick_reason": tick_reason,
+    "interval_ms": self.config.tick_interval_ms,
+    "has_stimulus": has_stimulus,
+    "stimulus_queue_length": len(self.stimulus_queue),
+    "t_ms": int(time.time() * 1000),
+    "context": {
+        "entity_id": subentity,
+        "tick_count": self.tick_count
+    }
+})
+```
+
+**Deployment:**
+- Code modified at 23:49:59
+- Guardian force-restart at 23:50:45 (hot-reload not working)
+- Engine verified running (tick 319+ at verification)
+
+**Phase 2 Acceptance Criteria:**
+- ✅ Backend emits tick.update with tick_reason field
+- ⏳ Frontend wiring (Atlas + Iris) - Next step
+- ⏳ Verification: Rumination shows >60% autonomy, conversation <30%
+
+**Handoff to Atlas + Iris:**
+- Backend complete: tick.update events now streaming
+- Frontend task: Wire AutonomyIndicator component to tick_reason field
+- Event available on WebSocket at each tick (every 100ms default)
+
+**Status:** ✅ COMPLETE - Backend emission implemented and deployed
 
 ---
 

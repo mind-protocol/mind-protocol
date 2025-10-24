@@ -172,6 +172,44 @@
 
 ---
 
+## Phase-A2: Signals → Stimuli Bridge (Operational Feedback Loop)
+
+**Reference:** `SIGNALS_TO_STIMULI_BRIDGE.md`
+**Purpose:** Route operational signals (logs, console, screenshots, code/doc changes, runtime events) into L2 consciousness for automated task creation
+
+### From: SIGNALS_TO_STIMULI_BRIDGE.md (v1.0)
+
+| Task | Owner | Status | Spec Reference | Verification | Comments |
+|------|-------|--------|----------------|--------------|----------|
+| **[A2-1] Signals Collector Service** - Implement FastAPI service with 4 endpoints | Atlas/Victor | 🔴 | §Signals Collector Service Specification | Health endpoint returns stats; deduplication works; priority scoring computes | Endpoints: /ingest/console, /ingest/log, /ingest/screenshot, /health |
+| Add deduplication logic (5-minute rolling window) | Atlas/Victor | 🔴 | §Deduplication Strategy | Same error 20× in 1 min → only first injected | Digest-based, cleanup every 60s |
+| Add rate limiting (token bucket per signal type) | Atlas/Victor | 🔴 | §Rate Limiting | Rate limit exceeded returns 429 | Configurable RATE_LIMIT_PER_MIN env var |
+| Add priority scoring with quantile gates | Atlas/Victor | 🔴 | §Priority Scoring | Priority score 0.0-1.0 computed from 5 factors | Formula: P = z(severity)×w1 + ... (configurable weights) |
+| Add heartbeat writer + guardian supervision | Victor | 🔴 | §Collector Implementation Skeleton | Heartbeat file updated every 5s; guardian restarts on crash | .heartbeats/signals_collector.heartbeat |
+| Wire to Stimulus Injection API | Atlas | 🔴 | §forward_to_injector() function | Forwards to http://localhost:8001/inject | Timeout 10s, async |
+| **[A2-2] Signal Source Watchers** - Implement 3 watchers | Atlas | 🔴 | §Signal Sources | All 3 watchers forward signals to collector | log_tail.py, git_watcher.py, ws_reinjector.py |
+| Implement log_tail.py watcher for backend logs | Atlas | 🔴 | §1. Backend Logs & System Errors | ERROR/WARN logs forwarded with service tag + stack | Tail orchestration/*.log files |
+| Implement git_watcher.py for code/doc drift | Atlas | 🔴 | §4. Code/Doc Synchronization | Code change → doc update stimulus (and vice versa) | Uses SCRIPT_MAP.md for mappings |
+| Implement ws_reinjector.py with loop guards | Atlas | 🔴 | §5. Self-Awareness + §Self-Awareness Loop Guards | Runtime events reinjected with origin_chain_depth tracking | MAX_DEPTH=2, never re-ingest self_observation |
+| Add all watchers to guardian supervision | Victor | 🔴 | §Signal Source Watchers | Individual heartbeat files per watcher | .heartbeats/{service}.heartbeat for each |
+| **[A2-3] Orchestrator Intent Templates** - Load YAML templates | Atlas | 🔴 | §Orchestrator Integration | Templates loaded on startup; match conditions work | intent_templates.yaml |
+| Implement intent.fix_incident pattern | Atlas | 🔴 | §Intent Templates (fix_incident) | Console/log errors → IntentCard → mission to Iris/Atlas/Victor | Routing: service → assignee mapping |
+| Implement intent.sync_docs_scripts pattern | Atlas | 🔴 | §Intent Templates (sync_docs_scripts) | Code change → doc update mission (and vice versa) | Routing: code_change → Ada, doc_change → Atlas |
+| Wire template parser + mission rendering | Atlas | 🔴 | §Orchestrator loading | Mission text rendered with stimulus metadata | Handlebars-like templating |
+| **[A2-4] Next.js Integration** - Dashboard signal routing | Iris | 🔴 | §Next.js Dashboard Integration | Console errors reach collector; beacon installed | 2 API routes + client beacon |
+| Create /api/signals/console/route.ts proxy | Iris | 🔴 | §Next.js API proxy (console) | Proxies to collector /ingest/console | Timeout handling, fire-and-forget |
+| Create /api/signals/screenshot/route.ts proxy | Iris | 🔴 | §Next.js API proxy (screenshot) | Multipart upload to collector /ingest/screenshot | FormData forwarding |
+| Create console-beacon.ts client library | Iris | 🔴 | §Client-side beacon | window.error + unhandledrejection → /api/signals/console | Attach in root layout |
+| Install beacon in root client layout | Iris | 🔴 | §Installation | installConsoleBeacon() called once at app start | use client component |
+| (Optional) Create StimuliFeed UI panel | Iris | 🔴 | §UI additions | Display last N stimuli with source/priority/scope | Optional for visibility |
+| **[A2-5] Acceptance Tests** - Validate all 4 scenarios | All | 🔴 | §Acceptance Tests | All 4 tests pass | E2E verification |
+| Test 1: Console error E2E | Iris | 🔴 | §Test 1 | Console error → IntentCard → mission to Iris → weights.updated | Browser → collector → orchestrator → citizen |
+| Test 2: Doc-sync E2E | Ada/Atlas | 🔴 | §Test 2 | Code change → intent.sync_docs_scripts → mission to Ada | git_watcher → orchestrator → Ada updates doc |
+| Test 3: Self-awareness guarded (depth limit) | Victor/Atlas | 🔴 | §Test 3 | Runtime anomaly → depth cap → ACK_REQUIRED at depth 2 | No infinite loop; mission requires human approval |
+| Test 4: Noise resistance (deduplication) | Atlas | 🔴 | §Test 4 | Same error 20× → only 1 stimulus created | Deduplication working |
+
+---
+
 ## Completion Criteria
 
 **Priority 0 tasks MUST complete** before L1 autonomy can ship.
@@ -184,5 +222,5 @@
 
 ---
 
-**Last Updated:** 2025-10-24 (after Phase 1 spec fixes)
-**Next Review:** After Priority 0 tasks complete (before L1 ship)
+**Last Updated:** 2025-10-24 (after Phase 1 spec fixes + Phase-A2 signals bridge)
+**Next Review:** After Priority 0 tasks complete (before L1 ship) OR After Phase-A2 tasks complete (operational feedback loop)
