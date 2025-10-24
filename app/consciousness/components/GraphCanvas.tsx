@@ -289,7 +289,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
         .distance(3) // Short link distance for tight global clustering
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('center', d3.forceCenter(width / 2, height / 2).strength(0.5))
       .force('collision', d3.forceCollide()
         .radius(16) // Collision radius to prevent node overlap
         .iterations(collisionIterations))
