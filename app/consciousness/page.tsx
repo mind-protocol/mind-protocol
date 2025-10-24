@@ -297,27 +297,21 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
-      {/* Tier Breakdown Panel (right sidebar, upper section) - Priority 2 */}
+      {/* Right sidebar panels - stacked vertically, hidden for now until positioning is resolved */}
+      {/* TODO: These panels need proper layout - currently hidden behind other elements */}
+      {/*
       <div className="absolute top-24 right-4 w-80 z-40">
         <TierBreakdownPanel strideEvents={strideEvents} />
       </div>
-
-      {/* Entity Context Learning Panel (right sidebar) - Priority 4 */}
       <div className="absolute top-96 right-4 w-80 z-40">
         <EntityContextLearningPanel weightEvents={weightLearningEvents} />
       </div>
-
-      {/* Phenomenology Mismatch Panel (right sidebar) - Priority 6 */}
       <div className="absolute top-[32rem] right-4 w-80 z-40">
         <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
       </div>
-
-      {/* Consciousness Health Dashboard (right sidebar) - Priority 6 */}
       <div className="absolute top-[48rem] right-4 w-80 z-40">
         <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
       </div>
-
-      {/* Citizen consciousness monitor (right sidebar, bottom) */}
       <div className="absolute top-[64rem] right-4 w-80 z-40">
         <CitizenMonitor
           citizens={citizens}
@@ -327,6 +321,7 @@ export default function ConsciousnessPage() {
           v2State={v2State}
         />
       </div>
+      */}
 
       {/* Detail panel - Modal overlay on node click */}
       <DetailPanel nodes={nodes} links={links} />
