@@ -841,9 +841,9 @@ class FalkorDBAdapter:
 
         result = self.graph_store.query(query)
 
-        # FalkorDBGraphStore.query() returns a list directly
-        if result:
-            for row in result:
+        # FalkorDBGraphStore.query() returns QueryResult with result_set
+        if result and result.result_set:
+            for row in result.result_set:
                 node_obj = row[0]  # First column is the FalkorDB Node object
 
                 # Extract properties - actual schema varies by node type
