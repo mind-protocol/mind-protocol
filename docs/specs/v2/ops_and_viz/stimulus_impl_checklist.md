@@ -25,7 +25,7 @@ summary: >
 
 - [x] Entropy‑coverage search (§2: adaptive retrieval)
 - [x] Gap mass calculation (§3.2)
-- [x] Gap‑capped budget distribution (§5.1)
+- [ ] Floor-biased dual-channel injection (§5.1) - **UPDATED v2.1:** Floor channel (λB) + Amplifier channel ((1-λ)B). See stimulus_injection.md v2.1 §2.1.1
 - [x] Basic `InjectionMatch` / `InjectionResult`
 
 # 2) Foundation features (v1)
@@ -66,8 +66,12 @@ summary: >
 
 # 4) Budget & injection math
 
-- Effective budget: `B_eff = B_base * f(ρ) * g(source) * (1 + peripheral_z⁺)`  
-- **Node cap:** each node receives ≤ its **gap to threshold** (scaled), never overshoot.  
+- Effective budget: `B_eff = B_base * f(ρ) * g(source) * (1 + peripheral_z⁺)`
+- **Dual-channel injection (v2.1):**
+  - **Floor channel (λB):** Prioritizes under-active nodes, capped at gap. Floor weight = σ((Θ - E)/k)
+  - **Amplifier channel ((1-λ)B):** Boosts strong matches **regardless of threshold** (enables propagation). Amp weight = sim^γ
+  - **Per-node safety cap:** ΔE_max (typically 10), NOT threshold cap
+  - **Critical:** Threshold is activation floor, not hard cap. Energy above threshold drives propagation via diffusion.
 - **Sparsity:** honor K_eff; prefer diversity (cover different subgraphs).
 
 # 5) Events (exact payloads)
@@ -98,7 +102,7 @@ summary: >
 ## Unit
 
 1. Entropy coverage adapts K.
-2. Gap mass and caps respected (no overshoot).
+2. Floor-biased injection: floor channel capped at gap, amplifier channel uncapped (v2.1). Per-node ΔE_max enforced.
 3. f(ρ) monotone; g(source) cohort‑relative.
 4. Direction prior splits per precedence.
 5. Peripheral amplification on z>0 only.
