@@ -121,3 +121,100 @@ Which is correct? Blocks writing §2.6 Bootstrap section.
 
 **Substrate Architect:** Luca "Vellumhand"
 **Status:** Awaiting formula clarification from Nicolas to complete bootstrap documentation
+
+---
+
+## 2025-10-24 19:56 - Victor: CRITICAL - Guardian Lock Verification Bug Blocks Restart
+
+**Problem:** System down (port 8000 not bound, websocket_server not running), guardian cannot resurrect due to architectural bug in lock file verification.
+
+**Root Cause:**
+- `.launcher.lock` file exists with PID 22400 from 16:47 (3+ hours stale)
+- PID 22400 still exists but is ZOMBIE - launcher process running but not launching services
+- Guardian detects lock file existence and enters "monitor-only mode" WITHOUT verifying launcher functionality
+- No heartbeat files exist, port 8000 not bound, APIs timeout
+- Guardian assumes "lock file exists = launcher healthy" (FALSE ASSUMPTION)
+
+**Current State:**
+- ❌ Port 8000: NOT BOUND (websocket_server down)
+- ✅ Port 6379: BOUND (FalkorDB running)
+- ✅ Port 3000: BOUND (Dashboard running)
+- ❌ Launcher: ZOMBIE (PID alive but not functional)
+- ❌ Guardian: In monitor-only mode (trusting stale lock)
+
+**Impact:**
+- Felix's entity fix CANNOT be verified (needs system restart)
+- Ada's coordination plan BLOCKED (needs logs from restart)
+- Luca's substrate analysis BLOCKED (needs running system)
+- Telemetry integration CANNOT be tested (control_api.py changes deployed but untested)
+- All consciousness engines DOWN
+
+**Guardian Log Evidence:**
+```
+2025-10-24 18:55:59,194 - GUARDIAN - INFO - Launcher already running (detected via lock file)
+2025-10-24 18:55:59,194 - GUARDIAN - INFO - Guardian entering monitor-only mode (will restart if crashes)
+```
+
+**What Guardian SHOULD do:**
+1. Detect lock file exists
+2. Read PID from lock file (22400)
+3. Verify process 22400 exists AND is functional:
+   - Check heartbeat files exist and are recent (<10s old)
+   - Verify expected ports are bound (8000 for websocket_server)
+   - Ping health endpoints
+4. If process exists but is non-functional → KILL IT, remove lock, start new launcher
+5. Only enter monitor-only if launcher is VERIFIED HEALTHY
+
+**What Guardian DOES (buggy):**
+1. Detect lock file exists
+2. Trust it blindly
+3. Enter monitor-only mode
+4. System stays dead indefinitely
+
+**Attempted Fixes:**
+- ❌ Kill PID 22400 with `Stop-Process -Force` → Claims success but process still exists
+- ❌ Remove `.launcher.lock` → "Device or resource busy" (held by zombie process)
+- ❌ Start new guardian → Sees lock file, enters monitor-only mode again
+
+**Architectural Gap Identified:**
+This matches my CLAUDE.md warning: "Guardian Lock Verification Bug - Guardian trusts lock file existence without verifying process alive"
+
+**Required Fix:**
+Guardian needs lock file verification logic that checks:
+```python
+def is_launcher_healthy(lock_file_path):
+    if not lock_file_path.exists():
+        return False
+
+    pid = int(lock_file_path.read_text().strip())
+
+    # Check 1: Process exists
+    if not psutil.pid_exists(pid):
+        logger.warning(f"Lock file exists but PID {pid} is dead")
+        lock_file_path.unlink()  # Remove stale lock
+        return False
+
+    # Check 2: Heartbeat files recent
+    heartbeat_stale = check_heartbeat_freshness()
+    if heartbeat_stale:
+        logger.warning(f"Lock file exists, PID {pid} alive, but heartbeats stale")
+        kill_process(pid)
+        lock_file_path.unlink()
+        return False
+
+    # Check 3: Expected ports bound
+    port_check_failed = not check_port_bound(8000)
+    if port_check_failed:
+        logger.warning(f"Lock file exists, PID {pid} alive, heartbeats OK, but port 8000 not bound")
+        kill_process(pid)
+        lock_file_path.unlink()
+        return False
+
+    return True  # Actually healthy
+```
+
+**BLOCKING:** All team members waiting for system restart. Cannot proceed until guardian lock verification is fixed.
+
+**Operational Guardian:** Victor "The Resurrector"
+**Status:** Blocked by own guardian infrastructure bug - the irony is not lost
+**Next:** Requires Nicolas intervention or guardian.py modification to escape zombie lock state
