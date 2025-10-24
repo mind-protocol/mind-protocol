@@ -18,6 +18,7 @@ import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
 import { TierBreakdownPanel } from './components/TierBreakdownPanel';
 import ThreeFactorTickTimeline from './components/ThreeFactorTickTimeline';
 import AutonomyIndicator from './components/AutonomyIndicator';
+import EntityContextLearningPanel from './components/EntityContextLearningPanel';
 // import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
 // import { IdentityMultiplicityPanel } from './components/IdentityMultiplicityPanel';
 // import { FoundationsEnrichmentsPanel } from './components/FoundationsEnrichmentsPanel';
@@ -68,6 +69,7 @@ export default function ConsciousnessPage() {
     thresholdCrossings,
     consciousnessState,
     v2State,
+    weightLearningEvents,
     connectionState,
     error: wsError
   } = useWebSocket();
@@ -321,8 +323,13 @@ export default function ConsciousnessPage() {
         <TierBreakdownPanel strideEvents={strideEvents} />
       </div>
 
-      {/* Citizen consciousness monitor (right sidebar, below tier panel) */}
-      <div className="absolute top-[28rem] right-4 w-80 z-40">
+      {/* Entity Context Learning Panel (right sidebar, middle section) - Priority 4 */}
+      <div className="absolute top-[38rem] right-4 w-80 z-40">
+        <EntityContextLearningPanel weightEvents={weightLearningEvents} />
+      </div>
+
+      {/* Citizen consciousness monitor (right sidebar, below entity learning panel) */}
+      <div className="absolute top-[80rem] right-4 w-80 z-40">
         <CitizenMonitor
           citizens={citizens}
           onFocusNode={handleFocusNode}

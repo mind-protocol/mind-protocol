@@ -98,6 +98,11 @@ class Node:
     # Learning Infrastructure (Phase 1-4: Consciousness Learning)
     # Long-run attractor strength in log space
     log_weight: float = 0.0
+    # Entity-specific weight overlays (Priority 4: Entity Context Tracking)
+    # Sparse dict: {entity_id: delta}
+    # Effective weight for entity E = log_weight + log_weight_overlays.get(E, 0.0)
+    # Updated by TRACE marks with entity_context (80% local, 20% global)
+    log_weight_overlays: Dict[str, float] = field(default_factory=dict)
     # Exponential moving average of TRACE reinforcement seats
     ema_trace_seats: float = 0.0
     # Exponential moving average of working memory selection frequency

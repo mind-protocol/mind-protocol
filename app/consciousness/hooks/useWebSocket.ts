@@ -367,6 +367,16 @@ export function useWebSocket(): WebSocketStreams {
           // broadcast for monitoring but don't require UI state updates
           break;
 
+        // Priority 4: Weight learning events
+        case 'weights.updated.trace': {
+          const weightEvent = data as WeightsUpdatedTraceEvent;
+          setWeightLearningEvents(prev => {
+            const updated = [...prev, weightEvent];
+            return updated.slice(-MAX_WEIGHT_LEARNING_EVENTS);
+          });
+          break;
+        }
+
         default:
           console.warn('[WebSocket] Unknown event type:', (data as any).type);
       }
@@ -480,6 +490,9 @@ export function useWebSocket(): WebSocketStreams {
 
     // Emotion coloring
     emotionState,
+
+    // Priority 4: Weight learning
+    weightLearningEvents,
 
     // Connection
     connectionState,
