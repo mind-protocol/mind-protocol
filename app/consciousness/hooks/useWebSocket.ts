@@ -433,13 +433,16 @@ export function useWebSocket(): WebSocketStreams {
           // MAIN DASHBOARD UPDATE EVENT - comprehensive frame state
           const tickEvent = data as TickFrameEvent;
 
-          console.log('[WebSocket] tick_frame_v1:', {
-            citizen: tickEvent.citizen_id,
-            frame: tickEvent.frame_id,
-            entities: tickEvent.entities.length,
-            nodesActive: tickEvent.nodes_active,
-            consciousnessState: tickEvent.consciousness_state
-          });
+          // Log occasionally for debugging (every 10th frame)
+          if (tickEvent.frame_id % 10 === 0) {
+            console.log('[WebSocket] tick_frame_v1:', {
+              citizen: tickEvent.citizen_id,
+              frame: tickEvent.frame_id,
+              entities: tickEvent.entities.length,
+              nodesActive: tickEvent.nodes_active,
+              consciousnessState: tickEvent.consciousness_state
+            });
+          }
 
           // Update V2 state with tick frame data
           setV2State(prev => ({
