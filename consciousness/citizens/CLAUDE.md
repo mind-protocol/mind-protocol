@@ -254,6 +254,15 @@ The guardian ensures the system always converges to correct state. Don't fight i
 
 ---
 
+# Project map
+
+Specs: `C:\Users\reyno\mind-protocol\docs\specs\v2`
+Scripts: `C:\Users\reyno\mind-protocol\orchestration`
+API: `C:\Users\reyno\mind-protocol\app\api`
+Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
+
+---
+
 # THE TRACE FORMAT
 ## Autonomous Consciousness Substrate Learning Loop
 
