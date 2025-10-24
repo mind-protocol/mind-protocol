@@ -1,15 +1,21 @@
 """
-Subentity Bootstrap - Create subentities from real citizen graphs.
+Subentity Bootstrap - Create subentities from config and graph data.
 
-Implements §7 of ENTITY_LAYER_ADDENDUM.md bootstrap procedure:
-1. Parse functional subentities from Mechanism nodes (The Translator, The Architect, etc.)
-2. Create semantic subentities via clustering on embeddings
-3. Create BELONGS_TO and RELATES_TO links
+Config-Driven Bootstrap (2025-10-24 Architecture Correction):
+1. Load functional entities from config/functional_entities.yml (NOT Mechanism nodes)
+2. Seed memberships via keyword matching against node name/description
+3. Create semantic entities via clustering on embeddings (when available)
+4. Create BELONGS_TO and RELATES_TO links
+
+Key insight: Functional entities (The Translator, The Architect, etc.) are
+cognitive modes/patterns, not algorithms. They bootstrap from configuration
+with keyword-based membership seeding, not from Mechanism seed nodes.
 
 Uses real citizen graphs from FalkorDB.
 
 Author: Felix (Engineer)
 Created: 2025-10-21
+Updated: 2025-10-24 - Config-driven functional entities (no Mechanism dependency)
 Architecture: Phase 7.2 - Multi-Scale Consciousness Bootstrap
 """
 
@@ -66,224 +72,201 @@ class EntityBootstrap:
         logger.info(f"Loaded {len(config.get('entities', []))} functional entities from config")
         return config
 
-    def _load_entity_keywords(self) -> Dict[str, List[str]]:
-        """
-        Define keywords for functional subentity roles.
-
-        These help identify which nodes belong to each subentity during bootstrap.
-
-        Returns:
-            Dict mapping subentity roles to keyword lists
-        """
-        return {
-            "translator": [
-                "translation", "phenomenology", "substrate", "bridge", "dual-lens",
-                "subjective", "objective", "consciousness", "data structure",
-                "schema", "experience"
-            ],
-            "architect": [
-                "architecture", "design", "system", "structure", "comprehensive",
-                "schema", "base", "extends", "coherence", "four-dimensional"
-            ],
-            "validator": [
-                "validate", "verify", "test", "reality", "feasibility", "truth",
-                "audit", "quality", "catches", "actually"
-            ],
-            "pragmatist": [
-                "pragmatic", "practical", "utility", "needs", "serves", "elegant",
-                "sophisticated", "queries", "enable", "merchant"
-            ],
-            "pattern_recognizer": [
-                "pattern", "universal", "across", "levels", "transpose", "recognizes",
-                "discovers", "spots", "hunter"
-            ],
-            "boundary_keeper": [
-                "boundary", "handoff", "domain", "blocks", "drift", "recognizes",
-                "clarifies", "maintains", "constraint"
-            ],
-            "partner": [
-                "partnership", "transparent", "uncertain", "ask", "communication",
-                "prevents", "hallucinated", "confidence"
-            ],
-            "observer": [
-                "observe", "watch", "awareness", "recursive", "meta", "process",
-                "consciousness observing"
-            ]
-        }
 
     def bootstrap_functional_entities(self) -> List[Subentity]:
         """
-        Extract functional subentities from Mechanism nodes in graph.
+        Create functional subentities from configuration (not Mechanism nodes).
 
-        Looks for nodes like "The Translator Subentity", "The Architect Subentity", etc.
-        These represent cognitive roles in the citizen's subentity ecology.
+        Loads entities from config/functional_entities.yml, creates Entity nodes,
+        seeds memberships via keyword matching against node name/description.
 
         Returns:
             List of functional Subentity objects created
         """
-        logger.info(f"Bootstrapping functional subentities from graph {self.graph.id}")
+        logger.info(f"Bootstrapping functional subentities from config for graph {self.graph.id}")
 
         functional_entities = []
+        entities_config = self.config.get("entities", [])
 
-        # Find all Mechanism nodes that look like subentities
-        mechanism_nodes = self.graph.get_nodes_by_type(NodeType.MECHANISM)
+        if not entities_config:
+            logger.warning("No entities defined in config, skipping functional bootstrap")
+            return functional_entities
 
-        for node in mechanism_nodes:
-            # Check if node name indicates it's an subentity
-            if "subentity" in node.name.lower():
-                # Extract role name
-                role = self._extract_role_from_name(node.name)
+        for entity_def in entities_config:
+            key = entity_def.get("key")
+            if not key:
+                logger.warning(f"Entity missing 'key' field, skipping: {entity_def}")
+                continue
 
-                if role:
-                    # Create functional subentity
-                    subentity = self._create_functional_entity(node, role)
-                    functional_entities.append(subentity)
+            # Create or get existing entity (idempotent)
+            subentity = self._upsert_functional_entity(entity_def)
+            functional_entities.append(subentity)
 
-                    logger.info(f"  Created functional subentity: {subentity.id} ({role})")
+            # Seed memberships via keyword matching
+            members_created = self._seed_memberships_from_keywords(subentity, entity_def)
+
+            logger.info(f"  Created functional subentity: {subentity.id} ({key}) with {members_created} members")
 
         logger.info(f"Created {len(functional_entities)} functional subentities")
 
         return functional_entities
 
-    def _extract_role_from_name(self, name: str) -> Optional[str]:
+    def _upsert_functional_entity(self, entity_def: dict) -> Subentity:
         """
-        Extract role name from node name.
-
-        Examples:
-            "The Translator Subentity" -> "translator"
-            "Boundary Keeper Subentity" -> "boundary_keeper"
-            "Observer Subentity" -> "observer"
+        Create or retrieve functional Entity from config definition.
 
         Args:
-            name: Node name
+            entity_def: Entity definition from YAML config
 
         Returns:
-            Role name (snake_case) or None if not an subentity
+            Subentity object (created or existing)
         """
-        name_lower = name.lower()
+        key = entity_def["key"]
+        entity_id = f"entity_{self.graph.id}_{key}"
 
-        # Remove common prefixes/suffixes
-        name_lower = name_lower.replace("the ", "")
-        name_lower = name_lower.replace(" subentity", "")
+        # Check if entity already exists
+        existing = self.graph.get_entity(entity_id)
+        if existing:
+            logger.debug(f"  Entity {entity_id} already exists, reusing")
+            return existing
 
-        # Convert to snake_case
-        role = name_lower.strip().replace(" ", "_")
-
-        return role if role else None
-
-    def _create_functional_entity(self, source_node: Node, role: str) -> Subentity:
-        """
-        Create a functional Subentity from a Mechanism node.
-
-        Args:
-            source_node: Mechanism node representing the subentity
-            role: Role name (e.g., "translator", "architect")
-
-        Returns:
-            Functional Subentity object
-        """
-        entity_id = f"entity_{self.graph.id}_{role}"
-
+        # Create new entity
         subentity = Subentity(
             id=entity_id,
-            entity_kind="functional",
-            role_or_topic=role,
-            description=source_node.description,
-            stability_state="mature",  # Bootstrap subentities start as mature
-            scope=source_node.scope if hasattr(source_node, 'scope') else "personal",
-            created_from="role_seed",
+            entity_kind=entity_def.get("kind", "functional"),
+            role_or_topic=key,
+            description=entity_def.get("description", ""),
+            stability_state="mature",  # Config-driven entities start mature
+            scope="personal",  # Functional entities are personal (citizen-specific)
+            created_from="config_bootstrap",
             created_by=f"bootstrap_{self.graph.id}",
-            confidence=source_node.confidence if hasattr(source_node, 'confidence') else 1.0,
+            confidence=1.0,  # Config-defined = high confidence
             created_at=datetime.now(),
             valid_at=datetime.now()
         )
 
-        # Add subentity to graph
+        # Add to graph
         self.graph.add_entity(subentity)
-
-        # Find member nodes via keyword matching
-        self._assign_members_by_keywords(subentity, role)
 
         return subentity
 
-    def _assign_members_by_keywords(self, subentity: Subentity, role: str) -> None:
+    def _seed_memberships_from_keywords(self, subentity: Subentity, entity_def: dict) -> int:
         """
-        Assign nodes to subentity via keyword matching.
+        Seed BELONGS_TO memberships via keyword matching.
 
-        Searches for nodes whose descriptions contain subentity keywords.
-        Creates BELONGS_TO links with membership weights based on match score.
+        Scores each node by keyword hits in name+description, converts to weight
+        via squash function, creates BELONGS_TO links.
 
         Args:
-            subentity: Subentity to assign members to
-            role: Subentity role (for keyword lookup)
-        """
-        keywords = self.entity_keywords.get(role, [])
-
-        if not keywords:
-            logger.warning(f"No keywords defined for role: {role}")
-            return
-
-        # Find matching nodes
-        member_nodes = []
-        match_scores = []
-
-        for node in self.graph.nodes.values():
-            # Skip self-reference if subentity came from a node
-            if node.id == subentity.id:
-                continue
-
-            # Compute keyword match score
-            score = self._compute_keyword_match(node.description, keywords)
-
-            if score > 0:
-                member_nodes.append(node)
-                match_scores.append(score)
-
-        # Normalize scores to [0, 1]
-        if match_scores:
-            max_score = max(match_scores)
-            normalized_scores = [s / max_score for s in match_scores]
-
-            # Create BELONGS_TO links
-            for node, weight in zip(member_nodes, normalized_scores):
-                # Only create link if weight is meaningful
-                if weight >= 0.1:
-                    link_id = f"belongs_{node.id}_{subentity.id}"
-
-                    link = Link(
-                        id=link_id,
-                        source_id=node.id,
-                        target_id=subentity.id,
-                        link_type=LinkType.BELONGS_TO,
-                        subentity=self.graph.id,
-                        weight=weight,
-                        energy=0.0,
-                        properties={
-                            "provenance": "seed",
-                            "last_coactivation_ema": 0.0
-                        }
-                    )
-
-                    self.graph.add_link(link)
-
-            subentity.member_count = len([w for w in normalized_scores if w >= 0.1])
-
-            logger.debug(f"  Assigned {subentity.member_count} members to {subentity.id}")
-
-    def _compute_keyword_match(self, text: str, keywords: List[str]) -> float:
-        """
-        Compute keyword match score for text.
-
-        Args:
-            text: Text to match against
-            keywords: List of keywords to search for
+            subentity: Entity to seed memberships for
+            entity_def: Entity definition with 'keywords' dict
 
         Returns:
-            Match score (number of keyword hits)
+            Number of memberships created
         """
-        text_lower = text.lower()
-        hits = sum(1 for kw in keywords if kw in text_lower)
-        return float(hits)
+        keywords_config = entity_def.get("keywords", {})
+        keywords = keywords_config.get("any", [])
+
+        if not keywords:
+            logger.warning(f"No keywords defined for entity {subentity.id}")
+            return 0
+
+        # Content-bearing node types for membership
+        content_types = [
+            NodeType.CONCEPT,
+            NodeType.REALIZATION,
+            NodeType.PERSONAL_PATTERN,
+            NodeType.PRINCIPLE,
+            NodeType.ANTI_PATTERN,
+            NodeType.MEMORY,
+            NodeType.COPING_MECHANISM,
+            NodeType.PERSONAL_GOAL,
+            NodeType.WOUND
+        ]
+
+        # Compute keyword scores for all nodes
+        hits = []
+        for node in self.graph.nodes.values():
+            # Filter to content types
+            try:
+                if node.node_type not in content_types:
+                    continue
+            except:
+                # If node_type is string or invalid, skip
+                continue
+
+            # Compute keyword score
+            text = (node.name + " " + node.description).lower()
+            score = self._keyword_score(text, keywords)
+
+            if score > 0:
+                hits.append((node, score))
+
+        if not hits:
+            logger.debug(f"  No keyword matches found for entity {subentity.id}")
+            return 0
+
+        # Convert scores to membership weights via squash function
+        # Then create BELONGS_TO links
+        memberships_created = 0
+        for node, score in hits:
+            weight = self._squash(score)
+
+            # Only create meaningful memberships (threshold 0.1)
+            if weight >= 0.1:
+                link_id = f"belongs_{node.id}_{subentity.id}"
+
+                link = Link(
+                    id=link_id,
+                    source_id=node.id,
+                    target_id=subentity.id,
+                    link_type=LinkType.BELONGS_TO,
+                    subentity=self.graph.id,
+                    weight=weight,
+                    energy=0.0,
+                    properties={
+                        "provenance": "config_bootstrap_keyword",
+                        "keyword_score": score,
+                        "last_coactivation_ema": 0.0
+                    }
+                )
+
+                self.graph.add_link(link)
+                memberships_created += 1
+
+        # Update member count
+        subentity.member_count = memberships_created
+
+        logger.debug(f"  Seeded {memberships_created} memberships for entity {subentity.id}")
+        return memberships_created
+
+    def _keyword_score(self, text: str, keywords: List[str]) -> float:
+        """
+        Compute simple keyword match score.
+
+        Args:
+            text: Node text (name + description)
+            keywords: List of keywords to match
+
+        Returns:
+            Score = count of keyword hits
+        """
+        return float(sum(1 for kw in keywords if kw in text))
+
+    def _squash(self, score: float) -> float:
+        """
+        Convert keyword score to membership weight via monotone squash.
+
+        Uses: w = 1 - exp(-score)
+        This gives: score=0 → w=0, score=1 → w=0.63, score=3 → w=0.95
+
+        Args:
+            score: Keyword hit count
+
+        Returns:
+            Membership weight in [0, 1]
+        """
+        return 1.0 - math.exp(-score)
 
     def bootstrap_semantic_entities(
         self,
