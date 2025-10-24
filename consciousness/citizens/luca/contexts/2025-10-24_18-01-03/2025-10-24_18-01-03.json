@@ -12115,10 +12115,191 @@
     },
     {
       "role": "user",
-      "timestamp": "2025-10-24T16:51:10.041142+00:00",
+      "timestamp": "2025-10-24T16:51:09.921Z",
       "content": "any changes needed to the DOCS?"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:26.843Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:39.807Z",
+      "content": "**Perceived Stimulus**\n\nNicolas asks what doc changes are needed [node_documentation_responsibility: very useful]. This is MY domain - substrate documentation.\n\n**Activated Mode**\n\n**Primary:** The Architect [architect: dominant] - systematic doc inventory and update plan\n\n**Strong:** The Validator [validator: strong] - ensuring docs match architectural truth\n\n---\n\n**Triggered Nodes**\n\nThe spec_reality_gap_visibility principle [spec_reality_gap_visibility: very useful] - docs must match reality, and I just learned the reality is different than I thought.\n\n---\n\n**Resulting Action (FOLLOWS Architect)**\n\nYes, several critical updates needed:\n\n---\n\n## **Priority 1: Save the field guide** ✅ IMMEDIATE\n\n**Action:**\n```\nSave Nicolas's field guide as: docs/specs/v2/FIELD_GUIDE.md\n```\n\n**Why:** Single source of truth for team. Corrects fundamental misunderstandings.\n\n---\n\n## **Priority 2: Update `entity_layer/entity_layer.md`** ⚠️ CRITICAL\n\n**Current issues (based on field guide):**\n- Likely mentions Mechanism node requirements\n- May not clearly document Entity as first-class node type\n- May not document BELONGS_TO memberships correctly\n- Probably missing config-driven bootstrap approach\n\n**Required changes:**\n1. **Add \"Truths vs Myths\" section** (from field guide)\n2. **Document Entity node schema:**\n   ```\n   Entity {\n     key: string (unique)\n     name: string\n     kind: enum (functional | semantic)\n     description: string\n     members: [(node_id, membership_weight)]\n     energy: float (aggregated)\n     threshold: float (dynamic cohort)\n     centroid_embedding: vector (optional until embeddings exist)\n     log_weight: float (learned)\n     color: string (OKLCH)\n     ema_wm_presence: float\n   }\n   ```\n3. **Document BELONGS_TO relationship:**\n   ```\n   BELONGS_TO(node→entity) {\n     weight: float [0,1] (membership strength)\n   }\n   ```\n4. **Update bootstrap section:**\n   - Remove Mechanism node requirement\n   - Add config-driven functional bootstrap (Step A from field guide)\n   - Add semantic bootstrap via clustering (Step B, when embeddings exist)\n5. **Add entity energy aggregation formula:**\n   ```\n   energy_e = Σ_i m_i,e · log1p(energy_i)\n   ```\n6. **Clarify sub-entity terminology:**\n   - \"Sub-entity = active entity this frame (energy ≥ threshold)\"\n   - Not a separate concept\n\n**Let me check what's actually in there:**"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:40.909Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01UMaAjthDShLiUPc3e9PjXA",
+          "tool": "Read",
+          "input": {
+            "file_path": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\entity_layer\\entity_layer.md",
+            "offset": 1,
+            "limit": 100
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T16:51:41.033Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01UMaAjthDShLiUPc3e9PjXA",
+          "output": "<tool_use_error>File does not exist.</tool_use_error>",
+          "is_error": true
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:45.993Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:46.700Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_015GoP6fKJWPXvArnoyhiQuB",
+          "tool": "Glob",
+          "input": {
+            "pattern": "**/*entity*.md",
+            "path": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T16:51:48.261Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_015GoP6fKJWPXvArnoyhiQuB",
+          "output": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\subentity_layer\\subentity_layer.md\nC:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\subentity_layer\\subentity_weight_learning.md\nC:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\emotion\\identity_conflict_resolution.md",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:52.911Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:51:53.545Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01TRZ8sHPpXDbA96SvMzGWGX",
+          "tool": "Read",
+          "input": {
+            "file_path": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\subentity_layer\\subentity_layer.md",
+            "offset": 1,
+            "limit": 150
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T16:51:54.808Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01TRZ8sHPpXDbA96SvMzGWGX",
+          "output": "     1→---\n     2→title: Subentity Layer (Overview)\n     3→status: stable\n     4→owner: @luca\n     5→last_updated: 2025-10-22\n     6→supersedes:\n     7→  - ../consciousness_engine/mechanisms/05_sub_entity_system.md (overview & phenomenology)\n     8→  - ../consciousness_engine/mechanisms/ENTITY_LAYER_ADDENDUM.md (schema/energy/bootstrap)\n     9→depends_on:\n    10→  - ../foundations/multi_energy.md\n    11→  - ../runtime_engine/traversal_v2.md\n    12→  - ../ops_and_viz/observability_events.md\n    13→summary: >\n    14→  Subentities are weighted neighborhoods (functional roles or semantic topics)\n    15→  whose activation derives from member nodes’ single-node energies and membership\n    16→  weights. They enable two-scale traversal, entity-first working memory, and\n    17→  a tractable branching factor.\n    18→---\n    19→\n    20→# Subentity Layer (Overview)\n    21→\n    22→## 1. Context — What problem are we solving?\n    23→\n    24→Atomic traversal over thousands of outgoing edges causes a combinatorial explosion and fails to match experience: people think and remember in **chunks** (topics/roles), not isolated nodes. We need a layer that:\n    25→- **Aggregates** meaning at the scale of neighborhoods (roles/topics),\n    26→- Provides a **two-scale traversal** (between subentities, then within),\n    27→- Anchors **Working Memory** (WM) in ~5–7 coherent chunks,\n    28→- Remains faithful to our **single-energy per node** substrate and avoids per-entity energy channels. :contentReference[oaicite:0]{index=0}\n    29→\n    30→## 2. Mechanism (Design)\n    31→\n    32→### 2.1 What is a subentity?\n    33→\n    34→A **subentity** is a **weighted neighborhood** of nodes—either a **functional role** (e.g., Architect, Validator) or a **semantic topic** (e.g., consciousness_architecture). Members connect to the subentity with soft membership `BELONGS_TO.weight ∈ [0,1]`. :contentReference[oaicite:1]{index=1}\n    35→\n    36→### 2.2 Single-energy substrate → entity activation\n    37→\n    38→Nodes hold one activation energy \\(E_i\\). Subentity activation is **derived**, not stored:  \n    39→\\[\n    40→E_\\text{entity} = \\sum_{i \\in M_E} \\tilde{m}_{iE} \\cdot \\max(0, E_i - \\Theta_i)\n    41→\\]\n    42→with normalized memberships \\(\\tilde{m}_{iE}\\). This respects the **single-energy per node** rule (no per-entity buffers) and uses **effective** (above-threshold) node energy only. :contentReference[oaicite:2]{index=2}\n    43→\n    44→### 2.3 Dynamic entity threshold & flip\n    45→\n    46→Entity thresholds follow the same cohort logic as nodes (rolling mean/std over “touched this frame,” modulated by health). Flip occurs when \\(E_\\text{entity}\\) crosses its \\(\\Theta_\\text{entity}\\). Emit `subentity.flip` on crossings. :contentReference[oaicite:3]{index=3}\n    47→\n    48→### 2.4 Two-scale traversal\n    49→\n    50→- **Between-entity:** pick target entity by 7-hunger valence at the entity level; select representative nodes for a boundary stride; learn **RELATES_TO** ease/dominance from boundary strides.  \n    51→- **Within-entity:** distribute budget over members and run atomic selection constrained to the entity neighborhood.  \n    52→Entity-scale selection drastically reduces branching before atomic moves. :contentReference[oaicite:4]{index=4}\n    53→\n    54→### 2.5 Schema (essentials)\n    55→\n    56→- **Subentity node:** fields for kind (`functional|semantic`), centroid embedding, coherence, and learning EMAs.  \n    57→- **BELONGS_TO (node→subentity):** soft membership `weight` learned from co-activation.  \n    58→- **RELATES_TO (subentity→subentity):** boundary ease (log-weight), dominance prior, semantic distance, counts. :contentReference[oaicite:5]{index=5}\n    59→\n    60→## 3. Why this makes sense (three lenses)\n    61→\n    62→### 3.1 Phenomenology (subentity feels like a growing pattern)\n    63→\n    64→The layer captures the felt dynamics described in the original narrative: subentities grow, integrate with larger patterns, or dissolve when falling below threshold; **integration is continuation**, not “death,” and WM surfaces dominant neighborhoods rather than scattered atoms. :contentReference[oaicite:6]{index=6}\n    65→\n    66→### 3.2 Human bio-inspiration\n    67→\n    68→Neural assemblies and cortical columns suggest **population-level codes**; chunks/roles/topics are a pragmatic abstraction for control, consistent with “entity-first WM” and dynamic thresholds (attention-like gain).\n    69→\n    70→### 3.3 Systems dynamics\n    71→\n    72→- **Single energy per node** keeps the substrate conservative and simple; entities are **read-outs**.  \n    73→- **Type-dependent decay** maintains long-lived knowledge vs transient thoughts at the substrate, while entity aggregation rides on that substrate (no double-decay). :contentReference[oaicite:7]{index=7}  \n    74→- **Tick-speed regulation** aligns entity flips/WM updates with stimulus cadence. :contentReference[oaicite:8]{index=8}\n    75→\n    76→## 4. Expected resulting behaviors\n    77→\n    78→- **Reduced branching:** between-entity selection prunes 10–30× before atomic moves. :contentReference[oaicite:9]{index=9}  \n    79→- **Stable WM chunks:** WM holds 5–7 entities with summaries and top members. :contentReference[oaicite:10]{index=10}  \n    80→- **Natural integration:** small patterns merge into stronger, coherent ones (boundary beams increase). :contentReference[oaicite:11]{index=11}  \n    81→- **Phenomenological alignment:** focus/centering, peripheral pull, goal-consistent flow are visible in entity metrics. :contentReference[oaicite:12]{index=12}\n    82→\n    83→## 5. Why this algorithm vs alternatives\n    84→\n    85→- **Vs “every active node is a subentity”:** preserves the clarity that **subentity = neighborhood**, while still allowing any active node to participate via membership; avoids flooding WM with thousands of “micro-entities.” :contentReference[oaicite:13]{index=13}  \n    86→- **Vs per-entity energy channels:** would explode storage/compute and contradict the single-energy invariant; aggregation is cheaper and matches semantics. :contentReference[oaicite:14]{index=14}  \n    87→- **Vs clustering-only approach:** we retain **functional** entities and **learn** the graph’s semantics via **RELATES_TO** from boundary strides, not just static clusters. :contentReference[oaicite:15]{index=15}\n    88→\n    89→## 6. Observability — how and what to measure\n    90→\n    91→**Events.**  \n    92→- `subentity.flip` on crossings; payload: \\(E\\), \\(\\Theta\\), activation_level.  \n    93→- `subentity.boundary.summary`: beams between entities (count, \\(\\sum\\Delta E\\), top hunger, \\(\\phi_{\\max}\\)).  \n    94→- `subentity.weights.updated` when entity-scale log-weights change. Event contract lives in the Viz WS spec. :contentReference[oaicite:16]{index=16}\n    95→\n    96→**Derived metrics.**  \n    97→- **Entity vitality:** \\(E/\\Theta\\).  \n    98→- **Coherence:** member similarity EMA.  \n    99→- **Integration index:** boundary \\(\\phi\\) density into a target entity.  \n   100→- **Diversity (completeness) index:** semantic spread of member set.  \n   101→All are consumable via the snapshot + deltas WS contract. :contentReference[oaicite:17]{index=17}\n   102→\n   103→## 7. Failure Modes & Guards\n   104→\n   105→- **Entity creep (ever-growing memberships):** require periodic membership sparsification & floor on `BELONGS_TO.weight`. Guard: EMA-based pruning + minimum meaningful weight. :contentReference[oaicite:18]{index=18}  \n   106→- **Flip thrash:** add hysteresis around \\(\\Theta_\\text{entity}\\); guard with small ratio bands. :contentReference[oaicite:19]{index=19}  \n   107→- **Boundary noise:** only learn `RELATES_TO` on **executed** boundary strides with non-trivial \\(\\phi\\). :contentReference[oaicite:20]{index=20}  \n   108→- **Over-chunked WM:** cap entity count for WM and score by energy-per-token and diversity bonus. :contentReference[oaicite:21]{index=21}\n   109→\n   110→## 8. Integration points\n   111→\n   112→- **Mechanisms:** `mechanisms/sub_entity_traversal.py` (two-scale selection & boundary stride accounting). :contentReference[oaicite:22]{index=22}  \n   113→- **Learning:** `entity_weight_learning` (BELONGS_TO updates); `RELATES_TO` ease/dominance from boundary stride outcomes. :contentReference[oaicite:23]{index=23}  \n   114→- **Runtime:** tick pacing from `tick_speed` (stimulus-paced). :contentReference[oaicite:24]{index=24}  \n   115→- **Observability:** WS contract & snapshot. :contentReference[oaicite:25]{index=25}\n   116→\n   117→## 9. What success looks like\n   118→\n   119→- WM shows 5–7 coherent entities with stable summaries (minutes), while atomic nodes churn faster.  \n   120→- Active-frontier traversal cost drops (fewer candidates per step), yet coverage & \\(\\phi\\) improve across frames.  \n   121→- Boundary summaries reveal stable “entity highways” that correlate with successful TRACEs. :contentReference[oaicite:26]{index=26}\n   122→\n   123→## 10. Open questions & future improvements\n   124→\n   125→- Adaptive **promotion/demotion**: runtime → provisional → mature entity lifecycle thresholds. :contentReference[oaicite:27]{index=27}  \n   126→- Better **centroid drift** handling (hysteresis & palette stability). :contentReference[oaicite:28]{index=28}  \n   127→- Cross-entity **goal priors** (dominance learning schedules) from boundary statistics. :contentReference[oaicite:29]{index=29}\n   128→```\n   129→\n   130→**Changes made (summary):**\n   131→\n   132→* Rewrote “what is a subentity” to unambiguously mean a **weighted neighborhood**; removed implication that “any active node is itself a subentity” as the *primary* definition (still participates via membership). \n   133→* Ensured **single-energy per node** is a hard invariant; entity energy is a **read-out** (no per-entity channels). \n   134→* Added **two-scale traversal** articulation, WM policy, and boundary learning hooks with references to the WS contract. \n   135→* Added **failure modes & guards**, success criteria, and explicit integration points across traversal, learning, tick speed, and viz. \n   136→\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:08.322Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:10.556Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01J3NMcKCznQE1ePC328c2WX",
+          "tool": "Grep",
+          "input": {
+            "pattern": "bootstrap|Mechanism|seed|create.*entit",
+            "path": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\subentity_layer\\subentity_layer.md",
+            "output_mode": "content",
+            "-n": true,
+            "-i": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T16:52:12.730Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01J3NMcKCznQE1ePC328c2WX",
+          "output": "7:  - ../consciousness_engine/mechanisms/05_sub_entity_system.md (overview & phenomenology)\r\n8:  - ../consciousness_engine/mechanisms/ENTITY_LAYER_ADDENDUM.md (schema/energy/bootstrap)\r\n30:## 2. Mechanism (Design)\r\n112:- **Mechanisms:** `mechanisms/sub_entity_traversal.py` (two-scale selection & boundary stride accounting). :contentReference[oaicite:22]{index=22}",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:19.049Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:20.149Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01FKSQwj1bQw8W7LcBmEbBTH",
+          "tool": "Read",
+          "input": {
+            "file_path": "C:\\Users\\reyno\\mind-protocol\\docs\\specs\\v2\\subentity_layer\\subentity_weight_learning.md",
+            "offset": 1,
+            "limit": 80
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T16:52:21.436Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01FKSQwj1bQw8W7LcBmEbBTH",
+          "output": "     1→---\n     2→title: Subentity Weight Learning (BELONGS_TO)\n     3→status: stable\n     4→owner: @felix\n     5→last_updated: 2025-10-22\n     6→depends_on:\n     7→  - ../entity_layer/subentity_layer.md\n     8→  - ../ops_and_viz/observability_events.md\n     9→summary: >\n    10→  Learn soft memberships (BELONGS_TO.weight) from co-activation of nodes with\n    11→  subentities using rank-normalized signals and EMAs. Single log-weight per membership,\n    12→  one-speed updates, no dual fast/slow channels.\n    13→---\n    14→\n    15→# Subentity Weight Learning (BELONGS_TO)\n    16→\n    17→## 1. Context — What problem are we solving?\n    18→\n    19→We need memberships that reflect **which nodes truly belong** to each subentity so that:\n    20→- entity activation (read-out) is meaningful and stable,\n    21→- two-scale traversal has coherent within-entity neighborhoods,\n    22→- WM chunks are representative—not noisy or bloated. :contentReference[oaicite:62]{index=62}\n    23→\n    24→## 2. Mechanism (Design)\n    25→\n    26→### 2.1 Single log-weight & one-speed updates\n    27→\n    28→Each membership keeps a **single** `log_weight` updated from all evidence sources (no fast/slow channels). This mirrors the global “one-speed learning” invariants used elsewhere. :contentReference[oaicite:63]{index=63}\n    29→\n    30→### 2.2 Evidence signals (rank-normalized)\n    31→\n    32→- **Co-activation signal**: Node active (above \\(\\Theta_i\\)) while entity active (above \\(\\Theta_E\\)) within a frame/window → update EMA.  \n    33→- **WM presence**: entity selected for WM with node among its top members → positive evidence.  \n    34→- **TRACE reinforcement / formation quality**: when available, include as low-frequency but high-value signals (rank-z within entity-type cohorts).  \n    35→All signals convert to **rank-based z-scores** in appropriate cohorts before aggregation. :contentReference[oaicite:64]{index=64}\n    36→\n    37→### 2.3 Update rule (conceptual)\n    38→\n    39→\\[\n    40→\\Delta \\log W_{iE} \\;=\\; \\eta_{iE} \\cdot \\big(z_{\\text{coact}} + z_{\\text{wm}} + z_{\\text{rein}} + z_{\\text{form}}\\big)\n    41→\\]\n    42→with \\(\\eta\\) from EWMA inter-update intervals (frequent updates → larger \\(\\eta\\); rare → smaller), following the global step-size rule. :contentReference[oaicite:65]{index=65}\n    43→\n    44→### 2.4 Gates\n    45→\n    46→- **Sparsity gate:** encourage few strong memberships by applying L1-like pressure (periodic shrink toward 0 for the weakest memberships per node).  \n    47→- **Novelty gate:** prefer evidence when the node’s membership set is under-diversified to avoid “entity creep”.  \n    48→These complement the *link* “newness gate” (frontier criterion) pattern used elsewhere, adapted to memberships. :contentReference[oaicite:66]{index=66}\n    49→\n    50→### 2.5 Read-time normalization\n    51→\n    52→For ranking members inside an entity, standardize log-weights by entity-type baselines (μ/σ); storage stays as plain `log_weight`. This keeps comparisons stable without mutating stored values. :contentReference[oaicite:67]{index=67}\n    53→\n    54→## 3. Why this makes sense\n    55→\n    56→### 3.1 Phenomenology\n    57→\n    58→Belonging emerges from **repeated co-activation** while the entity is active and relevant to WM/TRACE—mirrors how humans form tight associations to a topic or role. :contentReference[oaicite:68]{index=68}\n    59→\n    60→### 3.2 Human bio-inspiration\n    61→\n    62→Hebbian-like consolidation (co-activation) with slow decay; occasional “top-down” reinforcement when the topic dominates conscious output (TRACE/WM). :contentReference[oaicite:69]{index=69}\n    63→\n    64→### 3.3 Systems dynamics\n    65→\n    66→- Respects the **single-energy** substrate (membership learning reads activation; doesn’t add channels).  \n    67→- Plays nicely with **type-dependent decay** (memberships decay indirectly if unused via fewer co-activations over time). :contentReference[oaicite:70]{index=70}\n    68→\n    69→## 4. Expected resulting behaviors\n    70→\n    71→- Entities sharpen around **core** members (high standardized membership).  \n    72→- Peripheral members fall away without recent co-activation.  \n    73→- WM chunks list stable, representative top-k members with high **coherence**. :contentReference[oaicite:71]{index=71}\n    74→\n    75→## 5. Why this over alternatives\n    76→\n    77→- **Vs binary membership:** can’t express graded belonging; brittle under noise.  \n    78→- **Vs per-entity energy buffers:** conflates activation with belonging; duplicates energy state; violates substrate rules. :contentReference[oaicite:72]{index=72}\n    79→\n    80→## 6. Observability — how & what\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:33.685Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T16:52:59.475Z",
+      "content": "**Actually the existing spec is quite good!** \n\n`subentity_layer/subentity_layer.md` correctly documents:\n- ✅ Single-energy substrate (no per-entity channels)\n- ✅ Entity as weighted neighborhood with BELONGS_TO memberships\n- ✅ Two-scale traversal\n- ✅ Entity-first WM\n- ✅ RELATES_TO between entities\n\n**What's MISSING (the gap Felix hit):**\n\n## **Changes Needed:**\n\n### **1. Save field guide** ✅\n```\ndocs/specs/v2/FIELD_GUIDE.md\n```\n(Nicolas's full text - single source of truth)\n\n### **2. Add bootstrap section to `subentity_layer.md`** ⚠️\n\n**Current gap:** Line 8 references `ENTITY_LAYER_ADDENDUM.md (schema/energy/bootstrap)` but that doc doesn't exist in v2. Bootstrap process is undocumented.\n\n**Add new section** (after §2.5 Schema, before §3 Why):\n\n```markdown\n### 2.6 Bootstrap (Entity Creation)\n\nEntities must be created before they can be used. Two approaches:\n\n#### Functional entities (config-driven, immediate)\n- Create Entity nodes directly from `config/functional_entities.yml`\n- Seed BELONGS_TO memberships via keyword matching against node name/description\n- Set initial thresholds via cohort stats (no fixed constants)\n- Works immediately, no embeddings required\n- Example: \"The Translator\", \"The Architect\", \"The Validator\"\n\n#### Semantic entities (clustering, when embeddings exist)\n- Requires embeddings on nodes (see embedding_service.py)\n- Cluster node embeddings (KMeans/HDBSCAN) per scope\n- Create Entity node per cluster with centroid_embedding\n- Seed BELONGS_TO via soft assignment (distance-based)\n- Compute color from centroid (OKLCH hash)\n\n**Migration note:** Early implementations incorrectly required Mechanism nodes as seeds. This was removed - entities are created directly from config (functional) or clustering (semantic).\n\nSee FIELD_GUIDE.md §6 for complete bootstrap implementation.\n```\n\n### **3. Note formula discrepancy** ⚠️\n\n**Current spec** (line 39-41):\n```\nE_entity = Σ m̃_iE · max(0, E_i - Θ_i)\n```\n\n**Field guide** (§11):\n```\nenergy_e = Σ_i m_i · log1p(energy_i)\n```\n\n**Question for Nicolas:** Are these both valid (different approaches) or should spec be updated to match field guide?\n\n### **4. Update `IMPLEMENTATION_GAP_ANALYSIS.md`** ⚠️\n\nAdd note at top:\n```markdown\n## UPDATE (2025-10-24)\n\n**Entity architecture corrected:** See FIELD_GUIDE.md for accurate Entity architecture (first-class nodes with BELONGS_TO memberships, not node type identification).\n\n**Bootstrap approach:** Config-driven functional entities + clustering-based semantic entities. No Mechanism node requirement.\n\n**Formula clarification needed:** Gap analysis used wrong mental model of entities. Correct model documented in FIELD_GUIDE.md and subentity_layer.md.\n```\n\n### **5. Update `PROJECT_MAP.md`** ⚠️\n\nIn \"Key substrate specs\" section, add under **Subentity Layer:**\n```markdown\n**Subentity Layer:**\n- `subentity_layer/subentity_layer.md` — Entity neighborhoods, two-scale traversal, entity-first WM\n- `subentity_layer/subentity_weight_learning.md` — BELONGS_TO membership learning\n- `FIELD_GUIDE.md` — Team reference for entity architecture, bootstrap, formulas\n```\n\n---\n\n## **Summary:**\n\n**High priority:**\n1. ✅ Save FIELD_GUIDE.md (Nicolas's text)\n2. ⚠️ Add §2.6 Bootstrap to `subentity_layer.md`\n3. ⚠️ Clarify formula discrepancy with Nicolas\n\n**Medium priority:**\n4. ⚠️ Update IMPLEMENTATION_GAP_ANALYSIS.md with corrections\n5. ⚠️ Update PROJECT_MAP.md with FIELD_GUIDE reference\n\n**The existing specs are architecturally sound** - they just need bootstrap documentation and the Mechanism migration note.\n\n**Do you want me to make these edits now?**"
     }
   ],
-  "last_updated": "2025-10-24T16:51:10.041142+00:00",
-  "message_count": 1116
+  "last_updated": "2025-10-24T16:52:59.860137+00:00",
+  "message_count": 1134
 }

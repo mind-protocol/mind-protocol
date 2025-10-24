@@ -21,6 +21,9 @@ from collections import defaultdict
 
 from orchestration.core import Node, Subentity, Link, Graph, NodeType, LinkType
 from orchestration.core.types import EntityID
+import yaml
+import math
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +45,26 @@ class EntityBootstrap:
             graph: Citizen graph to bootstrap subentities from
         """
         self.graph = graph
-        self.entity_keywords = self._load_entity_keywords()
+        self.config = self._load_config()
+
+    def _load_config(self) -> dict:
+        """
+        Load functional entities configuration from YAML.
+
+        Returns:
+            Dict with 'entities' list containing entity definitions
+        """
+        config_path = Path(__file__).parent.parent / "config" / "functional_entities.yml"
+
+        if not config_path.exists():
+            logger.warning(f"Config file not found: {config_path}, using empty config")
+            return {"entities": []}
+
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+
+        logger.info(f"Loaded {len(config.get('entities', []))} functional entities from config")
+        return config
 
     def _load_entity_keywords(self) -> Dict[str, List[str]]:
         """
