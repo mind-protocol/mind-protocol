@@ -188,8 +188,9 @@ async function checkStimulusInjection(): Promise<ComponentStatus> {
     }
 
     const stats = await readFile(heartbeatPath, 'utf-8');
-    const heartbeatData = JSON.parse(stats);
-    const lastBeat = new Date(heartbeatData.timestamp);
+    // Heartbeat file contains Unix timestamp (seconds since epoch)
+    const unixTimestamp = parseInt(stats.trim());
+    const lastBeat = new Date(unixTimestamp * 1000); // Convert to milliseconds
     const now = new Date();
     const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;
 
@@ -229,8 +230,9 @@ async function checkAutonomyOrchestrator(): Promise<ComponentStatus> {
     }
 
     const stats = await readFile(heartbeatPath, 'utf-8');
-    const heartbeatData = JSON.parse(stats);
-    const lastBeat = new Date(heartbeatData.timestamp);
+    // Heartbeat file contains Unix timestamp (seconds since epoch)
+    const unixTimestamp = parseInt(stats.trim());
+    const lastBeat = new Date(unixTimestamp * 1000); // Convert to milliseconds
     const now = new Date();
     const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;
 

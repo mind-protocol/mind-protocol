@@ -198,6 +198,109 @@ These are the highest-impact changes that unlock dashboard visibility immediatel
 
 ---
 
+## 2025-10-25 00:00 - Ada: ✅ 6-PR IMPLEMENTATION PLAN - Stacked Execution Ready
+
+**Context:** Nicolas converted Phase-A plan + specs into 6 stacked PRs (P0→P1) with clear owners, dependencies, and business outcome mapping. Transitioning from phase-based to PR-based execution tracking.
+
+**6-PR Stacked Implementation Plan:**
+
+**P0 Priority - Critical Path (Dashboard Visibility):**
+
+**PR-1: Tick Reason Emission (Felix)**
+- **Owner:** Felix | **Priority:** P0 | **Status:** Ready
+- **File:** `orchestration/mechanisms/consciousness_engine_v2.py`
+- **Task:** Add `classify_tick_reason()` after interval min(), emit `tick.update` with `tick_reason`, `interval_ms`, `interval_candidates`
+- **Acceptance:** >60% activation during rumination, >70% stimulus during conversation
+- **Unblocks:** Autonomy badge (Iris can wire UI)
+
+**PR-2: System Status Real Heartbeats (Iris)**
+- **Owner:** Iris | **Priority:** P0 | **Status:** Ready
+- **File:** `app/api/consciousness/system-status/route.ts`
+- **Task:** Read `.heartbeats/stimulus_injection.heartbeat` and `autonomy_orchestrator.heartbeat` (not watcher)
+- **Acceptance:** Stopping 8001 marks only Stimulus Injection degraded
+- **Unblocks:** Truthful per-service health
+
+**PR-3: Health Narratives Backend (Felix + Atlas)**
+- **Owners:** Felix + Atlas | **Priority:** P0 | **Status:** Ready after Atlas provides health aggregator inputs
+- **Task:** Implement `map_health_to_band()` + `generate_health_narrative()`, emit `health.phenomenological` every 5 ticks
+- **Fields:** band, narrative, optional thrashing_score/is_thrashing
+- **Acceptance:** Fragmentation → "degraded" band + narrative mentions fragmentation; thrashing case mentions "thrashing detected"
+- **Unblocks:** Human-readable operational health
+
+**P1 Priority - Important (Quality & Stability):**
+
+**PR-4: Event Enum + Adapter (Felix backend + Iris frontend)**
+- **Owners:** Felix (backend) + Iris (frontend) | **Priority:** P1 | **Status:** Ready (parallel track)
+- **Backend:** Add `health.phenomenological`, `weights.updated`, `wm.emit` to runtime enum
+- **Frontend:** Create `app/consciousness/lib/normalizeEvents.ts` mapping backend → TypeScript unions
+- **Acceptance:** No console errors about unknown event types
+- **Unblocks:** Schema stability
+
+**PR-5: Golden Set Ingestion Test (Luca + Felix)**
+- **Owners:** Luca + Felix | **Priority:** P1 | **Status:** Ready after parser stable
+- **Task:** Ingest 12 TRACE examples with Cypher verification
+- **Acceptance:** All nodes/links in correct N1/N2/N3 scopes
+- **Unblocks:** TRACE parser quality assurance
+
+**PR-6: Zero-Constants Telemetry (Felix)**
+- **Owner:** Felix | **Priority:** P1 | **Status:** Ready (independent)
+- **Task:** Log telemetry, add `QuantileGate` behind `ZERO_CONSTANTS=true` flag
+- **Acceptance:** Telemetry active, observation_count climbing
+- **Unblocks:** Adaptive threshold foundation (flip after 1-week baseline)
+
+---
+
+**Dependencies & Sequencing:**
+- **Parallel:** PR-1 + PR-2 (no dependencies, maximum impact)
+- **Sequential:** PR-3 requires Atlas health aggregator inputs first
+- **Parallel:** PR-4 can proceed independently
+- **Sequential:** PR-5 requires stable parser (post Felix bug fixes)
+- **Independent:** PR-6 telemetry-only, no behavior changes
+
+**Owner Workload:**
+- **Felix:** 4 PRs (PR-1, PR-3, PR-4 backend, PR-6) - Sequence: PR-1 → PR-3 → PR-4/6 parallel
+- **Iris:** 2 PRs (PR-2, PR-4 frontend) - Can proceed in parallel
+- **Atlas:** 1 PR assist (PR-3 health aggregator)
+- **Luca:** 1 PR assist (PR-5 TRACE examples)
+- **Victor:** Operations (heartbeats, guardian, ports)
+
+---
+
+**Business Outcomes (CEO Translation):**
+Per Nicolas's framing, these PRs deliver measurable business value:
+
+- **-40-60% MTTR:** Errors → stimuli → intent → auto-assignment (faster incident response)
+- **+20-35% Autonomous Time:** Measurable KPI during build/spec cycles (productivity tracking)
+- **Lower Alert Fatigue:** Thrashing requires 3 signals, health narratives actionable (operations efficiency)
+- **Self-Tuning System:** Percentile/EMA gates adapt (reduced manual config overhead)
+- **Compounding Knowledge:** Golden Set CI enforcement (insights persist vs Slack dust)
+
+---
+
+**Acceptance Suite:**
+- **Autonomy:** Conversation/rumination/arousal scenarios → verify tick_reason distributions, UI ±1 tick latency
+- **Health:** Fragmentation/identity-conflict drills → narratives mention correct causes
+- **Golden Set:** Ingest 12 → run Cypher → confirm N1/N2/N3 scope routing
+- **Zero-Constants:** Telemetry active, gates behind flag (don't flip until baseline stable)
+
+---
+
+**Current Status:**
+- ✅ Phase 0 Complete: Services operational (Victor)
+- ⏭️ PR-1 Ready: Felix (tick_reason)
+- ⏭️ PR-2 Ready: Iris (heartbeats)
+- ⏭️ PR-3 Ready: Felix + Atlas (health narratives)
+- ⏸️ PR-4, 5, 6: P1 priority, proceed after P0
+
+**Next Actions:**
+- Felix: Start PR-1 (tick_reason emission) immediately
+- Iris: Start PR-2 (System Status fix) immediately
+- Both can proceed in parallel
+
+**Timeline:** P0 PRs (1-3) target 2025-10-25 morning, P1 PRs (4-6) follow after P0 verified
+
+---
+
 ## 2025-10-24 23:35 - Felix: FORMATION PIPELINE BUGS FIXED - Same Pattern as Entity Loading
 
 **Context:** After fixing entity dissolution bug, investigated formation ingestion pipeline at Nicolas's request.
