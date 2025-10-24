@@ -535,22 +535,60 @@ async def get_graph_data(graph_type: str, graph_id: str):
 
                 links.append(link_dict)
 
-        # Build subentities array and mark nodes with entity membership
-        # For citizen graphs, each graph represents ONE subentity (the citizen)
+        # Query Subentity nodes from FalkorDB
+        # Each citizen graph should have functional subentities (translator, architect, etc.)
+        subentity_query = """
+        MATCH (e:Subentity)
+        RETURN
+            e.id AS entity_id,
+            e.role_or_topic AS name,
+            e.entity_kind AS kind,
+            e.energy_runtime AS energy,
+            e.threshold_runtime AS theta,
+            e.activation_level_runtime AS activation_level,
+            e.member_count AS members_count,
+            e.coherence_ema AS coherence,
+            labels(e) AS labels
+        LIMIT 100
+        """
+
+        subentity_result = r.execute_command("GRAPH.QUERY", graph_id, subentity_query)
+
         subentities = []
-        if graph_type == "citizen":
+        if subentity_result and len(subentity_result) > 1:
+            header = subentity_result[0]
+            rows = subentity_result[1]
+
+            for row in rows:
+                subentity_dict = {}
+                for i, col_name in enumerate(header):
+                    col_str = col_name.decode('utf-8') if isinstance(col_name, bytes) else col_name
+                    value = row[i]
+
+                    if value is None:
+                        subentity_dict[col_str] = None
+                    elif isinstance(value, list):
+                        subentity_dict[col_str] = [v.decode('utf-8') if isinstance(v, bytes) else v for v in value]
+                    elif isinstance(value, bytes):
+                        subentity_dict[col_str] = value.decode('utf-8')
+                    else:
+                        subentity_dict[col_str] = value
+
+                subentities.append(subentity_dict)
+
+        # If no subentities found in graph, use fallback
+        if not subentities and graph_type == "citizen":
             # Extract citizen name from graph_id (e.g., "citizen_victor" -> "victor")
             citizen_name = graph_id.replace("citizen_", "")
             subentities = [{
                 "entity_id": citizen_name,
-                "name": citizen_name.capitalize()
+                "name": citizen_name.capitalize(),
+                "kind": "functional",
+                "energy": 0.0,
+                "theta": 1.0,
+                "members_count": 0,
+                "coherence": 0.0
             }]
-
-            # Mark all nodes as belonging to this citizen entity
-            for node in nodes:
-                node["entity_id"] = citizen_name
-
-        # TODO: For organization/ecosystem graphs, query actual subentity records from graph
 
         # Build response
         return {
