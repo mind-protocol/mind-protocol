@@ -256,7 +256,8 @@ def execute_stride_step(
     enable_strengthening: bool = True,
     goal_embedding: Optional[np.ndarray] = None,
     broadcaster: Optional[Any] = None,
-    enable_link_emotion: bool = True
+    enable_link_emotion: bool = True,
+    current_entity_id: Optional[str] = None
 ) -> int:
     """
     Execute one stride step: select best edges from active nodes and stage energy transfers.
@@ -292,6 +293,7 @@ def execute_stride_step(
         goal_embedding: Optional goal vector for goal-affinity cost computation
         broadcaster: Optional WebSocket broadcaster for emotion events
         enable_link_emotion: Whether to compute and emit link emotions (default True)
+        current_entity_id: Optional entity ID for personalized weight computation (Priority 4)
 
     Returns:
         Number of strides executed

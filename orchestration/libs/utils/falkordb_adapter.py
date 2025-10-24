@@ -1090,7 +1090,7 @@ class FalkorDBAdapter:
         # Check if subentities already exist in database
         check_query = "MATCH (e:Subentity) RETURN count(e) as count"
         result = self.graph_store.query(check_query)
-        existing_count = result[0][0] if result and len(result) > 0 else 0
+        existing_count = result.result_set[0][0] if result.result_set else 0
 
         if existing_count > 0:
             logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping entity creation")
