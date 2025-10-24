@@ -119,6 +119,10 @@ export function useWebSocket(): WebSocketStreams {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isIntentionalCloseRef = useRef(false);
 
+  // Frame throttling to prevent infinite re-render loops
+  const lastFrameUpdateRef = useRef<number>(0);
+  const FRAME_UPDATE_THROTTLE_MS = 100; // Only update every 100ms
+
   /**
    * Handle incoming WebSocket messages
    */
@@ -149,18 +153,20 @@ export function useWebSocket(): WebSocketStreams {
         // V2 events (frame-based)
         case 'frame.start': {
           const frameEvent = data as FrameStartEvent;
+
+          // Throttle frame updates to prevent infinite re-render loop
+          // Frames arrive rapidly (10-60ms apart), but React needs breathing room
+          const now = Date.now();
+          if (now - lastFrameUpdateRef.current < FRAME_UPDATE_THROTTLE_MS) {
+            // Skip this frame update - too soon since last update
+            break;
+          }
+          lastFrameUpdateRef.current = now;
+
           setV2State(prev => {
             // Only update if frame actually changed (frame_id is unique per frame)
-            // NOTE: Cannot compare rho/safety_state with === (object reference inequality)
             if (prev.currentFrame === frameEvent.frame_id) {
-              return prev; // Same frame, skip update to prevent re-render loop
-            }
-
-            // Check if this frame is already tracked in our history
-            // This prevents duplicate additions that cause infinite re-render loops
-            const alreadyTracked = prev.frameEvents.some(e => e.frame_id === frameEvent.frame_id);
-            if (alreadyTracked) {
-              return prev; // Skip duplicate frame
+              return prev; // Same frame, skip update
             }
 
             // Accumulate frame events for Priority 3 tick speed visualization

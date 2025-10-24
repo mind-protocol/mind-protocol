@@ -991,30 +991,81 @@ class ConsciousnessEngineV2:
         self.tick_duration_ms = tick_duration
         self.last_tick_time = datetime.now()
 
-        # === Step 10: Frame End Event + TRIPWIRE: Observability ===
-        # Frame.end is the heartbeat signal - missing events → monitoring blind
+        # === Step 10: Tick Frame V1 Event (Entity-First Telemetry) + TRIPWIRE: Observability ===
+        # tick_frame.v1 is the heartbeat signal - missing events → monitoring blind
+        # Replaces legacy frame.end with entity-scale observability
         # Tripwire triggers Safe Mode after 5 consecutive failures
         frame_end_emitted = False
 
         if self.broadcaster and self.broadcaster.is_available():
             try:
-                await self.broadcaster.broadcast_event("frame.end", {
-                    "v": "2",
-                    "frame_id": self.tick_count,
-                    "t_ms": int(time.time() * 1000),
-                    "stride_budget_used": 0,  # TODO: Track actual stride count
-                    "stride_budget_left": int(self.config.compute_budget),
-                    "emit_counts": {
-                        "nodes": len([n for n in self.graph.nodes.values() if n.is_active()]),  # Count active sub-entities
-                        "links": len(workspace_nodes),  # Simplified
-                        "tick_duration_ms": round(tick_duration, 2)
-                    }
-                })
+                # Compute entity aggregates for visualization
+                from orchestration.core.events import EntityData, TickFrameV1Event
+                import time as time_module
+
+                entity_data_list = []
+                if hasattr(self.graph, 'subentities') and self.graph.subentities:
+                    for entity_id, entity in self.graph.subentities.items():
+                        # Get members above threshold
+                        active_members = [nid for nid in entity.extent if self.graph.nodes.get(nid) and self.graph.nodes[nid].E >= self.graph.nodes[nid].theta]
+
+                        # Aggregate emotion from active members
+                        emotion_valence = None
+                        emotion_arousal = None
+                        emotion_magnitude = None
+
+                        if active_members:
+                            emotions = []
+                            for nid in active_members:
+                                node = self.graph.nodes.get(nid)
+                                if node and hasattr(node, 'emotion_vector') and node.emotion_vector is not None:
+                                    emotions.append(node.emotion_vector)
+
+                            if emotions:
+                                import numpy as np
+                                avg_emotion = np.mean(emotions, axis=0)
+                                emotion_valence = float(avg_emotion[0]) if len(avg_emotion) > 0 else 0.0
+                                emotion_arousal = float(avg_emotion[1]) if len(avg_emotion) > 1 else 0.0
+                                emotion_magnitude = float(np.linalg.norm(avg_emotion))
+
+                        entity_data = EntityData(
+                            id=entity_id,
+                            name=entity.name if hasattr(entity, 'name') else entity_id,
+                            kind=entity.kind.value if hasattr(entity, 'kind') and hasattr(entity.kind, 'value') else "functional",
+                            color=entity.color if hasattr(entity, 'color') else "#808080",
+                            energy=float(entity.E),
+                            theta=float(entity.theta),
+                            active=entity.is_active(),
+                            members_count=len(entity.extent) if hasattr(entity, 'extent') else 0,
+                            coherence=entity.coherence if hasattr(entity, 'coherence') else 0.0,
+                            emotion_valence=emotion_valence,
+                            emotion_arousal=emotion_arousal,
+                            emotion_magnitude=emotion_magnitude
+                        )
+                        entity_data_list.append(entity_data)
+
+                # Create tick_frame.v1 event
+                tick_event = TickFrameV1Event(
+                    citizen_id=self.config.citizen_id,
+                    frame_id=self.tick_count,
+                    t_ms=int(time_module.time() * 1000),
+                    tick_duration_ms=round(tick_duration, 2),
+                    entities=entity_data_list,
+                    nodes_active=len([n for n in self.graph.nodes.values() if n.is_active()]),
+                    nodes_total=len(self.graph.nodes),
+                    strides_executed=0,  # TODO: Track actual stride count
+                    stride_budget=int(self.config.compute_budget),
+                    rho=criticality_metrics.rho_global if criticality_metrics else 1.0,
+                    coherence=0.0  # TODO: Add coherence metric if available
+                )
+
+                # Emit event
+                await self.broadcaster.broadcast_event("tick_frame_v1", tick_event.to_dict())
                 frame_end_emitted = True
 
             except Exception as e:
-                # Frame.end emission failed - record observability violation
-                logger.error(f"[TRIPWIRE] frame.end emission failed: {e}")
+                # tick_frame.v1 emission failed - record observability violation
+                logger.error(f"[TRIPWIRE] tick_frame.v1 emission failed: {e}")
                 frame_end_emitted = False
 
         # Record observability tripwire status
@@ -1034,7 +1085,7 @@ class ConsciousnessEngineV2:
                     tripwire_type=TripwireType.OBSERVABILITY,
                     value=1.0,  # Binary: failed=1
                     threshold=0.0,  # Should always emit
-                    message="Failed to emit frame.end event (observability lost)"
+                    message="Failed to emit tick_frame.v1 event (observability lost)"
                 )
 
         except Exception as e:
@@ -1042,7 +1093,7 @@ class ConsciousnessEngineV2:
             logger.error(f"[TRIPWIRE] Observability check failed: {e}")
             # Continue execution - tripwire is diagnostic, not control flow
 
-        # Increment tick count AFTER emitting frame.end (so frame_id is correct)
+        # Increment tick count AFTER emitting tick_frame.v1 (so frame_id is correct)
         self.tick_count += 1
 
         # Periodic logging
