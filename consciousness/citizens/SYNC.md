@@ -93,44 +93,103 @@
 
 ---
 
-### Current Phase: Phase 0 - Infrastructure Bring-Up [BLOCKED]
+### Current Phase: Phase 0 - Implement & Start Autonomy Services [IN PROGRESS]
 
-**Goal:** Get all dashboard-dependent processes running under guardian supervision before fixing dashboard code.
+**Goal:** Implement Stimulus Injection (8001) and Autonomy Orchestrator (8002) services so dashboard can display their telemetry.
 
-**Current Status:** ⚠️ **2 of 4 required services missing**
+**Root Cause (Confirmed by Nicolas):** Services don't exist yet - this is implementation work, not an operational issue.
 
-**Services Running:**
-- ✅ WebSocket Server (port 8000) - consciousness engines operational
-- ✅ Dashboard (port 3000) - accessible
-- ✅ Conversation Watcher - processing formations
-- ✅ FalkorDB (port 6379) - graph storage
+**Current Infrastructure:**
+- ✅ WebSocket Server (port 8000) - operational
+- ✅ Dashboard (port 3000) - operational
+- ✅ Conversation Watcher - operational
+- ✅ FalkorDB (port 6379) - operational
+- ❌ **Stimulus Injection Server (port 8001)** - NOT IMPLEMENTED
+- ❌ **Autonomy Orchestrator (port 8002)** - NOT IMPLEMENTED
 
-**Services NOT Running:**
-- ❌ **Stimulus Injection Server (port 8001)** - connection refused
-- ❌ **Autonomy Orchestrator (port 8002)** - connection refused
+---
 
-**Evidence:**
-- Guardian logs show launcher started (PID 9328) at 23:01:56
-- `.heartbeats/` directory is empty (no heartbeat files being written)
-- Port verification via curl: 8001 and 8002 not bound
-- Nicolas's Phase-A plan explicitly requires these services with heartbeat files
+**Implementation Task: Create Minimal Service Stubs**
 
-**Why This Blocks Phase 1-5:**
-- **Phase 1:** System Status route needs to read `.heartbeats/stimulus_injection.heartbeat` and `.heartbeats/autonomy_orchestrator.heartbeat` - files don't exist
-- **Phase 2:** Autonomy Indicator needs `tick_reason` from autonomous ticks - orchestrator not running to generate autonomous activations
-- **Phase 5:** Smoke test requires stimulus injection → intent → mission loop - injector not running
+**Owner:** Victor (can delegate to Atlas/Felix if appropriate)
 
-**Root Cause Investigation Needed:**
-- Guardian successfully started launcher (PID 9328)
-- Launcher should start all 4 services (8000, 8001, 8002, 3000)
-- Only 8000 and 3000 are operational
-- Need to check: `start_mind_protocol.py` configuration, launcher logs for startup errors, service heartbeat writers
+**What to Build:** Two FastAPI services with health endpoints and heartbeat writers (Nicolas provided complete implementation stubs)
 
-**Next Action:** Victor to investigate why guardian/launcher only started 2 of 4 required services.
+**File Locations:**
+1. `orchestration/services/stimulus_injection_service.py` - Receives external stimuli, injects into consciousness
+2. `orchestration/services/autonomy_orchestrator.py` - Manages autonomous activation decisions
 
-**Owner:** Victor (Operations)
-**Priority:** BLOCKING - no Phase 1-5 work can proceed until services are running
-**Timeline:** Target resolution: 2025-10-25 morning
+**Implementation Requirements (Minimal Stubs):**
+
+Both services need:
+- FastAPI app with `/health` endpoint returning `{"status": "ok"}`
+- Heartbeat writer: Background thread writing Unix timestamp to `.heartbeats/<service_name>.heartbeat` every 5 seconds
+- Port binding: 8001 (stimulus), 8002 (orchestrator)
+- Uvicorn server running on `127.0.0.1`
+
+**Stimulus Injection Service (8001) - Additional Endpoints:**
+- `POST /inject` - Accepts stimulus dict, returns `{"status": "injected", "stimulus_id": "...", "echo": True}`
+
+**Autonomy Orchestrator (8002) - Additional Endpoints:**
+- `POST /intent` - Accepts stimulus dict, returns dummy IntentCard: `{"intent_type": "intent.fix_incident", "assignee": "atlas", "priority": 0.5}`
+
+**Guardian Wiring:**
+
+After services are implemented, update Guardian's SERVICES configuration to include:
+
+```python
+{
+    "name": "stimulus_injection",
+    "cmd": ["python", "-m", "orchestration.services.stimulus_injection_service"],
+    "port": 8001,
+    "heartbeat": ".heartbeats/stimulus_injection.heartbeat",
+},
+{
+    "name": "autonomy_orchestrator",
+    "cmd": ["python", "-m", "orchestration.services.autonomy_orchestrator"],
+    "port": 8002,
+    "heartbeat": ".heartbeats/autonomy_orchestrator.heartbeat",
+}
+```
+
+**15-Minute Diagnosis Flow (Per Nicolas):**
+
+1. **Create `orchestration/services/` directory** (doesn't exist yet)
+2. **Add both service stub files** (complete code provided by Nicolas - see system reminder)
+3. **Test manually first** (before guardian):
+   ```bash
+   python -m orchestration.services.stimulus_injection_service
+   # In another terminal:
+   curl -s http://localhost:8001/health  # Should return {"status":"ok"}
+   ls .heartbeats/stimulus_injection.heartbeat  # Should exist and update every 5s
+   ```
+4. **Repeat for orchestrator** (port 8002)
+5. **Update guardian wiring** to add both services
+6. **Restart guardian** - both services should start automatically
+
+**Common Pitfalls to Avoid:**
+- Missing venv deps: `pip install fastapi uvicorn httpx pydantic`
+- Wrong PYTHONPATH: `export PYTHONPATH=$PWD` from repo root
+- Wrong module path in guardian config (must include `services.` in `-m` path)
+
+**Acceptance Criteria:**
+- [ ] `curl http://localhost:8001/health` returns `{"status":"ok"}`
+- [ ] `curl http://localhost:8002/health` returns `{"status":"ok"}`
+- [ ] `.heartbeats/stimulus_injection.heartbeat` exists and updates every ~5s
+- [ ] `.heartbeats/autonomy_orchestrator.heartbeat` exists and updates every ~5s
+- [ ] Guardian supervision keeps both services running after restart
+
+**Why This Unblocks Everything:**
+- Phase 1: System Status can now read real heartbeat files (not just watcher)
+- Phase 2: Autonomy Indicator can display tick_reason once Atlas emits it
+- Phase 5: Smoke test can run stimulus → intent → mission loop
+
+**Next Actions After Phase 0 Complete:**
+1. Iris: Fix System Status heartbeat reading (1 file change)
+2. Atlas: Emit `tick.update` with `tick_reason` (1 file change)
+3. These are the "two files" priority fixes that unlock dashboard visibility
+
+**Timeline:** Target completion: 2025-10-25 morning (15-minute implementation + testing)
 
 ---
 

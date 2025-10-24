@@ -84,7 +84,7 @@ export class PixiRenderer implements RendererAdapter {
   private camera: CameraState = {
     x: 0,
     y: 0,
-    scale: 0.4, // Zoom out 2.5x to see full graph (was 1.0)
+    scale: 0.125, // Unzoomed by factor of 8 to see more of the graph
   };
 
   // Pick rendering (color-coded FBO)
@@ -484,7 +484,7 @@ export class PixiRenderer implements RendererAdapter {
     // Center camera initially (zoomed to see full graph)
     this.camera.x = this.app.screen.width / 2;
     this.camera.y = this.app.screen.height / 2;
-    this.camera.scale = 1.0; // Start at 1:1 zoom so graph is visible
+    this.camera.scale = 0.125; // Unzoomed by factor of 8 (1.0 / 8 = 0.125)
     this.updateCameraTransform();
   }
 
