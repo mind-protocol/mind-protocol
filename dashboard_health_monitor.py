@@ -2,7 +2,7 @@
 Dashboard Health Monitor - Detects and fixes Next.js HMR accumulation
 
 Monitors Next.js dashboard process for:
-- Memory usage >800MB (HMR accumulation)
+- Memory usage >1.5GB (HMR accumulation)
 - HTTP responsiveness
 - Connection leaks (CLOSE_WAIT states)
 
@@ -174,8 +174,8 @@ def check_dashboard_health(port: int = 3000) -> Tuple[bool, str]:
     if memory_mb is None:
         return False, "Could not read process memory"
 
-    if memory_mb > 800:
-        return False, f"Memory exceeded threshold: {memory_mb:.0f}MB > 800MB"
+    if memory_mb > 1500:
+        return False, f"Memory exceeded threshold: {memory_mb:.0f}MB > 1500MB"
 
     # Check connection leaks
     close_wait_count = count_close_wait_connections(port)
@@ -232,7 +232,7 @@ def monitor_loop(check_interval: int = 30, port: int = 3000):
         port: Dashboard port
     """
     logger.info("Dashboard health monitor starting...")
-    logger.info(f"Checking every {check_interval}s for memory >800MB or connection leaks")
+    logger.info(f"Checking every {check_interval}s for memory >1.5GB or connection leaks")
 
     while True:
         try:
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     logger.info("=" * 70)
     logger.info("DASHBOARD HEALTH MONITOR - ACTIVE")
     logger.info("Monitoring Next.js for HMR accumulation")
-    logger.info("Will auto-restart if memory >800MB or connection leaks detected")
+    logger.info("Will auto-restart if memory >1.5GB or connection leaks detected")
     logger.info("=" * 70)
 
     monitor_loop(check_interval=30, port=3000)
