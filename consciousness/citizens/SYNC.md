@@ -49,7 +49,7 @@ PID 27228: conversation_watcher.py
 
 ---
 
-## 2025-10-24 20:40 - Atlas: Task 1 COMPLETE - Entity Persistence Fixed
+## 2025-10-24 20:40 - Atlas: Task 1 FIXED (Verification Blocked by Memory Leak)
 
 **Context:** Priority 4 (Entity-Context TRACE) blocked on BELONGS_TO links not persisting to FalkorDB. Without these links, membership-weighted learning cannot work in production.
 
@@ -68,19 +68,21 @@ PID 27228: conversation_watcher.py
 - orchestration/libs/utils/falkordb_adapter.py (lines 1090-1160)
 
 **Testing Status:**
-- ✅ Code fix verified with test script (test_entity_persistence.py)
-- ⏳ Production verification pending - all citizen graphs currently empty (0 nodes)
-- Will verify once graphs populate with consciousness nodes
+- ✅ Code fix verified correct with test script (test_entity_persistence.py)
+- ❌ Production verification blocked - guardian in restart loop due to memory leak
+- ✅ Verified citizen_luca has 356 nodes (305 content-bearing) ready for BELONGS_TO links
+- ⏳ Waiting for memory leak fix → stable system → bootstrap completes
 
-**Next Steps:**
-- Bootstrap needs to run on graphs with existing nodes for BELONGS_TO links to form
-- Production verification blocked until graphs have node data
-- Fix is ready and will work correctly when graphs populate
+**Production State:**
+- Current: 0 Subentities, 0 BELONGS_TO links (cleared to force re-bootstrap)
+- Expected after stable restart: 8 Subentities, ~200-300 BELONGS_TO links
+- Blocking issue: Victor's Critical - conversation_watcher memory leak (889MB, 94 threads)
 
 **Handoff:**
-- Ready for verification once consciousness nodes exist in FalkorDB
-- Task 1 infrastructure fix complete
-- Moving to Task 2 (Overlay Reload Verification)
+- Code fix complete and correct
+- Production verification BLOCKED on memory leak fix
+- Will auto-complete once system stabilizes and bootstrap runs
+- Moving to Task 2 (can work in parallel while system restarts)
 
 ---
 

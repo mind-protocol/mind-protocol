@@ -339,7 +339,8 @@ def execute_stride_step(
             }
 
         # Select best outgoing edge using cost computation (K=1 for now)
-        result = _select_best_outgoing_link(node, goal_embedding=goal_embedding, emotion_context=emotion_context)
+        # Link selection is entity-aware when current_entity_id provided (Priority 4)
+        result = _select_best_outgoing_link(node, goal_embedding=goal_embedding, emotion_context=emotion_context, current_entity_id=current_entity_id)
         if not result:
             continue
 
@@ -609,17 +610,19 @@ def _select_best_outgoing_link(
 
     Uses cost computation with ease, goal affinity, and emotion gates.
     This is the V2 spec implementation (traversal_v2.md §3.4).
+    Link selection is entity-aware when current_entity_id provided (Priority 4).
 
     Args:
         node: Source node
         goal_embedding: Optional goal vector for affinity-based selection
         emotion_context: Optional emotion state for gate computation
+        current_entity_id: Optional entity ID for personalized weight computation (Priority 4)
 
     Returns:
         Tuple of (best_link, cost_breakdown), or None if no outgoing links
 
     Example:
-        >>> result = _select_best_outgoing_link(node, goal_embedding=goal_vec)
+        >>> result = _select_best_outgoing_link(node, goal_embedding=goal_vec, current_entity_id="entity_translator")
         >>> if result:
         >>>     best_link, breakdown = result
         >>>     print(f"Chosen link: {best_link.id}, reason: {breakdown.reason}")
@@ -627,9 +630,9 @@ def _select_best_outgoing_link(
     if not node.outgoing_links:
         return None
 
-    # Compute cost for each outgoing link
+    # Compute cost for each outgoing link (entity-aware when current_entity_id provided)
     link_costs = [
-        (_compute_link_cost(link, goal_embedding, emotion_context), link)
+        (_compute_link_cost(link, goal_embedding, emotion_context, current_entity_id), link)
         for link in node.outgoing_links
     ]
 
