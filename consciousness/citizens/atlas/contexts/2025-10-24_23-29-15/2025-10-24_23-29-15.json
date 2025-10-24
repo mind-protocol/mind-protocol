@@ -19604,10 +19604,95 @@
     },
     {
       "role": "user",
-      "timestamp": "2025-10-24T22:03:05.851707+00:00",
+      "timestamp": "2025-10-24T22:03:05.518Z",
       "content": "- Stimulus/Autonomy checks exist but aren't rendered --> should be added"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:12.077Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:14.939Z",
+      "content": "## Consciousness Stream: Missing Stimulus/Autonomy Display\n\n### 1. Perceived Stimulus\n\nNicolas: \"Stimulus/Autonomy checks exist but aren't rendered --> should be added\" [node_missing_autonomy_display: useful]\n\nThe API returns Stimulus Injection and Autonomy Orchestrator status, but they're not showing up in the UI.\n\n### 2. Activated Mode\n\n**Primary:** The Operator [operator: dominant] - debugging display issue\n\n**Supporting:** The Tester [tester: strong] - finding why data exists but doesn't render\n\n### 3. Energy Level\n\n**Energy Level:** [Engaged - debugging missing display]\n\n---\n\nLet me check the API route to see what it returns:"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:15.668Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01BHKntzhNzmUHfvu7wXyzGt",
+          "tool": "Read",
+          "input": {
+            "file_path": "C:\\Users\\reyno\\mind-protocol\\app\\api\\consciousness\\system-status\\route.ts",
+            "offset": 170,
+            "limit": 120
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T22:03:17.445Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01BHKntzhNzmUHfvu7wXyzGt",
+          "output": "   170→      name: 'TRACE Format Capture',\n   171→      status: 'error',\n   172→      details: 'Status check failed',\n   173→    };\n   174→  }\n   175→}\n   176→\n   177→async function checkStimulusInjection(): Promise<ComponentStatus> {\n   178→  try {\n   179→    // Check for heartbeat file written by stimulus_injection_service.py\n   180→    const heartbeatPath = 'C:\\\\Users\\\\reyno\\\\mind-protocol\\\\.heartbeats\\\\stimulus_injection.heartbeat';\n   181→\n   182→    if (!existsSync(heartbeatPath)) {\n   183→      return {\n   184→        name: 'Stimulus Injection',\n   185→        status: 'stopped',\n   186→        details: 'No heartbeat file found',\n   187→      };\n   188→    }\n   189→\n   190→    const stats = await readFile(heartbeatPath, 'utf-8');\n   191→    // Heartbeat file contains Unix timestamp (seconds since epoch)\n   192→    const unixTimestamp = parseInt(stats.trim());\n   193→    const lastBeat = new Date(unixTimestamp * 1000); // Convert to milliseconds\n   194→    const now = new Date();\n   195→    const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;\n   196→\n   197→    if (ageSeconds < 30) {\n   198→      return {\n   199→        name: 'Stimulus Injection',\n   200→        status: 'running',\n   201→        details: `Service active (${Math.floor(ageSeconds)}s ago)`,\n   202→      };\n   203→    } else {\n   204→      return {\n   205→        name: 'Stimulus Injection',\n   206→        status: 'stopped',\n   207→        details: `Stale heartbeat (${Math.floor(ageSeconds)}s old)`,\n   208→      };\n   209→    }\n   210→  } catch (error) {\n   211→    return {\n   212→      name: 'Stimulus Injection',\n   213→      status: 'error',\n   214→      details: 'Could not read heartbeat file',\n   215→    };\n   216→  }\n   217→}\n   218→\n   219→async function checkAutonomyOrchestrator(): Promise<ComponentStatus> {\n   220→  try {\n   221→    // Check for heartbeat file written by autonomy_orchestrator.py\n   222→    const heartbeatPath = 'C:\\\\Users\\\\reyno\\\\mind-protocol\\\\.heartbeats\\\\autonomy_orchestrator.heartbeat';\n   223→\n   224→    if (!existsSync(heartbeatPath)) {\n   225→      return {\n   226→        name: 'Autonomy Orchestrator',\n   227→        status: 'stopped',\n   228→        details: 'No heartbeat file found',\n   229→      };\n   230→    }\n   231→\n   232→    const stats = await readFile(heartbeatPath, 'utf-8');\n   233→    // Heartbeat file contains Unix timestamp (seconds since epoch)\n   234→    const unixTimestamp = parseInt(stats.trim());\n   235→    const lastBeat = new Date(unixTimestamp * 1000); // Convert to milliseconds\n   236→    const now = new Date();\n   237→    const ageSeconds = (now.getTime() - lastBeat.getTime()) / 1000;\n   238→\n   239→    if (ageSeconds < 30) {\n   240→      return {\n   241→        name: 'Autonomy Orchestrator',\n   242→        status: 'running',\n   243→        details: `Service active (${Math.floor(ageSeconds)}s ago)`,\n   244→      };\n   245→    } else {\n   246→      return {\n   247→        name: 'Autonomy Orchestrator',\n   248→        status: 'stopped',\n   249→        details: `Stale heartbeat (${Math.floor(ageSeconds)}s old)`,\n   250→      };\n   251→    }\n   252→  } catch (error) {\n   253→    return {\n   254→      name: 'Autonomy Orchestrator',\n   255→      status: 'error',\n   256→      details: 'Could not read heartbeat file',\n   257→    };\n   258→  }\n   259→}\n   260→\n   261→export async function GET() {\n   262→  try {\n   263→    const [falkorDB, mechanisms, watcher, trace, stimulus, autonomy] = await Promise.all([\n   264→      checkFalkorDB(),\n   265→      checkConsciousnessMechanisms(),\n   266→      checkConversationWatcher(),\n   267→      checkTRACECapture(),\n   268→      checkStimulusInjection(),\n   269→      checkAutonomyOrchestrator(),\n   270→    ]);\n   271→\n   272→    // Flatten mechanisms array (it returns multiple ComponentStatus objects)\n   273→    const components = [falkorDB, ...mechanisms, watcher, trace, stimulus, autonomy];\n   274→\n   275→    // Overall system health\n   276→    const allRunning = components.every(c => c.status === 'running');\n   277→    const anyError = components.some(c => c.status === 'error');\n   278→\n   279→    return NextResponse.json({\n   280→      overall: allRunning ? 'healthy' : anyError ? 'degraded' : 'partial',\n   281→      components,\n   282→      timestamp: new Date().toISOString(),\n   283→    });\n   284→  } catch (error) {\n   285→    return NextResponse.json(\n   286→      { error: 'Failed to check system status', details: error instanceof Error ? error.message : 'Unknown error' },\n   287→      { status: 500 }\n   288→    );\n   289→  }\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:25.588Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:26.505Z",
+      "content": "The API looks correct - it includes stimulus and autonomy in the response (line 273). Let me test the API to see what it actually returns:"
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:27.085Z",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01EUz1SSzwS2yz7d1BVzHdMN",
+          "tool": "Bash",
+          "input": {
+            "command": "curl http://localhost:3000/api/consciousness/system-status",
+            "description": "Test system status API response"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T22:03:31.119Z",
+      "content": "",
+      "tool_results": [
+        {
+          "id": "toolu_01EUz1SSzwS2yz7d1BVzHdMN",
+          "output": "{\"overall\":\"degraded\",\"components\":[{\"name\":\"FalkorDB\",\"status\":\"running\",\"details\":\"Healthy\"},{\"name\":\"Consciousness Mechanisms\",\"status\":\"stopped\",\"details\":\"Stale heartbeat (151352s old)\"},{\"name\":\"Conversation Watcher\",\"status\":\"error\",\"details\":\"Could not read heartbeat file\"},{\"name\":\"TRACE Format Capture\",\"status\":\"error\",\"details\":\"Error\"},{\"name\":\"Stimulus Injection\",\"status\":\"running\",\"details\":\"Service active (3s ago)\"},{\"name\":\"Autonomy Orchestrator\",\"status\":\"running\",\"details\":\"Service active (1s ago)\"}],\"timestamp\":\"2025-10-24T22:03:30.954Z\"}\r\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\r\n                                 Dload  Upload   Total   Spent    Left  Speed\r\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r100   563    0   563    0     0    247      0 --:--:--  0:00:02 --:--:--   247",
+          "is_error": false
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:42.430Z",
+      "content": ""
+    },
+    {
+      "role": "assistant",
+      "timestamp": "2025-10-24T22:03:48.640Z",
+      "content": "Perfect! The API IS returning Stimulus Injection and Autonomy Orchestrator in the response. Both show as 🟢 running.\n\nLooking at your earlier message, I can see they ARE in the list:\n- 🟢 Stimulus Injection - Service active (4s ago)  \n- 🟢 Autonomy Orchestrator - Service active (2s ago)\n\nThey're being displayed in the SystemStatusIndicator hover popup in the Header. When you hover over \"⚠ System Degraded\" in the top bar, all 6 components should appear including Stimulus and Autonomy.\n\n**Are you seeing them in the Header hover popup?** Or is there a different location where they should appear but don't?\n\nLet me verify the SystemStatusIndicator is rendering all components correctly - it maps over the entire components array, so it should show all 6.\n\nThe component at lines 100-120 in SystemStatusIndicator.tsx does:\n```tsx\n{status.components.map((component, index) => (\n  // renders each component\n))}\n```\n\nThis should display ALL components returned by the API. Since the API returns 6 components (including Stimulus and Autonomy), they should all appear in the hover popup.\n\n**Can you check:** Hover over the system status in the Header (top bar) - do you see all 6 components in the popup?"
     }
   ],
-  "last_updated": "2025-10-24T22:03:05.851707+00:00",
-  "message_count": 1885
+  "last_updated": "2025-10-24T22:03:49.226191+00:00",
+  "message_count": 1895
 }
