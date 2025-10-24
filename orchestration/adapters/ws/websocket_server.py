@@ -398,6 +398,16 @@ async def start_citizen_consciousness(
         logger.error(f"[N1:{citizen_id}] Graph load timed out after 30s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
+    # Bootstrap subentity layer if not already present
+    if not graph.subentities or len(graph.subentities) == 0:
+        logger.info(f"[N1:{citizen_id}] Bootstrapping subentity layer...")
+        from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
+        bootstrap = EntityBootstrap(graph)
+        stats = bootstrap.run_complete_bootstrap()
+        logger.info(f"[N1:{citizen_id}] Bootstrap complete: {stats}")
+    else:
+        logger.info(f"[N1:{citizen_id}] Subentities already present: {len(graph.subentities)}")
+
     # Create engine configuration
     config = EngineConfig(
         tick_interval_ms=100,
@@ -458,6 +468,16 @@ async def start_organizational_consciousness(
     except asyncio.TimeoutError:
         logger.error(f"[N2:{org_id}] Graph load timed out after 30s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
+
+    # Bootstrap subentity layer if not already present
+    if not graph.subentities or len(graph.subentities) == 0:
+        logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
+        from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
+        bootstrap = EntityBootstrap(graph)
+        stats = bootstrap.run_complete_bootstrap()
+        logger.info(f"[N2:{org_id}] Bootstrap complete: {stats}")
+    else:
+        logger.info(f"[N2:{org_id}] Subentities already present: {len(graph.subentities)}")
 
     # Create engine configuration
     config = EngineConfig(
