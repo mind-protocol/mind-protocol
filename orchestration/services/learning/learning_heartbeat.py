@@ -57,6 +57,49 @@ class LearningHeartbeat:
         # Individual weight updates (for detailed telemetry)
         self.weight_updates = []
 
+    def record_weight_update(
+        self,
+        node_id: str,
+        channel: str,
+        delta_log_weight: float,
+        z_score: float,
+        learning_rate: float,
+        local_overlays: list = None
+    ):
+        """
+        Record individual weight update with entity attribution (Priority 4).
+
+        Args:
+            node_id: Node being updated
+            channel: Learning channel (e.g., "trace", "wm")
+            delta_log_weight: Global weight change
+            z_score: Z-score used for learning
+            learning_rate: Adaptive learning rate
+            local_overlays: Entity-specific overlay updates (Priority 4)
+        """
+        update_record = {
+            'node_id': node_id,
+            'channel': channel,
+            'delta_log_weight': round(delta_log_weight, 4),
+            'z_score': round(z_score, 3),
+            'learning_rate': round(learning_rate, 3),
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # Add entity attribution if available (Priority 4)
+        if local_overlays:
+            update_record['local_overlays'] = [
+                {
+                    'entity': overlay['entity'],
+                    'delta': round(overlay['delta'], 4),
+                    'overlay_after': round(overlay['overlay_after'], 4),
+                    'membership_weight': round(overlay['membership_weight'], 3)
+                }
+                for overlay in local_overlays
+            ]
+
+        self.weight_updates.append(update_record)
+
     def record_trace_processing(
         self,
         nodes_processed: int,
@@ -113,12 +156,16 @@ class LearningHeartbeat:
                 )
             },
             'current_trace': self.current_trace_stats,
+            'weight_updates': self.weight_updates,  # NEW: Detailed updates with entity attribution
             'health': {
                 'learning_active': self.total_updates_applied > 0,
                 'traces_processed': self.total_traces_processed,
                 'status': self._compute_status()
             }
         }
+
+        # Reset weight_updates after writing
+        self.weight_updates = []
 
         try:
             with open(heartbeat_file, 'w') as f:

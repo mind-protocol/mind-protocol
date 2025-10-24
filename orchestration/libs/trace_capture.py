@@ -28,6 +28,7 @@ from orchestration.libs.entity_context_trace_integration import (
     enhance_nodes_with_memberships
 )
 from orchestration.services.learning.learning_heartbeat import LearningHeartbeat
+from orchestration.adapters.ws.weight_learning_emitter import WeightLearningEmitter, NoOpTransport
 from substrate.schemas.consciousness_schema import (
     get_node_type_by_name,
     get_relation_type_by_name,
@@ -43,7 +44,7 @@ logger = logging.getLogger(__name__)
 class TraceCapture:
     """Capture and process TRACE format consciousness streams with multi-niveau routing."""
 
-    def __init__(self, citizen_id: str, host: str = "localhost", port: int = 6379):
+    def __init__(self, citizen_id: str, host: str = "localhost", port: int = 6379, weight_emitter: WeightLearningEmitter = None):
         """
         Initialize capture system with multi-graph routing support.
 
@@ -51,10 +52,14 @@ class TraceCapture:
             citizen_id: Citizen identifier (used for N1 personal graph)
             host: FalkorDB host
             port: FalkorDB port
+            weight_emitter: Optional emitter for Priority 4 weight learning events
         """
         self.citizen_id = citizen_id
         self.host = host
         self.port = port
+
+        # Priority 4: Weight learning emitter (defaults to NoOp if not provided)
+        self.weight_emitter = weight_emitter or WeightLearningEmitter(NoOpTransport())
 
         # Single FalkorDB connection (we'll use switch_graph for routing)
         url = f"redis://{host}:{port}"
@@ -267,6 +272,27 @@ class TraceCapture:
             )
 
             logger.info(f"[TraceCapture] WeightLearnerV2 produced {len(updates)} updates with entity attribution")
+
+            # Emit Priority 4 weight learning events for visualization
+            if updates:
+                # Convert WeightUpdate dataclass instances to dicts for emitter
+                from dataclasses import asdict
+                updates_as_dicts = [asdict(update) for update in updates]
+
+                # Determine cohort identifier (use first update's type+scope)
+                cohort = f"{updates[0].item_type}@{updates[0].scope}"
+
+                # Emit trace weight update event
+                self.weight_emitter.trace_weight_updates(
+                    updates=updates_as_dicts,
+                    frame_id=0,  # TODO: Get actual frame_id from consciousness engine context
+                    scope="node",  # We're updating nodes
+                    cohort=cohort,
+                    entity_contexts=entity_context or [],
+                    global_context=True  # Global weights always updated
+                )
+
+                logger.debug(f"[TraceCapture] Emitted weights.updated.trace event (n={len(updates)}, cohort={cohort})")
 
             # Apply updates back to FalkorDB
             for update in updates:
