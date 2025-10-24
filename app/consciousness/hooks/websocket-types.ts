@@ -721,6 +721,9 @@ export interface WebSocketStreams {
   // Emotion coloring events
   emotionState: EmotionColoringState;
 
+  // Priority 4: Weight learning events
+  weightLearningEvents: WeightsUpdatedTraceEvent[];
+
   // Connection state
   connectionState: WebSocketState;
   error: string | null;

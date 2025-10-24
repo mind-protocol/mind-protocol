@@ -28,6 +28,7 @@ const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
 const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
 const MAX_RECENT_STRIDES = 100; // Keep last 100 strides for attribution
 const MAX_FRAME_EVENTS = 200; // Keep last 200 frame.start events (Priority 3 tick speed viz)
+const MAX_WEIGHT_LEARNING_EVENTS = 200; // Keep last 200 weight learning events (Priority 4 dual-view viz)
 const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
 /**
@@ -100,6 +101,9 @@ export function useWebSocket(): WebSocketStreams {
     resonanceRatio: null,
     saturationWarnings: []
   });
+
+  // Priority 4: Weight learning events
+  const [weightLearningEvents, setWeightLearningEvents] = useState<WeightsUpdatedTraceEvent[]>([]);
 
   // WebSocket reference (persists across renders)
   const wsRef = useRef<WebSocket | null>(null);
