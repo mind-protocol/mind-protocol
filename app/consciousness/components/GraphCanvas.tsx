@@ -736,15 +736,8 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       rafId = requestAnimationFrame(tick);
     }
 
-    // PERFORMANCE: Start simulation with faster settling and stop when stable
-    const alphaMin = nodeCount > 500 ? 0.05 : 0.01; // Stop earlier for large graphs
-
-    simulation
-      .alpha(0.3)
-      .alphaMin(alphaMin)
-      .alphaDecay(0.03) // Faster decay = settles quicker
-      .velocityDecay(0.6) // More friction = less bouncing, faster settling
-      .restart();
+    // Outer simulation already converged
+    // Inner simulations start automatically when created and tick via RAF
 
     // CRITICAL: Cleanup function that properly stops simulation and clears interval
     // This runs BEFORE the effect re-runs (not just on unmount)
@@ -772,7 +765,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       (simulation as any).force('center', null);
       (simulation as any).force('collision', null);
     };
-  }, [nodes, links, selectedSubentity]);
+  }, [nodes, links, selectedSubentity, expandedClusters]);
 
   // Handle node focus from CLAUDE_DYNAMIC.md clicks
   // IMPORTANT: Empty dependency array to prevent listener accumulation
