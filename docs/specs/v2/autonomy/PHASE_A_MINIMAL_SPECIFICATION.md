@@ -884,7 +884,7 @@ async def test_end_to_end_autonomy():
 
 **Extension to Phase-A:** Collect operational signals (logs, console errors, screenshots, code/doc changes, runtime events) and route them into L2 consciousness as stimuli for automated task creation.
 
-**Reference:** See `SIGNALS_TO_STIMULI_BRIDGE.md` for complete specification.
+**Reference:** See `SIGNALS_TO_STIMULI_BRIDGE.md` v1.1 for complete specification. **v1.1 includes production hardening:** 10 resilience mitigations (fanout caps, priority lanes, capacity-aware routing, impact-based trust, backlog handling, PII sensitivity, telemetry requirements).
 
 ---
 

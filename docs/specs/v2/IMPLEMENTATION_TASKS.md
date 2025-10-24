@@ -174,10 +174,10 @@
 
 ## Phase-A2: Signals → Stimuli Bridge (Operational Feedback Loop)
 
-**Reference:** `SIGNALS_TO_STIMULI_BRIDGE.md`
+**Reference:** `SIGNALS_TO_STIMULI_BRIDGE.md` v1.1 (production hardened)
 **Purpose:** Route operational signals (logs, console, screenshots, code/doc changes, runtime events) into L2 consciousness for automated task creation
 
-### From: SIGNALS_TO_STIMULI_BRIDGE.md (v1.0)
+### From: SIGNALS_TO_STIMULI_BRIDGE.md (v1.1)
 
 | Task | Owner | Status | Spec Reference | Verification | Comments |
 |------|-------|--------|----------------|--------------|----------|
@@ -196,6 +196,18 @@
 | Implement intent.fix_incident pattern | Atlas | 🔴 | §Intent Templates (fix_incident) | Console/log errors → IntentCard → mission to Iris/Atlas/Victor | Routing: service → assignee mapping |
 | Implement intent.sync_docs_scripts pattern | Atlas | 🔴 | §Intent Templates (sync_docs_scripts) | Code change → doc update mission (and vice versa) | Routing: code_change → Ada, doc_change → Atlas |
 | Wire template parser + mission rendering | Atlas | 🔴 | §Orchestrator loading | Mission text rendered with stimulus metadata | Handlebars-like templating |
+| Implement orchestrator policy configuration | Atlas | 🔴 | §Orchestrator Policy Configuration | Loads orchestrator_config.yaml on startup | ACK policies, lanes, capacity limits, trust tracking |
+| **[A2-3.1] Production Mitigations** - Implement 10 resilience features | Atlas/Victor | 🔴 | §Production Resilience Mitigations | All mitigations functional and tested | v1.1 hardening features |
+| Implement intent merge + fanout cap (≤3 intents/stimulus) | Atlas | 🔴 | §Mitigation #1: Fan-out Explosion | Same error 100× → ≤3 intents created | max_intents_per_stimulus=3, merge window 10 min |
+| Implement source trust scoring (impact-based) | Atlas | 🔴 | §Mitigation #2: Metric Gaming | Track Δhealth/Δerror_rate after mission | source_trust 0-1, verification queries |
+| Implement priority lanes + aging | Atlas | 🔴 | §Mitigation #3: Priority Inversion | Safety lane 30%, incidents 40%, sync 30% | sev1 never starved by sev3 flood |
+| Implement cooldown after rate limit burst | Atlas/Victor | 🔴 | §Mitigation #4: Stimuli Flood | After 3× rate limit in 60s, enter 5 min cooldown | Burst detection, queue summary injection |
+| Implement anomaly cooldown + hysteresis | Atlas | 🔴 | §Mitigation #5: Cascading Loops | Suppress similar anomalies for 5 min after escalation | Require 50 healthy frames before re-enable |
+| Implement durable backlog + idempotency | Atlas | 🔴 | §Mitigation #6: Orchestrator Outage | Persist stimuli to disk/Redis during outage | Exponential backoff retry, dedupe by stimulus_id |
+| Implement capacity-aware routing + reassignment | Atlas | 🔴 | §Mitigation #7: Citizen Overload | Per-citizen max_in_flight limits, 30 min timeout | Atlas=8, Iris=8, Felix=6, Victor=6, Ada=12 |
+| Implement sensitivity metadata + PII handling | Atlas/Iris | 🔴 | §Mitigation #8: Screenshots & PII | Tag screenshots as internal, optional redaction | Never route restricted to N3, circuit breaker for OCR |
+| Implement Prometheus telemetry + SLO tracking | Atlas/Victor | 🔴 | §Mitigation #9: Observability Gaps | Expose /metrics on port 9090 | Ingestion latency, deduplication rate, citizen queue depth |
+| Implement enhanced ACK policies | Atlas | 🔴 | §Mitigation #10: Autonomy Breaker | depth≥2 or sev1/sev2 → ACK_REQUIRED | Whitelist safe patterns, block high-risk operations |
 | **[A2-4] Next.js Integration** - Dashboard signal routing | Iris | 🔴 | §Next.js Dashboard Integration | Console errors reach collector; beacon installed | 2 API routes + client beacon |
 | Create /api/signals/console/route.ts proxy | Iris | 🔴 | §Next.js API proxy (console) | Proxies to collector /ingest/console | Timeout handling, fire-and-forget |
 | Create /api/signals/screenshot/route.ts proxy | Iris | 🔴 | §Next.js API proxy (screenshot) | Multipart upload to collector /ingest/screenshot | FormData forwarding |

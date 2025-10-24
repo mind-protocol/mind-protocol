@@ -1,10 +1,31 @@
 # Signals → Stimuli Bridge
 
-**Version:** 1.0
+**Version:** 1.1
 **Created:** 2025-10-24
+**Updated:** 2025-10-24 (Production hardening - added 10 resilience mitigations)
 **Purpose:** Route operational signals (logs, console errors, screenshots, code/doc changes, runtime events) into L2 consciousness as stimuli for automated task creation
 **Status:** Specification (Phase-A2)
 **Owner:** Atlas (collector + watchers), Iris (UI integration), orchestrator templates
+
+---
+
+## Changelog
+
+**v1.1 (2025-10-24):**
+- Added Production Resilience Mitigations section (10 mitigations addressing adversarial analysis risks)
+- Added extended StimulusEnvelope metadata fields (cooldown, merge keys, impact scoring, PII flags)
+- Added Orchestrator Policy Configuration (ACK policies, lanes, capacity limits, trust tracking)
+- Added 6 new acceptance tests (fanout cap, priority inversion, metric gaming, self-awareness guard, outage resilience, PII handling)
+- Updated architecture diagram to reflect production features (backlog, fanout caps, capacity-aware routing)
+- Updated telemetry requirements (Prometheus metrics, SLO targets, alerting thresholds)
+
+**v1.0 (2025-10-24):**
+- Initial specification
+- 5 signal sources (logs, console, screenshots, code/doc drift, runtime events)
+- Signals Collector service (FastAPI @8003)
+- Intent templates (fix_incident, sync_docs_scripts)
+- Self-awareness loop guards (origin tagging, depth limits, TTL)
+- 4 base acceptance tests
 
 ---
 
@@ -960,6 +981,94 @@ intents:
 
 ---
 
+### Orchestrator Policy Configuration
+
+**Location:** `orchestration/services/orchestrator/orchestrator_config.yaml`
+
+**Purpose:** Production resilience policies for intent routing, capacity management, and autonomy governance.
+
+```yaml
+version: 1
+
+orchestrator:
+  # ACK policies (Mitigation #10)
+  ack_policies:
+    max_origin_depth: 2
+    business_impact_ack: ["sev1", "sev2"]
+    whitelist_patterns:
+      - "intent.sync_docs_scripts"  # safe auto-execute
+      - "intent.fix_incident" where service != "sentinel"
+
+  # Priority lanes (Mitigation #3)
+  lanes:
+    safety: 0.30      # 30% capacity for sev1/sev2
+    incidents: 0.40   # 40% capacity for operational errors
+    sync: 0.30        # 30% capacity for doc/code drift
+
+  # Priority computation (Mitigation #3)
+  priority:
+    formula: "P * impact(sev) * service_criticality"
+    aging_sec: 900  # boost priority after 15 min wait
+    impact_weights:
+      sev1: 10.0
+      sev2: 5.0
+      sev3: 1.0
+      sev4: 0.5
+
+  # Fan-out controls (Mitigation #1)
+  fanout:
+    max_intents_per_stimulus: 3
+    merge_window_sec: 600
+    merge_strategy: "highest_priority"  # keep top 3 by priority
+
+  # Capacity management (Mitigation #7)
+  capacity:
+    per_assignee_max_in_flight:
+      atlas: 8
+      iris: 8
+      felix: 6
+      victor: 6
+      ada: 12
+    backpressure_threshold: 0.8  # queue assignment when 80% capacity
+    overflow_strategy: "reassign"  # or "queue"
+
+  # Reassignment policies (Mitigation #7)
+  reassignment:
+    timeout_sec: 1800  # 30 min stall timeout
+    escalation_chain:
+      iris: ["ada", "victor"]
+      atlas: ["victor", "ada"]
+      felix: ["ada"]
+      victor: ["ada"]
+
+  # Source trust tracking (Mitigation #2)
+  trust:
+    initial_trust: 0.8
+    decay_rate: 0.95  # multiply by 0.95 per failed outcome
+    recovery_rate: 1.05  # multiply by 1.05 per successful outcome
+    min_trust: 0.1
+    verification_required_below: 0.5  # ACK if source_trust < 0.5
+
+  # Telemetry (Mitigation #9)
+  telemetry:
+    metrics_port: 9090
+    export_format: "prometheus"
+    slo_targets:
+      intent_creation_latency_p99_ms: 500
+      mission_completion_rate: 0.85
+```
+
+**Orchestrator behavior:**
+1. **Load policies on startup** from orchestrator_config.yaml
+2. **Evaluate ACK policies** before mission execution
+3. **Enforce lane capacity** when assigning missions
+4. **Apply fanout cap** when multiple intents match
+5. **Check citizen capacity** before assignment
+6. **Track source trust** after mission completion
+7. **Export telemetry** to Prometheus on port 9090
+
+---
+
 ## Self-Awareness Loop Guards (Loop Prevention)
 
 ### Metadata Fields for Loop Prevention
@@ -1108,6 +1217,328 @@ if __name__ == "__main__":
 
 ---
 
+## Production Resilience Mitigations
+
+### Overview
+
+The following 10 mitigations address production risks identified through adversarial analysis. Each mitigation extends the base architecture with defenses against specific failure modes.
+
+---
+
+### 1. Fan-out Explosion → Intent Merge + Cap
+
+**Risk:** Single high-recurrence signal (e.g., same error 100×) creates 100 intents, overwhelming citizens.
+
+**Defense:** Intent merging with fanout cap
+- `max_intents_per_stimulus = 3` (configurable)
+- `intent_merge_key` for coalescing related intents
+- `intent_merge_window_sec = 600` (10 minutes)
+
+**Extended Metadata:**
+```yaml
+metadata:
+  intent_merge_key: "<stable key for coalescing>"
+  max_intents_per_stimulus: 3
+  intent_merge_window_sec: 600
+```
+
+**Orchestrator behavior:** If N>3 matches fire for same stimulus, merge into ≤3 intents with highest priority.
+
+---
+
+### 2. Metric Gaming → Impact-Based Trust
+
+**Risk:** Citizens optimize for task count over real fixes. Completing low-impact tasks inflates metrics without improving system health.
+
+**Defense:** Source trust scoring based on realized impact
+- Track `Δhealth`, `Δerror_rate` after mission execution
+- Update `source_trust` (0-1) based on outcomes
+- Downweight signals from low-trust sources
+
+**Extended Metadata:**
+```yaml
+metadata:
+  source_trust: 0.0-1.0               # learned from outcomes
+  expected_outcome: "error rate drops by 50%"
+  verification_query: "check error count in last 10 mins"
+```
+
+**Orchestrator behavior:** Missions include verification queries. Post-execution, compare expected vs actual outcome. Update source_trust accordingly.
+
+---
+
+### 3. Priority Inversion → Lanes + Aging
+
+**Risk:** Flood of low-priority signals (sev3/sev4) starves critical safety incidents (sev1).
+
+**Defense:** Priority lanes with capacity allocation
+- **Safety lane:** 30% capacity reserved for sev1/sev2
+- **Incidents lane:** 40% capacity for operational errors
+- **Sync lane:** 30% capacity for doc/code drift
+
+**Extended Metadata:**
+```yaml
+metadata:
+  business_impact: "sev1" | "sev2" | "sev3" | "sev4"
+  service_criticality: 0.0-1.0
+```
+
+**Orchestrator policy:**
+```yaml
+orchestrator:
+  lanes:
+    safety: 0.30
+    incidents: 0.40
+    sync: 0.30
+  priority:
+    formula: "P * impact(sev) * service_criticality"
+    aging_sec: 900  # boost priority after 15 min wait
+```
+
+---
+
+### 4. Stimuli Flood → Enhanced Rate Limiting + Cooldown
+
+**Risk:** Burst of 1000 similar signals (e.g., network partition) exceeds rate limits, but signals keep arriving.
+
+**Defense:** Cooldown period after burst detection
+- After rate limit hit, enter `cooldown_sec` period
+- During cooldown, signals deduplicated but not injected
+- Cooldown ends when signal rate drops below threshold
+
+**Extended Metadata:**
+```yaml
+metadata:
+  cooldown_sec: 300  # 5 min cooldown after burst
+  rate_limit_bucket: "<service>:<pattern>"
+```
+
+**Collector behavior:** Track burst events. If rate limit exceeded 3× in 60 seconds, enter cooldown. Queue signals, inject summary after cooldown expires.
+
+---
+
+### 5. Cascading Loops → Cooldown + Hysteresis
+
+**Risk:** Fix attempt triggers new anomaly → new stimulus → new fix attempt → cascade.
+
+**Defense:** Anomaly cooldown with hysteresis
+- After mission triggered by anomaly, enter `anomaly_cooldown_sec` period
+- Suppress similar anomalies during cooldown
+- Require `anomaly_hysteresis_frames` of healthy state before re-enabling
+
+**Extended Metadata:**
+```yaml
+metadata:
+  anomaly_cooldown_sec: 300
+  anomaly_hysteresis_frames: 50  # must be healthy 50 frames before re-escalating
+```
+
+**WS reinjector behavior:** Track last anomaly escalation timestamp. Suppress reinjection during cooldown. Require sustained health before next escalation.
+
+---
+
+### 6. Orchestrator Outage → Backlog + Idempotency
+
+**Risk:** Orchestrator down for 10 minutes. Collector queues 500 signals. On restart, all injected at once, overwhelming orchestrator.
+
+**Defense:** Durable backlog with at-least-once delivery
+- Collector writes stimuli to persistent queue (disk or Redis)
+- Injection retries with exponential backoff
+- Orchestrator handles duplicates via `stimulus_id` deduplication
+
+**Extended Metadata:**
+```yaml
+metadata:
+  backlog_id: "<persistent queue ID>"
+  retry_count: 0
+  retry_backoff_ms: 1000
+```
+
+**Collector behavior:** If injector unreachable, append to backlog file. Background task retries with backoff. Delete from backlog after successful injection.
+
+**Orchestrator behavior:** Deduplicate by `stimulus_id` before creating IntentCard.
+
+---
+
+### 7. Citizen Overload → Capacity-Aware Routing
+
+**Risk:** All incidents route to Atlas. He gets 50 concurrent missions, can't complete any.
+
+**Defense:** Per-citizen capacity limits with backpressure
+- `max_in_flight` missions per citizen (configurable per role)
+- If citizen at capacity, queue or reassign to alternate
+- Reassignment timeout if mission stalled
+
+**Extended Metadata:**
+```yaml
+metadata:
+  assignee_capacity:
+    max_in_flight: 5
+  reassign_after_sec: 1800  # 30 min timeout
+```
+
+**Orchestrator policy:**
+```yaml
+orchestrator:
+  capacity:
+    per_assignee_max_in_flight:
+      atlas: 8
+      iris: 8
+      felix: 6
+      victor: 6
+      ada: 12
+  reassignment:
+    timeout_sec: 1800
+```
+
+**Orchestrator behavior:** Check citizen capacity before assignment. If at max, queue mission or route to alternate. Monitor mission staleness, reassign if timeout exceeded.
+
+---
+
+### 8. Screenshots & PII → Sensitivity Metadata
+
+**Risk:** Screenshot contains credentials, PII, or sensitive data. Routing to N3 exposes it publicly.
+
+**Defense:** Sensitivity classification with routing restrictions
+- `sensitivity` field: `public` | `internal` | `restricted`
+- `pii_redacted` flag if redaction applied
+- Screenshots default to `internal`, never route to N3
+
+**Extended Metadata:**
+```yaml
+metadata:
+  sensitivity: "public" | "internal" | "restricted"
+  pii_redacted: true
+  storage_uri: "s3://evidence/redacted_screenshot.png"
+```
+
+**Collector behavior:**
+- Tag all screenshots as `sensitivity: internal`
+- Optional: Run PII redaction with circuit breaker
+- Store original + redacted version, include `storage_uri`
+
+**Orchestrator behavior:** Never route `restricted` stimuli to N3 graph. Limit N2 access to authorized citizens.
+
+---
+
+### 9. Observability Gaps → Telemetry Requirements
+
+**Risk:** Can't distinguish "system working" from "signals not flowing". Silent failures invisible.
+
+**Defense:** Required telemetry for all components
+- Collector exposes `/metrics` (Prometheus format)
+- SLO counters: ingestion latency, deduplication rate, injection success rate
+- Orchestrator tracks: intent creation rate, mission completion rate, citizen utilization
+
+**Telemetry Requirements:**
+
+**Collector metrics:**
+```python
+signals_ingested_total          # counter
+signals_deduplicated_total      # counter
+signals_rate_limited_total      # counter
+injection_latency_seconds       # histogram
+injection_failures_total        # counter
+```
+
+**Orchestrator metrics:**
+```python
+intents_created_total           # counter, labels: intent_type
+missions_assigned_total         # counter, labels: assignee
+missions_completed_total        # counter, labels: assignee, outcome
+citizen_queue_depth             # gauge, labels: citizen
+```
+
+**Alerting thresholds:**
+- Injection latency p99 >10 seconds → alert
+- Injection failure rate >5% → alert
+- Citizen queue depth >10 for >30 min → alert
+
+---
+
+### 10. Autonomy Breaker → Enhanced ACK Policies
+
+**Risk:** Self-awareness loops accidentally create missions that break autonomy (e.g., "disable sentinel").
+
+**Defense:** Enhanced ACK policies for high-risk operations
+- `origin_chain_depth >= 2` → ACK_REQUIRED
+- `business_impact = sev1` or `sev2` → ACK_REQUIRED
+- Orchestrator whitelist for auto-execute patterns
+
+**Extended Metadata:**
+```yaml
+metadata:
+  requires_ack_reason: "self_observation_depth_2" | "business_critical" | "manual_review"
+```
+
+**Orchestrator policy:**
+```yaml
+orchestrator:
+  ack_policies:
+    max_origin_depth: 2
+    business_impact_ack: ["sev1", "sev2"]
+    whitelist_patterns:
+      - "intent.sync_docs_scripts"  # safe auto-execute
+      - "intent.fix_incident" where service != "sentinel"
+```
+
+**Orchestrator behavior:** Evaluate mission against ACK policies. If match, set `execution_mode = ACK_REQUIRED`. Citizen awaits human approval.
+
+---
+
+### Extended StimulusEnvelope Metadata (Complete)
+
+All StimulusEnvelope instances SHOULD include these extended fields for production resilience:
+
+```yaml
+metadata:
+  # Core loop prevention (existing)
+  origin: "external" | "self_observation"
+  origin_chain_depth: 0
+  origin_chain: []
+  ttl_frames: 600
+  dedupe_key: "<hash>"
+  rate_limit_bucket: "<service>:<pattern>"
+
+  # Production mitigations (NEW)
+  cooldown_sec: 300
+  q_gate_config:
+    q_escalate: 0.75
+    q_hard: 0.90
+    ema_alpha: 0.2
+
+  # Fan-out & merging
+  intent_merge_key: "<stable key>"
+  max_intents_per_stimulus: 3
+  intent_merge_window_sec: 600
+
+  # Priority & impact
+  business_impact: "sev1" | "sev2" | "sev3" | "sev4"
+  service_criticality: 0.0-1.0
+  source_trust: 0.0-1.0
+  expected_outcome: "error rate drops by 50%"
+  verification_query: "check error count in last 10 mins"
+
+  # Capacity & routing
+  assignee_capacity:
+    max_in_flight: 5
+  reassign_after_sec: 1800
+
+  # Safety & PII
+  sensitivity: "public" | "internal" | "restricted"
+  pii_redacted: true
+  storage_uri: "s3://evidence/screenshot.png"
+
+  # Self-awareness
+  anomaly_cooldown_sec: 300
+  anomaly_hysteresis_frames: 50
+  requires_ack_reason: "self_observation_depth_2" | "business_critical"
+```
+
+**Note:** Fields marked (NEW) are optional extensions. Core fields (origin, origin_chain_depth, dedupe_key) remain REQUIRED.
+
+---
+
 ## Acceptance Tests
 
 ### Test 1: Incident E2E (Console Error)
@@ -1192,6 +1623,119 @@ if __name__ == "__main__":
 - Only 1 stimulus created in N2 graph
 - 19 requests return `deduplicated` status
 - Dedupe count visible in collector stats (`/health`)
+
+---
+
+### Test 5: Fanout Cap (Intent Merge)
+
+**Scenario:** Same error 20× in logs → only ≤3 intents created
+
+**Steps:**
+1. Generate 20 identical backend errors (same message + stack)
+2. Collector deduplicates, but sets `recurrence = 20` in metadata
+3. Forward single stimulus with high recurrence to orchestrator
+4. Orchestrator matches `intent.fix_incident`, evaluates fanout cap
+5. Creates ≤3 intents (merged by `intent_merge_key`)
+
+**Verification:**
+- Only 1 stimulus created (deduplication works)
+- ≤3 IntentCards created despite high recurrence
+- Intent merge visible in orchestrator logs
+
+---
+
+### Test 6: Priority Inversion (Lane Protection)
+
+**Scenario:** Flood of sev3 signals doesn't starve sev1 safety incident
+
+**Steps:**
+1. Generate 100 sev3 incidents (low priority)
+2. Generate 1 sev1 safety incident (high priority)
+3. Orchestrator receives all 101 stimuli
+4. Safety lane (30% capacity) reserves slots for sev1
+5. Sev1 mission assigned immediately despite queue depth
+
+**Verification:**
+- Sev1 mission created within <5 seconds
+- Sev3 missions queued but don't block sev1
+- Lane allocation visible in orchestrator metrics
+
+---
+
+### Test 7: Metric Gaming (Source Trust)
+
+**Scenario:** Citizen completes low-impact tasks, source_trust degrades
+
+**Steps:**
+1. Generate 10 signals from `test_source` with expected outcomes
+2. Citizen completes missions but outcomes don't match expectations
+3. Orchestrator measures Δhealth / Δerror_rate post-execution
+4. `source_trust` for `test_source` drops from 1.0 → 0.3
+5. Future signals from `test_source` downweighted
+
+**Verification:**
+- `source_trust` degrades after low-impact completions
+- Future signals from source have lower priority
+- Trust score visible in metadata
+
+---
+
+### Test 8: Self-Awareness Guard (Depth Cap)
+
+**Scenario:** Cascade attempt hits depth=2 limit, requires ACK
+
+**Steps:**
+1. Induce runtime anomaly (criticality unsafe)
+2. WS reinjector creates stimulus depth=1
+3. Mission executes, but anomaly persists
+4. Second reinjection creates stimulus depth=2
+5. Orchestrator sets `execution_mode = ACK_REQUIRED`
+6. Mission waits for human approval
+
+**Verification:**
+- First mission auto-executes (depth=1)
+- Second mission requires ACK (depth=2)
+- No third stimulus created (depth limit prevents)
+
+---
+
+### Test 9: Outage Resilience (Backlog)
+
+**Scenario:** Injector down, signals queued, replayed on recovery
+
+**Steps:**
+1. Stop stimulus injection service
+2. Generate 50 signals while injector down
+3. Collector writes to backlog file
+4. Restart injector
+5. Collector replays backlog with exponential backoff
+6. All 50 stimuli injected, deduplicated by `stimulus_id`
+
+**Verification:**
+- Backlog file created during outage
+- All signals eventually injected
+- No duplicates (idempotency works)
+- Backlog file cleared after replay
+
+---
+
+### Test 10: PII Handling (Sensitivity Routing)
+
+**Scenario:** Screenshot with PII never routes to N3
+
+**Steps:**
+1. Upload screenshot with visible credentials
+2. Collector tags as `sensitivity: restricted`
+3. Optional: PII redaction runs (or circuit breaker trips)
+4. Orchestrator creates mission, checks sensitivity
+5. Mission routes to N2 only, never N3
+6. Citizen receives mission with redacted version
+
+**Verification:**
+- Screenshot tagged `restricted`
+- Never appears in N3 graph
+- Redacted version (if applicable) used in mission
+- Original stored securely with access controls
 
 ---
 
