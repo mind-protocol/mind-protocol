@@ -42,15 +42,15 @@ export function CompactExploration({ strideSelectionEvents }: CompactExploration
   };
 
   recentStrides.forEach(stride => {
-    // Fanout analysis (based on tier)
-    if (stride.tier === 'STRONG') fanoutCounts.narrow++;
-    else if (stride.tier === 'MEDIUM') fanoutCounts.balanced++;
-    else fanoutCounts.wide++;
+    // Fanout analysis (based on strategy)
+    if (stride.strategy === 'selective') fanoutCounts.narrow++;
+    else if (stride.strategy === 'balanced') fanoutCounts.balanced++;
+    else fanoutCounts.wide++; // 'exhaustive'
 
-    // Task mode analysis (based on need type)
-    const need = stride.entity_need_type?.toLowerCase() || '';
-    if (need.includes('focus') || need.includes('depth')) taskModeCounts.focused++;
-    else if (need.includes('explore') || need.includes('discover')) taskModeCounts.exploratory++;
+    // Task mode analysis (based on task_mode)
+    const mode = stride.task_mode;
+    if (mode === 'focused' || mode === 'methodical') taskModeCounts.focused++;
+    else if (mode === 'divergent') taskModeCounts.exploratory++;
     else taskModeCounts.balanced++;
   });
 

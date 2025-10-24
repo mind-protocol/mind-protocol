@@ -18,7 +18,11 @@ import type {
   LinkEmotionUpdateEvent,
   StrideExecEvent,
   EmotionMetadata,
-  TickFrameEvent
+  TickFrameEvent,
+  WeightsUpdatedTraceEvent,
+  StrideSelectionEvent,
+  PhenomenologyMismatchEvent,
+  PhenomenologicalHealthEvent
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 
@@ -129,9 +133,10 @@ export function useWebSocket(): WebSocketStreams {
    */
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
-      const data: WebSocketEvent = JSON.parse(event.data);
+      const data = JSON.parse(event.data);
 
-      switch (data.type) {
+      // Use (data as any).type to handle both typed events and internal engine events
+      switch ((data as any).type) {
         // V1 events (legacy)
         case 'entity_activity':
           setEntityActivity(prev => {
