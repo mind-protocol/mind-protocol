@@ -572,7 +572,7 @@ class ConsciousnessEngineV2:
                         self.diffusion_rt,
                         alpha_tick=alpha_tick,
                         dt=dt,
-                        sample_rate=0.3,  # 30% emission - balance observability vs performance
+                        sample_rate=0.1,  # 10% emission - prevents websocket overload
                         broadcaster=self.broadcaster,
                         enable_link_emotion=True,
                         current_entity_id=next_entity.id if next_entity else None
@@ -585,7 +585,7 @@ class ConsciousnessEngineV2:
                         self.diffusion_rt,
                         alpha_tick=alpha_tick,
                         dt=dt,
-                        sample_rate=0.3,  # 30% emission - balance observability vs performance
+                        sample_rate=0.1,  # 10% emission - prevents websocket overload
                         broadcaster=self.broadcaster,
                         enable_link_emotion=True
                     )

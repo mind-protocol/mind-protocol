@@ -24875,8 +24875,13 @@
       "role": "assistant",
       "timestamp": "2025-10-24T23:09:42.050Z",
       "content": "Good! Felix engine is running (504 ticks). Here's what else to test:\n\n## Remaining Tests\n\n**1. Dashboard Visibility** ✅ (Already confirmed working)\n- Consciousness engines ticking (504 ticks on Felix)\n- 8 functional entities present\n- 439 nodes, 171 links\n\n**2. Hotfix Activation (Need to verify):**\n\n**Budget Floor Test:**\n```bash\n# Check if budget floor activated (we saw it earlier with sim_mass=0.00 → 0.15)\ngrep \"HOTFIX: Budget floor applied\" /c/Users/reyno/mind-protocol/launcher.log | tail -5\n```\n\n**Keyword Fallback Test:**\n```bash\n# Check if keyword fallback ever activated\ngrep \"keyword fallback\" /c/Users/reyno/mind-protocol/launcher.log | tail -5\n```\n\n**3. Entity Emergence (Critical - still blocked?):**\n```bash\n# Check for entity lifecycle events\ngrep -E \"entity\\.(promoted|demoted|emerged)\" /c/Users/reyno/mind-protocol/launcher.log | tail -10\n\n# Check entity count over time - should grow beyond 8 functional entities\ncurl -s http://127.0.0.1:8000/api/citizen/felix/status | grep sub_entity_count\n```\n\n**4. Working Memory Selection:**\n```bash\n# Check if WM is selecting activated nodes\ngrep \"wm.selection\" /c/Users/reyno/mind-protocol/launcher.log | tail -5\n```\n\n**5. Energy Persistence:**\n```bash\n# Verify energy persisted to nodes in FalkorDB\npython -c \"\nimport redis\nr = redis.Redis(host='localhost', port=6379, decode_responses=True)\nquery = 'MATCH (n) WHERE n.E > 0 RETURN count(n) AS energized_nodes'\nresult = r.execute_command('GRAPH.QUERY', 'citizen_felix', query)\nprint(f'Nodes with E > 0: {result[1][0][0] if result and result[1] else 0}')\n\"\n```\n\n**Priority Order:**\n1. ✅ Stimulus injection working (CONFIRMED: sim_mass=480.10)\n2. ⏳ Energy persistence to nodes\n3. ⏳ Working memory selection\n4. ⏳ Entity emergence (semantic/emergent entities)\n\nWant me to run these tests?"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T23:10:32.233673+00:00",
+      "content": "working memory selection"
     }
   ],
-  "last_updated": "2025-10-24T23:09:42.770967+00:00",
-  "message_count": 2373
+  "last_updated": "2025-10-24T23:10:32.233673+00:00",
+  "message_count": 2374
 }
