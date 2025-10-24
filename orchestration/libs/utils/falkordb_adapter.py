@@ -914,14 +914,14 @@ class FalkorDBAdapter:
         query = "MATCH ()-[r]->() RETURN r"
         result = self.graph_store.query(query)
 
-        # FalkorDBGraphStore.query() returns a list directly
-        if result:
+        # FalkorDBGraphStore.query() returns QueryResult with result_set
+        if result and result.result_set:
             # Need to query with source/target info
             query_with_nodes = "MATCH (a)-[r]->(b) RETURN r, a, b"
             result_with_nodes = self.graph_store.query(query_with_nodes)
 
-            if result_with_nodes:
-                for row in result_with_nodes:
+            if result_with_nodes and result_with_nodes.result_set:
+                for row in result_with_nodes.result_set:
                     link_obj = row[0]
                     source_obj = row[1]
                     target_obj = row[2]
@@ -986,9 +986,9 @@ class FalkorDBAdapter:
         query_subentities = "MATCH (e:Subentity) RETURN e"
         result_subentities = self.graph_store.query(query_subentities)
 
-        if result_subentities:
-            logger.debug(f"Loading {len(result_subentities)} subentities from FalkorDB")
-            for row in result_subentities:
+        if result_subentities and result_subentities.result_set:
+            logger.debug(f"Loading {len(result_subentities.result_set)} subentities from FalkorDB")
+            for row in result_subentities.result_set:
                 entity_obj = row[0]
                 props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}
 

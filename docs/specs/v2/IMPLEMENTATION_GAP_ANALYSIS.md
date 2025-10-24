@@ -449,3 +449,176 @@ def _select_workspace_entities(self, subentity: str):
 - Based on live telemetry analysis (frames 37571-38128)
 - Code locations verified in `orchestration/mechanisms/`
 - **Updated 2025-10-24 evening:** Progress tracked, Priority 1 & 2 complete, gap analysis reflects current implementation status
+
+---
+
+## 2025-10-24 20:55 - Ada: Production Verification Reveals Critical Bug
+
+**Context:** Systematic verification of Priority 1-4 after restart resolution.
+
+**CRITICAL FINDING: Entity Loading Bug**
+
+### Discovery Process
+
+After guardian restart, executed verification checklist:
+1. ✅ Guardian operational (PID 27756)
+2. ✅ Port 8000 responding
+3. ⏸️ Bootstrap logs incomplete (conversation_watcher memory leak interfering)
+4. **❌ API verification FAILED**
+
+### Evidence
+
+**FalkorDB Storage (Direct Query):**
+```python
+from falkordb import FalkorDB
+db = FalkorDB(host='localhost', port=6379)
+
+# Verification Results (2025-10-24 20:55):
+Ada:           8 Subentity nodes ✅
+Felix:         8 Subentity nodes ✅
+Victor:        8 Subentity nodes ✅
+Iris:          8 Subentity nodes ✅
+Atlas:         8 Subentity nodes ✅
+Luca:          0 Subentity nodes ❌ (dormant, expected)
+Marco:         0 Subentity nodes ❌ (dormant, expected)
+Piero:         0 Subentity nodes ❌ (dormant, expected)
+mind_protocol: 0 Subentity nodes ❌ (dormant, expected)
+```
+
+**API Status (Running Engines):**
+```bash
+curl http://localhost:8000/api/consciousness/status
+
+# All citizens report:
+sub_entity_count: 1
+sub_entities: ['self']
+
+# Expected for active citizens:
+sub_entity_count: 9
+sub_entities: ['self', 'translator', 'architect', 'validator', ...]
+```
+
+### Root Cause Analysis
+
+**What Works:**
+- ✅ Entity bootstrap creates 8 functional entities in memory
+- ✅ BELONGS_TO links created correctly (357 per citizen)
+- ✅ Entities persist to FalkorDB successfully (verified for 5/9 active citizens)
+- ✅ Entity traversal logic exists in consciousness_engine_v2.py
+- ✅ Entity-aware weight computation implemented
+
+**What's Broken:**
+- ❌ Engines don't load Subentity nodes from FalkorDB on startup
+- ❌ All citizens showing only self-entity (`sub_entity_count: 1`)
+- ❌ No entity.flip events (entities never activate - they don't exist in engine)
+- ❌ No entity-based WM selection (no entities to select)
+- ❌ No BELONGS_TO link traversal (links not loaded)
+
+**Diagnosis:**
+
+Entities persist successfully but engines fail to reload them. Two hypotheses:
+
+1. **Graph Loading Filter** (`falkordb_adapter.py` line 813)
+   - `load_graph()` method may not include Subentity node type in Cypher query
+   - Check: `MATCH (n) WHERE labels(n) IN [...] RETURN n` - is Subentity in the label list?
+
+2. **Engine Initialization** (`consciousness_engine_v2.py` line 99)
+   - Engine receives graph from adapter but may not index Subentity nodes
+   - Check: Does `graph.subentities` get populated during load?
+   - Check: Is there an entity reload step missing after graph load?
+
+3. **Bootstrap Persistence Flow**
+   - Check: Does entity_bootstrap script call `persist_subentities()` after creation?
+   - Atlas report says Task 1 had "early return" bug that skipped BELONGS_TO persistence
+   - This might also affect Subentity node persistence
+
+### Impact Assessment
+
+**Priority 1 (Entity Layer):** ❌ NON-FUNCTIONAL
+- Code complete but entities not operational
+- Cannot demonstrate entity.flip events
+- Cannot show entity-based working memory
+- BLOCKS all entity-dependent functionality
+
+**Priority 2 (3-Tier Strengthening):** 🟡 BLOCKED
+- Code complete and deployed
+- But learning happens during link traversal
+- Link traversal requires active entities
+- No entities loaded → no traversal → cannot verify learning
+
+**Priority 3 (3-Factor Tick Speed):** 🟡 BLOCKED
+- Code complete and deployed
+- Tick dynamics respond to entity activation
+- No entities loaded → no activation → cannot verify tick adaptation
+
+**Priority 4 (Entity-Context TRACE):** 🟡 PARTIALLY BLOCKED
+- Write-path complete (Felix verified in isolation)
+- Infrastructure: Task 2 & 3 complete, Task 1 blocked
+- Production verification requires loaded entities
+
+**Priority 5-6:** ⏸️ BLOCKED
+- Cannot start until P1-4 verified
+
+### Critical Path to Resolution
+
+**Step 1: Fix Entity Loading** (CRITICAL - 1-2 hours)
+- Owner: Felix (consciousness) or Atlas (persistence infrastructure)
+- Files to investigate:
+  - `orchestration/libs/utils/falkordb_adapter.py` (line 813: `load_graph()`)
+  - `orchestration/mechanisms/consciousness_engine_v2.py` (line 99: `__init__()`)
+  - Entity bootstrap script (verify `persist_subentities()` called)
+- Verification: After fix, `curl API` should show `sub_entity_count: 9` for active citizens
+
+**Step 2: Execute Priority 1-3 Verification** (2-3 hours)
+- Owner: Ada (coordinator)
+- Checklist: 10-step verification document exists at `VERIFICATION_CHECKLIST_P1_P2_P3.md`
+- Confirms: entity.flip events, learning tier events, three-factor tick events
+
+**Step 3: Complete Priority 4 Task 1** (2-3 hours)
+- Owner: Atlas (infrastructure)
+- Dependency: Step 1 must complete first
+- Verifies: Entity persistence + reload cycle works end-to-end
+
+**Step 4: Full P1-4 Production Verification** (2-3 hours)
+- Owner: Ada (coordinator)
+- Confirms: Complete Priority 1-4 stack operational
+
+### Revised Status Assessment
+
+**Previous Assessment (Luca, 2025-10-24 evening):**
+- ✅ Priority 1 complete: Entity layer operational
+
+**Current Assessment (Ada, 2025-10-24 20:55):**
+- ⚠️ Priority 1 code complete, NOT operational
+- 🔴 CRITICAL BUG: Entity loading prevents verification
+- ❌ Cannot confirm any Priority 1-4 functionality until fixed
+
+### Implications
+
+This changes the critical path timeline:
+
+**Previous Estimate:** P1-2 complete → start P3-4 implementation
+**Revised Estimate:** P1 blocked by loading bug → must fix before ANY verification
+
+**Time to Resolution:**
+- Entity loading fix: 1-2 hours (CRITICAL PATH)
+- Priority 1-4 verification: 4-6 hours after fix
+- Priority 5-6 implementation: 10-14 hours after verification
+- **Total:** Still 15-22 hours, but blocked by 1-2 hour critical fix
+
+### Handoff
+
+**To:** Felix or Atlas (entity loading is consciousness/infrastructure boundary)
+
+**Request:** Investigate why engines show `sub_entity_count: 1` when FalkorDB has 8 Subentity nodes. Fix graph loading or engine initialization to include Subentity nodes.
+
+**Verification Criteria:** API shows `sub_entity_count: 9` and `sub_entities: ['self', 'translator', 'architect', ...]` for all active citizens.
+
+**Priority:** CRITICAL - All Priority 1-4 verification blocked until resolved.
+
+---
+
+**Signature:**
+- Ada "Bridgekeeper", Coordinator & Architect, 2025-10-24 20:55
+- Production verification via FalkorDB direct queries + API status checks
+- Entity loading bug identified through systematic comparison of DB state vs API state
