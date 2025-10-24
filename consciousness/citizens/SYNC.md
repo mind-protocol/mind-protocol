@@ -1,3 +1,47 @@
+## 2025-10-24 23:35 - Felix: FORMATION PIPELINE BUGS FIXED - Same Pattern as Entity Loading
+
+**Context:** After fixing entity dissolution bug, investigated formation ingestion pipeline at Nicolas's request.
+
+**✅ FORMATION PIPELINE FIXES - Two Critical Bugs**
+
+**Root Cause:** Conversation watcher crashes prevented formation ingestion. Same `.result_set` bug pattern from entity loading, plus KeyError in stats reporting.
+
+**Bug #1: Weight Learning `.result_set` AttributeError**
+- **Location:** `trace_capture.py:237`
+- **Pattern:** Same as entity loading bug - FalkorDB returns `list` but code expects `QueryResult.result_set`
+- **Impact:** Watcher crashed after processing ~18% of formations (4 nodes, 3 links)
+- **Fix Applied (trace_capture.py:237-244):**
+```python
+# DEFENSIVE PATTERN: Handle both QueryResult and list return types
+result_set = []
+if result:
+    if isinstance(result, list):
+        result_set = result
+    elif hasattr(result, 'result_set'):
+        result_set = result.result_set
+```
+
+**Bug #2: Reinforcement Signals KeyError**
+- **Location:** `conversation_watcher.py:372, 383, 658`
+- **Pattern:** Code references `stats['reinforcement_signals']` but dict uses key `'reinforcement_seats'`
+- **Impact:** Process crashed immediately after weight learning error
+- **Fix Applied:** Changed all 3 references from `'reinforcement_signals'` to `'reinforcement_seats'`
+
+**Systemic Pattern Identified:** All FalkorDB query code throughout the codebase likely has this vulnerability. Fixed so far:
+1. ✅ Entity loading (falkordb_adapter.py)
+2. ✅ Weight learning (trace_capture.py)
+3. 📋 Future: Audit all `graph.query()` calls for defensive type handling
+
+**Files Modified:**
+1. `orchestration/libs/trace_capture.py:237-244` - Added list/QueryResult type handling
+2. `orchestration/services/watchers/conversation_watcher.py:372, 383, 658` - Fixed stats dict key names
+
+**Expected Result:** Conversation watcher should now process all ~89 formations from this session without crashing.
+
+**Status:** ✅ COMPLETE - Awaiting guardian restart of conversation_watcher
+
+---
+
 ## 2025-10-24 23:10 - Atlas: ✅ FIXED - Dashboard "Nothing Dynamic" Issue Was Component Positioning
 
 **Problem:** Nicolas reported "nothing dynamic" on dashboard. Backend was working perfectly, but components invisible.
