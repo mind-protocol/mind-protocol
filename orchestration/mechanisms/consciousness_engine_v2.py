@@ -307,9 +307,24 @@ class ConsciousnessEngineV2:
 
         # === V2 Event: frame.start ===
         if self.broadcaster and self.broadcaster.is_available():
+            # Include entity index for Iris viz (first frame or when entities change)
+            entity_index = []
+            if hasattr(self.graph, 'subentities') and self.graph.subentities:
+                for entity in self.graph.subentities.values():
+                    entity_index.append({
+                        "id": entity.id,
+                        "name": entity.role_or_topic,
+                        "color": getattr(entity, 'color', '#888888'),
+                        "energy": round(entity.energy_runtime, 4),
+                        "threshold": round(entity.threshold_runtime, 4),
+                        "active": entity.energy_runtime >= entity.threshold_runtime,
+                        "member_count": entity.member_count
+                    })
+
             await self.broadcaster.broadcast_event("frame.start", {
                 "v": "2",
                 "frame_id": self.tick_count,
+                "entity_index": entity_index,  # Entity snapshot for viz
                 "t_ms": int(time.time() * 1000)
             })
 
