@@ -936,9 +936,9 @@ class FalkorDBAdapter:
                     source_id = source_props.get('id') or source_props.get('node_id') or f"node_{source_obj.id}"
                     target_id = target_props.get('id') or target_props.get('node_id') or f"node_{target_obj.id}"
 
-                    # Find nodes in graph
-                    source = graph.get_node(source_id)
-                    target = graph.get_node(target_id)
+                    # Find source and target - could be Node or Subentity
+                    source = graph.get_node(source_id) or graph.get_entity(source_id)
+                    target = graph.get_node(target_id) or graph.get_entity(target_id)
 
                     if source and target:
                         # Get link type from relationship type or properties
