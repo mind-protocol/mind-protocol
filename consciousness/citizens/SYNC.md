@@ -9,6 +9,41 @@ Dashboard: `C:\Users\reyno\mind-protocol\app\consciousness`
 
 ---
 
+## 2025-10-24 20:40 - Atlas: Task 1 COMPLETE - Entity Persistence Fixed
+
+**Context:** Priority 4 (Entity-Context TRACE) blocked on BELONGS_TO links not persisting to FalkorDB. Without these links, membership-weighted learning cannot work in production.
+
+**Root Cause Identified:**
+- FalkorDB had 8 Subentity nodes but 0 BELONGS_TO links
+- Bug in `persist_subentities()` (falkordb_adapter.py:1095-1097)
+- Early return when entities existed → skipped BELONGS_TO link persistence
+
+**Fix Delivered:**
+- ✅ Removed early return - persist_subentities() now persists links even if entities exist
+- ✅ Changed CREATE to MERGE for BELONGS_TO links (idempotent)
+- ✅ Changed CREATE to MERGE for RELATES_TO links (idempotent)
+- ✅ Fixed QueryResult API bug (result[0][0] → result.result_set[0][0])
+
+**Files Modified:**
+- orchestration/libs/utils/falkordb_adapter.py (lines 1090-1160)
+
+**Testing Status:**
+- ✅ Code fix verified with test script (test_entity_persistence.py)
+- ⏳ Production verification pending - all citizen graphs currently empty (0 nodes)
+- Will verify once graphs populate with consciousness nodes
+
+**Next Steps:**
+- Bootstrap needs to run on graphs with existing nodes for BELONGS_TO links to form
+- Production verification blocked until graphs have node data
+- Fix is ready and will work correctly when graphs populate
+
+**Handoff:**
+- Ready for verification once consciousness nodes exist in FalkorDB
+- Task 1 infrastructure fix complete
+- Moving to Task 2 (Overlay Reload Verification)
+
+---
+
 ## 2025-10-25 07:00 - Iris: Priority 2-6 Frontend Visualization COMPLETE
 
 **Context:** Full observability infrastructure for all consciousness mechanisms - massive parallel delivery.

@@ -512,9 +512,11 @@ class ConsciousnessEngineV2:
                                     break
 
                             if boundary_link:
-                                # Execute boundary stride
+                                # Execute boundary stride with entity-aware weight (Priority 4)
+                                from orchestration.core.entity_context_extensions import effective_log_weight_link
                                 E_src = src_node.E
-                                ease = math.exp(boundary_link.log_weight)
+                                log_w = effective_log_weight_link(boundary_link, current_entity.id) if current_entity else boundary_link.log_weight
+                                ease = math.exp(log_w)
                                 delta_E = E_src * ease * alpha_tick * dt
 
                                 if delta_E > 1e-9:
@@ -534,6 +536,7 @@ class ConsciousnessEngineV2:
 
                     # Within-entity strides (constrained to active entities)
                     # For Phase 1: Execute normal strides (constraint TODO for Phase 2)
+                    # Pass entity ID for personalized weight computation (Priority 4)
                     strides_executed = execute_stride_step(
                         self.graph,
                         self.diffusion_rt,
@@ -541,7 +544,8 @@ class ConsciousnessEngineV2:
                         dt=dt,
                         sample_rate=0.1,
                         broadcaster=self.broadcaster,
-                        enable_link_emotion=True
+                        enable_link_emotion=True,
+                        current_entity_id=next_entity.id if next_entity else None
                     )
                 else:
                     # No active entities - fall back to atomic

@@ -20,6 +20,7 @@ import time
 import numpy as np
 from typing import Dict, Set, Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass
+from orchestration.core.entity_context_extensions import effective_log_weight_link
 
 if TYPE_CHECKING:
     from orchestration.core.graph import Graph
@@ -350,8 +351,14 @@ def execute_stride_step(
             relatedness = assess_stride_relatedness(node, best_link.target, best_link)
             rt.stride_relatedness_scores.append(relatedness)
 
-        # Compute ease from log_weight: f(w) = exp(log_weight)
-        ease = math.exp(best_link.log_weight)
+        # Compute ease from effective weight: f(w) = exp(effective_log_weight)
+        # Uses entity-specific overlay when current_entity_id provided (Priority 4)
+        # Falls back to global log_weight when entity_id is None
+        if current_entity_id:
+            log_w = effective_log_weight_link(best_link, current_entity_id)
+        else:
+            log_w = best_link.log_weight
+        ease = math.exp(log_w)
 
         # Compute energy transfer: ΔE = E_src · f(w) · α · Δt
         delta_E = E_src * ease * alpha_tick * dt
