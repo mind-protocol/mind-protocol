@@ -239,7 +239,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
 
     // Zoom behavior with double-click to reset
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.3, 4]) // Limit zoom range to prevent extreme values
+      .scaleExtent([3.0, 4]) // Limit zoom range to prevent extreme values
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
@@ -286,12 +286,12 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     const simulation = d3.forceSimulation(nodes as any)
       .force('link', d3.forceLink(validLinks)
         .id((d: any) => d.id)
-        .distance(3) // EXTREMELY short distance for tight clustering (was 100→50→15, now 3)
+        .distance(12) // Links 4x longer than previous value of 3
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('collision', d3.forceCollide()
-        .radius(8) // Very small radius to allow tight packing (was 15, now 8)
+        .radius(2) // Nodes 4x closer together (was 8, now 2)
         .iterations(collisionIterations))
       .force('temporal', forceTemporalX(width))
       .force('valence', forceValenceY(height));
