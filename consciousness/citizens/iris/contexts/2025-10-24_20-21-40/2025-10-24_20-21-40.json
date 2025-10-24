@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-24_20-21-40",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-24T18:21:40.215666+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-24T18:21:40.215666+00:00",
+      "content": "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.\n\nCheck the render method of `ConsciousnessPage`.\n\napp\\consciousness\\page.tsx (330:9) @ ConsciousnessPage\n\n\n  328 |       {/* Tier Breakdown Panel (right sidebar, upper section) - Priority 2 */}\n  329 |       <div className=\"absolute top-24 right-4 w-80 z-40\">\n> 330 |         <TierBreakdownPanel strideEvents={strideEvents} />\n      |         ^\n  331 |       </div>\n  332 |\n  333 |       {/* Entity Context Learning Panel (right sidebar, middle section) - Priority 4 */}\nCall Stack\n15\n\nShow 14 ignore-listed frame(s)\nConsciousnessPage\napp\\consciousness\\page.tsx (330:9)"
+    }
+  ],
+  "last_updated": "2025-10-24T18:21:40.215666+00:00",
+  "message_count": 1
+}
