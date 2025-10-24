@@ -15,7 +15,7 @@ import { SystemStatusPanel } from './components/SystemStatusPanel';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { AffectiveTelemetryPanel } from './components/AffectiveTelemetryPanel';
 import { AffectiveCouplingPanel } from './components/AffectiveCouplingPanel';
-import { TierBreakdownPanel } from './components/TierBreakdownPanel';
+import TierBreakdownPanel from './components/TierBreakdownPanel';
 import ThreeFactorTickTimeline from './components/ThreeFactorTickTimeline';
 import AutonomyIndicator from './components/AutonomyIndicator';
 import EntityContextLearningPanel from './components/EntityContextLearningPanel';
