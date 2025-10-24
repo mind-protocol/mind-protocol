@@ -1,3 +1,61 @@
+## 2025-10-24 23:42 - Felix: ✅ PHASE 1 COMPLETE - System Status Heartbeat Fix (Helping Iris)
+
+**Context:** Nicolas requested help for Iris on Phase 1 - fixing System Status API to read separate heartbeat files for autonomy services instead of piggybacking on conversation_watcher.
+
+**✅ PHASE 1 FIXES - Per-Service Health Tracking**
+
+**Problem:**
+- `checkStimulusInjection()` was piggybacking on conversation_watcher heartbeat (lines 177-203)
+- No check for Autonomy Orchestrator at all
+- Result: Killing stimulus injection wouldn't show on dashboard
+
+**Changes Made (app/api/consciousness/system-status/route.ts):**
+
+1. **Fixed checkStimulusInjection()** (lines 177-217)
+   - Changed from: Reading conversation_watcher heartbeat
+   - Changed to: Reading `.heartbeats/stimulus_injection.heartbeat`
+   - Fixed heartbeat format: Unix timestamp (not JSON)
+
+2. **Added checkAutonomyOrchestrator()** (lines 219-259)
+   - New function reading `.heartbeats/autonomy_orchestrator.heartbeat`
+   - Same Unix timestamp parsing as stimulus injection
+
+3. **Updated GET() handler** (lines 261-271)
+   - Added `checkAutonomyOrchestrator()` to Promise.all
+   - Added `autonomy` to components array
+
+**Technical Details:**
+- Heartbeat path: `C:\Users\reyno\mind-protocol\.heartbeats\` (root, not orchestration/services/)
+- Heartbeat format: Plain Unix timestamp (e.g., `1761341952`), not JSON like other services
+- Parsing: `parseInt(stats.trim()) * 1000` to convert seconds → milliseconds
+- Staleness threshold: 30 seconds (consistent with other services)
+
+**Verification Results:**
+```json
+{
+  "name": "Stimulus Injection",
+  "status": "running",
+  "details": "Service active (5s ago)"
+},
+{
+  "name": "Autonomy Orchestrator",
+  "status": "running",
+  "details": "Service active (3s ago)"
+}
+```
+
+**Phase 1 Acceptance Criteria:** ✅ **MET**
+- Each service reads its own heartbeat file
+- Services show independent health status
+- Killing one service only affects its status line (not all services)
+- Dashboard shows truthful per-service health
+
+**Status:** ✅ COMPLETE - System Status now tracks autonomy services independently
+
+**Handoff to Iris:** Phase 1 backend complete, dashboard should now display correct per-service status
+
+---
+
 ## 2025-10-24 23:25 - Felix: ✅ VERIFIED - Formation Pipeline Fixes Working
 
 **Context:** After fixing weight learning (.result_set bug) and reinforcement signals (KeyError), used `--force-restart` to deploy changes and verified processing.
