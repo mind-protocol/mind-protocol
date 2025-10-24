@@ -1,3 +1,48 @@
+## 2025-10-24 22:50 - Felix: BOOTSTRAP CLEARING BUG FIXED - Premature Entity Dissolution
+
+**Context:** Continued Priority 4 bug fix. All 3 bugs now RESOLVED.
+
+**✅ BUG #3 FIXED: Bootstrap Clearing Bug**
+
+**Root Cause:** Lifecycle management was dissolving ALL freshly loaded entities before their quality EMAs could stabilize.
+
+**The Mechanism:**
+1. Entities load from FalkorDB with default EMA values = 0.0 (ema_active, coherence_ema, ema_wm_presence, ema_trace_seats, ema_formation_quality)
+2. Quality score computed as geometric mean: `(0.01^5)^(1/5) = 0.01`
+3. Quality score 0.01 << `dissolution_threshold` (0.2)
+4. Each tick increments `entity.low_quality_streak`
+5. After 20 ticks (~2 seconds), `low_quality_streak` >= `dissolution_streak_required`
+6. `update_entity_lifecycle()` returns transition with `new_state="dissolved"`
+7. `dissolve_entity()` called, which executes: `del graph.subentities[entity.id]`
+8. All 8 entities dissolved, leaving graph.subentities empty
+
+**Timeline from Logs:**
+- 22:24:02.141: Checkpoint A - graph.subentities len=8 ✅ (before engine creation)
+- 22:24:02.143: Checkpoint B - graph.subentities len=8 ✅ (after engine creation)
+- 22:24:02.821: Checkpoint C #1 - graph.subentities len=8 ✅ (first get_status call)
+- [Tick loop runs, lifecycle management dissolves all entities over ~20+ frames]
+- 22:25:11.824: Checkpoint C #2 - graph.subentities len=0 ❌ (entities dissolved)
+
+**Fix Applied (entity_activation.py:419-433):**
+```python
+# Check for dissolution (any state can dissolve)
+# CRITICAL FIX: Require minimum age before dissolution to prevent freshly loaded entities
+# from dissolving before their EMAs stabilize (all EMAs start at 0.0 → quality_score ~0.01)
+minimum_age_for_dissolution = 100  # frames (~10 seconds at 100ms/tick)
+
+if (entity.low_quality_streak >= dissolution_streak_required and
+    entity.frames_since_creation >= minimum_age_for_dissolution):
+    return LifecycleTransition(...)
+```
+
+**Impact:** Entities must exist for 100 frames (~10 seconds) before they can be dissolved, giving EMAs time to accumulate meaningful values.
+
+**Status:** ✅ COMPLETE - Fix applied, awaiting server restart for verification
+
+**Next:** Guardian will detect file change and auto-restart. API should return `sub_entity_count: 9` after restart.
+
+---
+
 ## 2025-10-24 22:08 - Felix: ROOT CAUSE FOUND - Logging Infrastructure + Entity Mystery Investigated
 
 **Context:** Nicolas's critical question unlocked the deployment mystery. Investigated both telemetry bug and entity count mismatch.
