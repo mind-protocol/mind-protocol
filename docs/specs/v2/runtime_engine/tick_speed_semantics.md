@@ -258,6 +258,88 @@ autonomy_percent = (tick_counts['activation'] / window_size) * 100
 
 ---
 
+## Event Emission Contract
+
+**Critical:** This section defines the exact contract for emitting `tick_reason` to ensure UI/backend alignment.
+
+### Where to Emit
+
+**Primary emission point:** Tick scheduler (`orchestration/mechanisms/tick_speed.py`)
+
+The `tick_reason` field MUST be included in events emitted at the start of each tick. The exact event name depends on existing engine architecture:
+
+**Option A: Add to existing `frame.start` event**
+```python
+# In consciousness_engine_v2.py, at frame start:
+self.emit_event({
+    "event_type": "frame.start",
+    "frame_id": self.frame_id,
+    "timestamp_ms": current_time_ms,
+    "tick_reason": tick_reason,  # ← ADD THIS
+    "interval_ms": interval_ms,
+    "interval_candidates": interval_candidates
+})
+```
+
+**Option B: Use dedicated `tick.update` event** (as shown in Telemetry section above)
+
+**Decision criteria:** If `frame.start` already exists and is consumed by AutonomyIndicator, add `tick_reason` there (Option A). If creating new event stream, use `tick.update` (Option B).
+
+### When to Emit
+
+**Timing:** Immediately after interval computation and reason classification, before any tick processing begins.
+
+**Sequence:**
+1. Compute three intervals (stimulus, activation, arousal_floor)
+2. Take minimum → `next_interval_ms`
+3. Classify reason → `tick_reason`
+4. **EMIT EVENT** with `tick_reason` field
+5. Begin tick processing (traversal, decay, etc.)
+
+### Consumer Contract
+
+**Primary consumer:** `app/consciousness/components/AutonomyIndicator.tsx`
+
+**Consumer expectations:**
+- Event arrives at start of each tick (before any processing)
+- `tick_reason` field is one of: `'stimulus'` | `'activation'` | `'arousal_floor'`
+- Field is ALWAYS present (not optional)
+- Consumer maintains rolling window of last N `tick_reason` values
+- Computes autonomy % as `(activation_count / window_size) * 100`
+
+**Failure mode if contract violated:**
+- Missing `tick_reason` → AutonomyIndicator shows "unknown" or defaults to 'stimulus' (false reactive reading)
+- Wrong event name → AutonomyIndicator never receives updates, shows stale data
+- Wrong field name (`tickReason` vs `tick_reason`) → Field ignored, autonomy calculation breaks
+
+### Verification Hook
+
+**Acceptance criteria:**
+1. Every `frame.start` or `tick.update` event includes `tick_reason` field
+2. Field value matches minimum interval source (deterministic classification)
+3. AutonomyIndicator receives event within 1 tick (no buffering/delay)
+4. Rolling window computation in UI matches backend expectation
+
+**Test:**
+```python
+def test_tick_reason_emission():
+    engine = setup_test_engine()
+    events = []
+
+    engine.on_event(lambda e: events.append(e) if e.get('event_type') in ['frame.start', 'tick.update'] else None)
+
+    # Run 20 ticks
+    for _ in range(20):
+        engine.tick()
+
+    # Verify every event has tick_reason
+    for event in events:
+        assert 'tick_reason' in event, f"Missing tick_reason in {event}"
+        assert event['tick_reason'] in ['stimulus', 'activation', 'arousal_floor'], f"Invalid tick_reason: {event['tick_reason']}"
+```
+
+---
+
 ## Verification Criteria
 
 ### Acceptance Test 1: Conversation (Stimulus-Dominated)
@@ -413,12 +495,90 @@ class TickSpeedConfig:
     SUMMARY_EMISSION_INTERVAL: int = 10  # Emit summary every 10 ticks
 ```
 
-### Zero Constants Principle
+### Zero Constants Enforcement
 
-The thresholds above are **initial values**, not final. After gathering telemetry:
-- Replace fixed thresholds with percentile-based gates (e.g., Q75 of recent energy distribution)
-- Learn `ACTIVATION_INTERVAL_SCALE` from observed tick reason distributions
-- Adapt `AROUSAL_INTERVAL_CAP` based on phenomenological feedback ("Does arousal floor feel right?")
+**Principle:** The thresholds above are **initial values**, not final. Task diversity demands adaptive thresholds - fixed gates will mis-classify autonomy over time.
+
+**Enforcement mechanism:** After gathering telemetry, replace fixed thresholds with percentile/EMA gating:
+
+#### Rolling Histogram Gates
+
+**Implementation:**
+```python
+class QuantileGate:
+    def __init__(self, window_size=1000, percentile=75):
+        self.window_size = window_size
+        self.percentile = percentile
+        self.history = deque(maxlen=window_size)
+
+    def update(self, value):
+        self.history.append(value)
+
+    def compute_threshold(self):
+        if len(self.history) < 100:  # Warmup period
+            return self.default_threshold
+        return np.percentile(self.history, self.percentile)
+
+# Usage in tick speed:
+energy_gate = QuantileGate(percentile=75)  # Q75 for activation threshold
+arousal_gate = QuantileGate(percentile=90) # Q90 for arousal floor
+```
+
+**Specific gates to replace:**
+
+1. **ACTIVATION_ENERGY_THRESHOLD** (currently 0.3):
+   - Log rolling histogram of `total_active_energy` (sum of entity energies)
+   - Compute gate from Q75 (75th percentile)
+   - Why Q75: Ensures "high activation" means top quartile, not arbitrary constant
+
+2. **ACTIVATION_INTERVAL_SCALE** (currently 0.5):
+   - Track EMA of tick reason distribution over 1-hour windows
+   - If `activation` ticks < 20% → increase scale (make activation intervals shorter)
+   - If `activation` ticks > 80% → decrease scale (make activation intervals longer)
+   - Target: 40-60% activation in balanced scenarios
+
+3. **AROUSAL_INTERVAL_CAP** (currently 5000ms):
+   - Log rolling histogram of `mean_arousal` across active entities
+   - Compute gate from Q90 (90th percentile)
+   - Why Q90: Arousal floor should only engage at high emotional intensity
+
+**Why encoded in comments:**
+```python
+# Q75 ensures "high activation" means top quartile across task diversity
+# Prevents mis-classification when workload shifts (coding vs conversation vs research)
+```
+
+**Convergence criteria:**
+Over 1-hour run:
+- Gate percentiles converge (standard deviation of gate values < 10% of mean)
+- Tick reason distribution stabilizes (no drift into single-factor dominance)
+- Autonomy % reflects task type (low during conversation, high during rumination)
+
+**Acceptance check:**
+```python
+def test_zero_constants_convergence():
+    engine = setup_test_engine()
+
+    # Run for 1 hour with mixed workload
+    for scenario in ['conversation', 'rumination', 'conversation', 'planning']:
+        run_scenario(engine, scenario, duration_s=900)  # 15 min each
+
+    # Verify gates converged
+    energy_gate_history = engine.energy_gate.get_threshold_history()
+    std_dev = np.std(energy_gate_history[-100:])  # Last 100 samples
+    mean_val = np.mean(energy_gate_history[-100:])
+
+    assert std_dev / mean_val < 0.10, f"Energy gate didn't converge: std/mean = {std_dev/mean_val}"
+
+    # Verify tick distribution stable
+    tick_dist = engine.get_tick_reason_distribution(window='last_hour')
+    assert 0.20 < tick_dist['activation'] < 0.80, f"Activation ticks out of balance: {tick_dist['activation']}"
+```
+
+**Timeline:**
+- **Phase 1 (now):** Ship with fixed constants, log telemetry
+- **Phase 2 (after 1 week of telemetry):** Add rolling histograms, compute percentile gates
+- **Phase 3 (after 1 month):** Replace constants with adaptive gates in production
 
 ---
 
@@ -455,5 +615,11 @@ The thresholds above are **initial values**, not final. After gathering telemetr
 
 ---
 
-**Status:** Specification complete, ready for Felix implementation
-**Next:** Wire into `tick_speed.py`, emit events, run acceptance tests
+**Status:** Specification complete with event emission contracts, ready for Felix implementation
+**Version:** 1.1 (2025-10-24)
+**Updates:**
+- Fixed units mismatch: `MAX_INTERVAL_S` → `MAX_INTERVAL_MS`
+- Added "Event Emission Contract" section specifying exact emission point, consumer contract, verification hooks
+- Strengthened "Zero Constants Enforcement" with QuantileGate implementation, specific gates to replace, convergence criteria, phased timeline
+
+**Next:** Wire into `tick_speed.py`, emit `tick_reason` in frame.start or tick.update events, run acceptance tests
