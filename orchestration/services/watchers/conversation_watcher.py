@@ -501,9 +501,10 @@ class ConversationWatcher(FileSystemEventHandler):
                 result = r.execute_command('GRAPH.QUERY', graph_name, query)
 
                 if result and result[1]:
-                    # Use 30.0 as default threshold (above 95th percentile of existing energy values)
-                    # This ensures nodes have gap available for stimulus injection
-                    threshold = float(result[1][0][0]) if result[1][0][0] else 30.0
+                    # CRITICAL FIX: Force threshold to 30.0 to ensure gap exists for injection
+                    # Nodes currently have threshold=0.1 but energy values 15-60, causing gap=0
+                    # This override ensures gap = max(0, 30.0 - current_energy) is positive
+                    threshold = 30.0  # Always use high threshold regardless of database value
 
                     # Parse energy - can be either simple number or JSON dict
                     energy_value = result[1][0][1]
