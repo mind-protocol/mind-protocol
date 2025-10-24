@@ -909,15 +909,27 @@ class ConsciousnessEngineV2:
 
         # === V2 Event: wm.emit (entity-first working memory selection) ===
         if self.broadcaster and self.broadcaster.is_available():
+            # Extract entity IDs and token shares for viz contract
+            entity_ids = [e["id"] for e in wm_summary["entities"]]
+            entity_token_shares = [
+                {"id": e["id"], "tokens": e["tokens"]}
+                for e in wm_summary["entities"]
+            ]
+            # Extract top member nodes from entities
+            entity_member_nodes = []
+            for e in wm_summary["entities"]:
+                entity_member_nodes.extend([m["id"] for m in e["top_members"]])
+
             await self.broadcaster.broadcast_event("wm.emit", {
                 "v": "2",
                 "frame_id": self.tick_count,
                 "mode": "entity_first",
-                "selected_entities": wm_summary["entities"],
+                "selected_entities": entity_ids,  # Just IDs
+                "entity_token_shares": entity_token_shares,  # Token allocation
                 "total_entities": wm_summary["total_entities"],
                 "total_members": wm_summary["total_members"],
                 "token_budget_used": wm_summary["token_budget_used"],
-                "selected_nodes": [node.id for node in workspace_nodes],  # Backward compat
+                "selected_nodes": entity_member_nodes,  # Top members from entities
                 "t_ms": int(time.time() * 1000)
             })
 
@@ -1233,11 +1245,17 @@ class ConsciousnessEngineV2:
                 # Budget exhausted
                 break
 
-        # Build summary with top members
+        # Build summary with top members and token costs
         entity_summaries = []
+        entity_token_map = {}  # Track tokens per entity
         total_members = 0
 
-        for entity in selected_entities:
+        for entity, score, tokens in scored_entities:
+            if entity not in selected_entities:
+                continue
+
+            entity_token_map[entity.id] = tokens
+
             # Get members sorted by energy
             from orchestration.core.types import LinkType
             members = [
@@ -1261,7 +1279,8 @@ class ConsciousnessEngineV2:
                 "stability_state": entity.stability_state,
                 "quality_score": round(entity.quality_score, 4),
                 "top_members": top_members,
-                "member_count": len(members)
+                "member_count": len(members),
+                "tokens": tokens  # Add token cost to summary
             })
 
             total_members += len(members)
