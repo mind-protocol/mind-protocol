@@ -69,10 +69,10 @@
 For entity `e` with members `(i, m_i)`:
 
 ```
-energy_e = Σ_i  m_i · f(energy_i)
+energy_e = Σ_i  m_i · log1p( max(0, energy_i - threshold_i) )
 ```
 
-Where `f` can be `log1p(energy_i)` or identity — we often use `log1p` to temper single-node spikes.
+Where we use **surplus-only** energy (above each node's threshold) with **log damping** to prevent both sub-threshold leakage and single-node domination. Optional: use softplus for smooth knee near threshold.
 
 **Threshold_e** is a dynamic cohort statistic (e.g., median + k·MAD within entity kind/scope); no fixed constants.
 
@@ -226,7 +226,7 @@ Update `entity_bootstrap.py`:
 
 ## 8) Traversal & Learning — the few formulas you need handy
 
-**Entity energy:** `energy_e = Σ_i m_i,e · log1p(energy_i)`
+**Entity energy:** `energy_e = Σ_i m_i,e · log1p( max(0, energy_i - threshold_i) )`
 **Entity flip:** `active_e = 1[ energy_e ≥ threshold_e ]` (threshold by cohort stats)
 **Representative nodes:** source: sample by `energy_i · m_i,e`; target: sample by `gap_i · m_i,e`
 **Boundary precedence (s→t):**

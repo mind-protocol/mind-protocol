@@ -35,11 +35,11 @@ A **subentity** is a **weighted neighborhood** of nodes—either a **functional 
 
 ### 2.2 Single-energy substrate → entity activation
 
-Nodes hold one activation energy \(E_i\). Subentity activation is **derived**, not stored:  
+Nodes hold one activation energy \(E_i\). Subentity activation is **derived**, not stored:
 \[
-E_\text{entity} = \sum_{i \in M_E} \tilde{m}_{iE} \cdot \max(0, E_i - \Theta_i)
+E_\text{entity} = \sum_{i \in M_E} \tilde{m}_{iE} \cdot \log\big(1 + \max(0, E_i - \Theta_i)\big)
 \]
-with normalized memberships \(\tilde{m}_{iE}\). This respects the **single-energy per node** rule (no per-entity buffers) and uses **effective** (above-threshold) node energy only. :contentReference[oaicite:2]{index=2}
+with normalized memberships \(\tilde{m}_{iE}\). This uses **surplus-only energy** (above-threshold) with **log damping** to prevent both sub-threshold leakage and single-node domination, respecting the **single-energy per node** rule (no per-entity buffers). :contentReference[oaicite:2]{index=2}
 
 ### 2.3 Dynamic entity threshold & flip
 

@@ -179,7 +179,8 @@ def serialize_link(link: Link) -> Dict[str, Any]:
         >>> props['link_type']
         'ENABLES'
     """
-    return {
+    # Build property dict, filtering out None values for FalkorDB compatibility
+    props = {
         # Idsubentity
         'id': link.id,
         'source_id': link.source_id,
@@ -208,6 +209,9 @@ def serialize_link(link: Link) -> Dict[str, Any]:
         # Properties (Dict → JSON string)
         'properties': json.dumps(link.properties),
     }
+
+    # Filter out None values - FalkorDB doesn't accept None in properties
+    return {k: v for k, v in props.items() if v is not None}
 
 
 def deserialize_link(props: Dict[str, Any]) -> Link:
@@ -299,7 +303,8 @@ def serialize_entity(entity: 'Subentity') -> Dict[str, Any]:
         affect_bytes = entity.prev_affect_for_coherence.tobytes()
         prev_affect_str = base64.b64encode(affect_bytes).decode('utf-8')
 
-    return {
+    # Build property dict, filtering out None values for FalkorDB compatibility
+    props = {
         # Identity
         'id': entity.id,
         'entity_kind': entity.entity_kind,
@@ -370,6 +375,9 @@ def serialize_entity(entity: 'Subentity') -> Dict[str, Any]:
         # Properties (Dict → JSON string)
         'properties': json.dumps(entity.properties),
     }
+
+    # Filter out None values - FalkorDB doesn't accept None in properties
+    return {k: v for k, v in props.items() if v is not None}
 
 
 def deserialize_entity(props: Dict[str, Any]) -> 'Subentity':
