@@ -1131,7 +1131,7 @@ function computeSemanticPolarity(node: NodeData): number {
 
   // Signal 3: Last traversed subentity hash (20% weight)
   // Nodes last touched by same subentity cluster together
-  const lastSubentity = node.last_traversed_by || (node as any).created_by;
+  const lastSubentity = (node as any).last_traversed_by || (node as any).created_by;
   if (lastSubentity) {
     const entityHash = hashString(lastSubentity);
     polarity += ((entityHash % 1000) / 500 - 1) * 0.2;

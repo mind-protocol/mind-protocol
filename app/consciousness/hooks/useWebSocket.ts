@@ -575,6 +575,51 @@ export function useWebSocket(): WebSocketStreams {
     };
   }, [connect, disconnect]);
 
+  /**
+   * 🔴 MEMORY LEAK FIX: Periodic cleanup of emotion Maps
+   * Removes entries older than EMOTION_TTL_MS to prevent unbounded growth
+   */
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+
+      setEmotionState(prev => {
+        let hasChanges = false;
+        const newNodeEmotions = new Map<string, EmotionMetadata>();
+        const newLinkEmotions = new Map<string, EmotionMetadata>();
+
+        // Clean node emotions
+        for (const [key, value] of prev.nodeEmotions.entries()) {
+          if (now - value.lastUpdated < EMOTION_TTL_MS) {
+            newNodeEmotions.set(key, value);
+          } else {
+            hasChanges = true;
+          }
+        }
+
+        // Clean link emotions
+        for (const [key, value] of prev.linkEmotions.entries()) {
+          if (now - value.lastUpdated < EMOTION_TTL_MS) {
+            newLinkEmotions.set(key, value);
+          } else {
+            hasChanges = true;
+          }
+        }
+
+        // Only update if something changed
+        if (!hasChanges) return prev;
+
+        return {
+          ...prev,
+          nodeEmotions: newNodeEmotions,
+          linkEmotions: newLinkEmotions
+        };
+      });
+    }, CLEANUP_INTERVAL_MS);
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
+
   return {
     // V1 events
     entityActivity,
