@@ -1864,23 +1864,146 @@ class ConsciousnessEngineV2:
         self.trace_queue.append(trace_result)
         logger.info(f"[ConsciousnessEngineV2] Queued TRACE result for learning")
 
-    async def persist_to_database(self):
+    async def _persist_dirty_if_due(self):
         """
-        Persist current graph state to FalkorDB.
+        Persist dirty nodes if interval elapsed and batch size met.
 
-        Writes energy values and link weights back to database.
+        Strategy (Pass A - manual only):
+        - Check if interval elapsed since last persist
+        - If yes AND dirty_nodes >= min_batch: flush to database
+        - Use thread pool to avoid blocking event loop
+        - Track what was persisted to avoid oscillation
+
+        Gating:
+        - Requires MP_PERSIST_ENABLED=1 env var
+        - Respects interval + jitter (avoid herd flushes)
+        - Respects min batch size
         """
-        logger.info("[ConsciousnessEngineV2] Persisting to database...")
+        if not self._persist_enabled:
+            return  # Feature flag off
 
-        # Persist nodes (energy values)
+        import random
+        now = time.time()
+
+        # Time gate with jitter
+        jittered_interval = self._persist_interval_sec + random.uniform(-self._persist_jitter, self._persist_jitter)
+        elapsed = now - self._last_persist_time
+
+        if elapsed < jittered_interval:
+            return  # Not time yet
+
+        if len(self._dirty_nodes) < self._persist_min_batch:
+            return  # Not enough dirty nodes to warrant flush
+
+        # Build rows for bulk persist (use runtime fields, not init values)
+        rows = []
+        for node_id in self._dirty_nodes:
+            node = self.graph.get_node(node_id)
+            if not node:
+                continue
+
+            # Use runtime-computed values (not initialization defaults)
+            E = float(getattr(node, "energy_runtime", 0.0))  # 0..100 scale
+            theta = float(getattr(node, "threshold_runtime", 30.0))
+
+            # Clamp to valid range
+            E = max(0.0, min(100.0, E))
+            theta = max(0.0, min(100.0, theta))
+
+            rows.append({
+                'id': node.id,
+                'E': E,
+                'theta': theta
+            })
+
+        if not rows:
+            self._dirty_nodes.clear()
+            return
+
+        try:
+            # Execute in thread pool to avoid blocking tick loop
+            loop = asyncio.get_running_loop()
+            updated = await loop.run_in_executor(
+                None,
+                lambda: self.adapter.persist_node_scalars_bulk(rows)
+            )
+
+            logger.info(f"[Persistence] Flushed {updated}/{len(rows)} dirty nodes to FalkorDB")
+
+            # Update _last_persisted tracking for flushed nodes
+            for row in rows:
+                self._last_persisted[row['id']] = (row['E'], row['theta'])
+
+            # Telemetry
+            self._persist_batch_sizes.append(len(rows))
+
+            # Clear dirty set and update timestamp
+            self._dirty_nodes.clear()
+            self._last_persist_time = now
+
+        except Exception as e:
+            logger.error(f"[Persistence] Failed to flush dirty nodes: {e}")
+            self._persist_failures += 1
+            self._persist_last_error = str(e)
+            # Don't clear dirty set - will retry next interval
+
+    async def persist_to_database(self, force: bool = False):
+        """
+        Force persist all nodes immediately (for shutdown/manual flush).
+
+        Args:
+            force: If True, ignores interval/batch thresholds and persists everything
+
+        Usage:
+            - Manual API endpoint: POST /api/citizen/{id}/persist
+            - Shutdown hook: engine.persist_to_database(force=True)
+        """
+        logger.info(f"[ConsciousnessEngineV2] Force persisting all nodes (force={force})...")
+
+        # Build rows for all nodes (use runtime fields)
+        rows = []
         for node in self.graph.nodes.values():
-            self.adapter.update_node_energy(node)
+            # Use runtime-computed values
+            E = float(getattr(node, "energy_runtime", 0.0))
+            theta = float(getattr(node, "threshold_runtime", 30.0))
 
-        # Persist links (weights)
-        for link in self.graph.links.values():
-            self.adapter.update_link_weight(link)
+            # Clamp to valid range
+            E = max(0.0, min(100.0, E))
+            theta = max(0.0, min(100.0, theta))
 
-        logger.info("[ConsciousnessEngineV2] Persistence complete")
+            rows.append({
+                'id': node.id,
+                'E': E,
+                'theta': theta
+            })
+
+        if not rows:
+            logger.warning("[ConsciousnessEngineV2] No nodes to persist")
+            return
+
+        try:
+            # Execute in thread pool
+            loop = asyncio.get_running_loop()
+            updated = await loop.run_in_executor(
+                None,
+                lambda: self.adapter.persist_node_scalars_bulk(rows)
+            )
+
+            logger.info(f"[ConsciousnessEngineV2] Persisted {updated}/{len(rows)} nodes")
+
+            # Update tracking
+            for row in rows:
+                self._last_persisted[row['id']] = (row['E'], row['theta'])
+
+            # Clear dirty set
+            self._dirty_nodes.clear()
+            self._last_persist_time = time.time()
+
+        except Exception as e:
+            logger.error(f"[ConsciousnessEngineV2] Force persist failed: {e}")
+            self._persist_failures += 1
+            self._persist_last_error = str(e)
+            raise  # Re-raise on manual flush for visibility
 
     def get_metrics(self) -> Dict:
         """
