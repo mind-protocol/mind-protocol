@@ -249,7 +249,10 @@ def strengthen_link(
     stride_utility: float = 0.0,
     source_was_active_pre: bool = False,
     target_was_active_pre: bool = False,
-    target_crossed_threshold: bool = False
+    target_crossed_threshold: bool = False,
+    broadcaster: Optional[any] = None,
+    entity_context: Optional[List[str]] = None,
+    decimation_rate: float = 0.02
 ) -> Optional[StrengtheningEvent]:
     """
     Strengthen link proportional to energy flowing through it.
@@ -377,6 +380,43 @@ def strengthen_link(
         # Prune history to prevent unbounded growth
         if len(link.strengthening_history) > settings.MAX_STRENGTHENING_HISTORY:
             link.strengthening_history = link.strengthening_history[-settings.MAX_STRENGTHENING_HISTORY:]
+
+    # P2.1.3: Emit tier.link.strengthened event (decimated to 1-2Hz)
+    if broadcaster and broadcaster.is_available():
+        import random
+        import time
+
+        # Random sampling for decimation (1-2Hz at ~100Hz tick rate)
+        if random.random() < decimation_rate:
+            import asyncio
+
+            # Build payload
+            payload = {
+                "v": "2",
+                "frame_id": frame_id or 0,
+                "citizen_id": citizen_id,
+                "link_id": link.id if hasattr(link, 'id') else f"{link.source.id}→{link.target.id}",
+                "source_id": link.source.id,
+                "target_id": link.target.id,
+                "new_weight": round(link.log_weight, 4),
+                "delta_weight": round(event.delta_weight, 4),
+                "tier": event.reason,  # co_activation | causal | background
+                "tier_scale": event.tier_scale,  # 1.0 | 0.6 | 0.3
+                "energy_flow": round(energy_flow, 4),
+                "entity_context": entity_context or [],
+                "t_ms": int(time.time() * 1000)
+            }
+
+            # Thread-safe async emission
+            try:
+                loop = asyncio.get_running_loop()
+                asyncio.ensure_future(
+                    broadcaster.broadcast_event("tier.link.strengthened", payload),
+                    loop=loop
+                )
+            except RuntimeError:
+                # No running loop - skip emission
+                pass
 
     return event
 
