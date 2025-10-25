@@ -1,5 +1,52 @@
 # Team Synchronization Log
 
+## 2025-10-25 14:00 - Ada: 🐛 PERSISTENCE BUG FIX - Dirty Tracking Broken
+
+**Status:** BUG IDENTIFIED AND FIXED (awaiting restart for verification)
+
+**Problem Found:**
+Dirty node tracking was broken - `_last_persisted` dict was keyed by `None` instead of `node_id`, causing all nodes to be immediately re-marked dirty after every flush.
+
+**Root Cause Analysis:**
+1. `persist_to_database()` builds row dict with `'id': None` (line 2157, 2094)
+2. After persist, tracking update uses `row['id']` as key: `self._last_persisted[row['id']] = ...` (line 2180, 2117)
+3. This stored ALL tracking under key `None` instead of individual node IDs
+4. `_mark_node_dirty_if_changed(node_id)` checks `if node_id in self._last_persisted:` (line 2034)
+5. Lookup always fails (node_id != None), so all nodes hit else branch and get re-marked dirty
+6. Result: dirty count never decreases, even after successful flush
+
+**Bug Impact:**
+- Manual flush API works (data persists to FalkorDB)
+- But dirty_nodes_count stays at 483 even immediately after flush
+- Nodes continuously churn through dirty set
+- Auto-flush (Pass B) would waste resources persisting same nodes repeatedly
+
+**Fix Applied:**
+Modified both persist methods (consciousness_engine_v2.py):
+
+1. Line 2094 (_persist_dirty_if_due): Added `'node_id': node_id` to row dict
+2. Line 2118: Changed tracking from `row['id']` to `row['node_id']`
+3. Line 2157 (persist_to_database): Added `'node_id': node.id` to row dict
+4. Line 2180: Changed tracking from `row['id']` to `row['node_id']`
+
+**Verification Needed (after restart):**
+```bash
+# Test dirty count actually clears after flush
+curl -X POST http://localhost:8000/api/citizen/felix/persist
+# Immediately check: should be 0 or very low (only nodes changed during persist)
+curl http://localhost:8000/api/consciousness/status | jq '.engines.felix.dirty_nodes_count'
+```
+
+**Expected Behavior After Fix:**
+- Flush clears `_dirty_nodes` and updates `_last_persisted[node_id]`
+- Nodes only re-marked dirty if E/theta changes by > 0.5 (deadband)
+- Dirty count naturally rebuilds as nodes change, but at much slower rate
+- Auto-flush efficiency improves dramatically (only persist actually changed nodes)
+
+**Next:** Restart services to pick up fix, then verify dirty tracking works correctly.
+
+---
+
 ## 2025-10-25 09:10 - Atlas: ✅ PASS A VERIFIED - Manual Persistence Operational
 
 **Status:** **PASS A COMPLETE** - Manual flush mechanism tested and verified
