@@ -93,6 +93,9 @@ class TraceCapture:
         self.entity_context_manager = EntityContextManager(self.graph_store)
         self.membership_helper = MembershipQueryHelper(self.graph_store)
 
+        # FalkorDB adapter for entity membership persistence (P1)
+        self.adapter = FalkorDBAdapter(self.graph_store)
+
         # Embedding service for automatic embedding generation during formation
         self.embedding_service = get_embedding_service(backend='sentence-transformers')
         logger.info(f"[TraceCapture] Embedding service initialized for automatic formation embeddings")
@@ -512,6 +515,29 @@ class TraceCapture:
 
                 # Insert into scope-appropriate graph with node type label
                 await self._insert_node(node, node_type, graph)
+
+                # P1: Persist entity membership based on current WM state
+                if scope == 'personal' and self.last_wm_entities:
+                    # Assign to primary entity from WM (first entity = most active)
+                    primary_entity_id = self.last_wm_entities[0]
+                    graph_name = self._current_graph_name  # Current graph after _get_graph_for_scope
+                    node_name = fields.get('name')
+
+                    try:
+                        membership_success = self.adapter.persist_membership(
+                            graph_name=graph_name,
+                            node_name=node_name,
+                            entity_id=primary_entity_id,
+                            weight=1.0,  # Full weight for primary assignment
+                            role='primary'
+                        )
+                        if membership_success:
+                            logger.debug(f"[TraceCapture] Assigned {node_name} to entity {primary_entity_id}")
+                        else:
+                            logger.warning(f"[TraceCapture] Failed to assign {node_name} to entity {primary_entity_id}")
+                    except Exception as e:
+                        logger.warning(f"[TraceCapture] Entity membership persistence failed for {node_name}: {e}")
+                        # Non-fatal - node creation succeeded, membership is optional enhancement
 
                 stats['nodes_created'] += 1
                 logger.info(f"[TraceCapture] Created {node_type} in {scope} graph: {fields.get('name')}")
