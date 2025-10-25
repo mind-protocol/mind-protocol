@@ -92,8 +92,6 @@ export function useGraphData() {
         const response = await fetch('/api/graphs');
         const data = await response.json();
 
-        console.log('Raw graphs data:', data);
-
         // Transform backend format (string arrays) to frontend format (object arrays)
         const normalizeGraphs = (graphs: string[] | Array<{id: string, name: string}>) => {
           if (!graphs || graphs.length === 0) return [];
@@ -116,7 +114,6 @@ export function useGraphData() {
           ecosystems: normalizeGraphs(data.ecosystems || [])
         };
 
-        console.log('Normalized graphs:', normalizedGraphs);
         setAvailableGraphs(normalizedGraphs);
       } catch (error) {
         console.error('Error fetching graphs:', error);
@@ -139,7 +136,6 @@ export function useGraphData() {
     setError(null);
 
     try {
-      console.log(`[useGraphData] Fetching graph: ${graphType}/${graphId}`);
       const response = await fetch(`/api/graph/${graphType}/${graphId}`);
 
       if (!response.ok) {
@@ -214,7 +210,6 @@ export function useGraphData() {
   useEffect(() => {
     if (availableGraphs.citizens && availableGraphs.citizens.length > 0 && !currentGraphId) {
       const firstCitizen = availableGraphs.citizens[0];
-      console.log('[useGraphData] Auto-loading first graph:', firstCitizen);
       selectGraph('citizen', firstCitizen.id);
     }
   }, [availableGraphs, currentGraphId, selectGraph]);

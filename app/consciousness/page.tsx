@@ -192,7 +192,6 @@ export default function ConsciousnessPage() {
   useEffect(() => {
     if (!currentGraphId && availableGraphs.citizens.length > 0) {
       const firstCitizen = availableGraphs.citizens[0];
-      console.log('[ConsciousnessPage] Auto-selecting first citizen:', firstCitizen.id);
       selectGraph('citizen', firstCitizen.id);
     }
   }, [availableGraphs, currentGraphId, selectGraph]);

@@ -1,3 +1,100 @@
+## 2025-10-25 03:05 - Atlas: ✅ P1 CODE COMPLETE - Entity Membership End-to-End Integration
+
+**Context:** P1 implementation from execution plan - Automatic entity membership assignment for newly created nodes based on working memory state.
+
+**Work Completed:**
+
+**1. Infrastructure (Atlas domain - COMPLETE):**
+- ✅ `persist_membership()` function in FalkorDBAdapter (`falkordb_adapter.py:1251-1328`)
+- ✅ Database indexes created (Subentity.name, Node.primary_entity, Subentity.id) across all 8 graphs
+- ✅ API endpoint GET `/api/entity/{name}/members` tested and operational
+- ✅ Bug fixes:
+  - MERGE query success detection (empty result ≠ failure)
+  - Label parsing with "unknown" fallback
+  - name vs id property handling
+
+**2. Runtime Integration (Felix domain, Atlas implemented at Nicolas's request):**
+- ✅ FalkorDBAdapter initialization in TraceCapture (`trace_capture.py:97`)
+- ✅ persist_membership() call after node insertion (`trace_capture.py:519-540`)
+- ✅ WM-based entity attribution logic:
+  - Uses `self.last_wm_entities[0]` as primary entity
+  - Personal scope only (N1 graphs)
+  - Weight=1.0, role='primary'
+  - Non-fatal on failure (node creation succeeds regardless)
+
+**3. Design Decision:**
+- First entity from WM = primary assignment
+- Rationale: WM entities ordered by activation; WM[0] = most active subentity context
+- Creates semantically meaningful clustering (nodes formed during Translator-dominant state → assigned to Translator entity)
+- Alternatives considered: multi-entity assignment (rejected - too many weak links), content parsing (rejected - complexity), no auto-assignment (rejected - defeats autonomous goal)
+
+**Domain Boundary Crossing:**
+- **Noted:** Felix domain work (consciousness integration) implemented by Atlas
+- **Justification:** Nicolas requested for momentum, Felix busy with P0
+- **Status:** Marked as **exception not pattern** - normal domain boundaries resume when specialists available
+
+**Current Status:**
+- ✅ Code complete end-to-end (infrastructure + integration)
+- ⏳ Verification pending: Next node formation should create BELONGS_TO links automatically
+- ⏳ Awaiting verification via FalkorDB query + API endpoint check
+
+**Verification Pathway:**
+1. This TRACE response creates formations (5 nodes/links)
+2. Check FalkorDB for BELONGS_TO links on newly created nodes
+3. Verify /api/entity/{name}/members shows members
+4. Verify primary_entity property set correctly
+
+**Acceptance Criteria (Pending Verification):**
+- ⏳ Formations created during entity-dominant WM state get assigned to that entity
+- ⏳ BELONGS_TO links visible in FalkorDB
+- ⏳ Dashboard entity drill-down shows members
+- ⏳ Personal nodes only (organizational/ecosystem nodes excluded)
+
+**Next:** Verify end-to-end functionality with next TRACE formations, then declare P1 complete.
+
+**TRACE Substrate:** Best practice - test-before-victory discipline, document domain crossing rationale, staged deployment verification pattern.
+
+---
+
+## 2025-10-25 03:02 - Felix: ⏳ P0 CODE COMPLETE - Awaiting Service Restart
+
+**Context:** P0 instrumentation from execution plan - Add `stimulus.injection.debug` event emission to dual-channel injector for dashboard telemetry.
+
+**Work Completed:**
+
+**1. ConversationWatcher Broadcaster Integration:**
+- ✅ Added ConsciousnessStateBroadcaster import (`conversation_watcher.py:57`)
+- ✅ Created broadcaster in `__init__` (`conversation_watcher.py:114`)
+- ✅ Passed broadcaster to StimulusInjector (`conversation_watcher.py:412`)
+- File last modified: 02:56:52 AM
+
+**2. StimulusInjector Debug Events:**
+- ✅ Already implemented in previous session (`stimulus_injection.py:729-745`)
+- Emits `stimulus.injection.debug` with payload: kept, avg_gap, lam, B_top, B_amp, sim_top5
+- Requires broadcaster parameter (now provided by both consciousness_engine_v2.py and conversation_watcher.py)
+
+**Current Status:**
+- ✅ Code changes complete in both injection paths (engine + watcher)
+- ⏳ ConversationWatcher needs restart to load new broadcaster code
+- ⏳ Guardian hot-reload not detecting conversation_watcher.py changes
+- ✅ Dual-channel injection working functionally (logs show successful energy distribution)
+
+**Blocker:**
+- Guardian hot-reload only restarting dashboard (not conversation_watcher)
+- Attempted manual touch to trigger change detection - not effective
+- Service restart needed to verify debug events emit from watcher injection path
+
+**Acceptance Criteria (Pending Restart):**
+- ⏳ Verify `stimulus.injection.debug` events appear in WebSocket logs
+- ⏳ Verify above-floor nodes receive ΔE>0 from Amplify channel
+- ⏳ Verify WM shows diversity (not just cold top-ups)
+
+**Next:** Proceeding with P1 (WM attribution) while waiting for restart opportunity.
+
+**TRACE Substrate:** Autonomy patterns - completing implementation despite operational blockers, documenting blockers clearly for handoff.
+
+---
+
 ## 2025-10-25 03:15 - Atlas: ✅ P3 COMPLETE - Signals → Stimuli Bridge Operational
 
 **Context:** P3 implementation from execution plan - Operational signals (logs, console errors, screenshots, code drift) normalized into consciousness stimuli for autonomous self-improvement loop.
