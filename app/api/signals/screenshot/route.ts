@@ -14,27 +14,43 @@ const SIGNALS_COLLECTOR_URL = process.env.SIGNALS_COLLECTOR_URL || 'http://local
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
-    const body = await request.json();
+    // Parse FormData from browser
+    const formData = await request.formData();
+    const file = formData.get('file');
 
-    // Validate screenshot_path provided
-    if (!body.screenshot_path) {
+    // Validate file provided
+    if (!file || !(file instanceof File)) {
       return NextResponse.json(
-        { error: 'screenshot_path is required' },
+        { error: 'file is required (must be Blob/File in FormData)' },
         { status: 400 }
       );
     }
 
-    // Forward to signals collector
+    // Save screenshot to evidence directory
+    const fs = require('fs').promises;
+    const path = require('path');
+    const timestamp = Date.now();
+    const filename = `screenshot-${timestamp}.png`;
+    const evidenceDir = path.join(process.cwd(), '..', '..', 'data', 'evidence');
+    const filepath = path.join(evidenceDir, filename);
+
+    // Ensure evidence directory exists
+    await fs.mkdir(evidenceDir, { recursive: true });
+
+    // Write file to disk
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await fs.writeFile(filepath, buffer);
+
+    // Forward to signals collector with filepath
     const response = await fetch(`${SIGNALS_COLLECTOR_URL}/screenshot`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        screenshot_path: body.screenshot_path,
-        context: body.context,
-        timestamp_ms: Date.now(),
+        screenshot_path: filepath,
+        context: formData.get('context') || 'periodic_capture',
+        timestamp_ms: timestamp,
       }),
     });
 
@@ -44,13 +60,19 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json();
 
-    return NextResponse.json(result, { status: 200 });
+    return NextResponse.json(
+      {
+        ...result,
+        screenshot_path: filepath
+      },
+      { status: 200 }
+    );
 
   } catch (error) {
     console.error('[SignalsAPI] Screenshot forwarding failed:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         status: 'error',
         message: error instanceof Error ? error.message : 'Unknown error',
       },

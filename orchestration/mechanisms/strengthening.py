@@ -264,6 +264,8 @@ def strengthen_link(
 
     This is Hebbian learning: "Neurons that fire together, wire together"
 
+    P2.1.3: Optionally emits tier.link.strengthened events (decimated to 1-2Hz).
+
     Args:
         link: Link to strengthen
         energy_flow: Amount of energy transferred this stride
@@ -275,6 +277,9 @@ def strengthen_link(
         source_was_active_pre: Source was active before this stride
         target_was_active_pre: Target was active before this stride
         target_crossed_threshold: This stride caused target to activate
+        broadcaster: Optional broadcaster for P2.1.3 event emission
+        entity_context: Entity IDs for context attribution
+        decimation_rate: Sampling rate for emission (default 0.02 = ~2Hz at 100Hz ticks)
 
     Returns:
         StrengtheningEvent if strengthening occurred, None if filtered
@@ -282,7 +287,7 @@ def strengthen_link(
     Example:
         >>> controller = LearningController(base_rate=0.01)
         >>> event = strengthen_link(link, energy_flow=0.05, learning_controller=controller,
-        ...                         stride_utility=1.5)  # Above average utility
+        ...                         stride_utility=1.5, broadcaster=broadcaster)
         >>> if event:
         ...     print(f"Strengthened: Δw={event.delta_weight:.4f}, reason={event.reason}")
     """
@@ -426,17 +431,27 @@ def strengthen_link(
 def strengthen_during_stride(
     link: 'Link',
     energy_flow: float,
-    learning_controller: LearningController
+    learning_controller: LearningController,
+    broadcaster: Optional[any] = None,
+    entity_context: Optional[List[str]] = None,
+    citizen_id: str = "",
+    frame_id: Optional[int] = None
 ) -> bool:
     """
     Strengthen link during stride execution (integrated with diffusion).
 
     This is called from execute_stride_step() for each energy transfer.
 
+    P2.1.3: Passes broadcaster for decimated tier.link.strengthened emission.
+
     Args:
         link: Link through which energy is flowing
         energy_flow: Amount of energy being transferred
         learning_controller: Learning rate controller
+        broadcaster: Optional broadcaster for P2.1.3 event emission
+        entity_context: Entity IDs for context attribution
+        citizen_id: Citizen ID for telemetry
+        frame_id: Frame ID for telemetry
 
     Returns:
         True if strengthening occurred, False if skipped (both nodes active)
@@ -444,7 +459,8 @@ def strengthen_during_stride(
     Example:
         >>> # During diffusion stride:
         >>> energy_flow = E_src * ease * alpha * dt
-        >>> strengthened = strengthen_during_stride(link, energy_flow, controller)
+        >>> strengthened = strengthen_during_stride(link, energy_flow, controller,
+        ...                                         broadcaster=broadcaster)
         >>> if strengthened:
         ...     print("Link learned from this transfer")
     """
@@ -452,7 +468,11 @@ def strengthen_during_stride(
         link,
         energy_flow,
         learning_controller,
-        track_history=False  # Don't track during normal operation (too expensive)
+        track_history=False,  # Don't track during normal operation (too expensive)
+        broadcaster=broadcaster,  # P2.1.3: Pass for emission
+        entity_context=entity_context,
+        citizen_id=citizen_id,
+        frame_id=frame_id
     )
 
     return event is not None

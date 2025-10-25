@@ -982,6 +982,34 @@ class ConsciousnessEngineV2:
         # Entity-first working memory selection (spec: subentity_layer.md §4)
         workspace_entities, wm_summary = self._select_workspace_entities(subentity)
 
+        # P2.1.4: Detect phenomenological mismatch (expected vs actual WM)
+        mismatch_detected = False
+        mismatch_score = 0.0
+        expected_entity_ids = []
+        actual_entity_ids = [e.id for e in workspace_entities]
+
+        if hasattr(self.graph, 'subentities') and self.graph.subentities:
+            # Expected WM: Top entities by raw energy (phenomenological "felt" attention)
+            entities_by_energy = sorted(
+                self.graph.subentities.values(),
+                key=lambda e: e.energy_runtime,
+                reverse=True
+            )
+            expected_entity_ids = [e.id for e in entities_by_energy[:len(workspace_entities)]]
+
+            # Compute mismatch: Jaccard distance (1 - intersection/union)
+            expected_set = set(expected_entity_ids)
+            actual_set = set(actual_entity_ids)
+
+            if expected_set or actual_set:
+                intersection = len(expected_set & actual_set)
+                union = len(expected_set | actual_set)
+                overlap = intersection / union if union > 0 else 1.0
+                mismatch_score = 1.0 - overlap  # 0 = perfect match, 1 = no overlap
+
+                # Gate: Emit if mismatch > 0.3 (30% divergence)
+                mismatch_detected = mismatch_score > 0.3
+
         # Extract all member nodes from selected entities (for backward compatibility)
         workspace_nodes = []
         for entity in workspace_entities:

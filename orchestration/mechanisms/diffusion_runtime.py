@@ -423,7 +423,15 @@ def execute_stride_step(
         # Strengthen link (Hebbian learning - integrated with diffusion)
         if enable_strengthening and learning_controller is not None:
             from orchestration.mechanisms.strengthening import strengthen_during_stride
-            strengthen_during_stride(best_link, delta_E, learning_controller)
+            strengthen_during_stride(
+                best_link,
+                delta_E,
+                learning_controller,
+                broadcaster=broadcaster,  # P2.1.3: Pass for tier.link.strengthened emission
+                entity_context=[current_entity_id] if current_entity_id else None,
+                citizen_id=runtime.graph_name if hasattr(runtime, 'graph_name') else "",
+                frame_id=getattr(graph, 'frame_id', None)
+            )
 
         # Learn RELATES_TO from boundary strides (spec: subentity_layer.md §2.5)
         # Detect if this stride crosses an entity boundary

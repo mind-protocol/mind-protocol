@@ -178,20 +178,38 @@ export function BrowserSignalsCollector() {
         height: window.innerHeight
       });
 
-      const imageData = canvas.toDataURL('image/png');
+      // Convert canvas to Blob
+      const blob = await new Promise<Blob | null>(resolve =>
+        canvas.toBlob(resolve, 'image/png', 0.9)
+      );
 
-      const signal: ScreenshotSignal = {
-        imageData,
-        timestamp: new Date().toISOString(),
-        trigger,
-        errorContext
-      };
+      if (!blob) {
+        throw new Error('toBlob() failed');
+      }
 
-      await fetch('/api/signals/screenshot', {
+      // Create FormData with File object (required by backend multipart handler)
+      const formData = new FormData();
+      formData.set('file', new File([blob], `screenshot_${Date.now()}.png`, {
+        type: 'image/png'
+      }));
+
+      // Add metadata as separate fields
+      formData.set('timestamp', new Date().toISOString());
+      formData.set('trigger', trigger);
+      if (errorContext) {
+        formData.set('errorContext', JSON.stringify(errorContext));
+      }
+
+      const response = await fetch('/api/signals/screenshot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(signal)
+        body: formData // No Content-Type header - browser sets multipart/form-data automatically
       });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.warn('[BrowserSignalsCollector] Screenshot upload failed', response.status, text);
+        return;
+      }
 
       lastScreenshotTime.current = now;
 

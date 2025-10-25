@@ -25,9 +25,14 @@ import type {
   PhenomenologicalHealthEvent
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
+import { diagOnEvent } from '../lib/ws-diagnostics';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
 const RECONNECT_DELAY = 3000; // 3 seconds
+
+// 🎯 SINGLETON: Module-scope WebSocket to prevent mount/unmount churn
+let _ws: WebSocket | null = null;
+let _connecting = false;
 const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 subentity activities
 const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
 const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
@@ -435,7 +440,8 @@ export function useWebSocket(): WebSocketStreams {
           break;
 
         default:
-          console.warn('[WebSocket] Unknown event type:', eventType);
+          // 🎯 Catch unknown events to prevent silent drops
+          console.warn('[WebSocket] Unknown event type:', eventType, data);
       }
     });
   }, []);
@@ -448,6 +454,9 @@ export function useWebSocket(): WebSocketStreams {
     try {
       const data = JSON.parse(event.data);
 
+      // 🎯 STEP A: Transport diagnostic - prove events arrive
+      diagOnEvent(data);
+
       // Buffer event for batch processing
       // flushPendingUpdates will process at 10Hz
       pendingUpdatesRef.current.push(data);
@@ -458,13 +467,29 @@ export function useWebSocket(): WebSocketStreams {
   }, []);
 
   /**
-   * Connect to WebSocket
+   * Connect to WebSocket (singleton pattern)
+   * 🎯 Prevents mount/unmount churn by reusing module-scope WebSocket
    */
   const connect = useCallback(() => {
+    // If already connected, just update local state and return
+    if (_ws && _ws.readyState === WebSocket.OPEN) {
+      setConnectionState(WebSocketState.CONNECTED);
+      setError(null);
+      wsRef.current = _ws;
+      return;
+    }
+
+    // If already connecting, wait
+    if (_connecting) {
+      return;
+    }
+
     // Don't reconnect if intentionally closed
     if (isIntentionalCloseRef.current) {
       return;
     }
+
+    _connecting = true;
 
     try {
       console.log('[WebSocket] Connecting to:', WS_URL);
@@ -472,9 +497,14 @@ export function useWebSocket(): WebSocketStreams {
       setError(null);
 
       const ws = new WebSocket(WS_URL);
+      _ws = ws;
       wsRef.current = ws;
 
+      // Expose for diagnostics
+      (window as any).__ws = ws;
+
       ws.onopen = () => {
+        _connecting = false;
         console.log('[WebSocket] Connected');
         setConnectionState(WebSocketState.CONNECTED);
         setError(null);
@@ -490,6 +520,7 @@ export function useWebSocket(): WebSocketStreams {
       };
 
       ws.onclose = (event) => {
+        _connecting = false;
         console.log('[WebSocket] Disconnected:', event.code, event.reason);
         setConnectionState(WebSocketState.DISCONNECTED);
 
@@ -497,11 +528,13 @@ export function useWebSocket(): WebSocketStreams {
         if (!isIntentionalCloseRef.current) {
           console.log(`[WebSocket] Reconnecting in ${RECONNECT_DELAY}ms...`);
           reconnectTimeoutRef.current = setTimeout(() => {
+            _ws = null; // Clear stale socket
             connect();
           }, RECONNECT_DELAY);
         }
       };
     } catch (err) {
+      _connecting = false;
       console.error('[WebSocket] Connection error:', err);
       setConnectionState(WebSocketState.ERROR);
       setError(err instanceof Error ? err.message : 'Unknown connection error');
@@ -509,6 +542,7 @@ export function useWebSocket(): WebSocketStreams {
       // Attempt reconnection
       if (!isIntentionalCloseRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => {
+          _ws = null; // Clear stale socket
           connect();
         }, RECONNECT_DELAY);
       }
@@ -538,17 +572,17 @@ export function useWebSocket(): WebSocketStreams {
 
   /**
    * Initialize WebSocket connection on mount
-   * Cleanup on unmount
+   * 🎯 SINGLETON: Keep alive across unmounts (no disconnect on cleanup)
    */
   useEffect(() => {
     isIntentionalCloseRef.current = false;
     connect();
 
-    // Cleanup on unmount
+    // Don't disconnect on unmount - keep singleton alive across route changes
     return () => {
-      disconnect();
+      // Socket stays open
     };
-  }, [connect, disconnect]);
+  }, [connect]);
 
   /**
    * 🎯 PHASE 4: Start 10Hz flush interval
