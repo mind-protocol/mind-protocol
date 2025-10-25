@@ -1159,6 +1159,36 @@ class ConsciousnessEngineV2:
             logger.error(f"[TRIPWIRE] Observability check failed: {e}")
             # Continue execution - tripwire is diagnostic, not control flow
 
+        # === P2.1 Event: health.phenomenological (5-tick cadence) ===
+        # Phenomenological health state assessment for operator visibility
+        # Translates quantitative metrics into qualitative consciousness states
+        if self.tick_count % 5 == 0 and self.broadcaster and self.broadcaster.is_available():
+            try:
+                from orchestration.mechanisms.phenomenology_health import compute_phenomenological_health
+
+                narrative_state, fragmentation_score, cause, active_entities = compute_phenomenological_health(self.graph)
+
+                await self.broadcaster.broadcast_event("health.phenomenological", {
+                    "v": "2",
+                    "frame_id": self.tick_count,
+                    "citizen_id": self.config.entity_id,
+                    "narrative_state": narrative_state,
+                    "fragmentation_score": round(fragmentation_score, 4),
+                    "cause": cause,
+                    "num_active_entities": len(active_entities),
+                    "active_entities": active_entities,
+                    "t_ms": int(time.time() * 1000)
+                })
+
+                logger.debug(
+                    f"[P2.1] Health: {narrative_state} "
+                    f"(fragmentation={fragmentation_score:.3f}, {len(active_entities)} active)"
+                )
+
+            except Exception as e:
+                # Health emission failed - log but don't crash tick
+                logger.error(f"[P2.1] health.phenomenological emission failed: {e}")
+
         # Increment tick count AFTER emitting tick_frame.v1 (so frame_id is correct)
         self.tick_count += 1
 
