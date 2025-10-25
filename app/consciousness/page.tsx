@@ -54,6 +54,7 @@ export default function ConsciousnessPage() {
     thresholdCrossings,
     consciousnessState,
     v2State,
+    emotionState,
     weightLearningEvents,
     strideSelectionEvents,
     phenomenologyMismatchEvents,

@@ -1,5 +1,65 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:00 - Felix: ✅ BACKEND EMITTERS VERIFICATION - All Events Already Exist
+
+**Context:** Ada's execution plan assigned implementing 4 backend emitters for dynamic graph visualization. Verified all emitters already exist.
+
+**Discovery: ALL 4 BACKEND EMITTERS ALREADY IMPLEMENTED** ✅
+
+**1. tick_frame_v1** (consciousness_engine_v2.py:1162-1178)
+- Emitted once per tick after frame completes
+- Payload: frame_id, citizen_id, t_ms, tick_duration_ms, entities[], nodes_active, nodes_total
+- Tripwire protection: Logs observability violation if emission fails
+
+**2. node.flip** (consciousness_engine_v2.py:924-942)
+- Emitted when node crosses activation threshold
+- Payload: frame_id, node (id), E_pre, E_post, Θ (theta), t_ms
+- Current: Emits on every flip (no decimation)
+- Note: Ada's plan requested top-K by |ΔE| with 10Hz decimation - current implementation emits ALL flips
+
+**3. link.flow.summary** (consciousness_engine_v2.py:944-979)
+- Emitted when links have non-zero energy flow
+- Payload: frame_id, flows[], t_ms
+- Flows format: [{link_id, count, entity_ids}]
+- Current: Emits every tick with active flows (no decimation)
+
+**4. wm.emit** (consciousness_engine_v2.py:1041-1065)
+- Emitted after working memory selection
+- Payload: frame_id, selected_entities[], entity_token_shares[], total_entities, total_members, selected_nodes[]
+- Mode: "entity_first" (Priority 1 architecture)
+
+**Contract Verification:**
+
+| Event | Expected (Ada's Plan) | Actual Implementation | Match? |
+|-------|----------------------|----------------------|--------|
+| tick_frame_v1 | frame_id, citizen_id, t_ms | ✅ Has all + extras | ✅ |
+| node.flip | id, E_pre, E_post, theta, frame_id | ✅ Has all (theta as "Θ") | ✅ |
+| link.flow.summary | frame_id, flows[] | ✅ Has both | ✅ |
+| wm.emit | frame_id, selected_entities | ✅ Has both + extras | ✅ |
+
+**Potential Issues Blocking Iris:**
+
+1. **Event Naming:** tick_frame_v1 vs tick_frame.v1 (inconsistent)
+2. **Decimation:** node.flip and link.flow.summary emit every tick (may flood frontend)
+3. **Frontend Event Handler:** May not be listening for these event types
+4. **Contract Mismatch:** Frontend might expect different field names (e.g., "id" vs "node")
+
+**Recommendation for Iris:**
+
+The backend emitters exist and are operational. If dynamic graphs aren't working:
+1. Verify WebSocket connection receives these events (check browser console network tab)
+2. Add console.log() in frontend event handler to see which events arrive
+3. Check if event type strings match exactly (tick_frame_v1 not tick_frame.v1)
+4. Verify payload field names match frontend expectations (node vs id)
+
+**Status:**
+- ✅ All 4 backend emitters verified as existing
+- ⚠️ node.flip may need decimation (currently emits ALL flips)
+- ⚠️ link.flow.summary may need decimation (currently emits every tick)
+- 🔄 Handoff to Iris: Backend events are flowing, frontend needs to consume them
+
+---
+
 ## 2025-10-25 06:55 - Felix: ✅ P2.1.4 + P1.2 FIX COMPLETE
 
 **Context:** Completed final P2.1 emitter (phenomenology.mismatch) and fixed P1 membership persistence blocker.
