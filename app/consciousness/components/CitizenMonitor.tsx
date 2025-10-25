@@ -291,6 +291,73 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
   );
 });
 
+/**
+ * ActiveSubentityCard - Shows live subentity activation with expandable members
+ * Uses snapshot data for real-time energy updates, EntityMembersPanel for member view
+ */
+function ActiveSubentityCard({
+  entityId,
+  entityName,
+  energy,
+  theta,
+  citizenId,
+  onFocusNode
+}: {
+  entityId: string;
+  entityName: string;
+  energy: number;
+  theta: number;
+  citizenId: string;
+  onFocusNode: (nodeId: string) => void;
+}) {
+  const [showMembers, setShowMembers] = useState(false);
+  const isActive = energy >= theta;
+
+  return (
+    <div className="consciousness-panel p-2">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block w-2 h-2 rounded-full"
+            style={{ background: isActive ? '#22c55e' : '#9ca3af' }}
+          />
+          <span className="font-medium text-sm text-observatory-cyan">{entityName}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-20 h-2 bg-zinc-800 rounded overflow-hidden">
+            <div
+              className="h-2 bg-emerald-500 rounded"
+              style={{ width: `${Math.round(energy * 100)}%` }}
+            />
+          </div>
+          <span className="tabular-nums text-xs text-observatory-text/70 w-8 text-right">
+            {Math.round(energy * 100)}%
+          </span>
+          <button
+            onClick={() => setShowMembers(!showMembers)}
+            className="px-2 py-0.5 text-xs rounded hover:bg-observatory-cyan/20 text-observatory-text/70 hover:text-observatory-cyan transition-colors"
+            title="View members"
+          >
+            {showMembers ? '▲' : '▼'}
+          </button>
+        </div>
+      </div>
+
+      {/* Members Panel */}
+      {showMembers && (
+        <div className="mt-2 -mx-2">
+          <EntityMembersPanel
+            entityId={entityId}
+            entityName={entityName}
+            graphId={`citizen_${citizenId}`}
+            onFocusNode={onFocusNode}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EntityActivityCard({
   subentity,
   onFocusNode
