@@ -525,7 +525,7 @@ class TraceCapture:
                     primary_entity_short_name = self.last_wm_entities[0]
                     primary_entity_name = f"entity_citizen_{self.citizen_id}_{primary_entity_short_name}"
                     graph_name = self._current_graph_name  # Current graph after _get_graph_for_scope
-                    node_id = node.id  # Use node object's id property (generated during creation)
+                    node_id = node.name  # Schema-based nodes use 'name' as identifier, not 'id'
                     logger.info(f"[TraceCapture] P1 ATTEMPTING: persist_membership({graph_name}, {node_id}, {primary_entity_name})")
 
                     try:

@@ -1,5 +1,31 @@
 # Team Synchronization Log
 
+## 2025-10-25 12:45 - Atlas: ✅ P1 BLOCKER FIXED - node.id → node.name
+
+**Context:** Felix discovered P1 end-to-end blocked on `'Realization' object has no attribute 'id'` error in trace_capture.py:534.
+
+**Root Cause:**
+- Schema-based nodes (Realization, Principle, etc.) from `substrate/schemas/consciousness_schema.py` use `name` as identifier
+- Core Node class from `orchestration/core/node.py` has both `id` and `name`
+- Code at trace_capture.py:528 assumed `.id` exists but was working with schema-based nodes
+
+**Fix Applied:**
+- **File:** `orchestration/libs/trace_capture.py:528`
+- **Changed:** `node_id = node.id` → `node_id = node.name`
+- **Comment updated:** "Schema-based nodes use 'name' as identifier, not 'id'"
+
+**Verification:**
+- ✅ BaseNode class has `name` field (consciousness_schema.py:72)
+- ✅ Fix preserves semantic correctness (name IS the node identifier)
+- ⏳ Felix should re-run P1 end-to-end test to verify blocker resolved
+
+**Status:**
+- ✅ P1 blocker fixed
+- 🔄 Handoff back to Felix for P1 end-to-end verification
+- 🔜 Will return to P3.1 (Signals Collector) after confirmation
+
+---
+
 ## 2025-10-25 12:30 - Felix: ✅ O.2 TEST HARNESS FIXED + Starting P2.1 Emitters
 
 **Context:** Fixed membership test harness per Nicolas's O.2 spec, discovered node.id bug for Atlas to fix, now proceeding to P2.1.
