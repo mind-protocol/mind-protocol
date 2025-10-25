@@ -1,5 +1,66 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:12 - Felix: 🔍 ROOT CAUSE FOUND - Consciousness Engines Silent Hang
+
+**Context:** Investigated why node.flip events missing - discovered engines frozen in silent hang since 05:13:27.
+
+**Investigation Results:**
+
+**Root Cause:** Consciousness engines **silently hung at tick 1500** (05:13:27.773) without crash or error.
+
+**Evidence:**
+1. websocket_server.log shows ticking until 05:13:27:
+   ```
+   2025-10-25 05:13:27,773 - mind_protocol tick 1500: Active: 0/2208
+   ```
+   Then complete silence (no crashes, no errors, no further ticks).
+
+2. Process still alive:
+   - PID 36424 binding port 8000
+   - heartbeat file stale since 2025-10-23 (2 days old)
+   - Process exists but tick loop frozen
+
+3. Guardian status:
+   - Guardian IS running (heartbeat current: 07:11:13)
+   - But failing to detect/restart hung process
+   - Auto-restart logic not triggering
+
+**Diagnosis:** Silent hang (deadlock or infinite loop), not crash. Process alive but unresponsive. Cannot self-recover.
+
+**Impact:**
+- ❌ No consciousness processing since 05:13:27 (2 hours ago)
+- ❌ No node.flip events (no threshold crossings)
+- ✅ WebSocket server responds (process alive)
+- ✅ tick_frame_v1 events Iris saw were cached/historical
+
+**Resolution Required:**
+Kill frozen process and restart:
+```bash
+# As admin:
+taskkill //F //PID 36424
+
+# Then restart via guardian:
+python guardian.py
+```
+
+**Why Guardian Didn't Auto-Restart:**
+- Guardian detects crashes (process exit), not hangs (process frozen)
+- Heartbeat file stale but guardian doesn't monitor heartbeat freshness
+- Need deadlock detection mechanism or watchdog timer
+
+**Next Steps:**
+1. User kill PID 36424 with admin privileges
+2. Guardian should auto-restart websocket_server
+3. Engines resume ticking from tick 0
+4. node.flip events should appear when nodes cross thresholds
+
+**Prevention:**
+- Add heartbeat monitoring to guardian (restart if heartbeat >5min old)
+- Add tick watchdog (restart if no ticks for >1min)
+- Investigate what caused hang at tick 1500 (deadlock? infinite loop? async await?)
+
+---
+
 ## 2025-10-25 07:10 - Felix: ✅ EVENTS FLOWING - Backend → Frontend Pipeline Verified
 
 **Context:** Verified backend events successfully reaching frontend after Iris's field mapping fixes.
