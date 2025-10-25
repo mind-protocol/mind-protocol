@@ -1,100 +1,55 @@
+import { NextRequest, NextResponse } from 'next/server';
+
 /**
- * Console Signals Proxy - Browser Console Error Collection
- *
- * Collects browser console errors/logs and forwards them to the backend
- * signals collector for potential stimulus injection based on error patterns.
- *
- * Part of P3 Signals Bridge - browser observability to consciousness substrate.
- *
- * Author: Iris "The Aperture"
- * Created: 2025-10-25
- * Priority: P3 (Signals → Stimuli Bridge)
+ * Console Error Signal Proxy
+ * 
+ * Forwards console errors from dashboard to signals_collector service.
+ * This allows frontend to report errors without CORS issues.
+ * 
+ * Created: 2025-10-25 by Atlas (Infrastructure Engineer)
+ * Spec: Phase-A Autonomy - P3.1 Signals Collector MVP
  */
 
-import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+const SIGNALS_COLLECTOR_URL = process.env.SIGNALS_COLLECTOR_URL || 'http://localhost:8010';
 
-interface ConsoleSignal {
-  type: 'error' | 'warn' | 'log' | 'info';
-  message: string;
-  stack?: string;
-  timestamp: string;
-  url: string;
-  line?: number;
-  column?: number;
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const signal: ConsoleSignal = await request.json();
+    // Parse request body
+    const body = await request.json();
 
-    // Validate signal
-    if (!signal.type || !signal.message) {
-      return NextResponse.json(
-        { error: 'Invalid signal format - missing type or message' },
-        { status: 400 }
-      );
-    }
-
-    // Ensure log directory exists
-    const logDir = path.join(process.cwd(), 'claude-logs');
-    await fs.mkdir(logDir, { recursive: true });
-
-    // Append to browser console log
-    const logPath = path.join(logDir, 'browser-console.log');
-    const logEntry = JSON.stringify({
-      ...signal,
-      timestamp: signal.timestamp || new Date().toISOString()
-    }) + '\n';
-
-    await fs.appendFile(logPath, logEntry);
-
-    // Forward to signals collector backend (port 8010)
-    // Signals collector will deduplicate, rate limit, and forward to stimulus injection
-    try {
-      const collectorUrl = process.env.SIGNALS_COLLECTOR_URL || 'http://localhost:8010';
-      const response = await fetch(`${collectorUrl}/ingest/console`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          severity: signal.type === 'error' ? 'error' : signal.type === 'warn' ? 'warning' : 'info',
-          message: signal.message,
-          stack_trace: signal.stack,
-          source: 'browser_console',
-          metadata: {
-            url: signal.url,
-            line: signal.line,
-            column: signal.column,
-            timestamp: signal.timestamp
-          }
-        })
-      });
-
-      if (!response.ok) {
-        console.warn('[Console Proxy] Signals collector returned error:', response.status);
-      }
-    } catch (error) {
-      // Non-fatal - local logging succeeded even if forwarding failed
-      console.warn('[Console Proxy] Failed to forward to signals collector:', error);
-    }
-
-    return NextResponse.json({
-      success: true,
-      logged: true
+    // Forward to signals collector
+    const response = await fetch(`${SIGNALS_COLLECTOR_URL}/console`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        error_message: body.error_message,
+        stack_trace: body.stack_trace,
+        url: body.url || request.headers.get('referer'),
+        user_agent: request.headers.get('user-agent'),
+        timestamp_ms: Date.now(),
+      }),
     });
 
+    if (!response.ok) {
+      throw new Error(`Signals collector returned ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    return NextResponse.json(result, { status: 200 });
+
   } catch (error) {
-    console.error('[Console Proxy] Error processing signal:', error);
+    console.error('[SignalsAPI] Console error forwarding failed:', error);
+    
+    // Return success even if forwarding fails (don't break dashboard)
     return NextResponse.json(
-      { error: 'Failed to process console signal' },
-      { status: 500 }
+      { 
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 200 } // Still 200 to avoid dashboard error loops
     );
   }
 }
-
-/**
- * Note: Signal filtering and stimulus triggering now handled by signals_collector backend.
- * The collector service (port 8010) implements deduplication, rate limiting, and
- * pattern-based routing to appropriate consciousness entities via orchestrator templates.
- */
