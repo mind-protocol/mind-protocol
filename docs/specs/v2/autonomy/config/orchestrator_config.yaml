@@ -11,6 +11,16 @@
 lanes:
   # Lanes prevent priority inversion - sev1 work never starved by noise
 
+  - id: rapid_response
+    description: "Human DMs (Telegram, FE messages) requiring fast replies"
+    priority_weight: 1.2  # Higher than safety (humans waiting)
+    capacity_share: 0.2   # Can consume up to 20% of total capacity
+    conditions:
+      - "source_type IN ['human_dm.telegram', 'human_dm.frontend', 'human_dm.email']"
+      - "intent_template == 'intent.reply_to_human'"
+    aging_boost_per_minute: 0.1  # +10% priority per minute (rapid escalation)
+    max_age_minutes: 2    # Alert if human DM waits >2 min
+
   - id: safety
     description: "Sev1 incidents, sentinel-critical failures, production outages"
     priority_weight: 1.0  # Highest priority

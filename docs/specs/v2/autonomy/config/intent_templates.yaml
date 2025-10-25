@@ -10,7 +10,147 @@
 
 templates:
   # ----------------------------------------------------------------------------
-  # 1. Fix Incident (Console/Log Errors → Citizen Remediation)
+  # 1. Reply to Human (Fast Lane for DMs/Partner Messages)
+  # ----------------------------------------------------------------------------
+  - id: intent.reply_to_human
+    version: "1.0"
+    description: "Fast-lane routing for human DMs (Telegram, FE messages) to specific citizens with rapid context shift"
+
+    # Matching Conditions
+    match:
+      source_types:
+        - "human_dm.telegram"    # Direct Telegram messages
+        - "human_dm.frontend"    # Frontend message panel
+        - "human_dm.email"       # Email (if configured)
+
+      # Must specify target citizen in metadata
+      required_metadata:
+        - "to_citizen"           # Which citizen is being addressed
+        - "conversation_id"      # Thread context
+
+      # No quantile gate - all human DMs get through
+      severity:
+        min: 0.0                 # Accept all severities
+
+    # Routing Rules (explicit citizen addressing)
+    routing:
+      - condition:
+          metadata.to_citizen: "felix"
+        assignee: "felix"
+        reason: "Direct message to Felix"
+
+      - condition:
+          metadata.to_citizen: "ada"
+        assignee: "ada"
+        reason: "Direct message to Ada"
+
+      - condition:
+          metadata.to_citizen: "atlas"
+        assignee: "atlas"
+        reason: "Direct message to Atlas"
+
+      - condition:
+          metadata.to_citizen: "iris"
+        assignee: "iris"
+        reason: "Direct message to Iris"
+
+      - condition:
+          metadata.to_citizen: "luca"
+        assignee: "luca"
+        reason: "Direct message to Luca"
+
+      - condition:
+          metadata.to_citizen: "victor"
+        assignee: "victor"
+        reason: "Direct message to Victor"
+
+      # Default: route to Ada for triage
+      - condition: {}
+        assignee: "ada"
+        reason: "Unaddressed DM routed to Ada for triage"
+
+    # Acceptance Gates
+    acceptance:
+      # Auto-execute for most DMs (reply-first policy)
+      auto_execute:
+        - condition: "metadata.business_impact NOT IN ['sev1', 'production_deploy']"
+        - condition: "origin_chain_depth == 0"  # Not self-observation
+        - condition: "content_length < 500"  # Short messages
+
+      # ACK required for high-impact asks
+      ack_required:
+        - condition: "metadata.business_impact IN ['sev1', 'production_deploy']"
+          reason: "High-impact requests require explicit approval"
+        - condition: "content_length >= 500"
+          reason: "Long/complex requests need review"
+        - condition: "content CONTAINS 'deploy' OR content CONTAINS 'production'"
+          reason: "Production changes require ACK"
+
+    # Mission Configuration (reply-first policy)
+    mission:
+      template: |
+        ## Human Message
+
+        **From:** {actor}
+        **Channel:** {metadata.channel}
+        **Conversation:** {metadata.conversation_id}
+        **Timestamp:** {timestamp_ms}
+
+        **Message:**
+        ```
+        {content}
+        ```
+
+        ## Your Mission (Reply-First Policy)
+
+        1. **Read & Understand:** Comprehend the human's request/question
+        2. **Reply Immediately:** Provide a concise, helpful response
+           - If you can answer: Answer directly with citations
+           - If you need info: Ask clarifying questions
+           - If it requires work: Acknowledge + propose plan in follow-up
+        3. **Scope Response:** Keep reply focused on immediate question
+        4. **Follow-Up Intent:** If substantial work needed, create follow-up intent (don't block on it now)
+
+        ## Reply Guidelines
+
+        - **Be concise** (1-3 paragraphs for simple questions)
+        - **Cite evidence** when possible (link to docs, code, previous decisions)
+        - **Ask vs assume** - if ambiguous, ask clarifying questions
+        - **Promise follow-up** if work is needed: "I'll open a task to..." rather than doing it now
+        - **Telegram-friendly** - use markdown, keep formatting simple
+
+        ## Verification Criteria
+
+        - ✅ Reply sent within 2 minutes
+        - ✅ Human's question answered or clarified
+        - ✅ Follow-up intent created if work required
+        - ✅ No hallucinations (cite sources or acknowledge uncertainty)
+
+      # Expected outcome (rapid reply)
+      expected_outcome:
+        reply_sent: true
+        reply_latency_target_sec: 120  # 2 minutes
+        verification_query: |
+          MATCH (s:Stimulus {stimulus_id: $stimulus_id})
+          MATCH (r:Response)-[:RESPONDS_TO]->(s)
+          WHERE r.timestamp_ms < $stimulus_timestamp + 120000
+          RETURN r.timestamp_ms as reply_timestamp
+        success_condition: "reply_timestamp EXISTS"
+
+      # Time limits (aggressive for DMs)
+      sla:
+        max_duration_minutes: 5   # Reply within 5 min
+        verification_window_minutes: 0  # No post-reply monitoring
+
+    # Metadata for tracking
+    metadata:
+      priority_lane: "rapid_response"  # Dedicated fast lane
+      cooldown_window_sec: 0  # No cooldown for human DMs
+      merge_keys: []  # Don't merge DMs - each is unique
+      max_fanout: 1
+
+  # ----------------------------------------------------------------------------
+  # 2. Fix Incident (Console/Log Errors → Citizen Remediation)
   # ----------------------------------------------------------------------------
   - id: intent.fix_incident
     version: "1.0"
