@@ -79,6 +79,12 @@ export function EntityGraphView({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Compute visible graph based on expansion state (for Pixi rendering)
+  const visibleGraph = useMemo(() =>
+    selectVisibleGraph(nodes, links, subentities, expandedEntities),
+    [nodes, links, subentities, expandedEntities]
+  );
+
   // Convert subentities to Entity format with emotion aggregation
   const entities = useMemo<Entity[]>(() => {
     return subentities.map(subentity => {
@@ -127,10 +133,17 @@ export function EntityGraphView({
     });
   }, [subentities, nodes, emotionState.nodeEmotions]);
 
-  // Handle entity click -> expand to member view
+  // Handle entity click -> toggle expansion
   const handleEntityClick = (entityId: string) => {
-    setExpandedEntityId(entityId);
-    setViewMode('entity-expanded');
+    toggleEntity(entityId);
+    // Also update local expanded state for the entity-expanded view mode
+    if (expandedEntityId === entityId) {
+      setExpandedEntityId(null);
+      setViewMode('entity-map');
+    } else {
+      setExpandedEntityId(entityId);
+      setViewMode('entity-expanded');
+    }
   };
 
   // Handle back to entity map
@@ -207,11 +220,15 @@ export function EntityGraphView({
         </button>
       )}
 
-      {/* Entity count indicator */}
+      {/* Entity count indicator with visible graph stats */}
       {viewMode === 'entity-map' && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900/80 text-slate-300 rounded-lg text-xs font-mono backdrop-blur-sm border border-slate-700">
-          {entities.length} entities · {entities.filter(e => e.active).length} active
-          {expandedEntityId && ` · Expanded: ${entities.find(e => e.id === expandedEntityId)?.name || expandedEntityId}`}
+          {entities.length} entities · {entities.filter(e => e.active).length} active · {expandedEntities.size} expanded
+          <br />
+          Render: {visibleGraph.nodes.filter(n => n.kind === 'entity').length} entity nodes · {visibleGraph.nodes.filter(n => n.kind === 'node').length} member nodes · {visibleGraph.edges.length} edges
+          {expandedEntityId && (
+            <><br />Expanded: {entities.find(e => e.id === expandedEntityId)?.name || expandedEntityId}</>
+          )}
         </div>
       )}
 

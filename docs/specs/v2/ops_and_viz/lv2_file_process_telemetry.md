@@ -657,6 +657,7 @@ interface FileSignal {
 **Signal Sources:**
 - **Watchdog Observer:** Python `watchdog` library monitoring workspace directories
 - **Git Hooks:** Post-commit, post-merge hooks emit file change signals
+- **Git Watcher (`git_watcher.py`):** Maps code/doc changes via SCRIPT_MAP.md to identify counterpart drift; emits `source_type="code_change"` or `"doc_change"` with diff + counterpart path; triggers `intent.sync_docs_scripts` in L2 autonomy
 
 **Filtering:**
 - Exclude: `node_modules/`, `.git/`, `__pycache__/`, `*.pyc`, `dist/`, `build/`
