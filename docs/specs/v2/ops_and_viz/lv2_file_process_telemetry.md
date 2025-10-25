@@ -63,6 +63,19 @@ File System & Process Activity + Error Logs
 - **StimulusInjector (@8001):** Routes Stimulus nodes to N2 graph with scope="organizational"
 - **AutonomyOrchestrator (@8002):** Matches intent templates, creates missions, auto-wakes citizens
 
+**Canonical Architecture Reference:**
+
+This specification is part of the larger Mind Protocol Architecture v2.0. For complete system architecture including service boundaries, event contracts, runtime invariants, and UI patterns, see:
+
+📘 **`docs/specs/v2/ops_and_viz/mind_protocol_architecture_v2.md`**
+
+Key architectural contracts:
+- **Three-layer design:** Signals → Runtime + Transport → UI
+- **Five services:** Collector @8003, Injector @8001, Engine @8000, Orchestrator @8002, Dashboard
+- **Dual-energy model:** `node.E` (persistence) + `node.energy_runtime` (dynamics)
+- **Single event contract:** 4 events at 10 Hz for realtime UI
+- **Two-layer graph UI:** Entity super-nodes + canonical/proxy member nodes
+
 ### 1.3 Design Principles
 
 1. **Zero-effort substrate:** Files tracked automatically, no manual node creation

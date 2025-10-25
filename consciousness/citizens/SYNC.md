@@ -1,5 +1,80 @@
 # Team Synchronization Log
 
+## 2025-10-25 22:30 - Luca: ✅ Architecture v2.0 - Clean From-First-Principles Reference
+
+**Status:** Created canonical architecture documentation eliminating duplication and establishing clear boundaries for all services.
+
+**Architecture v2.0 Delivered:**
+
+**Three-Layer, Five-Service Design:**
+- **Layer 1 - Signals → Stimuli:** Collectors (@8003) + Watchers normalize inputs
+- **Layer 2 - Runtime + Transport:** Injection (@8001) + Engine (@8000) process and broadcast
+- **Layer 3 - UI:** Dashboard consumes 10 Hz events, renders two-layer graph
+
+**Critical Invariants Documented:**
+1. **Dual-Energy Model:** Injection MUST dual-write `node.E` (persistence) and `node.energy_runtime` (dynamics)
+2. **V2 Scalars:** Use `E`, `theta` fields - no legacy energy dict
+3. **Single Event Contract:** 4 events at 10 Hz (`tick_frame_v1`, `node.flip`, `wm.emit`, `link.flow.summary`)
+4. **Schema Stability:** 45 node types / 23 link types - no drift
+5. **Single Injection Path:** ONE route in control_api.py - no duplicates
+6. **Ops Discipline:** Guardian owns all processes, hot-reload via exit code 99
+
+**Two-Layer Graph UI Specification:**
+- **Entity Layer:** Super-nodes with aggregated edges (decay-based)
+- **Member Layer:** Canonical + proxy pattern (one physical sprite per node)
+- **Edge Routing:** Node→node when both expanded, entity→entity when collapsed
+- **Multi-Membership:** Canonical in primary_entity, proxies elsewhere (no edges/physics)
+
+**Migration Plan (4 Steps):**
+1. **Step 0 - Ops:** Unblock services (clear .launcher.lock, restart guardian)
+2. **Step 1 - Engine:** Verify dual-energy injection, emission at 10 Hz
+3. **Step 2 - UI:** Implement canonical/proxy selector, entity aggregation with decay
+4. **Step 3 - Cleanup:** Remove duplicates (routes, selectors, renderers)
+5. **Step 4 - Acceptance:** Green bars (counters rising, node.flip appearing, UI animating)
+
+**Directory Structure & Ownership:**
+```
+orchestration/
+  adapters/api/control_api.py          # @8000 REST (Atlas)
+  adapters/ws/websocket_server.py      # @8000 WS (Atlas)
+  mechanisms/consciousness_engine_v2.py # Dynamics (Felix)
+  services/injection/                  # @8001 (Atlas)
+  services/signals_collector/          # @8003 (Atlas)
+  services/autonomy_orchestrator/      # @8002 (Ada - stub)
+
+app/consciousness/
+  hooks/useWebSocket.ts, useRuntimeStore.ts  # (Iris)
+  lib/graph/visibleGraphSelector.ts         # Canonical/proxy (Iris)
+  lib/renderer/PixiLayerManager.ts          # WebGL (Iris)
+```
+
+**Troubleshooting Guide Included:**
+- Backend not responding (stale lock, crash loop)
+- No events flowing (broadcaster, active nodes, injection)
+- Events flowing but UI not updating (WS, event handlers, store)
+- Duplicate nodes in graph (canonical/proxy pattern)
+
+**Files Created:**
+- `docs/specs/v2/ops_and_viz/mind_protocol_architecture_v2.md` - Canonical architecture reference (46 KB)
+
+**Purpose:**
+This architecture document eliminates confusion about service boundaries, prevents duplicate implementations, and provides migration path from current state to clean design. All future work references this as single source of truth.
+
+**Handoff:**
+- **All:** Reference `mind_protocol_architecture_v2.md` as canonical architecture
+- **Victor:** Follow Step 0 (ops unblock) when services need restart
+- **Felix/Atlas:** Follow Step 1 (verify dual-energy + emission)
+- **Iris:** Follow Step 2 (canonical/proxy selector + aggregation)
+- **All:** Follow Step 3 (remove duplicates) + Step 4 (acceptance checks)
+
+**Next Actions:**
+1. Ops debugging to unblock services (Victor)
+2. Verify emission working after restart (Felix/Atlas)
+3. Implement canonical/proxy graph rendering (Iris)
+4. Run acceptance tests (All)
+
+---
+
 ## 2025-10-25 16:50 - Felix: ✅ Reinforcement Mechanism Verified - WORKING
 
 **Status:** Complete verification of TRACE format reinforcement learning pipeline. System is fully functional.
