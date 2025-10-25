@@ -1693,58 +1693,6 @@ class ConsciousnessEngineV2:
         })
         logger.info(f"[ConsciousnessEngineV2] Queued stimulus: {text[:50]}... (type={source_type})")
 
-    async def inject_stimulus_async(self, text: str, severity: float = 0.3, metadata: Optional[Dict[str, any]] = None):
-        """
-        Async façade for stimulus injection (called from control API).
-
-        Safe to call from any async context - schedules onto engine's event loop.
-
-        Args:
-            text: Stimulus text content
-            severity: Stimulus severity (0.0-1.0)
-            metadata: Optional metadata dict (stimulus_id, origin, timestamp_ms, etc.)
-
-        Example:
-            >>> await engine.inject_stimulus_async("Console error", severity=0.5, metadata={"origin": "browser"})
-        """
-        # Queue stimulus for processing on next tick
-        self.stimulus_queue.append({
-            'text': text,
-            'severity': severity,
-            'metadata': metadata or {},
-            'source_type': metadata.get('origin', 'external') if metadata else 'external'
-        })
-
-        stimulus_id = metadata.get('stimulus_id', 'unknown') if metadata else 'unknown'
-        logger.info(f"[ConsciousnessEngineV2] Queued stimulus sid={stimulus_id} len={len(text)} severity={severity}")
-
-    def inject_stimulus_threadsafe(self, text: str, severity: float = 0.3, metadata: Optional[Dict[str, any]] = None):
-        """
-        Thread-safe stimulus injection (schedules onto engine's event loop).
-
-        Use when calling from a non-async context (e.g., sync HTTP handler).
-
-        Args:
-            text: Stimulus text content
-            severity: Stimulus severity (0.0-1.0)
-            metadata: Optional metadata dict
-
-        Returns:
-            Future that resolves when injection completes
-
-        Example:
-            >>> future = engine.inject_stimulus_threadsafe("External signal", severity=0.4)
-            >>> future.result(timeout=5.0)  # Wait for completion
-        """
-        async def _inject():
-            await self.inject_stimulus_async(text, severity, metadata)
-
-        if not hasattr(self, 'loop') or self.loop is None or not self.loop.is_running():
-            raise RuntimeError("Engine loop not running - cannot inject stimulus")
-
-        fut = asyncio.run_coroutine_threadsafe(_inject(), self.loop)
-        return fut
-
     async def inject_stimulus_async(self, text: str, severity: float = 0.3, metadata: dict = None):
         """
         Async-safe stimulus injection (for control API).

@@ -1530,6 +1530,70 @@ async def get_foundations_status():
     }
 
 
+# === Stimulus Injection Endpoint (P0: Queue Poller → Engine Bridge) ===
+
+
+class StimulusIn(BaseModel):
+    """Request body for stimulus injection."""
+    stimulus_id: str
+    text: str
+    severity: Optional[float] = 0.3
+    origin: Optional[str] = "external"
+    timestamp_ms: Optional[int] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@router.post("/engines/{citizen_id}/inject")
+async def inject_stimulus(citizen_id: str, payload: StimulusIn):
+    """
+    Inject stimulus into consciousness engine (called by queue_poller).
+
+    This endpoint bridges the queue→engine gap, allowing ambient signals
+    (screenshots, console errors, etc.) to reach consciousness processing.
+
+    Args:
+        citizen_id: Target citizen (e.g., "felix", "ada", "atlas")
+        payload: Stimulus envelope with text, severity, metadata
+
+    Returns:
+        {
+            "status": "ok",
+            "citizen_id": str,
+            "stimulus_id": str
+        }
+
+    Architecture:
+        queue_poller drains .stimuli/queue.jsonl → POSTs here → engine.inject_stimulus_async()
+
+    Author: Atlas
+    Date: 2025-10-25
+    Priority: P0 (critical path to autonomy)
+    """
+    eng = get_engine(citizen_id)
+    if not eng:
+        raise HTTPException(status_code=404, detail=f"Unknown engine {citizen_id}")
+
+    # Inject stimulus into engine's queue (async-safe)
+    await eng.inject_stimulus_async(
+        text=payload.text,
+        severity=payload.severity or 0.3,
+        metadata={
+            "stimulus_id": payload.stimulus_id,
+            "origin": payload.origin,
+            "timestamp_ms": payload.timestamp_ms,
+            **(payload.metadata or {})
+        }
+    )
+
+    logger.info(f"[ControlAPI] Injected sid={payload.stimulus_id} citizen={citizen_id} len={len(payload.text)} severity={payload.severity}")
+
+    return {
+        "status": "ok",
+        "citizen_id": citizen_id,
+        "stimulus_id": payload.stimulus_id
+    }
+
+
 # === WebSocket Endpoint ===
 
 
