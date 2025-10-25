@@ -2154,6 +2154,7 @@ class ConsciousnessEngineV2:
             theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
             rows.append({
+                'node_id': node.id,  # For tracking in _last_persisted
                 'id': None,  # Trigger name-based matching (FalkorDB uses prefixed IDs)
                 'name': node.name,  # Match by name instead
                 'label': node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
@@ -2175,9 +2176,9 @@ class ConsciousnessEngineV2:
 
             logger.info(f"[ConsciousnessEngineV2] Persisted {updated}/{len(rows)} nodes")
 
-            # Update tracking
+            # Update tracking (use node_id, not database id)
             for row in rows:
-                self._last_persisted[row['id']] = (row['E'], row['theta'])
+                self._last_persisted[row['node_id']] = (row['E'], row['theta'])
 
             # Clear dirty set
             self._dirty_nodes.clear()
