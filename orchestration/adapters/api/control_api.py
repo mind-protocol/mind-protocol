@@ -959,6 +959,58 @@ async def set_citizen_speed_endpoint(citizen_id: str, request: SpeedRequest):
     return result
 
 
+@router.post("/citizen/{citizen_id}/persist")
+async def persist_citizen_endpoint(citizen_id: str):
+    """
+    Force persist citizen's consciousness state to FalkorDB (Pass A testing).
+
+    Persists all nodes' E and theta values to database immediately.
+    Used for testing persistence mechanism before wiring into tick loop.
+
+    Args:
+        citizen_id: Citizen identifier
+
+    Returns:
+        {
+            "status": "persisted",
+            "citizen_id": "felix",
+            "nodes_persisted": 483,
+            "elapsed_ms": 45.2
+        }
+
+    Example:
+        POST /api/citizen/felix/persist
+
+    Author: Atlas
+    Date: 2025-10-25
+    Pass: A (manual flush testing before auto-flush)
+    """
+    import time
+
+    engine = get_engine(citizen_id)
+    if not engine:
+        raise HTTPException(status_code=404, detail=f"Engine not found: {citizen_id}")
+
+    try:
+        start = time.time()
+
+        # Call force persist (Pass A implementation)
+        await engine.persist_to_database(force=True)
+
+        elapsed_ms = (time.time() - start) * 1000
+
+        return {
+            "status": "persisted",
+            "citizen_id": citizen_id,
+            "nodes_persisted": len(engine.graph.nodes),
+            "elapsed_ms": round(elapsed_ms, 2)
+        }
+
+    except Exception as e:
+        logger.error(f"[API] Force persist failed for {citizen_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Persistence failed: {str(e)}")
+
+
 # === Entity Membership Endpoints ===
 
 
