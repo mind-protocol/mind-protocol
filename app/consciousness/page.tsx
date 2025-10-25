@@ -72,8 +72,8 @@ export default function ConsciousnessPage() {
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
 
   // Stride events for TierBreakdownPanel (Priority 2)
-  // TODO: Integrate with useWebSocket when backend emits stride.exec events
-  const [strideEvents, setStrideEvents] = useState<any[]>([]);
+  // ✅ Wired to emotionState.recentStrides from useWebSocket
+  const strideEvents = emotionState.recentStrides;
 
   /**
    * WebSocket Event Integration

@@ -434,6 +434,11 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        // P2.1.3: Tier link strengthening (Felix) - received but not stored yet
+        // Future: Store for detailed link-level learning observability
+        case 'tier.link.strengthened':
+          break;
+
         // Internal consciousness engine events (safe to ignore)
         case 'criticality.state':
         case 'decay.tick':
