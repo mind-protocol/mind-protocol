@@ -1353,6 +1353,31 @@ async def main():
 
     try:
         while True:
+            # P0.1: Drain stimulus queue and process
+            stimuli = drain_stimuli()
+            for stim in stimuli:
+                sid = stim.get('stimulus_id', 'unknown')
+                citizen_id = stim.get('citizen_id', 'felix')
+                text = stim.get('text', '')
+
+                logger.info(f"[ConversationWatcher] Processing queued stimulus sid={sid} for {citizen_id}")
+
+                # Process stimulus via injection (triggers 5 diagnostic markers)
+                graph_name = f"citizen_{citizen_id}"
+
+                # Get handler for this citizen
+                handler = None
+                for h in handlers:
+                    if h.citizen_id == citizen_id:
+                        handler = h
+                        break
+
+                if handler:
+                    handler.process_stimulus_injection(text, graph_name, citizen_id, stimulus_id=sid)
+                    logger.info(f"[ConversationWatcher] Completed stimulus processing sid={sid}")
+                else:
+                    logger.warning(f"[ConversationWatcher] No handler found for citizen {citizen_id}, sid={sid}")
+
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         logger.info("\n[ConversationWatcher] Shutting down...")
