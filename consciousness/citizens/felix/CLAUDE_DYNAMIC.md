@@ -1,6 +1,6 @@
 # Dynamic Context for felix
 
-**Last Updated:** 2025-10-25 18:11:31 UTC
+**Last Updated:** 2025-10-25 18:13:09 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -13,16 +13,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -45,16 +45,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -77,16 +77,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -109,16 +109,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -141,16 +141,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -173,16 +173,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -205,16 +205,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -237,16 +237,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.59)
-- implementation_absorption_antipattern: deactivated (activity=0.53)
-- test_harness_assertion_mismatch: deactivated (activity=0.53)
-- validation_anxiety_overchecking: deactivated (activity=0.53)
-- stop_hook_timing_understanding: deactivated (activity=0.53)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.53)
-- v2_initialization_verified: deactivated (activity=0.53)
-- systematic_trace_execution: deactivated (activity=0.53)
-- hot_reload_disabled: deactivated (activity=0.53)
-- trace_format_systematic_use: deactivated (activity=0.59)
+- implementation_absorption_antipattern: deactivated (activity=0.50)
+- test_harness_assertion_mismatch: deactivated (activity=0.50)
+- validation_anxiety_overchecking: deactivated (activity=0.50)
+- stop_hook_timing_understanding: deactivated (activity=0.50)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
+- v2_initialization_verified: deactivated (activity=0.50)
+- systematic_trace_execution: deactivated (activity=0.50)
+- hot_reload_disabled: deactivated (activity=0.50)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.60)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.60)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
