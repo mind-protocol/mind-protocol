@@ -353,13 +353,13 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     const outerSim = d3.forceSimulation(clusterNodes as any)
       .force('link', d3.forceLink(interClusterLinks)
         .id((d: any) => d.id)
-        .distance(40)
+        .distance(200)         // INCREASED: 40 → 200 (much more space between clusters)
         .strength((l: any) => 0.8 + 0.2 * Math.min(l.weight / 5, 1)))
       .force('charge', d3.forceManyBody()
-        .strength(5)           // Slight attraction between clusters
-        .distanceMax(120))     // Cap range to prevent ocean gaps
+        .strength(-150)        // FIXED: 5 → -150 (repulsion, not attraction!)
+        .distanceMax(400))     // INCREASED: 120 → 400 (wider repulsion range)
       .force('collide', d3.forceCollide()
-        .radius((d: any) => 12 + 2 * Math.sqrt(d.size)))
+        .radius((d: any) => 30 + 4 * Math.sqrt(d.size)))  // INCREASED: larger collision radius
       .force('center', d3.forceCenter(width / 2, height / 2))
       .alphaDecay(0.05)
       .stop();
@@ -388,16 +388,16 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       return d3.forceSimulation(members as any)
         .force('link', d3.forceLink(intraLinks)
           .id((d: any) => d.id)
-          .distance(30)
-          .strength(0.4))
+          .distance(100)         // INCREASED: 30 → 100 (links now visible!)
+          .strength(0.3))        // REDUCED: 0.4 → 0.3 (softer link constraint)
         .force('charge', d3.forceManyBody()
-          .strength(-14)
-          .distanceMin(8)
-          .distanceMax(80))
+          .strength(-80)         // INCREASED: -14 → -80 (much stronger repulsion)
+          .distanceMin(20)       // INCREASED: 8 → 20 (prevent node overlap)
+          .distanceMax(200))     // INCREASED: 80 → 200 (wider repulsion range)
         .force('collide', d3.forceCollide()
-          .radius(nodeR + pad))
-        .force('x', d3.forceX(anchor.x).strength(0.2))  // Anchor to cluster position
-        .force('y', d3.forceY(anchor.y).strength(0.2))
+          .radius(nodeR * 2 + pad))  // INCREASED: collision radius doubled
+        .force('x', d3.forceX(anchor.x).strength(0.15))  // REDUCED: 0.2 → 0.15 (looser anchoring)
+        .force('y', d3.forceY(anchor.y).strength(0.15))  // REDUCED: 0.2 → 0.15 (looser anchoring)
         .alpha(1)
         .alphaDecay(0.05);
     };

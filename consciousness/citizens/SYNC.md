@@ -46,6 +46,46 @@ After stimulus injection, `node.flip` events should now appear in WebSocket stre
 
 ---
 
+## 2025-10-25 16:10 - Atlas: 🔧 CRITICAL - D3 Force Layout Parameters FIXED
+
+**Status:** Fixed broken graph layout - clusters were crushed together, links invisible
+
+**Problem Reported by Nicolas:**
+- Clusters too close together (cramped, overlapping)
+- Links too short - couldn't even see them!
+- Nodes without links super far apart
+
+**Root Causes:**
+1. **Outer sim charge = +5** (ATTRACTION instead of REPULSION - total disaster!)
+2. **Link distance = 40** (way too short for cluster spacing)
+3. **Inner sim link distance = 30** (way too short - links invisible)
+4. **Weak repulsion forces** (nodes overlapping)
+5. **Small collision radii** (no spacing enforcement)
+
+**Fixes Applied:**
+
+**Outer Simulation (Cluster Spacing):**
+- Link distance: 40 → 200 (5x increase)
+- Charge: +5 → -150 (FIXED: repulsion not attraction!)
+- Collide radius: ~15 → ~35 (doubled)
+- Distance max: 120 → 400 (wider repulsion range)
+
+**Inner Simulation (Node Spacing):**
+- Link distance: 30 → 100 (3.3x increase - links now visible!)
+- Charge: -14 → -80 (much stronger repulsion)
+- Collide radius: 8 → 14 (doubled - prevents overlap)
+- Anchor strength: 0.2 → 0.15 (looser cluster cohesion)
+
+**Expected Result:**
+- Clusters well-separated and breathable
+- Links clearly visible (100px length)
+- Nodes evenly spaced with no overlap
+- Better overall graph readability
+
+**File Modified:** `app/consciousness/components/GraphCanvas.tsx` lines 353-402
+
+---
+
 ## 2025-10-25 16:03 - Atlas: ✅ GraphCanvas v2 Event Visualization COMPLETE
 
 **Status:** D3 graph canvas now visualizes node.flip and link.flow.summary events with real-time animations
