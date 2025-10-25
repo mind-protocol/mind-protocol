@@ -877,6 +877,16 @@ class ProcessManager:
                 logger.info(f"  Killed {killed} process(es) on port {port} ({service})")
                 killed_count += killed
 
+
+        # Clean up PID lock files to prevent singleton guard blocking restarts
+        lock_dir = MIND_PROTOCOL_ROOT / ".locks"
+        if lock_dir.exists():
+            for lock_file in lock_dir.glob("*.pid"):
+                try:
+                    lock_file.unlink()
+                    logger.info(f"  Removed stale PID lock: {lock_file.name}")
+                except Exception as e:
+                    logger.debug(f"  Could not remove {lock_file.name}: {e}")
         if killed_count == 0:
             logger.info("  ✅ All critical ports already clear")
         else:

@@ -1076,8 +1076,8 @@ async def get_telemetry_counters():
             "status": "no_engines_running"
         }
 
-    # Get broadcaster from first engine
-    first_engine = engines[0]
+    # Get broadcaster from first engine (engines is a dict, get first value)
+    first_engine = next(iter(engines.values()))
     broadcaster = first_engine.broadcaster
 
     # Get counter stats

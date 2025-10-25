@@ -32,7 +32,7 @@ interface EntityGraphViewProps {
   subentities: Subentity[];
   workingMemory: Set<string>;
   linkFlows: Map<string, number>;
-  recentFlips: Array<{ node_id: string; direction: 'on' | 'off'; timestamp: number }>;
+  recentFlips: Array<{ node_id: string; direction: 'on' | 'off'; dE: number; timestamp: number }>;
 }
 
 /**

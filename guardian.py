@@ -384,7 +384,7 @@ def main():
                 launcher_log_file = open(launcher_log_path, 'a', encoding='utf-8', buffering=1)  # Line buffered
 
                 launcher_process = subprocess.Popen(
-                    [sys.executable, str(LAUNCHER_SCRIPT)],
+                    [sys.executable, str(LAUNCHER_SCRIPT)],  # VICTOR: No flags = full system (dashboard included)
                     env=env,
                     stdout=launcher_log_file,  # Log to file for debugging
                     stderr=subprocess.STDOUT  # Merge stderr into stdout

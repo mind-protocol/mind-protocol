@@ -22,7 +22,7 @@ interface PixiCanvasProps {
   selectedSubentity?: string;
   workingMemory?: Set<string>;
   linkFlows?: Map<string, number>;
-  recentFlips?: Array<{ node_id: string; direction: 'on' | 'off'; timestamp: number }>;
+  recentFlips?: Array<{ node_id: string; direction: 'on' | 'off'; dE: number; timestamp: number }>;
 }
 
 export function PixiCanvas({
@@ -109,7 +109,7 @@ export function PixiCanvas({
       nodeCount: stats.nodeCount,
       linkCount: stats.linkCount,
     });
-  }, [nodes, links, subentities, selectedSubentity]); // operations excluded - changes too frequently
+  }, [nodes, links, subentities, selectedSubentity, workingMemory, linkFlows, recentFlips]); // operations excluded - changes too frequently
 
   // Handle window resize
   useEffect(() => {
@@ -181,8 +181,8 @@ export function PixiCanvas({
   }, []);
 
   return (
-    <div className="relative w-full h-full">
-      {/* PixiJS canvas container */}
+    <div className="relative w-full h-full" style={{ transform: 'translateX(-256px)' }}>
+      {/* PixiJS canvas container - offset left to center in available space (chat panel right) */}
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Stats overlay (debugging) */}

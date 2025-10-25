@@ -77,21 +77,59 @@ export default function ConsciousnessHealthDashboard({
   // Compute average health metrics over window
   const avgHealth = useMemo((): HealthMetrics => {
     if (windowedEvents.length === 0) {
-      return { flow_state: 0, coherence_alignment: 0, multiplicity_health: 0, overall_health: 0 };
+      return {
+        flow_state: 0,
+        coherence_alignment: 0,
+        multiplicity_health: 0,
+        overall_health: 0,
+        thrashing_detected: false,
+        wm_challenge_balance: 0,
+        engagement: 0,
+        skill_demand_match: 0,
+        resonance_dominance_ratio: 0,
+        distinct_entities_coactive: 0,
+        co_activation_stability: 0
+      };
     }
 
     const sums = windowedEvents.reduce((acc, event) => ({
       flow_state: acc.flow_state + event.flow_state,
       coherence_alignment: acc.coherence_alignment + event.coherence_alignment,
       multiplicity_health: acc.multiplicity_health + event.multiplicity_health,
-      overall_health: acc.overall_health + event.overall_health
-    }), { flow_state: 0, coherence_alignment: 0, multiplicity_health: 0, overall_health: 0 });
+      overall_health: acc.overall_health + event.overall_health,
+      wm_challenge_balance: acc.wm_challenge_balance + event.wm_challenge_balance,
+      engagement: acc.engagement + event.engagement,
+      skill_demand_match: acc.skill_demand_match + event.skill_demand_match,
+      resonance_dominance_ratio: acc.resonance_dominance_ratio + event.resonance_dominance_ratio,
+      distinct_entities_coactive: acc.distinct_entities_coactive + event.distinct_entities_coactive,
+      co_activation_stability: acc.co_activation_stability + event.co_activation_stability,
+      thrashing_count: acc.thrashing_count + (event.thrashing_detected ? 1 : 0)
+    }), {
+      flow_state: 0,
+      coherence_alignment: 0,
+      multiplicity_health: 0,
+      overall_health: 0,
+      wm_challenge_balance: 0,
+      engagement: 0,
+      skill_demand_match: 0,
+      resonance_dominance_ratio: 0,
+      distinct_entities_coactive: 0,
+      co_activation_stability: 0,
+      thrashing_count: 0
+    });
 
     return {
       flow_state: sums.flow_state / windowedEvents.length,
       coherence_alignment: sums.coherence_alignment / windowedEvents.length,
       multiplicity_health: sums.multiplicity_health / windowedEvents.length,
-      overall_health: sums.overall_health / windowedEvents.length
+      overall_health: sums.overall_health / windowedEvents.length,
+      thrashing_detected: sums.thrashing_count > windowedEvents.length * 0.5, // >50% thrashing
+      wm_challenge_balance: sums.wm_challenge_balance / windowedEvents.length,
+      engagement: sums.engagement / windowedEvents.length,
+      skill_demand_match: sums.skill_demand_match / windowedEvents.length,
+      resonance_dominance_ratio: sums.resonance_dominance_ratio / windowedEvents.length,
+      distinct_entities_coactive: sums.distinct_entities_coactive / windowedEvents.length,
+      co_activation_stability: sums.co_activation_stability / windowedEvents.length
     };
   }, [windowedEvents]);
 

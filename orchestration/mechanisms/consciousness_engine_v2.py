@@ -528,11 +528,15 @@ class ConsciousnessEngineV2:
                     source_type=source_type
                 )
 
-                # Apply injections to nodes
+                # Apply injections to nodes (dual-write to E and energy_runtime)
                 for injection in result.injections:
                     node = self.graph.get_node(injection['item_id'])
                     if node:
-                        node.add_energy(injection['delta_energy'])
+                        delta = injection['delta_energy']
+                        # Update latent energy (persisted to DB)
+                        node.E = max(0.0, min(100.0, node.E + delta))
+                        # Update runtime energy (used by diffusion/decay/flip tracking)
+                        node.energy_runtime = max(0.0, min(100.0, node.energy_runtime + delta))
                         # Pass B: Mark node dirty after energy change
                         if self._persist_enabled:
                             self._mark_node_dirty_if_changed(injection['item_id'])
@@ -870,9 +874,9 @@ class ConsciousnessEngineV2:
             now = time.time()
             if now - self._flip_last_emit >= 1.0 / self._flip_fps:
                 changed = []
-                gi = self.graph.node_index  # id -> node
+                gi = self.graph.nodes  # id -> node (FIXED: node_index -> nodes)
                 for nid, node in gi.items():
-                    E_now = float(getattr(node, "energy_runtime", 0.0))  # 0..100 units
+                    E_now = float(getattr(node, "energy_runtime", 0.0))  # Runtime energy (dynamics)
                     E_prev = self._last_E.get(nid, E_now)
                     dE = E_now - E_prev
                     if dE != 0.0:

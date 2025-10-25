@@ -38,8 +38,8 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
   const clusterAnchors = useRef<Map<string, { x: number; y: number }>>(new Map());
   const innerSimulations = useRef<Map<string, d3.Simulation<any, any>>>(new Map());
 
-  // Emotion coloring state
-  const { emotionState } = useWebSocket();
+  // Emotion coloring state + v2 event streams (node.flip, link.flow)
+  const { emotionState, v2State } = useWebSocket();
 
   // Track emotion display states for hysteresis (per node and link)
   const emotionDisplayStates = useRef<Map<string, EmotionDisplayState>>(new Map());
@@ -766,6 +766,117 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       (simulation as any).force('collision', null);
     };
   }, [nodes, links, selectedSubentity, expandedClusters]);
+
+  // Visualize node.flip events (energy deltas) with temporary glows
+  useEffect(() => {
+    if (!svgRef.current || !v2State || !v2State.recentFlips || v2State.recentFlips.length === 0) return;
+
+    const svg = d3.select(svgRef.current);
+
+    // Apply flip effects to recently flipped nodes
+    v2State.recentFlips.forEach(flip => {
+      // Find the node element by node_id
+      const nodeElement = svg.selectAll('text')
+        .filter((d: any) => d && (d.id === flip.node_id || d.node_id === flip.node_id));
+
+      if (!nodeElement.empty()) {
+        const dE = flip.dE;
+        const isPositive = dE > 0;
+        const magnitude = Math.abs(dE);
+
+        // Determine glow color and intensity based on energy delta
+        const glowColor = isPositive ? '34, 197, 94' : '239, 68, 68'; // green (positive) or red (negative) RGB
+        const glowSize = 10 + (magnitude * 60); // Scale glow with energy delta magnitude
+        const opacity = Math.min(0.95, 0.5 + (magnitude * 2)); // Cap at 0.95
+
+        // Apply temporary glow pulse with transition
+        nodeElement
+          .transition()
+          .duration(200)
+          .style('filter', `url(#wireframe-glow) drop-shadow(0 0 ${glowSize}px rgba(${glowColor}, ${opacity})) drop-shadow(0 0 ${glowSize/2}px rgba(${glowColor}, ${opacity}))`)
+          .transition()
+          .delay(800)
+          .duration(1000)
+          .style('filter', function(d: any) {
+            // Fade back to normal filters (existing glow logic)
+            const activityGlow = getNodeGlow(d);
+            const hasGold = shouldApplyGoldShimmer(d);
+            const nodeId = d.id || d.node_id;
+
+            let filterStr = 'url(#wireframe-glow)';
+
+            // Re-apply subentity glow if active
+            const now = Date.now();
+            const workingMemoryWindow = 10000;
+            if (d.last_traversal_time && d.energy && d.energy > 0 && (now - d.last_traversal_time) < workingMemoryWindow) {
+              filterStr += ' url(#subentity-glow-default)';
+            }
+
+            if (hasGold) filterStr += ' url(#gold-shimmer)';
+            if (activityGlow !== 'none') filterStr += ` ${activityGlow}`;
+            return filterStr;
+          });
+      }
+    });
+  }, [v2State?.recentFlips]);
+
+  // Visualize link.flow.summary events with temporary thickness boost
+  useEffect(() => {
+    if (!svgRef.current || !v2State || !v2State.linkFlows || v2State.linkFlows.size === 0) return;
+
+    const svg = d3.select(svgRef.current);
+
+    // Apply flow effects to active links
+    v2State.linkFlows.forEach((flowVolume, linkId) => {
+      // Find the link element by link_id
+      const linkElement = svg.selectAll('line')
+        .filter((d: any) => {
+          if (!d) return false;
+          const id = d.id || `${typeof d.source === 'object' ? d.source.id : d.source}-${typeof d.target === 'object' ? d.target.id : d.target}`;
+          return id === linkId;
+        });
+
+      if (!linkElement.empty()) {
+        // Get current base width
+        const linkData: any = linkElement.datum();
+        const baseWidth = getLinkThickness(linkData);
+
+        // Calculate flow boost (scale with flow volume)
+        const flowBoost = Math.min(12, flowVolume * 8); // Add up to 12px for high flow
+
+        // Apply temporary width increase and opacity boost
+        linkElement
+          .transition()
+          .duration(300)
+          .attr('stroke-width', baseWidth + flowBoost)
+          .attr('stroke-opacity', 1.0)
+          .style('filter', 'drop-shadow(0 0 4px currentColor)') // Enhanced glow during flow
+          .transition()
+          .delay(500)
+          .duration(700)
+          .attr('stroke-width', baseWidth)
+          .attr('stroke-opacity', function(d: any) {
+            const linkId = d.id || `${typeof d.source === 'object' ? d.source.id : d.source}-${typeof d.target === 'object' ? d.target.id : d.target}`;
+            const hasEmotion = emotionState.linkEmotions && emotionState.linkEmotions.has(linkId);
+            if (hasEmotion) return 0.85;
+            return isNewLink(d) ? 0.9 : 0.7;
+          })
+          .style('filter', function(d: any) {
+            // Restore original filter logic
+            const linkId = d.id || `${typeof d.source === 'object' ? d.source.id : d.source}-${typeof d.target === 'object' ? d.target.id : d.target}`;
+            const linkEmotion = emotionState.linkEmotions && emotionState.linkEmotions.get(linkId);
+
+            if (linkEmotion && linkEmotion.magnitude > 0.3) {
+              return 'drop-shadow(0 0 3px currentColor)';
+            }
+            if (isNewLink(d)) {
+              return 'drop-shadow(0 0 2px currentColor)';
+            }
+            return 'none';
+          });
+      }
+    });
+  }, [v2State?.linkFlows, emotionState]);
 
   // Handle node focus from CLAUDE_DYNAMIC.md clicks
   // IMPORTANT: Empty dependency array to prevent listener accumulation

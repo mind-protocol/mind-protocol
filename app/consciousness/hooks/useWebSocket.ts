@@ -11,6 +11,7 @@ import type {
   FrameStartEvent,
   WmEmitEvent,
   NodeFlipEvent,
+  NodeFlipRecord,
   LinkFlowSummaryEvent,
   FrameEndEvent,
   EmotionColoringState,
@@ -239,8 +240,17 @@ export function useWebSocket(): WebSocketStreams {
         }
 
         case 'node.flip': {
+          const flipEvent = data as NodeFlipEvent;
           setV2State(prev => {
-            const updated = [...prev.recentFlips, data as NodeFlipEvent];
+            // Unpack batch into individual flip records
+            const newFlips = flipEvent.nodes.map(node => ({
+              node_id: node.id,
+              direction: (node.dE > 0 ? 'on' : 'off') as 'on' | 'off',
+              dE: node.dE,
+              timestamp: Date.now()
+            }));
+
+            const updated = [...prev.recentFlips, ...newFlips];
             return {
               ...prev,
               recentFlips: updated.slice(-MAX_NODE_FLIPS)
@@ -259,7 +269,7 @@ export function useWebSocket(): WebSocketStreams {
 
             let hasChanges = false;
             for (const flow of flowEvent.flows) {
-              if (prev.linkFlows.get(flow.link_id) !== flow.count) {
+              if (prev.linkFlows.get(flow.link_id) !== flow.flow) {
                 hasChanges = true;
                 break;
               }
@@ -271,7 +281,7 @@ export function useWebSocket(): WebSocketStreams {
 
             const newFlows = new Map(prev.linkFlows);
             flowEvent.flows.forEach(flow => {
-              newFlows.set(flow.link_id, flow.count);
+              newFlows.set(flow.link_id, flow.flow);
             });
             return {
               ...prev,

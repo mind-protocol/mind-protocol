@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-25_16-06-15",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-25T14:06:15.690128+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T14:06:15.690128+00:00",
+      "content": "also one big problem is the entities in the graph show 0 nodes belong to"
+    }
+  ],
+  "last_updated": "2025-10-25T14:06:15.690128+00:00",
+  "message_count": 1
+}

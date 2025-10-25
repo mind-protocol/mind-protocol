@@ -139,16 +139,32 @@ export interface WmEmitEvent {
 /**
  * Node Flip Event (v2)
  *
- * Emitted when a node crosses activation threshold.
+ * Emitted when nodes change energy (top-K by |dE|).
+ * Sent as a batch for efficiency.
  */
 export interface NodeFlipEvent {
   type: 'node.flip';
   v: '2';
-  kind: 'node.flip';
   frame_id: number;
+  citizen_id: string;
+  nodes: Array<{
+    id: string;                    // Node ID
+    E: number;                     // Current energy (0-100)
+    dE: number;                    // Energy delta since last emit
+  }>;
+}
+
+/**
+ * Individual Node Flip Record
+ *
+ * Stored in V2ConsciousnessState.recentFlips for visualization.
+ * Unpacked from batch NodeFlipEvent.
+ */
+export interface NodeFlipRecord {
   node_id: string;
-  direction: 'on' | 'off';         // Activated or deactivated
-  entity_id?: string;              // Which subentity caused the flip
+  direction: 'on' | 'off';         // Activated (dE > 0) or deactivated (dE < 0)
+  dE: number;                      // Energy delta
+  timestamp: number;               // When this flip occurred
 }
 
 /**
@@ -161,10 +177,10 @@ export interface LinkFlowSummaryEvent {
   v: '2';
   kind: 'link.flow.summary';
   frame_id: number;
+  citizen_id: string;
   flows: Array<{
     link_id: string;
-    count: number;                 // Number of traversals this frame
-    entity_ids: string[];          // Which subentities traversed
+    flow: number;                  // Energy flow amount this frame
   }>;
 }
 
@@ -742,8 +758,8 @@ export interface V2ConsciousnessState {
 
   // Working memory and traversal
   workingMemory: Set<string>;       // Node IDs currently in working memory
-  recentFlips: NodeFlipEvent[];     // Recent threshold crossings (last 20)
-  linkFlows: Map<string, number>;   // Link ID -> traversal count this frame
+  recentFlips: NodeFlipRecord[];    // Recent energy changes (last 20)
+  linkFlows: Map<string, number>;   // Link ID -> energy flow this frame
 }
 
 /**
@@ -799,6 +815,14 @@ export interface WebSocketStreams {
   // Priority 6: Phenomenology health events
   phenomenologyMismatchEvents: PhenomenologyMismatchEvent[];
   phenomenologyHealthEvents: PhenomenologicalHealthEvent[];
+
+  // Subentity activation snapshots (for Active Subentities panel)
+  subentitySnapshots: Record<string, {
+    active: Array<{id: string; name: string; energy: number; theta: number}>;
+    wm: Array<{id: string; name: string; share: number}>;
+    frame: number;
+    t: number;
+  }>;
 
   // Connection state
   connectionState: WebSocketState;

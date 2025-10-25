@@ -1,10 +1,15 @@
 # LV2 File & Process Telemetry
 
-**Version:** 1.0
-**Status:** Specification
+**Version:** 1.2
+**Status:** Specification (Production-Ready)
 **Owner:** Luca (substrate), Ada (orchestration), Atlas (implementation)
 **Created:** 2025-10-25
-**Last Updated:** 2025-10-25
+**Last Updated:** 2025-10-25 21:15
+
+**Changelog:**
+- **v1.2 (2025-10-25 21:15):** Production hardening. Added ring buffer counters (app-layer maintained, 60×1-min, 24×1-hour buckets). Canonical path normalization (lowercase, prevents Windows case-mismatch duplicates). Enhanced link metadata (DEPENDS_ON: confidence_reason; IMPLEMENTS: anchor_text). Safety rails (extended exclusions: .vscode/, .idea/, .pytest_cache/; magic header binary detection; bounded queue with disk spillover; deduplication; debouncing). ProcessExec env_snapshot allowlist (security). Most recent failure tracking.
+- **v1.1 (2025-10-25 20:45):** Complete rewrite with counter-based ProcessExec approach. File nodes gain execution counters (exec_count_1h/24h, failure_count_24h, avg_duration_ms). ProcessExec nodes now sparse (forensics only: exit≠0, duration>60s, forensics flag) with TTL=7 days. Integrated Chunk-based knowledge architecture (RELATES_TO links). Updated formation logic, Cypher templates, acceptance tests.
+- **v1.0 (2025-10-25 20:15):** Initial specification with node-per-execution ProcessExec approach (deprecated).
 
 ---
 
@@ -60,13 +65,18 @@ File System & Process Activity
 
 **Purpose:** Represents a file in the workspace as L2 consciousness substrate.
 
+**Identity & Normalization:**
+- **Canonical key:** `name` = lowercase absolute path (prevents Windows case-mismatch duplicates)
+- **Display path:** `metadata.original_path` preserves filesystem case for UI
+- **Rename handling:** Old node marked `invalid_at`, new node created with SUPERSEDES link
+
 **Schema:**
 ```typescript
 interface FileNode {
   // Universal node attributes (inherited)
   node_type: "File"
-  name: string                    // Unique identifier: normalized path
-  description: string             // "File: {path} ({ext}, {size})"
+  name: string                    // CANONICAL: lowercase absolute path (e.g., "c:\\users\\reyno\\script.py")
+  description: string             // "File: {original_path} ({ext}, {size})"
   created_at: datetime
   created_by: string             // "lv2_file_observer"
   confidence: float              // 1.0 (direct observation)
@@ -77,23 +87,38 @@ interface FileNode {
   substrate: "organizational"    // N2 graph
 
   // Bitemporal
-  valid_at: datetime             // File creation time
+  valid_at: datetime             // File creation time (or first observation)
   invalid_at: datetime | null    // File deletion time
-  expired_at: datetime | null    // Node superseded (rename)
+  expired_at: datetime | null    // TTL expiry (30 days after invalid_at)
 
   // File-specific metadata (JSON column)
   metadata: {
-    path: string                 // Absolute path
+    original_path: string        // Filesystem path with original case (for display)
     rel_path: string             // Relative to workspace root
-    hash: string                 // SHA256 of content
+    hash: string                 // SHA256 of content (up to 50MB files)
     size_bytes: int              // File size
-    ext: string                  // File extension
+    ext: string                  // File extension (lowercase)
     lang: string | null          // Language (python, typescript, markdown, etc.)
-    mtime: datetime              // Last modified time
+    mtime: datetime              // Last modified timestamp
     owner: string                // Created by which citizen/service
     is_tracked: boolean          // Git tracked?
     last_commit_sha: string | null
     purpose: string | null       // Extracted from docstring/header comment
+
+    // Execution counters (ring-buffer based, app-layer computed)
+    exec_count_1h: int           // Sum of last 60 1-min buckets
+    exec_count_24h: int          // Sum of last 24 1-hour buckets
+    last_exec_ts: datetime | null // Most recent execution timestamp
+    avg_duration_ms: float | null // EMA: 0.9*old + 0.1*new
+    exec_sample_count: int       // Number of executions used in avg (guards early skew)
+
+    // Failure tracking
+    failure_count_24h: int       // Failed executions (exit!=0) in 24h
+    failure_most_recent: {       // Most recent failure details
+      exit_code: int
+      stderr_excerpt: string     // Last 200 chars
+      timestamp_ms: datetime
+    } | null
   }
 }
 ```
@@ -124,39 +149,149 @@ def compute_file_base_weight(file_node: FileNode) -> float:
     return min(size_factor + recency_factor + type_factor, 1.0)
 ```
 
+**Ring Buffer Counter Implementation:**
+
+Execution counters use **ring buffers** (app-layer maintained) to provide precise sliding windows without race conditions:
+
+```python
+# App-layer ring buffer structure (not stored in FalkorDB)
+class FileExecutionTracking:
+    def __init__(self):
+        self.buckets_1h = [0] * 60    # 60 × 1-minute buckets
+        self.buckets_24h = [0] * 24   # 24 × 1-hour buckets
+        self.current_bucket_1h = 0    # Index into 1h buckets
+        self.current_bucket_24h = 0   # Index into 24h buckets
+        self.last_rotation_1h = time.time()
+        self.last_rotation_24h = time.time()
+
+    def record_execution(self, duration_ms: float, exit_code: int):
+        """Record execution and rotate buckets if needed."""
+        now = time.time()
+
+        # Rotate 1-minute buckets if needed
+        elapsed_min = int((now - self.last_rotation_1h) / 60)
+        if elapsed_min > 0:
+            for _ in range(min(elapsed_min, 60)):
+                self.current_bucket_1h = (self.current_bucket_1h + 1) % 60
+                self.buckets_1h[self.current_bucket_1h] = 0
+            self.last_rotation_1h = now
+
+        # Rotate 1-hour buckets if needed
+        elapsed_hr = int((now - self.last_rotation_24h) / 3600)
+        if elapsed_hr > 0:
+            for _ in range(min(elapsed_hr, 24)):
+                self.current_bucket_24h = (self.current_bucket_24h + 1) % 24
+                self.buckets_24h[self.current_bucket_24h] = 0
+            self.last_rotation_24h = now
+
+        # Increment current buckets
+        self.buckets_1h[self.current_bucket_1h] += 1
+        self.buckets_24h[self.current_bucket_24h] += 1
+
+    def get_counts(self) -> tuple:
+        """Compute current sliding window sums."""
+        return (sum(self.buckets_1h), sum(self.buckets_24h))
+```
+
+**FalkorDB Storage:**
+
+Only computed sums are stored (not ring buffers):
+
+```cypher
+MERGE (f:File {name: $canonical_path})
+  SET f.metadata.exec_count_1h = $sum_1h,
+      f.metadata.exec_count_24h = $sum_24h,
+      f.metadata.last_exec_ts = $timestamp,
+      f.metadata.avg_duration_ms = CASE
+          WHEN f.metadata.avg_duration_ms IS NULL THEN $duration_ms
+          ELSE 0.9 * f.metadata.avg_duration_ms + 0.1 * $duration_ms
+      END,
+      f.metadata.exec_sample_count = coalesce(f.metadata.exec_sample_count, 0) + 1,
+      f.metadata.failure_count_24h = CASE
+          WHEN $exit_code <> 0 THEN coalesce(f.metadata.failure_count_24h, 0) + 1
+          ELSE coalesce(f.metadata.failure_count_24h, 0)
+      END,
+      f.metadata.failure_most_recent = CASE
+          WHEN $exit_code <> 0 THEN $failure_details
+          ELSE f.metadata.failure_most_recent
+      END
+```
+
+**Benefits:**
+- No race conditions (atomic bucket updates)
+- Precise "last N minutes" (not approximate periodic resets)
+- Minimal DB writes (computed sums only, not full ring buffer)
+
 **Lifecycle:**
 - **Creation:** File created/discovered → File node formed
 - **Update:** File modified → update hash, mtime, size; generate stimulus
-- **Rename:** Old node marked invalid_at, new node created with SUPERSEDES link
+- **Rename:** Old node marked `invalid_at`, new node created with SUPERSEDES link
 - **Delete:** Node marked invalid_at, expired_at set
 - **TTL:** Deleted files expire from graph after 30 days (configurable)
 
 ---
 
-### 2.2 ProcessExec Node
+### 2.2 Process Execution Tracking (Counter-Based)
 
-**Purpose:** Represents a process execution (script run, command invocation) as L2 substrate.
+**Purpose:** Track script/command executions as **counters on File nodes** (default) or **sparse forensics nodes** (anomalies only).
 
-**Schema:**
+**Architecture Decision:**
+Process executions are **hot data** - high-frequency events (100s/hour) that need efficient querying. Creating a node per execution causes graph flooding. Instead:
+
+1. **Default: Counters on File nodes** - Execution counts, timestamps, durations stored as File node properties
+2. **Sparse: ProcessExec forensics nodes** - Created only for anomalies (exit≠0, duration>60s, forensics flag) with TTL=7 days
+
+**Counter Update (Default Behavior):**
+
+Every process execution updates the target File node counters via Cypher:
+
+```cypher
+MERGE (f:File {path: $path})
+  SET f.last_exec_ts = $t_ms,
+      f.exec_count_24h = coalesce(f.exec_count_24h, 0) + 1,
+      f.exec_count_1h = coalesce(f.exec_count_1h, 0) + 1,
+      f.avg_duration_ms = CASE
+          WHEN f.avg_duration_ms IS NULL THEN $duration_ms
+          ELSE 0.9 * f.avg_duration_ms + 0.1 * $duration_ms
+      END,
+      f.failure_count_24h = coalesce(f.failure_count_24h, 0) +
+          CASE WHEN $exit_code <> 0 THEN 1 ELSE 0 END
+```
+
+**Counter Decay (Windowed):**
+
+Application layer maintains sliding windows:
+- `exec_count_1h`: Reset every hour (or maintain timestamped ring buffer)
+- `exec_count_24h`: Reset daily
+- `failure_count_24h`: Reset daily
+
+**Forensics Node (Anomaly Behavior):**
+
+Create ProcessExec node only when:
+- `exit_code != 0` (failure)
+- `duration_ms > 60000` (long-running, >60s)
+- `forensics=true` flag (stimulus-triggered, needs audit trail)
+
+**ProcessExec Schema (Sparse Forensics Only):**
 ```typescript
 interface ProcessExecNode {
   // Universal node attributes
   node_type: "ProcessExec"
   name: string                   // Unique: "{citizen_id}:exec:{timestamp_ms}"
-  description: string            // "Executed: {cmd} {args[:50]}"
+  description: string            // "FAILED: {cmd} exit={exit_code}" or "LONG: {cmd} {duration}s"
   created_at: datetime
   created_by: string            // Citizen ID or "system"
   confidence: float             // 1.0 (direct observation)
   formation_trigger: "automated_recognition"
-  base_weight: float            // Computed from exit_code/duration
+  base_weight: float            // 0.7 (anomalies are high-weight)
   reinforcement_weight: float   // 0.0 initially
-  decay_rate: float             // 0.98 (faster decay than files)
+  decay_rate: float             // 0.98 (faster decay)
   substrate: "organizational"   // N2 graph
 
   // Bitemporal
   valid_at: datetime            // Process start time
   invalid_at: datetime          // Process end time
-  expired_at: datetime | null   // Node TTL expiry
+  expired_at: datetime | null   // TTL expiry (7 days)
 
   // ProcessExec-specific metadata
   metadata: {
@@ -169,42 +304,111 @@ interface ProcessExecNode {
     duration_ms: int            // Execution duration
     citizen_id: string          // Which citizen ran this
     triggered_by: string | null // stimulus_id if stimulus-triggered
-    stdout_excerpt: string      // First 500 chars
-    stderr_excerpt: string      // First 500 chars
-    env_snapshot: Record<string, string> // Key env vars
+    stdout_excerpt: string      // Last 500 chars of stdout
+    stderr_excerpt: string      // Last 500 chars of stderr
+    env_snapshot: Record<string, string> // ALLOWLIST ONLY (security)
+    anomaly_reason: "failure" | "long_duration" | "forensics" // Why node created
   }
 }
 ```
 
-**Base Weight Calculation:**
+**Environment Variable Allowlist (Security):**
+
+Only capture safe environment variables (avoid secrets):
+
 ```python
-def compute_process_base_weight(proc: ProcessExecNode) -> float:
-    """Compute base_weight for ProcessExec based on outcome and duration."""
-    # Exit code factor (failure = higher weight)
-    exit_weight = 0.5 if proc.metadata['exit_code'] != 0 else 0.2
+ENV_ALLOWLIST = [
+    'PATH',
+    'PYTHONPATH',
+    'NODE_ENV',
+    'NODE_PATH',
+    'VIRTUAL_ENV',
+    'CONDA_DEFAULT_ENV',
+    'SHELL',
+    'TERM',
+    'LANG',
+    'LC_ALL',
+    'HOME',
+    'USER',
+    'WORKSPACE_ROOT'
+]
 
-    # Duration factor (longer = more significant)
-    duration_sec = proc.metadata['duration_ms'] / 1000
-    duration_factor = min(0.3 * (duration_sec / 60), 0.3)  # Cap at 60s
-
-    # Command type factor
-    cmd_weight = {
-        'python': 0.2,
-        'npm': 0.15,
-        'git': 0.1,
-        'pytest': 0.25,
-        'bash': 0.1,
-    }
-    cmd_base = proc.metadata['cmd'].split('/')[-1]
-    type_factor = cmd_weight.get(cmd_base, 0.1)
-
-    return min(exit_weight + duration_factor + type_factor, 1.0)
+def capture_env_snapshot() -> dict:
+    """Capture environment snapshot (allowlist only)."""
+    return {k: os.environ.get(k) for k in ENV_ALLOWLIST if k in os.environ}
 ```
 
-**Lifecycle:**
-- **Creation:** Process starts → ProcessExec node formed
-- **Update:** Process ends → update exit_code, duration_ms, invalid_at
-- **TTL:** ProcessExec nodes expire after 7 days (configurable)
+**Never capture:**
+- Credentials: `AWS_SECRET_ACCESS_KEY`, `DATABASE_PASSWORD`, `API_KEY`, etc.
+- Tokens: `GITHUB_TOKEN`, `AUTH_TOKEN`, etc.
+- Private keys: Any variable ending in `_KEY`, `_SECRET`, `_TOKEN`, `_PASSWORD`
+
+**Forensics Node Creation (Cypher):**
+```cypher
+// Only on anomaly conditions
+CREATE (p:ProcessExec {
+  name: $name,
+  node_type: 'ProcessExec',
+  description: $description,
+  created_at: $now,
+  created_by: $citizen_id,
+  confidence: 1.0,
+  formation_trigger: 'automated_recognition',
+  base_weight: 0.7,
+  reinforcement_weight: 0.0,
+  decay_rate: 0.98,
+  substrate: 'organizational',
+  valid_at: $start_time,
+  invalid_at: $end_time,
+  expired_at: $now + 7*24*60*60*1000,  // TTL: 7 days
+  metadata: $metadata
+})
+
+MERGE (f:File {path: $script_path})
+CREATE (p)-[:EXECUTES {
+  energy: 0.8,
+  confidence: 1.0,
+  formation_trigger: 'direct_experience',
+  goal: 'Forensics link from anomalous execution to script',
+  mindstate: 'Anomaly tracking'
+}]->(f)
+
+RETURN p
+```
+
+**TTL Cleanup Job (Daily):**
+```cypher
+// Remove ProcessExec nodes older than 7 days
+MATCH (p:ProcessExec)
+WHERE p.expired_at < timestamp()
+DETACH DELETE p
+```
+
+**Performance Benefits:**
+- **100 executions** → 1 File node with updated counters, not 100 ProcessExec nodes
+- **Failure rate** → `failure_count_24h / exec_count_24h` queryable directly on File
+- **Hot files** → `exec_count_1h > 10` finds frequently-run scripts instantly
+- **Graph size** → Scales to millions of executions without node explosion
+
+**Query Examples:**
+
+```cypher
+// Find hot scripts (executed >10 times in last hour)
+MATCH (f:File) WHERE f.exec_count_1h > 10
+RETURN f.path, f.exec_count_1h, f.avg_duration_ms
+ORDER BY f.exec_count_1h DESC
+
+// Find failing scripts (>5 failures in 24h)
+MATCH (f:File) WHERE f.failure_count_24h > 5
+RETURN f.path, f.failure_count_24h, f.exec_count_24h
+ORDER BY f.failure_count_24h DESC
+
+// Forensics: recent anomalous executions
+MATCH (p:ProcessExec)-[:EXECUTES]->(f:File)
+WHERE p.created_at > timestamp() - 3600000  // Last hour
+RETURN p.metadata.cmd, p.metadata.exit_code, p.metadata.duration_ms, f.path
+ORDER BY p.created_at DESC
+```
 
 ---
 
@@ -240,8 +444,9 @@ interface DEPENDS_ON_Link {
     dep_type: "import" | "require" | "reference" | "config"
     line_number: int | null     // Where dependency declared
     is_direct: boolean          // Direct vs transitive
-    import_statement: string    // Original import line
+    import_statement: string    // Original import line (for tooling/debugging)
     detected_by: "ast_parser" | "regex_heuristic"
+    confidence_reason: string   // Why this confidence level (e.g., "AST-parsed Python import", "Regex fallback - AST failed")
   }
 }
 ```
@@ -255,9 +460,14 @@ interface DEPENDS_ON_Link {
 
 ### 3.2 IMPLEMENTS
 
-**Purpose:** File implements Task (from SYNC.md or task tracking).
+**Purpose:** File implements Task (code realization), or Chunk documents Task (knowledge representation).
 
-**Schema:**
+**Dual-Layer Implementation Tracking:**
+
+1. **Code Implementation:** `(File)-[:IMPLEMENTS]->(Task)` - Which code files implement task requirements
+2. **Knowledge Documentation:** `(Chunk)-[:RELATES_TO]->(Task)` - Which knowledge chunks document task specifications
+
+**File → Task IMPLEMENTS Schema:**
 ```typescript
 interface IMPLEMENTS_Link {
   source: string                // File node name
@@ -273,15 +483,56 @@ interface IMPLEMENTS_Link {
   metadata: {
     detected_by: "sync_md_parser" | "docstring_parser" | "manual"
     task_section: string | null // SYNC.md section
-    confidence_reason: string   // Why this link formed
+    anchor_text: string | null  // Text that triggered link (e.g., "`script.py` implements Task P2.1")
+    confidence_reason: string   // Why this link formed (for reviewability)
+  }
+}
+```
+
+**Chunk → Task RELATES_TO Schema:**
+```typescript
+interface RELATES_TO_Link {
+  source: string                // Chunk node chunk_id
+  target: string                // Task/Concept/Mechanism/File node name
+  link_type: "RELATES_TO"
+
+  energy: float                 // 0.6 (contextual)
+  confidence: float             // 0.9 (explicit reference) or 0.6 (inferred)
+  formation_trigger: "systematic_analysis"
+  goal: "Links knowledge chunk to related substrate node"
+  mindstate: "Knowledge graph building"
+
+  metadata: {
+    relation_type: "documents" | "references" | "depends_on" | "implements"
+    detected_by: "inline_marker" | "path_heuristic" | "embedding_similarity"
+    anchor_text: string | null  // Text triggering relation
   }
 }
 ```
 
 **Formation Logic:**
-- **SYNC.md Parser:** Extract task IDs/names from SYNC.md, match with file paths mentioned
-- **Docstring Parser:** Extract TODO/IMPLEMENTS comments from file headers
-- **Manual:** User-created links via API
+
+**File → Task (IMPLEMENTS):**
+- **SYNC.md Parser:** Extract task sections, find file path mentions (backtick-wrapped), create IMPLEMENTS(file, task)
+- **Docstring Parser:** Parse file headers for `TODO: #task_id` or `IMPLEMENTS: task_name` tags
+- **Manual:** User-created via API
+
+**Chunk → Task (RELATES_TO):**
+- **Inline Markers:** Parse chunk text for `` `[Task: P2.1.3]` `` or `#task_id` references
+- **Path Heuristics:** If chunk from `docs/specs/v2/autonomy/...`, relate to `Project:autonomy` tasks
+- **Embedding Similarity:** Vector search for task descriptions similar to chunk content (threshold >0.7)
+
+**Integration Benefit:**
+
+Query: "Show me everything about Task P2.1.3"
+```cypher
+MATCH (t:Task {id: 'P2.1.3'})
+OPTIONAL MATCH (f:File)-[:IMPLEMENTS]->(t)
+OPTIONAL MATCH (c:Chunk)-[:RELATES_TO]->(t)
+RETURN t, collect(f.path) as implementation_files, collect(c.text) as documentation_chunks
+```
+
+Result: Both *what code implements this* (Files) and *what knowledge documents this* (Chunks).
 
 ---
 
@@ -536,19 +787,46 @@ RETURN f
 
 ---
 
-### 5.4 Formation Logic: ProcessExec Node
+### 5.4 Formation Logic: Process Execution (Counter-Based)
 
 **Trigger:** `process.exec` signal
 
-**Steps:**
-1. **Create unique name:** `{citizen_id}:exec:{timestamp_ms}`
-2. **Extract metadata:** cmd, args, cwd, pid, ppid
-3. **Monitor process:** Track exit_code, duration_ms, stdout/stderr excerpts
-4. **Create node:** Insert with computed base_weight
-5. **Create EXECUTES link:** If cmd refers to a tracked script
-6. **Create GENERATES links:** Monitor file creation within 5s window
+**Default Behavior (Update Counters):**
 
-**Cypher (create):**
+**Steps:**
+1. **Resolve script path:** Extract script path from cmd (e.g., `python script.py` → `script.py`)
+2. **Update File counters:** Increment exec counts, update timestamps, rolling average duration
+3. **Generate stimulus:** If failure (exit≠0), create error stimulus
+
+**Cypher (counter update):**
+```cypher
+MERGE (f:File {path: $script_path})
+  SET f.last_exec_ts = $t_ms,
+      f.exec_count_24h = coalesce(f.exec_count_24h, 0) + 1,
+      f.exec_count_1h = coalesce(f.exec_count_1h, 0) + 1,
+      f.avg_duration_ms = CASE
+          WHEN f.avg_duration_ms IS NULL THEN $duration_ms
+          ELSE 0.9 * f.avg_duration_ms + 0.1 * $duration_ms
+      END,
+      f.failure_count_24h = coalesce(f.failure_count_24h, 0) +
+          CASE WHEN $exit_code <> 0 THEN 1 ELSE 0 END
+RETURN f
+```
+
+**Anomaly Behavior (Create Forensics Node):**
+
+**Trigger Conditions:**
+- `exit_code != 0` (failure)
+- `duration_ms > 60000` (long-running)
+- `forensics=true` flag (stimulus-triggered, audit trail needed)
+
+**Steps:**
+1. **Create ProcessExec node:** With forensics metadata
+2. **Create EXECUTES link:** Link to File node
+3. **Create GENERATES links:** If files created within 5s window
+4. **Generate error stimulus:** If failure
+
+**Cypher (forensics node):**
 ```cypher
 CREATE (p:ProcessExec {
   name: $name,
@@ -558,15 +836,46 @@ CREATE (p:ProcessExec {
   created_by: $citizen_id,
   confidence: 1.0,
   formation_trigger: 'automated_recognition',
-  base_weight: $base_weight,
+  base_weight: 0.7,
   reinforcement_weight: 0.0,
   decay_rate: 0.98,
   substrate: 'organizational',
   valid_at: $start_time,
   invalid_at: $end_time,
+  expired_at: $now + 604800000,  // TTL: 7 days
   metadata: $metadata
 })
+
+MERGE (f:File {path: $script_path})
+CREATE (p)-[:EXECUTES {
+  energy: 0.8,
+  confidence: 1.0,
+  formation_trigger: 'direct_experience',
+  goal: 'Forensics link from anomalous execution',
+  mindstate: 'Anomaly tracking'
+}]->(f)
+
 RETURN p
+```
+
+**Decision Flow:**
+```python
+def process_execution_signal(signal):
+    """Process execution signal - update counters or create forensics node."""
+    exit_code = signal['exit_code']
+    duration_ms = signal['duration_ms']
+    forensics = signal.get('forensics', False)
+
+    # Always update counters on File node
+    update_file_counters(signal['script_path'], signal)
+
+    # Create forensics node only on anomaly
+    if exit_code != 0 or duration_ms > 60000 or forensics:
+        create_forensics_node(signal)
+
+    # Generate stimulus if failure
+    if exit_code != 0:
+        emit_failure_stimulus(signal)
 ```
 
 ---
@@ -856,19 +1165,60 @@ def parse_sync_md_for_implements(sync_path: str) -> list[dict]:
 **Exclusions (Never Track):**
 ```python
 EXCLUDED_PATHS = [
+    # Package dependencies
     'node_modules/',
-    '.git/',
-    '__pycache__/',
-    'dist/',
-    'build/',
     'venv/',
     '.venv/',
+
+    # Build artifacts
+    'dist/',
+    'build/',
+    '__pycache__/',
+
+    # IDE & editor
+    '.vscode/',
+    '.idea/',
+
+    # Version control
+    '.git/',
+
+    # Test cache
+    '.pytest_cache/',
+    '.tox/',
+
+    # Python bytecode
     '*.pyc',
     '*.pyo',
     '*.pyd',
+
+    # OS files
     '.DS_Store',
     'Thumbs.db'
 ]
+```
+
+**Binary Detection:**
+
+Extension-based filtering is brittle. For files <100MB, use **magic header detection**:
+
+```python
+def is_binary_file(path: str) -> bool:
+    """Detect binary files by magic header (first 8192 bytes)."""
+    try:
+        with open(path, 'rb') as f:
+            chunk = f.read(8192)
+            if b'\x00' in chunk:  # Null bytes indicate binary
+                return True
+            # Check for common binary signatures
+            if chunk.startswith(b'\x89PNG') or chunk.startswith(b'GIF89'):
+                return True
+            if chunk.startswith(b'\xff\xd8\xff'):  # JPEG
+                return True
+            if chunk.startswith(b'%PDF'):
+                return True
+            return False
+    except:
+        return False  # If can't read, assume text
 ```
 
 **Inclusions (Priority Track):**
@@ -891,12 +1241,122 @@ PRIORITY_EXTENSIONS = [
 
 **Node Count Limits:**
 - **Max File nodes per citizen:** 10,000 (typical workspace)
-- **Max ProcessExec nodes:** 50,000 (with TTL cleanup)
+- **Max ProcessExec nodes:** ~100 concurrent (sparse forensics only, TTL=7 days)
 - **Max DEPENDS_ON links:** 100,000 (dense dependency graphs)
+
+**Counter-Based Scaling:**
+With counter-based approach, 1 million process executions → updates on ~1000 File nodes (scripts), not 1 million ProcessExec nodes. Graph size remains manageable.
 
 ---
 
-### 8.3 Rate Limiting
+### 8.3 Queue Safety & Backpressure
+
+**Bounded Channels with Spillover:**
+
+Prevent unbounded memory growth under signal bursts:
+
+```python
+class SignalQueue:
+    def __init__(self, max_memory_items: int = 10000):
+        self.memory_queue = deque(maxlen=max_memory_items)
+        self.disk_spillover = Path('.signals/spillover/')
+        self.disk_spillover.mkdir(parents=True, exist_ok=True)
+
+    def enqueue(self, signal: dict):
+        """Enqueue with overflow to disk."""
+        if len(self.memory_queue) < self.memory_queue.maxlen:
+            self.memory_queue.append(signal)
+        else:
+            # Spill oldest to disk
+            if self.memory_queue:
+                oldest = self.memory_queue.popleft()
+                self._spill_to_disk(oldest)
+            self.memory_queue.append(signal)
+
+    def _spill_to_disk(self, signal: dict):
+        """Write signal to disk with oldest-drop policy."""
+        spillover_files = list(self.disk_spillover.glob('*.jsonl'))
+        if len(spillover_files) > 1000:  # Max 1000 spillover files
+            # Drop oldest spillover file
+            oldest_file = min(spillover_files, key=lambda p: p.stat().st_mtime)
+            oldest_file.unlink()
+
+        filename = f"{signal['timestamp_ms']}.jsonl"
+        (self.disk_spillover / filename).write_text(json.dumps(signal))
+```
+
+**Deduplication:**
+
+Prevent processing duplicate signals:
+
+```python
+def dedupe_key(signal: dict) -> str:
+    """Generate dedup key for signal."""
+    if signal['type'].startswith('file.'):
+        # (path, hash) for file signals
+        return f"{signal['path']}:{signal.get('metadata', {}).get('hash', 'none')}"
+    elif signal['type'] == 'process.exec':
+        # (cmd, args, cwd, start_ts) for process signals
+        return f"{signal['cmd']}:{signal['args']}:{signal['cwd']}:{signal['timestamp_ms']}"
+    return f"{signal['type']}:{signal['timestamp_ms']}"
+
+class DedupFilter:
+    def __init__(self, ttl_seconds: int = 300):
+        self.seen = {}  # key -> expiry_time
+        self.ttl = ttl_seconds
+
+    def is_duplicate(self, signal: dict) -> bool:
+        """Check if signal is duplicate (within TTL)."""
+        key = dedupe_key(signal)
+        now = time.time()
+
+        # Cleanup expired keys
+        self.seen = {k: v for k, v in self.seen.items() if v > now}
+
+        if key in self.seen:
+            return True
+
+        self.seen[key] = now + self.ttl
+        return False
+```
+
+**Debouncing:**
+
+Coalesce rapid-fire signals for same path:
+
+```python
+class SignalDebouncer:
+    def __init__(self, delay_ms: int = 500):
+        self.pending = {}  # path -> (signal, timer)
+        self.delay = delay_ms / 1000
+
+    def debounce(self, signal: dict, callback):
+        """Debounce file signals - emit only after quiet period."""
+        if signal['type'] not in ['file.modified', 'file.created']:
+            callback(signal)  # No debounce for other types
+            return
+
+        path = signal['path']
+
+        # Cancel existing timer
+        if path in self.pending:
+            self.pending[path]['timer'].cancel()
+
+        # Set new timer
+        timer = Timer(self.delay, lambda: self._emit(path, callback))
+        self.pending[path] = {'signal': signal, 'timer': timer}
+        timer.start()
+
+    def _emit(self, path: str, callback):
+        """Emit debounced signal."""
+        if path in self.pending:
+            callback(self.pending[path]['signal'])
+            del self.pending[path]
+```
+
+---
+
+### 8.4 Rate Limiting
 
 **Signal Processing:**
 - **File signals:** Max 500/minute (watchdog debounce)
@@ -909,7 +1369,7 @@ PRIORITY_EXTENSIONS = [
 
 ---
 
-### 8.4 TTL Cleanup
+### 8.5 TTL Cleanup
 
 **Expiry Rules:**
 ```yaml
@@ -1280,42 +1740,96 @@ def test_typescript_import_creates_link():
 
 ### 10.3 Process Tracking Tests
 
-**Test 6: Process Execution Creates Node**
+**Test 6: Process Execution Updates File Counters**
 ```python
-def test_process_execution_creates_node():
-    """Test that script execution creates ProcessExec node."""
-    # Execute script
-    subprocess.run(['python', 'test_script.py'], cwd=workspace)
+def test_process_execution_updates_file_counters():
+    """Test that script execution updates File node counters (default behavior)."""
+    # Get initial counter values
+    result = db.query(f"MATCH (f:File {{path: 'test_script.py'}}) RETURN f")
+    initial_count = result[0].get('exec_count_24h', 0) if result else 0
 
+    # Execute script successfully
+    subprocess.run(['python', 'test_script.py'], cwd=workspace)
     time.sleep(2)
 
-    # Query ProcessExec node
+    # Verify counters updated
+    result = db.query(f"MATCH (f:File {{path: 'test_script.py'}}) RETURN f")
+    assert len(result) == 1
+    assert result[0]['exec_count_24h'] == initial_count + 1
+    assert result[0]['exec_count_1h'] >= 1
+    assert result[0]['last_exec_ts'] is not None
+    assert result[0]['avg_duration_ms'] is not None
+```
+
+**Test 7: Process Failure Creates Forensics Node**
+```python
+def test_process_failure_creates_forensics_node():
+    """Test that failed execution creates sparse ProcessExec forensics node."""
+    # Execute failing script
+    subprocess.run(['python', '-c', 'exit(1)'], cwd=workspace)
+    time.sleep(2)
+
+    # Verify forensics node created
     result = db.query(f"""
         MATCH (p:ProcessExec)
-        WHERE p.metadata.cmd CONTAINS 'python'
+        WHERE p.metadata.exit_code <> 0
         RETURN p
         ORDER BY p.created_at DESC
         LIMIT 1
     """)
     assert len(result) == 1
-    assert 'test_script.py' in result[0]['metadata']['args'][0]
-```
+    assert result[0]['metadata']['exit_code'] == 1
+    assert result[0]['metadata']['anomaly_reason'] == 'failure'
+    assert result[0]['expired_at'] is not None  # TTL set
 
-**Test 7: EXECUTES Link Created**
-```python
-def test_executes_link_created():
-    """Test that EXECUTES link connects ProcessExec to File."""
-    subprocess.run(['python', 'test_script.py'], cwd=workspace)
-    time.sleep(2)
-
+    # Verify EXECUTES link exists
     result = db.query(f"""
         MATCH (p:ProcessExec)-[e:EXECUTES]->(f:File)
-        WHERE f.name CONTAINS 'test_script.py'
+        WHERE p.metadata.exit_code <> 0
+        ORDER BY p.created_at DESC
+        LIMIT 1
         RETURN e
-        ORDER BY e.created_at DESC
+    """)
+    assert len(result) == 1
+```
+
+**Test 7b: Successful Execution Does Not Create Node**
+```python
+def test_successful_execution_no_node():
+    """Test that successful execution does NOT create ProcessExec node (counter-based)."""
+    # Execute successful script
+    subprocess.run(['python', '-c', 'exit(0)'], cwd=workspace)
+    time.sleep(2)
+
+    # Count ProcessExec nodes with exit_code=0
+    result = db.query(f"""
+        MATCH (p:ProcessExec)
+        WHERE p.metadata.cmd CONTAINS 'python'
+          AND p.metadata.exit_code = 0
+          AND p.created_at > timestamp() - 5000
+        RETURN count(p) as cnt
+    """)
+    assert result[0]['cnt'] == 0  # No nodes for successful executions
+```
+
+**Test 7c: Long-Duration Execution Creates Forensics Node**
+```python
+def test_long_duration_creates_forensics_node():
+    """Test that long-running execution (>60s) creates forensics node."""
+    # Execute long-running script
+    subprocess.run(['python', '-c', 'import time; time.sleep(61)'], cwd=workspace)
+    time.sleep(2)
+
+    # Verify forensics node created
+    result = db.query(f"""
+        MATCH (p:ProcessExec)
+        WHERE p.metadata.duration_ms > 60000
+        RETURN p
+        ORDER BY p.created_at DESC
         LIMIT 1
     """)
     assert len(result) == 1
+    assert result[0]['metadata']['anomaly_reason'] == 'long_duration'
 ```
 
 ---

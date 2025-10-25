@@ -229,6 +229,7 @@ export default function ConsciousnessPage() {
         recentFlips={v2State.recentFlips.map(flip => ({
           node_id: flip.node_id,
           direction: flip.direction,
+          dE: flip.dE,
           timestamp: Date.now()
         }))}
       />
@@ -269,9 +270,12 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
-      {/* Right Sidebar - Chat Panel (wider with left sidebar collapsed) */}
-      <div className="fixed top-16 bottom-0 right-0 z-40 w-[36rem]">
-        <ChatPanel />
+      {/* Right Sidebar - Chat Panel (wider for comfortable conversation) */}
+      <div className="fixed top-16 bottom-0 right-0 z-40 w-[48rem]">
+        <ChatPanel
+          onSelectCitizen={handleSelectCitizen}
+          activeCitizenId={currentGraphId?.replace('citizen_', '')}
+        />
       </div>
 
       {/* Detail panel - Modal overlay on node click */}
