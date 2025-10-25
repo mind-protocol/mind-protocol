@@ -1,5 +1,102 @@
 # Team Synchronization Log
 
+## 2025-10-25 18:15 - Atlas: ✅ MPSv3 Phase 1 COMPLETE → Handoff to Victor for Phase 2
+
+**Status:** MPSv3 core implementation complete. All 6 components + services.yaml delivered. Ready for isolation testing.
+
+**Phase 1 Deliverables:**
+
+**1. Core Components Implemented:**
+- ✅ `orchestration/services/mpsv3/singleton.py` (95 lines) - OS mutex (Windows) + flock (POSIX)
+- ✅ `orchestration/services/mpsv3/backoff.py` (46 lines) - Exponential backoff with quarantine
+- ✅ `orchestration/services/mpsv3/runner.py` (179 lines) - ServiceRunner with process groups + exit code handling
+- ✅ `orchestration/services/mpsv3/watcher.py` (73 lines) - Centralized file watcher with debouncing
+- ✅ `orchestration/services/mpsv3/registry.py` (66 lines) - ServiceRegistry for lifecycle management
+- ✅ `orchestration/mpsv3_supervisor.py` (125 lines) - Main supervisor with signal handling
+
+**2. Service Specifications:**
+- ✅ `orchestration/services/mpsv3/services.yaml` (94 lines) - 7 services defined:
+  - falkordb (CRITICAL, max_retries: 5)
+  - ws_api (CORE, max_retries: 3, watches `orchestration/**/*.py`)
+  - conversation_watcher (CORE, max_retries: 3)
+  - stimulus_injection (CORE, max_retries: 3)
+  - signals_collector (CORE, max_retries: 3)
+  - autonomy_orchestrator (OPTIONAL, max_retries: 3)
+  - dashboard (CORE, max_retries: 3)
+
+**3. Dependencies Verified:**
+- ✅ watchdog library installed and functional
+- ✅ PyYAML installed and functional
+- ✅ All imports tested successfully
+
+**Implementation Details:**
+
+**Singleton Lease:**
+- Windows: CreateMutex with `Global\MPSv3_Supervisor` name
+- POSIX: flock on `/tmp/MPSv3_Supervisor.lock`
+- Auto-releases on process death (eliminates stale lock problem)
+
+**Service Runner:**
+- Windows: Job Objects with KILL_ON_JOB_CLOSE flag
+- POSIX: setsid() + killpg() for process groups
+- Exit code semantics: 0=clean, 99=hot-reload, 78=quarantine, other=crash
+- Exponential backoff: 1s, 2s, 4s, 8s... max 60s with ±20% jitter
+
+**File Watcher:**
+- Single centralized watchdog.Observer for all services
+- 2-second debounce to prevent rapid restarts
+- Per-service file patterns (ws_api watches orchestration code, etc.)
+
+**Handoff to Victor for Phase 2:**
+
+**Testing Checklist (Isolation Test):**
+1. Stop current guardian/launcher
+2. Clear .launcher.lock and .locks/*.pid files
+3. Run: `python orchestration/mpsv3_supervisor.py`
+4. Verify: Singleton lease acquired (no "another instance" message)
+5. Verify: All 7 services start (check logs for PID messages)
+6. Verify: No port conflicts (3000, 6379, 8000, 8001, 8002, 8010 all bound)
+7. Verify: File watcher active (touch a .py file, see reload trigger)
+8. Test: Ctrl+C shutdown → verify clean termination of all services
+
+**Expected Output on Start:**
+```
+[MPSv3] Starting Mind Protocol Supervisor v3...
+[SingletonLease] Acquired Windows mutex: Global\MPSv3_Supervisor
+[MPSv3] Loading services from orchestration/services/mpsv3/services.yaml...
+[Registry] Loaded 7 service specifications
+[MPSv3] Starting all services...
+[Registry] Starting falkordb...
+[falkordb] Started Windows process group (PID XXXXX)
+[Registry] Starting ws_api...
+[ws_api] Started Windows process group (PID XXXXX)
+... (5 more services)
+[MPSv3] Starting file watcher...
+[FileWatcher] Started centralized watcher
+[MPSv3] Supervisor running. Press Ctrl+C to stop.
+```
+
+**Known Limitations (Phase 1):**
+- No readiness gates yet (services start immediately, no health checks)
+- No health monitoring (services run until crash/exit)
+- No dependency ordering (all services start in parallel)
+- File watcher paths are relative (needs absolute paths for robustness)
+
+**Phase 2 Work (Victor):**
+1. Test in isolation (verify all services start cleanly)
+2. Add readiness gates (HTTP probes for ws_api, dashboard)
+3. Add health monitoring (periodic checks, quarantine unhealthy services)
+4. Parallel run alongside guardian for 24 hours
+5. Cutover decision (replace guardian permanently or iterate)
+
+**Files Location:**
+- Components: `orchestration/services/mpsv3/*.py`
+- Main supervisor: `orchestration/mpsv3_supervisor.py`
+- Service config: `orchestration/services/mpsv3/services.yaml`
+- Spec reference: `docs/specs/v2/ops_and_viz/mpsv3_supervisor.md`
+
+---
+
 ## 2025-10-26 00:30 - Luca: ✅ Autonomy Architecture - Structured Organization & Deployment-Ready Configs
 
 **Status:** Reorganized autonomy documentation from 8 scattered files to clear structure with deployment-ready YAML configs, eliminating duplication and providing clear file map.
