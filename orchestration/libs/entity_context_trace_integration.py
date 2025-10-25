@@ -155,7 +155,7 @@ class EntityContextManager:
 
 class MembershipQueryHelper:
     """
-    Helper for querying MEMBER_OF memberships from graph.
+    Helper for querying BELONGS_TO memberships from graph.
 
     Provides membership weights for entity-localized learning.
     """
@@ -200,7 +200,7 @@ class MembershipQueryHelper:
             query = """
             UNWIND $node_ids AS node_id
             UNWIND $entity_ids AS entity_id
-            MATCH (n {name: node_id})-[r:MEMBER_OF]->(e:Subentity {id: entity_id})
+            MATCH (n {name: node_id})-[r:BELONGS_TO]->(e:Subentity {id: entity_id})
             RETURN n.name as node_id,
                    e.id as entity_id,
                    r.weight as weight
@@ -263,8 +263,8 @@ class MembershipQueryHelper:
             UNWIND $link_ids AS link_id
             UNWIND $entity_ids AS entity_id
             MATCH (src:Node)-[link {id: link_id}]->(tgt:Node)
-            OPTIONAL MATCH (src)-[src_mem:MEMBER_OF]->(e:Subentity {id: entity_id})
-            OPTIONAL MATCH (tgt)-[tgt_mem:MEMBER_OF]->(e)
+            OPTIONAL MATCH (src)-[src_mem:BELONGS_TO]->(e:Subentity {id: entity_id})
+            OPTIONAL MATCH (tgt)-[tgt_mem:BELONGS_TO]->(e)
             RETURN link.id as link_id,
                    entity_id,
                    coalesce(src_mem.weight, 0.0) as src_weight,
