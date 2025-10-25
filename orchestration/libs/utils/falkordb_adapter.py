@@ -1263,8 +1263,8 @@ class FalkorDBAdapter:
         Creates MEMBER_OF link from node to entity and sets primary_entity property.
         Uses MERGE with ON CREATE/ON MATCH for idempotency - safe to call multiple times.
 
-        PRODUCTION-GRADE PATTERN (P1.3 Hardening):
-        - Match nodes by unique 'id' property (not 'name')
+        PRODUCTION-GRADE PATTERN (P1.3 Hardening + P1.2 Fix):
+        - Match nodes by unique 'name' property (schema-based nodes)
         - Match entities by 'name' property with :Subentity label (label-safe)
         - Use MEMBER_OF (semantic: nodes can belong to multiple entities)
         - ε-policy: Update primary_entity only if missing or new weight > current + ε (0.1)
@@ -1272,7 +1272,7 @@ class FalkorDBAdapter:
 
         Args:
             graph_name: Graph database name
-            node_id: Node unique ID to assign membership (uses 'id' property)
+            node_id: Node unique identifier (uses 'name' property for schema-based nodes)
             entity_name: Subentity name (e.g., 'entity_citizen_felix_translator')
             weight: Membership weight (0-1, default 1.0)
             role: Membership role ('primary' or 'secondary', default 'primary')
@@ -1284,7 +1284,7 @@ class FalkorDBAdapter:
         Example:
             >>> adapter.persist_membership(
             ...     "citizen_felix",
-            ...     "node_abc123",
+            ...     "realization_abc",
             ...     "entity_citizen_felix_translator",
             ...     weight=1.0,
             ...     role="primary"
@@ -1301,8 +1301,9 @@ class FalkorDBAdapter:
                 timestamp = int(datetime.now().timestamp() * 1000)
 
             # P1.3 Hardened pattern: label-safe MATCH + ε-policy for primary_entity
+            # P1.2 FIX: Match by 'name' for schema-based nodes (not 'id')
             query = """
-            MATCH (n {id: $node_id})
+            MATCH (n {name: $node_id})
             MATCH (e:Subentity {name: $entity_name})
             MERGE (n)-[r:MEMBER_OF]->(e)
               ON CREATE SET r.role = $role, r.weight = $weight, r.at = $timestamp
