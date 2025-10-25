@@ -1,6 +1,6 @@
 # Dynamic Context for felix
 
-**Last Updated:** 2025-10-25 18:19:32 UTC
+**Last Updated:** 2025-10-25 18:27:09 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -13,16 +13,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -45,16 +45,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -77,16 +77,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -109,16 +109,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -141,16 +141,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -173,16 +173,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -205,16 +205,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -237,16 +237,16 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- implementation_absorption_antipattern: deactivated (activity=0.50)
-- test_harness_assertion_mismatch: deactivated (activity=0.50)
-- validation_anxiety_overchecking: deactivated (activity=0.50)
-- stop_hook_timing_understanding: deactivated (activity=0.50)
-- enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
-- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
+- implementation_absorption_antipattern: deactivated (activity=0.49)
+- test_harness_assertion_mismatch: deactivated (activity=0.49)
+- validation_anxiety_overchecking: deactivated (activity=0.49)
+- stop_hook_timing_understanding: deactivated (activity=0.49)
+- enum_migration_requires_reference_sweep: deactivated (activity=0.49)
+- v2_initialization_verified: deactivated (activity=0.49)
+- systematic_trace_execution: deactivated (activity=0.49)
+- hot_reload_disabled: deactivated (activity=0.49)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.61)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
