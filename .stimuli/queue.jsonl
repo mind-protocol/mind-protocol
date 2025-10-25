@@ -216,3 +216,4 @@
 {"stimulus_id": "stim_1761394227430", "timestamp_ms": 1761394227430, "citizen_id": "felix", "text": "Screenshot: screenshot-1761394225411.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761394287670", "timestamp_ms": 1761394287670, "citizen_id": "felix", "text": "Screenshot: screenshot-1761394285641.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761394347560", "timestamp_ms": 1761394347560, "citizen_id": "felix", "text": "Screenshot: screenshot-1761394345523.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761394408658", "timestamp_ms": 1761394408658, "citizen_id": "felix", "text": "Screenshot: screenshot-1761394406619.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
