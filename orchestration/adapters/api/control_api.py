@@ -357,13 +357,40 @@ async def semantic_search(
         # Initialize semantic search for the specified graph
         search = SemanticSearch(graph_name=graph_id)
 
-        # Perform vector similarity search
-        results = search.find_similar_nodes(
-            query_text=query,
-            node_type=node_type,
-            threshold=threshold,
-            limit=limit
-        )
+        # If no node_type specified, query multiple common types and merge results
+        if not node_type:
+            common_types = [
+                "Realization", "Decision", "Concept", "Principle", "Mechanism",
+                "Memory", "Best_Practice", "Anti_Pattern", "Personal_Goal",
+                "Coping_Mechanism", "Document", "Process"
+            ]
+
+            all_results = []
+            for ntype in common_types:
+                try:
+                    type_results = search.find_similar_nodes(
+                        query_text=query,
+                        node_type=ntype,
+                        threshold=threshold,
+                        limit=limit
+                    )
+                    all_results.extend(type_results)
+                except Exception as e:
+                    # Skip types that don't exist in this graph
+                    logger.debug(f"[API] No results for type {ntype}: {e}")
+                    continue
+
+            # Sort by similarity and limit
+            all_results.sort(key=lambda x: x.get('similarity', 0), reverse=True)
+            results = all_results[:limit]
+        else:
+            # Perform vector similarity search for specific type
+            results = search.find_similar_nodes(
+                query_text=query,
+                node_type=node_type,
+                threshold=threshold,
+                limit=limit
+            )
 
         return {
             "query": query,

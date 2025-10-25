@@ -48,6 +48,7 @@ from orchestration.mechanisms.weight_learning import WeightLearner
 # Observability
 from orchestration.libs.metrics import BranchingRatioTracker
 from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster
+from orchestration.adapters.ws.traversal_event_emitter import TraversalEventEmitter, EmotionDelta
 
 # FalkorDB integration
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
@@ -80,6 +81,18 @@ class EngineConfig:
     enable_websocket: bool = True
     compute_budget: float = 100.0
     max_nodes_per_tick: int = 50000
+
+
+class BroadcasterAdapter:
+    """Adapter to make ConsciousnessStateBroadcaster compatible with Transport protocol."""
+    def __init__(self, broadcaster):
+        self.broadcaster = broadcaster
+
+    def emit(self, event_type: str, payload: any) -> None:
+        """Emit event via broadcaster if available."""
+        if self.broadcaster and self.broadcaster.is_available():
+            import asyncio
+            asyncio.create_task(self.broadcaster.broadcast_event(event_type, payload))
 
 
 class ConsciousnessEngineV2:
@@ -154,6 +167,13 @@ class ConsciousnessEngineV2:
         # Observability
         self.branching_tracker = BranchingRatioTracker(window_size=10)
         self.broadcaster = ConsciousnessStateBroadcaster() if self.config.enable_websocket else None
+
+        # Traversal event emitter (for emotion and stride events)
+        if self.broadcaster:
+            adapter = BroadcasterAdapter(self.broadcaster)
+            self.emitter = TraversalEventEmitter(adapter)
+        else:
+            self.emitter = None
 
         # Subentity Layer (advanced thresholding)
         from orchestration.mechanisms.entity_activation import EntityCohortTracker
@@ -575,7 +595,8 @@ class ConsciousnessEngineV2:
                         sample_rate=0.1,  # 10% emission - prevents websocket overload
                         broadcaster=self.broadcaster,
                         enable_link_emotion=True,
-                        current_entity_id=next_entity.id if next_entity else None
+                        current_entity_id=next_entity.id if next_entity else None,
+                        emitter=self.emitter
                     )
                 else:
                     # No active entities - fall back to atomic
