@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-25_14-07-29",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-25T12:07:29.934860+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T12:07:29.934860+00:00",
+      "content": "go"
+    }
+  ],
+  "last_updated": "2025-10-25T12:07:29.934860+00:00",
+  "message_count": 1
+}
