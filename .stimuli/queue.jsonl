@@ -127,3 +127,6 @@
 {"stimulus_id": "stim_1761375303689", "timestamp_ms": 1761375303689, "citizen_id": "felix", "text": "Screenshot: screenshot-1761375301609.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761375365202", "timestamp_ms": 1761375365202, "citizen_id": "felix", "text": "Screenshot: screenshot-1761375362187.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "v2_schema_test", "text": "V2 SCHEMA TEST: This stimulus verifies E scalar field persistence works correctly", "severity": 0.9, "origin": "schema_fix_verification", "citizen_id": "victor", "timestamp_ms": 1761375388699}
+{"stimulus_id": "stim_1761375409657", "timestamp_ms": 1761375409657, "citizen_id": "felix", "text": "Screenshot: screenshot-1761375407518.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761375433907", "timestamp_ms": 1761375433907, "citizen_id": "felix", "text": "Screenshot: screenshot-1761375431873.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761375463683", "timestamp_ms": 1761375463683, "citizen_id": "felix", "text": "Screenshot: screenshot-1761375461646.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
