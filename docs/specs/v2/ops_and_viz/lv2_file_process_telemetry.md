@@ -1,12 +1,13 @@
 # LV2 File & Process Telemetry
 
-**Version:** 1.2
-**Status:** Specification (Production-Ready)
+**Version:** 1.3
+**Status:** Specification (Production-Ready + L2 Autonomy Integration)
 **Owner:** Luca (substrate), Ada (orchestration), Atlas (implementation)
 **Created:** 2025-10-25
-**Last Updated:** 2025-10-25 21:15
+**Last Updated:** 2025-10-25 22:00
 
 **Changelog:**
+- **v1.3 (2025-10-25 22:00):** **L2 Autonomy Integration.** Added Git Watcher (code/doc drift detection via SCRIPT_MAP.md → intent.sync_docs_scripts). Added Log Tail Watcher (error log monitoring → intent.fix_incident). Added Error Log Signals (§4.4: error.log, error.console with service routing). Added Console Beacon integration (frontend errors → Iris). Complete L2 routing specification (§10: StimulusInjector @8001 → AutonomyOrchestrator @8002 → IntentCard → Mission). ProcessExec forensics enrichment (RELATES_TO links between Stimulus and ProcessExec). Updated architecture diagram showing L2 integration path. Routing table by service (Atlas/Victor/Iris). Autonomy guardrails (ACK policies, capacity-aware routing, outcome verification).
 - **v1.2 (2025-10-25 21:15):** Production hardening. Added ring buffer counters (app-layer maintained, 60×1-min, 24×1-hour buckets). Canonical path normalization (lowercase, prevents Windows case-mismatch duplicates). Enhanced link metadata (DEPENDS_ON: confidence_reason; IMPLEMENTS: anchor_text). Safety rails (extended exclusions: .vscode/, .idea/, .pytest_cache/; magic header binary detection; bounded queue with disk spillover; deduplication; debouncing). ProcessExec env_snapshot allowlist (security). Most recent failure tracking.
 - **v1.1 (2025-10-25 20:45):** Complete rewrite with counter-based ProcessExec approach. File nodes gain execution counters (exec_count_1h/24h, failure_count_24h, avg_duration_ms). ProcessExec nodes now sparse (forensics only: exit≠0, duration>60s, forensics flag) with TTL=7 days. Integrated Chunk-based knowledge architecture (RELATES_TO links). Updated formation logic, Cypher templates, acceptance tests.
 - **v1.0 (2025-10-25 20:15):** Initial specification with node-per-execution ProcessExec approach (deprecated).
@@ -1737,7 +1738,288 @@ if __name__ == '__main__':
 
 ---
 
-## §10 Acceptance Tests
+## §10 L2 Autonomy Integration
+
+### 10.1 Overview
+
+**TRACK B substrate (File/ProcessExec nodes) feeds into L2 organizational autonomy.** File changes, errors, and code/doc drift automatically trigger intent formation and mission assignment.
+
+**Integration Pattern:**
+```
+TRACK B Substrate          L2 Autonomy Orchestration
+     ↓                            ↓
+File/ProcessExec          Stimulus → IntentCard → Mission
+```
+
+**Key Integration Points:**
+1. **Git Watcher** → File changes → `intent.sync_docs_scripts`
+2. **Log Tail** → Error logs → `intent.fix_incident`
+3. **ProcessExec Forensics** → RELATES_TO links → Incident context enrichment
+
+---
+
+### 10.2 Git Watcher Integration (Code/Doc Drift)
+
+**Purpose:** Detect when code changes without corresponding doc updates (or vice versa) and trigger sync intent.
+
+**Architecture:**
+```
+[Git Watcher: git_watcher.py]
+   ↓ (watches file.modified events)
+[SCRIPT_MAP.md parser]
+   ↓ (maps file → counterpart)
+[Drift Detection]
+   ├─ Code changed, doc stale → source_type="code_change"
+   └─ Doc changed, code stale → source_type="doc_change"
+   ↓
+[Signals Collector @8003] /ingest/file
+   ↓ (StimulusEnvelope)
+[StimulusInjector @8001]
+   ↓ (scope="organizational", N2 graph)
+[AutonomyOrchestrator @8002]
+   ↓ (matches intent.sync_docs_scripts)
+[IntentCard created]
+   ├─ Code→Doc: routed to Ada (docs update)
+   └─ Doc→Code: routed to Atlas (code update)
+   ↓
+[Mission assigned to citizen]
+```
+
+**Signal Schema:**
+```typescript
+interface CodeDocDriftSignal {
+  type: "file.modified"
+  timestamp_ms: number
+  path: string                    // Changed file
+  metadata: {
+    source_type: "code_change" | "doc_change"
+    counterpart_path: string      // Expected counterpart from SCRIPT_MAP.md
+    counterpart_mtime: datetime   // Last modified time of counterpart
+    drift_duration_hours: float   // How long counterpart has been stale
+    diff_excerpt: string          // First 500 chars of diff
+    event_source: "git_watcher"
+  }
+}
+```
+
+**Formation Logic:**
+
+When git_watcher detects drift:
+1. **Create/update File nodes** for both changed file and counterpart
+2. **Create Stimulus node** in N2 graph:
+   ```cypher
+   CREATE (s:Stimulus {
+     name: "drift_{timestamp}_{file_hash}",
+     source_type: "code_change",
+     scope: "organizational",
+     severity: CASE
+       WHEN $drift_hours > 168 THEN 0.8  // 1 week stale = high severity
+       WHEN $drift_hours > 24 THEN 0.6   // 1 day stale = medium
+       ELSE 0.4                           // Fresh = low
+     END,
+     metadata: {
+       changed_file: $path,
+       stale_counterpart: $counterpart_path,
+       drift_hours: $drift_hours,
+       diff_excerpt: $diff
+     }
+   })
+   ```
+3. **Link Stimulus to both File nodes** via RELATES_TO
+4. **AutonomyOrchestrator** matches template `intent.sync_docs_scripts`
+5. **Mission created** with specific files to sync
+
+**Routing by Direction:**
+- **Code→Doc (code changed, doc stale):** Route to **Ada** (documentation updates)
+- **Doc→Code (doc changed, code stale):** Route to **Atlas** (code implementation)
+
+**Acceptance Criteria (Phase-A):**
+- ✅ Drift detected within 5 minutes of git commit
+- ✅ IntentCard created with both file paths
+- ✅ Mission routed to correct citizen based on direction
+- ✅ No duplicate intents for same drift (5-minute dedupe window)
+
+---
+
+### 10.3 Log Tail Integration (Error Incidents)
+
+**Purpose:** Backend/frontend errors automatically trigger incident triage and fixing.
+
+**Architecture:**
+```
+[Log Tail Watcher: log_tail.py]
+   ↓ (monitors logs/*.log for ERROR/WARN)
+[Console Beacon]
+   ↓ (monitors browser console)
+   ↓
+[Signals Collector @8003] /ingest/log, /ingest/console
+   ↓ (StimulusEnvelope normalization)
+[StimulusInjector @8001]
+   ↓ (scope="organizational", N2 graph)
+[Stimulus node + RELATES_TO ProcessExec forensics]
+   ↓
+[AutonomyOrchestrator @8002]
+   ↓ (matches intent.fix_incident)
+[IntentCard created]
+   ├─ Backend error → routed to Atlas/Victor (by service)
+   ├─ Frontend error → routed to Iris
+   └─ Operational error → routed to Victor
+   ↓
+[Mission assigned to citizen]
+```
+
+**Signal Schema:**
+```typescript
+interface ErrorLogSignal {
+  type: "error.log" | "error.console"
+  timestamp_ms: number
+  level: "ERROR" | "WARN" | "CRITICAL"
+  service: string                 // e.g., "websocket_server", "dashboard"
+  message: string
+  metadata: {
+    stack?: string
+    file_path?: string            // Source file that logged error
+    line_number?: int
+    context?: Record<string, any>
+    event_source: "log_tail" | "console_beacon"
+  }
+}
+```
+
+**Formation Logic:**
+
+When log_tail detects error:
+1. **Create Stimulus node** in N2 graph with `source_type="error.log"`
+2. **Lookup related ProcessExec forensics** (if error from script execution):
+   ```cypher
+   MATCH (s:Stimulus {source_type: 'error.log', metadata.file_path: $path})
+   MATCH (p:ProcessExec {metadata.exit_code: $exit_code})
+   WHERE abs(s.timestamp_ms - p.valid_at) < 5000  // Within 5s
+   MERGE (s)-[:RELATES_TO {
+     energy: 0.8,
+     confidence: 0.9,
+     goal: 'Links incident to execution forensics',
+     formation_trigger: 'systematic_analysis'
+   }]->(p)
+   ```
+3. **Lookup related File node** via `metadata.file_path`
+4. **AutonomyOrchestrator** matches template `intent.fix_incident`
+5. **Mission created** with error context, stack trace, forensics links
+
+**Routing by Service:**
+- **websocket_server, queue_poller, consciousness_engine_v2** → **Atlas** (backend engineer)
+- **guardian, launcher** → **Victor** (operations engineer)
+- **dashboard, app/** → **Iris** (frontend engineer)
+
+**Deduplication:**
+- Key: `(service, message_hash, 5-minute window)`
+- Prevents duplicate incidents for same recurring error
+- If error recurs 10+ times → escalate severity
+
+**Acceptance Criteria (Phase-A):**
+- ✅ Error detected within 10 seconds of logging
+- ✅ IntentCard created with service, stack, file_path
+- ✅ Mission routed to correct citizen based on service
+- ✅ RELATES_TO link created to ProcessExec forensics (when available)
+- ✅ Duplicate errors deduplicated (only 1 intent per 5-min window)
+
+---
+
+### 10.4 ProcessExec Forensics Enrichment
+
+**Purpose:** Link error incidents to process execution forensics for debugging context.
+
+**Schema:**
+```cypher
+// Stimulus node (from error log)
+(s:Stimulus {
+  source_type: "error.log",
+  metadata: {
+    file_path: "orchestration/services/queue_poller.py",
+    line_number: 142,
+    message: "Failed to inject stimulus: AttributeError",
+    stack: "..."
+  }
+})
+
+// ProcessExec forensics node (from process failure)
+(p:ProcessExec {
+  metadata: {
+    cmd: "python",
+    args: ["orchestration/services/queue_poller.py"],
+    exit_code: 1,
+    stderr_excerpt: "AttributeError: 'NoneType' object has no attribute 'inject'",
+    anomaly_reason: "failure"
+  }
+})
+
+// Link
+(s)-[:RELATES_TO {
+  energy: 0.8,
+  confidence: 0.9,
+  goal: "Links error incident to execution forensics"
+}]->(p)
+```
+
+**Query: "Show me all context for incident X"**
+```cypher
+MATCH (s:Stimulus {name: $incident_id})
+MATCH (s)-[:RELATES_TO]->(p:ProcessExec)
+MATCH (p)-[:EXECUTES]->(f:File)
+RETURN s.metadata as error_details,
+       p.metadata as execution_context,
+       f.metadata.rel_path as failed_script,
+       f.metadata.failure_most_recent as recent_failures
+```
+
+**Result:** Complete incident context - error message + stack + execution env + recent failure history
+
+---
+
+### 10.5 L2 Routing Summary
+
+**Source → Intent → Citizen Routing Table:**
+
+| Signal Source | Source Type | Intent Template | Routed To | Acceptance Gate |
+|---------------|-------------|-----------------|-----------|-----------------|
+| git_watcher (code→doc) | code_change | intent.sync_docs_scripts | Ada | Drift >1 day |
+| git_watcher (doc→code) | doc_change | intent.sync_docs_scripts | Atlas | Drift >1 day |
+| log_tail (backend) | error.log | intent.fix_incident | Atlas/Victor (by service) | level=ERROR |
+| console_beacon (frontend) | error.console | intent.fix_incident | Iris | level=ERROR |
+| ProcessExec forensics | (enrichment) | (context only) | (via RELATES_TO link) | exit_code≠0 |
+
+**Deduplication Windows:**
+- **Git drift:** 5 minutes (same file pair)
+- **Error logs:** 5 minutes (same service + message hash)
+- **ProcessExec forensics:** No dedupe (each execution is unique)
+
+**Severity Calculation:**
+- **Code/doc drift:** `0.4 + (drift_hours / 168) * 0.4` (capped at 0.8)
+- **Error logs:** `0.6` (ERROR), `0.8` (CRITICAL), `0.4` (WARN)
+- **Recurring errors:** +0.2 severity if >10 occurrences in 1 hour
+
+---
+
+### 10.6 Autonomy Guardrails
+
+**ACK Policies (from Phase-A spec):**
+- **Sev1/Sev2 incidents:** `ACK_REQUIRED` before mission execution
+- **Doc/code sync:** No ACK required (low risk)
+- **Depth limit:** Self-observation depth ≥2 requires ACK
+
+**Capacity-Aware Routing:**
+- If citizen's active mission count ≥3 → queue mission
+- If all citizens saturated → create IntentCard but don't assign mission yet
+- Dashboard shows intent queue: "Waiting for available citizen"
+
+**Outcome Verification:**
+- Mission completion → check: did error stop recurring?
+- Mission completion → check: did drift resolve (both files now in sync)?
+- Failed missions → escalate intent severity, retry with different citizen
+
+---
+
+## §11 Acceptance Tests
 
 ### 10.1 File Tracking Tests
 
