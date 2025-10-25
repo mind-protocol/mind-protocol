@@ -47,6 +47,9 @@ from orchestration.mechanisms.criticality import CriticalityController, Controll
 from orchestration.mechanisms.stimulus_injection import StimulusInjector, create_match
 from orchestration.mechanisms.weight_learning import WeightLearner
 
+# Embedding Service (for Control API fallback)
+from orchestration.adapters.search.embedding_service import EmbeddingService
+
 # Observability
 from orchestration.libs.metrics import BranchingRatioTracker
 from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster

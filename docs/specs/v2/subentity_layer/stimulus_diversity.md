@@ -633,22 +633,94 @@ def compute_lambda(
 
 ---
 
-## 11. Open Questions & Future Extensions
+## 11. Implementation Decisions (Nicolas 2025-10-25)
 
-**Phase 1 (this spec):**
-- Static derivation rules (if X then Y)
-- Manual threshold tuning
+### 11.1 Threshold Strategy
 
-**Phase 2 (future):**
+**Phase 1 (Conservative Seeds):**
+Start with safe, conservative threshold values to enable fast shipping:
+
+- **Fragmentation:** `intent.stabilize_narrative` when **≥5 fragmented frames in 60s AND mean fragmentation_score ≥ 0.60**
+- **Error Storm:** `incident.backend_error` when **≥10 identical errors in 2min** per stack-fingerprint
+- **Learning Spike:** `intent.consolidate_learning` when `weights.updated` **≥100 in 5min OR above Q95 of last 24h**
+- **Belief Mismatch:** `intent.reconcile_beliefs` when commit touches schemas **AND ≥3 related backend errors in 10min**
+
+**Phase 2 (Learned Percentiles):**
+Replace seed values with per-citizen percentile-based gates:
+- Compute rolling **Q85-Q95** thresholds per citizen (7-day window)
+- Update daily via `threshold_tuner` job
+- Keep seeds as safety floors only
+- Aligns with "no arbitrary constants" principle
+
+**Rationale:** Start high (conservative), tune down via percentiles once metrics populate. Prevents premature optimization while enabling data-driven improvement.
+
+### 11.2 Screenshot OCR
+
+**Decision:** Phase 2
+
+Ship MVP without OCR. Add OCR as optional enrichment later (`ocr_text` field in L1 screenshot metadata) once ingestion & derivation basics are stable.
+
+### 11.3 Alert Routing
+
+**Decision:** Dashboard always, Slack/email only for critical with safety gates
+
+**Policy:**
+- All incidents appear in dashboard by default
+- Slack/email **only** when `severity=critical`
+- Enforce safety gates:
+  - **Cooldowns** per channel (prevent spam)
+  - **Capacity limits** per assignee (`max_in_flight`)
+  - **Sensitivity metadata** (never route `restricted` to N3)
+  - **Circuit breakers** for alert storms
+
+**Rationale:** Prevents alert fatigue and Slack spam while ensuring critical incidents reach operators.
+
+### 11.4 Cross-Citizen Correlation
+
+**Decision:** Phase 2
+
+Keep Phase 1 intra-citizen (stimuli stay within citizen graph). Enable correlation across citizens (e.g., Ada observes → Luca receives mission) in Phase 2. Substrate already anticipates this via `correlation_id` and citizen-scoped evidence refs.
+
+### 11.5 L2 Persistence
+
+**Decision:** Store ALL L2 stimuli with TTL
+
+Persist every L2 stimulus + evidence links + injection results (`nodes_activated`, `flips_caused`) to enable:
+- False positive measurement
+- Threshold tuning via success rate
+- Governance & traceability
+
+Apply TTL/archival after 30-60d if storage becomes concern.
+
+### 11.6 Targeted Improvements (Integrated)
+
+**Metrics Endpoint (Priority 1):**
+Implement `/consciousness/:citizen/metrics/stimuli` immediately to enable tuning + demos. Expose:
+- L1/L2 rates per minute (by type)
+- Dropped/decimated counts
+- Attribution hit rate
+- Injection success rate
+
+**Threshold Tuner (Daily Job):**
+Compute per-citizen Q85/Q95 baselines from 7-day window, output to config. See separate spec.
+
+**Alert Safety:**
+Enforce cooldowns, capacity-aware assignment, sensitivity metadata, circuit-breakers.
+
+**Full Traceability:**
+Persist `L1↔L2 evidence` and `L2→InjectionResult` edges for "what derived this?" and "did it work?" queries.
+
+**Autonomy Boundary:**
+Autonomy service generates IntentCards at L2, dispatches missions through existing injection path. Keep boundary crisp.
+
+### 11.7 Future Extensions (Phase 2+)
+
 - Learned derivation rules (pattern mining on L1 sequences)
-- Adaptive thresholds based on false positive/negative rates
-- Cross-citizen correlation (Ada observes → Luca stimulus)
-- Temporal patterns (commit → 2min → error → 5min → fix)
-
-**Screenshot OCR:**
-- Optional Phase 2 addition
-- Would add `ocr_text` to L1 screenshot metadata
-- Could enable derived intents from visual evidence
+- Adaptive thresholds based on citizen-specific traffic percentiles
+- Cross-citizen correlation and collective intelligence
+- Temporal patterns (commit → 2min → error → 5min → fix sequences)
+- Screenshot OCR enrichment
+- Advanced attribution (learned entity affinity models)
 
 ---
 
