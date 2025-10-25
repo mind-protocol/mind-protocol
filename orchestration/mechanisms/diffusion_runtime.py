@@ -429,7 +429,7 @@ def execute_stride_step(
                 learning_controller,
                 broadcaster=broadcaster,  # P2.1.3: Pass for tier.link.strengthened emission
                 entity_context=[current_entity_id] if current_entity_id else None,
-                citizen_id=runtime.graph_name if hasattr(runtime, 'graph_name') else "",
+                citizen_id=graph.name if hasattr(graph, 'name') else "",
                 frame_id=getattr(graph, 'frame_id', None)
             )
 
