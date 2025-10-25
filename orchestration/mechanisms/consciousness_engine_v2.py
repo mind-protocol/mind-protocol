@@ -804,7 +804,8 @@ class ConsciousnessEngineV2:
                 # Get per-link flows from diffusion runtime
                 link_flows = getattr(self.diffusion_rt, '_frame_link_flow', {})
 
-                if link_flows:
+                # Emit if we have flows and broadcaster is available
+                if link_flows and self.broadcaster and self.broadcaster.is_available():
                     # Sort by absolute flow, cap at 200
                     sorted_flows = sorted(
                         link_flows.items(),
@@ -822,9 +823,8 @@ class ConsciousnessEngineV2:
                         ]
                     })
 
-                # Clear accumulator for next frame
+                # Always clear accumulator at decimation boundary (whether we broadcast or not)
                 self.diffusion_rt._frame_link_flow.clear()
-
                 self._flow_last_emit = now
 
             # === E.6: Compute Coherence Metric ===
@@ -879,7 +879,7 @@ class ConsciousnessEngineV2:
                         changed.append((nid, E_prev, E_now, dE))
                     self._last_E[nid] = E_now
 
-                if changed:
+                if changed and self.broadcaster and self.broadcaster.is_available():
                     changed.sort(key=lambda x: abs(x[3]), reverse=True)
                     top = changed[:self._flip_topk]
                     await self.broadcaster.broadcast_event("node.flip", {
