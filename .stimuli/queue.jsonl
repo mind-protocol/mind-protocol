@@ -13,3 +13,6 @@
 {"stimulus_id": "stim_1761367568268", "timestamp_ms": 1761367568268, "citizen_id": "felix", "text": "Test error from Atlas | test.py:1", "severity": 0.6, "origin": "dashboard_console"}
 {"stimulus_id": "stim_1761367689534", "timestamp_ms": 1761367689534, "citizen_id": "felix", "text": "P3.1 deployment verification test | atlas_verification.py:42", "severity": 0.6, "origin": "dashboard_console"}
 {"stimulus_id":"test_p1_trigger","timestamp_ms":1761368000000,"citizen_id":"atlas","text":"P1 verification test - triggering via JSONL queue to reproduce len(int) error","severity":0.5,"origin":"atlas_manual_trigger"}
+{"stimulus_id": "stim_1761368309389", "timestamp_ms": 1761368309389, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368307357.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761368333386", "timestamp_ms": 1761368333386, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368331347.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761368365854", "timestamp_ms": 1761368365854, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368363070.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
