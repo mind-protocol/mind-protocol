@@ -27,6 +27,7 @@ import type {
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 import { diagOnEvent } from '../lib/ws-diagnostics';
+import { normalizeEvent } from '../lib/normalizeEvents';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
 const RECONNECT_DELAY = 3000; // 3 seconds
@@ -458,10 +459,13 @@ export function useWebSocket(): WebSocketStreams {
    */
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
-      const data = JSON.parse(event.data);
+      const rawData = JSON.parse(event.data);
 
       // 🎯 STEP A: Transport diagnostic - prove events arrive
-      diagOnEvent(data);
+      diagOnEvent(rawData);
+
+      // 🎯 PART B: Normalize events (handle backend evolution)
+      const data = normalizeEvent(rawData);
 
       // Buffer event for batch processing
       // flushPendingUpdates will process at 10Hz
