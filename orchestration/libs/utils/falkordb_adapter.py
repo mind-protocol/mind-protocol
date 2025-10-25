@@ -1322,12 +1322,10 @@ class FalkorDBAdapter:
 
             result = self.graph_store.query(query, params)
 
-            if result:
-                logger.debug(f"Persisted membership: {node_name} -[BELONGS_TO:{role}:{weight}]-> {entity_id}")
-                return True
-            else:
-                logger.warning(f"No result from membership persistence: {node_name} -> {entity_id}")
-                return False
+            # MERGE queries may return empty results even on success
+            # If no exception occurred, membership was persisted
+            logger.debug(f"Persisted membership: {node_name} -[BELONGS_TO:{role}:{weight}]-> {entity_id}")
+            return True
 
         except Exception as e:
             logger.error(f"Failed to persist membership {node_name} -> {entity_id}: {e}")

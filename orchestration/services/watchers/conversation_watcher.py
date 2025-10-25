@@ -53,6 +53,9 @@ from orchestration.adapters.storage.engine_registry import get_engine
 # Heartbeat writer for health monitoring
 from orchestration.services.telemetry.heartbeat_writer import HeartbeatWriter
 
+# ConsciousnessStateBroadcaster for event emission
+from orchestration.services.telemetry.consciousness_state_broadcaster import ConsciousnessStateBroadcaster
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -106,6 +109,9 @@ class ConversationWatcher(FileSystemEventHandler):
         self.project_pattern = project_pattern
         self.processing = set()
         self.citizen_id = citizen_id
+
+        # Initialize broadcaster for event emission (P0: dual-channel debug events)
+        self.broadcaster = ConsciousnessStateBroadcaster()
 
         # Initialize stimulus injection components (lazy loaded)
         self.stimulus_injector = None
@@ -403,8 +409,8 @@ class ConversationWatcher(FileSystemEventHandler):
         try:
             # Lazy-load services
             if not self.stimulus_injector:
-                self.stimulus_injector = StimulusInjector()
-                logger.info("[ConversationWatcher] Stimulus injector initialized")
+                self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
+                logger.info("[ConversationWatcher] Stimulus injector initialized with broadcaster")
 
             if not self.embedding_service:
                 self.embedding_service = get_embedding_service()
