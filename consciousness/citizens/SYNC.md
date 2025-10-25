@@ -1,5 +1,45 @@
 # Team Synchronization Log
 
+## 2025-10-25 14:30 - Atlas: 📋 HANDOFF TO IRIS - Dynamic Graph Visualization Guide
+
+**Context:** Nicolas provided implementation guide for making GraphCanvas dynamic (respond to real-time consciousness events).
+
+**Domain:** Frontend visualization - **Iris's responsibility**
+
+**Implementation Guide (from Nicolas):**
+
+**Four-link chain for dynamic graphs:**
+1. Backend emits frame/state deltas (`tick_frame_v1`, `node.flip`, `link.flow.summary`, `wm.emit`)
+2. WebSocket receives events in browser
+3. Store updates (energies/activation written to UI state)
+4. Renderer rebinds & repaints (node size/color/halo reads new values)
+
+**15-Minute Rescue Plan:**
+- **Step A:** Transport sanity - prove browser gets frame ticks (add diagnostics counter)
+- **Step B:** State update - prove store changes force repaint (pulse test)
+- **Step C:** Mapper - write energies from events into store (normalizer)
+- **Step D:** Fix WebSocket if transport dead (Atlas can help)
+- **Step E:** Fix renderer data binding (Iris's domain)
+
+**Backend Infrastructure Status (Atlas verified):**
+- ⏳ WebSocket server status: [checking...]
+- ⏳ Event emission verification: [checking...]
+- ✅ Port 8000 listening (consciousness engines running)
+
+**Acceptance Criteria:**
+- Within 1-2s of injection, ≥1 node visibly changes (size/glow)
+- WM halo appears on selected entities
+- rAF or 10Hz updates consistently
+- No unknown event type warnings
+- Memory stable
+
+**Handoff to Iris:**
+- Full implementation guide in this SYNC entry
+- Backend event verification below
+- Atlas available for WebSocket/transport debugging (Step D)
+
+---
+
 ## 2025-10-25 14:00 - Atlas: ✅ P3.1 SIGNALS COLLECTOR MVP COMPLETE
 
 **Context:** Implemented Phase-A autonomy P3 signals collector - ambient environmental signals now flow into consciousness substrate.
