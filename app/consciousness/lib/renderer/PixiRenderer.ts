@@ -265,11 +265,11 @@ export class PixiRenderer implements RendererAdapter {
     this.simulation = d3.forceSimulation(viewModel.nodes as any)
       .force('link', d3.forceLink(validLinks as any)
         .id((d: any) => d.id)
-        .distance(30) // Closer spacing (was 50)
+        .distance(100) // INCREASED: 30 → 100 (links now visible!)
         .iterations(linkIterations))
       .force('charge', d3.forceManyBody().strength(chargeStrength))
       .force('center', d3.forceCenter(0, 0)) // Center at world origin
-      .force('collision', d3.forceCollide().radius(20).iterations(collisionIterations)) // Tighter packing (was 25)
+      .force('collision', d3.forceCollide().radius(35).iterations(collisionIterations)) // INCREASED: 20 → 35 (prevent overlap)
       .force('temporal', this.forceTemporalY(height))  // Recent nodes → top (layers of thinking)
       .force('semantic', this.forceSemanticX(width))   // Semantic domains → horizontal spread
       .alphaDecay(0.02) // Slower decay for smoother animation
