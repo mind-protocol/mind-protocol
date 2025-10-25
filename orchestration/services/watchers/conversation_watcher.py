@@ -104,11 +104,23 @@ from orchestration.services.telemetry.heartbeat_writer import HeartbeatWriter
 # ConsciousnessStateBroadcaster for event emission
 from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Configure logging with rotating file handler (P0.1 diagnostics)
+import logging
+from logging.handlers import RotatingFileHandler
+
+LOG = logging.getLogger()
+LOG.setLevel(logging.INFO)
+fh = RotatingFileHandler("conversation_watcher.log", maxBytes=5_000_000, backupCount=3, encoding="utf-8")
+fh.setLevel(logging.INFO)
+fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+fh.setFormatter(fmt)
+LOG.addHandler(fh)
+
+# Explicit for modules we rely on (P0 diagnostic markers)
+logging.getLogger("orchestration.adapters.search.semantic_search").setLevel(logging.INFO)
+logging.getLogger("orchestration.mechanisms.stimulus_injection").setLevel(logging.INFO)
+logging.getLogger("orchestration.libs.falkordb_adapter").setLevel(logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 # Paths
