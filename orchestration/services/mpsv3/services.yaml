@@ -1,0 +1,82 @@
+# MPSv3 Service Specifications
+# Author: Atlas
+# Date: 2025-10-25
+# Phase: Phase 1 Implementation
+
+services:
+  - id: falkordb
+    cmd: ["C:\\FalkorDB\\falkordb-server.exe", "--port", "6379"]
+    env:
+      FALKORDB_DATA_DIR: "C:\\FalkorDB\\data"
+    cwd: null
+    criticality: CRITICAL
+    max_retries: 5
+    watched_files: []  # Never auto-reload database (data corruption risk)
+
+  - id: ws_api
+    cmd: ["python", "orchestration/adapters/ws/websocket_server.py"]
+    env:
+      PORT: "8000"
+      FALKORDB_HOST: "localhost"
+      FALKORDB_PORT: "6379"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/**/*.py"
+      - "!orchestration/tests/**"
+
+  - id: conversation_watcher
+    cmd: ["python", "orchestration/services/watchers/conversation_watcher.py"]
+    env:
+      CONVERSATION_DIR: "C:\\Users\\reyno\\AppData\\Roaming\\Claude\\claude_desktop_config\\conversations"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/watchers/**/*.py"
+      - "orchestration/libs/trace_*.py"
+
+  - id: stimulus_injection
+    cmd: ["python", "orchestration/services/stimulus_injection_service.py"]
+    env:
+      PORT: "8001"
+      FALKORDB_HOST: "localhost"
+      FALKORDB_PORT: "6379"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/stimulus_injection_service.py"
+      - "orchestration/libs/stimulus_*.py"
+
+  - id: signals_collector
+    cmd: ["python", "orchestration/services/signals_collector.py"]
+    env:
+      PORT: "8010"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/signals_collector.py"
+
+  - id: autonomy_orchestrator
+    cmd: ["python", "orchestration/services/autonomy_orchestrator.py"]
+    env:
+      PORT: "8002"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: OPTIONAL
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/autonomy_orchestrator.py"
+
+  - id: dashboard
+    cmd: ["npm", "run", "dev"]
+    env:
+      NODE_ENV: "development"
+      PORT: "3000"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:8000"
+    cwd: "C:\\Users\\reyno\\mind-protocol\\app"
+    criticality: CORE
+    max_retries: 3
+    watched_files: []  # npm run dev has built-in auto-reload
