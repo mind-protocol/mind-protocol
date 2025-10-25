@@ -193,6 +193,10 @@ class ConsciousnessEngineV2:
         self.last_tick_time = datetime.now()
         self.tick_duration_ms = 0.0
 
+        # P2.1: Health emitter state tracking (for hysteresis)
+        self._last_health_state = None  # "dormant" | "coherent" | "multiplicitous" | "fragmented"
+        self._last_frag = 0.0            # Last fragmentation score
+
         # Transition matrix cache (rebuild only when graph structure changes)
         self._transition_matrix = None
         self._transition_matrix_dirty = True
@@ -1159,31 +1163,48 @@ class ConsciousnessEngineV2:
             logger.error(f"[TRIPWIRE] Observability check failed: {e}")
             # Continue execution - tripwire is diagnostic, not control flow
 
-        # === P2.1 Event: health.phenomenological (5-tick cadence) ===
+        # === P2.1 Event: health.phenomenological (hysteresis-based emission) ===
         # Phenomenological health state assessment for operator visibility
         # Translates quantitative metrics into qualitative consciousness states
+        # Uses hysteresis: only emit when state changes OR fragmentation shifts >0.1
         if self.tick_count % 5 == 0 and self.broadcaster and self.broadcaster.is_available():
             try:
-                from orchestration.mechanisms.phenomenology_health import compute_phenomenological_health
+                from orchestration.mechanisms.phenomenology_health import classify
 
-                narrative_state, fragmentation_score, cause, active_entities = compute_phenomenological_health(self.graph)
+                # Classify current health state
+                result = classify(self.graph.subentities.values() if hasattr(self.graph, 'subentities') else [])
 
-                await self.broadcaster.broadcast_event("health.phenomenological", {
-                    "v": "2",
-                    "frame_id": self.tick_count,
-                    "citizen_id": self.config.entity_id,
-                    "narrative_state": narrative_state,
-                    "fragmentation_score": round(fragmentation_score, 4),
-                    "cause": cause,
-                    "num_active_entities": len(active_entities),
-                    "active_entities": active_entities,
-                    "t_ms": int(time.time() * 1000)
-                })
+                # Hysteresis check: only emit if state changed OR fragmentation shifted >0.1
+                state_changed = (result.state != self._last_health_state)
+                frag_shifted = abs(result.fragmentation - self._last_frag) > 0.1
+                must_emit = state_changed or frag_shifted or (self._last_health_state is None)
 
-                logger.debug(
-                    f"[P2.1] Health: {narrative_state} "
-                    f"(fragmentation={fragmentation_score:.3f}, {len(active_entities)} active)"
-                )
+                if must_emit:
+                    # Emit event with Nicolas's event shape
+                    await self.broadcaster.broadcast_event("health.phenomenological", {
+                        "v": "2",
+                        "frame_id": self.tick_count,
+                        "citizen_id": self.config.entity_id,
+                        "state": result.state,
+                        "fragmentation": round(result.fragmentation, 3),
+                        "components": {
+                            "flow": round(result.components.flow, 3),
+                            "coherence": round(result.components.coherence, 3),
+                            "multiplicity": round(result.components.multiplicity, 3),
+                        },
+                        "narrative": result.cause,
+                        "t_ms": int(time.time() * 1000)
+                    })
+
+                    logger.debug(
+                        f"[P2.1] Health: {result.state} "
+                        f"(frag={result.fragmentation:.3f}, flow={result.components.flow:.2f}, "
+                        f"coherence={result.components.coherence:.2f}, mult={result.components.multiplicity:.2f})"
+                    )
+
+                    # Update hysteresis state
+                    self._last_health_state = result.state
+                    self._last_frag = result.fragmentation
 
             except Exception as e:
                 # Health emission failed - log but don't crash tick
