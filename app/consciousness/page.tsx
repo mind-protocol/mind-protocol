@@ -122,7 +122,7 @@ export default function ConsciousnessPage() {
     if (thresholdCrossings.length > 0) {
       setLastProcessedThreshold(thresholdCrossings.length - 1);
     }
-  }, [thresholdCrossings, lastProcessedThreshold, updateNodeFromEvent, addOperation]);
+  }, [thresholdCrossings, updateNodeFromEvent, addOperation]);
 
   // Handle subentity activity events
   // FIXED: Removed 'nodes' from dependencies to prevent re-runs on every node update

@@ -28,9 +28,11 @@ logger = logging.getLogger(__name__)
 # Global registry: citizen_id -> ConsciousnessEngineV2 instance
 _ENGINES: Dict[str, 'ConsciousnessEngineV2'] = {}
 
-# Aliases for backward compatibility
+# Task registry: citizen_id -> asyncio.Task (for lifecycle management)
+CONSCIOUSNESS_TASKS: Dict[str, 'asyncio.Task'] = {}
+
+# Legacy alias for backward compatibility
 CONSCIOUSNESS_ENGINES = _ENGINES  # Legacy name used by websocket_server
-CONSCIOUSNESS_TASKS = _ENGINES     # Legacy name used by websocket_server
 
 
 def register_engine(citizen_id: str, engine: 'ConsciousnessEngineV2') -> None:
