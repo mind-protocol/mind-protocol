@@ -169,6 +169,9 @@ class ConsciousnessEngineV2:
         self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
         self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
 
+        # P1: Store last WM entity IDs for TraceCapture attribution
+        self.last_wm_entity_ids: List[str] = []
+
         # Stimulus queue (for Phase 1: Activation)
         self.stimulus_queue: List[Dict[str, any]] = []
 
@@ -1011,6 +1014,9 @@ class ConsciousnessEngineV2:
                 "selected_nodes": entity_member_nodes,  # Top members from entities
                 "t_ms": int(time.time() * 1000)
             })
+
+            # P1: Store entity IDs for TraceCapture attribution
+            self.last_wm_entity_ids = entity_ids
 
         # === Phase 4: Learning & Metrics ===
         # Process TRACE signals and update weights

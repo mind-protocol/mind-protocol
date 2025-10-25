@@ -1,0 +1,155 @@
+# Orchestrator Intent Templates
+# Maps operational signals to consciousness stimuli with routing and ACK policies
+
+intents:
+  fix_incident:
+    description: "Route console errors, log warnings, and operational failures to responsible citizens"
+
+    trigger_conditions:
+      # Console errors with stack traces
+      - signal_type: "console"
+        severity: ["error", "critical"]
+      # Log errors from services
+      - signal_type: "log"
+        severity: ["error", "critical"]
+        source: ["guardian", "websocket_server", "signals_collector", "consciousness_engine"]
+
+    routing:
+      # Route based on error domain
+      infrastructure_errors:
+        pattern: "(FalkorDB|redis|database|persistence|adapter)"
+        assign_to: ["atlas"]
+        reason: "Database and persistence infrastructure"
+
+      dashboard_errors:
+        pattern: "(React|Next\\.js|component|frontend|UI)"
+        assign_to: ["iris"]
+        reason: "Frontend and dashboard issues"
+
+      operational_errors:
+        pattern: "(guardian|restart|process|port|health)"
+        assign_to: ["victor"]
+        reason: "Operational infrastructure and process management"
+
+      consciousness_errors:
+        pattern: "(entity|consciousness|working_memory|traversal)"
+        assign_to: ["felix"]
+        reason: "Consciousness system logic"
+
+      # Fallback for unclear errors
+      default:
+        assign_to: ["atlas", "victor"]
+        reason: "General infrastructure issue, needs triage"
+
+    ack_policy:
+      # Require explicit acknowledgment for critical issues
+      required_when:
+        - severity: "critical"
+        - origin_chain_depth: 2  # Recurring issues
+      timeout_seconds: 300  # 5 minutes
+      escalation: "ada"  # Escalate to Ada if no ACK
+
+    capacity_lane: "incidents"  # 40% of total capacity
+
+    stimulus_template:
+      channel: "operational"
+      urgency: "{{ severity }}"  # critical/error/warning
+      content: |
+        🚨 Operational Incident Detected
+
+        **Source:** {{ source }}
+        **Severity:** {{ severity }}
+        **Message:** {{ message }}
+
+        {% if stack_trace %}
+        **Stack Trace:**
+        ```
+        {{ stack_trace }}
+        ```
+        {% endif %}
+
+        **Assigned to:** {{ assigned_citizens | join(', ') }}
+        **Reason:** {{ routing_reason }}
+
+        Please investigate and resolve. ACK required for severity {{ severity }}.
+
+  sync_docs_scripts:
+    description: "Route code/documentation drift signals to maintain system coherence"
+
+    trigger_conditions:
+      # Code changes without corresponding doc updates
+      - signal_type: "log"
+        source: "guardian"
+        pattern: "hot-reload.*\\.py$"
+      # Screenshot signals showing UI drift from specs
+      - signal_type: "screenshot"
+        analysis: "drift_detected"
+
+    routing:
+      # Route based on what drifted
+      consciousness_drift:
+        pattern: "(consciousness_engine|entity|working_memory)"
+        assign_to: ["felix", "ada"]
+        reason: "Consciousness implementation may have drifted from specs"
+
+      infrastructure_drift:
+        pattern: "(falkordb|api|telemetry|adapter)"
+        assign_to: ["atlas", "ada"]
+        reason: "Infrastructure implementation may have drifted from specs"
+
+      dashboard_drift:
+        pattern: "(dashboard|component|visualization)"
+        assign_to: ["iris", "ada"]
+        reason: "Dashboard implementation may have drifted from specs"
+
+      default:
+        assign_to: ["ada"]
+        reason: "General documentation sync needed"
+
+    ack_policy:
+      # Documentation drift is lower urgency
+      required_when:
+        - origin_chain_depth: 3  # Only if recurring pattern
+      timeout_seconds: 600  # 10 minutes
+      escalation: null  # No escalation for doc drift
+
+    capacity_lane: "sync"  # 30% of total capacity
+
+    stimulus_template:
+      channel: "operational"
+      urgency: "low"
+      content: |
+        📝 Documentation Sync Required
+
+        **Change Detected:** {{ file_path }}
+        **Type:** {{ change_type }}
+        **Pattern:** {{ drift_pattern }}
+
+        {% if screenshot_url %}
+        **Visual Evidence:** {{ screenshot_url }}
+        {% endif %}
+
+        **Assigned to:** {{ assigned_citizens | join(', ') }}
+        **Reason:** {{ routing_reason }}
+
+        Please verify implementation matches specifications and update docs if needed.
+
+# Capacity Lane Configuration
+capacity_lanes:
+  safety:
+    percentage: 30
+    description: "Reserved for critical operations and system stability"
+
+  incidents:
+    percentage: 40
+    description: "Handling operational failures and errors"
+
+  sync:
+    percentage: 30
+    description: "Documentation, drift detection, and coherence maintenance"
+
+# ACK Policy Defaults
+ack_defaults:
+  timeout_seconds: 180  # 3 minutes default
+  retry_count: 2
+  require_resolution_evidence: true  # Must show fix was tested

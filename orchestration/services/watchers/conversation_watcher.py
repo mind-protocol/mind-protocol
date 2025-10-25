@@ -371,6 +371,15 @@ class ConversationWatcher(FileSystemEventHandler):
                     self.event_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(self.event_loop)
 
+            # P1: Query engine's current WM entities for attribution
+            try:
+                engine = get_engine(citizen_id)
+                if engine and hasattr(engine, 'last_wm_entity_ids'):
+                    self.trace_capture.set_wm_entities(engine.last_wm_entity_ids)
+                    logger.debug(f"[ConversationWatcher] Updated TraceCapture WM entities: {engine.last_wm_entity_ids}")
+            except Exception as e:
+                logger.warning(f"[ConversationWatcher] Failed to query WM entities from engine: {e}")
+
             stats = self.event_loop.run_until_complete(self.trace_capture.process_response(content))
 
             # Report results
