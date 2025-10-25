@@ -166,9 +166,16 @@ export default function EntityContextLearningPanel({
   return (
     <div className="entity-context-learning-panel bg-gray-900 border border-gray-700 rounded-lg p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-100">
-          Dual-View Learning
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-gray-100">
+            Dual-View Learning
+          </h3>
+          {windowedEvents.length === 0 && (
+            <span className="text-xs px-2 py-0.5 rounded bg-yellow-900/30 text-yellow-400 border border-yellow-600/30">
+              Awaiting data
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-400">Window:</label>
