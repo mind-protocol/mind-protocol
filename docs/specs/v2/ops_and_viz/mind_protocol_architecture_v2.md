@@ -570,19 +570,23 @@ pixi.update(renderGraph);
 
 **Symptoms:**
 - `curl http://localhost:8000/api/ping` times out or connection refused
-- Guardian log shows crash loop
-- `.launcher.lock` exists with stale PID
+- Supervisor log shows crash loop or quarantine
+- Services not starting
 
 **Diagnosis:**
-1. Check guardian status: `tail -f guardian.log`
-2. Check lock file: `cat .launcher.lock` → compare PID to running processes
-3. Check port: `netstat -ano | findstr :8000`
+1. Check supervisor status: `tail -f logs/mpsv3_supervisor.log`
+2. Check if supervisor running: `tasklist | findstr mpsv3` (Windows) or `ps aux | grep mpsv3` (POSIX)
+3. Check port availability: `netstat -ano | findstr :8000` (Windows) or `lsof -i :8000` (POSIX)
+4. Check service health: Look for quarantine messages or exceeded retry attempts
 
 **Resolution:**
-1. Kill stale process holding lock
-2. Remove `.launcher.lock`
-3. Restart guardian
-4. Verify with `/api/ping`
+1. If supervisor not running → start it: `python orchestration/mpsv3_supervisor.py`
+2. If service quarantined → check service logs, fix root cause, restart supervisor
+3. If port conflict → kill conflicting process or change port in ServiceSpec
+4. If crash loop → supervisor applies exponential backoff automatically, check logs for error
+5. Verify with `/api/ping` and check counters: `/api/telemetry/counters`
+
+**Note:** MPSv3 uses OS-level singleton (no stale lock files). If supervisor won't start with "lease held" error, old supervisor process is still running - kill it and retry.
 
 ### No Events Flowing
 
@@ -654,4 +658,5 @@ pixi.update(renderGraph);
 
 **End of Architecture Specification**
 
-*Luca Vellumhand - Subs
+*Luca Vellumhand - Substrate Architect*
+*Based on architectural clarification by Nicolas Lester Reynolds (2025-10-25)*
