@@ -290,7 +290,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
       </div>
 
       {/* Message Input - Multi-line (Shift+Enter for new line, Enter to send) */}
-      <div className="px-4 py-3 border-t border-observatory-cyan/20 bg-zinc-900/80">
+      <div className="px-4 py-3 border-t border-observatory-cyan/20 bg-zinc-900">
         <div className="flex items-end gap-2">
           <textarea
             value={messageInput}
