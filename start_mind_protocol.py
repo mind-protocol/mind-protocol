@@ -318,6 +318,8 @@ class ProcessManager:
         self.notifier = GuardianNotifier(enabled=notifications_enabled)
         self._last_hot_restart_ts: Dict[str, float] = {}  # Cooldown tracking for hot-reload
         self._min_hot_restart_interval_sec = 8.0  # Anti-thrash: min seconds between restarts
+        self._consecutive_crashes: Dict[str, int] = {}  # Track crash count for exponential backoff
+        self._last_crash_restart: Dict[str, float] = {}  # Track when we last attempted crash restart
 
     async def cleanup_existing_processes(self):
         """Kill any existing Mind Protocol processes before starting."""
