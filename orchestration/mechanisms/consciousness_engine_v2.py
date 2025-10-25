@@ -174,7 +174,7 @@ class ConsciousnessEngineV2:
         dynamic_path = f"consciousness/citizens/{self.config.entity_id}/CLAUDE_DYNAMIC.md"
         self.dynamic_prompt = DynamicPromptGenerator(
             citizen_id=self.config.entity_id,
-            graph_store=graph_store,
+            graph_store=self.adapter.graph_store,
             network_id=self.config.network_id,
             file_path=dynamic_path
         )
