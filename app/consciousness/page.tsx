@@ -47,6 +47,8 @@ export default function ConsciousnessPage() {
     expandedEntities,
     toggleEntity,
     collapseAll,
+    entityToEntity,
+    updateEntityToEntityFlow,
     updateNodeFromEvent,
     updateLinkFromEvent,
     addOperation
@@ -171,6 +173,44 @@ export default function ConsciousnessPage() {
     // Consciousness state is global - could update UI indicators here
     // (CitizenMonitor uses this for display)
   }, [consciousnessState]);
+
+  // Handle link flow aggregation to entity-to-entity edges
+  useEffect(() => {
+    // Process link flows and aggregate to entity-to-entity connections
+    v2State.linkFlows.forEach((flowCount, linkId) => {
+      if (flowCount <= 0) return;
+
+      // Find the link
+      const link = links.find(l => l.id === linkId);
+      if (!link) return;
+
+      // Find source and target nodes
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+
+      const sourceNode = nodes.find(n => (n.id || n.node_id) === sourceId);
+      const targetNode = nodes.find(n => (n.id || n.node_id) === targetId);
+
+      if (!sourceNode || !targetNode) return;
+
+      // Get primary entities for source and target
+      // Use first entity from entity_activations as primary
+      const sourceEntities = sourceNode.entity_activations
+        ? Object.keys(sourceNode.entity_activations)
+        : [];
+      const targetEntities = targetNode.entity_activations
+        ? Object.keys(targetNode.entity_activations)
+        : [];
+
+      if (sourceEntities.length === 0 || targetEntities.length === 0) return;
+
+      const sourcePrimaryEntity = sourceEntities[0];
+      const targetPrimaryEntity = targetEntities[0];
+
+      // Update entity-to-entity flow
+      updateEntityToEntityFlow(sourcePrimaryEntity, targetPrimaryEntity, flowCount);
+    });
+  }, [v2State.linkFlows, links, nodes, updateEntityToEntityFlow]);
 
   const handleFocusNode = useCallback((nodeId: string) => {
     setFocusedNodeId(nodeId);
