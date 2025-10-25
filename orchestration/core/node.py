@@ -76,6 +76,7 @@ class Node:
     # CRITICAL: Energy is strictly non-negative [0.0, ∞)
     # Inhibition is implemented via SUPPRESS link type, not negative values
     E: float = 0.0  # Activation energy (single scalar, not per-entity)
+    energy_runtime: float = 0.0  # Runtime energy for dynamics (dual-energy architecture)
 
     # Bitemporal tracking (M13) - Reality timeline
     valid_at: datetime = field(default_factory=datetime.now)
