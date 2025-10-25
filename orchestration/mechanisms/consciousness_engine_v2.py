@@ -1152,6 +1152,18 @@ class ConsciousnessEngineV2:
         self.tick_duration_ms = tick_duration
         self.last_tick_time = datetime.now()
 
+        # === Dynamic Prompt Update: Check entity activation changes ===
+        if hasattr(self, 'dynamic_prompt') and hasattr(self.graph, 'subentities') and self.graph.subentities:
+            try:
+                entity_ids = list(self.graph.subentities.keys())
+                global_crit = criticality_metrics.rho_global if criticality_metrics else 0.5
+                await self.dynamic_prompt.check_and_update(
+                    global_criticality=global_crit,
+                    entity_ids=entity_ids
+                )
+            except Exception as e:
+                logger.warning(f"[DynamicPrompt] Update failed: {e}")
+
         # === Step 10: Tick Frame V1 Event (Entity-First Telemetry) + TRIPWIRE: Observability ===
         # tick_frame.v1 is the heartbeat signal - missing events → monitoring blind
         # Replaces legacy frame.end with entity-scale observability
