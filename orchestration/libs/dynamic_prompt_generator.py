@@ -212,13 +212,14 @@ class DynamicPromptGenerator:
             Dict mapping node_id -> (node_name, energy, sub_entity_weights)
         """
         try:
+            # V2 schema: Use n.E (scalar) instead of n.energy (V1 dict)
             cypher = """
             MATCH (n)
-            WHERE n.energy IS NOT NULL
+            WHERE n.E IS NOT NULL
             RETURN
                 id(n) AS node_id,
                 n.name AS node_name,
-                n.energy AS energy,
+                n.E AS energy,
                 n.sub_entity_weights AS sub_entity_weights
             """
 
@@ -230,9 +231,16 @@ class DynamicPromptGenerator:
             node_states = {}
             for row in result:
                 node_id, node_name, energy, sub_entity_weights = row
+
+                # Ensure energy is float (FalkorDB might return string)
+                try:
+                    energy_val = float(energy) if energy is not None else 0.0
+                except (ValueError, TypeError):
+                    energy_val = 0.0
+
                 node_states[str(node_id)] = (
                     node_name or "unknown",
-                    energy or 0.0,
+                    energy_val,
                     sub_entity_weights or {}
                 )
 
