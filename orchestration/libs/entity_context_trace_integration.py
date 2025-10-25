@@ -155,7 +155,7 @@ class EntityContextManager:
 
 class MembershipQueryHelper:
     """
-    Helper for querying BELONGS_TO memberships from graph.
+    Helper for querying MEMBER_OF memberships from graph.
 
     Provides membership weights for entity-localized learning.
     """
