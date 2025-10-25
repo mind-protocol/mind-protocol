@@ -76,7 +76,7 @@ services:
   - orchestration/services/autonomy_orchestrator.py
 - id: dashboard
   cmd:
-  - npm
+  - npm.cmd
   - run
   - dev
   env:
