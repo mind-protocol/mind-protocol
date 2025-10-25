@@ -1818,6 +1818,67 @@ class ConsciousnessEngineV2:
         })
         logger.info(f"[ConsciousnessEngineV2] Queued stimulus: {text[:50]}... (type={source_type})")
 
+    async def _ensure_embedding(self, text: str) -> Optional[np.ndarray]:
+        """
+        Lazy embedding generation with timeout + circuit breaker.
+
+        Tries to generate embedding for stimulus text when Control API provides none.
+        Fails gracefully if embedder is unavailable/slow.
+
+        Args:
+            text: Stimulus text to embed
+
+        Returns:
+            768-dim embedding array or None if unavailable
+
+        Author: Felix "Ironhand"
+        Date: 2025-10-25
+        Pattern: Circuit breaker for optional enrichments (never block core path)
+        """
+        # Lazy init embedding service (don't load heavy model in __init__)
+        if not hasattr(self, '_embedding_service'):
+            try:
+                self._embedding_service = EmbeddingService(backend='sentence-transformers')
+                self._embedding_failures = 0  # Circuit breaker state
+                self._embedding_circuit_open_until = 0.0  # Timestamp when circuit closes
+            except Exception as e:
+                logger.warning(f"[Stimulus] Embedding service unavailable: {e}")
+                self._embedding_service = None
+                return None
+
+        # Circuit breaker: if embedder failed recently, skip (avoid repeated hangs)
+        if self._embedding_circuit_open_until > time.time():
+            logger.debug("[Stimulus] Embedding circuit breaker OPEN, skipping embed")
+            return None
+
+        # Try to embed with hard timeout (2s max)
+        try:
+            loop = asyncio.get_running_loop()
+            embedding = await asyncio.wait_for(
+                loop.run_in_executor(None, self._embedding_service.embed, text),
+                timeout=2.0
+            )
+
+            # Success - reset failure counter
+            self._embedding_failures = 0
+            return np.array(embedding)
+
+        except asyncio.TimeoutError:
+            logger.warning("[Stimulus] Embedding timeout (>2s), using best-effort fallback")
+            self._embedding_failures += 1
+
+            # Open circuit breaker after 3 consecutive failures (30s cooldown)
+            if self._embedding_failures >= 3:
+                self._embedding_circuit_open_until = time.time() + 30.0
+                logger.warning("[Stimulus] Embedding circuit breaker OPEN for 30s after 3 failures")
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"[Stimulus] Embedding failed: {e}")
+            self._embedding_failures += 1
+            return None
+
     async def inject_stimulus_async(self, text: str, severity: float = 0.3, metadata: dict = None):
         """
         Async-safe stimulus injection (for control API).

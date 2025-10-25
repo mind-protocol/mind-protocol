@@ -841,13 +841,84 @@ GET /consciousness/:citizen/metrics/stimuli
 
 ---
 
-## 8. Open Questions for Nicolas
+## 8. Implementation Decisions (Nicolas 2025-10-25)
 
-1. **Threshold tuning:** Initial values for derivation rules (e.g., fragmentation count ≥5)?
-2. **Screenshot OCR:** Phase 1 (adds complexity) or Phase 2 (simpler MVP)?
-3. **Alert routing:** Should `incident.backend_error` trigger Slack/email, or just dashboard?
-4. **Cross-citizen correlation:** Phase 2 feature, or needed in Phase 1?
-5. **L2 persistence:** Store all L2 stimuli in graph, or only successful (→flips) ones?
+**All blockers removed.** Concrete decisions on thresholds, OCR, alerts, correlation, persistence.
+
+### 8.1 Threshold Strategy
+
+**Phase 1 (Conservative Seeds):**
+- **Fragmentation:** ≥5 fragmented frames in 60s AND mean_fragmentation ≥0.60 → `intent.stabilize_narrative`
+- **Error Storm:** ≥10 identical errors in 2min (per stack-fingerprint) → `incident.backend_error`
+- **Learning Spike:** ≥100 weights.updated in 5min OR above Q95 of last 24h → `intent.consolidate_learning`
+- **Belief Mismatch:** commit touches schemas AND ≥3 related backend errors in 10min → `intent.reconcile_beliefs`
+
+**Phase 2 (Learned Percentiles):**
+- Replace seeds with per-citizen Q85-Q95 thresholds (7-day window)
+- Daily `threshold_tuner` job computes and updates config
+- Keep seeds as safety floors
+
+### 8.2 Other Decisions
+
+- **Screenshot OCR:** Phase 2 (simplifies MVP)
+- **Alert Routing:** Dashboard always, Slack/email only for severity=critical with cooldowns + capacity limits
+- **Cross-Citizen Correlation:** Phase 2
+- **L2 Persistence:** Store ALL L2 + evidence + injection results (TTL 30-60d)
+
+### 8.3 Ready-to-Use Config (Phase 1)
+
+```yaml
+# config/deriver_rules.yaml
+windows:
+  error_storm_minutes: 2
+  fragmentation_seconds: 60
+  learning_minutes: 5
+
+rules:
+  - name: incident.backend_error
+    when:
+      type: backend_error
+      fingerprint: same
+      count_ge: 10
+      window_min: 2
+    routing:
+      mode: top_up
+      budget_hint: 4.0
+      alert: true
+      alert_severity: critical
+
+  - name: intent.stabilize_narrative
+    when:
+      type: health.phenomenological
+      fragmented_frames_ge: 5
+      mean_fragmentation_ge: 0.60
+    routing:
+      mode: amplify
+      budget_hint: 2.5
+
+  - name: intent.consolidate_learning
+    when:
+      type: weights.updated
+      count_ge: 100
+      window_min: 5
+      or_above_percentile: 95
+    routing:
+      mode: hybrid
+      budget_hint: 2.0
+
+  - name: intent.reconcile_beliefs
+    when:
+      any_of:
+        - type: git_commit
+          touches: ["schema", "types"]
+        - type: backend_error
+          related_to_commit: true
+          count_ge: 3
+          window_min: 10
+    routing:
+      mode: top_up
+      budget_hint: 3.0
+```
 
 ---
 

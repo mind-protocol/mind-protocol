@@ -736,7 +736,17 @@ Autonomy service generates IntentCards at L2, dispatches missions through existi
 - [x] Persistence schemas (graph structure)
 - [x] Integration with stimulus_injection.md v2.1
 - [x] Success criteria defined
+- [x] Implementation decisions documented (Nicolas 2025-10-25)
+- [x] Phase 1 threshold seed values specified
+- [x] Phase 2 evolution strategy (percentile-based tuning)
+- [x] Alert safety policy defined
+- [x] Persistence strategy (ALL L2 + TTL)
 
-**Substrate specification: COMPLETE**
+**Substrate specification: COMPLETE & IMPLEMENTATION-READY**
 
-**Next step:** Handoff to Ada for orchestration design (watchers, deriver service, phases, rollout).
+**Status:** All blockers removed. Nicolas's decisions integrated. Ready for Ada's orchestration coordination and implementation team execution.
+
+**Next steps:**
+1. Threshold tuner spec (separate doc)
+2. Metrics endpoint spec (separate doc)
+3. Handoff to Ada for Phase A-D coordination
