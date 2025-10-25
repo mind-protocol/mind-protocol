@@ -113,6 +113,30 @@ Checked `ws_stderr.log` (last entry 14:40:52):
 - Iris: Blocked until backend emits events
 - Victor: **IMMEDIATE ACTION - Full system restart required**
 
+**Victor's Hot-Reload Fix:**
+
+✅ **Implemented automatic file watcher for engine code changes**
+
+**What was added** (`websocket_server.py` lines 1172-1234):
+- File watcher using `watchdog` library
+- Monitors critical files: consciousness_engine_v2.py, control_api.py, websocket_broadcast.py, falkordb_adapter.py, node.py, graph.py
+- On file change: 2-second delay → exit with code 99 → guardian restarts automatically
+- Enabled by `MP_HOT_RELOAD=1` (already set in guardian.py line 375)
+
+**How it works:**
+1. Developer saves file (e.g., control_api.py)
+2. Watchdog detects change within 1 second
+3. Log shows: "🔥 HOT-RELOAD: Detected change in control_api.py"
+4. Wait 2 seconds for file write to complete
+5. Process exits cleanly
+6. Guardian detects exit and restarts websocket_server immediately
+7. New code loads on restart
+
+**Next Action:**
+- Install watchdog: `pip install watchdog`
+- Restart system to test
+- Verify: Edit any watched file → see automatic restart within 3 seconds
+
 ---
 
 ## 2025-10-25 19:00 - Nicolas: 🎯 LIVE DYNAMICS PUSH — 90-MINUTE WAR-ROOM
