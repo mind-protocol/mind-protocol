@@ -18,6 +18,7 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from datetime import datetime
+from collections import defaultdict, deque
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,11 @@ class ConsciousnessStateBroadcaster:
                 logger.warning("[ConsciousnessStateBroadcaster] WebSocket manager not available - events will not be broadcast")
         else:
             self.available = True
+
+        # Telemetry counters: track event counts since boot and in 60s window
+        # Atlas implementation - War Room Plan P1
+        self.event_counts_total = defaultdict(int)  # Total counts since boot
+        self.event_timestamps = defaultdict(deque)  # Timestamps for 60s sliding window
 
     async def broadcast_consciousness_state(
         self,
@@ -156,6 +162,19 @@ class ConsciousnessStateBroadcaster:
             ...     data={"node_id": "n1", "energy": 0.8}
             ... )
         """
+        # Telemetry counters: track event counts (Atlas - War Room Plan P1)
+        # This happens BEFORE availability check - we track even if no clients connected
+        import time
+        now = time.time()
+
+        self.event_counts_total[event_type] += 1
+        self.event_timestamps[event_type].append(now)
+
+        # Clean old timestamps outside 60s window
+        cutoff = now - 60.0
+        while self.event_timestamps[event_type] and self.event_timestamps[event_type][0] < cutoff:
+            self.event_timestamps[event_type].popleft()
+
         if not self.available or not self.websocket_manager:
             return
 
@@ -222,6 +241,46 @@ class ConsciousnessStateBroadcaster:
             True
         """
         return self.available and self.websocket_manager is not None
+
+    def get_counter_stats(self) -> Dict[str, Any]:
+        """
+        Get telemetry counter statistics.
+
+        Returns per-type event counts since boot and in 60s sliding window.
+        Used by /api/telemetry/counters endpoint (Atlas - War Room Plan P1).
+
+        Returns:
+            {
+                "event_type": {
+                    "total": int,       # Total events since boot
+                    "last_60s": int     # Events in last 60 seconds
+                }
+            }
+
+        Example:
+            >>> broadcaster = ConsciousnessStateBroadcaster()
+            >>> stats = broadcaster.get_counter_stats()
+            >>> stats["tick_frame_v1"]["total"]
+            1523
+            >>> stats["tick_frame_v1"]["last_60s"]
+            57
+        """
+        import time
+        now = time.time()
+        cutoff = now - 60.0
+
+        stats = {}
+        for event_type, total_count in self.event_counts_total.items():
+            # Clean stale timestamps for accurate 60s count
+            while self.event_timestamps[event_type] and self.event_timestamps[event_type][0] < cutoff:
+                self.event_timestamps[event_type].popleft()
+
+            stats[event_type] = {
+                "total": total_count,
+                "last_60s": len(self.event_timestamps[event_type])
+            }
+
+        return stats
 
     def stride_exec(self, stride_data: Dict[str, Any]):
         """

@@ -1,5 +1,229 @@
 # Team Synchronization Log
 
+## 2025-10-25 19:30 - Victor: 🔍 CRITICAL FINDING - Emitters Already Exist
+
+**Status:** War-room P0.2 task "Felix adds emitters" is ALREADY COMPLETE in codebase
+
+**Evidence from code inspection:**
+
+✅ **tick_frame.v1** - IMPLEMENTED
+- Location: `consciousness_engine_v2.py` lines 1322-1422
+- Broadcasts at end of every tick with entity data, active nodes, criticality metrics
+- Includes tripwire monitoring for observability
+
+✅ **node.flip** - IMPLEMENTED
+- Location: `consciousness_engine_v2.py` lines 1037-1079
+- Detects threshold crossings (E >= theta transitions)
+- Top-K decimation (20 most significant flips by |ΔE|)
+- Broadcasts per flip with E_pre, E_post, theta
+
+✅ **wm.emit** - IMPLEMENTED
+- Location: `consciousness_engine_v2.py` line 1183-1196
+- Entity-first working memory selection
+- Broadcasts selected entities with token shares
+
+**Implication:** The issue is NOT missing emitters. All 3 events are already coded and should be firing every tick.
+
+**Root cause must be one of:**
+1. Events not firing (broadcaster unavailable? conditionals not met?)
+2. Events firing but not reaching dashboard (websocket transport issue?)
+3. Dashboard receiving but not rendering (frontend store/rendering issue?)
+
+**Next Action:** Need to verify if events are actually being broadcast:
+- Check `ws_stderr.log` for "[Broadcaster]" messages
+- Verify `self.broadcaster.is_available()` returns True
+- Confirm engines are ticking (not frozen at tick_count=0)
+- Test websocket connection receives events
+
+**Team Coordination:**
+- Felix: Can skip "add emitters" task - they exist. Instead: verify events firing in logs
+- Atlas: Priority is transport layer - are events reaching websocket clients?
+- Iris: If events ARE arriving, issue is frontend rendering
+- Victor: Standing by to restart engines for testing once diagnosis complete
+
+---
+
+## 2025-10-25 19:00 - Nicolas: 🎯 LIVE DYNAMICS PUSH — 90-MINUTE WAR-ROOM
+
+**Goal:** Within one session, get the dashboard to show *visible motion*: frame ticks, node size/glow changes, WM halos, and sampled link flows. Kill "Awaiting data…" across panels.
+
+---
+
+### P0 — Minimal Event Pack (What Must Exist for Motion)
+
+These 4 event types are the only things the frontend needs to animate:
+
+1. **`tick_frame_v1`** (timebase, 10Hz)
+```json
+{"v":"2","type":"tick_frame_v1","frame_id":8895,"citizen_id":"felix","t_ms":1729864523456}
+```
+
+2. **`node.flip`** (top-K energy deltas per frame)
+```json
+{"v":"2","type":"node.flip","frame_id":8895,"citizen_id":"felix","nodes":[{"id":"n_123","E":3.42,"dE":+0.18},{"id":"n_456","E":0.77,"dE":-0.09}]}
+```
+
+3. **`wm.emit`** (working-memory halos / focus)
+```json
+{"v":"2","type":"wm.emit","frame_id":8895,"citizen_id":"felix","top":["entity_translator","entity_validator"],"all":[["entity_translator",0.82],["entity_validator",0.65]]}
+```
+
+4. **`link.flow.summary`** (sampled flows per stride; ~2% decimation)
+```json
+{"v":"2","type":"link.flow.summary","frame_id":8895,"citizen_id":"felix","flows":[{"src":"n_a","dst":"n_b","flow":0.041},{"src":"n_c","dst":"n_d","flow":0.018}]}
+```
+
+**Acceptance:** Seeing any two of these arrive continuously is enough for visible motion (node size/glow from `node.flip`; halos from `wm.emit`). `tick_frame_v1` keeps timeline moving. `link.flow.summary` adds "life" along edges.
+
+---
+
+### P1 — Task Breakdown by Owner
+
+**Felix — Engine Emitters**
+Files: `consciousness_engine_v2.py`, `diffusion_runtime.py`, `strengthening.py`
+
+- [ ] Emit `tick_frame_v1` at end of each tick (10Hz) - Hook: end of `tick()` → `broadcaster.broadcast_event(...)`
+- [ ] Emit `node.flip`: compute top-K |dE| nodes since last frame (K≈25), clamp to max size 50 per event - Hook: after injections + decay → diff `(E_now - E_prev)`
+- [ ] Emit `wm.emit`: pick top subentities by energy (≥θ and top-N) - Hook: same cadence as tick
+- [ ] Verify `tier.link.strengthened` still fires with ~2% decimation
+- [ ] Do not drop stimuli with `embedding=None` - fallback path already implemented
+
+**Success:** `ws_stderr.log` shows continuous `[Broadcaster] tick_frame_v1`, `node.flip count=XX`, `wm.emit`, `link.flow.summary`. Within 5-10s of stimulus, see `node.flip` for that citizen.
+
+---
+
+**Atlas — Transport + Diagnostics**
+Files: `websocket_server.py`, `control_api.py`, `queue_poller.py`
+
+- [ ] Counters endpoint: `GET /api/telemetry/counters` returning per-type counts since boot + 60s sliding window - Store in dict incremented inside `ConsciousnessStateBroadcaster.broadcast_event`
+- [ ] Hot-reload guard: "full restart suggested" banner when engine-side code changes
+- [ ] Ensure only one consumer drains JSONL (disable ConversationWatcher drain for ambient)
+
+**Success:** `GET /api/telemetry/counters` shows monotonically rising counts for all 4 event types.
+
+---
+
+**Iris — Frontend Plumbing + UI**
+Files: `useWebSocket.ts`, `normalizeEvents.ts`, `store/*`, `PixiRenderer.ts`, `components/*`
+
+- [ ] Normalizer: map events 1-4 exactly - Keep permissive: accept old aliases, log warnings for unknown types
+- [ ] Store updates:
+  - `tick_frame_v1` → `ui.frameId = ...`
+  - `node.flip` → update `store.nodes[id].energy` and `lastDelta`
+  - `wm.emit` → `store.wm.active = top`, `store.wm.scores = all`
+  - `link.flow.summary` → append to rolling ring-buffer for spark/flow overlays
+- [ ] Renderer binding: Add glow intensity = f(|dE|) for last 500ms, WM Halo = f(store.wm.scores[entity])
+- [ ] Active Subentities panel: read `wm.emit.top` and render as list
+
+**Success:** "Tick Timeline" moves; "Active Subentities" shows real entities; nodes resize/glow within seconds; halos appear/disappear with WM focus.
+
+---
+
+**Victor — Stability & Restart Discipline**
+Files: `guardian.py`, `launcher.py`
+
+- [ ] Engine code change = full restart (not just uvicorn reload) - Keep 8s cooldown; print "♻ Engine objects re-instantiated"
+- [ ] Ensure logs split: `ws_stdout.log`, `ws_stderr.log`, `guardian.log`
+- [ ] Add boot banner with git SHA to prove freshness
+
+**Success:** After engine file change, see banner and frame counter resets (proves fresh code).
+
+---
+
+**Ada — Event Contract + Schema Hygiene**
+Files: `SYNC.md`, `schema_registry`, `trace_parser.py`
+
+- [ ] Document canonical shapes (above) and pin in SYNC
+- [ ] Keep schema counts 45/23 stable; verify no drift after hot-reloads
+- [ ] Add one-time linter to flag events missing `v`, `type`, `citizen_id`, `frame_id`
+
+**Success:** SYNC contains canonical docs; counters show only canonical types (no typos).
+
+---
+
+### P2 — "Awaiting Data" Panel-by-Panel Checklist
+
+- **Regulation / Sparks / Task Mode** → needs `stride.exec` (OPTIONAL for first live demo) - Interim: Down-level to `node.flip` as visual driver
+- **3-Tier Strengthening** → `tier.link.strengthened` (already implemented) - Check decimation (2%) and ring buffer length
+- **Dual-View Learning** → `weights.updated` (TRACE-driven) - Will fill as WeightLearner runs; not blocking
+- **Phenomenology Alignment** → `phenomenology.mismatch` - Validate shape; not needed for first motion
+- **Consciousness Health** → `health.phenomenological` (done) - Wire to panel; use 5-tick cadence and hysteresis
+- **Tick Timeline** → `tick_frame_v1` - Should be first to go green
+- **Active Subentities** → `wm.emit` - Replace placeholder now
+
+---
+
+### P3 — Quick Wins (Non-Blocking)
+
+**Layout tuning (Pixi):**
+- Increase baseline edge length; add min edge length
+- Reduce node scatter by increasing charge damping
+- Freeze layout after 3s to reduce drift; resume on focus/drag
+
+**Tooltips:**
+- Node: `name`, `E`, `θ`, top incoming/outgoing (2 each)
+- Link: `source → target`, `w`, last flow sample
+
+**Semantic search fix:**
+- Route to backend semantic_search adapter
+- If index cold, fall back to keyword search with "warming up" badge
+
+---
+
+### P4 — Proof Page (Single Look)
+
+Add "**Live Telemetry Debug**" page (developer-only):
+- Counters from `/api/telemetry/counters` (per type, last 60s rate)
+- Last 20 events (type, citizen, size)
+- Frame ID per citizen
+- Toggle to draw WM halos / link flow samples
+
+**Exit Criteria:** After sending one stimulus, within ≤2s:
+- (a) `tick_frame_v1` increments
+- (b) `node.flip` > 0 items
+- (c) halos appear in Active Subentities
+- (d) at least 1 `link.flow.summary` per ~50 strides
+- (e) "Awaiting data" disappears from Tick Timeline and Active Subentities
+
+---
+
+### 30-Minute Playbook
+
+1. **Felix (10 min):** Add 3 emitters (tick_frame_v1, node.flip, wm.emit) + ensure broadcaster calls
+2. **Victor (2 min):** Hard restart engines (banner shows)
+3. **Atlas (5 min):** Counters endpoint + sanity log "Broadcasted ..." lines
+4. **Iris (10 min parallel):** Wire `wm.emit` to Active Subentities; `node.flip` to store → verify node resizing/glow
+5. **Everyone (3 min):** POST one stimulus; confirm motion; capture screenshots
+
+---
+
+### Known Foot-Guns (Avoid)
+
+- **Hot reload ≠ engine reload** - Always trigger full engine restart when engine files change
+- **Wrong fields** - Runtime → DB mapping must write `E`/`theta` from `energy_runtime`/`threshold_runtime`
+- **Dropping `embedding=None`** - Keep fallback injection path (already implemented)
+- **Two consumers** - Ensure only `queue_poller` injects ambient; CW handles conversations
+
+---
+
+### Ownership (RACI)
+
+| Task | Owner | Support | When Done |
+|------|-------|---------|-----------|
+| Emitters (tick_frame_v1, node.flip, wm.emit) | Felix | Atlas | PR merged, banner shows, counters rising |
+| Counters endpoint | Atlas | Victor | `/api/telemetry/counters` responds; rates > 0 |
+| Active Subentities panel | Iris | Felix | Shows top entities within 2s of stimulus |
+| Engine full-restart on code change | Victor | Atlas | Banner + frame reset after edit |
+| Event schema doc | Ada | Felix/Iris | SYNC updated; linter warns on bad payloads |
+
+---
+
+**Note from Nicolas:** You already proved end-to-end persistence ("Flushed 176/391"). The UI is quiet purely due to **emitter & wiring**. Land the 3 emitters + frontend bindings and you'll immediately see motion (size/glow/halos), even before advanced panels fill in.
+
+**Offer:** Drop the `tick()` tail snippet and Nicolas will annotate exactly where to place the three `broadcast_event` calls for Felix to paste in one shot.
+
+---
+
 ## 2025-10-25 14:35 - Ada: 📊 DASHBOARD INTEGRATION DIAGNOSTIC
 
 **Status:** Backend operational ✅ | Frontend rendering issues identified 🔴
