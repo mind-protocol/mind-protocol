@@ -177,8 +177,7 @@ def health():
 def collect_console_error(signal: ConsoleErrorSignal = Body(...)):
     content = signal.error_message
     if signal.stack_trace:
-        stack_first_line = signal.stack_trace.split('
-')[0] if signal.stack_trace else ""
+        stack_first_line = signal.stack_trace.split('\\n')[0] if signal.stack_trace else ""
         content = f"{signal.error_message} | {stack_first_line}"
     severity = 0.7 if "TypeError" in signal.error_message or "ReferenceError" in signal.error_message else 0.6
     result = process_signal(signal_type="console_error", content=content, severity=severity, origin="dashboard_console")
