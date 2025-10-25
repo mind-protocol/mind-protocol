@@ -33,6 +33,10 @@ class ServiceRegistry:
             config = yaml.safe_load(f)
 
         for service in config.get("services", []):
+            # Parse watch configuration (paths to watch for file changes)
+            watch_config = service.get("watch", {})
+            watched_files = watch_config.get("paths", [])
+
             spec = ServiceSpec(
                 id=service["id"],
                 cmd=service["cmd"],
@@ -40,10 +44,7 @@ class ServiceRegistry:
                 cwd=service.get("cwd"),
                 criticality=service.get("criticality", "CORE"),
                 max_retries=service.get("max_retries", 3),
-            # Parse watch configuration (paths to watch for file changes)
-            watch_config = service.get("watch", {})
-            watched_files = watch_config.get("paths", [])
-
+                watched_files=watched_files
             )
             self.specs[spec.id] = spec
             self.runners[spec.id] = ServiceRunner(spec)
