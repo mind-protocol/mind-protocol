@@ -162,7 +162,7 @@ class ConsciousnessEngineV2:
         self.coherence_state = CoherenceState()
 
         # Learning mechanisms (Phase 3+4)
-        self.stimulus_injector = StimulusInjector()
+        self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
         self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
 
         # Stimulus queue (for Phase 1: Activation)

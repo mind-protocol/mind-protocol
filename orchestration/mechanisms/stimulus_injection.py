@@ -94,10 +94,14 @@ class StimulusInjector:
     Subentity layer (TODO): Subentity-aware injection channels
     """
 
-    def __init__(self):
+    def __init__(self, broadcaster=None):
         """
         Initialize stimulus injector with V1 mechanisms.
+
+        Args:
+            broadcaster: Optional ConsciousnessStateBroadcaster for event emission
         """
+        self.broadcaster = broadcaster
 
         # V1 Mechanisms
         self.health_modulator = HealthModulator(
@@ -721,6 +725,24 @@ class StimulusInjector:
             f"[StimulusInjector] Dual-channel: λ={lambda_val:.2f}, avg_deficit={avg_deficit:.2f}, "
             f"H={H:.3f}, B_top={B_top:.2f}, B_amp={B_amp:.2f}"
         )
+
+        # Emit stimulus.injection.debug event
+        if self.broadcaster and hasattr(self.broadcaster, 'is_available') and self.broadcaster.is_available():
+            import asyncio
+            sim_top5 = sorted([m.similarity for m in matches], reverse=True)[:5]
+            debug_payload = {
+                'kept': len(matches),
+                'avg_gap': round(avg_deficit, 2),
+                'lam': round(lambda_val, 2),
+                'B_top': round(B_top, 2),
+                'B_amp': round(B_amp, 2),
+                'sim_top5': [round(s, 3) for s in sim_top5]
+            }
+            try:
+                loop = asyncio.get_running_loop()
+                asyncio.ensure_future(self.broadcaster.broadcast_event('stimulus.injection.debug', debug_payload), loop=loop)
+            except RuntimeError:
+                asyncio.ensure_future(self.broadcaster.broadcast_event('stimulus.injection.debug', debug_payload))
 
         # Step 3: Compute injections per node
         injections = []
