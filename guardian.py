@@ -372,6 +372,7 @@ def main():
                 env = os.environ.copy()
                 env.setdefault("WS_PORT", "8000")  # Pin WS server port
                 env.setdefault("DASHBOARD_PORT", "3000")  # Pin dashboard port
+                env.setdefault("MP_HOT_RELOAD", "1")  # Enable hot-reload by default during dev
 
                 # Open log file for launcher output
                 launcher_log_path = MIND_PROTOCOL_ROOT / "launcher.log"

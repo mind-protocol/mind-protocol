@@ -990,7 +990,7 @@ class ProcessManager:
         # Check orchestration directory for Python file changes
         orchestration_dir = MIND_PROTOCOL_ROOT / "orchestration"
         if orchestration_dir.exists():
-            for py_file in orchestration_dir.glob("*.py"):
+            for py_file in orchestration_dir.rglob("*.py"):
                 try:
                     current_mtime = py_file.stat().st_mtime
                     file_key = str(py_file)
