@@ -241,20 +241,54 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
       {/* Expanded Content */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
-          {/* Subentity Activity Stream */}
+          {/* Active Subentities */}
           <div>
             <div className="text-xs text-observatory-text/70 uppercase tracking-wider mb-2">
               Active Subentities
             </div>
-            <div className="space-y-2">
-              {citizen.subentities.map(subentity => (
-                <EntityActivityCard
-                  key={subentity.entity_id}
-                  subentity={subentity}
-                  onFocusNode={onFocusNode}
-                />
-              ))}
-            </div>
+            {!subentitySnapshot || Date.now() - (subentitySnapshot.t ?? 0) > 2000 ? (
+              <div className="text-sm text-observatory-text/50 italic">
+                Waiting for live activation...
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-xs text-observatory-text/50">frame #{subentitySnapshot.frame}</div>
+                {subentitySnapshot.active.map(a => (
+                  <div key={a.id} className="flex items-center justify-between consciousness-panel p-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-block w-2 h-2 rounded-full"
+                        style={{ background: a.energy >= a.theta ? '#22c55e' : '#9ca3af' }}
+                      />
+                      <span className="font-medium text-sm text-observatory-cyan">{a.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 h-2 bg-zinc-800 rounded overflow-hidden">
+                        <div
+                          className="h-2 bg-emerald-500 rounded"
+                          style={{ width: `${Math.round(a.energy * 100)}%` }}
+                        />
+                      </div>
+                      <span className="tabular-nums text-xs text-observatory-text/70 w-8 text-right">
+                        {Math.round(a.energy * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {subentitySnapshot.wm && subentitySnapshot.wm.length > 0 && (
+                  <div className="pt-2 border-t border-observatory-teal/30">
+                    <div className="text-xs text-observatory-text/50 mb-1">Working memory</div>
+                    <div className="flex flex-wrap gap-2">
+                      {subentitySnapshot.wm.map(w => (
+                        <span key={w.id} className="px-2 py-0.5 rounded bg-zinc-800 text-xs text-observatory-cyan">
+                          {w.name} <span className="text-observatory-text/50">({Math.round(w.share * 100)}%)</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* CLAUDE_DYNAMIC.md Viewer */}
