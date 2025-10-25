@@ -947,6 +947,8 @@ class ConsciousnessEngineV2:
                 flips_sorted = sorted(flips, key=lambda f: f['delta_E'], reverse=True)
                 top_k_flips = flips_sorted[:20]  # Top 20 most significant flips
 
+                logger.debug(f"[node.flip] Detected {len(flips)} flips, emitting top {len(top_k_flips)}")
+
                 for flip in top_k_flips:
                     await self.broadcaster.broadcast_event("node.flip", {
                         "v": "2",
@@ -957,6 +959,11 @@ class ConsciousnessEngineV2:
                         "Θ": flip["theta"],
                         "t_ms": int(time.time() * 1000)
                     })
+                    logger.debug(f"[node.flip] {flip['node_id']}: {flip['E_pre']:.3f} → {flip['E_post']:.3f} (Δ={flip['delta_E']:.3f})")
+            else:
+                # Log when no flips detected (every 100 ticks to avoid spam)
+                if self.tick_count % 100 == 0:
+                    logger.debug(f"[node.flip] No threshold crossings detected at tick {self.tick_count}")
 
         # === V2 Event: link.flow.summary (aggregate link activity with decimation) ===
         # Decimation: Random sampling at 10% (~10Hz at 100Hz tick rate) to prevent frontend flood
