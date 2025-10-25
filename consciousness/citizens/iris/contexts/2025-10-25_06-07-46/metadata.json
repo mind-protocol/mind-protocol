@@ -2,9 +2,8 @@
   "context_id": "2025-10-25_06-07-46",
   "entity_type": "citizen",
   "entity_id": "iris",
-  "created_at": "2025-10-25T04:07:46.013514+00:00",
-  "created_by": "precompact_hook",
-  "last_updated": "2025-10-25T04:07:46.013514+00:00",
-  "message_count": 0,
-  "has_tool_calls": false
+  "created_at": "2025-10-25T04:18:09.534191+00:00",
+  "last_updated": "2025-10-25T04:18:10.528417+00:00",
+  "message_count": 5424,
+  "has_tool_calls": true
 }

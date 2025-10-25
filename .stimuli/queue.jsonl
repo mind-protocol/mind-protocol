@@ -2,3 +2,4 @@
 {"stimulus_id": "p01_final", "timestamp_ms": 1761365479239, "citizen_id": "felix", "text": "P0.1 FINAL ACCEPTANCE: Complete API to persistence flow with correlation IDs", "severity": 0.7, "origin": "acceptance_test"}
 {"stimulus_id": "stim_1761365589483", "timestamp_ms": 1761365589483, "citizen_id": "felix", "text": "", "severity": 0.3, "origin": "external"}
 {"stimulus_id": "stim_1761365702832", "timestamp_ms": 1761365702832, "citizen_id": "felix", "text": "", "severity": 0.3, "origin": "external"}
+{"stimulus_id": "stim_1761365889651", "timestamp_ms": 1761365889651, "citizen_id": "felix", "text": "", "severity": 0.3, "origin": "external"}
