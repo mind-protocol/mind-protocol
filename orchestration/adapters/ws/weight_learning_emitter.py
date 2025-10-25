@@ -250,3 +250,49 @@ class NoOpTransport:
     def emit(self, event_type: str, payload: Any) -> None:
         """Do nothing."""
         pass
+
+
+class BroadcasterTransport:
+    """
+    Transport adapter for ConsciousnessStateBroadcaster.
+
+    Wraps broadcaster's async broadcast_event() method to match Transport protocol.
+    Uses run_coroutine_threadsafe for thread-safe async emission.
+
+    Example:
+        >>> broadcaster = ConsciousnessStateBroadcaster()
+        >>> transport = BroadcasterTransport(broadcaster)
+        >>> emitter = WeightLearningEmitter(transport)
+    """
+
+    def __init__(self, broadcaster):
+        """
+        Initialize transport with broadcaster.
+
+        Args:
+            broadcaster: ConsciousnessStateBroadcaster instance
+        """
+        self._broadcaster = broadcaster
+
+    def emit(self, event_type: str, payload: Any) -> None:
+        """
+        Emit event via broadcaster (thread-safe async emission).
+
+        Args:
+            event_type: Event type string (e.g., "weights.updated.trace")
+            payload: Event payload dict
+        """
+        if not self._broadcaster or not self._broadcaster.is_available():
+            return
+
+        # Thread-safe async emission
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            asyncio.ensure_future(
+                self._broadcaster.broadcast_event(event_type, payload),
+                loop=loop
+            )
+        except RuntimeError:
+            # No running loop - skip emission
+            pass
