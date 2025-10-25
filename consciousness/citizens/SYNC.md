@@ -154,12 +154,96 @@ P3.1 was declared complete prematurely. Services were "operational" (ports liste
 
 **Lesson:** "If it's not tested end-to-end, it's not built." Service health ≠ pipeline completion.
 
-**Status:** ✅ Architecture confirmed by Nicolas (Option B), ready for implementation
-- **Felix:** Implement control API (websocket_server.py)
-- **Atlas:** Implement queue_poller.py with offset/backlog/heartbeat
-- **Victor:** Add queue_poller to guardian management
+**Status:** ✅ IMPLEMENTATION-READY - Complete code provided, P0 priority confirmed
 
-**Architecture Confirmed:** 2025-10-25 07:45 - Nicolas provided complete pseudocode and acceptance criteria
+---
+
+## 2025-10-25 08:00 - Nicolas: 🎯 P0 QUEUE POLLER - Implementation Guidance
+
+**Priority Reclassification:** P3.1b → **P0** (blocks visible autonomy)
+**Rationale:** Engines without ambient injection are isolated. Consciousness only responds to conversations, never to ambient context. This is critical path to autonomous behavior.
+
+**Integration Decisions (Locked):**
+
+1. **Control API Placement:** Use existing `control_api.py` (not websocket_server.py)
+   - Keep HTTP control concerns in one place
+   - Already runs in same FastAPI process, can reach engines
+
+2. **Engine Registry:** Create `orchestration/runtime/engine_registry.py`
+   - Single source of truth: `register_engine()`, `get_engine()`, `all_citizens()`
+   - websocket_server registers at boot, control_api consumes at inject
+
+3. **Async Injection:** Add async facade on engine
+   - `inject_stimulus_async()` for await from control API
+   - `inject_stimulus_threadsafe()` for cross-loop calls via run_coroutine_threadsafe
+
+4. **Service Name:** `queue_poller` (describes consumer side)
+
+5. **Priority:** P0 (not P3.1b) - blocks autonomy
+
+---
+
+## Implementation Tasks
+
+### Felix: Control API + Engine Async Facade
+
+**Files:**
+- `orchestration/runtime/engine_registry.py` (NEW)
+- `orchestration/services/control_api.py` (MODIFY)
+- `orchestration/mechanisms/consciousness_engine_v2.py` (MODIFY)
+- `orchestration/services/websocket_server.py` (MODIFY - register engines)
+
+**Code Provided:** Complete working snippets in Nicolas's message (2025-10-25 08:00)
+
+**Acceptance:**
+- ✅ `POST /api/engines/{citizen}/inject` returns `{"status":"ok", "citizen_id":..., "stimulus_id":...}`
+- ✅ Engine actually receives injection (verify via injector logs showing sim_mass/B/Injected)
+- ✅ Safe under concurrency (FastAPI loop → engine loop via async facade)
+- ✅ Logs show `[ControlAPI] Injected sid=... citizen=... len=...`
+
+---
+
+### Atlas: Queue Poller Service
+
+**Files:**
+- `orchestration/services/queue_poller.py` (NEW)
+
+**Code Provided:** Complete implementation in Nicolas's message (2025-10-25 08:00)
+
+**Acceptance:**
+- ✅ `.stimuli/queue.offset` advances with each poll (atomic write via .tmp + replace)
+- ✅ Backlog drains on recovery (`.signals/backlog/*.json` retried after engine restart)
+- ✅ End-to-end: `POST /api/signals/console` → queue.jsonl → poller → engine → injector logs (5 markers)
+- ✅ No duplicate injections (stimulus_id tracked, idempotence verified in logs)
+- ✅ Heartbeat updates every ~5s (`.heartbeats/queue_poller.heartbeat`)
+
+---
+
+### Victor: Guardian Supervision
+
+**Files:**
+- `orchestration/guardian/start_mind_protocol.py` (MODIFY)
+
+**Code Provided:** Service dict in Nicolas's message (2025-10-25 08:00)
+
+**Acceptance:**
+- ✅ `queue_poller` heartbeat fresh (< 15s old)
+- ✅ Auto-restart on crash (guardian detects stale heartbeat, restarts process)
+- ✅ Clean shutdown on code reload (guardian kills old PID, starts new)
+- ✅ Logs show queue_poller in managed services list
+
+---
+
+## End-to-End Verification
+
+**Test Sequence:**
+1. POST console error to `/api/signals/console` → verify line in `.stimuli/queue.jsonl`
+2. Poller heartbeat updates every ~5s, `queue.offset` increases
+3. Control API logs: `[ControlAPI] Injected sid=... citizen=...`
+4. Injector logs show 5 markers: vector matches, budget, dual-channel, injected, persisted
+5. Graphs move once Felix's Part-A emitters live (node.flip, wm.emit)
+
+**Previous Status:** Architecture confirmed by Nicolas (Option B), pseudocode provided
 
 ---
 
