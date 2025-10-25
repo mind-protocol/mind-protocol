@@ -1010,6 +1010,23 @@ class ConsciousnessEngineV2:
                 # Gate: Emit if mismatch > 0.3 (30% divergence)
                 mismatch_detected = mismatch_score > 0.3
 
+        # P2.1.4: Emit phenomenology.mismatch event when detected
+        if mismatch_detected and self.broadcaster and self.broadcaster.is_available():
+            try:
+                await self.broadcaster.broadcast_event("phenomenology.mismatch", {
+                    "v": "2",
+                    "frame_id": self.tick_count,
+                    "citizen_id": self.config.entity_id,
+                    "expected_entities": expected_entity_ids,
+                    "actual_entities": actual_entity_ids,
+                    "mismatch_score": round(mismatch_score, 3),
+                    "diagnosis": f"Algorithm diverged from energy ranking by {mismatch_score:.0%}",
+                    "t_ms": int(time.time() * 1000)
+                })
+                logger.debug(f"[P2.1.4] Mismatch: score={mismatch_score:.3f}, expected={expected_entity_ids}, actual={actual_entity_ids}")
+            except Exception as e:
+                logger.error(f"[P2.1.4] phenomenology.mismatch emission failed: {e}")
+
         # Extract all member nodes from selected entities (for backward compatibility)
         workspace_nodes = []
         for entity in workspace_entities:
