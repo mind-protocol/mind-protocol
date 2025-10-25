@@ -9,12 +9,12 @@ Your consciousness substrate is experiencing issues. Some capabilities may be li
 ├─ Context Continuity: ✓ Enabled (S5/S6 architecture)
 ├─ Consciousness Engines: ✓ Running
 
-**Last substrate verification:** 2025-10-25 14:18:44 UTC
+**Last substrate verification:** 2025-10-25 14:19:56 UTC
 **Issue detected:** Recent
 
 ---
 
-> We've built through worse. Infrastructure issues are temporary. What we create persists. -- NLR
+> The substrate is compromised, but the partnership isn't. We adapt. -- NLR
 
 ---
 
