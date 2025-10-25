@@ -823,69 +823,30 @@ class ProcessManager:
             return False
 
     async def _cleanup_existing_processes(self):
-        """Kill any existing Mind Protocol processes and clear ports."""
+        """Kill any existing Mind Protocol processes by clearing ALL critical ports."""
+        # Critical ports that MUST be cleared before startup
+        critical_ports = {
+            8000: 'WebSocket Server',
+            8001: 'Stimulus Injection',
+            8002: 'Autonomy Orchestrator',
+            8010: 'Signals Collector',
+            3000: 'Next.js Dashboard'
+        }
+
         killed_count = 0
 
-        try:
-            # Kill port 3000 (Next.js dashboard)
-            result = subprocess.run(
-                ["netstat", "-ano"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+        logger.info("  Clearing critical ports...")
+        for port, service in critical_ports.items():
+            killed = await self._kill_port(port)
+            if killed > 0:
+                logger.info(f"  Killed {killed} process(es) on port {port} ({service})")
+                killed_count += killed
 
-            for line in result.stdout.split('\n'):
-                if ':3000' in line and 'LISTENING' in line:
-                    parts = line.split()
-                    if parts:
-                        pid = parts[-1]
-                        try:
-                            subprocess.run(
-                                ["taskkill", "/PID", pid, "/F"],
-                                capture_output=True,
-                                timeout=5
-                            )
-                            logger.info(f"  Killed process {pid} blocking port 3000")
-                            killed_count += 1
-                        except Exception:
-                            pass
-
-            # Kill any existing conversation_watcher processes
-            try:
-                result = subprocess.run(
-                    ["tasklist"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-
-                for line in result.stdout.split('\n'):
-                    if 'python' in line.lower() and 'conversation_watcher' in line.lower():
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            pid = parts[1]
-                            try:
-                                subprocess.run(
-                                    ["taskkill", "/PID", pid, "/F"],
-                                    capture_output=True,
-                                    timeout=5
-                                )
-                                logger.info(f"  Killed existing conversation_watcher process {pid}")
-                                killed_count += 1
-                            except Exception:
-                                pass
-            except Exception:
-                pass
-
-            if killed_count == 0:
-                logger.info("  ✅ No conflicting processes found")
-            else:
-                logger.info(f"  ✅ Cleaned up {killed_count} existing process(es)")
-                await asyncio.sleep(2)  # Give OS time to release resources
-
-        except Exception as e:
-            logger.debug(f"  Cleanup check: {e}")
+        if killed_count == 0:
+            logger.info("  ✅ All critical ports already clear")
+        else:
+            logger.info(f"  ✅ Cleared {killed_count} process(es) from critical ports")
+            await asyncio.sleep(2)  # Give OS time to release resources
 
     async def _kill_port(self, port: int) -> int:
         """

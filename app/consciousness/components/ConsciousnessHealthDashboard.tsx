@@ -34,6 +34,14 @@ interface HealthMetrics {
   coherence_alignment: number;
   multiplicity_health: number;
   overall_health: number;
+  // Diagnostic fields for cause narratives
+  thrashing_detected: boolean;
+  wm_challenge_balance: number;
+  engagement: number;
+  skill_demand_match: number;
+  resonance_dominance_ratio: number;
+  distinct_entities_coactive: number;
+  co_activation_stability: number;
 }
 
 export default function ConsciousnessHealthDashboard({

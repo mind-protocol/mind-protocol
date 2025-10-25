@@ -46,7 +46,7 @@ class EntityPersistence:
 
     def normalize_memberships(self, graph: 'Graph') -> Dict[str, Dict[str, float]]:
         """
-        Normalize BELONGS_TO membership weights per node.
+        Normalize MEMBER_OF membership weights per node.
 
         Ensures Σ_entities weight ≤ 1.0 for each node (per Nicolas's requirement).
 
@@ -149,7 +149,7 @@ class EntityPersistence:
 
     def upsert_memberships(self, graph: 'Graph', normalized_weights: Dict[str, Dict[str, float]]) -> int:
         """
-        Upsert BELONGS_TO memberships with normalized weights.
+        Upsert MEMBER_OF memberships with normalized weights.
 
         Args:
             graph: Graph with nodes and entities
@@ -168,7 +168,7 @@ class EntityPersistence:
                     query = """
                     MATCH (n:Node {id: $node_id})
                     MATCH (e:Subentity {id: $entity_id})
-                    MERGE (n)-[r:BELONGS_TO]->(e)
+                    MERGE (n)-[r:MEMBER_OF]->(e)
                     SET r.weight = $weight
                     RETURN r
                     """

@@ -1,1 +1,2 @@
 {"stimulus_id":"manual_test_1","timestamp_ms":1729838400000,"citizen_id":"felix","text":"Manual test: verify watcher drains queue and processes stimulus","severity":0.4,"origin":"manual_verification"}
+{"stimulus_id": "p01_final", "timestamp_ms": 1761365479239, "citizen_id": "felix", "text": "P0.1 FINAL ACCEPTANCE: Complete API to persistence flow with correlation IDs", "severity": 0.7, "origin": "acceptance_test"}

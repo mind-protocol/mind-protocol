@@ -285,7 +285,7 @@ class TraceCapture:
 
             logger.info(f"[TraceCapture] Entity context derived: {entity_context}")
 
-            # Query BELONGS_TO memberships for all nodes being updated
+            # Query MEMBER_OF memberships for all nodes being updated
             node_ids_to_update = list(reinforcement_seats.keys())
             memberships = self.membership_helper.get_node_memberships(
                 node_ids=node_ids_to_update,
@@ -516,7 +516,7 @@ class TraceCapture:
                 # Insert into scope-appropriate graph with node type label
                 await self._insert_node(node, node_type, graph)
 
-                # P1: Persist entity membership based on current WM state (BELONGS_TO pattern)
+                # P1: Persist entity membership based on current WM state (MEMBER_OF pattern)
                 logger.info(f"[TraceCapture] P1 CHECK: scope={scope}, last_wm_entities={self.last_wm_entities}")
                 if scope == 'personal' and self.last_wm_entities:
                     # Assign to primary entity from WM (first entity = most active)

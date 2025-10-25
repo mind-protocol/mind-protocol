@@ -1258,15 +1258,16 @@ class FalkorDBAdapter:
         timestamp: Optional[int] = None
     ) -> bool:
         """
-        Persist entity membership for a node using robust MEMBER_OF pattern.
+        Persist entity membership for a node using hardened MEMBER_OF pattern.
 
         Creates MEMBER_OF link from node to entity and sets primary_entity property.
         Uses MERGE with ON CREATE/ON MATCH for idempotency - safe to call multiple times.
 
-        PRODUCTION-GRADE PATTERN (Nicolas's guidance):
+        PRODUCTION-GRADE PATTERN (P1.3 Hardening):
         - Match nodes by unique 'id' property (not 'name')
-        - Match entities by 'name' property (canonical key)
+        - Match entities by 'name' property with :Subentity label (label-safe)
         - Use MEMBER_OF (semantic: nodes can belong to multiple entities)
+        - ε-policy: Update primary_entity only if missing or new weight > current + ε (0.1)
         - Add RETURN barrier to prevent read-after-write races
 
         Args:
@@ -1299,14 +1300,23 @@ class FalkorDBAdapter:
                 from datetime import datetime
                 timestamp = int(datetime.now().timestamp() * 1000)
 
-            # Robust pattern: Match by id, use MEMBER_OF, add RETURN barrier
+            # P1.3 Hardened pattern: label-safe MATCH + ε-policy for primary_entity
             query = """
             MATCH (n {id: $node_id})
             MATCH (e:Subentity {name: $entity_name})
             MERGE (n)-[r:MEMBER_OF]->(e)
               ON CREATE SET r.role = $role, r.weight = $weight, r.at = $timestamp
               ON MATCH  SET r.role = $role, r.weight = $weight
-            SET n.primary_entity = CASE WHEN $role = 'primary' THEN $entity_name ELSE n.primary_entity END
+            WITH n, e, r
+            OPTIONAL MATCH (n)-[current_primary:MEMBER_OF]->(primary_e:Subentity)
+              WHERE n.primary_entity = primary_e.name
+            WITH n, e, r, current_primary
+            SET n.primary_entity = CASE
+              WHEN $role = 'primary' AND n.primary_entity IS NULL THEN $entity_name
+              WHEN $role = 'primary' AND current_primary IS NULL THEN $entity_name
+              WHEN $role = 'primary' AND r.weight > coalesce(current_primary.weight, 0.0) + 0.1 THEN $entity_name
+              ELSE n.primary_entity
+            END
             RETURN 1
             """
 
