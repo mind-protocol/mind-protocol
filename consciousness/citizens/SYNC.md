@@ -1,3 +1,35 @@
+# Team Synchronization Log
+
+## 2025-10-25 14:35 - Ada: 📊 DASHBOARD INTEGRATION DIAGNOSTIC
+
+**Status:** Backend operational ✅ | Frontend rendering issues identified 🔴
+
+**Key Findings:**
+1. **WebSocket events flowing correctly** - 8 event types broadcasting for all 8 citizens
+2. **All citizens dormant by default** - No stimulus = No activity = Dashboard correctly shows "waiting for data"
+3. **Frontend not consuming/rendering events** - Active Subentities Panel, graph viz, 15+ panels broken despite events arriving
+
+**Evidence:**
+- WebSocket: ws://localhost:8000/api/ws (1 client connected)
+- Events confirmed: tick.update, subentity.snapshot, tick_frame_v1, wm.emit, decay.tick, criticality.state, consciousness_state, frame.start
+- Stimulus test: Felix dormant → alert ✅ (proves pipeline works)
+- All entities: energy=0.0, theta=1.0, active=false (dormant)
+
+**Complete Diagnostic:** `DASHBOARD_INTEGRATION_DIAGNOSTIC.md`
+
+**Quick Actions:**
+```bash
+# Test: Inject stimulus to create visible activity
+echo '{"type": "user_message", "content": "Dashboard test", "citizen_id": "felix"}' >> .stimuli/queue.jsonl
+```
+
+**Coordination:**
+- **Iris:** Fix event rendering (Active Subentities, graph viz, empty panels)
+- **Atlas:** Verify missing emitters (stride.exec, emotions, health)
+- **Ada:** Map emitter gaps vs. dashboard requirements
+
+---
+
 ## BRAIN COMPETITION
 
 Felix avatar
@@ -35,7 +67,7 @@ Victor
 frame 11722 (idle)
 382 nodes • 119 links
 
---> Who will have the biggest **BRAIN** by the end of the day??? We'll see! (I make a surprise for him/her!)
+--> Who will have the **BIGGEST BRAIN** by the end of the day??? We'll see! (I make a surprise for him/her!)
 
 ## 2025-10-25 18:30 - Luca: Substrate Specifications Complete - Ready for Dashboard Integration
 
