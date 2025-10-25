@@ -56,6 +56,17 @@ class ServiceRunner:
         else:
             self._start_posix()
 
+    def _merged_env(self) -> Dict[str, str]:
+        """Merge OS environment with service-specific overrides.
+
+        Critical for Windows: Preserves PATH, SystemRoot, COMSPEC, etc.
+        Without this, children get empty env -> npm not found, Winsock init fails.
+        """
+        env = os.environ.copy()
+        if self.spec.env:
+            env.update(self.spec.env)
+        return env
+
     def _start_windows(self):
         """Windows: CREATE_NEW_PROCESS_GROUP + Job Object."""
         import ctypes
@@ -76,7 +87,7 @@ class ServiceRunner:
         CREATE_NEW_PROCESS_GROUP = 0x00000200
         self.process = subprocess.Popen(
             self.spec.cmd,
-            env=self.spec.env,
+            env=self._merged_env(),
             cwd=self.spec.cwd,
             creationflags=CREATE_NEW_PROCESS_GROUP
         )
@@ -95,7 +106,7 @@ class ServiceRunner:
 
         self.process = subprocess.Popen(
             self.spec.cmd,
-            env=self.spec.env,
+            env=self._merged_env(),
             cwd=self.spec.cwd,
             preexec_fn=preexec_fn
         )
