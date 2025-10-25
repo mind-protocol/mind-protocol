@@ -1248,6 +1248,85 @@ class FalkorDBAdapter:
         logger.info(f"Subentity persistence complete: {stats}")
         return stats
 
+    def persist_membership(
+        self,
+        graph_name: str,
+        node_id: str,
+        entity_id: str,
+        weight: float = 1.0,
+        role: str = "primary",
+        timestamp: Optional[int] = None
+    ) -> bool:
+        """
+        Persist entity membership for a node.
+
+        Creates BELONGS_TO link from node to entity and sets primary_entity property.
+        Uses MERGE for idempotency - safe to call multiple times.
+
+        Args:
+            graph_name: Graph database name
+            node_id: Node to assign membership
+            entity_id: Subentity the node belongs to
+            weight: Membership weight (0-1, default 1.0)
+            role: Membership role ('primary' or 'secondary', default 'primary')
+            timestamp: Creation timestamp in milliseconds (default: now)
+
+        Returns:
+            True if successful, False otherwise
+
+        Example:
+            >>> adapter.persist_membership(
+            ...     "citizen_felix",
+            ...     "node_consciousness_architecture",
+            ...     "entity_citizen_felix_architect",
+            ...     weight=1.0,
+            ...     role="primary"
+            ... )
+            True
+        """
+        try:
+            # Set graph context
+            self.graph_store.database = graph_name
+
+            # Default timestamp to now if not provided
+            if timestamp is None:
+                from datetime import datetime
+                timestamp = int(datetime.now().timestamp() * 1000)
+
+            # Create BELONGS_TO link using MERGE (idempotent)
+            # Also set primary_entity property on node for denormalized access
+            query = """
+            MATCH (n {id: $node_id})
+            MATCH (e:Subentity {id: $entity_id})
+            MERGE (n)-[r:BELONGS_TO]->(e)
+            SET r.weight = $weight,
+                r.role = $role,
+                r.created_at = $timestamp,
+                n.primary_entity = CASE WHEN $role = 'primary' THEN $entity_id ELSE n.primary_entity END
+            RETURN r
+            """
+
+            params = {
+                'node_id': node_id,
+                'entity_id': entity_id,
+                'weight': weight,
+                'role': role,
+                'timestamp': timestamp
+            }
+
+            result = self.graph_store.query(query, params)
+
+            if result:
+                logger.debug(f"Persisted membership: {node_id} -[BELONGS_TO:{role}:{weight}]-> {entity_id}")
+                return True
+            else:
+                logger.warning(f"No result from membership persistence: {node_id} -> {entity_id}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Failed to persist membership {node_id} -> {entity_id}: {e}")
+            return False
+
     def get_node_count(self, graph_name: str) -> int:
         """
         Get number of nodes in graph.

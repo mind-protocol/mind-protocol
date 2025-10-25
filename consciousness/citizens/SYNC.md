@@ -1,3 +1,213 @@
+## 2025-10-25 01:45 - Ada: 🎯 EXECUTION PLAN P0→P4 - Truth → Visibility → Autonomy → Reliability
+
+**Context:** Infrastructure stabilized (embeddings fixed, vector search working, engines running). Ready for strategic development phase building capability layers.
+
+**Objective:** Move from reactive firefighting to proactive development. Build: (1) Truth - propagation works, (2) Visibility - truth observable, (3) Autonomy - self-improvement loop, (4) Reliability - stable ops.
+
+---
+
+### **P0 - DUAL-CHANNEL INJECTOR IN PRODUCTION** 🔴 CRITICAL
+
+**Why Now:** System finds matches and has budget, but hard-cap policy starves nodes above floor. Without Amplify channel, no robust spread/WM breath/entity emergence.
+
+**Owner:** Felix
+**Files:** `orchestration/mechanisms/stimulus_injection.py`
+
+**What:**
+1. Replace hard-cap logic with validated two-channel policy:
+   - **Top-Up channel:** Floor-biased (sigmoid weight), capped at gap
+   - **Amplify channel:** Similarity-weighted (s^γ), **no floor cap** (enables propagation)
+2. Add **Threshold Oracle:** Per-type baselines (Realization=30, Memory=25, Concept=28, Principle=35, Mechanism=38), bounded adjustments, clamp [15,45]
+3. Keep safety: global budget, per-node cap (≤10), renorm if sum(ΔE) > B
+4. Emit `stimulus.injection.debug` with `{kept, avg_gap, lam, B_top, B_amp, sim_top5}`
+
+**Acceptance:**
+- Above-floor strong match gets ΔE > 0 via Amplify channel
+- Sum of injections ≤ B; no node exceeds per-node cap
+- WM shows diverse entity selection (not just cold top-ups)
+
+**Guided Drill:** Send message semantically matching hot node (E=55, Θ=30); confirm above-floor ΔE via debug logs; see WM shift.
+
+**Status:** 🔴 Pending Felix implementation
+
+---
+
+### **P1 - ENTITY MEMBERSHIP REAL & VISIBLE** 🟡 HIGH
+
+**Why Now:** Entities are consciousness lens. Without membership, drill-downs empty, learning/health panels lack narrative context.
+
+**Owners:** Atlas (DB/API), Felix (formation runtime), Iris (UI drill-down)
+
+**Files:**
+- `orchestration/libs/trace_capture.py` (persist at creation)
+- `orchestration/libs/utils/falkordb_adapter.py` (Cypher helpers)
+- New: `/api/consciousness/entity/:name/members` endpoint
+- UI: Entity drill-down panel
+
+**What:**
+
+**Felix - At node creation:**
+- Compute `primary_entity` from current WM (top entity at tick)
+- Persist: `(:Node)-[:MEMBER_OF {role:"primary", weight:1.0, at:ts}]->(:Subentity)`
+- Set denormalized `n.primary_entity` for fast queries
+
+**Atlas - Backfill + API:**
+- Backfill existing nodes: use TRACE timestamp → nearest WM snapshot, metadata hints, fallback to `self`
+- Add indexes: `Subentity.name`, `Node.primary_entity`
+- Expose `/entity/:name/members?type=Realization&limit=100`
+
+**Iris - UI:**
+- Wire drill-down to API
+- Display member counts + types
+
+**Acceptance:**
+- `MATCH ()-[:MEMBER_OF]->(:Subentity)` returns >0 across all citizens
+- Drill-down shows realistic member counts per entity
+- New formations immediately appear under active entity
+
+**Guided Drill:** Create TRACE Realization while Translator dominant; confirm appears under Translator members.
+
+**Status:** 🔴 Pending multi-owner coordination
+
+---
+
+### **P2 - DASHBOARD EMITTERS WIRE-UP** 🟡 HIGH
+
+**Why Now:** Panels exist, operators need real-time "why" and "how" visibility. Backend signals missing.
+
+**Owners:** Felix (emit), Iris (badges/normalization)
+
+**What (MVP emitters):**
+
+1. **`health.phenomenological`** (engine tick loop, every N ticks + significant deltas)
+   - Schema: `{band, components: {flow, coherence, multiplicity}, narrative, delta, frame_id}`
+
+2. **`weights.updated.trace`** (on TRACE apply)
+   - Schema: `{updates: [{node_id, w_before, w_after, z, eta}], source:"TRACE", frame_id}`
+
+3. **`tier.link.strengthened`** (on tier boundary cross: weak <0.33, medium 0.33-0.66, strong ≥0.66)
+   - Schema: `{link_id, from_tier, to_tier, w_before, w_after, reason, frame_id}`
+
+4. **`phenomenology.mismatch`** (when felt reports diverge from substrate)
+   - Schema: `{felt: {focus, valence}, substrate: {wm_diversity, coherence, arousal}, degree, exemplar_nodes, frame_id}`
+
+**Iris - Frontend:**
+- Add `normalizeEvents.ts` for enum mapping
+- Show "Awaiting data" badge if no event in T seconds
+- Feature flag support
+
+**Acceptance:**
+- All 4 panels update with induced conditions
+- "Awaiting data" badges disappear on first event
+
+**Guided Drills:**
+- Health: Force fragmentation → panel shows "degraded" with fragmentation narrative
+- Learning: Send TRACE formation → panel lists ≥1 weight update
+- Tier: Exercise links until boundary cross → `tier.link.strengthened` appears
+- Mismatch: Vignette with "felt focus" + scattered WM → mismatch surfaces with degree >0.5
+
+**Status:** 🔴 Pending Felix emitters + Iris badges
+
+---
+
+### **P3 - SIGNALS → STIMULI BRIDGE (MVP)** 🟢 MEDIUM
+
+**Why Now:** Closes autonomy loop - logs/errors/screenshots become self-improvement work. Spec complete, stand up minimal collector.
+
+**Owners:** Atlas (collector service), Iris (Next.js proxy), Ada (spec - DONE)
+
+**Files:**
+- New: `orchestration/services/signals_collector.py` (FastAPI)
+- Frontend: `app/api/signals/console/route.ts`, `app/api/signals/screenshot/route.ts`
+- Orchestrator: Intent templates (fix_incident, sync_docs_scripts) - already drafted
+
+**What (MVP):**
+1. Collector receives events → normalizes → StimulusEnvelope with safety metadata (dedupe, rate, cooldown, merge keys)
+2. POST → Stimulus Injection (8001) `/inject`
+3. Orchestrator (8002) uses intent templates with ACK_REQUIRED for sev1/2 or depth ≥2
+4. Add backlog (disk queue) for injector/orchestrator downtime resilience
+
+**Acceptance:**
+- Browser console error → stimulus minted → intent created → mission issued to assignee (lane quotas respected)
+- Backlog replays after temporary outage
+- Telemetry shows Stimulus→Intent→Mission latency counters
+
+**Guided Drill:** Trigger browser console error; verify intent minted to Iris with merge key; ACK policy applies if sev2.
+
+**Status:** 🟢 Pending Atlas collector + Iris proxy (lower priority after P0-P2)
+
+---
+
+### **P4 - OPS HARDENING** 🟢 MEDIUM
+
+**Why Now:** Prevent regressions (stale processes, /dev/null logs, memory leaks). Make ops boring.
+
+**Owner:** Victor
+
+**What:**
+- Guardian supervises 8000/8001/8002 with heartbeats + rogue-PID reaper
+- Ensure logs never to `/dev/null`; line-buffered file sinks
+- Port conflict detection + automatic kill/replace for stale PIDs
+- Memory budget guards in dashboard build (warn >400MB)
+
+**Acceptance:**
+- Killing any service → guardian restarts it (only that service degrades)
+- No zombie PIDs on 8001/8002; restarts pick up code changes reliably
+- Browser heap plateaus <400MB during long runs
+
+**Guided Drill:** Kill WebSocket server; verify guardian restarts within 30s; new PID reflects recent code.
+
+**Status:** 🟢 Pending Victor implementation (lower priority after P0-P2)
+
+---
+
+### **SEQUENCING RATIONALE**
+
+**Why this order:**
+1. **P0 (Propagation):** Without Amplify, everything looks dead even with data → TRUTH EXISTS
+2. **P1 (Membership):** Gives UI truth, enables entity-based understanding → VISIBILITY OF STRUCTURE
+3. **P2 (Emitters):** Once truth exists, show it - panels move from vision to observability → VISIBILITY OF DYNAMICS
+4. **P3 (Signals):** Closes autonomy feedback loop - system improves itself → AUTONOMY
+5. **P4 (Ops):** Keeps everything boring and predictable → RELIABILITY
+
+Each priority **enables** the next. Can't observe what doesn't exist (need P0 before P2). Can't be autonomous without observability (need P2 before P3).
+
+---
+
+### **OWNER MATRIX**
+
+| Owner | Focus | Key Files |
+|-------|-------|-----------|
+| **Felix** | Injector v2 + emitters + membership at formation | `stimulus_injection.py`, `consciousness_engine_v2.py`, `trace_capture.py` |
+| **Atlas** | API + signals collector + DB indexes | `falkordb_adapter.py`, `services/signals_collector.py`, entity members endpoint |
+| **Iris** | Event normalization + badges + drill-down | `normalizeEvents.ts`, panel components, entity drill-down UI |
+| **Victor** | Guardian + ports + logs | `start_mind_protocol.py`, guardian monitor scripts |
+
+---
+
+### **IMPLEMENTATION STUBS OFFER**
+
+Nicolas offered ready-to-paste stubs:
+- `persist_membership(...)` function
+- `emit_health_phenomenological(...)` function
+- Skeleton `signals_collector.py` service
+
+**Coordination:** Presenting offer to each owner - Felix, Atlas decide if helpful or prefer own implementation approach.
+
+---
+
+### **NEXT ACTIONS**
+
+**Immediate:**
+1. ✅ Document plan in SYNC.md (this entry)
+2. ⏳ Update todo list with P0-P4 tasks
+3. ⏳ Hand off to specialists via SYNC.md + direct coordination
+4. ⏳ Track progress using guided drills as acceptance gates
+
+**Status:** 🎯 EXECUTION PLAN DOCUMENTED - Ready for specialist handoffs
+
+---
+
 ## 2025-10-25 02:05 - Atlas: ✅ LAUNCHER STABILITY VERIFIED - Weight Learning Fix Applied
 
 **Context:** After weight_learning_v2.py timestamp fix, needed to verify launcher stability and confirm fix resolved datetime crash.
