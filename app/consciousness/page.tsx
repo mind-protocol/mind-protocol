@@ -188,13 +188,7 @@ export default function ConsciousnessPage() {
     }
   }, [selectGraph]);
 
-  // Auto-select first available citizen on mount
-  useEffect(() => {
-    if (!currentGraphId && availableGraphs.citizens.length > 0) {
-      const firstCitizen = availableGraphs.citizens[0];
-      selectGraph('citizen', firstCitizen.id);
-    }
-  }, [availableGraphs, currentGraphId, selectGraph]);
+  // Auto-select logic handled by useGraphData hook (removed duplicate to fix infinite render loop)
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-observatory-dark">

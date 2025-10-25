@@ -42,6 +42,9 @@ const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation 
 const EMOTION_TTL_MS = 5 * 60 * 1000; // 5 minutes - remove stale emotion data
 const CLEANUP_INTERVAL_MS = 60 * 1000; // Run cleanup every 60 seconds
 
+// 🎯 PHASE 4 STABILITY: 10Hz throttling to prevent flicker and excessive re-renders
+const UPDATE_THROTTLE_MS = 100; // Batch updates and flush at 10Hz (100ms intervals)
+
 /**
  * useWebSocket Hook
  *
@@ -132,15 +135,27 @@ export function useWebSocket(): WebSocketStreams {
   // Track last processed frame_id instead of time to avoid processing duplicates
   const lastProcessedFrameRef = useRef<number | null>(null);
 
-  /**
-   * Handle incoming WebSocket messages
-   */
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
+  // 🎯 PHASE 4: Throttling infrastructure - batch updates and flush at 10Hz
+  const pendingUpdatesRef = useRef<any[]>([]);
+  const flushIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-      // Use (data as any).type to handle both typed events and internal engine events
-      switch ((data as any).type) {
+  /**
+   * 🎯 PHASE 4: Flush pending updates at 10Hz
+   * Processes all buffered WebSocket events in single setState batch
+   * Reduces React re-render frequency from ~49Hz to 10Hz
+   */
+  const flushPendingUpdates = useCallback(() => {
+    const updates = pendingUpdatesRef.current;
+    if (updates.length === 0) return;
+
+    // Clear buffer immediately to avoid processing duplicates
+    pendingUpdatesRef.current = [];
+
+    // Process all updates in single pass
+    updates.forEach((data) => {
+      const eventType = (data as any).type;
+
+      switch (eventType) {
         // V1 events (legacy)
         case 'entity_activity':
           setEntityActivity(prev => {
@@ -165,37 +180,27 @@ export function useWebSocket(): WebSocketStreams {
           const frameEvent = data as FrameStartEvent;
 
           // De-duplicate: Skip if we've already processed this frame_id
-          // This prevents infinite re-render loops when duplicate events arrive
           if (lastProcessedFrameRef.current === frameEvent.frame_id) {
             break;
           }
           lastProcessedFrameRef.current = frameEvent.frame_id;
 
           setV2State(prev => {
-            // Double-check frame hasn't already been applied to state
-            // (defense-in-depth against race conditions)
             if (prev.currentFrame === frameEvent.frame_id) {
               return prev; // Same frame, skip update
             }
 
-            // Accumulate frame events for Priority 3 tick speed visualization
             const updatedFrameEvents = [...prev.frameEvents, frameEvent].slice(-MAX_FRAME_EVENTS);
 
             return {
               ...prev,
               currentFrame: frameEvent.frame_id,
               frameEvents: updatedFrameEvents,
-
-              // Criticality metrics
               rho: frameEvent.rho ?? prev.rho,
               safety_state: frameEvent.safety_state ?? prev.safety_state,
-
-              // Timing metrics
               dt_ms: frameEvent.dt_ms ?? prev.dt_ms,
               interval_sched: frameEvent.interval_sched ?? prev.interval_sched,
               dt_used: frameEvent.dt_used ?? prev.dt_used,
-
-              // Clear link flows at frame start (only if not already empty)
               linkFlows: prev.linkFlows.size > 0 ? new Map<string, number>() : prev.linkFlows
             };
           });
@@ -205,11 +210,10 @@ export function useWebSocket(): WebSocketStreams {
         case 'wm.emit': {
           const wmEvent = data as WmEmitEvent;
           setV2State(prev => {
-            // Only update if working memory content changed
             const newNodeIds = new Set(wmEvent.node_ids);
             if (prev.workingMemory.size === newNodeIds.size &&
                 [...newNodeIds].every(id => prev.workingMemory.has(id))) {
-              return prev; // No change, return same object
+              return prev;
             }
             return {
               ...prev,
@@ -233,13 +237,11 @@ export function useWebSocket(): WebSocketStreams {
         case 'link.flow.summary': {
           const flowEvent = data as LinkFlowSummaryEvent;
           setV2State(prev => {
-            // Guard: Check if flows array exists
             if (!flowEvent.flows || !Array.isArray(flowEvent.flows)) {
               console.warn('[useWebSocket] link.flow.summary event missing flows array:', flowEvent);
               return prev;
             }
 
-            // Check if any flow values actually changed
             let hasChanges = false;
             for (const flow of flowEvent.flows) {
               if (prev.linkFlows.get(flow.link_id) !== flow.count) {
@@ -249,7 +251,7 @@ export function useWebSocket(): WebSocketStreams {
             }
 
             if (!hasChanges) {
-              return prev; // No changes, return same object
+              return prev;
             }
 
             const newFlows = new Map(prev.linkFlows);
@@ -267,7 +269,6 @@ export function useWebSocket(): WebSocketStreams {
         case 'frame.end': {
           const frameEndEvent = data as FrameEndEvent;
           setV2State(prev => {
-            // Check if any values actually changed
             if (
               prev.deltaE_total === frameEndEvent.deltaE_total &&
               prev.conservation_error_pct === frameEndEvent.conservation_error_pct &&
@@ -278,20 +279,16 @@ export function useWebSocket(): WebSocketStreams {
               prev.shadow_count === frameEndEvent.shadow_count &&
               prev.diffusion_radius === frameEndEvent.diffusion_radius
             ) {
-              return prev; // No changes, skip update
+              return prev;
             }
 
             return {
               ...prev,
-
-              // Conservation metrics
               deltaE_total: frameEndEvent.deltaE_total ?? prev.deltaE_total,
               conservation_error_pct: frameEndEvent.conservation_error_pct ?? prev.conservation_error_pct,
               energy_in: frameEndEvent.energy_in ?? prev.energy_in,
               energy_transferred: frameEndEvent.energy_transferred ?? prev.energy_transferred,
               energy_decay: frameEndEvent.energy_decay ?? prev.energy_decay,
-
-              // Frontier metrics
               active_count: frameEndEvent.active_count ?? prev.active_count,
               shadow_count: frameEndEvent.shadow_count ?? prev.shadow_count,
               diffusion_radius: frameEndEvent.diffusion_radius ?? prev.diffusion_radius
@@ -304,7 +301,6 @@ export function useWebSocket(): WebSocketStreams {
         case 'node.emotion.update': {
           const emotionEvent = data as NodeEmotionUpdateEvent;
           setEmotionState(prev => {
-            // Create emotion metadata from event
             const metadata: EmotionMetadata = {
               magnitude: emotionEvent.emotion_magnitude,
               axes: emotionEvent.top_axes,
@@ -312,11 +308,9 @@ export function useWebSocket(): WebSocketStreams {
               displayedMagnitude: prev.nodeEmotions.get(emotionEvent.node_id)?.displayedMagnitude ?? emotionEvent.emotion_magnitude
             };
 
-            // Update node emotions map
             const newNodeEmotions = new Map(prev.nodeEmotions);
             newNodeEmotions.set(emotionEvent.node_id, metadata);
 
-            // Check for saturation warnings
             const saturationWarnings: string[] = [];
             for (const [nodeId, meta] of newNodeEmotions.entries()) {
               if (meta.magnitude > SATURATION_THRESHOLD) {
@@ -336,7 +330,6 @@ export function useWebSocket(): WebSocketStreams {
         case 'link.emotion.update': {
           const emotionEvent = data as LinkEmotionUpdateEvent;
           setEmotionState(prev => {
-            // Create emotion metadata from event
             const metadata: EmotionMetadata = {
               magnitude: emotionEvent.emotion_magnitude,
               axes: emotionEvent.top_axes,
@@ -344,7 +337,6 @@ export function useWebSocket(): WebSocketStreams {
               displayedMagnitude: prev.linkEmotions.get(emotionEvent.link_id)?.displayedMagnitude ?? emotionEvent.emotion_magnitude
             };
 
-            // Update link emotions map
             const newLinkEmotions = new Map(prev.linkEmotions);
             newLinkEmotions.set(emotionEvent.link_id, metadata);
 
@@ -359,22 +351,18 @@ export function useWebSocket(): WebSocketStreams {
         case 'stride.exec': {
           const strideEvent = data as StrideExecEvent;
           setEmotionState(prev => {
-            // Add to recent strides for attribution
             const updated = [...prev.recentStrides, strideEvent];
             const recentStrides = updated.slice(-MAX_RECENT_STRIDES);
 
-            // Calculate regulation vs resonance ratios from recent strides
             let compCount = 0;
             let resCount = 0;
 
             for (const stride of recentStrides) {
-              // Count as complementarity-driven if comp multiplier reduced cost more than resonance
               if (stride.comp_multiplier < stride.resonance_multiplier) {
                 compCount++;
               } else if (stride.resonance_multiplier < stride.comp_multiplier) {
                 resCount++;
               }
-              // If equal, don't count either (neutral)
             }
 
             const total = compCount + resCount;
@@ -390,13 +378,6 @@ export function useWebSocket(): WebSocketStreams {
           });
           break;
         }
-
-        // Internal consciousness engine events (no UI updates needed)
-        case 'criticality.state':
-        case 'decay.tick':
-          // Safe to ignore - these are internal engine telemetry events
-          // broadcast for monitoring but don't require UI state updates
-          break;
 
         // Priority 4: Weight learning events
         case 'weights.updated.trace': {
@@ -438,36 +419,38 @@ export function useWebSocket(): WebSocketStreams {
         }
 
         case 'tick_frame_v1': {
-          // MAIN DASHBOARD UPDATE EVENT - comprehensive frame state
           const tickEvent = data as TickFrameEvent;
-
-          // Removed frequent console.log to prevent memory leak
-          // Was logging every 10th frame (7/sec with 7 engines) = 25k logs/hour
-          // Only log on errors or when explicitly debugging specific issues
-
-          // Update V2 state with tick frame data
           setV2State(prev => ({
             ...prev,
             currentFrame: tickEvent.frame_id,
             rho: tickEvent.rho ?? prev.rho,
-            // Could add more tick_frame_v1 specific state here if needed
           }));
-
-          // Note: Entity data from tick_frame_v1 is not currently stored in state
-          // but could be used for entity visualization if needed
           break;
         }
 
-        case 'tick.update': {
-          // Autonomy tracking event - emitted at start of each tick
-          // Contains: tick_reason (stimulus_detected | autonomous_activation), has_stimulus, interval_ms
-          // Currently just acknowledged - could be used for autonomy telemetry panels
+        // Internal consciousness engine events (safe to ignore)
+        case 'criticality.state':
+        case 'decay.tick':
+        case 'tick.update':
           break;
-        }
 
         default:
-          console.warn('[WebSocket] Unknown event type:', (data as any).type);
+          console.warn('[WebSocket] Unknown event type:', eventType);
       }
+    });
+  }, []);
+
+  /**
+   * Handle incoming WebSocket messages
+   * 🎯 PHASE 4: Buffered mode - accumulate events, flush at 10Hz
+   */
+  const handleMessage = useCallback((event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      // Buffer event for batch processing
+      // flushPendingUpdates will process at 10Hz
+      pendingUpdatesRef.current.push(data);
     } catch (err) {
       console.error('[WebSocket] Failed to parse message:', err);
       setError('Failed to parse WebSocket message');
@@ -566,6 +549,27 @@ export function useWebSocket(): WebSocketStreams {
       disconnect();
     };
   }, [connect, disconnect]);
+
+  /**
+   * 🎯 PHASE 4: Start 10Hz flush interval
+   * Processes buffered events every 100ms to throttle React re-renders
+   */
+  useEffect(() => {
+    flushIntervalRef.current = setInterval(() => {
+      flushPendingUpdates();
+    }, UPDATE_THROTTLE_MS);
+
+    // Cleanup on unmount
+    return () => {
+      if (flushIntervalRef.current) {
+        clearInterval(flushIntervalRef.current);
+        flushIntervalRef.current = null;
+      }
+
+      // Flush any remaining events before unmounting
+      flushPendingUpdates();
+    };
+  }, [flushPendingUpdates]);
 
   /**
    * 🔴 MEMORY LEAK FIX: Periodic cleanup of emotion Maps

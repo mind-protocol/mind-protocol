@@ -2,9 +2,10 @@
   "context_id": "2025-10-25_03-27-25",
   "entity_type": "citizen",
   "entity_id": "felix",
-  "created_at": "2025-10-25T01:27:25.021769+00:00",
-  "created_by": "precompact_hook",
-  "last_updated": "2025-10-25T01:27:25.021769+00:00",
-  "message_count": 0,
-  "has_tool_calls": false
+  "created_at": "2025-10-25T01:39:20.478016+00:00",
+  "last_updated": "2025-10-25T02:25:17.067649+00:00",
+  "message_count": 9521,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-25T02:25:18.404090+00:00",
+  "closed_reason": "compact"
 }

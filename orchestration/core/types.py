@@ -47,7 +47,7 @@ class LinkType(Enum):
     INSTANCE_OF = "INSTANCE_OF"
 
     # Multi-scale consciousness (Phase 7)
-    BELONGS_TO = "BELONGS_TO"  # Node -> Subentity membership
+    MEMBER_OF = "MEMBER_OF"  # Node -> Subentity membership (nodes can belong to multiple entities)
     RELATES_TO = "RELATES_TO"  # Subentity -> Subentity boundary
 
     # Energy flow

@@ -128,7 +128,7 @@ def compute_completeness_hunger(entity: 'Subentity') -> float:
     from orchestration.core.types import LinkType
     active_count = sum(
         1 for link in entity.incoming_links
-        if link.link_type == LinkType.BELONGS_TO and link.source.is_active()
+        if link.link_type == LinkType.MEMBER_OF and link.source.is_active()
     )
 
     completeness_ratio = active_count / entity.member_count
@@ -321,7 +321,7 @@ def select_representative_nodes(
     # Get source members (active only)
     source_members = [
         link.source for link in source_entity.incoming_links
-        if link.link_type == LinkType.BELONGS_TO and link.source.is_active()
+        if link.link_type == LinkType.MEMBER_OF and link.source.is_active()
     ]
 
     if not source_members:
@@ -333,7 +333,7 @@ def select_representative_nodes(
     # Get target members
     target_members = [
         link.source for link in target_entity.incoming_links
-        if link.link_type == LinkType.BELONGS_TO
+        if link.link_type == LinkType.MEMBER_OF
     ]
 
     if not target_members:

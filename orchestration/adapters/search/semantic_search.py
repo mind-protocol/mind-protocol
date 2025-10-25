@@ -92,8 +92,11 @@ class SemanticSearch:
         # FalkorDB returns cosine similarity scores (higher = more similar, range 0-1)
         vector_str = str(query_embedding)  # Converts list to "[0.1, 0.2, ...]"
 
+        # Fix #6: Query more results to account for potential near-duplicates
+        query_limit = limit * 3
+
         query = f"""
-        CALL db.idx.vector.queryNodes('{node_type}', 'content_embedding', {limit * 2}, vecf32({vector_str}))
+        CALL db.idx.vector.queryNodes('{node_type}', 'content_embedding', {query_limit}, vecf32({vector_str}))
         YIELD node, score
         WHERE score >= {threshold}
         RETURN
@@ -103,14 +106,14 @@ class SemanticSearch:
           labels(node) as labels,
           score as distance
         ORDER BY score DESC
-        LIMIT {limit}
+        LIMIT {query_limit}
         """
 
         try:
             result = self.r.execute_command('GRAPH.QUERY', self.graph_name, query)
 
             # Parse results
-            matches = []
+            all_matches = []
             if result and len(result) > 1:
                 for row in result[1]:
                     name = row[0].decode() if isinstance(row[0], bytes) else row[0]
@@ -119,13 +122,25 @@ class SemanticSearch:
                     labels = [l.decode() if isinstance(l, bytes) else l for l in row[3]] if row[3] else []
                     distance = float(row[4]) if row[4] is not None else 1.0
 
-                    matches.append({
+                    all_matches.append({
                         'name': name,
                         'description': description,
                         'embeddable_text': embeddable_text,
                         'type': labels[0] if labels else None,
                         'similarity': distance  # FalkorDB returns cosine similarity (not distance)
                     })
+
+            # Fix #6: Filter out near-exact duplicates (similarity > 0.995)
+            # These are likely self-hits or duplicate content
+            matches = [m for m in all_matches if m['similarity'] < 0.995]
+
+            # Return only requested limit
+            matches = matches[:limit]
+
+            # Fix #6: Log similarity distribution for debugging
+            if matches:
+                sims = [m['similarity'] for m in matches]
+                logger.debug(f"[SemanticSearch] Similarity range: min={min(sims):.3f}, max={max(sims):.3f}, mean={sum(sims)/len(sims):.3f}")
 
             logger.info(f"[SemanticSearch] Found {len(matches)} similar nodes for query: '{query_text[:50]}...'")
             return matches

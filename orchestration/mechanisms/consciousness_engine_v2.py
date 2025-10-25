@@ -1402,7 +1402,7 @@ class ConsciousnessEngineV2:
             members = [
                 (link.source, link.source.E)
                 for link in entity.incoming_links
-                if link.link_type == LinkType.BELONGS_TO
+                if link.link_type == LinkType.MEMBER_OF
             ]
             members.sort(key=lambda x: x[1], reverse=True)
 

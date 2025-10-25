@@ -516,32 +516,32 @@ class TraceCapture:
                 # Insert into scope-appropriate graph with node type label
                 await self._insert_node(node, node_type, graph)
 
-                # P1: Persist entity membership based on current WM state
+                # P1: Persist entity membership based on current WM state (MEMBER_OF pattern)
                 logger.info(f"[TraceCapture] P1 CHECK: scope={scope}, last_wm_entities={self.last_wm_entities}")
                 if scope == 'personal' and self.last_wm_entities:
                     # Assign to primary entity from WM (first entity = most active)
-                    # WM entities are short names ('translator'), need to construct full entity ID
+                    # WM entities are short names ('translator'), need to construct full entity name
                     # Format: entity_citizen_{citizen_id}_{entity_short_name}
                     primary_entity_short_name = self.last_wm_entities[0]
-                    primary_entity_id = f"entity_citizen_{self.citizen_id}_{primary_entity_short_name}"
+                    primary_entity_name = f"entity_citizen_{self.citizen_id}_{primary_entity_short_name}"
                     graph_name = self._current_graph_name  # Current graph after _get_graph_for_scope
-                    node_name = fields.get('name')
-                    logger.info(f"[TraceCapture] P1 ATTEMPTING: persist_membership({graph_name}, {node_name}, {primary_entity_id})")
+                    node_id = node.id  # Use node object's id property (generated during creation)
+                    logger.info(f"[TraceCapture] P1 ATTEMPTING: persist_membership({graph_name}, {node_id}, {primary_entity_name})")
 
                     try:
                         membership_success = self.adapter.persist_membership(
                             graph_name=graph_name,
-                            node_name=node_name,
-                            entity_id=primary_entity_id,
+                            node_id=node_id,
+                            entity_name=primary_entity_name,
                             weight=1.0,  # Full weight for primary assignment
                             role='primary'
                         )
                         if membership_success:
-                            logger.debug(f"[TraceCapture] Assigned {node_name} to entity {primary_entity_id}")
+                            logger.debug(f"[TraceCapture] Assigned {node_id} to entity {primary_entity_name}")
                         else:
-                            logger.warning(f"[TraceCapture] Failed to assign {node_name} to entity {primary_entity_id}")
+                            logger.warning(f"[TraceCapture] Failed to assign {node_id} to entity {primary_entity_name}")
                     except Exception as e:
-                        logger.warning(f"[TraceCapture] Entity membership persistence failed for {node_name}: {e}")
+                        logger.warning(f"[TraceCapture] Entity membership persistence failed for {node_id}: {e}")
                         # Non-fatal - node creation succeeded, membership is optional enhancement
 
                 stats['nodes_created'] += 1

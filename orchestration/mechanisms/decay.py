@@ -586,7 +586,7 @@ def compute_decay_resistance(node: 'Node', graph: 'Graph') -> float:
     entity_count = 0
     if hasattr(graph, 'subentities'):
         for link in node.outgoing_links:
-            if link.link_type == LinkType.BELONGS_TO:
+            if link.link_type == LinkType.MEMBER_OF:
                 entity_count += 1
 
     if entity_count > 1:

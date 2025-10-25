@@ -183,7 +183,7 @@ def compute_entity_activation(
 
     members_with_weights = []
     for link in entity.incoming_links:
-        if link.link_type != LinkType.BELONGS_TO:
+        if link.link_type != LinkType.MEMBER_OF:
             continue
 
         node = link.source
@@ -253,7 +253,7 @@ def compute_entity_threshold(
         # Fallback: weighted mean of member thresholds
         members_with_weights = []
         for link in entity.incoming_links:
-            if link.link_type == LinkType.BELONGS_TO:
+            if link.link_type == LinkType.MEMBER_OF:
                 members_with_weights.append((link.source, link.weight))
 
         if not members_with_weights:
@@ -494,7 +494,7 @@ def dissolve_entity(
     # Remove all BELONGS_TO links (release members)
     belongs_to_links = [
         link for link in entity.incoming_links
-        if link.link_type == LinkType.BELONGS_TO
+        if link.link_type == LinkType.MEMBER_OF
     ]
 
     for link in belongs_to_links:
@@ -622,7 +622,7 @@ def update_entity_activations(
         # Count members
         from orchestration.core.types import LinkType
         members = [link.source for link in entity.incoming_links
-                   if link.link_type == LinkType.BELONGS_TO]
+                   if link.link_type == LinkType.MEMBER_OF]
 
         member_count = len(members)
         active_members = sum(1 for node in members if node.E >= node.theta)

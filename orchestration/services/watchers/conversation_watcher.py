@@ -31,6 +31,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import os
+import atexit
 from pathlib import Path
 from datetime import datetime
 from watchdog.observers import Observer
@@ -38,6 +40,50 @@ from watchdog.events import FileSystemEventHandler
 
 # Add parent directory to path for imports (4 levels: watchers → services → orchestration → mind-protocol)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
+# SINGLETON GUARD - Prevent duplicate instances from spawn loops
+def acquire_singleton_lock():
+    """
+    Acquire PID lock to ensure only one instance runs.
+    If another instance is running, exit immediately.
+    """
+    import psutil
+
+    lock_dir = Path(__file__).parent.parent.parent.parent / ".locks"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_file = lock_dir / "conversation_watcher.pid"
+
+    if lock_file.exists():
+        try:
+            pid = int(lock_file.read_text().strip())
+            if psutil.pid_exists(pid):
+                # Another instance is running
+                sys.stderr.write(f"[SINGLETON] conversation_watcher already running (PID {pid}). Exiting.\n")
+                sys.exit(0)
+            else:
+                # Stale lock - remove it
+                lock_file.unlink(missing_ok=True)
+        except (ValueError, OSError):
+            # Corrupt lock - remove it
+            lock_file.unlink(missing_ok=True)
+
+    # Write our PID
+    lock_file.write_text(str(os.getpid()))
+
+    # Register cleanup on exit
+    def cleanup_lock():
+        try:
+            if lock_file.exists():
+                current_pid = int(lock_file.read_text().strip())
+                if current_pid == os.getpid():
+                    lock_file.unlink(missing_ok=True)
+        except:
+            pass
+
+    atexit.register(cleanup_lock)
+
+# Acquire lock BEFORE any other imports/initialization
+acquire_singleton_lock()
 
 # TRACE format support
 from orchestration.libs.trace_parser import parse_trace_format
@@ -83,13 +129,22 @@ def load_file_positions() -> dict:
     return {}
 
 def save_file_positions(positions: dict):
-    """Save file positions to disk."""
+    """Save file positions to disk atomically (Fix #5)."""
     try:
         POSITIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(POSITIONS_FILE, 'w') as f:
-            json.dump(positions, f, indent=2)
+
+        # Create snapshot to protect against dict size changes during save
+        snapshot = dict(positions)
+
+        # Write to temporary file first
+        tmp_file = Path(str(POSITIONS_FILE) + ".tmp")
+        with open(tmp_file, 'w', encoding='utf-8') as f:
+            json.dump(snapshot, f, indent=2)
+
+        # Atomic replace (works across platforms)
+        tmp_file.replace(POSITIONS_FILE)
     except Exception as e:
-        logger.warning(f"[ConversationWatcher] Failed to save file positions: {e}")
+        logger.warning(f"[ConversationWatcher] Failed to save file positions atomically: {e}")
 
 # Track last processed position in each file (loaded from disk)
 file_positions = load_file_positions()
@@ -182,7 +237,7 @@ class ConversationWatcher(FileSystemEventHandler):
 
         return False
 
-    def extract_text_from_contexts_json(self, json_content: str) -> str:
+    def extract_text_from_contexts_json(self, json_content: str, file_path: Path = None) -> str:
         """
         Extract text content from contexts JSON format (new hook format).
 
@@ -202,7 +257,10 @@ class ConversationWatcher(FileSystemEventHandler):
                         texts.append(content)
 
         except json.JSONDecodeError as e:
-            logger.warning(f"[ConversationWatcher] Failed to parse contexts JSON: {e}")
+            if file_path:
+                logger.error(f"[ConversationWatcher] Failed to parse JSON: {e} in file: {file_path}")
+            else:
+                logger.warning(f"[ConversationWatcher] Failed to parse contexts JSON: {e}")
 
         return '\n\n'.join(texts)
 
@@ -227,7 +285,7 @@ class ConversationWatcher(FileSystemEventHandler):
                 full_content = f.read()
 
             # Extract text from JSON
-            text_content = self.extract_text_from_contexts_json(full_content)
+            text_content = self.extract_text_from_contexts_json(full_content, file_path)
 
             # Count current messages
             try:
@@ -426,7 +484,13 @@ class ConversationWatcher(FileSystemEventHandler):
                 logger.info("[ConversationWatcher] Embedding service initialized")
 
             # Truncate content to first 500 chars for embedding (avoid huge embeddings)
-            stimulus_text = content[:500]
+            stimulus_text = (content or "")[:500].strip()
+
+            # Fix #4: Skip empty or too-short stimuli
+            MIN_STIMULUS_LENGTH = 8
+            if len(stimulus_text) < MIN_STIMULUS_LENGTH:
+                logger.debug(f"[ConversationWatcher] Skipping too-short stimulus ({len(stimulus_text)} chars, min={MIN_STIMULUS_LENGTH})")
+                return True  # Not an error, just skip injection
 
             # Generate embedding
             stimulus_embedding = self.embedding_service.embed(stimulus_text)
@@ -593,13 +657,13 @@ class ConversationWatcher(FileSystemEventHandler):
                 rho_proxy = (max_degree * avg_weight) / active_node_count
                 logger.debug(f"[ConversationWatcher] Graph stats: max_degree={max_degree}, avg_weight={avg_weight:.3f}, active_nodes={active_node_count}, ρ={rho_proxy:.3f}")
 
-            # Inject energy (V1 with rho_proxy)
+            # Inject energy (V2 dual-channel with rho_proxy)
             result = self.stimulus_injector.inject(
                 stimulus_embedding=stimulus_embedding,
                 matches=injection_matches,
                 source_type="user_message",
                 rho_proxy=rho_proxy,
-                context_embeddings=None  # V1: Skip S5/S6 context
+                context_embeddings=None  # V2: Skip S5/S6 context
             )
 
             logger.info(
@@ -1183,6 +1247,9 @@ async def main():
     logger.info("")
     logger.info("Waiting for consciousness streams...")
     logger.info("=" * 70)
+
+    # Capture event loop for thread-safe stimulus injection telemetry
+    StimulusInjector.set_event_loop()
 
     # Initialize and start heartbeat writer
     heartbeat = HeartbeatWriter("conversation_watcher")

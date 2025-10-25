@@ -148,7 +148,7 @@ class Subentity:
         """
         from .types import LinkType
         return [link.source for link in self.incoming_links
-                if link.link_type == LinkType.BELONGS_TO]
+                if link.link_type == LinkType.MEMBER_OF]
 
     @property
     def extent(self) -> List['Node']:

@@ -29,11 +29,56 @@ import json
 import logging
 import os
 import sys
+import atexit
 from datetime import datetime, timezone
 from pathlib import Path
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
+# SINGLETON GUARD - Prevent duplicate instances from spawn loops
+def acquire_singleton_lock():
+    """
+    Acquire PID lock to ensure only one instance runs.
+    If another instance is running, exit immediately.
+    """
+    import psutil
+
+    lock_dir = Path(__file__).parent.parent.parent.parent / ".locks"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_file = lock_dir / "websocket_server.pid"
+
+    if lock_file.exists():
+        try:
+            pid = int(lock_file.read_text().strip())
+            if psutil.pid_exists(pid):
+                # Another instance is running
+                sys.stderr.write(f"[SINGLETON] websocket_server already running (PID {pid}). Exiting.\n")
+                sys.exit(0)
+            else:
+                # Stale lock - remove it
+                lock_file.unlink(missing_ok=True)
+        except (ValueError, OSError):
+            # Corrupt lock - remove it
+            lock_file.unlink(missing_ok=True)
+
+    # Write our PID
+    lock_file.write_text(str(os.getpid()))
+
+    # Register cleanup on exit
+    def cleanup_lock():
+        try:
+            if lock_file.exists():
+                current_pid = int(lock_file.read_text().strip())
+                if current_pid == os.getpid():
+                    lock_file.unlink(missing_ok=True)
+        except:
+            pass
+
+    atexit.register(cleanup_lock)
+
+# Acquire lock BEFORE any other imports/initialization
+acquire_singleton_lock()
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form

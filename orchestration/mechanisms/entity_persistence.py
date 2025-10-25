@@ -61,7 +61,7 @@ class EntityPersistence:
         normalized = {}
 
         # Group memberships by source node
-        for link in graph.get_links_by_type(LinkType.BELONGS_TO):
+        for link in graph.get_links_by_type(LinkType.MEMBER_OF):
             node_id = link.source_id
             entity_id = link.target_id
             weight = link.weight

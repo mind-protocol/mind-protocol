@@ -1154,7 +1154,7 @@ class FalkorDBAdapter:
         """
         stats = {
             'entities_created': 0,
-            'belongs_to_links': 0,
+            'member_of_links': 0,
             'relates_to_links': 0,
             'errors': 0
         }
@@ -1181,11 +1181,11 @@ class FalkorDBAdapter:
                     logger.error(f"  Failed to create subentity {entity.id}: {e}")
                     stats['errors'] += 1
 
-        # Create BELONGS_TO links (Node -> Subentity)
+        # Create MEMBER_OF links (Node -> Subentity)
         from orchestration.core.types import LinkType
-        belongs_to_links = graph.get_links_by_type(LinkType.BELONGS_TO)
+        member_of_links = graph.get_links_by_type(LinkType.MEMBER_OF)
 
-        for link in belongs_to_links:
+        for link in member_of_links:
             try:
                 # Check if target is a Subentity (not Node)
                 target = graph.get_entity(link.target_id)
@@ -1195,7 +1195,7 @@ class FalkorDBAdapter:
                     query = f"""
                     MATCH (source {{id: $source_id}})
                     MATCH (target:Subentity {{id: $target_id}})
-                    MERGE (source)-[r:BELONGS_TO]->(target)
+                    MERGE (source)-[r:MEMBER_OF]->(target)
                     SET r = $props
                     RETURN r
                     """
@@ -1208,9 +1208,9 @@ class FalkorDBAdapter:
                     }
 
                     self.graph_store.query(query, params)
-                    stats['belongs_to_links'] += 1
+                    stats['member_of_links'] += 1
             except Exception as e:
-                logger.error(f"  Failed to create BELONGS_TO link {link.id}: {e}")
+                logger.error(f"  Failed to create MEMBER_OF link {link.id}: {e}")
                 stats['errors'] += 1
 
         # Create RELATES_TO links (Subentity -> Subentity)
@@ -1251,22 +1251,28 @@ class FalkorDBAdapter:
     def persist_membership(
         self,
         graph_name: str,
-        node_name: str,
-        entity_id: str,
+        node_id: str,
+        entity_name: str,
         weight: float = 1.0,
         role: str = "primary",
         timestamp: Optional[int] = None
     ) -> bool:
         """
-        Persist entity membership for a node.
+        Persist entity membership for a node using robust MEMBER_OF pattern.
 
-        Creates BELONGS_TO link from node to entity and sets primary_entity property.
-        Uses MERGE for idempotency - safe to call multiple times.
+        Creates MEMBER_OF link from node to entity and sets primary_entity property.
+        Uses MERGE with ON CREATE/ON MATCH for idempotency - safe to call multiple times.
+
+        PRODUCTION-GRADE PATTERN (Nicolas's guidance):
+        - Match nodes by unique 'id' property (not 'name')
+        - Match entities by 'name' property (canonical key)
+        - Use MEMBER_OF (semantic: nodes can belong to multiple entities)
+        - Add RETURN barrier to prevent read-after-write races
 
         Args:
             graph_name: Graph database name
-            node_name: Node name to assign membership (uses 'name' property)
-            entity_id: Subentity ID the node belongs to (uses 'id' property)
+            node_id: Node unique ID to assign membership (uses 'id' property)
+            entity_name: Subentity name (e.g., 'entity_citizen_felix_translator')
             weight: Membership weight (0-1, default 1.0)
             role: Membership role ('primary' or 'secondary', default 'primary')
             timestamp: Creation timestamp in milliseconds (default: now)
@@ -1274,16 +1280,11 @@ class FalkorDBAdapter:
         Returns:
             True if successful, False otherwise
 
-        Note:
-            Regular nodes use 'name' property for identification.
-            Subentity nodes use 'id' property for identification.
-            This function links regular nodes to subentities.
-
         Example:
             >>> adapter.persist_membership(
             ...     "citizen_felix",
-            ...     "node_consciousness_architecture",
-            ...     "entity_citizen_felix_architect",
+            ...     "node_abc123",
+            ...     "entity_citizen_felix_translator",
             ...     weight=1.0,
             ...     role="primary"
             ... )
@@ -1298,23 +1299,20 @@ class FalkorDBAdapter:
                 from datetime import datetime
                 timestamp = int(datetime.now().timestamp() * 1000)
 
-            # Create BELONGS_TO link using MERGE (idempotent)
-            # Regular nodes use 'name' property, Subentity nodes use 'id' property
-            # Also set primary_entity property on node for denormalized access
+            # Robust pattern: Match by id, use MEMBER_OF, add RETURN barrier
             query = """
-            MATCH (n {name: $node_name})
-            MATCH (e:Subentity {id: $entity_id})
-            MERGE (n)-[r:BELONGS_TO]->(e)
-            SET r.weight = $weight,
-                r.role = $role,
-                r.created_at = $timestamp,
-                n.primary_entity = CASE WHEN $role = 'primary' THEN $entity_id ELSE n.primary_entity END
-            RETURN r
+            MATCH (n {id: $node_id})
+            MATCH (e:Subentity {name: $entity_name})
+            MERGE (n)-[r:MEMBER_OF]->(e)
+              ON CREATE SET r.role = $role, r.weight = $weight, r.at = $timestamp
+              ON MATCH  SET r.role = $role, r.weight = $weight
+            SET n.primary_entity = CASE WHEN $role = 'primary' THEN $entity_name ELSE n.primary_entity END
+            RETURN 1
             """
 
             params = {
-                'node_name': node_name,
-                'entity_id': entity_id,
+                'node_id': node_id,
+                'entity_name': entity_name,
                 'weight': weight,
                 'role': role,
                 'timestamp': timestamp
@@ -1322,13 +1320,12 @@ class FalkorDBAdapter:
 
             result = self.graph_store.query(query, params)
 
-            # MERGE queries may return empty results even on success
-            # If no exception occurred, membership was persisted
-            logger.debug(f"Persisted membership: {node_name} -[BELONGS_TO:{role}:{weight}]-> {entity_id}")
+            # RETURN 1 barrier ensures query completes before returning
+            logger.debug(f"Persisted membership: {node_id} -[MEMBER_OF:{role}:{weight}]-> {entity_name}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to persist membership {node_name} -> {entity_id}: {e}")
+            logger.error(f"Failed to persist membership {node_id} -> {entity_name}: {e}")
             return False
 
     def get_node_count(self, graph_name: str) -> int:

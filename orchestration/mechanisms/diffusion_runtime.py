@@ -436,12 +436,12 @@ def execute_stride_step(
 
             # Check source node's BELONGS_TO links
             for link in node.outgoing_links:
-                if link.link_type == LinkType.BELONGS_TO:
+                if link.link_type == LinkType.MEMBER_OF:
                     source_entities.append(link.target)
 
             # Check target node's BELONGS_TO links
             for link in best_link.target.outgoing_links:
-                if link.link_type == LinkType.BELONGS_TO:
+                if link.link_type == LinkType.MEMBER_OF:
                     target_entities.append(link.target)
 
             # If nodes belong to different entities, this is a boundary stride

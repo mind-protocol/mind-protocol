@@ -1047,8 +1047,17 @@ class ProcessManager:
         - Edit app/**/*.tsx → auto-restart dashboard
         - Changes detected within 2 seconds
         - No manual restarts needed
+
+        Can be disabled via MP_HOT_RELOAD=0 environment variable (default: disabled for stability).
         """
-        logger.info("[Guardian] Starting code change monitor (hot-reload enabled)")
+        # Feature flag: disable hot-reload by default for stability (spawn loop prevention)
+        hot_reload_enabled = os.getenv("MP_HOT_RELOAD", "0") == "1"
+
+        if not hot_reload_enabled:
+            logger.info("[Guardian] Hot-reload DISABLED (set MP_HOT_RELOAD=1 to enable)")
+            return  # Exit monitoring entirely when disabled
+
+        logger.info("[Guardian] Starting code change monitor (hot-reload ENABLED)")
 
         while self.running:
             await asyncio.sleep(2)  # Check every 2 seconds

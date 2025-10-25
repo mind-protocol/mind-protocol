@@ -73,8 +73,6 @@
       "role": "user",
       "timestamp": "2025-10-19T07:45:25.492865+00:00",
       "content": "okay try a no save response"
-    },
-    {
-      "role": "user",
-      "timestamp": "2025-10-19T08:02:50.222672+00:00",
-      "content": 
+    }
+  ]
+}

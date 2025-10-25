@@ -219,7 +219,7 @@ class EntityBootstrap:
                     id=link_id,
                     source_id=node.id,
                     target_id=subentity.id,
-                    link_type=LinkType.BELONGS_TO,
+                    link_type=LinkType.MEMBER_OF,
                     subentity=self.graph.id,
                     weight=weight,
                     energy=0.0,
@@ -453,7 +453,7 @@ class EntityBootstrap:
                 id=link_id,
                 source_id=node.id,
                 target_id=subentity.id,
-                link_type=LinkType.BELONGS_TO,
+                link_type=LinkType.MEMBER_OF,
                 subentity=self.graph.id,
                 weight=max(0.1, weight),  # Ensure minimum weight
                 energy=0.0,
@@ -592,7 +592,7 @@ class EntityBootstrap:
             "relates_to_links": relates_to_count,
             "belongs_to_links": len([
                 l for l in self.graph.links.values()
-                if l.link_type == LinkType.BELONGS_TO
+                if l.link_type == LinkType.MEMBER_OF
             ])
         }
 

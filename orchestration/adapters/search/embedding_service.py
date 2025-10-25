@@ -107,6 +107,12 @@ class EmbeddingService:
         try:
             if self.backend == 'sentence-transformers':
                 embedding = self.model.encode(text, convert_to_numpy=True)
+
+                # Fix #6: L2 normalization for stable cosine similarity
+                norm = np.linalg.norm(embedding)
+                if norm > 0:
+                    embedding = embedding / norm
+
                 return embedding.tolist()
 
             elif self.backend == 'ollama':
@@ -115,7 +121,14 @@ class EmbeddingService:
                     model=self.model,
                     prompt=text
                 )
-                return response['embedding']
+                embedding_array = np.array(response['embedding'])
+
+                # Fix #6: L2 normalization for stable cosine similarity
+                norm = np.linalg.norm(embedding_array)
+                if norm > 0:
+                    embedding_array = embedding_array / norm
+
+                return embedding_array.tolist()
 
         except Exception as e:
             logger.error(f"[EmbeddingService] Embedding generation failed: {e}")

@@ -45,6 +45,10 @@ _schema_cache = None
 def _load_schema_registry():
     """Load schema registry from FalkorDB (cached)."""
     global _schema_cache
+
+    # ATLAS VERIFICATION MARKER - If you see this, new code loaded successfully
+    logger.info("[TraceParser] ★★★ ATLAS SCHEMA FIX ACTIVE - CODE RELOADED ★★★")
+
     if _schema_cache is not None:
         return _schema_cache
 
@@ -70,36 +74,56 @@ def _load_schema_registry():
         )
         universal_link_fields = {row[0] for row in result[1]}
 
-        # Get type-specific required fields for all node types
+        # Get ALL node type names from schema registry
+        result = r.execute_command('GRAPH.QUERY', 'schema_registry',
+            '''MATCH (nt:NodeTypeSchema)
+               RETURN nt.type_name'''
+        )
+        all_node_types = {row[0] for row in result[1]}
+        logger.info(f"[TraceParser] DEBUG: Queried {len(result[1])} node types from schema_registry, parsed into set of {len(all_node_types)}")
+
+        # Initialize all node types with universal fields
+        node_required_fields = {
+            type_name: set(universal_node_fields)
+            for type_name in all_node_types
+        }
+        logger.info(f"[TraceParser] DEBUG: Initialized node_required_fields dict with {len(node_required_fields)} entries")
+
+        # Get type-specific required fields and add them
         result = r.execute_command('GRAPH.QUERY', 'schema_registry',
             '''MATCH (nt:NodeTypeSchema)-[:HAS_REQUIRED_FIELD]->(f:FieldSchema)
                RETURN nt.type_name, f.name'''
         )
 
-        node_required_fields = {}
         for row in result[1]:
             type_name = row[0]
             field_name = row[1]
-            if type_name not in node_required_fields:
-                # Start with universal fields for this type
-                node_required_fields[type_name] = set(universal_node_fields)
-            # Add type-specific field
+            # Add type-specific field to existing universal fields
             node_required_fields[type_name].add(field_name)
 
-        # Get type-specific required fields for all link types
+        # Get ALL link type names from schema registry
+        result = r.execute_command('GRAPH.QUERY', 'schema_registry',
+            '''MATCH (lt:LinkTypeSchema)
+               RETURN lt.type_name'''
+        )
+        all_link_types = {row[0] for row in result[1]}
+
+        # Initialize all link types with universal fields
+        link_required_fields = {
+            type_name: set(universal_link_fields)
+            for type_name in all_link_types
+        }
+
+        # Get type-specific required fields and add them
         result = r.execute_command('GRAPH.QUERY', 'schema_registry',
             '''MATCH (lt:LinkTypeSchema)-[:HAS_REQUIRED_FIELD]->(f:FieldSchema)
                RETURN lt.type_name, f.name'''
         )
 
-        link_required_fields = {}
         for row in result[1]:
             type_name = row[0]
             field_name = row[1]
-            if type_name not in link_required_fields:
-                # Start with universal fields for this type
-                link_required_fields[type_name] = set(universal_link_fields)
-            # Add type-specific field
+            # Add type-specific field to existing universal fields
             link_required_fields[type_name].add(field_name)
 
         _schema_cache = {
@@ -279,6 +303,10 @@ class TraceParser:
 
             # Parse field: value pairs
             fields = self._parse_field_block(fields_block)
+
+            # Fix #3: Coerce Mechanism inputs/outputs to lists
+            if node_type == 'Mechanism':
+                fields = self._coerce_mechanism_fields(fields)
 
             # Validate required fields from schema registry
             if not self._validate_node_fields(fields, node_type):
@@ -510,6 +538,40 @@ class TraceParser:
             return False
 
         return True
+
+    def _coerce_mechanism_fields(self, fields: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Fix #3: Coerce Mechanism inputs/outputs to lists.
+
+        Schema requires list[str] but users often write comma-separated strings.
+        This coerces strings → lists to prevent validation failures.
+
+        Args:
+            fields: Parsed fields from Mechanism formation
+
+        Returns:
+            fields with inputs/outputs coerced to lists
+        """
+        def _coerce_to_list(value):
+            """Coerce value to list of strings."""
+            if value is None:
+                return []
+            if isinstance(value, list):
+                return value
+            if isinstance(value, str):
+                # Split on commas and strip whitespace
+                return [item.strip() for item in value.split(',') if item.strip()]
+            # Single non-string value → convert to string in list
+            return [str(value)]
+
+        # Coerce inputs and outputs fields
+        if 'inputs' in fields:
+            fields['inputs'] = _coerce_to_list(fields['inputs'])
+        if 'outputs' in fields:
+            fields['outputs'] = _coerce_to_list(fields['outputs'])
+
+        logger.debug(f"[TraceParser] Coerced Mechanism fields: inputs={fields.get('inputs')}, outputs={fields.get('outputs')}")
+        return fields
 
     def _validate_link_fields(self, fields: Dict[str, Any], link_type: str) -> bool:
         """

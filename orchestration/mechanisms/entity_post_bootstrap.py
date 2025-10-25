@@ -81,7 +81,7 @@ def normalize_node_memberships(graph: Graph) -> int:
         # Get all BELONGS_TO links from this node
         belongs_to_links = [
             link for link in node.outgoing_links
-            if link.link_type == LinkType.BELONGS_TO
+            if link.link_type == LinkType.MEMBER_OF
         ]
 
         if not belongs_to_links:
@@ -119,7 +119,7 @@ def compute_entity_centroids(graph: Graph) -> int:
         member_data = []
 
         for link in entity.incoming_links:
-            if link.link_type != LinkType.BELONGS_TO:
+            if link.link_type != LinkType.MEMBER_OF:
                 continue
 
             node = link.source
@@ -203,7 +203,7 @@ def initialize_entity_thresholds(graph: Graph) -> int:
         entity_energy = 0.0
 
         for link in entity.incoming_links:
-            if link.link_type != LinkType.BELONGS_TO:
+            if link.link_type != LinkType.MEMBER_OF:
                 continue
 
             node = link.source

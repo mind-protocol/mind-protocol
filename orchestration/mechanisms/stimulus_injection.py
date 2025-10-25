@@ -23,8 +23,9 @@ from dataclasses import dataclass, field
 from collections import deque, defaultdict
 import logging
 import time
+import asyncio
 
-# V1 mechanism modules
+# V2 mechanism modules
 from orchestration.mechanisms.health_modulation import HealthModulator
 from orchestration.mechanisms.source_impact import SourceImpactGate
 from orchestration.mechanisms.peripheral_amplification import PeripheralAmplifier
@@ -32,6 +33,9 @@ from orchestration.mechanisms.entity_channels import EntityChannelSelector
 from orchestration.mechanisms.direction_priors import DirectionPriorDistributor
 
 logger = logging.getLogger(__name__)
+
+# Module-level event loop reference for thread-safe async calls
+MAIN_LOOP: Optional[asyncio.AbstractEventLoop] = None
 
 
 @dataclass
@@ -96,14 +100,14 @@ class StimulusInjector:
 
     def __init__(self, broadcaster=None):
         """
-        Initialize stimulus injector with V1 mechanisms.
+        Initialize stimulus injector with V2 mechanisms (dual-channel Top-Up + Amplify).
 
         Args:
             broadcaster: Optional ConsciousnessStateBroadcaster for event emission
         """
         self.broadcaster = broadcaster
 
-        # V1 Mechanisms
+        # V2 Mechanisms
         self.health_modulator = HealthModulator(
             history_size=1000,
             min_samples=200
@@ -131,7 +135,7 @@ class StimulusInjector:
         self.source_impact_enabled = True
         self.peripheral_amplification_enabled = True
         self.link_injection_enabled = True
-        self.entity_channels_enabled = False  # V1: Simplified to single subentity
+        self.entity_channels_enabled = False  # V2: Simplified to single subentity
 
         # Frame counter for diagnostics
         self.frame_count = 0
@@ -142,9 +146,22 @@ class StimulusInjector:
         self.affect_ema_alpha = 0.1  # EMA smoothing factor (window ~20 frames)
 
         logger.info(
-            f"[StimulusInjector] Initialized V1 with mechanisms: "
+            f"[StimulusInjector] Initialized V2 (dual-channel: Top-Up + Amplify) with mechanisms: "
             f"health_modulation, source_impact, peripheral_amplification, direction_priors"
         )
+
+    @staticmethod
+    def set_event_loop():
+        """
+        Capture the current event loop for thread-safe async broadcasting.
+        Call this from async context (e.g., during watcher startup).
+        """
+        global MAIN_LOOP
+        try:
+            MAIN_LOOP = asyncio.get_running_loop()
+            logger.info("[StimulusInjector] Event loop captured for thread-safe telemetry")
+        except RuntimeError:
+            logger.warning("[StimulusInjector] No running event loop to capture")
 
     def inject(
         self,
@@ -726,9 +743,9 @@ class StimulusInjector:
             f"H={H:.3f}, B_top={B_top:.2f}, B_amp={B_amp:.2f}"
         )
 
-        # Emit stimulus.injection.debug event
+        # Emit stimulus.injection.debug event (thread-safe)
         if self.broadcaster and hasattr(self.broadcaster, 'is_available') and self.broadcaster.is_available():
-            import asyncio
+            global MAIN_LOOP
             sim_top5 = sorted([m.similarity for m in matches], reverse=True)[:5]
             debug_payload = {
                 'kept': len(matches),
@@ -738,11 +755,20 @@ class StimulusInjector:
                 'B_amp': round(B_amp, 2),
                 'sim_top5': [round(s, 3) for s in sim_top5]
             }
-            try:
-                loop = asyncio.get_running_loop()
-                asyncio.ensure_future(self.broadcaster.broadcast_event('stimulus.injection.debug', debug_payload), loop=loop)
-            except RuntimeError:
-                asyncio.ensure_future(self.broadcaster.broadcast_event('stimulus.injection.debug', debug_payload))
+
+            # Thread-safe: schedule on main loop using run_coroutine_threadsafe
+            if MAIN_LOOP and MAIN_LOOP.is_running():
+                async def _broadcast():
+                    await self.broadcaster.broadcast_event('stimulus.injection.debug', debug_payload)
+
+                future = asyncio.run_coroutine_threadsafe(_broadcast(), MAIN_LOOP)
+                # Add done callback to surface exceptions
+                future.add_done_callback(
+                    lambda f: logger.error(f"[StimulusInjector] Broadcast failed: {f.exception()}")
+                    if f.exception() else None
+                )
+            else:
+                logger.debug("[StimulusInjector] No MAIN_LOOP available - skipping debug telemetry")
 
         # Step 3: Compute injections per node
         injections = []
