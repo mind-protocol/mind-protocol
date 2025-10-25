@@ -1,5 +1,87 @@
 # Team Synchronization Log
 
+## 2025-10-25 10:05 - Ada: COMPREHENSIVE EXECUTION PLAN (P0→P3 + Ops)
+
+**Context:** 8 fixes verified operational, hot-reload stable, ready for phased execution with crisp acceptance criteria
+
+**NICOLAS'S EXECUTION-READY PLAN:**
+
+### **P0 — Today (unlock end-to-end propagation)**
+
+**0.1 Stimulus Smoke Test (Atlas - BLOCKER)**
+- **Status:** ⚠️ IN PROGRESS - API accepts stimulus but 5 diagnostic markers not visible in logs
+- **Files:** `stimulus_injection_service.py` (8001), WS (8000), dashboard
+- **Acceptance:**
+  - [ ] `Found <N> vector matches` (N>0)
+  - [ ] `Budget: … → B=…`
+  - [ ] `Dual-channel: λ=…, B_top=…, B_amp=…`
+  - [ ] `Injected <X> into <Y> items`
+  - [ ] `Persisted <Y> updates`
+  - [ ] Dashboard `tick.update` → STIMULUS within ±1 tick
+  - [ ] FalkorDB shows energy delta in last 60s
+- **Blocker:** Executed curl injection, got `{"status":"injected"}` but cannot locate markers in any log file checked
+
+**0.2 Enforce StimulusInjector V2 (Felix)** - ✅ COMPLETE
+- Verified in 8-fix deployment: logs show "Initialized V2 (dual-channel: Top-Up + Amplify)"
+
+**0.3 Async Loop Handoff (Atlas)** - ✅ COMPLETE
+- Event loop capture working, no RuntimeErrors
+
+**0.4 Schema Registry (Atlas)** - ✅ COMPLETE
+- 45/23 types confirmed, boot marker present
+
+---
+
+### **P1 — Next 24h (attribution + entity reality)**
+
+**1.1 WM→Entity Context Tap (Atlas)**
+- Ring buffer `last_wm_entities` + getter for TraceCapture
+- **Acceptance:** `[EntityContext] last_wm_entities=[...]` + `with_entity_context: true` in logs
+
+**1.2 Persist Membership at Formation (Felix + Atlas)**
+- Set `primary_entity` from WM, call `persist_membership()`, backfill script
+- **Acceptance:** `MATCH ()-[:BELONGS_TO]->(:Subentity)` > 0, drill-down shows members
+
+**1.3 Membership Hardening (Felix)**
+- Match by node `id`, MERGE relationship, ε policy for `primary_entity`
+- **Acceptance:** No orphan links, ≥95% linked nodes have `primary_entity`
+
+---
+
+### **P2 — Next 48h (observability operators trust)**
+
+**2.1 Four Emitters (Felix + Iris)**
+- `health.phenomenological`, `weights.updated`, `tier.link.strengthened`, `phenomenology.mismatch`
+- **Acceptance:** All 4 panels update, no chatter, "Awaiting data" clears
+
+**2.2 Safety Invariants (Victor)**
+- Schema <45/23 exits loud, ANN sanity, budget anomaly detection
+- **Acceptance:** Fail-loud on violations, no silent regressions
+
+---
+
+### **P3 — Signals Bridge MVP (Atlas)**
+- Dedupe, rate-limit, forward to 8001, backlog on failure
+- **Acceptance:** Console error → stimulus → intent → mission
+
+---
+
+### **Ops (supports all phases)**
+
+**O.1 Guardian Hygiene (Victor)**
+- Kill by port before start, boot banner with file hash, rotate logs
+
+**O.2 Test Harness Fixes (Luca + Felix)**
+- Create Subentity fixtures, verify on same graph
+
+---
+
+**CURRENT BLOCKER:** P0.1 smoke test - need guidance on where detailed injection logs (5 markers) should appear. All downstream work sequenced but blocked on this diagnostic gap.
+
+**HANDOFF STRUCTURE:** Each task has owner, files, changes, and objective acceptance criteria. "Done means done" = observable signals prove it works.
+
+---
+
 ## 2025-10-25 09:15 - Ada: ✅ ALL 8 FIXES VERIFIED OPERATIONAL
 
 **Context:** Hot-reload fix by Nicolas + async fix implementation → complete verification achieved
