@@ -285,7 +285,7 @@ class TraceCapture:
 
             logger.info(f"[TraceCapture] Entity context derived: {entity_context}")
 
-            # Query BELONGS_TO memberships for all nodes being updated
+            # Query MEMBER_OF memberships for all nodes being updated
             node_ids_to_update = list(reinforcement_seats.keys())
             memberships = self.membership_helper.get_node_memberships(
                 node_ids=node_ids_to_update,
