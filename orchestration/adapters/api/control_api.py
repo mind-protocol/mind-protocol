@@ -1626,16 +1626,26 @@ async def inject_stimulus(citizen_id: str, payload: StimulusIn):
         raise HTTPException(status_code=404, detail=f"Unknown engine {citizen_id}")
 
     # Inject stimulus into engine's queue (async-safe)
-    await eng.inject_stimulus_async(
-        text=payload.text,
-        severity=payload.severity or 0.3,
-        metadata={
-            "stimulus_id": payload.stimulus_id,
-            "origin": payload.origin,
-            "timestamp_ms": payload.timestamp_ms,
-            **(payload.metadata or {})
-        }
-    )
+    # Diagnostic logging to trace flow
+    logger.info(f"[ControlAPI] BEFORE inject_stimulus_async: citizen={citizen_id}, engine={type(eng).__name__}, sid={payload.stimulus_id}, text_preview={payload.text[:50]}")
+
+    try:
+        await eng.inject_stimulus_async(
+            text=payload.text,
+            severity=payload.severity or 0.3,
+            metadata={
+                "stimulus_id": payload.stimulus_id,
+                "origin": payload.origin,
+                "timestamp_ms": payload.timestamp_ms,
+                **(payload.metadata or {})
+            }
+        )
+
+        logger.info(f"[ControlAPI] AFTER inject_stimulus_async: sid={payload.stimulus_id} - SUCCESS")
+
+    except Exception as e:
+        logger.error(f"[ControlAPI] Exception during inject_stimulus_async: {e}", exc_info=True)
+        raise
 
     logger.info(f"[ControlAPI] Injected sid={payload.stimulus_id} citizen={citizen_id} len={len(payload.text)} severity={payload.severity}")
 
