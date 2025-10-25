@@ -12,6 +12,7 @@ import { Legend } from './components/Legend';
 import { Header } from './components/Header';
 import { CitizenMonitor } from './components/CitizenMonitor';
 import { LeftSidebarMenu } from './components/LeftSidebarMenu';
+import { ChatPanel } from './components/ChatPanel';
 import { useGraphData } from './hooks/useGraphData';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useCitizens } from './hooks/useCitizens';
@@ -268,39 +269,9 @@ export default function ConsciousnessPage() {
       {/* Tooltip for hover info */}
       <Tooltip />
 
-      {/* Right Sidebar - Collapsible Container */}
-      <div
-        className={`fixed top-16 bottom-0 right-0 z-40 transition-all duration-300 overflow-hidden ${
-          rightSidebarCollapsed ? 'w-12' : 'w-[22rem]'
-        }`}
-      >
-        {/* Toggle Button */}
-        <button
-          onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-          className="absolute top-4 left-2 z-50 p-1.5 rounded hover:bg-observatory-cyan/20 transition-colors"
-          title={rightSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <span className="text-observatory-text/70 text-sm">
-            {rightSidebarCollapsed ? '◀' : '▶'}
-          </span>
-        </button>
-
-        {/* Right Sidebar Panels */}
-        {!rightSidebarCollapsed && (
-          <div className="relative w-full h-full overflow-y-auto custom-scrollbar pt-4 pr-4 pl-4">
-            {/* Citizen consciousness monitor */}
-            <div className="mb-4">
-              <CitizenMonitor
-                citizens={citizens}
-                onFocusNode={handleFocusNode}
-                onSelectCitizen={handleSelectCitizen}
-                activeCitizenId={currentGraphId}
-                v2State={v2State}
-                subentitySnapshots={subentitySnapshots}
-              />
-            </div>
-          </div>
-        )}
+      {/* Right Sidebar - Chat Panel (wider with left sidebar collapsed) */}
+      <div className="fixed top-16 bottom-0 right-0 z-40 w-[36rem]">
+        <ChatPanel />
       </div>
 
       {/* Detail panel - Modal overlay on node click */}
