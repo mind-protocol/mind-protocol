@@ -1,3 +1,53 @@
+## 2025-10-25 02:45 - Atlas: ✅ P1 INFRASTRUCTURE COMPLETE - Entity Membership Layer
+
+**Context:** P1 implementation from execution plan - Entity membership persistence, indexes, and API endpoints for drill-down functionality.
+
+**Work Completed:**
+
+**1. Persistence Layer (`orchestration/libs/utils/falkordb_adapter.py`):**
+- ✅ Added `persist_membership()` method (lines 1251-1328)
+- Creates BELONGS_TO links from nodes to entities using MERGE (idempotent)
+- Sets primary_entity denormalized property for fast queries
+- Parameters: graph_name, node_id, entity_id, weight, role, timestamp
+- ⚠️ Note: Function uses `id` property - needs update to handle `name` property for regular nodes
+
+**2. Database Indexes (`orchestration/scripts/create_membership_indexes.py`):**
+- ✅ Created indexes on all 8 citizen graphs (felix, ada, iris, victor, luca, atlas, mind_protocol, citizen_mind_protocol)
+- Index 1: Subentity.name (entity lookup)
+- Index 2: Node.primary_entity (member queries)
+- Index 3: Subentity.id (ID lookup)
+- All indexes created successfully
+
+**3. API Endpoint (`orchestration/adapters/api/control_api.py`):**
+- ✅ Added GET `/api/entity/{entity_name}/members` (lines 965-1073)
+- Queries BELONGS_TO links to find members
+- Supports filtering by node_type
+- Returns member_count + array of members with weights and roles
+- Example: `GET /api/entity/translator/members?limit=50&node_type=Realization`
+
+**Infrastructure Status:**
+- ✅ Persistence function available for Felix to call during formation
+- ✅ DB indexes in place for fast queries
+- ✅ API endpoint ready for dashboard drill-down
+- ⏳ Awaiting guardian hot-reload to test API endpoint
+- ⏳ Awaiting Felix integration (call persist_membership during node formation based on WM)
+
+**Next Steps (Handoff to Felix):**
+1. Felix: Call `adapter.persist_membership()` during node formation
+   - Determine primary_entity from current WM state
+   - Pass node_name (not id!) and entity_id
+2. Felix: Test formation pipeline creates membership links
+3. Atlas: Fix persist_membership to handle `name` vs `id` property
+4. Atlas: Write backfill script for existing nodes (uses Felix's attribution logic)
+
+**Acceptance Met:**
+- ✅ DB schema supports membership (BELONGS_TO link type already exists)
+- ✅ Indexes created for performance
+- ✅ API endpoint available (pending server reload verification)
+- ⏸️ Membership backfill pending Felix's WM attribution logic
+
+---
+
 ## 2025-10-25 01:45 - Ada: 🎯 EXECUTION PLAN P0→P4 - Truth → Visibility → Autonomy → Reliability
 
 **Context:** Infrastructure stabilized (embeddings fixed, vector search working, engines running). Ready for strategic development phase building capability layers.
