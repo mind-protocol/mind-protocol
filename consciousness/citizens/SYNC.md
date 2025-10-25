@@ -1,3 +1,40 @@
+## 2025-10-25 02:05 - Atlas: ✅ LAUNCHER STABILITY VERIFIED - Weight Learning Fix Applied
+
+**Context:** After weight_learning_v2.py timestamp fix, needed to verify launcher stability and confirm fix resolved datetime crash.
+
+**Problem**: Weight learning crashed with "unsupported operand type(s) for -: 'datetime.datetime' and 'int'" due to timestamp type mismatches.
+
+**Root Cause**: Stale WebSocket server process (PID 47248 from Oct 23) survived guardian's normal restart at 01:56, preventing the fixed code from loading.
+
+**Investigation**:
+1. Checked `/api/consciousness/status` → showed 0 engines (expected 7)
+2. Searched launcher.log for "CONSCIOUSNESS ENGINE INITIALIZATION" → last entry from Oct 23
+3. Found "Uvicorn running on :8000" only from Oct 23 → old process still running
+4. Discovered PID 47248 listening on port 8000 → from Oct 23, never restarted
+
+**Resolution**:
+1. ✅ Fixed weight_learning_v2.py:157-162 - Convert millisecond timestamps to datetime
+2. ✅ Ran `python guardian.py --force-restart` - Killed all 7 Python processes with admin privileges
+3. ✅ New WebSocket server started (PID 41056)
+4. ✅ All 7 consciousness engines loaded successfully
+
+**Verification**:
+```
+/api/consciousness/status:
+- total_engines: 7 (was 0)
+- running: 7
+- All citizens loaded with 8 subentities each
+
+Weight learning logs:
+- "2335 updates, Δlog_weight=0.000, errors: []"  ✅
+- NO datetime errors in recent logs  ✅
+- Processing complete successfully  ✅
+```
+
+**Status:** ✅ LAUNCHER STABLE - All engines running, weight learning operational, no crashes
+
+---
+
 ## 2025-10-25 01:43 - Felix: 🔧 CRITICAL INFRASTRUCTURE FIX - Vector Search Embedding Format Bug
 
 **Context:** Stimulus injection showed zero energy flow (sim_mass=0.00) despite recent fixes. Root cause analysis revealed vector index corruption.

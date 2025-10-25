@@ -314,6 +314,10 @@ def execute_stride_step(
 
     strides_executed = 0
 
+    # Collect emotion deltas for emitter
+    node_emotion_deltas = []
+    link_emotion_deltas = []
+
     # === E.6: Collect current frontier nodes for coherence metric ===
     if settings.COHERENCE_METRIC_ENABLED:
         rt.current_frontier_nodes = [graph.nodes[nid] for nid in rt.active if nid in graph.nodes]
@@ -379,14 +383,42 @@ def execute_stride_step(
         rt.add(best_link.target.id, +retained_delta_E)  # Target gains retained amount
         # Energy leak: (delta_E - retained_delta_E) dissipates to environment
 
-        # Compute and emit link emotion (Phase 1: interpolation)
-        if enable_link_emotion and broadcaster is not None:
+        # Collect node emotion delta for target node (if it has an emotion vector)
+        if emitter is not None and hasattr(best_link.target, 'emotion_vector') and best_link.target.emotion_vector is not None:
+            if random.random() <= sample_rate:
+                from orchestration.adapters.ws.traversal_event_emitter import EmotionDelta
+                node_emotion = best_link.target.emotion_vector
+                magnitude = float(np.linalg.norm(node_emotion))
+                top_axes = [
+                    ("valence", float(node_emotion[0])),
+                    ("arousal", float(node_emotion[1]) if len(node_emotion) > 1 else 0.0)
+                ]
+                node_emotion_deltas.append(EmotionDelta(
+                    id=best_link.target.id,
+                    mag=magnitude,
+                    top_axes=top_axes
+                ))
+
+        # Compute link emotion (Phase 1: interpolation) and collect for emission
+        if enable_link_emotion:
             link_emotion = _compute_link_emotion(best_link, delta_E)
             if link_emotion is not None:
                 # Update link's emotion vector
                 best_link.emotion_vector = link_emotion
-                # Emit event to frontend
-                _emit_link_emotion_event(best_link, link_emotion, broadcaster, sample_rate)
+
+                # Collect delta for batch emission via emitter
+                if emitter is not None and random.random() <= sample_rate:
+                    from orchestration.adapters.ws.traversal_event_emitter import EmotionDelta
+                    magnitude = float(np.linalg.norm(link_emotion))
+                    top_axes = [
+                        ("valence", float(link_emotion[0])),
+                        ("arousal", float(link_emotion[1]) if len(link_emotion) > 1 else 0.0)
+                    ]
+                    link_emotion_deltas.append(EmotionDelta(
+                        id=best_link.id,
+                        mag=magnitude,
+                        top_axes=top_axes
+                    ))
 
         # Strengthen link (Hebbian learning - integrated with diffusion)
         if enable_strengthening and learning_controller is not None:
@@ -459,6 +491,13 @@ def execute_stride_step(
 
             # Emit via broadcaster
             broadcaster.stride_exec(stride_data)
+
+    # Emit collected emotion deltas via emitter (batch emission)
+    if emitter is not None:
+        if node_emotion_deltas:
+            emitter.node_emotion_update(node_emotion_deltas)
+        if link_emotion_deltas:
+            emitter.link_emotion_update(link_emotion_deltas)
 
     return strides_executed
 
