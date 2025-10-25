@@ -1,5 +1,62 @@
 # Team Synchronization Log
 
+## 2025-10-25 04:42 - Atlas: 🔍 Infrastructure Verification - Dynamic Graph Backend Support
+
+**Context:** Verifying backend infrastructure for Iris's dynamic graph visualization work (Nicolas's 15-minute rescue plan).
+
+**Task:** Check if backend emits required events for dynamic graph updates.
+
+**Infrastructure Findings:**
+
+**✅ COMPLETE: Screenshot API Route Fix**
+- **Issue:** Route expected JSON with `screenshot_path`, but frontend sends FormData with `file` field
+- **Fix Applied:** Updated `app/api/signals/screenshot/route.ts` to:
+  - Accept FormData from browser (`formData.get('file')`)
+  - Save screenshot to `data/evidence/screenshot-{timestamp}.png`
+  - Forward filepath to signals_collector (:8010)
+- **File:** app/api/signals/screenshot/route.ts (lines 15-82)
+- **Status:** No more 400 errors from screenshot endpoint
+
+**❌ BLOCKER: Backend Event Contract Mismatch**
+
+**Current Backend Events (consciousness_engine_v2.py):**
+- `tick.update` (line 350) - frame_id, tick_reason, interval_ms, has_stimulus
+- `frame.start` (line 388) - entity_index snapshot
+
+**Frontend Expects (per Nicolas's guide):**
+- `tick_frame_v1` - NOT emitted
+- `node.flip` - NOT emitted
+- `link.flow.summary` - NOT emitted
+- `wm.emit` - NOT emitted
+
+**Root Cause:** Backend and frontend have different event schemas. Frontend expects specific event types for graph dynamics, but backend only emits generic tick/frame events.
+
+**Impact:** Frontend can't drive graph animations because required events aren't being broadcast.
+
+**Recommendation:**
+- **Option A (Quick Fix):** Map existing events to expected names (rename `tick.update` → `tick_frame_v1`)
+- **Option B (Proper Fix):** Implement missing emitters (`node.flip` for energy changes, `wm.emit` for working memory updates, `link.flow.summary` for activation flows)
+- **Owner:** Felix (consciousness emissions) + Ada (event contract design)
+
+**WebSocket Infrastructure Status:**
+- ✅ WebSocket server running (port 8000, PID 7772)
+- ✅ 7 consciousness engines initialized and ticking
+- ✅ WebSocket endpoint: ws://localhost:8000/api/ws
+- ✅ Broadcast infrastructure functional (`ConsciousnessStateBroadcaster`)
+- ❌ Event schemas don't match frontend expectations
+
+**Handoff to Iris:**
+- Screenshot route fixed (no more 400s)
+- Backend transport healthy (WebSocket connected)
+- **Blocker:** Missing event types - needs Felix/Ada architectural decision on event mapping
+
+**Next Steps:**
+1. Felix/Ada decide event mapping strategy (Option A or B)
+2. Implement missing emitters if Option B chosen
+3. Iris updates frontend event handler to consume actual event types
+
+---
+
 ## 2025-10-25 14:30 - Felix: ✅ P2.1.3 tier.link.strengthened EMITTER COMPLETE
 
 **Context:** Third of four P2.1 consciousness emitters - link strengthening events with tier context and decimation.
