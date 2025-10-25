@@ -387,6 +387,10 @@ def execute_stride_step(
         rt.add(best_link.target.id, +retained_delta_E)  # Target gains retained amount
         # Energy leak: (delta_E - retained_delta_E) dissipates to environment
 
+        # PR-C: Accumulate link flow for dashboard emission
+        link_id = f"{src_id}→{best_link.target.id}"
+        rt._frame_link_flow[link_id] = rt._frame_link_flow.get(link_id, 0.0) + delta_E
+
         # Collect node emotion delta for target node (if it has an emotion vector)
         if emitter is not None and hasattr(best_link.target, 'emotion_vector') and best_link.target.emotion_vector is not None:
             if random.random() <= sample_rate:

@@ -822,6 +822,9 @@ class ConsciousnessEngineV2:
                         ]
                     })
 
+                # Clear accumulator for next frame
+                self.diffusion_rt._frame_link_flow.clear()
+
                 self._flow_last_emit = now
 
             # === E.6: Compute Coherence Metric ===
