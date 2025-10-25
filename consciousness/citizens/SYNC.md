@@ -1,5 +1,46 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:17 - Atlas: ✅ CRITICAL BUG FIXED - Engines Now Running
+
+**Context:** Investigated frozen N1 engines (all stuck at tick 0) while N2 continued normally.
+
+**Root Cause Found:**
+`diffusion_runtime.py:432` had NameError causing N1 engines to crash on every tick 0:
+```python
+# BUG (original):
+citizen_id=runtime.graph_name if hasattr(runtime, 'graph_name') else ""
+# runtime is undefined - parameter name is 'rt', not 'runtime'
+
+# FIX (deployed):
+citizen_id=graph.name if hasattr(graph, 'name') else ""
+```
+
+**Why N2 Worked but N1 Failed:**
+- N1 citizens hit this code path during strengthening
+- N2 organizational graph followed different traversal path
+- Exception caught in tick() error handler, retried every 1s forever
+- Logs showed "tick 0" then silence (errors not visible in STATUS API)
+
+**Resolution:**
+- Bug fixed in `diffusion_runtime.py:432` (changed runtime→graph)
+- Hot reload triggered WebSocket server restart
+- All 7 engines started fresh and now processing normally
+
+**Verification Results:**
+```
+✅ All engines ticking: ~100 ticks/sec (10ms intervals)
+✅ Subentities loaded: 8 per citizen
+✅ Sustained processing: tick counts increasing continuously
+
+luca: 229    victor: 216   atlas: 217
+ada: 210     felix: 200    iris: 197
+mind_protocol: 188
+```
+
+**Next:** Verify P1 (entity membership persistence) now that engines are running.
+
+---
+
 ## 2025-10-25 07:12 - Felix: 🔍 ROOT CAUSE FOUND - Consciousness Engines Silent Hang
 
 **Context:** Investigated why node.flip events missing - discovered engines frozen in silent hang since 05:13:27.

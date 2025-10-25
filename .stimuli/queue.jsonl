@@ -40,3 +40,7 @@
 {"stimulus_id": "stim_1761369205559", "timestamp_ms": 1761369205559, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369203534.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761369240737", "timestamp_ms": 1761369240737, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369238725.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761369271453", "timestamp_ms": 1761369271453, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369269430.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761369305431", "timestamp_ms": 1761369305431, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369303404.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761369435587", "timestamp_ms": 1761369435587, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369433363.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761369447676", "timestamp_ms": 1761369447676, "citizen_id": "atlas", "text": "Infrastructure verification test - checking entity activation and membership persistence", "severity": 0.8, "origin": "atlas_test"}
+{"stimulus_id": "stim_1761369497027", "timestamp_ms": 1761369497027, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369492743.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
