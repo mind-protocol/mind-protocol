@@ -2275,3 +2275,4 @@ class ConsciousnessEngineV2:
         }
 # Force reload
 # Force reload
+# Trigger hot-reload - Felix fix 2025-10-25
