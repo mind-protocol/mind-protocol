@@ -44,3 +44,5 @@
 {"stimulus_id": "stim_1761369435587", "timestamp_ms": 1761369435587, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369433363.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761369447676", "timestamp_ms": 1761369447676, "citizen_id": "atlas", "text": "Infrastructure verification test - checking entity activation and membership persistence", "severity": 0.8, "origin": "atlas_test"}
 {"stimulus_id": "stim_1761369497027", "timestamp_ms": 1761369497027, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369492743.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761369534220", "timestamp_ms": 1761369534220, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369532151.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761369565582", "timestamp_ms": 1761369565582, "citizen_id": "felix", "text": "Screenshot: screenshot-1761369563549.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
