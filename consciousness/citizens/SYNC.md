@@ -1,5 +1,59 @@
 # Team Synchronization Log
 
+## 2025-10-25 11:15 - Atlas: P0 SMOKE TEST - CRITICAL PERSISTENCE BLOCKER
+
+**Context:** Executed P0.1 stimulus smoke test per Nicolas's plan. Injection and dual-channel working, but persistence completely broken.
+
+**What Was Tested:**
+- Injected test stimulus via POST to :8001
+- Monitored logs for 5 diagnostic markers
+- Verified FalkorDB for energy deltas
+
+**Results:** 3/7 Acceptance Criteria Passed
+
+✅ **Working:**
+1. Vector similarity search: Found 60 matches
+2. Budget calculation: sim_mass=20.88 → B=20.88
+3. Dual-channel split: λ=0.60, B_top=12.53, B_amp=8.35
+
+❌ **Broken:**
+4. Energy injection: Logs say "16.01 energy into 19 items" but no in-memory verification
+5. **PERSISTENCE: Logs say "Persisted 19 updates" but FalkorDB shows ZERO nodes with energy!**
+6. Dashboard tick_reason: Not implemented yet (P2 work)
+7. FalkorDB energy verification: ZERO nodes with energy in both citizen_felix and felix_personal_graph
+
+**Root Cause (conversation_watcher.py:705-706):**
+```python
+update_query = f"MATCH (n {{name: '{node_id}'}}) SET n.energy = '{energy_json}'"
+r.execute_command('GRAPH.QUERY', graph_name, update_query)
+logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB")
+```
+
+**Three Critical Bugs:**
+1. **Silent failure:** MATCH won't create missing nodes, fails silently
+2. **Type error:** Stores JSON string `'{"felix": 2.5}'` instead of numeric `2.5`
+3. **False logging:** Claims success without checking query result
+
+**Blocker Impact:**
+- P0 end-to-end chain is broken at persistence layer
+- Stimulus → injection → budget → split all work
+- But energy never persists to database
+- Subsequent ticks can't see energy changes
+- WM selection has no data to work with
+
+**Recommended Fix:**
+1. Use `MERGE (n {name: $node_id})` to create if missing
+2. Extract numeric value: `SET n.energy = $energy_value` (not JSON string)
+3. Verify query succeeded before logging
+4. Add error handling and logging for failures
+
+**Next Steps:**
+- Awaiting Nicolas/Felix guidance on fix approach
+- After fix: Re-run P0 smoke test
+- Verify all 7 criteria pass before moving to P1
+
+---
+
 ## 2025-10-25 10:05 - Ada: COMPREHENSIVE EXECUTION PLAN (P0→P3 + Ops)
 
 **Context:** 8 fixes verified operational, hot-reload stable, ready for phased execution with crisp acceptance criteria
@@ -8,18 +62,36 @@
 
 ### **P0 — Today (unlock end-to-end propagation)**
 
-**0.1 Stimulus Smoke Test (Atlas - BLOCKER)**
-- **Status:** ⚠️ IN PROGRESS - API accepts stimulus but 5 diagnostic markers not visible in logs
-- **Files:** `stimulus_injection_service.py` (8001), WS (8000), dashboard
+**0.1 Stimulus Smoke Test (Atlas - CRITICAL BLOCKER FOUND)**
+- **Status:** ❌ 3/7 PASSED - **PERSISTENCE BROKEN**
+- **Files:** `stimulus_injection_service.py` (8001), `conversation_watcher.py` (persistence)
 - **Acceptance:**
-  - [ ] `Found <N> vector matches` (N>0)
-  - [ ] `Budget: … → B=…`
-  - [ ] `Dual-channel: λ=…, B_top=…, B_amp=…`
-  - [ ] `Injected <X> into <Y> items`
-  - [ ] `Persisted <Y> updates`
-  - [ ] Dashboard `tick.update` → STIMULUS within ±1 tick
-  - [ ] FalkorDB shows energy delta in last 60s
-- **Blocker:** Executed curl injection, got `{"status":"injected"}` but cannot locate markers in any log file checked
+  - [x] `Found <N> vector matches` (N>0) - ✅ Found 60 matches
+  - [x] `Budget: … → B=…` - ✅ B=20.88
+  - [x] `Dual-channel: λ=…, B_top=…, B_amp=…` - ✅ λ=0.60, B_top=12.53, B_amp=8.35
+  - [?] `Injected <X> into <Y> items` - ⚠️ Logged "16.01 energy into 19 items" but unverified
+  - [ ] `Persisted <Y> updates` - ❌ **FALSE - Zero nodes with energy in FalkorDB!**
+  - [ ] Dashboard `tick.update` → STIMULUS within ±1 tick - ⏸️ tick_reason not implemented yet (P2)
+  - [ ] FalkorDB shows energy delta in last 60s - ❌ **ZERO nodes with energy property**
+
+**CRITICAL BLOCKER (conversation_watcher.py:705-706):**
+```python
+update_query = f"MATCH (n {{name: '{node_id}'}}) SET n.energy = '{energy_json}'"
+r.execute_command('GRAPH.QUERY', graph_name, update_query)
+```
+**Problems:**
+1. **Silent failure:** MATCH only updates existing nodes (won't create), fails silently if node missing
+2. **Wrong type:** Sets `n.energy` to JSON string `'{"felix": 2.5}'` instead of numeric `2.5`
+3. **No verification:** Logs "Persisted" without checking query success
+
+**Evidence:**
+- Logs: "Persisted 19 energy updates to FalkorDB"
+- Reality: `citizen_felix` (7 nodes, 0 with energy), `felix_personal_graph` (483 nodes, 0 with energy)
+
+**Fix Required:**
+- Use MERGE to create nodes if missing
+- Extract numeric value from energy_dict, don't store JSON string
+- Verify query result before logging success
 
 **0.2 Enforce StimulusInjector V2 (Felix)** - ✅ COMPLETE
 - Verified in 8-fix deployment: logs show "Initialized V2 (dual-channel: Top-Up + Amplify)"
