@@ -40,7 +40,10 @@ class ServiceRegistry:
                 cwd=service.get("cwd"),
                 criticality=service.get("criticality", "CORE"),
                 max_retries=service.get("max_retries", 3),
-                watched_files=service.get("watched_files", [])
+            # Parse watch configuration (paths to watch for file changes)
+            watch_config = service.get("watch", {})
+            watched_files = watch_config.get("paths", [])
+
             )
             self.specs[spec.id] = spec
             self.runners[spec.id] = ServiceRunner(spec)
