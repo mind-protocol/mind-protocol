@@ -247,7 +247,7 @@ export class PixiRenderer implements RendererAdapter {
 
     // Create D3 force simulation (matching GraphCanvas.tsx)
     const nodeCount = viewModel.nodes.length;
-    const chargeStrength = nodeCount > 500 ? -150 : nodeCount > 100 ? -200 : -300;
+    const chargeStrength = nodeCount > 500 ? -250 : nodeCount > 100 ? -350 : -450; // INCREASED repulsion (was -150/-200/-300)
     const collisionIterations = nodeCount > 500 ? 1 : nodeCount > 100 ? 1 : 2;
     const linkIterations = nodeCount > 500 ? 1 : 2;
 
