@@ -1,5 +1,71 @@
 # Team Synchronization Log
 
+## 2025-10-25 06:50 - Ada: 🚨 EXECUTION PLAN - Dynamic Graphs & P1 Unblock
+
+**Context:** Nicolas identified ROOT CAUSE of dynamic graph blockage + P1 verification issues. Clear 2-hour execution plan with owner assignments.
+
+**ROOT CAUSE IDENTIFIED:**
+- **Backend Event Contract Mismatch:** Backend emits `tick.update`/`frame.start`, frontend expects `tick_frame_v1`/`node.flip`/`wm.emit`/`link.flow.summary`
+- **This blocks Iris's dynamic graph work** - Step C (mapper) can't map non-existent event types
+- **P1 blocker is LIVE:** This conversation's formations triggered `'Realization' object has no attribute 'id'` error (traceback logging working ✅)
+
+**EXECUTION PLAN:**
+
+**A) Backend Emitters (Owner: Felix) - 4 new emitters needed:**
+
+1. **tick_frame_v1** - Canonical frame end marker
+   - File: `consciousness_engine_v2.py` (where frame.start is sent)
+   - Emit once per tick after energies update
+   - Payload: frame_id, citizen_id, t_ms
+
+2. **node.flip** - Energy deltas for visible node changes
+   - File: `consciousness_engine_v2.py` or `diffusion_runtime.py`
+   - Emit top-K (20) nodes by |ΔE| every 10Hz (decimated)
+   - Payload: id, E_pre, E_post, theta, frame_id
+
+3. **link.flow.summary** - Link activation flows (optional but great for motion)
+   - File: `diffusion_runtime.py` (after stride)
+   - Aggregate per-tick ΔE along links, decimated ≤10Hz
+   - Payload: frame_id, flows array (link_id, dE)
+
+4. **wm.emit** - WM selection for halos
+   - File: WM selection code (`working_memory` or engine loop)
+   - After WM picks, send IDs + token shares
+   - Payload: frame_id, selected_entities array
+
+**B) Frontend Normalizer (Owner: Iris):**
+- Add event type normalizer accepting current + new event types
+- Warn on unknown types (never silently drop frames)
+- Map tick.update → frame.end temporarily during transition
+
+**C) P1 Unblock (Owner: Atlas) - ✅ COMPLETE:**
+- ✅ Stack traces logging (DONE - conversation_watcher.py:389-391 - error visible in system message)
+- ✅ JSONL queue mechanism (DONE - `.stimuli/queue.jsonl`, drained at line 1377 - bypasses watchdog)
+- ✅ P1 Fix Verification: node.id → node.name deployed (trace_capture.py:528), watcher restarted (PID 67560)
+
+**D) Watchdog Fix (Owner: Victor - if needed):**
+- Switch to PollingObserver for Windows reliability if JSONL workaround insufficient
+
+**ACCEPTANCE CRITERIA:**
+- WebSocket steady OPEN, no close-before-open churn
+- Within 1-2s of stimulus: tick_frame_v1, then node.flip for top-K nodes, optional wm.emit/link.flow
+- GraphCanvas: node visibly changes (size/glow) and/or WM halos appear
+- Health emitter continues working
+- No frontend console spam for unknown event types
+
+**P1 ERROR LIVE NOW:**
+```
+ERROR: Node formation failed: 'Realization' object has no attribute 'id'
+❌ primary_entity WRONG
+❌ MEMBER_OF relationship not found
+```
+This conversation's formations triggered it - perfect debugging opportunity.
+
+**Ada's Verification Gap Acknowledged:**
+Verified WebSocket infrastructure (state + stability) but **missed contract alignment** - didn't check if backend emits events frontend expects. Three-dimensional verification needed: state, stability, contract.
+
+---
+
 ## 2025-10-25 06:48 - Atlas: ✅ P3.1 DEPLOYMENT VERIFIED - Signals Collector Operational
 
 **Context:** Deployed P3.1 signals collector MVP for autonomy - verifying full deployment and integration.
