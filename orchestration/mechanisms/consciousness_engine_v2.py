@@ -798,6 +798,32 @@ class ConsciousnessEngineV2:
             # === Step 5: Emit Stride Exec Samples ===
             self._emit_stride_exec_samples()
 
+            # === PR-C: Emit link.flow.summary (top 200 flows at 10Hz) ===
+            now = time.time()
+            if now - self._flow_last_emit >= 1.0 / self._flip_fps:  # Same 10Hz as flip
+                # Get per-link flows from diffusion runtime
+                link_flows = getattr(self.diffusion_rt, '_frame_link_flow', {})
+
+                if link_flows:
+                    # Sort by absolute flow, cap at 200
+                    sorted_flows = sorted(
+                        link_flows.items(),
+                        key=lambda x: abs(x[1]),
+                        reverse=True
+                    )[:200]
+
+                    await self.broadcaster.broadcast_event("link.flow.summary", {
+                        "v": "2",
+                        "frame_id": self.tick_count,
+                        "citizen_id": self.config.entity_id,
+                        "flows": [
+                            {"link_id": link_id, "flow": round(flow, 4)}
+                            for (link_id, flow) in sorted_flows
+                        ]
+                    })
+
+                self._flow_last_emit = now
+
             # === E.6: Compute Coherence Metric ===
             if settings.COHERENCE_METRIC_ENABLED:
                 from orchestration.mechanisms.coherence_metric import compute_coherence_metric, emit_coherence_telemetry
