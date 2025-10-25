@@ -959,6 +959,120 @@ async def set_citizen_speed_endpoint(citizen_id: str, request: SpeedRequest):
     return result
 
 
+# === Entity Membership Endpoints ===
+
+
+@router.get("/entity/{entity_name}/members")
+async def get_entity_members(
+    entity_name: str,
+    graph_name: Optional[str] = None,
+    node_type: Optional[str] = None,
+    limit: int = 100
+):
+    """
+    Get members (nodes) belonging to an entity.
+
+    Queries BELONGS_TO links to find all nodes assigned to this entity.
+    Supports filtering by node type and limiting results.
+
+    Args:
+        entity_name: Entity name (e.g., "translator", "architect")
+                    Function will construct full entity_id from this
+        graph_name: Optional graph name (default: inferred from context)
+        node_type: Optional filter by node type (e.g., "Realization", "Principle")
+        limit: Maximum members to return (default 100)
+
+    Returns:
+        {
+            "entity_id": str,
+            "entity_name": str,
+            "member_count": int,
+            "members": [
+                {
+                    "id": str,
+                    "name": str,
+                    "type": str,
+                    "membership_weight": float,
+                    "membership_role": str
+                },
+                ...
+            ]
+        }
+
+    Example:
+        GET /api/entity/translator/members?limit=50
+        GET /api/entity/translator/members?node_type=Realization
+
+    Author: Atlas
+    Date: 2025-10-25
+    """
+    import redis
+    from typing import List, Dict, Any
+
+    # Connect to FalkorDB
+    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+    # Infer graph name if not provided (default to first citizen graph for now)
+    if not graph_name:
+        # Try to get from context or default to citizen_felix
+        graph_name = "citizen_felix"  # TODO: Get from request context
+
+    # Construct full entity ID (handle both short and full names)
+    if not entity_name.startswith("entity_"):
+        # Assume it's a short name like "translator" -> "entity_citizen_X_translator"
+        # For now, use the graph_name to infer the full entity ID
+        citizen_id = graph_name.replace("citizen_", "").replace("org_", "")
+        prefix = "citizen" if graph_name.startswith("citizen_") else "org"
+        entity_id = f"entity_{prefix}_{citizen_id}_{entity_name}"
+    else:
+        entity_id = entity_name
+
+    # Build query to find members
+    query_parts = []
+    query_parts.append(f'MATCH (n)-[r:BELONGS_TO]->(e:Subentity {{id: "{entity_id}"}})')
+
+    # Add node type filter if provided
+    if node_type:
+        query_parts.append(f'WHERE n:{node_type}')
+
+    # Return member details
+    query_parts.append(
+        'RETURN n.name AS name, '
+        'labels(n) AS labels, '
+        'n.node_type AS node_type, '
+        'r.weight AS weight, '
+        'r.role AS role '
+        f'LIMIT {limit}'
+    )
+
+    query = '\n'.join(query_parts)
+
+    try:
+        result = r.execute_command('GRAPH.QUERY', graph_name, query)
+
+        members = []
+        if result and len(result) > 1:
+            for row in result[1]:
+                members.append({
+                    "name": row[0] if row[0] else "unknown",
+                    "type": row[1][0] if row[1] and len(row[1]) > 0 else (row[2] if row[2] else "unknown"),
+                    "membership_weight": float(row[3]) if row[3] is not None else 0.0,
+                    "membership_role": row[4] if row[4] else "unknown"
+                })
+
+        return {
+            "entity_id": entity_id,
+            "entity_name": entity_name,
+            "graph_name": graph_name,
+            "member_count": len(members),
+            "members": members
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get entity members for {entity_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+
+
 # === Affective Telemetry Endpoints (PR-A, PR-B) ===
 
 
