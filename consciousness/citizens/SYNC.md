@@ -1,8 +1,78 @@
 # Team Synchronization Log
 
-## 2025-10-25 16:05 - Ada: 🔧 Dual-Energy Synchronization Bug FIXED (Needs Verification)
+## 2025-10-25 16:40 - Ada: 📐 Two-Layer Graph Architecture → Iris
 
-**Status:** Root cause identified and fixed - injected energy now writes to both `E` (persistence) and `energy_runtime` (dynamics)
+**Status:** Nicolas provided complete implementation-ready plan for entity-layer graph visualization with expand/collapse
+
+**Architecture Overview:**
+- **Layer A (Entity layer):** Subentities as super-nodes with aggregated links
+- **Layer B (Inner layer):** Click entity → expand to show member nodes; click again → collapse
+- **Mixed state:** Some entities expanded, others collapsed - edges route correctly
+- **Multi-membership:** Single knowledge node belongs to multiple entities - canonical placement in primary_entity + lightweight proxies for other memberships
+- **Live updates:** 10 Hz from `tick_frame_v1`, `node.flip`, `wm.emit`, `link.flow.summary`
+- **Performance:** 60 FPS at ≤10k sprites with incremental aggregation
+
+**Key Technical Patterns:**
+
+1. **Canonical + Proxy Model:**
+   - Physical node sprite lives in `primary_entity` container only
+   - Other memberships show as small proxy sprites (delegate clicks to canonical)
+   - Prevents double forces, double counting, maintains physics stability
+
+2. **Edge Routing Logic:**
+   - Node→Node edges drawn only when BOTH entities expanded
+   - Otherwise contributes to aggregated entity→entity edge
+   - Incremental aggregation matrix `agg[A|B]` with decay
+
+3. **Local Layout Caching:**
+   - Pre-computed or cached layouts per entity
+   - Fast radial/hex packing for on-demand expansion
+   - WebWorker for large entities (>300 nodes)
+
+**Data Contracts:**
+```ts
+type RenderNode = {
+  id: string; x: number; y: number; r: number;
+  energy: number; kind: "entity"|"node"|"proxy";
+  entityId?: string; canonicalId?: string;
+};
+type RenderEdge = {
+  id: string; from: string; to: string; w: number;
+  kind: "entity"|"intra"|"inter"
+};
+```
+
+**Store Pattern:**
+- `expandedEntities: Set<string>` for UI state
+- `visibleGraphSelector()` memoized selector producing flat arrays for Pixi
+- Event mappers update aggregates: `node.flip` → entity energy, `link.flow.summary` → entity edges
+
+**Full Specification:**
+See Nicolas's message (2025-10-25 ~16:35) for complete TypeScript snippets, event intake pipeline, failure mode guards, and migration notes.
+
+**Implementation Checklist for Iris:**
+- [ ] Store shape + selectors (`visibleGraphSelector`)
+- [ ] Entity glyph click → `toggleEntity(eid)`
+- [ ] Local layout cache per entity
+- [ ] Node.flip mapper updates node.E + invalidates entity aggregates
+- [ ] link.flow.summary mapper updates `entityToEntity` with decay
+- [ ] wm.emit maps to entity halos + micro-halos when expanded
+- [ ] Pixi containers: entityLayer, edgeEntityLayer, edgeNodeLayer, nodeLayer, haloLayer, labelLayer
+- [ ] Jank guard: batch updates at 10 Hz; profile >55 FPS on 5k sprites
+
+**Why This Matters:**
+Solves multi-membership visualization, provides entity-level overview + detail-on-demand, maintains performance at realistic graph scale (100K+ nodes lifetime).
+
+**Next Owner:** **Iris** (Frontend Engineer)
+
+---
+
+## 2025-10-25 16:20 - Ada: ⚠️ Dual-Energy Fix - Verification BLOCKED (Services Down)
+
+**Status:** Dual-energy synchronization fix is implemented but CANNOT be verified - all services are down (0/8 engines, 0 processes)
+
+**Fix Previously Implemented:**
+Modified `consciousness_engine_v2.py` lines 535-539 to dual-write injected energy to both `E` (persistence) and `energy_runtime` (dynamics). See entry below for full details.
 
 **Root Cause Discovered:**
 Stimulus injection was only writing to `node.E` (latent energy for persistence) while runtime systems (diffusion, decay, flip tracking) read `node.energy_runtime` (working integrator for dynamics). No synchronization between them → injected energy never reached visualization pipeline.
