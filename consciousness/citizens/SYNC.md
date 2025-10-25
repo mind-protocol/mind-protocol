@@ -1,5 +1,92 @@
 # Team Synchronization Log
 
+## 2025-10-25 22:00 - Luca: ✅ TRACK B v1.3 - L2 Autonomy Integration Complete
+
+**Status:** TRACK B substrate specification updated to v1.3 with comprehensive L2 autonomy integration. File/Process tracking now feeds organizational intelligence and autonomous intent formation.
+
+**L2 Autonomy Integration Delivered:**
+
+**Git Watcher (Code/Doc Drift Detection):**
+- ✅ Added as signal source to TRACK B (§4.1)
+- ✅ Maps file changes via SCRIPT_MAP.md to identify counterpart drift
+- ✅ Emits `source_type="code_change"` or `"doc_change"` with diff + counterpart path
+- ✅ Triggers `intent.sync_docs_scripts` in AutonomyOrchestrator
+- ✅ Routing: Code→Doc to Ada, Doc→Code to Atlas
+- ✅ Severity calculation based on drift duration (1 day = medium, 1 week = high)
+
+**Log Tail Watcher (Error Log Monitoring):**
+- ✅ New signal type: error.log (§4.4)
+- ✅ Monitors `logs/*.log` for ERROR/WARN/CRITICAL levels
+- ✅ Emits with service, message, stack trace, file_path, line_number
+- ✅ Triggers `intent.fix_incident` in AutonomyOrchestrator
+- ✅ Routing by service: Atlas (backend), Victor (ops), Iris (frontend)
+- ✅ Deduplication by (service, message_hash, 5-minute window)
+
+**Console Beacon (Frontend Error Monitoring):**
+- ✅ Client-side browser console error tracking
+- ✅ Signal type: error.console
+- ✅ Routes via Next.js API proxy → Signals Collector → L2 autonomy
+- ✅ Triggers `intent.fix_incident` routed to Iris
+
+**ProcessExec Forensics Enrichment:**
+- ✅ RELATES_TO links between Stimulus (error log) and ProcessExec (failure forensics)
+- ✅ Temporal correlation within 5-second window
+- ✅ Enables query: "Show all context for incident X" (error + execution + file history)
+- ✅ Complete debugging context: message + stack + env + recent failures
+
+**L2 Routing Architecture (§10):**
+- ✅ Complete integration path specification:
+  - TRACK B substrate → Signals Collector @8003
+  - StimulusEnvelope normalization
+  - StimulusInjector @8001 (scope="organizational", N2 graph)
+  - AutonomyOrchestrator @8002 (intent template matching)
+  - IntentCard creation → Mission assignment → Citizen auto-wake
+- ✅ Routing table by signal source + intent template + citizen
+- ✅ Autonomy guardrails: ACK policies, capacity-aware routing, outcome verification
+
+**Architecture Updates:**
+- ✅ Updated architecture diagram (§1.2) showing L2 integration path
+- ✅ Added comprehensive §10 L2 Autonomy Integration section with:
+  - Git Watcher integration architecture (§10.2)
+  - Log Tail integration architecture (§10.3)
+  - ProcessExec forensics enrichment (§10.4)
+  - L2 routing summary table (§10.5)
+  - Autonomy guardrails (§10.6)
+
+**Key Integration Points:**
+
+| Signal Source | Triggers | Routes To | Acceptance Gate |
+|---------------|----------|-----------|-----------------|
+| git_watcher (code→doc) | intent.sync_docs_scripts | Ada | Drift >1 day |
+| git_watcher (doc→code) | intent.sync_docs_scripts | Atlas | Drift >1 day |
+| log_tail (backend) | intent.fix_incident | Atlas/Victor | level=ERROR |
+| console_beacon (frontend) | intent.fix_incident | Iris | level=ERROR |
+
+**Deduplication & Severity:**
+- Git drift: 5-minute window, severity 0.4-0.8 by drift duration
+- Error logs: 5-minute window, severity 0.6 (ERROR), 0.8 (CRITICAL)
+- Recurring errors: +0.2 severity escalation if >10 occurrences/hour
+
+**Files Updated:**
+- `docs/specs/v2/ops_and_viz/lv2_file_process_telemetry.md` - Updated to v1.3 with comprehensive L2 integration
+
+**Handoff:**
+- **Atlas/Victor:** Git Watcher and Log Tail implementation ready (specs complete, watchers defined)
+- **Atlas:** StimulusInjector @8001 and Signals Collector @8003 integration
+- **Ada:** AutonomyOrchestrator @8002 intent template integration
+- **Iris:** Console Beacon implementation + dashboard intent queue visualization
+- **All:** L2 autonomy substrate complete and ready for Phase-A execution
+
+**Next Steps (Atlas/Victor/Ada - from Nicolas's briefing):**
+1. Stand up StimulusInjectionService @8001, Signals Collector @8003, AutonomyOrchestrator @8002
+2. Launch watchers: git_watcher.py, log_tail.py, console beacon
+3. Load intent templates (intent.sync_docs_scripts, intent.fix_incident)
+4. Run acceptance tests (Incident E2E, Doc-Sync E2E, Self-Awareness Guarded)
+
+**Status:** TRACK B substrate work complete. L2 autonomy architecture fully specified. Ready for orchestration/implementation phase.
+
+---
+
 ## 2025-10-25 16:40 - Ada: 📐 Two-Layer Graph Architecture → Iris
 
 **Status:** Nicolas provided complete implementation-ready plan for entity-layer graph visualization with expand/collapse
