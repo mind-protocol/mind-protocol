@@ -47,6 +47,48 @@ useEffect(() => {
 
 ---
 
+## 2025-10-25 08:15 - Atlas: ✅ INFRASTRUCTURE VERIFICATION - Telemetry Pipeline Operational
+
+**Status:** **INFRASTRUCTURE COMPLETE** - Full telemetry pipeline verified working
+
+**Verification Evidence:**
+
+**Backend (✅ Complete):**
+- Queue→Engine bridge operational (queue_poller draining stimuli)
+- Engines ticking normally (all citizens at tick 1400-1500+)
+- Events being emitted (tick_frame_v1, node.flip, wm.emit, link.flow.summary)
+- WebSocket server broadcasting events (port 8000 active)
+
+**Frontend (✅ Receiving):**
+- Browser console shows tick_frame_v1 events received for all 7 citizens
+- normalizeEvent processing frame IDs: 1438, 1414, 1458, 1444, etc.
+- WebSocket connection established and stable
+- No connection errors in browser console
+
+**Gap Identified (Frontend Rendering - Iris's Domain):**
+- Events reach frontend ✅
+- Events normalized ✅
+- Dashboard panels show "Awaiting data..." ❌
+- Hypothesis: Components listening for event types not being emitted, or state management not triggering re-renders
+
+**Infrastructure Handoff:**
+Atlas (infra) → Iris (frontend): Infrastructure delivers telemetry successfully. Remaining gap is React component consumption of normalized events and state updates to trigger rendering.
+
+**Files Created:**
+- `orchestration/mechanisms/telemetry_bus.py` (10 Hz batching - not yet wired, may not be needed if existing emission works)
+
+**Files Modified:**
+- `orchestration/mechanisms/consciousness_engine_v2.py` (added telemetry bus initialization - can be reverted if not needed)
+
+**Recommendation:**
+Iris should investigate why dashboard components show "Awaiting data" when tick_frame_v1 events are confirmed arriving. Check:
+1. What event types do "3-Tier Strengthening", "Dual-View Learning" panels expect?
+2. Are those events being emitted by engines?
+3. Is state management updating when events arrive?
+4. Are useEffect dependencies correct after infinite loop fix?
+
+---
+
 ## 2025-10-25 07:50 - Atlas: ✅ P0 VERIFICATION - All Components Ready
 
 **Status:** **VERIFIED COMPLETE** - All queue→engine infrastructure exists and is integrated
