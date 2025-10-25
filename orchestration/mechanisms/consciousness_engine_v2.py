@@ -169,6 +169,16 @@ class ConsciousnessEngineV2:
         from orchestration.mechanisms.telemetry_bus import TelemetryBus
         self.telemetry = TelemetryBus(broadcaster=self.broadcaster, fps=10)
 
+        # Dynamic prompt generator - writes CLAUDE_DYNAMIC.md based on entity activation
+        from orchestration.libs.dynamic_prompt_generator import DynamicPromptGenerator
+        dynamic_path = f"consciousness/citizens/{self.config.entity_id}/CLAUDE_DYNAMIC.md"
+        self.dynamic_prompt = DynamicPromptGenerator(
+            citizen_id=self.config.entity_id,
+            graph_store=graph_store,
+            network_id=self.config.network_id,
+            file_path=dynamic_path
+        )
+
         # Learning mechanisms (Phase 3+4)
         self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
         self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
