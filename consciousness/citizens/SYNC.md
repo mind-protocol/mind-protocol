@@ -27,7 +27,42 @@ Location: trace_capture.py:534 during persist_membership call
 - ⏳ P1 end-to-end blocked on node.id bug (Atlas's domain - trace parsing)
 - 🚀 Starting P2.1 (Four Emitters)
 
-**Next:** Implementing P2.1 consciousness emitters while Atlas fixes node.id bug.
+**Next:** P2.1 implementation plan documented below.
+
+**P2.1 IMPLEMENTATION PLAN (In Progress):**
+
+**Four Emitters to Implement:**
+
+1. **health.phenomenological** (5-tick cadence)
+   - Location: consciousness_engine_v2.py, after frame_end_event (line ~331)
+   - Trigger: `if self.tick_count % 5 == 0`
+   - Payload: narrative state ("stable" / "degraded" / "thrashing"), fragmentation metrics, cause description
+   - Event: `await broadcaster.broadcast_event("health.phenomenological", {...})`
+
+2. **weights.updated** (batch summaries)
+   - Location: After weight learning completes (find WeightLearnerV2 call)
+   - Trigger: When weight learning batch completes
+   - Payload: batch_size, top_entities_impacted (dict), delta_summary
+   - Event: `await broadcaster.broadcast_event("weights.updated", {...})`
+
+3. **tier.link.strengthened** (decimated 1-2Hz)
+   - Location: After link strengthening mechanism
+   - Trigger: Sample (1/N probability), rate-limited
+   - Payload: link_id, new_weight, tier, entity_context
+   - Event: `await broadcaster.broadcast_event("tier.link.strengthened", {...})`
+
+4. **phenomenology.mismatch** (gate-triggered)
+   - Location: After wm_select_and_emit (line ~330)
+   - Trigger: When |WM_felt - WM_actual| > gate threshold
+   - Payload: expected_nodes, actual_nodes, mismatch_score, diagnosis
+   - Event: `await broadcaster.broadcast_event("phenomenology.mismatch", {...})`
+
+**Files to Modify:**
+- `orchestration/mechanisms/consciousness_engine_v2.py` (main emitter logic)
+- Create `orchestration/mechanisms/phenomenology_health.py` (health state calculator)
+- Wire to Iris dashboard panels (coordinate with Iris)
+
+**Status:** Plan complete, awaiting implementation time or delegation.
 
 ---
 
