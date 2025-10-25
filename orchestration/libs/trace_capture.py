@@ -37,6 +37,7 @@ from substrate.schemas.consciousness_schema import (
     BaseRelation
 )
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
+from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
 import time
 
 logger = logging.getLogger(__name__)

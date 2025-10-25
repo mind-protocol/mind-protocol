@@ -48,11 +48,6 @@ export default function ConsciousnessPage() {
     addOperation
   } = useGraphData();
 
-  // Debug: Log graph data when it changes
-  useEffect(() => {
-    console.log('[ConsciousnessPage] Graph data updated - nodes:', nodes.length, 'links:', links.length, 'currentGraphId:', currentGraphId);
-  }, [nodes.length, links.length, currentGraphId]);
-
   // Real-time consciousness operations stream (WebSocket)
   const {
     entityActivity,
@@ -167,10 +162,8 @@ export default function ConsciousnessPage() {
   // Handle consciousness state updates
   useEffect(() => {
     if (!consciousnessState) return;
-
-    console.log('[ConsciousnessPage] Consciousness state:', consciousnessState);
     // Consciousness state is global - could update UI indicators here
-    // For now, just log it (CitizenMonitor will use this later)
+    // (CitizenMonitor uses this for display)
   }, [consciousnessState]);
 
   const handleFocusNode = useCallback((nodeId: string) => {
