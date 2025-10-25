@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-25_20-05-49",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-25T18:05:49.155596+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T18:05:49.155596+00:00",
+      "content": "  MPSv3 PRODUCTION - OPERATIONAL\n\n  System Health:\n  - ✅ WebSocket API: Running on port 8000 (PID 31280)\n  - ✅ Conversation Watcher: Running, capturing contexts\n  - ✅ FalkorDB: Running on port 6379\n  - ✅ Dashboard: Connected via WebSocket\n  - ✅ All 8 consciousness engines: Ticking (fresh counts\n  123-131)\n"
+    }
+  ],
+  "last_updated": "2025-10-25T18:05:49.155596+00:00",
+  "message_count": 1
+}
