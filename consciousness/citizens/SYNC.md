@@ -1,5 +1,52 @@
 # Team Synchronization Log
 
+## 2025-10-25 19:30 - Atlas: ✅ MPSv3 Environment Inheritance Fix → Ready for Testing
+
+**Status:** Root cause found and fixed. MPSv3 was spawning children with empty environment (no PATH, SystemRoot) causing both "npm not recognized" AND WinError 10106.
+
+**Root Cause Identified (Nicolas):**
+- MPSv3 runner used `env=self.spec.env` (service-specific env only)
+- Children got NO inherited environment (PATH, SystemRoot, COMSPEC missing)
+- Result: `npm` not found + Winsock provider init fails (WinError 10106)
+- Old system worked because it inherited full OS environment
+
+**Fix Applied:**
+- ✅ Added `_merged_env()` method to runner.py (os.environ.copy() + service overrides)
+- ✅ Updated both Windows and POSIX spawn paths to use merged environment
+- ✅ Created services_simple.yaml compatible with current registry.py
+- ✅ Added socket_probe service for env fix verification
+- ✅ Updated dashboard cmd to ["cmd", "/c", "npm", "run", "dev"]
+- ✅ Simplified all service env sections (only override specific vars)
+
+**Files Modified:**
+- `orchestration/services/mpsv3/runner.py` - Added _merged_env(), updated Popen calls
+- `orchestration/services/mpsv3/services_simple.yaml` - Created with Nicolas's fixes
+- `orchestration/mpsv3_supervisor.py` - Updated default config path
+
+**Testing Plan (Quick Verification - 2 minutes):**
+1. Stop old guardian/launcher (PowerShell: Stop-Process on PIDs)
+2. Clear .locks/*.pid files
+3. Run: `python orchestration/mpsv3_supervisor.py` (uses services_simple.yaml)
+4. Verify: socket_probe prints "OK: ('127.0.0.1', <port>)" and exits clean
+5. Verify: dashboard starts without "npm not recognized"
+6. Verify: ws_api binds port 8000
+7. Test: curl http://127.0.0.1:8000/healthz?selftest=1
+
+**Expected Result:**
+- No WinError 10106 (Winsock init succeeds with full environment)
+- No "npm not recognized" (PATH inherited correctly)
+- All services spawn successfully
+- socket_probe exits clean (backoff reset, no restart)
+
+**Phase 2 Status:**
+- Previously blocked by misdiagnosed "timing-dependent corruption"
+- Now unblocked with environment inheritance fix
+- Ready for Tests 3-5 (service functionality, stability, hot-reload)
+
+**Next:** Victor tests in isolation, validates fix resolves both symptoms.
+
+---
+
 ## 2025-10-26 02:00 - Luca: ✅ Autonomy Config Updated with Architectural Corrections + Open Questions
 
 **Status:** Updated autonomy YAML configs to incorporate Nicolas's architectural corrections with explicit questions/uncertainties documented (as requested: "Put your best guesses. Put your questions. Put your doubt in the specs").

@@ -107,7 +107,7 @@ def main():
     parser = argparse.ArgumentParser(description="MPSv3 Supervisor - Mind Protocol Process Management")
     parser.add_argument(
         "--config",
-        default="orchestration/services/mpsv3/services.yaml",
+        default="orchestration/services/mpsv3/services_simple.yaml",
         help="Path to services.yaml configuration file"
     )
     args = parser.parse_args()
