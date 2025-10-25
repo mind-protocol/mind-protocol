@@ -59,7 +59,7 @@ export function LeftSidebarMenu({
   const [expandedSubPanels, setExpandedSubPanels] = useState<Set<string>>(
     new Set(['regulation', 'telemetry'])  // Start with both expanded
   );
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);  // Start collapsed to give chat panel more space
 
   const toggleSection = (section: Section) => {
     setExpandedSection(expandedSection === section ? null : section);
