@@ -2147,3 +2147,4 @@ class ConsciousnessEngineV2:
             "dirty_nodes_count": len(self._dirty_nodes)
         }
 # Force reload
+# Force reload
