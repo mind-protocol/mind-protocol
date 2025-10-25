@@ -12,13 +12,6 @@ import { Legend } from './components/Legend';
 import { Header } from './components/Header';
 import { CitizenMonitor } from './components/CitizenMonitor';
 import { LeftSidebarMenu } from './components/LeftSidebarMenu';
-import TierBreakdownPanel from './components/TierBreakdownPanel';
-import EntityContextLearningPanel from './components/EntityContextLearningPanel';
-import PhenomenologyMismatchPanel from './components/PhenomenologyMismatchPanel';
-import ConsciousnessHealthDashboard from './components/ConsciousnessHealthDashboard';
-// import { MultiPatternResponsePanel } from './components/MultiPatternResponsePanel';
-// import { IdentityMultiplicityPanel } from './components/IdentityMultiplicityPanel';
-// import { FoundationsEnrichmentsPanel } from './components/FoundationsEnrichmentsPanel';
 import { useGraphData } from './hooks/useGraphData';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useCitizens } from './hooks/useCitizens';
@@ -278,33 +271,14 @@ export default function ConsciousnessPage() {
       <LeftSidebarMenu
         v2State={v2State}
         strideSelectionEvents={strideSelectionEvents}
+        strideEvents={strideEvents}
+        weightLearningEvents={weightLearningEvents}
+        phenomenologyMismatchEvents={phenomenologyMismatchEvents}
+        phenomenologyHealthEvents={phenomenologyHealthEvents}
       />
 
       {/* Tooltip for hover info */}
       <Tooltip />
-
-      {/* Bottom Center Diagnostic Panels */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-row gap-3 max-w-[80vw]">
-        {/* Tier Breakdown Panel - Priority 2 */}
-        <div className="w-72">
-          <TierBreakdownPanel strideEvents={strideEvents} />
-        </div>
-
-        {/* Entity Context Learning Panel - Priority 4 */}
-        <div className="w-72">
-          <EntityContextLearningPanel weightEvents={weightLearningEvents} />
-        </div>
-
-        {/* Phenomenology Mismatch Panel - Priority 6 */}
-        <div className="w-72">
-          <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} />
-        </div>
-
-        {/* Consciousness Health Dashboard - Priority 6 */}
-        <div className="w-72">
-          <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} />
-        </div>
-      </div>
 
       {/* Right Sidebar - Collapsible Container */}
       <div

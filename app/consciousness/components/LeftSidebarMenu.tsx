@@ -22,17 +22,39 @@ import { CompactAffectiveTelemetry } from './sidebar-compact/CompactAffectiveTel
 import { CompactTickTimeline } from './sidebar-compact/CompactTickTimeline';
 import { CompactAutonomy } from './sidebar-compact/CompactAutonomy';
 import { CompactExploration } from './sidebar-compact/CompactExploration';
-import type { V2ConsciousnessState, StrideSelectionEvent } from '../hooks/websocket-types';
+import TierBreakdownPanel from './TierBreakdownPanel';
+import EntityContextLearningPanel from './EntityContextLearningPanel';
+import PhenomenologyMismatchPanel from './PhenomenologyMismatchPanel';
+import ConsciousnessHealthDashboard from './ConsciousnessHealthDashboard';
+import type {
+  V2ConsciousnessState,
+  StrideSelectionEvent,
+  StrideExecEvent,
+  WeightsUpdatedTraceEvent,
+  PhenomenologyMismatchEvent,
+  PhenomenologicalHealthEvent
+} from '../hooks/websocket-types';
 
 interface LeftSidebarMenuProps {
   v2State: V2ConsciousnessState;
   strideSelectionEvents: StrideSelectionEvent[];
+  strideEvents: StrideExecEvent[];
+  weightLearningEvents: WeightsUpdatedTraceEvent[];
+  phenomenologyMismatchEvents: PhenomenologyMismatchEvent[];
+  phenomenologyHealthEvents: PhenomenologicalHealthEvent[];
 }
 
-type Section = 'affective' | 'rhythms' | 'exploration' | null;
-type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | null;
+type Section = 'affective' | 'rhythms' | 'exploration' | 'learning' | null;
+type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | 'tier' | 'learning' | 'phenomenology' | 'health' | null;
 
-export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarMenuProps) {
+export function LeftSidebarMenu({
+  v2State,
+  strideSelectionEvents,
+  strideEvents,
+  weightLearningEvents,
+  phenomenologyMismatchEvents,
+  phenomenologyHealthEvents
+}: LeftSidebarMenuProps) {
   const [expandedSection, setExpandedSection] = useState<Section>('affective');
   const [expandedSubPanels, setExpandedSubPanels] = useState<Set<string>>(
     new Set(['regulation', 'telemetry'])  // Start with both expanded
@@ -139,6 +161,48 @@ export function LeftSidebarMenu({ v2State, strideSelectionEvents }: LeftSidebarM
         >
           <div className="space-y-4 p-4 bg-slate-900/30">
             <CompactExploration strideSelectionEvents={strideSelectionEvents} />
+          </div>
+        </SectionAccordion>
+
+        {/* Learning & Health Observability Section */}
+        <SectionAccordion
+          title="Learning & Health"
+          emoji="📊"
+          isExpanded={expandedSection === 'learning'}
+          onToggle={() => toggleSection('learning')}
+        >
+          <div className="bg-slate-900/30">
+            <SubPanelAccordion
+              title="3-Tier Strengthening"
+              isExpanded={expandedSubPanels.has('tier')}
+              onToggle={() => toggleSubPanel('tier')}
+            >
+              <TierBreakdownPanel strideEvents={strideEvents} windowSize={50} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="Dual-View Learning"
+              isExpanded={expandedSubPanels.has('learning')}
+              onToggle={() => toggleSubPanel('learning')}
+            >
+              <EntityContextLearningPanel weightEvents={weightLearningEvents} windowSize={50} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="Phenomenology Alignment"
+              isExpanded={expandedSubPanels.has('phenomenology')}
+              onToggle={() => toggleSubPanel('phenomenology')}
+            >
+              <PhenomenologyMismatchPanel mismatchEvents={phenomenologyMismatchEvents} windowSize={50} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="Consciousness Health"
+              isExpanded={expandedSubPanels.has('health')}
+              onToggle={() => toggleSubPanel('health')}
+            >
+              <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} windowSize={50} />
+            </SubPanelAccordion>
           </div>
         </SectionAccordion>
 
