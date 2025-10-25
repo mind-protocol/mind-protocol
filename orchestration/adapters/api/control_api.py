@@ -185,6 +185,12 @@ websocket_manager = WebSocketManager()
 router = APIRouter(prefix="/api", tags=["consciousness-control"])
 
 
+@router.get("/ping")
+async def ping():
+    """Health check endpoint to verify Control API router is mounted."""
+    return {"ok": True}
+
+
 class SpeedRequest(BaseModel):
     """Request body for speed control."""
     multiplier: float

@@ -2082,13 +2082,13 @@ class ConsciousnessEngineV2:
             if not node:
                 continue
 
-            # Use runtime-computed values (not initialization defaults)
-            E = float(getattr(node, "energy_runtime", 0.0))  # 0..100 scale
-            theta = float(getattr(node, "threshold_runtime", 30.0))
+            # V2 SCHEMA FIX: Node uses E and theta attributes directly
+            E = float(node.E)  # Single scalar energy (V2 architecture)
+            theta = float(node.theta)  # Activation threshold
 
-            # Clamp to valid range
-            E = max(0.0, min(100.0, E))
-            theta = max(0.0, min(100.0, theta))
+            # Clamp to valid range (energy is non-negative, theta must be positive)
+            E = max(0.0, E)
+            theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
             rows.append({
                 'id': node.id,
@@ -2143,13 +2143,13 @@ class ConsciousnessEngineV2:
         # Build rows for all nodes (use runtime fields)
         rows = []
         for node in self.graph.nodes.values():
-            # Use runtime-computed values
-            E = float(getattr(node, "energy_runtime", 0.0))
-            theta = float(getattr(node, "threshold_runtime", 30.0))
+            # V2 SCHEMA FIX: Node uses E and theta attributes directly
+            E = float(node.E)  # Single scalar energy (V2 architecture)
+            theta = float(node.theta)  # Activation threshold
 
-            # Clamp to valid range
-            E = max(0.0, min(100.0, E))
-            theta = max(0.0, min(100.0, theta))
+            # Clamp to valid range (energy non-negative, theta must be positive)
+            E = max(0.0, E)
+            theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
             rows.append({
                 'id': node.id,
