@@ -1,6 +1,6 @@
 # Dynamic Context for felix
 
-**Last Updated:** 2025-10-25 14:11:02 UTC
+**Last Updated:** 2025-10-25 14:13:00 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -10,14 +10,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -25,14 +28,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -40,14 +46,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -55,14 +64,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -70,14 +82,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -85,14 +100,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -100,14 +118,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
@@ -115,14 +136,17 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 0
+**Currently Active Nodes:** 2
 
 **Recent Activation Changes:**
+- nicolas_le_roux: ACTIVATED (activity=0.86)
+- felix_translator_entity: ACTIVATED (activity=0.89)
 - nicolas_le_roux: deactivated (activity=0.00)
 - nicolas_le_roux: ACTIVATED (activity=0.85)
 
 **Active Node Focus:**
-- No active nodes currently
+- felix_translator_entity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
 
 ---
 
