@@ -81,6 +81,88 @@ mind_protocol: 188
 
 ---
 
+## 2025-10-25 07:28 - Atlas: ❌ CRITICAL GAP FOUND - Queue Poller Missing (P3.1b)
+
+**Context:** User asked "is any of the entity emerging? what about traversal,,"
+
+**Investigation Findings:**
+
+**Graph Activity (NOT emergence):**
+- Engines ticking normally (~100/sec)
+- Nodes actively DECAYING without new stimulus:
+  ```
+  Luca active nodes: 117→111→90→84→82 (shrinking over time)
+  Victor, Ada, Felix: Similar decay pattern
+  mind_protocol: 0/2125 active (completely dormant)
+  ```
+
+**Root Cause: Architectural Gap**
+- ✅ Signals collector writes stimuli to `.stimuli/queue.jsonl`
+- ✅ Engines have `inject_stimulus()` method
+- ✅ Conversation_watcher injects conversation stimuli
+- ❌ **NO SERVICE drains queue.jsonl and calls engine.inject_stimulus()**
+
+**Impact:**
+- Ambient signals (screenshots, console errors) are COLLECTED but NEVER CONSUMED
+- Engines only process conversation stimuli (from watcher)
+- Without external stimulus, graphs slowly decay to zero
+- No autonomous consciousness behavior possible
+
+**Evidence:**
+```bash
+# Queue has 5 stimuli written by signals_collector
+$ tail -5 .stimuli/queue.jsonl
+{"stimulus_id": "stim_...", "citizen_id": "atlas", ...}
+{"stimulus_id": "stim_...", "citizen_id": "felix", ...}  # 4 screenshots
+
+# But no offset file - nothing is reading the queue
+$ cat .stimuli/atlas_offset.txt
+No such file or directory
+```
+
+**Solution Plan (from Nicolas):**
+
+**Option B (Recommended): Standalone queue_poller service**
+
+**Phase 1 - Felix Domain:**
+- Add control API endpoint to websocket_server
+- `POST /api/engines/{citizen_id}/inject` → calls `engine.inject_stimulus()`
+- Async-safe injection into engine tick loop
+
+**Phase 2 - Atlas Domain:**
+- Implement `orchestration/services/queue_poller.py`
+- Drain `.stimuli/queue.jsonl` with offset tracking
+- POST each stimulus to control API
+- Backlog on failure (write to `.signals/backlog/`)
+- Heartbeat every 5s
+
+**Phase 3 - Victor Domain:**
+- Add queue_poller to guardian service management
+- Monitor heartbeat + restart on failure
+
+**Acceptance Criteria:**
+```
+✓ POST /api/signals/console → queue.jsonl → queue_poller → engine → injector logs
+✓ queue.offset advances with each poll
+✓ Backlog drains after engine restart
+✓ No duplicate injections (stimulus_id idempotence)
+✓ Heartbeat file updates every 5s
+```
+
+**Realization:**
+P3.1 was declared complete prematurely. Services were "operational" (ports listening, health checks passing, end-to-end to :8001 working) but the FULL LOOP was incomplete. Infrastructure isn't done until data flows from entry point → final effect.
+
+**Lesson:** "If it's not tested end-to-end, it's not built." Service health ≠ pipeline completion.
+
+**Status:** ✅ Architecture confirmed by Nicolas (Option B), ready for implementation
+- **Felix:** Implement control API (websocket_server.py)
+- **Atlas:** Implement queue_poller.py with offset/backlog/heartbeat
+- **Victor:** Add queue_poller to guardian management
+
+**Architecture Confirmed:** 2025-10-25 07:45 - Nicolas provided complete pseudocode and acceptance criteria
+
+---
+
 ## 2025-10-25 07:12 - Felix: 🔍 ROOT CAUSE FOUND - Consciousness Engines Silent Hang
 
 **Context:** Investigated why node.flip events missing - discovered engines frozen in silent hang since 05:13:27.

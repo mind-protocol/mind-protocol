@@ -247,6 +247,72 @@ async def receive_screenshot(
         return {"error": str(e), "status": "failed"}
 
 
+# === Control API: Stimulus Injection ===
+
+class StimulusPayload(BaseModel):
+    """Stimulus injection payload for queue_poller → engine control API."""
+    stimulus_id: str
+    text: str
+    severity: float = 0.3
+    origin: str = "external"
+    timestamp_ms: Optional[int] = None
+    metadata: Optional[dict] = None
+
+
+@app.post("/api/engines/{citizen_id}/inject")
+async def inject_stimulus_control(citizen_id: str, payload: StimulusPayload):
+    """
+    Control API endpoint for stimulus injection.
+
+    Called by queue_poller service to inject queued stimuli into consciousness engines.
+
+    Architecture:
+    - queue_poller drains .stimuli/queue.jsonl
+    - POSTs each stimulus to this endpoint
+    - Engine processes stimulus via inject_stimulus()
+    - Returns success/failure for backlog handling
+
+    Designer: Felix "Engineer"
+    Date: 2025-10-25
+    Purpose: Close ambient signals → consciousness pipeline (P3.1b)
+    """
+    try:
+        from orchestration.adapters.storage.engine_registry import CONSCIOUSNESS_ENGINES
+
+        # Get engine for citizen
+        engine = CONSCIOUSNESS_ENGINES.get(citizen_id)
+        if not engine:
+            logger.warning(f"[ControlAPI] Unknown citizen: {citizen_id}")
+            raise HTTPException(status_code=404, detail=f"Unknown engine: {citizen_id}")
+
+        # Inject stimulus into engine
+        # NOTE: inject_stimulus is sync, but safe to call from async context
+        engine.inject_stimulus(
+            text=payload.text,
+            severity=payload.severity,
+            metadata={
+                "stimulus_id": payload.stimulus_id,
+                "origin": payload.origin,
+                "timestamp_ms": payload.timestamp_ms or int(time.time() * 1000),
+                **(payload.metadata or {})
+            }
+        )
+
+        logger.info(f"[ControlAPI] Injected stimulus sid={payload.stimulus_id} → {citizen_id} (len={len(payload.text)})")
+
+        return {
+            "status": "ok",
+            "citizen_id": citizen_id,
+            "stimulus_id": payload.stimulus_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[ControlAPI] Injection failed for {citizen_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Injection failed: {str(e)}")
+
+
 # === Consciousness Engine Management ===
 
 # NOTE: consciousness_tasks moved to engine_registry.CONSCIOUSNESS_TASKS
