@@ -215,6 +215,22 @@ class ConsciousnessEngineV2:
         self._transition_matrix = None
         self._transition_matrix_dirty = True
 
+        # Persistence: Dirty tracking with configurable thresholds
+        import os
+        import random
+        self._persist_enabled = bool(int(os.getenv("MP_PERSIST_ENABLED", "0")))  # Default OFF for Pass A
+        self._persist_min_batch = int(os.getenv("MP_PERSIST_MIN_BATCH", "25"))
+        self._persist_interval_sec = float(os.getenv("MP_PERSIST_INTERVAL_SEC", "5.0"))
+        self._persist_jitter = 0.5  # ±0.5s jitter to avoid herd flushes
+        self._dirty_nodes: Set[str] = set()  # Node IDs changed since last persist
+        self._last_persisted: Dict[str, tuple[float, float]] = {}  # id -> (E, theta) last written to DB
+        self._last_persist_time = time.time()
+
+        # Persistence telemetry (for observability)
+        self._persist_batch_sizes: List[int] = []  # Track batch sizes for stats
+        self._persist_failures = 0
+        self._persist_last_error: Optional[str] = None
+
         logger.info(f"[ConsciousnessEngineV2] Initialized")
         logger.info(f"  Subentity: {self.config.entity_id}")
         logger.info(f"  Network: {self.config.network_id}")
