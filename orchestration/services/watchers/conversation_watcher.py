@@ -476,7 +476,7 @@ class ConversationWatcher(FileSystemEventHandler):
             self.report_error(citizen_id, {}, str(e))
             return False
 
-    def process_stimulus_injection(self, content: str, graph_name: str, citizen_id: str) -> bool:
+    def process_stimulus_injection(self, content: str, graph_name: str, citizen_id: str, stimulus_id: str = None) -> bool:
         """
         Inject energy into graph via stimulus-based vector search.
 
@@ -486,7 +486,14 @@ class ConversationWatcher(FileSystemEventHandler):
         3. Calculate injection budget
         4. Distribute energy to matched nodes
         5. Update graph
+
+        Args:
+            content: Stimulus text
+            graph_name: Target graph
+            citizen_id: Citizen identifier
+            stimulus_id: Correlation ID for P0 diagnostics (optional)
         """
+        sid_log = f" sid={stimulus_id}" if stimulus_id else ""
         try:
             # Lazy-load services
             if not self.stimulus_injector:
@@ -579,7 +586,7 @@ class ConversationWatcher(FileSystemEventHandler):
                     logger.info(f"[ConversationWatcher] No keywords extractable - skipping injection")
                     return True
 
-            logger.info(f"[ConversationWatcher] Found {len(all_matches)} vector matches")
+            logger.info(f"[ConversationWatcher] Found {len(all_matches)} vector matches{sid_log}")
 
             # Debug: Log first 5 similarity scores to diagnose zero-similarity issue
             if all_matches:
@@ -683,7 +690,7 @@ class ConversationWatcher(FileSystemEventHandler):
             logger.info(
                 f"[ConversationWatcher] Stimulus injection complete: "
                 f"budget={result.total_budget:.2f}, "
-                f"injected={result.total_energy_injected:.2f} into {result.items_injected} nodes"
+                f"injected={result.total_energy_injected:.2f} into {result.items_injected} nodes{sid_log}"
             )
 
             # Persist energy deltas to FalkorDB
@@ -717,7 +724,7 @@ class ConversationWatcher(FileSystemEventHandler):
                     update_query = f"MATCH (n {{name: '{node_id}'}}) SET n.energy = '{energy_json}'"
                     r.execute_command('GRAPH.QUERY', graph_name, update_query)
 
-            logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB")
+            logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB{sid_log}")
 
             # Inject stimulus into running engine for immediate activation
             try:
@@ -1237,6 +1244,45 @@ class ConversationWatcher(FileSystemEventHandler):
 
         except Exception as e:
             logger.error(f"[ConversationWatcher] Failed to report error: {e}")
+
+
+# JSONL stimulus queue consumption (P0.1 integration)
+QUEUE = Path(".stimuli/queue.jsonl")
+OFFSET = Path(".stimuli/queue.offset")
+
+def _load_offset():
+    """Load last processed offset from disk."""
+    try:
+        return int(OFFSET.read_text())
+    except:
+        return 0
+
+def _save_offset(n):
+    """Save current offset to disk."""
+    OFFSET.write_text(str(n))
+
+def drain_stimuli():
+    """
+    Drain stimulus queue (P0.1 JSONL integration).
+    Returns list of stimulus envelopes ready for processing.
+    Each envelope has: stimulus_id, timestamp_ms, citizen_id, text, severity, origin
+    """
+    if not QUEUE.exists():
+        return []
+
+    data = QUEUE.read_text(encoding="utf-8")
+    lines = data.splitlines()
+    start = _load_offset()
+    items = []
+
+    for idx in range(start, len(lines)):
+        try:
+            items.append(json.loads(lines[idx]))
+        except Exception as e:
+            logger.warning(f"[ConversationWatcher] Bad stimulus line at {idx}: {e}")
+
+    _save_offset(len(lines))
+    return items
 
 
 async def main():
