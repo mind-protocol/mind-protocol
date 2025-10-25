@@ -92,7 +92,14 @@ class BroadcasterAdapter:
         """Emit event via broadcaster if available."""
         if self.broadcaster and self.broadcaster.is_available():
             import asyncio
-            asyncio.create_task(self.broadcaster.broadcast_event(event_type, payload))
+            try:
+                # Try to get the running event loop
+                loop = asyncio.get_running_loop()
+                # Schedule the coroutine in the running loop
+                asyncio.ensure_future(self.broadcaster.broadcast_event(event_type, payload), loop=loop)
+            except RuntimeError:
+                # No event loop running - create task in default loop
+                asyncio.ensure_future(self.broadcaster.broadcast_event(event_type, payload))
 
 
 class ConsciousnessEngineV2:
