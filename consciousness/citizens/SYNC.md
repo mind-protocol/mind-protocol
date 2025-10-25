@@ -117,8 +117,22 @@ MATCH (n)-[r:MEMBER_OF]->(e) RETURN count(r)  # → 0
 **Status:**
 - ✅ P1.1 infrastructure verified (entities exist, proper structure)
 - ✅ P1 code fix verified (node.name instead of node.id)
-- ❌ P1 end-to-end BLOCKED by new processing error
-- 🔄 Needs debugging before P1 can be verified
+- ✅ Traceback logging added (conversation_watcher.py:376-378)
+- ❌ P1 end-to-end BLOCKED by new processing error (needs re-trigger to get stack trace)
+- ⚠️ Watchdog not detecting file changes on Windows (prevents re-triggering error)
+
+**Update 06:31 - Watchdog Issue Discovered:**
+- Attempted to re-trigger processing to get stack trace with new logging
+- Tried: touch existing file, create new file, modify existing file
+- Result: Zero file modification events detected by watchdog
+- conversation_watcher only has `on_modified` handler (no `on_created`)
+- Watcher idle since 06:30:09 restart - no processing activity
+- **Impact:** Cannot trigger processing to get stack trace for debugging
+
+**Alternative Path Forward:**
+- Wait for natural conversation save (this session will eventually trigger processing)
+- OR: Create direct test script bypassing file watcher
+- When error re-occurs, full stack trace will be available
 
 ---
 

@@ -91,6 +91,9 @@ acquire_singleton_lock()
 from orchestration.libs.trace_parser import parse_trace_format
 from orchestration.libs.trace_capture import TraceCapture
 
+# P2.1.2: Weight learning emitter support
+from orchestration.adapters.ws.weight_learning_emitter import WeightLearningEmitter, BroadcasterTransport
+
 # Stimulus injection support
 from orchestration.mechanisms.stimulus_injection import StimulusInjector, create_match
 from orchestration.adapters.search.embedding_service import get_embedding_service
@@ -182,6 +185,11 @@ class ConversationWatcher(FileSystemEventHandler):
         # Initialize broadcaster for event emission (P0: dual-channel debug events)
         self.broadcaster = ConsciousnessStateBroadcaster()
 
+        # P2.1.2: Initialize weight learning emitter with broadcaster transport
+        weight_transport = BroadcasterTransport(self.broadcaster)
+        self.weight_emitter = WeightLearningEmitter(weight_transport)
+        logger.info("[ConversationWatcher] Weight learning emitter initialized with broadcaster transport")
+
         # Initialize stimulus injection components (lazy loaded)
         self.stimulus_injector = None
         self.embedding_service = None
@@ -191,8 +199,13 @@ class ConversationWatcher(FileSystemEventHandler):
         # This accumulates FalkorDB connections and objects, causing memory leak
         self.trace_capture = None
         if citizen_id:
-            self.trace_capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
-            logger.info(f"[ConversationWatcher] Initialized reusable TraceCapture for {citizen_id}")
+            self.trace_capture = TraceCapture(
+                citizen_id=citizen_id,
+                host="localhost",
+                port=6379,
+                weight_emitter=self.weight_emitter  # P2.1.2: Pass weight emitter
+            )
+            logger.info(f"[ConversationWatcher] Initialized reusable TraceCapture for {citizen_id} with weight learning telemetry")
 
         # MEMORY LEAK FIX: Reuse single event loop instead of creating new ones
         # Previous code created event loops on-demand (line 335-336) but never closed them
@@ -433,7 +446,12 @@ class ConversationWatcher(FileSystemEventHandler):
             # Previous code created new TraceCapture for every call, accumulating connections
             if not self.trace_capture:
                 # Fallback if not initialized (shouldn't happen with new __init__)
-                self.trace_capture = TraceCapture(citizen_id=citizen_id, host="localhost", port=6379)
+                self.trace_capture = TraceCapture(
+                    citizen_id=citizen_id,
+                    host="localhost",
+                    port=6379,
+                    weight_emitter=self.weight_emitter  # P2.1.2: Pass weight emitter
+                )
 
             # MEMORY LEAK FIX: Reuse event loop instead of creating new ones
             # Previous code created new loops but never closed them
