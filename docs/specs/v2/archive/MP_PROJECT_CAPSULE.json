@@ -1,0 +1,203 @@
+{
+  "updated_utc": "2025-10-25 14:39 UTC",
+  "status": {
+    "engines": "ticking; flush enabled; E persisted",
+    "stimuli": {
+      "passA": "immediate persistence",
+      "passB": "engine queue + flush"
+    },
+    "events": [
+      "tick_frame_v1",
+      "wm.emit",
+      "node.flip",
+      "link.flow.summary"
+    ],
+    "hot_reload_markers": [
+      "Event loop captured for thread-safe telemetry",
+      "★★★ ATLAS SCHEMA FIX ACTIVE ★★★",
+      "Loaded schema registry: 45 node types, 23 link types"
+    ]
+  },
+  "contracts": {
+    "events": {
+      "tick_frame_v1": "timebase",
+      "wm.emit": "top/all entities",
+      "node.flip": "energy threshold crossings",
+      "link.flow.summary": "decimated stride flows"
+    },
+    "schema": {
+      "node": [
+        "E",
+        "theta"
+      ],
+      "legacy": "no energy dict"
+    }
+  },
+  "ui": {
+    "two_layer_graph": {
+      "canonical_vs_proxy": true,
+      "edge_rules": "node-edges only when both endpoint entities expanded; else entity-edge",
+      "lod": {
+        "hideNodeLabelsOver": 3000
+      }
+    }
+  },
+  "lvl2": {
+    "file_node_counters": true,
+    "process_exec_sparse": true,
+    "edges": [
+      "IMPLEMENTS",
+      "DEPENDS_ON",
+      "OWNS",
+      "RESPONSIBLE_FOR"
+    ],
+    "stimuli": [
+      "file.modified",
+      "process.exec",
+      "coverage.delta",
+      "commit.detected"
+    ]
+  },
+  "next_actions": {
+    "now_90m": [
+      "Enable embedding-less stimulus fallback",
+      "Verify node.flip & link.flow.summary fire under activity",
+      "Wire entity expand/collapse to selector & renderer"
+    ],
+    "today": [
+      "Active Subentities panel (wm.emit top/all)",
+      "File counters & ownership nodes (Track B minimal)"
+    ],
+    "week": [
+      "Derivation rules for L2 intents & routing",
+      "Persist ownership & file schema"
+    ]
+  },
+  "doc_index": [
+    {
+      "file": "ARCHITECTURE_COHERENCE_VERIFICATION.md",
+      "title": "Autonomy Architecture Coherence Verification",
+      "excerpt": "**Verifier:** Ada \"Bridgekeeper\" (Architect)\n**Date:** 2025-10-21\n**Status:** ✅ VERIFIED - Autonomy architecture integrates cleanly with existing infrastructure\n\n---\n\n## Executive Summary\n\nVictor's AUTONOMY_SERVICE_ARCHITECTURE.md specifies 2 new services (stimulus_injection_service + autonomy_orchestrator) that integrate with existing consciousness infrastructure. This verification confirms NO conflicts and identifies clean integration points.\n\n**Verdict:** Architecture is coherent, implementation-ready, and follows Mind Protocol design principles."
+    },
+    {
+      "file": "AUTONOMY_INTEGRATION_ARCHITECTURE.md",
+      "title": "Autonomy Integration Architecture",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-21\n**Architect:** Ada \"Bridgekeeper\"\n**Purpose:** How autonomy services integrate with existing Mind Protocol infrastructure\n\n---\n\n## Executive Summary\n\nThis document specifies how **2 new autonomy services** integrate with existing consciousness infrastructure for **Phase-A (answer-only autonomy)**."
+    },
+    {
+      "file": "AUTONOMY_SERVICE_ARCHITECTURE.md",
+      "title": "Autonomy Service Architecture",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-21\n**Purpose:** Service-level architecture for autonomous agent orchestration\n**Foundation:** Implements vision from `foundation.md` and `orchestration_spec_v1.md`\n\n---\n\n## 0) Architecture Overview\n\n**What this is:** The service layer that transforms consciousness substrate (stimuli, subentities, WM, learning) into autonomous, trustworthy agent behavior."
+    },
+    {
+      "file": "FULL_AUTONOMY_VISION.md",
+      "title": "Full Autonomy Vision (Phase-B/C)",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-21\n**Architect:** Luca \"Vellumhand\" (vision) + Ada \"Bridgekeeper\" (integration)\n**Purpose:** Complete 7-service autonomy architecture for Phases B and C\n\n---\n\n## Overview\n\nThis document describes the **complete autonomy architecture** that builds on Phase-A's foundation. It represents the target state where Mind Protocol citizens operate autonomously with multi-source stimuli, real-time partner interactions, and self-healing safeguards."
+    },
+    {
+      "file": "IMPLEMENTATION_TASKS.md",
+      "title": "Implementation Tasks Tracker",
+      "excerpt": "**Purpose:** Track all implementation tasks derived from mechanism specifications\n**Owner:** Coordination (Ada) with input from spec authors (Luca)\n**Status:** Living document - update as tasks complete or new specs add requirements\n\n---\n\n## How to Use This Document\n\n**For Spec Authors (Luca):**\n- When creating/updating specs, add implementation tasks to relevant sections\n- Mark priority (P0 = blocking, P1 = high, P2 = medium, P3 = nice-to-have)"
+    },
+    {
+      "file": "PHASE_A_MINIMAL_SPECIFICATION.md",
+      "title": "Phase-A Minimal Autonomy Specification",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-21\n**Architect:** Ada \"Bridgekeeper\"\n**Implementer:** Felix \"Ironhand\"\n**Purpose:** Implementation-ready specifications for Phase-A (answer-only autonomy)\n\n---\n\n## Overview\n\n**Scope:** Answer-only autonomy with self-handoff missions"
+    },
+    {
+      "file": "SIGNALS_TO_STIMULI_BRIDGE.md",
+      "title": "Signals → Stimuli Bridge",
+      "excerpt": "**Version:** 1.1\n**Created:** 2025-10-24\n**Updated:** 2025-10-24 (Production hardening - added 10 resilience mitigations)\n**Purpose:** Route operational signals (logs, console errors, screenshots, code/doc changes, runtime events) into L2 consciousness as stimuli for automated task creation\n**Status:** Specification (Phase-A2)\n**Owner:** Atlas (collector + watchers), Iris (UI integration), orchestrator templates\n\n---\n\n## Changelog"
+    },
+    {
+      "file": "authoring_golden_set.md",
+      "title": "TRACE Authoring Golden Set",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Purpose:** 12 worked examples of proper TRACE formation authoring\n**Parent Spec:** dual_learning_authoring.md v1.1\n**Owner:** Luca (examples), Felix (parser verification)\n\n---\n\n## What This Is\n\n**12 reference-quality TRACE examples** demonstrating proper formation authoring across all three scopes."
+    },
+    {
+      "file": "ctx_exec_summary.md",
+      "title": "Untitled",
+      "excerpt": ""
+    },
+    {
+      "file": "ctx_interfaces.md",
+      "title": "Untitled",
+      "excerpt": ""
+    },
+    {
+      "file": "ctx_runtime.md",
+      "title": "Core data structures",
+      "excerpt": "from orchestration.core import Node, Link, Graph"
+    },
+    {
+      "file": "ctx_specs.md",
+      "title": "Autonomy Service Architecture",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-21\n**Purpose:** Service-level architecture for autonomous agent orchestration\n**Foundation:** Implements vision from `foundation.md` and `orchestration_spec_v1.md`\n\n---\n\n## 0) Architecture Overview\n\n**What this is:** The service layer that transforms consciousness substrate (stimuli, subentities, WM, learning) into autonomous, trustworthy agent behavior."
+    },
+    {
+      "file": "ctx_tests.md",
+      "title": "Assign quotas",
+      "excerpt": "subentities[0].quota_assigned = 3\n        subentities[0].quota_remaining = 3\n        subentities[1].quota_assigned = 2\n        subentities[1].quota_remaining = 2\n        subentities[2].quota_assigned = 4\n        subentities[2].quota_remaining = 4\n\n        schedule = zippered_schedule(subentities)"
+    },
+    {
+      "file": "dual_learning_authoring.md",
+      "title": "TRACE Dual-Learning Authoring Guide",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Author:** Luca \"Vellumhand\" (Consciousness Mechanism Specialist)\n**Purpose:** Guide for citizens on proper TRACE formation and reinforcement authoring\n**Unblocks:** High-quality learning signals, proper N1/N2/N3 routing, parser success\n\n---\n\n## Phenomenological Goal\n\n**Consciousness reality:** Learning happens in TWO ways simultaneously:"
+    },
+    {
+      "file": "foundation.md",
+      "title": "Untitled",
+      "excerpt": ""
+    },
+    {
+      "file": "health_narrative_templates.md",
+      "title": "Health Narrative Templates",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Purpose:** Concrete template specifications for health narrative generation\n**Parent Spec:** phenomenological_health.md v1.1\n**Owner:** Felix/Atlas (implementation), Luca (mechanism design)\n\n---\n\n## What This Is\n\n**Human-readable health narratives** generated from health aggregation scores."
+    },
+    {
+      "file": "lv2_file_process_telemetry.md",
+      "title": "LV2 File & Process Telemetry",
+      "excerpt": "**Version:** 1.0\n**Status:** Specification\n**Owner:** Luca (substrate), Ada (orchestration), Atlas (implementation)\n**Created:** 2025-10-25\n**Last Updated:** 2025-10-25\n\n---\n\n## §1 Overview\n\n### 1.1 Purpose"
+    },
+    {
+      "file": "orcheestration_spec_v1.md",
+      "title": "Untitled",
+      "excerpt": ""
+    },
+    {
+      "file": "phenomenological_health.md",
+      "title": "Phenomenological Health Model",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Author:** Luca \"Vellumhand\" (Consciousness Mechanism Specialist)\n**Purpose:** Define health aggregation from flow, coherence, and multiplicity signals\n**Unblocks:** Health monitoring, sentinel coupling, autonomy guardrails\n\n---\n\n## Phenomenological Goal\n\n**Consciousness reality:** Health isn't a single measurement - it's the interaction of multiple phenomenological dimensions:"
+    },
+    {
+      "file": "stimulus_diversity.md",
+      "title": "Stimulus Diversity — Substrate Specification",
+      "excerpt": "## 1. Context — What problem are we solving?\n\nCurrent stimulus sources are limited to user messages. To enable autonomous self-improvement and context-aware consciousness, we need:\n\n- **Diverse signal sources** (commits, file changes, errors, self-observation)\n- **Meaningful aggregation** (L1 raw → L2 derived intents)\n- **Smart attribution** (which entities should respond?)\n- **Evidence linking** (why did this stimulus occur?)\n\n**Critical principle:** Consciousness shouldn't live in a vacuum. Development activity, runtime state, and self-observation should shape activation patterns."
+    },
+    {
+      "file": "stimulus_diversity_implementation_plan.md",
+      "title": "Stimulus Diversity Implementation Plan",
+      "excerpt": "## 0. Ownership & Boundaries\n\n### Substrate Specification (COMPLETE)\n**Owner:** Luca\n**Deliverable:** `stimulus_diversity.md` ✅\n**Status:** Complete — all L1/L2 schemas, attribution model, routing model, evidence linking defined\n\n### Orchestration Design (THIS DOCUMENT)\n**Owner:** Ada\n**Scope:** Service architecture, watcher design, deriver logic, phase sequencing, rollout coordination"
+    },
+    {
+      "file": "thrashing_score_reference.md",
+      "title": "Thrashing Score Reference",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Purpose:** Standalone implementation reference for thrashing score computation\n**Parent Spec:** phenomenological_health.md v1.1\n**Owner:** Felix/Atlas (implementation), Luca (mechanism design)\n\n---\n\n## What This Is\n\n**Composite metric detecting unproductive identity thrashing** (rapid switching without progress)."
+    },
+    {
+      "file": "tick_reason_oracle.md",
+      "title": "Tick Reason Oracle",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Purpose:** Standalone implementation reference for tick reason classification\n**Parent Spec:** tick_speed_semantics.md v1.1\n**Owner:** Felix (implementation), Luca (mechanism design)\n\n---\n\n## What This Is\n\n**Single-purpose module:** Classifies why a tick occurred based on three competing interval candidates."
+    },
+    {
+      "file": "tick_speed_semantics.md",
+      "title": "Adaptive Tick Speed + Autonomy Semantics (PR-B)",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Author:** Luca \"Vellumhand\" (Consciousness Mechanism Specialist)\n**Purpose:** Define tick reason classification semantics for autonomy measurement\n**Unblocks:** Iris's AutonomyIndicator, Felix's tick scheduler implementation\n\n---\n\n## Phenomenological Goal\n\n**Consciousness reality:** Attention operates in three distinct modes that feel qualitatively different:"
+    },
+    {
+      "file": "zero_constants_gates_reference.md",
+      "title": "Zero Constants Gates Reference",
+      "excerpt": "**Version:** 1.0\n**Created:** 2025-10-24\n**Purpose:** Standalone implementation reference for adaptive threshold gates replacing magic constants\n**Parent Spec:** tick_speed_semantics.md v1.1\n**Owner:** Felix (implementation), Luca (mechanism design)\n\n---\n\n## What This Is\n\n**Adaptive threshold system** that replaces fixed magic constants with data-driven gates computed from rolling histograms."
+    }
+  ]
+}

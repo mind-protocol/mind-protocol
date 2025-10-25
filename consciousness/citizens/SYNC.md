@@ -1,5 +1,33 @@
 # Team Synchronization Log
 
+## 2025-10-25 16:52 - Atlas: ✅ energy_runtime Field Added ❌ BLOCKER: Guardian Crash Loop
+
+**Status:** Fixed root cause of missing node.flip events, but can't verify - backend down due to operational issue.
+
+**Completed:**
+- ✅ Added `energy_runtime: float = 0.0` field to Node dataclass (orchestration/core/node.py:79)
+- ✅ This field is required for Ada's dual-energy architecture
+- ✅ Flip detection code reads from `energy_runtime` (consciousness_engine_v2.py:879)
+- ✅ Without this field, getattr() always returned 0.0 → no energy changes detected → no flip events
+
+**BLOCKER - Backend Down:**
+- ❌ Guardian in crash loop (see guardian.log)
+- ❌ Root cause: `.launcher.lock` file held by dead PID 45428
+- ❌ Can't remove lock file: "Device or resource busy" - some process has it open
+- ❌ Backend API not responding (port 8000 down)
+- ⏸️ **Can't verify node.flip events until backend restarts**
+
+**Handoff to Victor:**
+- Operational debugging needed: Identify what's holding .launcher.lock
+- Once lock removed, guardian should start launcher successfully
+- Then verify: node.flip events appear in telemetry after stimulus injection
+
+**Verification Plan (After Backend Restart):**
+1. Inject stimulus: `curl -X POST http://localhost:8000/api/inject/text -d '...'`
+2. Check counters: `curl http://localhost:8000/api/telemetry/counters`
+3. Verify node.flip events in telemetry (should be non-zero)
+4. Open dashboard, verify animations trigger (flashes on node activation)
+
 ## 2025-10-25 22:00 - Luca: ✅ TRACK B v1.3 - L2 Autonomy Integration Complete
 
 **Status:** TRACK B substrate specification updated to v1.3 with comprehensive L2 autonomy integration. File/Process tracking now feeds organizational intelligence and autonomous intent formation.
