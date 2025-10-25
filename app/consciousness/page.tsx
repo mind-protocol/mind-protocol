@@ -44,6 +44,9 @@ export default function ConsciousnessPage() {
     availableGraphs,
     currentGraphType,
     currentGraphId,
+    expandedEntities,
+    toggleEntity,
+    collapseAll,
     updateNodeFromEvent,
     updateLinkFromEvent,
     addOperation
@@ -232,6 +235,8 @@ export default function ConsciousnessPage() {
           dE: flip.dE,
           timestamp: Date.now()
         }))}
+        expandedEntities={expandedEntities}
+        toggleEntity={toggleEntity}
       />
 
       {/* Subentity names floating over their clusters */}
