@@ -1,5 +1,118 @@
 # Team Synchronization Log
 
+## 2025-10-26 00:30 - Luca: ✅ Autonomy Architecture - Structured Organization & Deployment-Ready Configs
+
+**Status:** Reorganized autonomy documentation from 8 scattered files to clear structure with deployment-ready YAML configs, eliminating duplication and providing clear file map.
+
+**Problem Solved:**
+- **Before:** 8 files (~7000 lines) with significant overlap, no clear entry point, missing YAML configs
+- **After:** 3 architecture docs + 2 config files + 1 implementation spec + 1 README map
+
+**New Structure:**
+
+```
+docs/specs/v2/autonomy/
+├── README.md (File map + quick start)
+├── config/
+│   ├── intent_templates.yaml (intent.fix_incident, intent.sync_docs_scripts)
+│   └── orchestrator_config.yaml (lanes, capacity, ACK, trust, resilience)
+├── architecture/
+│   ├── foundation.md (philosophical principles)
+│   ├── signals_to_stimuli_bridge.md (production spec)
+│   └── maturity_ladder.md (L0→L1→L2→L3→L4 stages)
+├── implementation/
+│   └── phase_a_minimal.md (implementation-ready spec)
+└── archive/ (5 consolidated/superseded files)
+```
+
+**Key Deliverables:**
+
+**1. intent_templates.yaml (370 lines)**
+- `intent.fix_incident` template
+  - Routing: console errors → Iris, backend errors → Atlas/Victor, crashes → Victor
+  - ACK policies: sev1, sentinel services, deep self-observation, recurring failures
+  - Mission template with verification criteria
+- `intent.sync_docs_scripts` template
+  - Routing: code→doc changes → Ada, doc→code → Atlas
+  - ACK policies: large files, architecture docs, stale drift >1 week
+  - Drift threshold: 24 hours minimum
+
+**2. orchestrator_config.yaml (600 lines)**
+- **Lanes:** safety (sev1, 50% capacity), incidents (sev2/sev3, 30%), sync (15%), self-awareness (5%)
+- **Capacity:** Max concurrent (3-5 per citizen), queue depth (8-15), backpressure at 70%
+- **ACK Policies:** 6 policies (high severity, sentinel services, deep self-observation, recurring failures, large files, stale drift)
+- **Trust Tracking:** Initial 0.5, decay -1%/day, delta by outcome quality
+- **Priority Scoring:** 5 factors (severity, urgency, yield, alignment, confidence) with z-score normalization
+- **Resilience:** 10 mitigations (fanout caps, deduplication, rate limiting, cooldown, quantile gates, depth/TTL guards, PII handling, backlog, circuit breakers, sentinels)
+- **Telemetry:** Prometheus metrics, SLO targets, alerting thresholds
+
+**3. maturity_ladder.md (700 lines)**
+- **L0→L1 (Answer-Only):** Enable 2 intent templates, ACK policies, 3 acceptance tests
+- **L1→L2 (Signals-Driven):** Enable collector + watchers, resilience features, lanes, 4 acceptance tests
+- **L2→L3 (Self-Aware):** Enable WS reinjector, self-observation guards (MAX_DEPTH=2, TTL, rate limits), 3 acceptance tests
+- **L3→L4 (Outcome-Aware):** Enable trust tracking, impact scoring, reassignment, 3 acceptance tests
+- **4 Key Metrics:** Autonomy ratio, latency p95, capacity utilization, autonomous tick ratio
+- **Risk & Guardrails:** Runaway loop prevention, incident hygiene, PII protection
+- **Implementation Priority:** 5-step rollout plan with clear targets
+
+**4. README.md (370 lines)**
+- Quick start (what is autonomy, pipeline, maturity ladder)
+- File organization with clear navigation ("start here", "read when...")
+- What's built vs missing
+- Implementation priority from Nicolas's guidance
+- Four metrics that matter
+- Guardrails explanation
+- Decision log (why this structure)
+
+**Files Archived (Consolidated):**
+- AUTONOMY_SERVICE_ARCHITECTURE.md → signals_to_stimuli_bridge.md
+- AUTONOMY_INTEGRATION_ARCHITECTURE.md → signals_to_stimuli_bridge.md
+- FULL_AUTONOMY_VISION.md → foundation.md
+- ARCHITECTURE_COHERENCE_VERIFICATION.md (analysis, archived)
+- orcheestration_spec_v1.md (superseded)
+
+**Deployment-Ready:**
+- ✅ Config files can be loaded directly by orchestrator
+- ✅ Intent templates define complete routing + ACK logic
+- ✅ Orchestrator config defines all policies (lanes, capacity, trust, resilience)
+- ✅ Maturity ladder provides gradual rollout with acceptance tests
+
+**Implementation Priority (Per Nicolas):**
+1. Ship orchestrator configs (intent_templates.yaml + orchestrator_config.yaml)
+2. Stand up collector + two watchers (console, log tail)
+3. Prove four motion events flow (tick_frame_v1, wm.emit, node.flip, link.flow.summary)
+4. Turn on self-observation with guards (MAX_DEPTH=2, ACK at limit)
+5. Introduce reassignment + trust scoring
+
+**Handoff:**
+- **Ada:** Deploy config files to orchestrator, coordinate phased rollout per maturity ladder
+- **Atlas:** Implement signals collector + watchers, integrate orchestrator config loader
+- **Victor:** Verify collector/watchers emit correct StimulusEnvelope format
+- **All:** Reference README.md for navigation, maturity_ladder.md for rollout stages
+
+**Files Created:**
+- `docs/specs/v2/autonomy/README.md` (370 lines)
+- `docs/specs/v2/autonomy/config/intent_templates.yaml` (370 lines)
+- `docs/specs/v2/autonomy/config/orchestrator_config.yaml` (600 lines)
+- `docs/specs/v2/autonomy/architecture/maturity_ladder.md` (700 lines)
+
+**Files Reorganized:**
+- foundation.md → architecture/
+- signals_to_stimuli_bridge.md → architecture/
+- phase_a_minimal.md → implementation/
+
+**Files Archived:**
+- 5 files moved to archive/ (consolidated or superseded)
+
+**Next Actions:**
+1. Ada: Load intent_templates.yaml + orchestrator_config.yaml into orchestrator
+2. Atlas: Implement config loaders, verify YAML schema validation
+3. Atlas: Implement signals_collector.py with resilience features from config
+4. Victor: Implement log_tail.py, console_beacon per signals spec
+5. All: Reference maturity_ladder.md for L0→L1 acceptance test criteria
+
+---
+
 ## 2025-10-25 23:45 - Ada: ✅ MPSv3 Specification VERIFIED → Handoff to Victor + Atlas
 
 **Status:** Verified Luca's MPSv3 specification addresses ALL identified problems from guardian/launcher/websocket analysis. Clean handoff prepared for implementation.
