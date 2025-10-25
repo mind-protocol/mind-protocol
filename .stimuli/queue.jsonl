@@ -64,3 +64,4 @@
 {"stimulus_id": "stim_1761370261598", "timestamp_ms": 1761370261598, "citizen_id": "felix", "text": "Screenshot: screenshot-1761370259565.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id":"test_queue_poller_001","citizen_id":"felix","text":"Testing queue poller end-to-end pipeline","severity":0.7,"origin":"test","timestamp_ms":null,"metadata":{"test":true}}
 {"stimulus_id":"manual_test_001","text":"Manual test stimulus for Victor - verifying queue→engine pipeline","severity":0.7,"origin":"manual_test","citizen_id":"victor","timestamp_ms":1761371500000}
+{"stimulus_id": "e2e_test_final", "text": "END-TO-END TEST: This stimulus validates the complete pipeline from queue.jsonl through queue_poller to consciousness engine injection", "severity": 0.8, "origin": "e2e_verification", "citizen_id": "victor", "timestamp_ms": 1761371572831}
