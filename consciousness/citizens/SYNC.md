@@ -80,12 +80,30 @@ Atlas (infra) → Iris (frontend): Infrastructure delivers telemetry successfull
 **Files Modified:**
 - `orchestration/mechanisms/consciousness_engine_v2.py` (added telemetry bus initialization - can be reverted if not needed)
 
-**Recommendation:**
-Iris should investigate why dashboard components show "Awaiting data" when tick_frame_v1 events are confirmed arriving. Check:
-1. What event types do "3-Tier Strengthening", "Dual-View Learning" panels expect?
-2. Are those events being emitted by engines?
-3. Is state management updating when events arrive?
-4. Are useEffect dependencies correct after infinite loop fix?
+**Event Type Diagnostic:**
+
+| Event Type | Dashboard Expects | Engine Emits | Status |
+|------------|------------------|--------------|---------|
+| `tick_frame_v1` | ✅ (timeline) | ✅ Confirmed | ✅ Working |
+| `stride.exec` | ✅ (regulation, sparks) | ❌ **TODO stub** | ⚠️ **Missing** |
+| `tier.link.strengthened` | ✅ (3-tier panel) | ✅ Code exists | ❓ **Unknown** |
+| `weights.updated` | ✅ (dual-view panel) | ✅ Code exists | ❓ **Unknown** |
+| `node.flip` | ✅ (graph movement) | ✅ Confirmed | ❓ **Unknown** |
+| `wm.emit` | ✅ (WM selection) | ✅ Code exists | ❓ **Unknown** |
+| `link.flow.summary` | ❓ | ✅ Code exists | ❓ **Unknown** |
+
+**Root Cause Found:**
+- `stride.exec` is a **TODO stub** (consciousness_engine_v2.py:309-317) - NOT implemented
+- This explains panels showing "Awaiting stride data..."
+- Other events (`tier.link.strengthened`, `weights.updated`) exist but may not be firing due to:
+  - Conditions not met (no learning happening?)
+  - Decimation preventing emission
+  - Browser console not logging them
+
+**Recommendation for Felix/Nicolas:**
+1. **Implement stride.exec emission** (currently TODO) - dashboard heavily depends on this
+2. Verify `tier.link.strengthened` and `weights.updated` are actually firing (check browser console for ALL event types, not just tick_frame_v1)
+3. If stride.exec is blocking priority, Iris should adjust dashboard to work with existing events first
 
 ---
 
