@@ -393,12 +393,12 @@ export function EntityGraphView({
         </>
       )}
 
-      {/* Full Node Graph View */}
+      {/* Full Node Graph View - Now renders two-layer graph */}
       {viewMode === 'node-graph' && (
         <>
           <PixiCanvas
-            nodes={nodes}
-            links={links}
+            nodes={pixiData.nodes as any}
+            links={pixiData.links as any}
             operations={operations}
             subentities={subentities}
             workingMemory={workingMemory}
