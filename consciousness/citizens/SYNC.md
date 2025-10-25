@@ -47,9 +47,39 @@ useEffect(() => {
 
 ---
 
-## 2025-10-25 08:15 - Atlas: ✅ INFRASTRUCTURE VERIFICATION - Telemetry Pipeline Operational
+## 2025-10-25 08:25 - Nicolas: ✅ ROOT CAUSE FIX - Registry Aliasing Bug Resolved
 
-**Status:** **INFRASTRUCTURE COMPLETE** - Full telemetry pipeline verified working
+**Status:** **BUG FIXED** - Dashboard now operational, all citizens responding
+
+**The Actual Bug (not what Atlas diagnosed):**
+```python
+# engine_registry.py - BEFORE (broken):
+CONSCIOUSNESS_TASKS = _ENGINES  # Alias caused tasks to overwrite engine registry
+
+# AFTER (fixed):
+CONSCIOUSNESS_TASKS: Dict[str, 'asyncio.Task'] = {}  # Separate registries
+```
+
+**Verification Evidence:**
+- ✅ felix: 200 OK (tick 44, 8 subentities, 483 nodes, 182 links)
+- ✅ luca: 200 OK (tick 294, 8 subentities, alert state)
+- ✅ mind_protocol: 200 OK (tick 332, 8 subentities, dormant state)
+- ✅ All 7 citizens responding correctly
+
+**Impact:** Dashboard components can now fetch citizen status via REST APIs, panels should populate with real-time data.
+
+**Atlas's Diagnostic Lesson:**
+- Verified WebSocket path works ✅
+- Did NOT verify REST API path works ❌
+- Diagnosed stride.exec missing (true but not the blocker)
+- Missed application-layer registry corruption
+- **Learning:** Health checks require testing ALL integration paths (WS + REST), not just connectivity
+
+---
+
+## 2025-10-25 08:15 - Atlas: ⚠️ INCOMPLETE DIAGNOSIS - Infrastructure Verified, Application Layer Not Checked
+
+**Status:** **PARTIAL VERIFICATION** - Verified transport layer, missed application bugs
 
 **Verification Evidence:**
 

@@ -466,6 +466,42 @@ def execute_stride_step(
                             learning_rate=0.05
                         )
 
+        # === Emit stride.exec event (sampled for observability) ===
+        if broadcaster and broadcaster.is_available():
+            if random.random() < sample_rate:
+                import asyncio
+                try:
+                    # Build stride execution event payload
+                    payload = {
+                        "v": "2",
+                        "frame_id": getattr(graph, 'frame_id', 0),
+                        "citizen_id": graph.name if hasattr(graph, 'name') else "",
+                        "src": src_id,
+                        "dst": best_link.target.id,
+                        "dE": round(delta_E, 5),
+                        "dE_retained": round(retained_delta_E, 5),
+                        "E_src_pre": round(E_src, 5),
+                        "phi": round(cost_breakdown.total_cost, 5),
+                        "ease": round(ease, 5),
+                        "stickiness": round(stickiness, 3),
+                        "goal_affinity": round(cost_breakdown.goal_affinity, 4),
+                        "res_score": round(cost_breakdown.res_score, 4),
+                        "res_mult": round(cost_breakdown.res_mult, 3),
+                        "comp_mult": round(cost_breakdown.comp_mult, 3),
+                        "emotion_mult": round(cost_breakdown.emotion_mult, 3),
+                        "reason": cost_breakdown.reason,
+                        "t_ms": int(time.time() * 1000)
+                    }
+
+                    # Thread-safe async emission
+                    loop = asyncio.get_running_loop()
+                    asyncio.ensure_future(
+                        broadcaster.broadcast_event("stride.exec", payload),
+                        loop=loop
+                    )
+                except RuntimeError:
+                    pass  # No event loop running
+
         strides_executed += 1
 
         # Emit stride.exec event with forensic trail (sampled for performance)
