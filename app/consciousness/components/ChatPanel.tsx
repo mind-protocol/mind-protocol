@@ -215,7 +215,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
 
             {/* Frame Counter */}
             <span className="text-[10px] tabular-nums text-observatory-text/50">
-              {citizen.frame.toLocaleString()}
+              {citizen.frame.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
             </span>
           </button>
         ))}
