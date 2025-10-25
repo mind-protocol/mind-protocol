@@ -1094,6 +1094,39 @@ class FalkorDBAdapter:
 
         self.graph_store.query(query, params)
 
+    def persist_node_scalars_bulk(self, rows: list[dict]) -> int:
+        """
+        Batch persist E and theta for many nodes using UNWIND.
+
+        Args:
+            rows: List of dicts with keys: id, E, theta
+                  Example: [{"id": "node_123", "E": 42.0, "theta": 30.0}, ...]
+
+        Returns:
+            Number of nodes updated
+
+        Example:
+            >>> rows = [{"id": "n1", "E": 0.8, "theta": 0.5}, {"id": "n2", "E": 0.3, "theta": 0.5}]
+            >>> updated = adapter.persist_node_scalars_bulk(rows)
+            >>> print(f"Updated {updated} nodes")
+        """
+        if not rows:
+            return 0
+
+        query = """
+        UNWIND $rows AS r
+        MATCH (n {id: r.id})
+        SET n.E = r.E, n.theta = r.theta
+        RETURN count(n) AS updated
+        """
+
+        result = self.graph_store.query(query, {"rows": rows})
+
+        # Extract count from result (format varies by FalkorDB version)
+        if result and len(result) > 1 and len(result[1]) > 0:
+            return int(result[1][0][0])
+        return 0
+
     def update_link_weight(self, link: 'Link'):
         """
         Persist link weight to database.
