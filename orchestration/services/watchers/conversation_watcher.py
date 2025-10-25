@@ -9,6 +9,8 @@ Supports TWO formats:
    - Formation blocks: [NODE_FORMATION: ...], [LINK_FORMATION: ...]
 2. Legacy JSON blocks (backward compatibility)
 
+Hot-reload test: Victor verifying autoreload works - 2025-10-25 05:32
+
 How it works:
 1. Monitor conversation .jsonl files
 2. Detect TRACE format OR JSON blocks
