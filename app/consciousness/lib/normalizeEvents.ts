@@ -88,6 +88,10 @@ export function normalizeEvent(e: any): any {
     case 'stride.selection':
       return e; // Already canonical
 
+    // Subentity activation snapshot (active subentities panel)
+    case 'subentity.snapshot':
+      return e; // Already canonical
+
     // Legacy V1 events (pass through)
     case 'consciousness_state':
     case 'entity_activity':

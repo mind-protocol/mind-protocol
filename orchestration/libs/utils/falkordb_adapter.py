@@ -1134,9 +1134,10 @@ class FalkorDBAdapter:
 
         result = self.graph_store.query(query, {"rows": rows})
 
-        # Extract count from result (format varies by FalkorDB version)
-        if result and len(result) > 1 and len(result[1]) > 0:
-            return int(result[1][0][0])
+        # Extract count from result
+        # graph_store.query() returns list of rows: [[count]]
+        if result and len(result) > 0 and len(result[0]) > 0:
+            return int(result[0][0])
         return 0
 
     def update_link_weight(self, link: 'Link'):

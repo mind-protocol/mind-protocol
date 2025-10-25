@@ -1113,6 +1113,65 @@ class ConsciousnessEngineV2:
             # P1: Store entity IDs for TraceCapture attribution
             self.last_wm_entity_ids = entity_ids
 
+            # === V2 Event: subentity.snapshot (active subentity visualization) ===
+            # Collect active subentities (energy >= threshold)
+            act = []
+            if hasattr(self.graph, 'subentities') and self.graph.subentities:
+                for e in self.graph.subentities.values():
+                    E = float(getattr(e, "energy_runtime", 0.0))
+                    th = float(getattr(e, "threshold_runtime", 30.0))
+                    if E >= th:
+                        # Get display name: try role_or_topic, then id
+                        name = getattr(e, "role_or_topic", getattr(e, "id", "unknown"))
+                        # If name is still an ID-like string, try to extract last part
+                        if name.startswith("entity_"):
+                            name = name.split('_')[-1] if '_' in name else name
+
+                        act.append({
+                            "id": e.id,
+                            "name": name,
+                            # Normalize to 0..1 for UI (cap at 100 for reasonable range)
+                            "energy": round(min(max(E / 100.0, 0.0), 1.0), 3),
+                            "theta": round(min(max(th / 100.0, 0.0), 1.0), 3),
+                        })
+
+            # Sort by energy descending, cap at 8
+            act.sort(key=lambda x: x["energy"], reverse=True)
+            act = act[:8]
+
+            # Build WM list from selected entities
+            wm_list = []
+            token_budget_total = wm_summary.get("token_budget_total", 2000)
+            for entity_id in entity_ids[:8]:  # Cap at 8
+                # Find the entity object
+                entity = self.graph.subentities.get(entity_id)
+                if entity:
+                    name = getattr(entity, "role_or_topic", getattr(entity, "id", "unknown"))
+                    if name.startswith("entity_"):
+                        name = name.split('_')[-1] if '_' in name else name
+
+                    # Get token share from entity_token_shares
+                    token_share = 1.0
+                    for ets in entity_token_shares:
+                        if ets["id"] == entity_id:
+                            token_share = float(ets.get("tokens", 1.0)) / token_budget_total if token_budget_total > 0 else 1.0
+                            break
+
+                    wm_list.append({
+                        "id": entity_id,
+                        "name": name,
+                        "share": round(token_share, 3)
+                    })
+
+            await self.broadcaster.broadcast_event("subentity.snapshot", {
+                "v": "1",
+                "frame_id": self.tick_count,
+                "citizen_id": self.config.entity_id,
+                "active": act,
+                "wm": wm_list,
+                "t_ms": int(time.time() * 1000)
+            })
+
         # === Phase 4: Learning & Metrics ===
         # Process TRACE signals and update weights
         while self.trace_queue:

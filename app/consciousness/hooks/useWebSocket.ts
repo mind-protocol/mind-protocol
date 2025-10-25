@@ -133,6 +133,14 @@ export function useWebSocket(): WebSocketStreams {
   const [phenomenologyMismatchEvents, setPhenomenologyMismatchEvents] = useState<PhenomenologyMismatchEvent[]>([]);
   const [phenomenologyHealthEvents, setPhenomenologyHealthEvents] = useState<PhenomenologicalHealthEvent[]>([]);
 
+  // Subentity activation snapshots (active subentities panel)
+  const [subentitySnapshots, setSubentitySnapshots] = useState<Record<string, {
+    active: Array<{id: string; name: string; energy: number; theta: number}>;
+    wm: Array<{id: string; name: string; share: number}>;
+    frame: number;
+    t: number;
+  }>>({});
+
   // WebSocket reference (persists across renders)
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -425,6 +433,21 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        // Subentity activation snapshots (active subentities panel)
+        case 'subentity.snapshot': {
+          const snapshot = data as any; // {v, frame_id, citizen_id, active, wm, t_ms}
+          setSubentitySnapshots(prev => ({
+            ...prev,
+            [snapshot.citizen_id]: {
+              active: snapshot.active || [],
+              wm: snapshot.wm || [],
+              frame: snapshot.frame_id,
+              t: snapshot.t_ms
+            }
+          }));
+          break;
+        }
+
         case 'tick_frame_v1': {
           const tickEvent = data as TickFrameEvent;
           setV2State(prev => ({
@@ -681,6 +704,9 @@ export function useWebSocket(): WebSocketStreams {
     // Priority 6: Phenomenology health
     phenomenologyMismatchEvents,
     phenomenologyHealthEvents,
+
+    // Subentity activation snapshots
+    subentitySnapshots,
 
     // Connection
     connectionState,

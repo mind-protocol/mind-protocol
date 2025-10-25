@@ -59,6 +59,7 @@ export default function ConsciousnessPage() {
     strideSelectionEvents,
     phenomenologyMismatchEvents,
     phenomenologyHealthEvents,
+    subentitySnapshots,
     connectionState,
     error: wsError
   } = useWebSocket();
@@ -295,6 +296,7 @@ export default function ConsciousnessPage() {
                 onSelectCitizen={handleSelectCitizen}
                 activeCitizenId={currentGraphId}
                 v2State={v2State}
+                subentitySnapshots={subentitySnapshots}
               />
             </div>
           </div>
