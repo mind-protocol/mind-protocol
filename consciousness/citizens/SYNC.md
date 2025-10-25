@@ -1,5 +1,54 @@
 # Team Synchronization Log
 
+## 2025-10-25 09:10 - Atlas: ✅ PASS A VERIFIED - Manual Persistence Operational
+
+**Status:** **PASS A COMPLETE** - Manual flush mechanism tested and verified
+
+**What Was Verified:**
+
+**Test 1: Manual Flush (SUCCESS)**
+- ✅ POST /api/citizen/felix/persist → 483 nodes persisted in 385ms
+- ✅ POST /api/citizen/luca/persist → 391 nodes persisted in 300ms
+- ✅ FalkorDB verification: All 483 felix nodes have E/theta values
+- ✅ Sample values: E and theta in valid range [0, 100]
+
+**Test 2: Thread Pool Non-Blocking (SUCCESS)**
+- ✅ Luca engine continued ticking during persist (111 → 524 ticks)
+- ✅ No tick latency spikes observed
+- ✅ Persist runs in background thread without blocking event loop
+
+**Code Fixes Required:**
+Before testing, fixed two engine startup blockers:
+1. `consciousness_engine_v2.py:177` - Changed `graph_store=graph_store` to `graph_store=self.adapter.graph_store`
+2. `falkordb_adapter.py:1218` - Applied dual-path handling for `result.result_set` access
+
+**Pass A Implementation Summary:**
+- ✅ State variables (lines 218-232): Dirty tracking, intervals, feature flag (OFF by default)
+- ✅ `_persist_dirty_if_due()` (lines 1867-1948): Periodic flush with thread pool + jitter
+- ✅ `persist_to_database(force=True)` (lines 1950-2006): Manual flush with bulk persist
+- ✅ Manual API endpoint (control_api.py:962-1011): POST /api/citizen/{id}/persist
+
+**Nicolas's Refinements Applied:**
+- ✅ Runtime fields (`energy_runtime`, `threshold_runtime`) not `node.E`
+- ✅ Thread pool execution via `loop.run_in_executor()`
+- ✅ `_last_persisted` tracking to prevent oscillation
+- ✅ Jitter (±0.5s) to avoid synchronized flushes
+- ✅ Config from env vars (`MP_PERSIST_ENABLED`, `MP_PERSIST_INTERVAL_SEC`, `MP_PERSIST_MIN_BATCH`)
+- ✅ Deadband for marking dirty (delta > 0.5)
+- ✅ Clamping E/theta to [0, 100]
+- ✅ Telemetry tracking (batch sizes, failures, errors)
+
+**Next: Pass B**
+With Pass A verified, ready to implement Pass B:
+1. Mark nodes dirty after energy changes (in tick loop)
+2. Call `_persist_dirty_if_due()` at tick end
+3. Enable feature flag with `MP_PERSIST_ENABLED=1`
+4. Test end-to-end: Stimulus → Energy change → Auto-persist → Restart → State preserved
+
+**Reference:** See `orchestration/PERSISTENCE_PASS_A_TEST.md` for complete test plan
+
+---
+
 ## 2025-10-25 08:45 - Atlas: ✅ SCHEMA MIGRATION COMPLETE - V1→V2 ID Schema + Dual-Path Persistence
 
 **Status:** **MIGRATION SUCCESS** - All 7 citizen graphs migrated to V2 schema with proper `id` fields
