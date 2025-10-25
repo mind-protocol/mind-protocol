@@ -42,8 +42,8 @@ export function normalizeEvent(e: any): any {
       return e; // Keep as-is
 
     // Node energy changes - canonical: node.flip
-    case 'node.flip':
-      return {
+    case 'node.flip': {
+      const normalized = {
         type: 'node.flip',
         node_id: e.node ?? e.id ?? e.node_id,  // Backend uses "node" field
         E_pre: e.E_pre,
@@ -53,6 +53,9 @@ export function normalizeEvent(e: any): any {
         direction: (e.E_post ?? e.energy_post ?? e.energy ?? 0) > (e.Θ ?? e.theta ?? e.threshold ?? 0) ? 'on' : 'off',
         timestamp: e.timestamp ?? new Date().toISOString()
       };
+      console.log(`[normalizeEvent] ✅ node.flip: ${normalized.node_id} ${normalized.direction} (E: ${normalized.E_pre.toFixed(2)} → ${normalized.E_post.toFixed(2)})`);
+      return normalized;
+    }
 
     // Working memory - canonical: wm.emit
     case 'wm.emit':

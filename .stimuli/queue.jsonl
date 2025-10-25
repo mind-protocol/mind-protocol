@@ -22,3 +22,6 @@
 {"stimulus_id": "stim_1761368482717", "timestamp_ms": 1761368482717, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368480705.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761368510180", "timestamp_ms": 1761368510180, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368508135.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761368540753", "timestamp_ms": 1761368540753, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368538734.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761368573702", "timestamp_ms": 1761368573702, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368571668.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761368599360", "timestamp_ms": 1761368599360, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368597327.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761368612388", "timestamp_ms": 1761368612388, "citizen_id": "felix", "text": "Screenshot: screenshot-1761368610358.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}

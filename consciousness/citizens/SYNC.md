@@ -1,5 +1,45 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:05 - Felix: ✅ DECIMATION ADDED - node.flip + link.flow.summary
+
+**Context:** Added decimation to node.flip and link.flow.summary emitters to prevent frontend flooding as identified in verification.
+
+**Implementation Complete:**
+
+**1. node.flip Decimation - Top-K Selection:**
+- Strategy: Collect all threshold crossings, rank by |ΔE|, emit top-K (20)
+- File: consciousness_engine_v2.py (lines 924-959)
+- Logic:
+  1. Collect all flips during tick into list
+  2. Compute delta_E = |E_post - E_pre| for each
+  3. Sort by delta_E descending
+  4. Emit only top 20 most significant flips
+- Benefit: Shows most important state changes without flooding with minor flips
+
+**2. link.flow.summary Decimation - Random Sampling:**
+- Strategy: Random decimation at 10% sampling rate
+- File: consciousness_engine_v2.py (lines 961-1001)
+- Logic: `if random.random() < 0.10` → ~10Hz at 100Hz tick rate
+- Benefit: Statistical representation without emitting every tick
+
+**Before/After:**
+```
+node.flip:
+  Before: ALL threshold crossings emitted (variable, potentially 100s per tick)
+  After:  Top 20 by |ΔE| only (max 20 per tick, showing most significant)
+
+link.flow.summary:
+  Before: Every tick with active flows (~100Hz)
+  After:  ~10Hz random sampling
+```
+
+**Status:**
+- ✅ node.flip decimation complete (top-K selection)
+- ✅ link.flow.summary decimation complete (random sampling)
+- 🔄 Frontend should now receive manageable event volume
+
+---
+
 ## 2025-10-25 07:00 - Felix: ✅ BACKEND EMITTERS VERIFICATION - All Events Already Exist
 
 **Context:** Ada's execution plan assigned implementing 4 backend emitters for dynamic graph visualization. Verified all emitters already exist.
