@@ -474,6 +474,9 @@ class ConsciousnessEngineV2:
                         node = self.graph.get_node(injection['item_id'])
                         if node:
                             node.add_energy(injection['delta_energy'])  # Single-energy: direct add
+                            # Pass B: Mark node dirty after energy change
+                            if self._persist_enabled:
+                                self._mark_node_dirty_if_changed(injection['item_id'])
 
                     logger.debug(
                         f"[Phase 1] Stimulus injection: {result.total_energy_injected:.2f} energy "
@@ -1864,11 +1867,45 @@ class ConsciousnessEngineV2:
         self.trace_queue.append(trace_result)
         logger.info(f"[ConsciousnessEngineV2] Queued TRACE result for learning")
 
+    def _mark_node_dirty_if_changed(self, node_id: str, deadband: float = 0.5):
+        """
+        Mark node as dirty if energy/threshold changed significantly since last persist.
+
+        Args:
+            node_id: Node to check
+            deadband: Minimum delta to mark dirty (default 0.5)
+
+        Author: Atlas
+        Date: 2025-10-25
+        Pass: B (auto-flush integration)
+        """
+        node = self.graph.get_node(node_id)
+        if not node:
+            return
+
+        # Get current runtime values
+        E_current = float(getattr(node, "energy_runtime", 0.0))
+        theta_current = float(getattr(node, "threshold_runtime", 30.0))
+
+        # Get last persisted values (if any)
+        if node_id in self._last_persisted:
+            E_last, theta_last = self._last_persisted[node_id]
+
+            # Check if changed beyond deadband
+            E_delta = abs(E_current - E_last)
+            theta_delta = abs(theta_current - theta_last)
+
+            if E_delta > deadband or theta_delta > deadband:
+                self._dirty_nodes.add(node_id)
+        else:
+            # Never persisted before - mark dirty
+            self._dirty_nodes.add(node_id)
+
     async def _persist_dirty_if_due(self):
         """
         Persist dirty nodes if interval elapsed and batch size met.
 
-        Strategy (Pass A - manual only):
+        Strategy (Pass B - auto-flush enabled):
         - Check if interval elapsed since last persist
         - If yes AND dirty_nodes >= min_batch: flush to database
         - Use thread pool to avoid blocking event loop
