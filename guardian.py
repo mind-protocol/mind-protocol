@@ -374,6 +374,11 @@ def main():
                 env.setdefault("DASHBOARD_PORT", "3000")  # Pin dashboard port
                 env.setdefault("MP_HOT_RELOAD", "1")  # Enable hot-reload by default during dev
 
+                # Enable persistence with configurable thresholds
+                env.setdefault("MP_PERSIST_ENABLED", "1")  # Enable persistence
+                env.setdefault("MP_PERSIST_MIN_BATCH", "5")  # Lower threshold for testing
+                env.setdefault("MP_PERSIST_INTERVAL_SEC", "5.0")  # 5 second flush interval
+
                 # Open log file for launcher output
                 launcher_log_path = MIND_PROTOCOL_ROOT / "launcher.log"
                 launcher_log_file = open(launcher_log_path, 'a', encoding='utf-8', buffering=1)  # Line buffered

@@ -1,6 +1,8 @@
 """
 Consciousness Engine V2 - Phase 1+2 Architecture
 
+Last modified: 2025-10-25 (Pass B auto-flush integration)
+
 Complete implementation using:
 - Phase 1: Multi-Energy (M01) + Bitemporal (M13)
 - Phase 2: Diffusion (M07) + Decay (M08) + Strengthening (M09) + Threshold (M16)
