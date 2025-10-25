@@ -24,6 +24,7 @@ import { aggregateEntityEmotion, aggregateEntityEnergy, calculateEntityCoherence
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Node, Link, Subentity, Operation } from '../hooks/useGraphData';
 import { selectVisibleGraph } from '../lib/visibleGraphSelector';
+import { selectVisibleGraphV2, type RenderNode, type RenderEdge } from '../lib/graph/selectVisibleGraphV2';
 
 export type ViewMode = 'entity-map' | 'entity-expanded' | 'node-graph';
 
@@ -133,6 +134,65 @@ export function EntityGraphView({
       };
     });
   }, [subentities, nodes, emotionState.nodeEmotions]);
+
+  // NEW: Compute two-layer visible graph using V2 selector
+  const renderGraph = useMemo(() => {
+    return selectVisibleGraphV2(entities, nodes, links, expandedEntities, linkFlows);
+  }, [entities, nodes, links, expandedEntities, linkFlows]);
+
+  // Adapter: Transform RenderGraph to PixiCanvas ViewModel format
+  const pixiData = useMemo(() => {
+    const pixiNodes = renderGraph.nodes.map(n => ({
+      id: n.id,
+      name: n.label ?? n.id,
+      node_type: n.kind,     // 'entity' | 'node' | 'proxy'
+      energy: n.energy ?? 0,
+      x: n.x,
+      y: n.y,
+      // Pass through other fields PixiCanvas might use
+      text: n.label,
+      weight: 1.0,
+      last_active: undefined,
+      last_traversal_time: undefined,
+      traversal_count: 0,
+      entity_activations: {},
+    }));
+
+    const pixiLinks = renderGraph.edges.map(e => ({
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      type: e.kind === 'entity' ? 'RELATES_TO' : 'ENABLES', // Any label works for renderer
+      strength: e.w ?? 0.5,
+      // Pass through other fields PixiCanvas might use
+      valence: undefined,
+      confidence: undefined,
+      created_at: undefined,
+      last_traversal: undefined,
+      traversal_count: 0,
+    }));
+
+    return { nodes: pixiNodes, links: pixiLinks };
+  }, [renderGraph]);
+
+  // Click listener: Entity super-nodes toggle expand/collapse
+  useEffect(() => {
+    const onClick = (e: any) => {
+      const id: string | undefined = e?.detail?.node?.id;
+      if (!id) return;
+
+      // Check if this is an entity super-node (from renderGraph)
+      const clickedNode = renderGraph.nodes.find(n => n.id === id);
+      if (clickedNode && clickedNode.kind === 'entity') {
+        toggleEntity(id);
+        setViewMode('entity-map'); // Keep entity-map view to show overlay
+        setExpandedEntityId(prev => (prev === id ? null : id));
+      }
+    };
+
+    window.addEventListener('node:click', onClick as any);
+    return () => window.removeEventListener('node:click', onClick as any);
+  }, [renderGraph.nodes, toggleEntity]);
 
   // Handle entity click -> toggle expansion
   const handleEntityClick = (entityId: string) => {
