@@ -516,7 +516,7 @@ class TraceCapture:
                 # Insert into scope-appropriate graph with node type label
                 await self._insert_node(node, node_type, graph)
 
-                # P1: Persist entity membership based on current WM state (MEMBER_OF pattern)
+                # P1: Persist entity membership based on current WM state (BELONGS_TO pattern)
                 logger.info(f"[TraceCapture] P1 CHECK: scope={scope}, last_wm_entities={self.last_wm_entities}")
                 if scope == 'personal' and self.last_wm_entities:
                     # Assign to primary entity from WM (first entity = most active)
