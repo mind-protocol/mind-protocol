@@ -19,6 +19,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { EntityMoodMap, type Entity } from './EntityMoodMap';
 import { PixiCanvas } from './PixiCanvas';
 import { StrideSparks } from './StrideSparks';
+import { ActiveSubentitiesPanel } from './ActiveSubentitiesPanel';
 import { aggregateEntityEmotion, aggregateEntityEnergy, calculateEntityCoherence } from '../lib/entityEmotion';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Node, Link, Subentity, Operation } from '../hooks/useGraphData';
@@ -185,9 +186,19 @@ export function EntityGraphView({
   }, [links, expandedMemberNodes, expandedEntityId, linkFlows]);
 
   return (
-    <div className="relative w-full h-full">
-      {/* View Mode Toggle */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2">
+    <div className="relative w-full h-full flex flex-col">
+      {/* Active Subentities Panel - WM Focus */}
+      <ActiveSubentitiesPanel
+        subentities={subentities}
+        entities={entities}
+        nodes={nodes}
+        workingMemory={workingMemory}
+      />
+
+      {/* Graph View Container */}
+      <div className="relative flex-1">
+        {/* View Mode Toggle */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2">
         <button
           onClick={() => setViewMode('entity-map')}
           className={`px-4 py-2 rounded-lg text-sm font-medium backdrop-blur-sm transition-colors ${
