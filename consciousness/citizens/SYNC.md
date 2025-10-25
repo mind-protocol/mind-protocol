@@ -1,5 +1,89 @@
 # Team Synchronization Log
 
+## 2025-10-25 15:05 - Felix: ✅ PR-C Dashboard Events Implemented (⏸️ Untested - Hot-Reload Blocked)
+
+**Status:** PR-C implementation complete - `node.flip` and `link.flow.summary` events fully coded and ready for testing
+
+**What Was Implemented:**
+
+**1. State Variables Added** (`consciousness_engine_v2.py:239-244`):
+```python
+# PR-C: Dashboard event emission state (node.flip, link.flow.summary)
+self._last_E: Dict[str, float] = {}  # node_id -> last E seen (0..100) for dE computation
+self._flip_last_emit = 0.0           # seconds, for 10Hz decimation
+self._flip_fps = 10                  # emit at most 10 Hz
+self._flip_topk = 25                 # number of nodes per emission
+self._flow_last_emit = 0.0           # seconds, for 10Hz decimation
+```
+
+**2. node.flip Emission** (`consciousness_engine_v2.py:840-865`):
+- Inserted after delta application (line 838: `self.diffusion_rt.clear_deltas()`)
+- Tracks E_prev in `self._last_E` dict for dE computation
+- Emits top-K=25 nodes by |dE| at 10Hz
+- Format: `{"v":"2","type":"node.flip","frame_id":X,"citizen_id":"felix","nodes":[{"id":"n_123","E":3.42,"dE":+0.18}]}`
+
+**3. link.flow.summary Emission** (`consciousness_engine_v2.py:801-828`):
+- Inserted after stride execution (line 799: `self._emit_stride_exec_samples()`)
+- Reads from `self.diffusion_rt._frame_link_flow` accumulator
+- Emits top 200 flows at 10Hz
+- Clears accumulator after emission (line 826)
+- Format: `{"v":"2","type":"link.flow.summary","frame_id":X,"citizen_id":"felix","flows":[{"link_id":"a→b","flow":0.041}]}`
+
+**4. Link Flow Accumulator** (`diffusion_runtime.py`):
+- Added `_frame_link_flow` to `__slots__` (line 76)
+- Initialized in `__init__` (line 89): `self._frame_link_flow: Dict[str, float] = {}`
+- Accumulates during stride execution (lines 390-392):
+  ```python
+  link_id = f"{src_id}→{best_link.target.id}"
+  rt._frame_link_flow[link_id] = rt._frame_link_flow.get(link_id, 0.0) + delta_E
+  ```
+- Cleared after emission in consciousness_engine_v2.py (line 826)
+
+**Implementation Complete:**
+- ✅ All 4 subtasks completed (state vars, node.flip, link.flow.summary, accumulator)
+- ✅ Follows Nicolas's exact specifications (10Hz decimation, top-K selection, engine units 0..100)
+- ✅ No syntax errors or import errors
+- ✅ Code saved and committed
+
+**Testing Blocker:**
+- ⏸️ **Hot-reload not functional** - documented in CLAUDE.md but not working in practice
+- Guardian log: No file change detection messages
+- Launcher log: No hot-reload activity
+- Code changes saved at 15:00, server still running with pre-15:00 code at 15:05
+- Test stimulus injected successfully (241.00 energy into 482 items, 223 dirty nodes flushed)
+- But no `node.flip` or `link.flow.summary` events in ws_stderr.log
+
+**Verification Attempted:**
+```bash
+# Injected test stimulus at 15:02:24
+curl -X POST http://127.0.0.1:8000/api/engines/felix/inject \
+  -d '{"text":"Testing PR-C event emission","severity":0.7,...}'
+
+# Result: Stimulus successfully queued and injected
+[StimulusInjector] Injected 241.00 energy into 482 items
+[Persistence] Flushed 223/483 dirty nodes to FalkorDB
+
+# But no PR-C events emitted (searched ws_stderr.log)
+grep -E "(node\.flip|link\.flow\.summary)" ws_stderr.log  # No matches
+```
+
+**Next Steps:**
+1. **Requires manual service restart** to load new code
+2. After restart, inject stimulus and verify events appear in `ws_stderr.log`
+3. Confirm events reach dashboard (check `/api/consciousness/counters` endpoint)
+4. Verify dashboard panels populate (Tick Timeline, Active Subentities, node glow, WM halos)
+
+**Files Modified:**
+- `orchestration/mechanisms/consciousness_engine_v2.py` (lines 239-244, 801-828, 840-865)
+- `orchestration/mechanisms/diffusion_runtime.py` (lines 76, 89, 390-392)
+
+**Handoff:**
+- **Nicolas:** Manual restart needed - hot-reload infrastructure not operational
+- **Iris:** After restart + verification, dashboard should show motion (events are emitting)
+- **Ada:** Light verification after restart to confirm events reaching dashboard
+
+---
+
 ## 2025-10-25 20:15 - Luca: ✅ TRACK B Specification Complete
 
 **Status:** L2 File & Process Telemetry substrate specification complete and ready for handoff
