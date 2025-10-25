@@ -1053,9 +1053,19 @@ async def get_entity_members(
         members = []
         if result and len(result) > 1:
             for row in result[1]:
+                # Extract node type from labels array or node_type property
+                node_type_value = "unknown"
+                if row[1] and isinstance(row[1], list) and len(row[1]) > 0:
+                    # labels(n) returns array like ['Realization', 'Node']
+                    # Take first label (most specific type)
+                    node_type_value = row[1][0]
+                elif row[2]:
+                    # Fall back to node_type property
+                    node_type_value = row[2]
+
                 members.append({
                     "name": row[0] if row[0] else "unknown",
-                    "type": row[1][0] if row[1] and len(row[1]) > 0 else (row[2] if row[2] else "unknown"),
+                    "type": node_type_value,
                     "membership_weight": float(row[3]) if row[3] is not None else 0.0,
                     "membership_role": row[4] if row[4] else "unknown"
                 })

@@ -161,6 +161,10 @@ class ConsciousnessEngineV2:
         from orchestration.mechanisms.coherence_metric import CoherenceState
         self.coherence_state = CoherenceState()
 
+        # Observability (must initialize before learning mechanisms that need broadcaster)
+        self.branching_tracker = BranchingRatioTracker(window_size=10)
+        self.broadcaster = ConsciousnessStateBroadcaster() if self.config.enable_websocket else None
+
         # Learning mechanisms (Phase 3+4)
         self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
         self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
@@ -170,10 +174,6 @@ class ConsciousnessEngineV2:
 
         # TRACE queue (for Phase 4: Learning)
         self.trace_queue: List[Dict[str, any]] = []
-
-        # Observability
-        self.branching_tracker = BranchingRatioTracker(window_size=10)
-        self.broadcaster = ConsciousnessStateBroadcaster() if self.config.enable_websocket else None
 
         # Traversal event emitter (for emotion and stride events)
         if self.broadcaster:
