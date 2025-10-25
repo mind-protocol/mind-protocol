@@ -316,6 +316,8 @@ class ProcessManager:
         self.lock_fd = None  # Lock file handle for single-instance enforcement
         self.file_mtimes: Dict[str, float] = {}  # Track file modification times for auto-restart
         self.notifier = GuardianNotifier(enabled=notifications_enabled)
+        self._last_hot_restart_ts: Dict[str, float] = {}  # Cooldown tracking for hot-reload
+        self._min_hot_restart_interval_sec = 8.0  # Anti-thrash: min seconds between restarts
 
     async def cleanup_existing_processes(self):
         """Kill any existing Mind Protocol processes before starting."""
@@ -1075,6 +1077,14 @@ class ProcessManager:
                     # Already dead, monitor_processes() will restart it
                     logger.debug(f"[Guardian] Service {service_name} already dead, monitor will restart")
                     continue
+
+                # Cooldown check - prevent restart thrashing
+                now = time.time()
+                last = self._last_hot_restart_ts.get(service_name, 0.0)
+                if now - last < self._min_hot_restart_interval_sec:
+                    logger.info(f"[Guardian] ⏳ Skipping {service_name} restart (cooldown: {now - last:.1f}s < {self._min_hot_restart_interval_sec}s)")
+                    continue
+                self._last_hot_restart_ts[service_name] = now
 
                 logger.info(f"[Guardian] 🔄 Auto-restarting: {service_name}")
 
