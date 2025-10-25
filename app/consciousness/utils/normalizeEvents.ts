@@ -198,3 +198,26 @@ export function getTimeAgo(timestamp: string): string {
     return 'unknown';
   }
 }
+
+/**
+ * Normalize malformed node type field
+ *
+ * Backend currently returns "[" instead of actual type due to serialization bug.
+ * This normalizer handles the issue gracefully until Atlas fixes the API.
+ */
+export function normalizeNodeType(type: string | undefined): string {
+  if (!type) return 'Unknown';
+
+  // Handle malformed serialization (bug: returns "[" instead of type)
+  if (type === '[' || type === '[]' || type.length <= 2) {
+    return 'Unknown';
+  }
+
+  // Clean up any array syntax that might leak through
+  const cleaned = type.replace(/[\[\]"']/g, '').trim();
+
+  if (!cleaned) return 'Unknown';
+
+  // Capitalize first letter for display
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
