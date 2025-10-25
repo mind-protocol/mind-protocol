@@ -132,10 +132,24 @@ Checked `ws_stderr.log` (last entry 14:40:52):
 6. Guardian detects exit and restarts websocket_server immediately
 7. New code loads on restart
 
-**Next Action:**
-- Install watchdog: `pip install watchdog`
-- Restart system to test
-- Verify: Edit any watched file → see automatic restart within 3 seconds
+**Current Status:**
+- ✅ Watchdog library installed
+- ✅ File watcher code added to websocket_server.py
+- ⏳ **REQUIRES ONE RESTART** to bootstrap hot-reload system
+- After restart: All future file saves trigger automatic restart
+
+**To Test:**
+1. Restart websocket server (or full system)
+2. Edit any watched file (e.g., add a comment to control_api.py)
+3. Save file
+4. Watch logs - should see "🔥 HOT-RELOAD: Detected change..." within 2 seconds
+5. Guardian restarts server automatically
+6. New code loads
+
+**Bootstrap Paradox Resolved:**
+- Old code doesn't have hot-reload → needs manual restart
+- New code has hot-reload → automatic restarts from now on
+- This is the ONE manual restart to enable automatic future restarts
 
 ---
 
