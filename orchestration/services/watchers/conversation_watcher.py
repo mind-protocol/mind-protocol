@@ -713,36 +713,19 @@ class ConversationWatcher(FileSystemEventHandler):
                 f"injected={result.total_energy_injected:.2f} into {result.items_injected} nodes{sid_log}"
             )
 
-            # Persist energy deltas to FalkorDB
+            # Persist energy deltas to FalkorDB (V2 schema: E scalar field)
             for inj in result.injections:
                 node_id = inj['item_id']
                 new_energy = inj['new_energy']
 
-                # Query current energy
-                query = f"MATCH (n {{name: '{node_id}'}}) RETURN n.energy"
-                result_query = r.execute_command('GRAPH.QUERY', graph_name, query)
-
-                if result_query and result_query[1]:
-                    energy_value = result_query[1][0][0]
-                    if energy_value:
-                        try:
-                            parsed = json.loads(energy_value) if isinstance(energy_value, str) else energy_value
-                            if isinstance(parsed, dict):
-                                energy_dict = parsed
-                            else:
-                                energy_dict = {citizen_id: float(parsed)}
-                        except (json.JSONDecodeError, ValueError):
-                            energy_dict = {}
-                    else:
-                        energy_dict = {}
-
-                    # Update citizen-specific energy
-                    energy_dict[citizen_id] = new_energy
-                    energy_json = json.dumps(energy_dict).replace("'", "\\'")
-
-                    # Persist to graph
-                    update_query = f"MATCH (n {{name: '{node_id}'}}) SET n.energy = '{energy_json}'"
-                    r.execute_command('GRAPH.QUERY', graph_name, update_query)
+                # V2 SCHEMA: Set E (scalar energy) and ensure theta exists
+                # Default theta = 0.5 if not present (standard activation threshold)
+                update_query = f"""
+                MATCH (n {{name: '{node_id}'}})
+                SET n.E = {new_energy}
+                SET n.theta = COALESCE(n.theta, 0.5)
+                """
+                r.execute_command('GRAPH.QUERY', graph_name, update_query)
 
             logger.info(f"[ConversationWatcher] Persisted {len(result.injections)} energy updates to FalkorDB{sid_log}")
 

@@ -1,0 +1,1 @@
+{"citizen_id": "victor", "stimulus_id": "v2_schema_test", "text": "V2 SCHEMA TEST: This stimulus verifies E scalar field persistence works correctly", "severity": 0.9, "origin": "schema_fix_verification", "timestamp_ms": 1761375388699, "metadata": {}}
