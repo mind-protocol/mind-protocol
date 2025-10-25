@@ -13,8 +13,8 @@ templates:
   # 1. Reply to Human (Fast Lane for DMs/Partner Messages)
   # ----------------------------------------------------------------------------
   - id: intent.reply_to_human
-    version: "1.0"
-    description: "Fast-lane routing for human DMs (Telegram, FE messages) to specific citizens with rapid context shift"
+    version: "1.1"
+    description: "Fast-lane routing for human DMs (Telegram, FE messages) with prepare-then-reply execution and merge windows for bursty messages"
 
     # Matching Conditions
     match:
@@ -69,85 +69,137 @@ templates:
         assignee: "ada"
         reason: "Unaddressed DM routed to Ada for triage"
 
+    # Merge Window (batch bursty messages)
+    merge_window:
+      enabled: true
+      window_duration_sec: 3  # Wait up to 3 seconds for follow-up messages
+      max_messages_to_merge: 5  # Batch up to 5 messages into one mission
+      merge_strategy: "chronological"  # Present messages in order received
+
     # Acceptance Gates
     acceptance:
-      # Auto-execute for most DMs (reply-first policy)
+      # Auto-execute for most DMs (prepare-then-reply execution)
       auto_execute:
         - condition: "metadata.business_impact NOT IN ['sev1', 'production_deploy']"
         - condition: "origin_chain_depth == 0"  # Not self-observation
-        - condition: "content_length < 500"  # Short messages
+        - condition: "merged_message_count <= 5"  # Reasonable batch size
 
       # ACK required for high-impact asks
       ack_required:
         - condition: "metadata.business_impact IN ['sev1', 'production_deploy']"
           reason: "High-impact requests require explicit approval"
-        - condition: "content_length >= 500"
-          reason: "Long/complex requests need review"
+        - condition: "merged_message_count > 5"
+          reason: "Large message batches need review to prevent overwhelming citizen"
         - condition: "content CONTAINS 'deploy' OR content CONTAINS 'production'"
           reason: "Production changes require ACK"
 
-    # Mission Configuration (reply-first policy)
+    # Mission Configuration (prepare-then-reply execution)
     mission:
       template: |
-        ## Human Message
+        ## Human Message(s)
 
         **From:** {actor}
         **Channel:** {metadata.channel}
         **Conversation:** {metadata.conversation_id}
         **Timestamp:** {timestamp_ms}
+        **Merged Messages:** {merged_message_count}
 
-        **Message:**
+        **Message(s):**
         ```
-        {content}
+        {merged_content}
         ```
 
-        ## Your Mission (Reply-First Policy)
+        ## Your Mission (Prepare-Then-Reply)
 
-        1. **Read & Understand:** Comprehend the human's request/question
-        2. **Reply Immediately:** Provide a concise, helpful response
-           - If you can answer: Answer directly with citations
-           - If you need info: Ask clarifying questions
-           - If it requires work: Acknowledge + propose plan in follow-up
-        3. **Scope Response:** Keep reply focused on immediate question
-        4. **Follow-Up Intent:** If substantial work needed, create follow-up intent (don't block on it now)
+        **⚠️ IMPORTANT:** Do NOT reply immediately. Prepare a complete response first.
+
+        ### Execution Flow:
+
+        1. **Context Gathering (Streamline runs automatically before this mission)**
+           - Person card (name, expertise, recent interactions)
+           - Last 20 messages in conversation
+           - Active tasks/goals for this person
+           - Relevant organizational policies
+
+        2. **Research & Preparation**
+           - Use Streamline context to understand full picture
+           - Search L1 (personal) + L2 (organizational) graphs for relevant information
+           - Gather evidence, verify claims, check current system state
+           - Identify what work (if any) needs to happen
+
+        3. **Reply (After Preparation Complete)**
+           - Provide comprehensive, well-researched response
+           - Cite sources from context/graphs (e.g., "According to SYNC.md entry from 2025-10-25...")
+           - If work needed: Propose concrete plan + create follow-up intent
+           - If uncertain: Ask clarifying questions with context about why uncertain
+
+        4. **Bounded Execution (Continue Score)**
+           - Mission continues while Continue Score > threshold
+           - Continue Score driven by: WM stability, criticality state, health.phenomenological, PoV trend
+           - Q: What exact formula? What quantile-based gate thresholds?
+           - When score drops below threshold, wrap up and emit micro_session.done
+
+        5. **Follow-Up Work (If Needed)**
+           - Create separate intent for substantial work (don't block reply on implementation)
+           - Reply can BE a mission asking you to do something (prepare + act)
 
         ## Reply Guidelines
 
-        - **Be concise** (1-3 paragraphs for simple questions)
-        - **Cite evidence** when possible (link to docs, code, previous decisions)
-        - **Ask vs assume** - if ambiguous, ask clarifying questions
-        - **Promise follow-up** if work is needed: "I'll open a task to..." rather than doing it now
-        - **Telegram-friendly** - use markdown, keep formatting simple
+        - **Be thorough** (not artificially brief - use the context you gathered)
+        - **Cite evidence** from Streamline context, graphs, docs, code
+        - **No hallucinations** - if uncertain, explicitly state uncertainty with reasoning
+        - **Promise follow-up** if substantial work needed (create intent in graph)
+        - **Telegram-friendly** formatting (markdown, no complex tables)
+
+        ## Dynamic Toolbox
+
+        Available tools for this mission (based on channel={metadata.channel}):
+        {dynamic_toolbox}
+
+        Q: How is dynamic toolbox generated? MCP budget <6 tools. Unmount on micro-session end.
 
         ## Verification Criteria
 
-        - ✅ Reply sent within 2 minutes
-        - ✅ Human's question answered or clarified
+        - ✅ Reply sent (after preparation, not immediately)
+        - ✅ Human's question answered with citations
         - ✅ Follow-up intent created if work required
-        - ✅ No hallucinations (cite sources or acknowledge uncertainty)
+        - ✅ No hallucinations (all claims backed by evidence or marked as uncertain)
+        - ✅ micro_session.done emitted when Continue Score drops
 
-      # Expected outcome (rapid reply)
+      # Expected outcome
       expected_outcome:
         reply_sent: true
-        reply_latency_target_sec: 120  # 2 minutes
+        reply_latency_target_sec: 180  # 3 minutes (allows for preparation)
+        micro_session_completion: true
         verification_query: |
           MATCH (s:Stimulus {stimulus_id: $stimulus_id})
           MATCH (r:Response)-[:RESPONDS_TO]->(s)
-          WHERE r.timestamp_ms < $stimulus_timestamp + 120000
-          RETURN r.timestamp_ms as reply_timestamp
-        success_condition: "reply_timestamp EXISTS"
+          MATCH (e:Event {type: 'micro_session.done', session_id: $session_id})
+          WHERE r.timestamp_ms < $stimulus_timestamp + 180000
+          RETURN r.timestamp_ms as reply_timestamp, e.timestamp_ms as completion_timestamp
+        success_condition: "reply_timestamp EXISTS AND completion_timestamp EXISTS"
 
-      # Time limits (aggressive for DMs)
+      # Time limits
       sla:
-        max_duration_minutes: 5   # Reply within 5 min
+        max_duration_minutes: 10  # Up to 10 min for preparation + reply
         verification_window_minutes: 0  # No post-reply monitoring
 
     # Metadata for tracking
     metadata:
       priority_lane: "rapid_response"  # Dedicated fast lane
       cooldown_window_sec: 0  # No cooldown for human DMs
-      merge_keys: []  # Don't merge DMs - each is unique
+      merge_keys: ["conversation_id", "to_citizen"]  # Merge by conversation + recipient
       max_fanout: 1
+
+    # Open Questions (to be refined)
+    questions:
+      - "Q: Where does Streamline service live? orchestration/services/streamline_service.py?"
+      - "Q: What's the exact Cypher query pattern for person card + last 20 messages?"
+      - "Q: Continue Score formula - which specific engine signals? What quantile thresholds?"
+      - "Q: Hook integration - where do before_message, after_message hooks run?"
+      - "Q: Dynamic toolbox generation - how does it select <6 MCP tools based on mission metadata?"
+      - "Q: Micro-session integration - how does canonical thread consume micro_session.done events?"
+      - "Q: CLAUDE_DYNAMIC.md vs CLAUDE.md - when does it switch to full CLAUDE.md?"
 
   # ----------------------------------------------------------------------------
   # 2. Fix Incident (Console/Log Errors → Citizen Remediation)
@@ -428,3 +480,63 @@ metadata:
     - Non-critical services
     - First-occurrence errors
     - Code/doc sync for small files with moderate drift
+
+  # Architectural Decisions (2025-10-25)
+  architecture:
+    notes: |
+      Key corrections from architectural review:
+
+      1. **No L2 Org Agent**: Only citizens (L1) act. L2 can have decision threads (artifacts) but no agent persona.
+
+      2. **Prepare-Then-Reply for DMs**: Not reply-first. Citizens gather context via Streamline, research,
+         then reply. Allows for thorough preparation before responding.
+
+      3. **Merge Windows for Bursty Messages**: 2-5 second windows to batch rapid-fire messages (e.g., 5 messages → 1 answer).
+         Prevents overwhelming citizens with separate missions for each message in a burst.
+
+      4. **Streamline Context Injection**: Separate service (NOT part of Consciousness Engine) that runs L1+L2
+         graph traversal before each mission. Updates CLAUDE_DYNAMIC.md (currently) with person card, last 20 messages,
+         active tasks, policies. Will migrate to full CLAUDE.md when ready.
+
+      5. **Bounded Execution via Emotion/Energy**: Continue Score driven by engine signals (WM stability, criticality,
+         health.phenomenological, PoV trend). NOT fixed turn limits or time budgets. Quantile-based gates.
+
+      6. **Dynamic Toolbox per Mission**: Mission metadata determines which MCP tools to mount (e.g., channel="telegram"
+         → /send_telegram, /get_telegram_thread). Keep budget <6 tools. Unmount on micro_session end.
+
+      7. **Micro-Session Integration**: Each mission runs as WM shard, emits micro_session.done when Continue Score drops.
+         Canonical thread integrates completion as stimulus.
+
+      8. **Citizens AND People as Actors**: Not just citizens. Humans (people) also act in the system. No L2 org agent.
+
+  # Open Questions (To Be Refined)
+  open_questions:
+    streamline:
+      - "Where does Streamline service live? orchestration/services/streamline_service.py?"
+      - "What's the exact Cypher query pattern for L1+L2 traversal (person card + last 20 messages + active tasks + policies)?"
+      - "Which node/link type enums should Streamline use for queries?"
+      - "When does CLAUDE_DYNAMIC.md migrate to full CLAUDE.md?"
+
+    continue_score:
+      - "What's the exact formula for Continue Score?"
+      - "Which specific engine signals map to Continue Score (WM stability, criticality, health.phenomenological, PoV trend)?"
+      - "What quantile-based gate thresholds? (e.g., 'continue while score > P25 of recent scores'?)"
+      - "How is the threshold adjusted over time (learning)?"
+
+    hooks:
+      - "Where do before_message, after_message, before_stop hooks run?"
+      - "What's the hook execution model (blocking, async, parallel)?"
+      - "What data structure do hooks receive (full stimulus envelope, just metadata)?"
+      - "How do hooks call Streamline service?"
+
+    dynamic_toolbox:
+      - "How is dynamic toolbox generated from mission metadata?"
+      - "What's the mapping from channel/service → MCP tools?"
+      - "How does unmounting work on micro_session end?"
+      - "Where are outbound channel wrappers defined (/send_telegram, /send_email)?"
+
+    micro_sessions:
+      - "How does canonical thread consume micro_session.done events?"
+      - "What format is the integration stimulus (full transcript, summary, just outcome)?"
+      - "How are WM shards created for micro-sessions?"
+      - "How does the citizen's main thread know about micro-session outcomes?"

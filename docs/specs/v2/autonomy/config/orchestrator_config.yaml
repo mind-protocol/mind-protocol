@@ -301,6 +301,24 @@ resilience:
     merge_strategy: "consolidate"  # or "drop_duplicates" or "backlog"
     merge_window_sec: 300  # 5 min window
 
+  # 1a. Merge Windows for Bursty DMs (batch rapid-fire messages)
+  merge_windows:
+    enabled: true
+    per_source_type:
+      "human_dm.telegram":
+        window_duration_sec: 3  # Wait up to 3 seconds for follow-up messages
+        max_messages_to_merge: 5  # Batch up to 5 messages
+        merge_strategy: "chronological"  # Present messages in order received
+      "human_dm.frontend":
+        window_duration_sec: 3
+        max_messages_to_merge: 5
+        merge_strategy: "chronological"
+      "human_dm.email":
+        window_duration_sec: 5  # Email can batch longer
+        max_messages_to_merge: 3
+        merge_strategy: "chronological"
+    # For other source types, no merge window (create intent immediately)
+
   # 2. Deduplication
   deduplication:
     enabled: true
