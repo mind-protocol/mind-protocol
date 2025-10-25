@@ -86,7 +86,7 @@ export default function ConsciousnessPage() {
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
   // Handle threshold crossing events
-  // FIXED: Removed 'nodes' from dependencies to prevent re-runs on every node update
+  // FIXED: Removed lastProcessedThreshold from dependencies to prevent infinite loop
   useEffect(() => {
     // Process all new threshold crossings since last check
     for (let i = lastProcessedThreshold + 1; i < thresholdCrossings.length; i++) {
@@ -125,7 +125,7 @@ export default function ConsciousnessPage() {
   }, [thresholdCrossings, updateNodeFromEvent, addOperation]);
 
   // Handle subentity activity events
-  // FIXED: Removed 'nodes' from dependencies to prevent re-runs on every node update
+  // FIXED: Removed lastProcessedActivity from dependencies to prevent infinite loop
   useEffect(() => {
     // Process all new subentity activities since last check
     for (let i = lastProcessedActivity + 1; i < entityActivity.length; i++) {
@@ -158,7 +158,7 @@ export default function ConsciousnessPage() {
     if (entityActivity.length > 0) {
       setLastProcessedActivity(entityActivity.length - 1);
     }
-  }, [entityActivity, lastProcessedActivity, updateNodeFromEvent, addOperation]);
+  }, [entityActivity, updateNodeFromEvent, addOperation]);
 
   // Handle consciousness state updates
   useEffect(() => {

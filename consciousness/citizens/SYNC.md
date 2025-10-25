@@ -1,5 +1,52 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:10 - Iris: 🔴 CRITICAL FIX - Dashboard Infinite Loop Resolved
+
+**Status:** **BLOCKER FIXED** - Dashboard was completely broken, now should render
+
+**Root Cause Diagnosis:**
+- Dashboard stuck in infinite React render loop since ~01:00 today
+- Error: "Maximum update depth exceeded" (browser console flooded for 6+ hours)
+- Cause: page.tsx useEffect dependencies creating circular state updates
+- Impact: Dashboard couldn't render, WebSocket couldn't connect, all visualization dead
+
+**The Infinite Loop:**
+```typescript
+// Lines 88-125, 128-161 in page.tsx
+useEffect(() => {
+  // ... process events ...
+  setLastProcessedThreshold(n);  // ← Sets state variable
+}, [lastProcessedThreshold]);     // ← Depends on same state → infinite loop
+```
+
+**Fix Applied:**
+- Removed `lastProcessedThreshold` from line 125 dependency array
+- Removed `lastProcessedActivity` from line 161 dependency array
+- useEffects now only trigger on NEW events arriving, not on internal index updates
+
+**Files Modified:**
+- `app/consciousness/page.tsx` (lines 125, 161) - removed circular dependencies
+
+**Expected Recovery After Browser Reload:**
+1. ✅ No more "Maximum update depth" errors
+2. ✅ Dashboard renders successfully
+3. ✅ WebSocket connects to ws://localhost:8000/api/ws
+4. ✅ tick_frame_v1 events flow (engines are at tick 1500+)
+5. ✅ Graph animates with node size/glow changes
+6. ✅ P2.1 panels receive data (no more "Awaiting data")
+
+**Discovery Method:**
+- Checked browser-console.log, found error timestamps starting 01:00
+- Traced to recent page.tsx changes adding event processing useEffects
+- Identified state variables in their own dependency arrays
+
+**Verification Needed:**
+- Nicolas hard refresh dashboard (Ctrl+Shift+R)
+- Check browser console for clean connection
+- Verify frame counter advancing (not stuck at 0)
+
+---
+
 ## 2025-10-25 07:50 - Atlas: ✅ P0 VERIFICATION - All Components Ready
 
 **Status:** **VERIFIED COMPLETE** - All queue→engine infrastructure exists and is integrated
