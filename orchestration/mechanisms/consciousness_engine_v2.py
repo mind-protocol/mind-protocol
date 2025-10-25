@@ -755,6 +755,9 @@ class ConsciousnessEngineV2:
                 node = self.graph.nodes.get(node_id)
                 if node:
                     node.add_energy(delta)
+                    # Pass B: Mark node dirty after diffusion energy change
+                    if self._persist_enabled and abs(delta) > 1e-9:
+                        self._mark_node_dirty_if_changed(node_id)
 
             # Clear staged deltas
             self.diffusion_rt.clear_deltas()
@@ -804,6 +807,12 @@ class ConsciousnessEngineV2:
                 f"energy lost={decay_metrics.energy_lost:.3f}, "
                 f"δ_E={decay_metrics.delta_E:.4f}"
             )
+
+            # Pass B: Mark decayed nodes as dirty
+            if self._persist_enabled:
+                for node in self.graph.nodes.values():
+                    # Decay affects all nodes - mark if energy/threshold changed
+                    self._mark_node_dirty_if_changed(node.id)
 
         # Apply emotion decay (separate from activation decay, spec §5.3)
         from orchestration.mechanisms import emotion_coloring
@@ -1390,6 +1399,11 @@ class ConsciousnessEngineV2:
             except Exception as e:
                 # Health emission failed - log but don't crash tick
                 logger.error(f"[P2.1] health.phenomenological emission failed: {e}")
+
+        # === Pass B: Periodic Persistence Flush ===
+        # Check if dirty nodes should be persisted (auto-flush enabled with MP_PERSIST_ENABLED=1)
+        if self._persist_enabled:
+            await self._persist_dirty_if_due()
 
         # Increment tick count AFTER emitting tick_frame.v1 (so frame_id is correct)
         self.tick_count += 1
