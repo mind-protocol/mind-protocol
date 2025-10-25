@@ -837,6 +837,33 @@ class ConsciousnessEngineV2:
             # Clear staged deltas
             self.diffusion_rt.clear_deltas()
 
+            # === PR-C: Emit node.flip (top-K nodes by |dE| at 10Hz) ===
+            now = time.time()
+            if now - self._flip_last_emit >= 1.0 / self._flip_fps:
+                changed = []
+                gi = self.graph.node_index  # id -> node
+                for nid, node in gi.items():
+                    E_now = float(getattr(node, "energy_runtime", 0.0))  # 0..100 units
+                    E_prev = self._last_E.get(nid, E_now)
+                    dE = E_now - E_prev
+                    if dE != 0.0:
+                        changed.append((nid, E_prev, E_now, dE))
+                    self._last_E[nid] = E_now
+
+                if changed:
+                    changed.sort(key=lambda x: abs(x[3]), reverse=True)
+                    top = changed[:self._flip_topk]
+                    await self.broadcaster.broadcast_event("node.flip", {
+                        "v": "2",
+                        "frame_id": self.tick_count,
+                        "citizen_id": self.config.entity_id,
+                        "nodes": [
+                            {"id": nid, "E": round(E_now, 3), "dE": round(dE, 3)}
+                            for (nid, E_prev, E_now, dE) in top
+                        ]
+                    })
+                self._flip_last_emit = now
+
             logger.debug(
                 f"[Step 3-4] Two-scale traversal: {boundary_strides} boundary strides, "
                 f"{strides_executed} within-entity strides, "
