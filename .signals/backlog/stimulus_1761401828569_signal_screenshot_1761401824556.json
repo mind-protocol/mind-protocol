@@ -1,0 +1,9 @@
+{
+  "stimulus_id": "signal_screenshot_1761401824556",
+  "timestamp_ms": 1761401824556,
+  "citizen_id": "felix",
+  "text": "Screenshot: screenshot-1761401824528.png | Context: periodic_capture",
+  "severity": 0.5,
+  "origin": "screenshot_capture",
+  "signal_type": "screenshot"
+}
