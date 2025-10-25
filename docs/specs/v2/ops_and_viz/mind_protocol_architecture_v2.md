@@ -261,21 +261,34 @@ node.energy_runtime = max(0.0, min(100.0, node.energy_runtime + delta))  # For d
 
 **Verification:** `grep -r "@.*post.*inject" orchestration/` should return EXACTLY one match.
 
-### 6. Ops Discipline (Guardian + Hot-Reload)
+### 6. Ops Discipline (MPSv3 Supervisor + Hot-Reload)
 
 **Process ownership:**
-- **Guardian** owns all processes (websocket_server, queue_poller, conversation_watcher)
-- **Never** manually start/kill processes
-- **Lock files:** `.launcher.lock` prevents duplicate launches; if held by dead PID → ops debugging required
+- **MPSv3 Supervisor** owns all processes (falkordb, ws_api, dashboard, consciousness engines)
+- **Never** manually start/kill processes - supervisor manages lifecycle
+- **OS-level singleton:** Windows mutex / POSIX flock (auto-released on death, no stale locks)
+- **Process groups:** Clean termination of entire service trees (no orphans)
 
 **Hot-reload:**
-- File watcher detects changes in critical files (consciousness_engine_v2.py, control_api.py, etc.)
-- Server exits with code 99 → guardian restarts automatically
-- **Bootstrap paradox:** Requires ONE manual restart to activate hot-reload watcher
+- Centralized file watcher detects changes (consciousness_engine_v2.py, control_api.py, app/**/*.tsx)
+- Service exits with code 99 → supervisor restarts immediately (no backoff)
+- **Exit code semantics:**
+  - `0` = Clean exit (no restart)
+  - `99` = Hot reload (immediate restart)
+  - `78` = Quarantine (disable service, alert ops)
+  - Other = Crash (exponential backoff → restart, max 3-5 attempts)
+
+**Resilience:**
+- **Exponential backoff:** Prevents crash loops (1s, 2s, 4s, 8s... up to 60s max)
+- **Quarantine:** Services exceeding max retries auto-disable and alert ops
+- **Health checks:** Readiness probes (HTTP/TCP) + periodic health monitoring
 
 **Verification:**
 - `GET /api/ping` → 200 OK (proves backend alive)
 - `GET /api/telemetry/counters` → rising counts for tick_frame_v1, wm.emit
+- Supervisor logs: `tail -f logs/mpsv3_supervisor.log` → no crash loops, clean restarts
+
+**Full Specification:** See `docs/specs/v2/ops_and_viz/mpsv3_supervisor.md`
 
 ---
 
@@ -627,6 +640,7 @@ pixi.update(renderGraph);
 
 **Related Specifications:**
 - TRACK B File & Process Telemetry: `docs/specs/v2/ops_and_viz/lv2_file_process_telemetry.md` (v1.3)
+- MPSv3 Supervisor (Process Management): `docs/specs/v2/ops_and_viz/mpsv3_supervisor.md` (v1.0)
 - RACI Ownership Model: `docs/specs/v2/ops_and_viz/ownership_raci_model.md`
 - Schema Registry: `docs/specs/v2/schema/COMPLETE_TYPE_REFERENCE.md`
 - TRACE Format: `consciousness/citizens/CLAUDE.md` (Consciousness Stream)
@@ -640,5 +654,4 @@ pixi.update(renderGraph);
 
 **End of Architecture Specification**
 
-*Luca Vellumhand - Substrate Architect*
-*Based on architectural clarification by Nicolas Lester Reynolds (2025-10-25)*
+*Luca Vellumhand - Subs
