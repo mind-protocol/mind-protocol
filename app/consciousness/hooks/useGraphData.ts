@@ -88,6 +88,10 @@ export function useGraphData() {
   // Entity expansion state (for two-layer visualization)
   const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
 
+  // Entity-to-entity edge aggregation (from link.flow.summary events)
+  // Key: "sourceEntityId->targetEntityId", Value: flow count
+  const [entityToEntity, setEntityToEntity] = useState<Record<string, number>>({});
+
   // Fetch available graphs from server
   useEffect(() => {
     const fetchGraphs = async () => {
@@ -210,6 +214,30 @@ export function useGraphData() {
   }, []);
 
   /**
+   * Update entity-to-entity edge flow from link.flow.summary events
+   * Increments flow count and applies decay to all edges
+   */
+  const updateEntityToEntityFlow = useCallback((sourceEntityId: string, targetEntityId: string, flowCount: number) => {
+    setEntityToEntity(prev => {
+      const next: Record<string, number> = {};
+
+      // Apply decay to all existing edges (0.95 decay per update)
+      for (const [key, value] of Object.entries(prev)) {
+        const decayed = value * 0.95;
+        if (decayed > 0.1) { // Remove edges below threshold
+          next[key] = decayed;
+        }
+      }
+
+      // Add/increment the new flow
+      const edgeKey = `${sourceEntityId}->${targetEntityId}`;
+      next[edgeKey] = (next[edgeKey] || 0) + flowCount;
+
+      return next;
+    });
+  }, []);
+
+  /**
    * Toggle entity expansion state
    */
   const toggleEntity = useCallback((entityId: string) => {
@@ -260,6 +288,10 @@ export function useGraphData() {
     expandedEntities,
     toggleEntity,
     collapseAll,
+
+    // Entity-to-entity edge aggregation
+    entityToEntity,
+    updateEntityToEntityFlow,
 
     // Event-driven updates (called by parent component with WebSocket events)
     updateNodeFromEvent,
