@@ -495,7 +495,7 @@ metadata:
     3. **ACK Policies:** When human approval is required
     4. **Trust Tracking:** Source reputation and impact scoring
     5. **Priority Scoring:** Composite priority from multiple factors
-    6. **Resilience:** 10 production hardening mitigations
+    6. **Resilience:** 10+ production hardening mitigations (including merge windows)
 
     The system is designed to:
     - Keep high-priority work (sev1) flowing even during noise storms
@@ -503,5 +503,87 @@ metadata:
     - Learn from outcomes and adjust trust/impact scores over time
     - Prevent runaway loops through depth/TTL/rate guards
     - Degrade gracefully during outages (backlog, circuit breakers)
+    - Batch bursty DMs to prevent overwhelming citizens
 
     Tune these policies based on observed metrics (autonomy ratio, latency, capacity utilization).
+
+  # Architectural Context (2025-10-25)
+  architecture:
+    service_location:
+      autonomy_orchestrator: "orchestration/services/autonomy_orchestrator.py (stub exists, needs implementation)"
+      signals_collector: "orchestration/services/signals_collector.py (stub exists, needs implementation)"
+      streamline: "orchestration/services/streamline_service.py (Q: Does this exist? Separate service, not part of consciousness engine)"
+      stimulus_injection: "Referenced as existing service - Q: Exact location?"
+
+    key_integrations:
+      streamline_context:
+        description: "Separate service that runs L1+L2 graph traversal before each mission"
+        timing: "Called by hooks (before_message)"
+        output: "Updates CLAUDE_DYNAMIC.md (currently) with person card, last 20 messages, active tasks, policies"
+        future: "Will migrate to full CLAUDE.md when ready"
+        queries: "Q: What's the exact Cypher query pattern for L1+L2 traversal?"
+
+      micro_sessions:
+        description: "Each mission runs as WM shard, bounded by Continue Score"
+        completion_signal: "Emits micro_session.done when Continue Score drops below threshold"
+        integration: "Canonical thread consumes micro_session.done as stimulus"
+        questions:
+          - "Q: How are WM shards created for micro-sessions?"
+          - "Q: What format is the integration stimulus (full transcript, summary, just outcome)?"
+
+      continue_score:
+        description: "Bounded execution via emotion/energy system (NOT fixed turns/time)"
+        signals: "WM stability, criticality state, health.phenomenological, PoV trend"
+        gate: "Quantile-based thresholds (NOT magic constants)"
+        questions:
+          - "Q: What's the exact formula?"
+          - "Q: Which specific engine signal fields?"
+          - "Q: What quantile thresholds (e.g., 'continue while score > P25'?)"
+
+      dynamic_toolbox:
+        description: "Mission metadata determines which MCP tools to mount"
+        budget: "Keep <6 tools per mission"
+        unmount: "On micro_session end"
+        questions:
+          - "Q: How is toolbox generated from mission metadata?"
+          - "Q: What's the mapping from channel/service → tools?"
+          - "Q: Where are outbound channel wrappers defined (/send_telegram, /send_email)?"
+
+    citizens_and_people:
+      actors: "Citizens (L1) AND people (humans). No L2 org agent."
+      l2_artifacts: "L2 can have decision threads (artifacts) but no agent persona"
+
+  # Implementation Status
+  implementation:
+    complete:
+      - "Consciousness engines (L1 citizens) with tick_reason emission"
+      - "Stimulus injection mechanism (embedding, routing to N1/N2/N3)"
+      - "Event broadcasting (tick_frame_v1, wm.emit, node.flip, link.flow.summary at 10 Hz)"
+      - "TRACE format (learning from usefulness evaluations)"
+      - "Dashboard (consuming realtime events)"
+
+    stubs:
+      - "Signals Collector (@8003) - orchestration/services/signals_collector.py"
+      - "Autonomy Orchestrator (@8002) - orchestration/services/autonomy_orchestrator.py"
+
+    missing:
+      - "Intent templates config loader"
+      - "Orchestrator config loader"
+      - "Watchers (log_tail.py, git_watcher.py, console_beacon)"
+      - "WS reinjector (runtime events → stimuli with guards)"
+      - "Streamline service (Q: Does it exist somewhere?)"
+      - "Hook integration (before_message, after_message, before_stop)"
+
+  # Open Questions
+  open_questions:
+    priority: "Nicolas said: 'Put your best guesses. Put your questions. Put your doubt in the specs.'"
+    questions:
+      - "Q: Streamline service location - where does it live?"
+      - "Q: Exact Cypher queries for L1+L2 traversal (person card, messages, tasks, policies)"
+      - "Q: Continue Score formula and quantile thresholds"
+      - "Q: Hook execution model and integration points"
+      - "Q: Dynamic toolbox generation logic"
+      - "Q: Micro-session WM shard creation mechanism"
+      - "Q: Node/Link type enums for Streamline queries"
+      - "Q: When does CLAUDE_DYNAMIC.md migrate to full CLAUDE.md?"
+      - "Q: Outbound channel wrapper specifications (/send_telegram, /send_email, etc.)"
