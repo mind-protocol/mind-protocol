@@ -439,7 +439,7 @@ class ConsciousnessEngineV2:
             }
 
         # === Phase 1: Activation (Stimulus Injection) ===
-        # Process incoming stimuli from queue
+        # Process incoming stimuli from queue (NEVER discard - always attempt injection)
         while self.stimulus_queue:
             stimulus = self.stimulus_queue.pop(0)
 
@@ -447,46 +447,109 @@ class ConsciousnessEngineV2:
             embedding = stimulus.get('embedding')
             text = stimulus.get('text', '')
             source_type = stimulus.get('source_type', 'user_message')
+            metadata = stimulus.get('metadata', {})
+            severity = stimulus.get('severity', 0.3)
 
-            if embedding is not None:
-                # Create matches from vector search (simplified - would use real vector search)
-                # For now, match all nodes with simple similarity scoring
-                matches = []
+            # Try to ensure embedding if Control API provided none
+            injection_path = "vector"  # Default assumption
+            if embedding is None:
+                embedding = await self._ensure_embedding(text)
+                if embedding is None:
+                    # Embedder unavailable/timeout - use best-effort fallback
+                    injection_path = "best_effort"
+                    logger.debug(f"[Stimulus] No embedding available, using best-effort candidate selection")
+
+            # Select candidate nodes for injection
+            matches = []
+            if injection_path == "vector" and embedding is not None:
+                # Vector path: semantic similarity (simplified - full vector search would use semantic_search module)
                 for node in self.graph.nodes.values():
-                    # Simplified similarity (would use cosine similarity with actual embeddings)
-                    similarity = 0.5  # Placeholder
-                    current_energy = node.E  # Single-energy architecture
-
+                    similarity = 0.5  # Placeholder - would compute cosine similarity with node embeddings
                     match = create_match(
                         item_id=node.id,
                         item_type='node',
                         similarity=similarity,
-                        current_energy=current_energy,
+                        current_energy=node.E,
                         threshold=node.theta
                     )
                     matches.append(match)
+            else:
+                # Best-effort path: attribution → keyword → small seed
+                # Step 1: Try attribution-targeted candidates (if metadata indicates primary entities)
+                attribution = metadata.get('attribution', {})
+                if attribution and attribution.get('primary_entities'):
+                    # TODO: Implement retrieve_entity_members() when entity routing is available
+                    pass
 
-                # Inject energy using stimulus injector
-                if matches:
-                    result = self.stimulus_injector.inject(
-                        stimulus_embedding=embedding,
-                        matches=matches,
-                        source_type=source_type
-                    )
+                # Step 2: Keyword-based candidates (simple name/description contains)
+                if not matches:
+                    keywords = text.lower().split()[:5]  # First 5 words as keywords
+                    for node in self.graph.nodes.values():
+                        node_text = f"{node.name} {node.description}".lower()
+                        relevance = sum(1 for kw in keywords if kw in node_text) / max(len(keywords), 1)
+                        if relevance > 0:
+                            matches.append(create_match(
+                                item_id=node.id,
+                                item_type='node',
+                                similarity=relevance * 0.3,  # Scale to similarity range
+                                current_energy=node.E,
+                                threshold=node.theta
+                            ))
 
-                    # Apply injections to nodes
-                    for injection in result.injections:
-                        node = self.graph.get_node(injection['item_id'])
-                        if node:
-                            node.add_energy(injection['delta_energy'])  # Single-energy: direct add
-                            # Pass B: Mark node dirty after energy change
-                            if self._persist_enabled:
-                                self._mark_node_dirty_if_changed(injection['item_id'])
+                # Step 3: Small uniform seed if still no candidates (bounded to prevent flooding)
+                if not matches:
+                    seed_limit = min(50, len(self.graph.nodes))
+                    seed_nodes = list(self.graph.nodes.values())[:seed_limit]
+                    for node in seed_nodes:
+                        matches.append(create_match(
+                            item_id=node.id,
+                            item_type='node',
+                            similarity=0.15,  # Minimal base similarity for seed
+                            current_energy=node.E,
+                            threshold=node.theta
+                        ))
 
-                    logger.debug(
-                        f"[Phase 1] Stimulus injection: {result.total_energy_injected:.2f} energy "
-                        f"into {result.items_injected} nodes"
-                    )
+                # Budget floor for best-effort to prevent starvation during embedder outage
+                if injection_path == "best_effort" and matches:
+                    logger.debug(f"[Stimulus] Best-effort: {len(matches)} candidates selected via keyword/seed")
+
+            # Inject energy using stimulus injector
+            if matches:
+                result = self.stimulus_injector.inject(
+                    stimulus_embedding=embedding if injection_path == "vector" else None,
+                    matches=matches,
+                    source_type=source_type
+                )
+
+                # Apply injections to nodes
+                for injection in result.injections:
+                    node = self.graph.get_node(injection['item_id'])
+                    if node:
+                        node.add_energy(injection['delta_energy'])
+                        # Pass B: Mark node dirty after energy change
+                        if self._persist_enabled:
+                            self._mark_node_dirty_if_changed(injection['item_id'])
+
+                # Emit telemetry for injection observability
+                if self.broadcaster and self.broadcaster.is_available():
+                    await self.broadcaster.broadcast_event("stimulus.injection.debug", {
+                        "v": "2",
+                        "frame_id": self.tick_count,
+                        "path": injection_path,
+                        "kept_count": result.items_injected,
+                        "total_energy": round(result.total_energy_injected, 4),
+                        "lam": getattr(result, 'lambda_param', None),
+                        "B_top": getattr(result, 'B_top', None),
+                        "B_amp": getattr(result, 'B_amp', None),
+                        "t_ms": int(time.time() * 1000)
+                    })
+
+                logger.debug(
+                    f"[Phase 1] Stimulus injection ({injection_path}): {result.total_energy_injected:.2f} energy "
+                    f"into {result.items_injected} nodes"
+                )
+            else:
+                logger.warning(f"[Stimulus] No candidates found for injection - stimulus dropped")
 
         # Compute adaptive thresholds and activation masks
         # NOTE: Using TOTAL energy per spec (sub-entity = any active node)

@@ -922,14 +922,99 @@ rules:
 
 ---
 
-## 9. Next Steps
+## 9. Next Steps (Nicolas's Priority Order)
 
-1. **Ada:** Review this orchestration design, refine phases/ownership
-2. **Nicolas:** Provide threshold guidance, answer open questions
-3. **Team standup:** Sync on Phase A start (Week 1 Day 1)
-4. **Atlas:** Stub git_watcher and fs_watcher services
-5. **Victor:** Stub log_watcher service
-6. **Felix:** Design self-obs → L1 wrapper
-7. **Iris:** Design Stimuli Feed mockup
+**Lock Phase-A slice and ship.** Don't expand scope until watchers + deriver MVP + metrics are live.
 
-**Target:** Phase A complete in 1 week, Phase B in 2 weeks, full implementation in 4 weeks.
+### Priority 1: Metrics Foundation
+**Owner:** Atlas (backend), Iris (UI)
+**Why First:** Enables tuning + demos; unlocks parallel work
+
+1. Implement `/consciousness/:citizen/metrics/stimuli` endpoint
+2. Add counters in each watcher (L1 rates by type)
+3. Add counters in deriver (L2 rates, dropped count, attribution hit rate)
+4. Wire metrics panel in dashboard
+
+**Acceptance:** Dashboard shows real-time L1/L2 rates, attribution quality, injection success.
+
+### Priority 2: Watchers + Deriver MVP
+**Owners:** Atlas (watchers, deriver), Felix (self-obs), Victor (log watcher, guardian)
+
+1. Implement git_watcher, fs_watcher (Atlas)
+2. Implement log_watcher (Victor)
+3. Wrap self-observation events in L1 stimuli (Felix)
+4. Build deriver service skeleton + sliding windows (Atlas)
+5. Implement 3 MVP rules from config (Atlas):
+   - incident.backend_error
+   - intent.stabilize_narrative
+   - intent.reconcile_beliefs
+6. Wire attribution + routing per substrate spec (Atlas + Felix)
+7. Guardian config for all new services (Victor)
+
+**Acceptance:** Create commit, modify file, trigger error, emit health event → 4 L1 stimuli + derived L2 intents visible in logs.
+
+### Priority 3: Alert Safety
+**Owner:** Atlas (bridge), Ada (policy enforcement)
+
+1. Add cooldowns per channel (prevent spam)
+2. Add capacity limits per assignee (max_in_flight)
+3. Add sensitivity metadata handling (never route restricted to N3)
+4. Add circuit breakers for alert storms
+
+**Acceptance:** Force error storm → alert fires → cooldown prevents spam → capacity limit respected.
+
+### Priority 4: Threshold Tuner (Daily Job)
+**Owner:** Atlas
+**Depends on:** Metrics collecting for ≥7 days
+
+1. Read 7-day histograms per citizen per metric
+2. Compute Q85/Q95 thresholds
+3. Write to config (YAML or DB)
+4. Scheduled daily via cron/guardian
+
+**Acceptance:** After 7 days, tuner computes percentiles → config updated → deriver uses learned thresholds.
+
+**Spec needed:** See Nicolas's offer for threshold_tuner sketch.
+
+### Priority 5: Full Observability
+**Owner:** Iris (UI), Atlas (persistence)
+
+1. Persist all L2 + evidence links + injection results
+2. Build Stimuli Feed panel (tabs: All/L1/L2/Self-Obs)
+3. Add timeline markers for L2 events
+4. Add TTL policy (30-60d archival)
+
+**Acceptance:** Can replay dev loop (commit → mismatch → fix) in Feed panel with full evidence trail.
+
+---
+
+### Immediate Next Actions (This Week)
+
+**Day 1-2:**
+- Atlas: Implement metrics endpoint + counters
+- Iris: Wire metrics panel
+- Victor: Set up log_watcher skeleton
+
+**Day 3-4:**
+- Atlas: Implement git_watcher, fs_watcher, deriver skeleton
+- Felix: Self-obs → L1 wrapper
+- Iris: Stimuli Feed mockup
+
+**Day 5:**
+- Team: Integration testing (L1 end-to-end)
+- Victor: Guardian config for all services
+
+**Week 2:** Deriver MVP (3 rules) + attribution/routing integration
+
+**Week 3:** Alert safety + UI polish
+
+**Week 4:** Threshold tuner + full observability
+
+---
+
+### Dependencies for Parallel Work
+
+- **Metrics API spec** (see Nicolas's offer) → enables Iris to build UI in parallel
+- **Threshold tuner spec** (see Nicolas's offer) → enables Atlas to implement in parallel
+
+**Target:** Phase A complete in 1 week, Phase B in 2 weeks, metrics + tuner + UI in 4 weeks.
