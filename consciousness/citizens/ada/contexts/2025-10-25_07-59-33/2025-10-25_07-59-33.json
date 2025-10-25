@@ -1,0 +1,339 @@
+{
+  "context_id": "2025-10-25_07-59-33",
+  "entity_type": "citizen",
+  "entity_id": "ada",
+  "created_at": "2025-10-25T06:07:28.012499+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:28.012499+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:28.550558+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:29.207639+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:29.920171+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:30.714493+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:31.477417+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:32.131914+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:32.801464+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:33.435610+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:34.280746+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:35.328220+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:36.238421+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:37.180332+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:37.940442+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:38.692433+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:39.338583+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:40.005355+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:40.637335+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:41.455072+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:42.051626+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:42.710757+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:43.379706+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:43.969614+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:44.687615+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:45.293446+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:45.873128+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:46.488705+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:47.152259+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:47.786757+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:48.268221+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:48.837006+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:49.347335+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:49.861796+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:50.355763+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:50.833045+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:51.402346+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:52.103008+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:52.812077+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:53.626378+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:54.551588+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:55.191078+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:56.014697+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:56.793208+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:57.871006+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:58.701104+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:07:59.503227+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:00.278262+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:01.161656+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:01.956739+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:02.760780+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:03.740083+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:05.064058+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:06.012882+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:06.929108+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:08.068661+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:08.797732+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:09.554544+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:10.606146+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:11.183744+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:11.851165+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:12.786432+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:13.553922+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:14.336799+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:15.398089+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:16.396135+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:17.492574+00:00",
+      "content": " Nicolas - I found the issue! The engines ARE emitting all\n  four event types (node.flip, wm.emit, link.flow.summary,\n  tick_frame_v1), but there are no WebSocket clients connected\n  to receive them.\n\n  The /ws endpoint exists in control_api.py and is mounted on\n  the FastAPI app, but I see ZERO connection logs in\n  websocket_server.log. This suggests the dashboard frontend\n  isn't connecting to ws://localhost:8000/ws.\n\n  Root Cause: The frontend→backend WebSocket connection isn't\n  established.\n\n  Next Steps:\n  1. Verify dashboard is trying to connect (check browser\n  console for WebSocket errors)\n  2. Check if CORS/Origin headers are blocking connections\n  3. Verify WebSocket URL in frontend code matches backend"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-25T06:08:18.524575+00:00",

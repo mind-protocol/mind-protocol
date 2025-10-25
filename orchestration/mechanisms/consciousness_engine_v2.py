@@ -165,6 +165,10 @@ class ConsciousnessEngineV2:
         self.branching_tracker = BranchingRatioTracker(window_size=10)
         self.broadcaster = ConsciousnessStateBroadcaster() if self.config.enable_websocket else None
 
+        # Telemetry bus for decimated dashboard events (10 Hz batching)
+        from orchestration.mechanisms.telemetry_bus import TelemetryBus
+        self.telemetry = TelemetryBus(broadcaster=self.broadcaster, fps=10)
+
         # Learning mechanisms (Phase 3+4)
         self.stimulus_injector = StimulusInjector(broadcaster=self.broadcaster)
         self.weight_learner = WeightLearner(alpha=0.1, min_cohort_size=3)
