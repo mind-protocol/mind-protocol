@@ -43,6 +43,107 @@ END
 
 ---
 
+## 2025-10-25 06:12 - Ada: ✅ P0.1 STIMULUS SMOKE TEST - COMPLETE
+
+**Context:** Implemented JSONL queue integration for stimulus_injection_service → conversation_watcher flow. Complete end-to-end verification from API to persistence.
+
+**Implementation:**
+
+**1. Watcher Side (conversation_watcher.py):**
+- ✅ Rotating log handler configured (conversation_watcher.log, 5MB, 3 backups)
+- ✅ INFO level enabled for diagnostic modules (semantic_search, stimulus_injection, falkordb_adapter)
+- ✅ `drain_stimuli()` function with offset tracking (.stimuli/queue.offset)
+- ✅ `process_stimulus_injection()` modified to accept correlation ID (stimulus_id)
+- ✅ Main loop integrated: drains queue → processes stimuli → emits all 5 markers
+
+**2. Service Side (stimulus_injection_service.py):**
+- ✅ JSONL queue writing to `.stimuli/queue.jsonl`
+- ✅ Correlation ID generation: `stimulus_id = stimulus.get("id") or f"stim_{int(time.time()*1000)}"`
+- ✅ Stimulus envelope with all required fields
+
+**Acceptance Evidence (sid=p01_final):**
+```
+1. ✅ 06:11:21.188 - Found 10 vector matches sid=p01_final
+2. ✅ 06:11:21.207 - Budget: sim_mass=2.70, f(ρ)=1.00, g(user_message)=1.00 → B=2.70
+3. ✅ 06:11:21.209 - Dual-channel: λ=0.80, avg_deficit=22.44, H=0.111, B_top=2.16, B_amp=0.54
+4. ✅ 06:11:21.209 - Stimulus injection complete: budget=2.70, injected=2.69 into 9 nodes sid=p01_final
+5. ✅ 06:11:21.302 - Persisted 9 energy updates to FalkorDB sid=p01_final
+```
+
+**Verification:**
+- ✅ Queue file: `.stimuli/queue.jsonl` contains both test stimuli
+- ✅ Offset tracking: `.stimuli/queue.offset` = 2 (both processed, no reprocessing)
+- ✅ Correlation ID propagation: All markers show `sid=p01_final`
+- ✅ End-to-end flow: curl → API → queue → watcher → injection → persistence
+
+**Test Command:**
+```bash
+curl -s -X POST http://127.0.0.1:8001/inject \
+  -H "Content-Type: application/json" \
+  -d '{"id":"p01_final","origin":"acceptance_test","citizen_id":"felix","text":"P0.1 FINAL ACCEPTANCE: Complete API to persistence flow with correlation IDs","severity":0.7}'
+```
+
+**Response:** `{"status":"injected","stimulus_id":"p01_final"}` ← Confirms new code loaded
+
+**Blockers Encountered:**
+1. Hot-reload disabled by default (MP_HOT_RELOAD=0) - required manual launcher restart
+2. Sequential launcher startup - port 8000 blocking prevented all subsequent services from starting
+3. Aggressive cleanup (step [0/5]) missed existing websocket_server process
+
+**Lessons:**
+- Partial verification (manual queue.jsonl creation) proved architecture before full integration
+- Hot-reload coverage should be checked before coding (stimulus_injection not in watch list)
+- Sequential launcher without skip-on-failure causes cascading unavailability
+
+**Status:** P0.1 COMPLETE ✅ - All acceptance criteria met
+
+**Next:** P1 verification (discovered P1.1 + P1.2 infrastructure already exists)
+
+---
+
+## 2025-10-25 12:15 - Atlas: ✅ P1.1 + P1.2 ALREADY COMPLETE - Verified Existing Infrastructure
+
+**Context:** Started P1.1/P1.2 implementation, discovered both are already fully implemented and wired. Just needed verification and MEMBER_OF standardization.
+
+**P1.1 (WM→Entity Context Tap): ✅ COMPLETE**
+- `consciousness_engine_v2.py:173` - Ring buffer `last_wm_entity_ids` initialized
+- `consciousness_engine_v2.py:1019` - Updated on every `wm.emit` event
+- `conversation_watcher.py:450` - Queries engine, calls `trace_capture.set_wm_entities()`
+- `trace_capture.py:125` - Updates `last_wm_entities`
+- `trace_capture.py:281` - Passes to `entity_context_manager.derive_entity_context()`
+- **Logs confirm:** "Updated 2481 node weights with entity_context" ✅
+
+**P1.2 (Membership Persist at Formation): ✅ COMPLETE**
+- `trace_capture.py:532` - Calls `adapter.persist_membership()` on every node formation
+- Passes `primary_entity` from `last_wm_entities[0]` (most active entity)
+- **Ready to create MEMBER_OF links** on next TRACE processing
+
+**Relationship Type Standardization:**
+- **Found:** 3 files using different types (BELONGS_TO vs MEMBER_OF)
+- **Fixed:** Standardized all to `MEMBER_OF` (semantic: nodes can belong to multiple entities)
+- **Files updated:**
+  - `entity_context_trace_integration.py` - Queries use MEMBER_OF
+  - `entity_persistence.py` - Docstrings + queries use MEMBER_OF
+  - `trace_capture.py` - Comments use MEMBER_OF
+  - `falkordb_adapter.py` - Already was MEMBER_OF (Felix's ε-policy implementation)
+
+**Status:**
+- ✅ P1.1 infrastructure complete and operational (entity context flowing to WeightLearnerV2)
+- ✅ P1.2 infrastructure complete and wired (will create MEMBER_OF on next node formation)
+- ✅ P1.3 complete (Felix's ε-policy hardening)
+- ✅ All code standardized to MEMBER_OF relationship type
+
+**Ready for End-to-End Test:**
+Now that P0 JSONL queue is working, we can test full P1 chain:
+1. Process TRACE response with formations
+2. Verify `last_wm_entities` populated from engine
+3. Verify MEMBER_OF links created in DB
+4. Verify entity-localized weight updates in logs
+
+**Next:** Standing by for guidance - P1 infrastructure verification or move to P2/P3?
+
+---
+
 ## 2025-10-25 11:15 - Atlas: P0 SMOKE TEST - CRITICAL PERSISTENCE BLOCKER
 
 **Context:** Executed P0.1 stimulus smoke test per Nicolas's plan. Injection and dual-channel working, but persistence completely broken.

@@ -3,7 +3,9 @@
   "entity_type": "citizen",
   "entity_id": "atlas",
   "created_at": "2025-10-25T03:53:09.779963+00:00",
-  "last_updated": "2025-10-25T04:11:56.065811+00:00",
-  "message_count": 4558,
-  "has_tool_calls": true
+  "last_updated": "2025-10-25T04:13:23.502346+00:00",
+  "message_count": 4571,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-25T04:13:24.207059+00:00",
+  "closed_reason": "compact"
 }

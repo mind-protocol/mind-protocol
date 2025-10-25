@@ -63,7 +63,14 @@ export default function ConsciousnessHealthDashboard({
       flow_state: recent.flow_state,
       coherence_alignment: recent.coherence_alignment,
       multiplicity_health: recent.multiplicity_health,
-      overall_health: recent.overall_health
+      overall_health: recent.overall_health,
+      thrashing_detected: recent.thrashing_detected,
+      wm_challenge_balance: recent.wm_challenge_balance,
+      engagement: recent.engagement,
+      skill_demand_match: recent.skill_demand_match,
+      resonance_dominance_ratio: recent.resonance_dominance_ratio,
+      distinct_entities_coactive: recent.distinct_entities_coactive,
+      co_activation_stability: recent.co_activation_stability
     };
   }, [windowedEvents]);
 
@@ -120,6 +127,60 @@ export default function ConsciousnessHealthDashboard({
     if (value >= 0.6) return 'Good';
     if (value >= 0.4) return 'Fair';
     return 'Poor';
+  };
+
+  // Get narrative diagnosis for degraded health
+  const getDiagnosisNarrative = (health: HealthMetrics): string[] => {
+    const diagnoses: string[] = [];
+
+    // Critical: Thrashing detected
+    if (health.thrashing_detected) {
+      diagnoses.push('⚠️ Thrashing detected: Multiple entities competing for control');
+    }
+
+    // Multiplicity health issues
+    if (health.multiplicity_health < 0.4) {
+      if (health.co_activation_stability < 0.5) {
+        diagnoses.push('Fragmentation: Entity co-activation highly unstable');
+      } else {
+        diagnoses.push('Fragmentation: Poor entity coordination');
+      }
+    }
+
+    // Coherence issues
+    if (health.coherence_alignment < 0.4) {
+      if (health.resonance_dominance_ratio < 0.3) {
+        diagnoses.push('Low coherence: Excessive complementarity, insufficient resonance');
+      } else if (health.resonance_dominance_ratio > 0.7) {
+        diagnoses.push('Lock-in risk: Excessive resonance, insufficient complementarity');
+      } else {
+        diagnoses.push('Low coherence: Emotional regulation imbalance');
+      }
+    }
+
+    // Flow state issues
+    if (health.flow_state < 0.4) {
+      if (health.wm_challenge_balance < 0.3) {
+        diagnoses.push('Flow disruption: Working memory overload');
+      } else if (health.wm_challenge_balance > 0.7) {
+        diagnoses.push('Flow disruption: Insufficient challenge');
+      }
+
+      if (health.engagement < 0.4) {
+        diagnoses.push('Low engagement: Insufficient energy investment');
+      }
+
+      if (health.skill_demand_match < 0.4) {
+        diagnoses.push('Skill-demand mismatch: Capabilities not aligned with demands');
+      }
+    }
+
+    // Overall health summary if no specific diagnosis
+    if (diagnoses.length === 0 && health.overall_health < 0.6) {
+      diagnoses.push('Moderate consciousness stress detected');
+    }
+
+    return diagnoses;
   };
 
   return (
@@ -179,6 +240,30 @@ export default function ConsciousnessHealthDashboard({
               }
             </div>
           </div>
+
+          {/* Health Diagnosis - Show narrative causes when degraded */}
+          {(() => {
+            const diagnoses = getDiagnosisNarrative(currentHealth);
+            if (diagnoses.length > 0) {
+              return (
+                <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-red-300 mb-2 flex items-center gap-2">
+                    <span>🔍</span>
+                    <span>Health Diagnosis</span>
+                  </h4>
+                  <div className="space-y-1">
+                    {diagnoses.map((diagnosis, idx) => (
+                      <div key={idx} className="text-xs text-red-200 flex items-start gap-2">
+                        <span className="text-red-400 mt-0.5">•</span>
+                        <span>{diagnosis}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Health Dimensions */}
           <div>
