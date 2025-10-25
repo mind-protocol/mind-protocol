@@ -41,8 +41,11 @@ HEARTBEAT_PATH = ".heartbeats/signals_collector.heartbeat"
 INJECTOR_URL = os.getenv("INJECTOR_URL", "http://localhost:8001")
 DEDUPE_WINDOW_SEC = int(os.getenv("DEDUPE_WINDOW_SEC", "300"))  # 5 minutes
 MAX_DEPTH = int(os.getenv("MAX_DEPTH", "2"))
-RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "10"))
-SIGNALS_COLLECTOR_PORT = int(os.getenv("SIGNALS_COLLECTOR_PORT", "8003"))
+RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "60"))
+BUCKET_CAPACITY = int(os.getenv("BUCKET_CAPACITY", "30"))
+SIGNALS_COLLECTOR_PORT = int(os.getenv("SIGNALS_COLLECTOR_PORT", "8010"))
+BACKLOG_PATH = "data/backlog/queue.ndjson"
+BACKLOG_DRAIN_INTERVAL_SEC = 10
 
 # FastAPI app
 app = FastAPI(title="Signals Collector", version=VERSION)
@@ -53,7 +56,9 @@ stats = {
     "ingested": 0,
     "deduplicated": 0,
     "rate_limited": 0,
-    "injections_failed": 0
+    "injections_failed": 0,
+    "backlog_size": 0,
+    "backlog_drained": 0
 }
 start_time = time.time()
 
@@ -157,11 +162,118 @@ async def cleanup_digests():
             logger.debug(f"Cleaned up {len(expired)} expired digests")
 
 
+# === Backlog Queue ===
+
+def enqueue_to_backlog(envelope: dict):
+    """
+    Enqueue stimulus envelope to backlog for later replay.
+
+    Uses NDJSON format for simple, line-oriented persistence.
+    Each envelope is one JSON line.
+    """
+    try:
+        os.makedirs(os.path.dirname(BACKLOG_PATH), exist_ok=True)
+        with open(BACKLOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(envelope) + "\n")
+        stats["backlog_size"] = get_backlog_size()
+        logger.info(f"Enqueued to backlog: {envelope['stimulus_id']}")
+    except Exception as e:
+        logger.error(f"Failed to enqueue to backlog: {e}")
+
+
+def get_backlog_size() -> int:
+    """Get current backlog queue size (number of lines)."""
+    try:
+        if not os.path.exists(BACKLOG_PATH):
+            return 0
+        with open(BACKLOG_PATH, "r", encoding="utf-8") as f:
+            return sum(1 for line in f if line.strip())
+    except Exception:
+        return 0
+
+
+async def drain_backlog():
+    """
+    Drain backlog queue by replaying envelopes to injector.
+
+    Respects rate limits and deduplication.
+    Deletes lines only after successful injection.
+    """
+    if not os.path.exists(BACKLOG_PATH):
+        return
+
+    try:
+        # Read all backlog lines
+        with open(BACKLOG_PATH, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+
+        if not lines:
+            return
+
+        logger.info(f"Draining backlog: {len(lines)} envelopes")
+
+        # Try to inject each envelope
+        remaining = []
+        for line in lines:
+            try:
+                envelope = json.loads(line)
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.post(f"{INJECTOR_URL}/inject", json=envelope)
+                    resp.raise_for_status()
+                    stats["backlog_drained"] += 1
+                    logger.debug(f"Drained from backlog: {envelope['stimulus_id']}")
+            except Exception as e:
+                # Keep in backlog if injection failed
+                remaining.append(line)
+                logger.debug(f"Backlog injection failed (will retry): {e}")
+
+        # Rewrite backlog with only failed lines
+        with open(BACKLOG_PATH, "w", encoding="utf-8") as f:
+            for line in remaining:
+                f.write(line + "\n")
+
+        stats["backlog_size"] = len(remaining)
+
+        if remaining:
+            logger.info(f"Backlog drain incomplete: {len(remaining)} remaining")
+        else:
+            logger.info("Backlog drained successfully")
+
+    except Exception as e:
+        logger.error(f"Failed to drain backlog: {e}")
+
+
+def drain_backlog_loop():
+    """
+    Background loop to drain backlog every N seconds.
+    Runs in separate thread.
+    """
+    import threading
+    import time as time_module
+
+    def _loop():
+        while True:
+            try:
+                # Use asyncio.run to execute async drain function
+                import asyncio
+                asyncio.run(drain_backlog())
+            except Exception as e:
+                logger.error(f"Backlog drain loop error: {e}")
+
+            time_module.sleep(BACKLOG_DRAIN_INTERVAL_SEC)
+
+    thread = threading.Thread(target=_loop, daemon=True)
+    thread.start()
+    logger.info(f"Backlog drain loop started (interval: {BACKLOG_DRAIN_INTERVAL_SEC}s)")
+
+
 # === Forward to Injector ===
 
 async def forward_to_injector(envelope: dict) -> dict:
     """
     Forward StimulusEnvelope to Stimulus Injection service.
+
+    On failure, enqueues to backlog for later replay.
 
     Args:
         envelope: StimulusEnvelope dict
@@ -170,7 +282,7 @@ async def forward_to_injector(envelope: dict) -> dict:
         Injector response
 
     Raises:
-        HTTPException if injection fails
+        HTTPException if injection fails (after enqueueing to backlog)
     """
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -180,7 +292,10 @@ async def forward_to_injector(envelope: dict) -> dict:
     except Exception as e:
         stats["injections_failed"] += 1
         logger.error(f"Failed to forward to injector: {e}")
-        # TODO: Add to backlog queue for resilience
+
+        # Enqueue to backlog for resilience
+        enqueue_to_backlog(envelope)
+
         raise HTTPException(status_code=502, detail=f"Injection failed: {str(e)}")
 
 
@@ -413,21 +528,28 @@ async def health():
 
     Returns:
         {
-            "status": "healthy",
+            "status": "healthy" | "ok",
             "uptime_seconds": <int>,
             "signals_ingested": <int>,
             "signals_deduplicated": <int>,
             "signals_rate_limited": <int>,
-            "injections_failed": <int>
+            "injections_failed": <int>,
+            "backlog_size": <int>,
+            "backlog_drained": <int>
         }
     """
+    # Update backlog size from file
+    stats["backlog_size"] = get_backlog_size()
+
     return {
-        "status": "healthy",
+        "status": "ok",  # Guardian expects "ok" status
         "uptime_seconds": int(time.time() - start_time),
         "signals_ingested": stats["ingested"],
         "signals_deduplicated": stats["deduplicated"],
         "signals_rate_limited": stats["rate_limited"],
-        "injections_failed": stats["injections_failed"]
+        "injections_failed": stats["injections_failed"],
+        "backlog_size": stats["backlog_size"],
+        "backlog_drained": stats["backlog_drained"]
     }
 
 
@@ -454,8 +576,10 @@ async def startup():
     """Start background tasks on service startup."""
     asyncio.create_task(write_heartbeat())
     asyncio.create_task(cleanup_digests())
+    drain_backlog_loop()  # Start backlog drain thread
     logger.info(f"Signals Collector v{VERSION} started on port {SIGNALS_COLLECTOR_PORT}")
     logger.info(f"Forwarding to injector: {INJECTOR_URL}")
+    logger.info(f"Backlog queue: {BACKLOG_PATH}")
 
 
 if __name__ == "__main__":

@@ -394,7 +394,11 @@ class ProcessManager:
         if not await self.start_stimulus_injection():
             return False
 
-        # 5. Start Autonomy Orchestrator (port 8002)
+        # 5. Start Signals Collector service (port 8010)
+        if not await self.start_signals_collector():
+            return False
+
+        # 6. Start Autonomy Orchestrator (port 8002)
         if not await self.start_autonomy_orchestrator():
             return False
 
@@ -630,6 +634,32 @@ class ProcessManager:
 
         except Exception as e:
             logger.error(f"  ❌ Failed to start Stimulus Injection: {e}")
+            return False
+
+    async def start_signals_collector(self) -> bool:
+        """Start Signals Collector service (port 8010)."""
+        logger.info("[5/7] Starting Signals Collector Service...")
+
+        try:
+            process = subprocess.Popen(
+                [sys.executable, "-m", "orchestration.services.signals_collector"],
+                cwd=MIND_PROTOCOL_ROOT
+            )
+
+            self.processes['signals_collector'] = process
+
+            # Give it a moment to start and bind port
+            await asyncio.sleep(2)
+
+            if process.poll() is None:
+                logger.info("  ✅ Signals Collector started (port 8010)")
+                return True
+            else:
+                logger.error("  ❌ Signals Collector failed to start")
+                return False
+
+        except Exception as e:
+            logger.error(f"  ❌ Failed to start Signals Collector: {e}")
             return False
 
     async def start_autonomy_orchestrator(self) -> bool:
@@ -1237,6 +1267,7 @@ class ProcessManager:
             'websocket_server': 8000,
             'dashboard': 3000,
             'stimulus_injection': 8001,
+            'signals_collector': 8010,
             'autonomy_orchestrator': 8002
         }
 
