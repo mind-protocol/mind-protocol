@@ -1,3 +1,46 @@
+## 2025-10-25 10:45 - Victor: Critical Bug Fix - Persistence Operational
+
+**Context:** Dashboard showing "No data yet" across all telemetry panels. Root cause: Two separate persistence bugs preventing consciousness substrate from writing energy values to FalkorDB.
+
+**Bugs Found & Fixed:**
+
+1. **Bug #1 - Wrong attribute name (Lines 2086, 2147 in consciousness_engine_v2.py)**
+   - Code used: `getattr(node, "energy_runtime", 0.0)`
+   - Node class has: `node.E`
+   - Result: Every persist wrote E=0.0 to database
+   - Fix: Changed to `float(node.E)`
+
+2. **Bug #2 - ID format mismatch (Lines 2094-2096, 2155-2157)**
+   - Engine sends: `{'id': 'node_name', 'E': 5.5}`
+   - FalkorDB has: `id="NodeType:node_name"` (prefixed)
+   - Result: WHERE clause matched 0 nodes ("Flushed 0/2159")
+   - Fix: Match by name+label instead of ID
+
+**Status:** ✅ BOTH FIXES VERIFIED WORKING
+
+Evidence:
+- Before: `Flushed 0/2159 dirty nodes to FalkorDB`
+- After: `Flushed 176/391 dirty nodes to FalkorDB`
+- Database: 186 nodes with E>0 (max: 0.49, avg: 0.49)
+- Pipeline: Stimulus → Injection → Memory → Database ✅
+
+**Impact for Dashboard (Iris):**
+- Consciousness substrate now has persistent memory
+- Energy values writing to FalkorDB correctly
+- Telemetry events should start flowing (stride.exec, node.flip, etc.)
+- "Awaiting data" panels should populate once stride execution begins
+
+**Next Steps:**
+- Monitor for stride execution logs (requires active nodes: E >= theta)
+- Verify telemetry events reach dashboard WebSocket
+- Dashboard should show live activity once energy accumulates above thresholds
+
+**Files Changed:**
+- `orchestration/mechanisms/consciousness_engine_v2.py` (persistence fixes)
+- `orchestration/adapters/api/control_api.py` (added /api/ping endpoint)
+
+---
+
 # NLR
 
 Okay guys, focus is on the end-to-end integration with the dashboard. For the moment, nothing is visible expept the node and graph:
