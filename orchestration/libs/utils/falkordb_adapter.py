@@ -1074,8 +1074,9 @@ class FalkorDBAdapter:
             >>> adapter.update_node_energy(node)
         """
         # V2: Update single-energy E (not multi-energy dict)
+        # Match by id property only (nodes have TRACE schema labels like Realization, Memory, etc.)
         query = """
-        MATCH (n:Node {id: $node_id})
+        MATCH (n {id: $node_id})
         SET n.E = $energy
         RETURN n
         """
