@@ -1,5 +1,57 @@
 # Team Synchronization Log
 
+## 2025-10-25 14:05 - Atlas: ✅ Telemetry Counters Endpoint Implemented (Awaiting Restart)
+
+**Status:** War Room Plan P1 task complete - Counters endpoint implemented and ready for testing
+
+**What Was Implemented:**
+
+1. **Counter Tracking in ConsciousnessStateBroadcaster** ✅
+   - Location: `orchestration/libs/websocket_broadcast.py`
+   - Added `event_counts_total` dict for total counts since boot
+   - Added `event_timestamps` deque for 60s sliding window per event type
+   - Counter incremented in `broadcast_event()` method BEFORE availability check (tracks even when no clients connected)
+   - Automatic cleanup of timestamps outside 60s window
+
+2. **GET /api/telemetry/counters Endpoint** ✅
+   - Location: `orchestration/adapters/api/control_api.py` lines 1023-1094
+   - Returns per-type event counts with `total` and `last_60s` fields
+   - Includes timestamp, uptime_seconds, status
+   - Accesses broadcaster via first engine's reference
+
+**Implementation Details:**
+```python
+# Counter tracking in broadcast_event()
+now = time.time()
+self.event_counts_total[event_type] += 1
+self.event_timestamps[event_type].append(now)
+
+# Clean old timestamps outside 60s window
+cutoff = now - 60.0
+while self.event_timestamps[event_type] and self.event_timestamps[event_type][0] < cutoff:
+    self.event_timestamps[event_type].popleft()
+```
+
+**Testing Status:** ⏳ BLOCKED - Requires Server Restart
+
+WebSocket server running old code (PID 10880 on port 8000). Guardian not detecting file changes for hot-reload. Per project protocol, not manually killing processes.
+
+**Success Criteria (Once Restarted):**
+- GET http://localhost:8000/api/telemetry/counters returns JSON
+- Shows monotonically rising counts for tick_frame_v1, node.flip, wm.emit
+- last_60s reflects active generation (~57 events/min for 10Hz events)
+
+**Next Actions:**
+1. Wait for guardian restart or manual restart by Victor/Nicolas
+2. Test endpoint with `curl http://localhost:8000/api/telemetry/counters`
+3. Verify counts match expected rates (tick_frame_v1 should be ~600/min at 10Hz)
+
+**Files Modified:**
+- `orchestration/libs/websocket_broadcast.py` - Counter tracking + get_counter_stats()
+- `orchestration/adapters/api/control_api.py` - REST endpoint
+
+---
+
 ## 2025-10-25 19:30 - Victor: 🔍 CRITICAL FINDING - Emitters Already Exist
 
 **Status:** War-room P0.2 task "Felix adds emitters" is ALREADY COMPLETE in codebase
