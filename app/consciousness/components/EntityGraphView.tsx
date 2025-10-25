@@ -348,6 +348,7 @@ export function EntityGraphView({
           <StrideSparks nodes={nodes} links={links} />
         </>
       )}
-    </div>
+      </div> {/* Close Graph View Container */}
+    </div> {/* Close root container */}
   );
 }
