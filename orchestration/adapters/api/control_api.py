@@ -1017,6 +1017,83 @@ async def persist_citizen_endpoint(citizen_id: str):
         raise HTTPException(status_code=500, detail=f"Persistence failed: {str(e)}")
 
 
+# === Telemetry Endpoints ===
+
+
+@router.get("/telemetry/counters")
+async def get_telemetry_counters():
+    """
+    Get event telemetry counters for dashboard integration verification.
+
+    Returns per-type event counts since boot and in 60s sliding window.
+    Used to verify events are flowing from consciousness engines to dashboard.
+
+    Returns:
+        {
+            "timestamp": ISO datetime,
+            "uptime_seconds": float,
+            "event_counts": {
+                "tick_frame_v1": {
+                    "total": 1523,
+                    "last_60s": 57
+                },
+                "node.flip": {
+                    "total": 842,
+                    "last_60s": 32
+                },
+                "wm.emit": {
+                    "total": 1523,
+                    "last_60s": 57
+                },
+                ...
+            }
+        }
+
+    Success Criteria (War Room Plan):
+        - tick_frame_v1, node.flip, wm.emit, link.flow.summary show monotonically rising counts
+        - last_60s counts reflect active event generation
+        - Proves events flowing even when dashboard not connected
+
+    Example:
+        GET /api/telemetry/counters
+
+    Author: Atlas "Infrastructure Engineer"
+    Date: 2025-10-25
+    Context: War Room Plan P1 - Dashboard Integration Verification
+    """
+    from orchestration.adapters.storage.engine_registry import get_all_engines
+    import time
+
+    # Get counter stats from first available engine's broadcaster
+    # (All engines share the same broadcaster instance via singleton WebSocketManager)
+    engines = get_all_engines()
+
+    if not engines:
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "uptime_seconds": 0.0,
+            "event_counts": {},
+            "status": "no_engines_running"
+        }
+
+    # Get broadcaster from first engine
+    first_engine = engines[0]
+    broadcaster = first_engine.broadcaster
+
+    # Get counter stats
+    event_counts = broadcaster.get_counter_stats()
+
+    # Calculate uptime from first engine's start time
+    uptime_seconds = (datetime.now(timezone.utc) - first_engine.start_time).total_seconds() if hasattr(first_engine, 'start_time') else 0.0
+
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "uptime_seconds": uptime_seconds,
+        "event_counts": event_counts,
+        "status": "ok"
+    }
+
+
 # === Entity Membership Endpoints ===
 
 
