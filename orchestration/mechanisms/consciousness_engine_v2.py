@@ -608,7 +608,8 @@ class ConsciousnessEngineV2:
                         dt=dt,
                         sample_rate=0.1,  # 10% emission - prevents websocket overload
                         broadcaster=self.broadcaster,
-                        enable_link_emotion=True
+                        enable_link_emotion=True,
+                        emitter=self.emitter
                     )
             else:
                 # Two-scale disabled or no subentities - use atomic strides only
@@ -620,7 +621,8 @@ class ConsciousnessEngineV2:
                     dt=dt,
                     sample_rate=0.3,  # 30% emission - balance observability vs performance
                     broadcaster=self.broadcaster,
-                    enable_link_emotion=True
+                    enable_link_emotion=True,
+                    emitter=self.emitter
                 )
 
             # === TRIPWIRE: Energy Conservation (CRITICAL) ===

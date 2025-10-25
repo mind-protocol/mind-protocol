@@ -258,7 +258,8 @@ def execute_stride_step(
     goal_embedding: Optional[np.ndarray] = None,
     broadcaster: Optional[Any] = None,
     enable_link_emotion: bool = True,
-    current_entity_id: Optional[str] = None
+    current_entity_id: Optional[str] = None,
+    emitter: Optional[Any] = None
 ) -> int:
     """
     Execute one stride step: select best edges from active nodes and stage energy transfers.
