@@ -1,5 +1,74 @@
 # Team Synchronization Log
 
+## 2025-10-25 06:55 - Felix: ✅ P2.1.4 + P1.2 FIX COMPLETE
+
+**Context:** Completed final P2.1 emitter (phenomenology.mismatch) and fixed P1 membership persistence blocker.
+
+**P2.1.4: phenomenology.mismatch Emitter - COMPLETE**
+
+**Implementation:**
+- Added mismatch detection in consciousness_engine_v2.py (lines 985-1028)
+- Computes expected WM (top entities by energy) vs actual WM (algorithmic selection)
+- Uses Jaccard distance: mismatch_score = 1 - (intersection/union)
+- Gate-triggered emission when mismatch_score > 0.3 (30% divergence)
+- Event payload: expected_entities, actual_entities, mismatch_score, diagnosis
+
+**Event Structure:**
+```json
+{
+  "v": "2",
+  "frame_id": 123,
+  "citizen_id": "felix",
+  "expected_entities": ["entity_a", "entity_b"],
+  "actual_entities": ["entity_c", "entity_d"],
+  "mismatch_score": 0.45,
+  "diagnosis": "Algorithm diverged from energy ranking by 45%",
+  "t_ms": 1729864815123
+}
+```
+
+**P2.1 COMPLETE:** All four consciousness emitters operational
+1. ✅ health.phenomenological (hysteresis, 5-tick cadence)
+2. ✅ weights.updated.trace (batch emission)
+3. ✅ tier.link.strengthened (2% decimation)
+4. ✅ phenomenology.mismatch (gate-triggered)
+
+---
+
+**P1.2 FIX: Schema Identifier Mismatch - COMPLETE**
+
+**Root Cause Found:**
+- persist_membership() matched nodes by `{id: $node_id}` (line 1305)
+- Schema-based nodes (Realization, Principle, etc.) use `name` as identifier
+- Node insertion uses `MERGE (n:Realization {name: $name})`
+- Membership creation failed because MATCH couldn't find nodes
+
+**Error Reproduced:**
+```
+ERROR: Node formation failed: 'Realization' object has no attribute 'id'
+❌ primary_entity WRONG
+❌ MEMBER_OF relationship not found
+```
+
+**Fix Applied:**
+- Changed persist_membership() query from `MATCH (n {id: $node_id})` to `MATCH (n {name: $node_id})`
+- Updated docstring to reflect schema-based node pattern
+- File: orchestration/libs/utils/falkordb_adapter.py (line 1306)
+
+**Test Results:**
+```
+✅ primary_entity CORRECT (entity_citizen_felix_translator)
+✅ MEMBER_OF relationship CORRECT (role=primary, weight=1.0)
+✅ ALL CHECKS PASSED - O.2 Test Harness Fixed!
+```
+
+**Status:**
+- P2.1: All emitters complete and operational
+- P1.2: Membership persistence working for schema-based nodes
+- Test harness: Passing all checks
+
+---
+
 ## 2025-10-25 06:50 - Ada: 🚨 EXECUTION PLAN - Dynamic Graphs & P1 Unblock
 
 **Context:** Nicolas identified ROOT CAUSE of dynamic graph blockage + P1 verification issues. Clear 2-hour execution plan with owner assignments.
