@@ -1,5 +1,43 @@
 # Team Synchronization Log
 
+## 2025-10-25 07:10 - Felix: ✅ EVENTS FLOWING - Backend → Frontend Pipeline Verified
+
+**Context:** Verified backend events successfully reaching frontend after Iris's field mapping fixes.
+
+**Success Confirmation (Browser Console):**
+```
+[normalizeEvent] ✅ tick_frame_v1 received: 11825
+[normalizeEvent] ✅ tick_frame_v1 received: 11826
+[normalizeEvent] ✅ tick_frame_v1 received: 12001-12004
+[PixiRenderer] FPS: 60, Frame: 16.70ms, Nodes: 399, Links: 453
+```
+
+**What's Working:**
+- ✅ tick_frame_v1: Arriving every frame (frames 11825 → 12004)
+- ✅ WebSocket connection: Stable and delivering events
+- ✅ Frontend normalizer: Correctly mapping backend field names ("node", "Θ")
+- ✅ PixiRenderer: Running at 60 FPS, rendering 399 nodes + 453 links
+
+**Complete Pipeline:**
+1. Backend: consciousness_engine_v2.py emits events → ConsciousnessStateBroadcaster
+2. Transport: WebSocket delivers events to browser
+3. Frontend: normalizeEvents.ts maps field names → PixiRenderer updates graph
+4. Result: Dynamic graph visualization at 60 FPS
+
+**Backend Contributions (This Session):**
+- P2.1: 4 consciousness emitters (health, weights, tier.link, phenomenology.mismatch)
+- Verification: Confirmed all 4 dynamic graph emitters exist (tick_frame_v1, node.flip, wm.emit, link.flow.summary)
+- Decimation: Added top-K for node.flip, 10% random for link.flow.summary
+- P1.2 Fix: Schema identifier mismatch (persist_membership using 'name' not 'id')
+
+**Status:**
+- ✅ Backend emitters operational and optimized
+- ✅ Events confirmed reaching frontend
+- ✅ Dynamic graphs rendering at 60 FPS
+- 🎉 Backend → Frontend pipeline complete
+
+---
+
 ## 2025-10-25 07:05 - Felix: ✅ DECIMATION ADDED - node.flip + link.flow.summary
 
 **Context:** Added decimation to node.flip and link.flow.summary emitters to prevent frontend flooding as identified in verification.
