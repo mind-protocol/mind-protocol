@@ -22,6 +22,7 @@ import { StrideSparks } from './StrideSparks';
 import { aggregateEntityEmotion, aggregateEntityEnergy, calculateEntityCoherence } from '../lib/entityEmotion';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Node, Link, Subentity, Operation } from '../hooks/useGraphData';
+import { selectVisibleGraph } from '../lib/visibleGraphSelector';
 
 export type ViewMode = 'entity-map' | 'entity-expanded' | 'node-graph';
 
@@ -33,6 +34,8 @@ interface EntityGraphViewProps {
   workingMemory: Set<string>;
   linkFlows: Map<string, number>;
   recentFlips: Array<{ node_id: string; direction: 'on' | 'off'; dE: number; timestamp: number }>;
+  expandedEntities: Set<string>;
+  toggleEntity: (entityId: string) => void;
 }
 
 /**
@@ -47,7 +50,9 @@ export function EntityGraphView({
   subentities,
   workingMemory,
   linkFlows,
-  recentFlips
+  recentFlips,
+  expandedEntities,
+  toggleEntity
 }: EntityGraphViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('entity-map');
   const [expandedEntityId, setExpandedEntityId] = useState<string | null>(null);
