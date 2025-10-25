@@ -50,19 +50,33 @@ export async function POST(request: Request) {
 
     await fs.appendFile(logPath, logEntry);
 
-    // TODO: Forward high-severity errors to backend stimulus injection
-    // This would analyze error patterns and inject debugging/recovery stimuli
-    // Example: Critical React errors → stimulus to "debugging_protocol" entity
-    if (signal.type === 'error' && shouldTriggerStimulus(signal)) {
-      // await fetch('http://localhost:8001/stimulus/inject', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     query: `frontend error: ${signal.message}`,
-      //     budget: 10.0,
-      //     source: 'browser_console_error'
-      //   })
-      // });
+    // Forward to signals collector backend (port 8010)
+    // Signals collector will deduplicate, rate limit, and forward to stimulus injection
+    try {
+      const collectorUrl = process.env.SIGNALS_COLLECTOR_URL || 'http://localhost:8010';
+      const response = await fetch(`${collectorUrl}/ingest/console`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          severity: signal.type === 'error' ? 'error' : signal.type === 'warn' ? 'warning' : 'info',
+          message: signal.message,
+          stack_trace: signal.stack,
+          source: 'browser_console',
+          metadata: {
+            url: signal.url,
+            line: signal.line,
+            column: signal.column,
+            timestamp: signal.timestamp
+          }
+        })
+      });
+
+      if (!response.ok) {
+        console.warn('[Console Proxy] Signals collector returned error:', response.status);
+      }
+    } catch (error) {
+      // Non-fatal - local logging succeeded even if forwarding failed
+      console.warn('[Console Proxy] Failed to forward to signals collector:', error);
     }
 
     return NextResponse.json({
