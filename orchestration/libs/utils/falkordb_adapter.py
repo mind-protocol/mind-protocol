@@ -1099,23 +1099,35 @@ class FalkorDBAdapter:
         Batch persist E and theta for many nodes using UNWIND.
 
         Args:
-            rows: List of dicts with keys: id, E, theta
-                  Example: [{"id": "node_123", "E": 42.0, "theta": 30.0}, ...]
+            rows: List of dicts with keys: id, name, label, E, theta
+                  Example: [{"id": "node_123", "name": "my_node", "label": "Concept", "E": 42.0, "theta": 30.0}, ...]
 
         Returns:
             Number of nodes updated
 
         Example:
-            >>> rows = [{"id": "n1", "E": 0.8, "theta": 0.5}, {"id": "n2", "E": 0.3, "theta": 0.5}]
+            >>> rows = [{"id": "n1", "name": "n1", "label": "Concept", "E": 0.8, "theta": 0.5}]
             >>> updated = adapter.persist_node_scalars_bulk(rows)
             >>> print(f"Updated {updated} nodes")
+
+        Note:
+            Uses dual-path matching for schema migration:
+            - Prefer matching by id if present in both row and database
+            - Fallback to matching by name+label for nodes without id
+            This allows gradual migration from name-based to id-based schema.
         """
         if not rows:
             return 0
 
+        # Dual-path MATCH: try id first, fallback to name+label
+        # This bridges old schema (name-only) and new schema (proper id)
         query = """
         UNWIND $rows AS r
-        MATCH (n {id: r.id})
+        MATCH (n)
+        WHERE (r.id IS NOT NULL AND n.id = r.id)
+           OR ( (r.id IS NULL OR n.id IS NULL)
+                AND n.name = r.name
+                AND (r.label IS NULL OR r.label IN labels(n)) )
         SET n.E = r.E, n.theta = r.theta
         RETURN count(n) AS updated
         """
