@@ -246,3 +246,6 @@
 {"stimulus_id": "stim_1761395425843", "timestamp_ms": 1761395425843, "citizen_id": "felix", "text": "Screenshot: screenshot-1761395423817.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761395468676", "timestamp_ms": 1761395468676, "citizen_id": "felix", "text": "Screenshot: screenshot-1761395466662.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "stim_1761395550986", "timestamp_ms": 1761395550986, "citizen_id": "felix", "text": "Screenshot: screenshot-1761395548972.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761395571612", "timestamp_ms": 1761395571612, "citizen_id": "felix", "text": "Screenshot: screenshot-1761395569585.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"type": "user_message", "content": "Testing dashboard visualization - can you see this energy flowing?", "citizen_id": "felix", "timestamp": "2025-10-25T12:33:07Z"}
+{"stimulus_id": "stim_1761395598742", "timestamp_ms": 1761395598742, "citizen_id": "felix", "text": "Screenshot: screenshot-1761395596704.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
