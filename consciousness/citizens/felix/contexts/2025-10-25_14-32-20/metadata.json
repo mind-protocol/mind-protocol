@@ -1,0 +1,9 @@
+{
+  "context_id": "2025-10-25_14-32-20",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-25T12:32:20.770368+00:00",
+  "last_updated": "2025-10-25T12:32:21.956452+00:00",
+  "message_count": 12597,
+  "has_tool_calls": true
+}
