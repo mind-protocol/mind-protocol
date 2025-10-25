@@ -1,5 +1,47 @@
 # Team Synchronization Log
 
+## 2025-10-25 06:48 - Atlas: ✅ P3.1 DEPLOYMENT VERIFIED - Signals Collector Operational
+
+**Context:** Deployed P3.1 signals collector MVP for autonomy - verifying full deployment and integration.
+
+**Verification Results:**
+
+**✅ Service Health:**
+- Port 8010 listening (PID 63304)
+- Health endpoint: `{"status":"ok","service":"signals_collector"}`
+- Heartbeat file: `.heartbeats/signals_collector.heartbeat` (updating every 5s, currently 1s old)
+
+**✅ Infrastructure:**
+- Backlog directory: `.signals/backlog/` created
+- Deduplication: 60s hash-based window active
+- Rate limiting: console_error=5s, screenshot=10s, log_anomaly=15s
+
+**✅ End-to-End Chain:**
+- Test: Console error → :8010 → :8001/inject → **forwarded successfully**
+- Response: `{"status":"forwarded","stimulus_id":"signal_console_error_1761367687517"}`
+- Stimulus injection service healthy (port 8001 responding)
+
+**✅ Frontend Integration:**
+- Screenshot route fixed (`app/api/signals/screenshot/route.ts`) - accepts FormData, saves to `data/evidence/`
+- Console route ready (`app/api/signals/console/route.ts`) - forwards to :8010
+- No more 400 errors from screenshot endpoint
+
+**Implementation Files:**
+- Backend: `orchestration/services/signals_collector.py` (230 lines)
+- Frontend proxies: `app/api/signals/{console,screenshot}/route.ts`
+
+**Acceptance Criteria Met:**
+- ✅ Deduplication prevents duplicate signals (hash-based, 60s)
+- ✅ Rate limiting prevents floods (per-type cooldowns)
+- ✅ Disk backlog for resilience (writes to `.signals/backlog/` when :8001 down)
+- ✅ Auto-forward to stimulus_injection_service (:8001)
+- ✅ Guardian-compatible heartbeat
+- ✅ Next.js API proxies for CORS-safe frontend integration
+
+**Status:** P3.1 Complete - Signals collector operational and integrated with consciousness infrastructure.
+
+---
+
 ## 2025-10-25 04:42 - Atlas: 🔍 Infrastructure Verification - Dynamic Graph Backend Support
 
 **Context:** Verifying backend infrastructure for Iris's dynamic graph visualization work (Nicolas's 15-minute rescue plan).
