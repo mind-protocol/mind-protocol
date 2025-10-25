@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import type { Subentity } from '../hooks/useGraphData';
 import type { V2ConsciousnessState } from '../hooks/websocket-types';
+import { EntityMembersPanel } from './EntityMembersPanel';
 
 interface Citizen {
   id: string;
@@ -260,17 +261,31 @@ function EntityActivityCard({
   subentity: Subentity;
   onFocusNode: (nodeId: string) => void;
 }) {
+  const [showMembers, setShowMembers] = useState(false);
+
+  // Extract entity name from entity_id (e.g., "entity_citizen_iris_translator" -> "translator")
+  const entityName = subentity.entity_id.split('_').pop() || subentity.entity_id;
+
   return (
     <div className="consciousness-panel p-3 text-xs">
       <div className="flex items-center justify-between mb-2">
         <span className="text-observatory-cyan font-medium">
-          {subentity.entity_id}
+          {entityName}
         </span>
-        {(subentity as any).energy_used !== undefined && (subentity as any).energy_budget !== undefined && (
-          <span className="text-venice-gold-bright">
-            {(subentity as any).energy_used}/{(subentity as any).energy_budget}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {(subentity as any).energy_used !== undefined && (subentity as any).energy_budget !== undefined && (
+            <span className="text-venice-gold-bright">
+              {(subentity as any).energy_used}/{(subentity as any).energy_budget}
+            </span>
+          )}
+          <button
+            onClick={() => setShowMembers(!showMembers)}
+            className="px-2 py-0.5 text-xs rounded hover:bg-observatory-cyan/20 text-observatory-text/70 hover:text-observatory-cyan transition-colors"
+            title="View members"
+          >
+            {showMembers ? '▲' : '▼'}
+          </button>
+        </div>
       </div>
 
       {/* Current Yearning */}
@@ -280,8 +295,20 @@ function EntityActivityCard({
         </div>
       )}
 
+      {/* Members Panel */}
+      {showMembers && (
+        <div className="mt-2 -mx-3">
+          <EntityMembersPanel
+            entityId={subentity.entity_id}
+            entityName={entityName}
+            graphId={(subentity as any).graph_id || 'citizen_iris'}
+            onFocusNode={onFocusNode}
+          />
+        </div>
+      )}
+
       {/* Recent Path - Clickable */}
-      {(subentity as any).recent_path && (subentity as any).recent_path.length > 0 && (
+      {!showMembers && (subentity as any).recent_path && (subentity as any).recent_path.length > 0 && (
         <div className="space-y-1">
           <div className="text-observatory-text/50">Recent path:</div>
           {(subentity as any).recent_path.slice(-5).map((node: any, i: number) => (
