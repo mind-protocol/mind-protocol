@@ -39,6 +39,12 @@ interface CitizenMonitorProps {
   onSelectCitizen: (citizenId: string) => void;
   activeCitizenId: string | null;
   v2State: V2ConsciousnessState;
+  subentitySnapshots: Record<string, {
+    active: Array<{id: string; name: string; energy: number; theta: number}>;
+    wm: Array<{id: string; name: string; share: number}>;
+    frame: number;
+    t: number;
+  }>;
 }
 
 /**
@@ -51,7 +57,7 @@ interface CitizenMonitorProps {
  * Clicking citizen card or avatar switches to that citizen's graph.
  * Clicking node references focuses that node on the graph.
  */
-export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeCitizenId, v2State }: CitizenMonitorProps) {
+export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeCitizenId, v2State, subentitySnapshots }: CitizenMonitorProps) {
   const [expandedCitizen, setExpandedCitizen] = useState<string | null>(null);
 
   return (
@@ -70,6 +76,7 @@ export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeC
             onFocusNode={onFocusNode}
             onSelectCitizen={onSelectCitizen}
             v2State={v2State}
+            subentitySnapshot={subentitySnapshots[`citizen_${citizen.id}`]}
           />
         ))}
       </div>
@@ -84,7 +91,8 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
   onToggle,
   onFocusNode,
   onSelectCitizen,
-  v2State
+  v2State,
+  subentitySnapshot
 }: {
   citizen: Citizen;
   isExpanded: boolean;
@@ -93,6 +101,12 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
   onFocusNode: (nodeId: string) => void;
   onSelectCitizen: (citizenId: string) => void;
   v2State: V2ConsciousnessState;
+  subentitySnapshot?: {
+    active: Array<{id: string; name: string; energy: number; theta: number}>;
+    wm: Array<{id: string; name: string; share: number}>;
+    frame: number;
+    t: number;
+  };
 }) {
   const [apiStatus, setApiStatus] = useState<CitizenStatus | null>(null);
 

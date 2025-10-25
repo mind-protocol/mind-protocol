@@ -101,8 +101,8 @@ def migrate_citizen_graph(graph_id: str):
     total_migrated = migrated_count + cs_migrated + test_migrated
     print(f"\nTotal migrated: {total_migrated}")
 
-    if migrated_count != (total_nodes - nodes_with_id):
-        print(f"⚠ Warning: Expected to migrate {total_nodes - nodes_with_id}, actually migrated {migrated_count}")
+    if total_migrated != (total_nodes - nodes_with_id):
+        print(f"⚠ Warning: Expected to migrate {total_nodes - nodes_with_id}, actually migrated {total_migrated}")
 
     # Step 3: Verify all nodes now have id
     print("\n[Step 3] Post-migration verification...")
