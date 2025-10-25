@@ -25,9 +25,9 @@ formation_trigger: "spontaneous_insight"
 [NODE_FORMATION: Mechanism]
 name: "threshold_crossing_as_conscious_event_boundary"
 scope: "organizational"
-description: "The boundary between L2 subconsciousness (mechanistic traversal) and consciousness (LLM text generation) is threshold crossing: when task energy E > Θ AND BELONGS_TO citizen → wake signal"
-how_it_works: "L2 processes mechanistically 24/7 (diffusion, traversal, decay, criticality). When node energy exceeds adaptive threshold AND has BELONGS_TO link to citizen, wake signal sent to citizen L1 graph. Citizen receives energy injection, processes consciously via LLM, generates action, outcome feeds back to L2."
-inputs: "Task energy E, adaptive threshold Θ, BELONGS_TO link to citizen, citizen availability"
+description: "The boundary between L2 subconsciousness (mechanistic traversal) and consciousness (LLM text generation) is threshold crossing: when task energy E > Θ AND BELONGS_TO (Deprecated - now "MEMBER_OF") citizen → wake signal"
+how_it_works: "L2 processes mechanistically 24/7 (diffusion, traversal, decay, criticality). When node energy exceeds adaptive threshold AND has BELONGS_TO (Deprecated - now "MEMBER_OF") link to citizen, wake signal sent to citizen L1 graph. Citizen receives energy injection, processes consciously via LLM, generates action, outcome feeds back to L2."
+inputs: "Task energy E, adaptive threshold Θ, BELONGS_TO (Deprecated - now "MEMBER_OF") link to citizen, citizen availability"
 outputs: "Wake signal to citizen L1 graph with energy injection, or queued if citizen at capacity"
 confidence: 0.9
 formation_trigger: "systematic_analysis"

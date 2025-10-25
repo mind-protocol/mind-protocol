@@ -130,7 +130,7 @@ class Subentity:
     last_update_timestamp: Optional[datetime] = None
 
     # Graph structure (populated by Graph container)
-    # Members: accessed via BELONGS_TO links (Node -> Subentity)
+    # Members: accessed via BELONGS_TO (Deprecated - now "MEMBER_OF") links (Node -> Subentity)
     # Boundaries: accessed via RELATES_TO links (Subentity -> Subentity)
     outgoing_links: List['Link'] = field(default_factory=list)
     incoming_links: List['Link'] = field(default_factory=list)
@@ -144,7 +144,7 @@ class Subentity:
         """
         Get all nodes that belong to this subentity.
 
-        Returns nodes connected via BELONGS_TO links.
+        Returns nodes connected via BELONGS_TO (Deprecated - now "MEMBER_OF") links.
         """
         from .types import LinkType
         return [link.source for link in self.incoming_links
@@ -155,7 +155,7 @@ class Subentity:
         """
         Alias for get_members() - backward compatibility for telemetry code.
 
-        Returns list of member nodes (those with BELONGS_TO links to this subentity).
+        Returns list of member nodes (those with BELONGS_TO (Deprecated - now "MEMBER_OF") links to this subentity).
         """
         return self.get_members()
 

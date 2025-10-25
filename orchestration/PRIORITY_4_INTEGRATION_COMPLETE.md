@@ -56,7 +56,7 @@ Successfully integrated entity-context-aware TRACE reinforcement using **dual-vi
 
 3. **Entity context derivation** (lines 238-259):
    - Derives entity context using priority logic (WM → TRACE annotations → dominant entity)
-   - Queries BELONGS_TO memberships for nodes being updated
+   - Queries BELONGS_TO (Deprecated - now "MEMBER_OF") memberships for nodes being updated
    - Enhances node dicts with membership data
 
 4. **Dual-view weight updates** (lines 262-267):
@@ -302,7 +302,7 @@ entity_context = self.entity_context_manager.derive_entity_context(
 ✅ **Implementation complete:**
 - WeightLearnerV2 with dual-view architecture
 - EntityContextManager with priority logic
-- MembershipQueryHelper with BELONGS_TO querying
+- MembershipQueryHelper with BELONGS_TO (Deprecated - now "MEMBER_OF") querying
 - TRACE capture integration
 - Overlay persistence to DB
 - Telemetry with entity attribution
@@ -332,7 +332,7 @@ entity_context = self.entity_context_manager.derive_entity_context(
 │     ├─ WM selected entities (priority 1)                    │
 │     ├─ TRACE annotations (priority 2)                       │
 │     └─ Dominant entity (priority 3, fallback)              │
-│  3. Query BELONGS_TO memberships                            │
+│  3. Query BELONGS_TO (Deprecated - now "MEMBER_OF") memberships                            │
 │  4. Enhance nodes with membership data                      │
 │  5. Call WeightLearnerV2 with entity_context               │
 │                                                             │
@@ -402,7 +402,7 @@ entity_context = self.entity_context_manager.derive_entity_context(
 2. **Single energy substrate:** Maintain one E per node (no per-entity energies)
 3. **80/20 split:** Configurable via `alpha_local`/`alpha_global` for experimentation
 4. **Overlay capping:** Max absolute overlay ±2.0 prevents runaway reinforcement
-5. **Membership weighting:** Local updates scaled by BELONGS_TO weights (Σ weight ≤ 1.0 per node)
+5. **Membership weighting:** Local updates scaled by BELONGS_TO (Deprecated - now "MEMBER_OF") weights (Σ weight ≤ 1.0 per node)
 6. **Priority derivation:** WM entities > TRACE annotations > dominant entity (cleanest to fallback)
 7. **Read-time composition:** Effective weight = global + overlay@E (computed when needed, not stored)
 

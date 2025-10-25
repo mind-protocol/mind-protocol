@@ -117,7 +117,7 @@ def bootstrap_functional_entities(self) -> List[Subentity]:
 2. **Config-driven bootstrap:**
    - Loads from `orchestration/config/functional_entities.yml`
    - Creates Entity nodes directly (idempotent upsert)
-   - Seeds BELONGS_TO via keyword matching
+   - Seeds BELONGS_TO (Deprecated - now "MEMBER_OF") via keyword matching
    - No dependency on Mechanism nodes
 
 3. **Entity energy formula refinement:**
@@ -239,7 +239,7 @@ entity_configs = config.get("entities", [])
 
 **Green flags:**
 - Config-driven entity creation
-- Keyword-based BELONGS_TO seeding
+- Keyword-based BELONGS_TO (Deprecated - now "MEMBER_OF") seeding
 - Idempotent upsert patterns
 
 ---

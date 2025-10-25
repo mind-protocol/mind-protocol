@@ -1107,7 +1107,7 @@ async def get_entity_members(
     """
     Get members (nodes) belonging to an entity.
 
-    Queries BELONGS_TO links to find all nodes assigned to this entity.
+    Queries BELONGS_TO (Deprecated - now "MEMBER_OF") links to find all nodes assigned to this entity.
     Supports filtering by node type and limiting results.
 
     Args:
@@ -1164,7 +1164,7 @@ async def get_entity_members(
 
     # Build query to find members
     query_parts = []
-    query_parts.append(f'MATCH (n)-[r:BELONGS_TO]->(e:Subentity {{id: "{entity_id}"}})')
+    query_parts.append(f'MATCH (n)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(e:Subentity {{id: "{entity_id}"}})')
 
     # Add node type filter if provided
     if node_type:

@@ -450,12 +450,12 @@ def execute_stride_step(
             source_entities = []
             target_entities = []
 
-            # Check source node's BELONGS_TO links
+            # Check source node's BELONGS_TO (Deprecated - now "MEMBER_OF") links
             for link in node.outgoing_links:
                 if link.link_type == LinkType.MEMBER_OF:
                     source_entities.append(link.target)
 
-            # Check target node's BELONGS_TO links
+            # Check target node's BELONGS_TO (Deprecated - now "MEMBER_OF") links
             for link in best_link.target.outgoing_links:
                 if link.link_type == LinkType.MEMBER_OF:
                     target_entities.append(link.target)

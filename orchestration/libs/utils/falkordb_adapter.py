@@ -1191,7 +1191,7 @@ class FalkorDBAdapter:
         """
         Persist all subentities from graph to FalkorDB.
 
-        Creates Subentity nodes and their BELONGS_TO/RELATES_TO links.
+        Creates Subentity nodes and their BELONGS_TO (Deprecated - now "MEMBER_OF")/RELATES_TO links.
         Used after bootstrap to make subentities permanent.
 
         Args:
@@ -1228,7 +1228,7 @@ class FalkorDBAdapter:
 
         if existing_count > 0:
             logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping entity creation")
-            # NOTE: We still persist BELONGS_TO and RELATES_TO links below (they may be missing)
+            # NOTE: We still persist BELONGS_TO (Deprecated - now "MEMBER_OF") and RELATES_TO links below (they may be missing)
         else:
             logger.info(f"Persisting {len(graph.subentities)} subentities to FalkorDB...")
 

@@ -406,7 +406,7 @@ Iris can show:
 
 ## Questions / Design Notes
 
-1. **Membership weight source:** Currently stubbed in `_get_membership_weights()`. Need to query `BELONGS_TO` links from graph during weight updates.
+1. **Membership weight source:** Currently stubbed in `_get_membership_weights()`. Need to query `BELONGS_TO (Deprecated - now "MEMBER_OF")` links from graph during weight updates.
 
 2. **Entity context derivation:** Multiple strategies possible:
    - **Primary:** WM selected entities (cleanest - reflects actual active context)

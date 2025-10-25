@@ -26,7 +26,7 @@ Gap-closure utility for a traversed link: the fraction of the target's pre-gap c
 ## subentity energy
 Aggregate of member node energies with saturation: \(E_{ent} = \sum_i \log(1+E_i) \cdot m_{i,ent}\). subentity threshold is cohort-based (μ + z·σ with health modulation).
 
-## BELONGS_TO
+## BELONGS_TO (Deprecated - now "MEMBER_OF")
 Membership relation (Node → subentity) with weight ∈ [0,1]. Updated by co-activation (Hebbian), normalized per node.
 
 ## RELATES_TO

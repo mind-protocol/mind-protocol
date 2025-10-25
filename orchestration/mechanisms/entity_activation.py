@@ -9,7 +9,7 @@ Formula (spec: subentity_layer.md §2.2):
 Where:
     - E_i = node activation energy (node.E)
     - Θ_i = node threshold (node.theta)
-    - m̃_iE = normalized membership weight from BELONGS_TO link
+    - m̃_iE = normalized membership weight from BELONGS_TO (Deprecated - now "MEMBER_OF") link
     - Only above-threshold energy contributes (max(0, E_i - Θ_i))
 
 This respects the V2 single-energy invariant: nodes hold ONE energy value,
@@ -122,7 +122,7 @@ def normalize_membership_weights(
     members: List[Tuple['Node', float]]
 ) -> Dict[str, float]:
     """
-    Normalize BELONGS_TO membership weights to sum to 1.0.
+    Normalize BELONGS_TO (Deprecated - now "MEMBER_OF") membership weights to sum to 1.0.
 
     Args:
         members: List of (node, raw_weight) tuples
@@ -178,7 +178,7 @@ def compute_entity_activation(
         >>> energy = compute_entity_activation(entity, graph)
         >>> # Returns weighted sum of member above-threshold energies
     """
-    # Get members via BELONGS_TO links
+    # Get members via BELONGS_TO (Deprecated - now "MEMBER_OF") links
     from orchestration.core.types import LinkType
 
     members_with_weights = []
@@ -187,7 +187,7 @@ def compute_entity_activation(
             continue
 
         node = link.source
-        membership_weight = link.weight  # BELONGS_TO.weight ∈ [0,1]
+        membership_weight = link.weight  # BELONGS_TO (Deprecated - now "MEMBER_OF").weight ∈ [0,1]
         members_with_weights.append((node, membership_weight))
 
     if not members_with_weights:
@@ -473,7 +473,7 @@ def dissolve_entity(
     """
     Dissolve entity and release its members.
 
-    This removes the entity from the graph and deletes all BELONGS_TO links
+    This removes the entity from the graph and deletes all BELONGS_TO (Deprecated - now "MEMBER_OF") links
     to its members. Members return to the atomic node pool.
 
     Args:
@@ -482,7 +482,7 @@ def dissolve_entity(
 
     Side effects:
         - Removes entity from graph.subentities
-        - Deletes all BELONGS_TO links to this entity
+        - Deletes all BELONGS_TO (Deprecated - now "MEMBER_OF") links to this entity
         - Members become free-floating nodes
 
     Example:
@@ -491,7 +491,7 @@ def dissolve_entity(
     """
     from orchestration.core.types import LinkType
 
-    # Remove all BELONGS_TO links (release members)
+    # Remove all BELONGS_TO (Deprecated - now "MEMBER_OF") links (release members)
     belongs_to_links = [
         link for link in entity.incoming_links
         if link.link_type == LinkType.MEMBER_OF

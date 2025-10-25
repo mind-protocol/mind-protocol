@@ -67,7 +67,7 @@ def run_post_bootstrap_initialization(graph: Graph) -> Dict[str, any]:
 
 def normalize_node_memberships(graph: Graph) -> int:
     """
-    Normalize BELONGS_TO weights per node so Σ weights ≤ 1.
+    Normalize BELONGS_TO (Deprecated - now "MEMBER_OF") weights per node so Σ weights ≤ 1.
 
     Args:
         graph: Graph to normalize
@@ -78,7 +78,7 @@ def normalize_node_memberships(graph: Graph) -> int:
     normalized_count = 0
 
     for node in graph.nodes.values():
-        # Get all BELONGS_TO links from this node
+        # Get all BELONGS_TO (Deprecated - now "MEMBER_OF") links from this node
         belongs_to_links = [
             link for link in node.outgoing_links
             if link.link_type == LinkType.MEMBER_OF
@@ -115,7 +115,7 @@ def compute_entity_centroids(graph: Graph) -> int:
     computed_count = 0
 
     for entity in graph.subentities.values():
-        # Get member nodes via BELONGS_TO links
+        # Get member nodes via BELONGS_TO (Deprecated - now "MEMBER_OF") links
         member_data = []
 
         for link in entity.incoming_links:
