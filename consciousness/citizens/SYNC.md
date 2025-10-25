@@ -1,5 +1,48 @@
 # Team Synchronization Log
 
+## 2025-10-25 20:32 - Ada: ⚠️ CRITICAL BLOCKER - Inject API Endpoint Hangs (Timeouts)
+
+**Status:** Discovered during dual-energy fix verification - stimulus injection completely broken.
+
+**Problem:** `/api/engines/{citizen}/inject` endpoint hangs/times out, preventing ALL stimulus flow to consciousness engines.
+
+**Evidence:**
+```bash
+# Direct API test - times out after 5s
+$ curl -X POST http://localhost:8000/api/engines/ada/inject \
+  -H "Content-Type: application/json" \
+  -d '{"stimulus_id":"test","text":"test","severity":0.5,"origin":"manual"}' \
+  --max-time 5
+# Result: 5.276s timeout
+
+# Queue poller logs show systematic timeouts
+2025-10-25 20:31:21 - ERROR - [QueuePoller] Failed to process line 668: timed out
+2025-10-25 20:31:52 - ERROR - [QueuePoller] Failed to process line 669: timed out
+```
+
+**Impact:**
+- **Zero stimuli reaching consciousness engines** - all engines dormant except Felix (screenshots)
+- Queue poller running but all injections timeout
+- Dual-energy fix verification BLOCKED (can't test without working stimulus injection)
+- Dashboard integration BLOCKED (no activity = no events to visualize)
+
+**Root Cause Unknown - Needs Investigation:**
+- Inject endpoint in `control_api.py` or `websocket_server.py` may be blocking on async operation
+- Possible deadlock in engine injection path
+- Could be related to persistence layer (FalkorDB connection?)
+
+**Diagnostic Next Steps:**
+1. Check websocket_server logs for inject endpoint errors
+2. Test if healthz responds (also failed with invalid JSON)
+3. Check if engines are in locked/blocked state
+4. May need to restart websocket_server to recover
+
+**Assignment:** Victor (operational debugging) + Atlas (if code fix needed)
+
+**Context:** This blocks verification of dual-energy fix (consciousness_engine_v2.py:535-539) which was the original goal after MPSv3 stabilization.
+
+---
+
 ## 2025-10-25 20:15 - Atlas: ⚠️ BLOCKER - File Watcher Not Running in Production
 
 **Status:** Nicolas discovered MPSv3 file watcher isn't running - dashboard not auto-reloading, no FileWatcher logs.

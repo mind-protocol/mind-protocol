@@ -56,7 +56,7 @@
 
 * **Nodes** (ideas, memories, code, etc.) have **activation energy** (E_i(t)) and a **weight** (\log W_i).
 * **Links** connect nodes; during a **stride**, some (ΔE) flows across a link from source node to target node. Links store **affect (`energy`)** and **telemetry** (how effective they’ve been).
-* **Subentities** are neighborhoods (functional or semantic). They are **nodes that group nodes** via **BELONGS_TO (Deprecated - now "MEMBER_OF")** with weights. An subentity’s activation (E_{\text{subentity}}) is **derived** from member nodes.
+* **Subentities** are neighborhoods (functional or semantic). They are **nodes that group nodes** via **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")** with weights. An subentity’s activation (E_{\text{subentity}}) is **derived** from member nodes.
 * **Stimuli** from “reality” inject activation energy into **matched nodes** (using embeddings + budget derived from gaps/health).
 * **Traversal**: Active subentities make **valence‑weighted choices** (7 hungers) to send energy along links **within** the subentity or **across** subentity boundaries.
 * **Learning**: After strides, we update link/node weights from outcomes (flip causality, ROI, TRACE reinforcement).
@@ -120,7 +120,7 @@ Subentity {
 ### 2.4 Membership and subentity relations
 
 ```
-BELONGS_TO (Deprecated - now "MEMBER_OF") (Node -> Subentity) {
+BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") (Node -> Subentity) {
   weight                       # membership strength ∈ [0,1]
 }
 
@@ -283,7 +283,7 @@ Combine with **surprise‑gated** weights (derived from EMAs of each channel):
 2. **Split budget** with hunger gates into within/between.
 3. **Between**: for each active subentity, pick a target subentity by subentity‑valence; choose representatives; run **atomic selector**; stride; record boundary stride with **actual (ΔE)**.
 4. **Within**: for each active subentity, spread among active members; run selector with **within filter**; stride.
-5. **Learning**: boundary precedence, link updates, node weight updates, membership adaptation (Hebbian on BELONGS_TO (Deprecated - now "MEMBER_OF")).
+5. **Learning**: boundary precedence, link updates, node weight updates, membership adaptation (Hebbian on BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")).
 6. **WM**: greedy subentity‑first with diversity.
 7. **Decay**, finish frame.
 
@@ -315,7 +315,7 @@ Combine with **surprise‑gated** weights (derived from EMAs of each channel):
 
 * [ ] Remove any **per‑subentity node energy arrays**; replace with single (E_i) and **Subentity aggregation**.
 * [ ] Ensure **links** have **no activation buffer**; keep `energy` (affect), `ema_flow`, `phi_max`, `precedence_ema`, counts.
-* [ ] Add **Subentity** nodes + **BELONGS_TO (Deprecated - now "MEMBER_OF")** + **RELATES_TO**; compute subentity energy/threshold each frame.
+* [ ] Add **Subentity** nodes + **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")** + **RELATES_TO**; compute subentity energy/threshold each frame.
 * [ ] Implement **boundary stride** recording and **precedence** update with **actual (ΔE)** and **half‑life EMA**.
 * [ ] WM selection: **subentity‑first**, greedy + diversity, learned token estimates (no hard 200/40/30 constants).
 * [ ] Replace any **fixed thresholds/alphas** with **percentiles/z‑scores/half‑lives**.

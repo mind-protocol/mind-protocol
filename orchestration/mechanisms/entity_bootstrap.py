@@ -5,7 +5,7 @@ Config-Driven Bootstrap (2025-10-24 Architecture Correction):
 1. Load functional entities from config/functional_entities.yml (NOT Mechanism nodes)
 2. Seed memberships via keyword matching against node name/description
 3. Create semantic entities via clustering on embeddings (when available)
-4. Create BELONGS_TO (Deprecated - now "MEMBER_OF") and RELATES_TO links
+4. Create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") and RELATES_TO links
 
 Key insight: Functional entities (The Translator, The Architect, etc.) are
 cognitive modes/patterns, not algorithms. They bootstrap from configuration
@@ -152,10 +152,10 @@ class EntityBootstrap:
 
     def _seed_memberships_from_keywords(self, subentity: Subentity, entity_def: dict) -> int:
         """
-        Seed BELONGS_TO (Deprecated - now "MEMBER_OF") memberships via keyword matching.
+        Seed BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships via keyword matching.
 
         Scores each node by keyword hits in name+description, converts to weight
-        via squash function, creates BELONGS_TO (Deprecated - now "MEMBER_OF") links.
+        via squash function, creates BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links.
 
         Args:
             subentity: Entity to seed memberships for
@@ -206,7 +206,7 @@ class EntityBootstrap:
             return 0
 
         # Convert scores to membership weights via squash function
-        # Then create BELONGS_TO (Deprecated - now "MEMBER_OF") links
+        # Then create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
         memberships_created = 0
         for node, score in hits:
             weight = self._squash(score)
@@ -438,7 +438,7 @@ class EntityBootstrap:
         # Add subentity to graph
         self.graph.add_entity(subentity)
 
-        # Create BELONGS_TO (Deprecated - now "MEMBER_OF") links
+        # Create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
         for node in member_nodes:
             # Compute distance to centroid
             if hasattr(node, 'embedding') and node.embedding is not None:
@@ -640,6 +640,6 @@ if __name__ == "__main__":
     print(f"Functional subentities: {stats['functional_entities']}")
     print(f"Semantic subentities: {stats['semantic_entities']}")
     print(f"Total subentities: {stats['total_entities']}")
-    print(f"BELONGS_TO (Deprecated - now "MEMBER_OF") links: {stats['belongs_to_links']}")
+    print(f"BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links: {stats['belongs_to_links']}")
     print(f"RELATES_TO links: {stats['relates_to_links']}")
     print("="*70)

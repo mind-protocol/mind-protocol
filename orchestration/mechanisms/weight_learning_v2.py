@@ -250,9 +250,9 @@ class WeightLearnerV2:
             if not node_id:
                 continue
 
-            # Get BELONGS_TO (Deprecated - now "MEMBER_OF") memberships from node
+            # Get BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships from node
             # (Assumes memberships stored in node.properties or similar)
-            # TODO: Get from graph.get_links_by_type(BELONGS_TO (Deprecated - now "MEMBER_OF")) filtered by node_id
+            # TODO: Get from graph.get_links_by_type(BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")) filtered by node_id
             memberships = node.get('memberships', {})  # {entity_id: weight}
 
             # Filter to active entity context

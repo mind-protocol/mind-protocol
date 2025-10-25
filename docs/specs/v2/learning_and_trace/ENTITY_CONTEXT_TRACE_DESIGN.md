@@ -122,7 +122,7 @@ x.log_weight_overlays[E] = clamp(
 ```
 
 **Membership Weight Modifier:**
-- **Node:** `m[i,E]` (BELONGS_TO (Deprecated - now "MEMBER_OF") weight)
+- **Node:** `m[i,E]` (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weight)
 - **Link:** `min(m[src,E], m[tgt,E])` or smoother function
 
 **Overlay Cap:** Learned cap or percentile-based winsorization (no fixed constants).
@@ -272,7 +272,7 @@ CREATE TABLE weight_overlays (
 
 **Phase 2: WeightLearner Integration**
 - [ ] Add `entity_context` parameter to `apply_trace_updates()`
-- [ ] Implement `weight_membership_modifier()` using BELONGS_TO (Deprecated - now "MEMBER_OF") weights
+- [ ] Implement `weight_membership_modifier()` using BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights
 - [ ] Implement dual update (global + overlays)
 - [ ] Implement overlay capping (learned or percentile-based)
 - [ ] Unit tests for membership-weighted updates
@@ -303,7 +303,7 @@ CREATE TABLE weight_overlays (
 
 **Matches design pillars:**
 - ✅ Single energy per node (no per-entity energies)
-- ✅ Entities are weighted neighborhoods (BELONGS_TO (Deprecated - now "MEMBER_OF") as localization mask)
+- ✅ Entities are weighted neighborhoods (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") as localization mask)
 - ✅ Two-scale traversal (entity selection then atomic traversal with entity view)
 - ✅ TRACE reinforcement flows to weights (both global and local)
 

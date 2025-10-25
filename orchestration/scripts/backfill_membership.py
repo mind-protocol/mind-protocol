@@ -1,13 +1,13 @@
 """
 Backfill Entity Membership for Existing Nodes
 
-Assigns primary_entity and BELONGS_TO (Deprecated - now "MEMBER_OF") links for all nodes missing membership.
+Assigns primary_entity and BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links for all nodes missing membership.
 
 For nodes without entity attribution:
 1. Query node creation context if available
 2. Default to 'translator' entity (most common consciousness work entity)
 3. Set primary_entity property
-4. Create BELONGS_TO (Deprecated - now "MEMBER_OF") link with weight=1.0, role='primary'
+4. Create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link with weight=1.0, role='primary'
 
 Usage:
     python orchestration/scripts/backfill_membership.py [--graph GRAPH_NAME] [--dry-run]
@@ -123,7 +123,7 @@ def assign_membership(
     MATCH (n:Node {name: $node_name})
     MATCH (e:Subentity {id: $entity_id})
     SET n.primary_entity = $entity_id
-    MERGE (n)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(e)
+    MERGE (n)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(e)
     SET r.weight = 1.0, r.role = 'primary'
     RETURN n.name, e.id
     """

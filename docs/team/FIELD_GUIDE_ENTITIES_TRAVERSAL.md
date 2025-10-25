@@ -15,7 +15,7 @@
   `link.energy` = *affect metadata* (how urgent/intense the relation feels), used in **valence**, not as a budget.
 
 * **T2 — Entities = neighborhoods.**
-  An **Entity** is a neighborhood (topic or role) defined by **memberships** from nodes (`BELONGS_TO (Deprecated - now "MEMBER_OF")` with weights).
+  An **Entity** is a neighborhood (topic or role) defined by **memberships** from nodes (`BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")` with weights).
   Entities live in the DB as first‑class nodes (`Entity`), with fields like `centroid_embedding`, `log_weight`, `color`, etc.
 
 * **T3 — "Sub‑entity" = an **active** Entity this frame.**
@@ -250,7 +250,7 @@ Update `entity_bootstrap.py`:
 
 * **Do not** query for Mechanism nodes.
 * Load config, **create Entity nodes** if missing (idempotent upsert).
-* Seed **`BELONGS_TO (Deprecated - now "MEMBER_OF")`** memberships by **keyword matching** against node `name`/`description`:
+* Seed **`BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")`** memberships by **keyword matching** against node `name`/`description`:
 
   ```
   score_i,e = sigmoid( tf-idf(keyword hits) )  → normalize per node: Σ_e m_i,e ≤ 1
@@ -307,7 +307,7 @@ Update `entity_bootstrap.py`:
 
 **Relations**
 
-* `BELONGS_TO (Deprecated - now "MEMBER_OF")(node→entity){weight}`
+* `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(node→entity){weight}`
 * `RELATES_TO(entity↔entity){semantic_distance, precedence_ema, flow_ema, dominance}`
 
 ---

@@ -205,7 +205,7 @@ class Graph:
 
         Supports:
         - Node -> Node links (ENABLES, BLOCKS, etc.)
-        - Node -> Subentity links (BELONGS_TO (Deprecated - now "MEMBER_OF"))
+        - Node -> Subentity links (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
         - Subentity -> Subentity links (RELATES_TO)
 
         Args:

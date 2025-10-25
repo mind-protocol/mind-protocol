@@ -667,3 +667,8 @@
 {"type": "ambient_thought", "content": "Fresh test with queue poller running", "citizen_id": "ada", "timestamp": "2025-10-25T18:30:45Z"}
 {"stimulus_id": "stim_1761417074269", "timestamp_ms": 1761417074269, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417072218.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"stimulus_id": "test_1761417104", "citizen_id": "ada", "text": "Properly formatted test stimulus for dual-energy verification", "severity": 0.5, "origin": "manual_test", "timestamp_ms": 1761417104975}
+{"stimulus_id": "stim_1761417158608", "timestamp_ms": 1761417158608, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417156548.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761417217518", "timestamp_ms": 1761417217518, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417215492.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761417245226", "timestamp_ms": 1761417245226, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417243115.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761417277471", "timestamp_ms": 1761417277471, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417275431.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"stimulus_id": "stim_1761417306979", "timestamp_ms": 1761417306979, "citizen_id": "felix", "text": "Screenshot: screenshot-1761417304942.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}

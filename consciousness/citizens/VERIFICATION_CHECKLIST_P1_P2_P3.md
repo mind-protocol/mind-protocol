@@ -85,8 +85,8 @@ MATCH (e:Subentity) RETURN count(e) as entity_count
 // List all entities
 MATCH (e:Subentity) RETURN e.id, e.role_or_topic, e.member_count
 
-// Check BELONGS_TO (Deprecated - now "MEMBER_OF") links
-MATCH (:Node)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(:Subentity) RETURN count(r) as membership_count
+// Check BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
+MATCH (:Node)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(:Subentity) RETURN count(r) as membership_count
 // Expected: 357
 
 // Verify entity properties

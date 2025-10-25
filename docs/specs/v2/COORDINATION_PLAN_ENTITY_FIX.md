@@ -111,7 +111,7 @@ class EntityBootstrap:
         Assign nodes to entity based on keyword matching.
 
         Searches node name + description for keyword hits.
-        Creates BELONGS_TO (Deprecated - now "MEMBER_OF") links with weights based on match score.
+        Creates BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links with weights based on match score.
         """
         keyword_list = keywords.get("any", [])
         if not keyword_list:
@@ -130,7 +130,7 @@ class EntityBootstrap:
             if score > 0:
                 hits.append((node, score))
 
-        # Create BELONGS_TO (Deprecated - now "MEMBER_OF") links
+        # Create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
         for node, score in hits:
             weight = self._squash_score(score)  # 1 - exp(-score)
             self.graph.upsert_belongs_to(node.id, entity.id, weight=weight)
@@ -148,13 +148,13 @@ class EntityBootstrap:
 
         # Calculate totals
         for link in self.graph.links.values():
-            if link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF")":
+            if link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")":
                 node_id = link.source
                 node_totals[node_id] = node_totals.get(node_id, 0) + link.weight
 
         # Normalize if > 1
         for link in self.graph.links.values():
-            if link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF")":
+            if link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")":
                 total = node_totals.get(link.source, 1.0)
                 if total > 1.0:
                     link.weight = link.weight / total
@@ -306,7 +306,7 @@ grep "entity_bootstrap" launcher.log
 **Verify via FalkorDB:**
 ```cypher
 MATCH (e:Entity) RETURN e.key, e.kind, e.energy, e.threshold
-MATCH ()-[r:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(:Entity) RETURN count(r)
+MATCH ()-[r:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(:Entity) RETURN count(r)
 ```
 
 ### After Phase 3 Complete:

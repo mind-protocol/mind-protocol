@@ -85,7 +85,7 @@ WARNING:orchestration.libs.entity_context_trace_integration:[EntityContext] No e
 INFO:orchestration.libs.trace_capture:[TraceCapture] Entity context derived: []
 ```
 
-Entity membership (BELONGS_TO (Deprecated - now "MEMBER_OF") links) is not being created when nodes form.
+Entity membership (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links) is not being created when nodes form.
 
 ### Root Cause
 
@@ -109,7 +109,7 @@ Entity membership (BELONGS_TO (Deprecated - now "MEMBER_OF") links) is not being
 3. **Membership weight calculation:**
    - Current: hardcoded `weight=1.0`
    - **Enhance:** Weight proportional to entity's WM activation (0.5-1.0 range)
-   - Secondary entities: If node relevant to multiple entities, create multiple BELONGS_TO (Deprecated - now "MEMBER_OF") links with lower weights
+   - Secondary entities: If node relevant to multiple entities, create multiple BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links with lower weights
 
 **File:** `orchestration/adapters/api/control_api.py`
 
@@ -126,21 +126,21 @@ Entity membership (BELONGS_TO (Deprecated - now "MEMBER_OF") links) is not being
 Backfill entity membership for existing nodes created before P1.
 
 Strategy:
-1. Query all nodes without BELONGS_TO (Deprecated - now "MEMBER_OF") links
+1. Query all nodes without BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
 2. For each node, find nearest TRACE timestamp
 3. Query WM snapshot from that time (via telemetry or consciousness engine state)
 4. Derive primary entity from WM
-5. Create BELONGS_TO (Deprecated - now "MEMBER_OF") link with derived weight
+5. Create BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link with derived weight
 6. Fallback: If no WM data, assign to entity_citizen_{citizen}_self
 """
 ```
 
 ### Acceptance Criteria
 
-✅ **BELONGS_TO (Deprecated - now "MEMBER_OF") links exist:** `MATCH ()-[:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(:Subentity) RETURN count(*) > 0`
+✅ **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links exist:** `MATCH ()-[:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(:Subentity) RETURN count(*) > 0`
 ✅ **Entity context populated:** Weight learner logs show `"Entity context derived: [entity_X, entity_Y, ...]"` (not empty array)
 ✅ **Drill-down functional:** `curl http://localhost:8001/api/entity/entity_citizen_felix_translator/members` returns nodes with membership_weight > 0
-✅ **Backfill complete:** All existing nodes (>2000 across citizens) have at least one BELONGS_TO (Deprecated - now "MEMBER_OF") link
+✅ **Backfill complete:** All existing nodes (>2000 across citizens) have at least one BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link
 
 ### Test Plan
 
@@ -157,7 +157,7 @@ from falkordb import FalkorDB
 db = FalkorDB(host='localhost', port=6379)
 for citizen in ['felix', 'atlas', 'iris', 'luca', 'ada', 'victor']:
     g = db.select_graph(f'citizen_{citizen}')
-    result = g.query('MATCH ()-[:BELONGS_TO (Deprecated - now "MEMBER_OF")]->(e:Subentity) RETURN e.id, count(*) as members ORDER BY members DESC')
+    result = g.query('MATCH ()-[:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(e:Subentity) RETURN e.id, count(*) as members ORDER BY members DESC')
     print(f'{citizen}: {result.result_set}')
 "
 

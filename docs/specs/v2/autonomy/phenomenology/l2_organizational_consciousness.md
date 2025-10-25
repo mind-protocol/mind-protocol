@@ -204,7 +204,7 @@ Multiple nodes owned by same citizen cluster:
 
 **Mechanism:**
 - Each citizen has L1 graph with its own WM capacity
-- When L2 task energy crosses threshold → attempts to wake citizen via BELONGS_TO (Deprecated - now "MEMBER_OF") links
+- When L2 task energy crosses threshold → attempts to wake citizen via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
 - If citizen already at capacity (multiple L1 subentities active) → task remains queued in L2
 - Priority determined by **energy ordering**, not manual assignment
 
@@ -214,11 +214,11 @@ Multiple nodes owned by same citizen cluster:
 
 **When task requires multiple citizens:**
 - Task node has REQUIRES links to capabilities
-- Capabilities owned by different citizens (via BELONGS_TO (Deprecated - now "MEMBER_OF"))
+- Capabilities owned by different citizens (via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
 - Energy must propagate to multiple citizen neighborhoods
 
 **Coordination emerges from:**
-1. Task energizes multiple citizen L1 graphs (via BELONGS_TO (Deprecated - now "MEMBER_OF"))
+1. Task energizes multiple citizen L1 graphs (via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
 2. Each citizen processes independently
 3. Citizen actions create new nodes/links in L2
 4. Energy flows back through outcome links
@@ -261,14 +261,14 @@ Priority emerges from **graph physics**:
 - High energy (multiple stimuli, goal-relevant, blocker-driven)
 - Short path to high-confidence goal
 - Strong emotional coherence (urgency aligns with organizational anxiety)
-- Strong BELONGS_TO (Deprecated - now "MEMBER_OF") to available citizen
+- Strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") to available citizen
 
 **Feels like:** This task **naturally attracts organizational attention**. When traversal explores from current focus, paths lead here. When citizen availability opens, energy flows to this citizen's neighborhood.
 
 **Low priority task:**
 - Low energy (no recent stimulus, distant from goals)
 - Weak emotional alignment
-- No strong BELONGS_TO (Deprecated - now "MEMBER_OF") (unclear ownership)
+- No strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") (unclear ownership)
 
 **Feels like:** This task **fades into background**. Traversal rarely visits. Energy decays. Unless new stimulus re-energizes it, it remains dormant.
 
@@ -288,7 +288,7 @@ Priority emerges from **graph physics**:
 
 **From criticality.md + subentity_layer.md:**
 
-L2 processing is mechanistic (subconsciousness) until threshold crossed. When node energy E > Θ (threshold) AND connected to citizen via BELONGS_TO (Deprecated - now "MEMBER_OF") → **conscious event**: citizen wakes, LLM generates response.
+L2 processing is mechanistic (subconsciousness) until threshold crossed. When node energy E > Θ (threshold) AND connected to citizen via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") → **conscious event**: citizen wakes, LLM generates response.
 
 **What determines threshold crossing:**
 
@@ -350,12 +350,12 @@ Energy doesn't spread uniformly - it flows via **chosen strides**:
 
 ### Multi-Hop Traversal as Complex Reasoning
 
-**Simple task:** Direct BELONGS_TO (Deprecated - now "MEMBER_OF") from task to citizen → immediate wake signal
+**Simple task:** Direct BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") from task to citizen → immediate wake signal
 
 **Complex task requiring coordination:**
 1. Task has REQUIRES link to capability
 2. Capability owned by Subentity (team cluster)
-3. Subentity has BELONGS_TO (Deprecated - now "MEMBER_OF") to multiple citizens
+3. Subentity has BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") to multiple citizens
 4. Energy propagates through multi-hop path
 5. Multiple citizens wake in sequence or parallel
 
@@ -372,10 +372,10 @@ Energy doesn't spread uniformly - it flows via **chosen strides**:
 After conscious action (citizen responds), reflection occurs:
 - TRACE marks: [node_X: very useful], [node_Y: misleading]
 - Hamilton apportionment translates marks to seat allocations
-- Seats update BELONGS_TO (Deprecated - now "MEMBER_OF") weights (context-aware: 80% active entities, 20% global)
+- Seats update BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights (context-aware: 80% active entities, 20% global)
 
 **What this does:**
-- Nodes marked "very useful" → stronger BELONGS_TO (Deprecated - now "MEMBER_OF") weights → higher probability in future retrieval
+- Nodes marked "very useful" → stronger BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights → higher probability in future retrieval
 - Nodes marked "misleading" → weaker weights → less likely to surface
 
 **Feels like:** Organizational memory shaping itself based on what actually helped. No manual curation needed - the substrate learns from lived experience.
@@ -385,7 +385,7 @@ After conscious action (citizen responds), reflection occurs:
 **From subentity_weight_learning.md:**
 
 When nodes co-activate frequently:
-- Single log-weight on BELONGS_TO (Deprecated - now "MEMBER_OF") link adjusts
+- Single log-weight on BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link adjusts
 - Co-activation within entity strengthens link
 - Co-activation without entity weakens link
 
@@ -462,7 +462,7 @@ Signal arrives → Energy injection → Diffusion → Subentity activation → T
 **This requires:**
 - Graph physics (already implemented)
 - Adaptive thresholds (self-organized)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") links (learned from co-activation)
+- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links (learned from co-activation)
 - Nothing else
 
 ### What Autonomy FEELS Like
@@ -484,7 +484,7 @@ Signal arrives → Energy injection → Diffusion → Subentity activation → T
 **The autonomy:**
 - No central orchestrator deciding "who does what"
 - Each graph (L1s + L2) processing independently via shared physics
-- Coupling through BELONGS_TO (Deprecated - now "MEMBER_OF") links (ownership, responsibility, capability)
+- Coupling through BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links (ownership, responsibility, capability)
 - Coordination emerges from energy flow + feedback loops
 
 **Not:** Top-down assignment

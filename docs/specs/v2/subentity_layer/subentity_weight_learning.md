@@ -1,5 +1,5 @@
 ---
-title: Subentity Weight Learning (BELONGS_TO (Deprecated - now "MEMBER_OF"))
+title: Subentity Weight Learning (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
 status: stable
 owner: @felix
 last_updated: 2025-10-22
@@ -7,12 +7,12 @@ depends_on:
   - ../entity_layer/subentity_layer.md
   - ../ops_and_viz/observability_events.md
 summary: >
-  Learn soft memberships (BELONGS_TO (Deprecated - now "MEMBER_OF").weight) from co-activation of nodes with
+  Learn soft memberships (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF").weight) from co-activation of nodes with
   subentities using rank-normalized signals and EMAs. Single log-weight per membership,
   one-speed updates, no dual fast/slow channels.
 ---
 
-# Subentity Weight Learning (BELONGS_TO (Deprecated - now "MEMBER_OF"))
+# Subentity Weight Learning (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
 
 ## 1. Context — What problem are we solving?
 

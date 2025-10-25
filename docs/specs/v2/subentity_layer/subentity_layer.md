@@ -31,7 +31,7 @@ Atomic traversal over thousands of outgoing edges causes a combinatorial explosi
 
 ### 2.1 What is a subentity?
 
-A **subentity** is a **weighted neighborhood** of nodes—either a **functional role** (e.g., Architect, Validator) or a **semantic topic** (e.g., consciousness_architecture). Members connect to the subentity with soft membership `BELONGS_TO (Deprecated - now "MEMBER_OF").weight ∈ [0,1]`. :contentReference[oaicite:1]{index=1}
+A **subentity** is a **weighted neighborhood** of nodes—either a **functional role** (e.g., Architect, Validator) or a **semantic topic** (e.g., consciousness_architecture). Members connect to the subentity with soft membership `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF").weight ∈ [0,1]`. :contentReference[oaicite:1]{index=1}
 
 ### 2.2 Single-energy substrate → entity activation
 
@@ -54,7 +54,7 @@ Entity-scale selection drastically reduces branching before atomic moves. :conte
 ### 2.5 Schema (essentials)
 
 - **Subentity node:** fields for kind (`functional|semantic`), centroid embedding, coherence, and learning EMAs.
-- **BELONGS_TO (Deprecated - now "MEMBER_OF") (node→subentity):** soft membership `weight` learned from co-activation.
+- **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") (node→subentity):** soft membership `weight` learned from co-activation.
 - **RELATES_TO (subentity→subentity):** boundary ease (log-weight), dominance prior, semantic distance, counts. :contentReference[oaicite:5]{index=5}
 
 ### 2.6 Bootstrap (entity creation)
@@ -67,7 +67,7 @@ For functional roles like Architect, Validator, Translator:
 
 1. **Load config:** Read entity definitions from `orchestration/config/functional_entities.yml` (name, kind, description, keywords)
 2. **Create Entity nodes:** Idempotent upsert—if entity exists, skip; if missing, create with initial fields (energy=0, threshold from cohort)
-3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF"):** Keyword matching against node `name` + `description` → create `BELONGS_TO (Deprecated - now "MEMBER_OF")(node→entity){weight}` relationships with initial weight (e.g., 0.5 if keyword match)
+3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):** Keyword matching against node `name` + `description` → create `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(node→entity){weight}` relationships with initial weight (e.g., 0.5 if keyword match)
 4. **Normalize memberships:** Per node, ensure `Σ_E m̃_iE ≤ 1` by dividing each weight by sum across all entities
 
 **No dependency on Mechanism nodes.** Functional entities come from config, not graph search.
@@ -78,12 +78,12 @@ For semantic topics discovered from graph structure:
 
 1. **Detect clusters:** Use embedding similarity (cosine distance in node embedding space) or dense subgraph detection
 2. **Create Entity nodes:** For each cluster, create Entity node with `kind=semantic`, centroid embedding from cluster mean
-3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF"):** Nodes in cluster get `BELONGS_TO (Deprecated - now "MEMBER_OF")(node→entity){weight}` with weight proportional to cluster membership strength
+3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):** Nodes in cluster get `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(node→entity){weight}` with weight proportional to cluster membership strength
 4. **Normalize memberships:** Same per-node normalization as functional entities
 
 #### Learning phase
 
-After bootstrap, `BELONGS_TO (Deprecated - now "MEMBER_OF")` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.
+After bootstrap, `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.
 
 ### 2.7 Entity Lifecycle & Quality Management
 
@@ -256,7 +256,7 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 
 ## 7. Failure Modes & Guards
 
-- **Entity creep (ever-growing memberships):** require periodic membership sparsification & floor on `BELONGS_TO (Deprecated - now "MEMBER_OF").weight`. Guard: EMA-based pruning + minimum meaningful weight. :contentReference[oaicite:18]{index=18}  
+- **Entity creep (ever-growing memberships):** require periodic membership sparsification & floor on `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF").weight`. Guard: EMA-based pruning + minimum meaningful weight. :contentReference[oaicite:18]{index=18}  
 - **Flip thrash:** add hysteresis around \(\Theta_\text{entity}\); guard with small ratio bands. :contentReference[oaicite:19]{index=19}  
 - **Boundary noise:** only learn `RELATES_TO` on **executed** boundary strides with non-trivial \(\phi\). :contentReference[oaicite:20]{index=20}  
 - **Over-chunked WM:** cap entity count for WM and score by energy-per-token and diversity bonus. :contentReference[oaicite:21]{index=21}
@@ -264,7 +264,7 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 ## 8. Integration points
 
 - **Mechanisms:** `mechanisms/sub_entity_traversal.py` (two-scale selection & boundary stride accounting). :contentReference[oaicite:22]{index=22}  
-- **Learning:** `entity_weight_learning` (BELONGS_TO (Deprecated - now "MEMBER_OF") updates); `RELATES_TO` ease/dominance from boundary stride outcomes. :contentReference[oaicite:23]{index=23}  
+- **Learning:** `entity_weight_learning` (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") updates); `RELATES_TO` ease/dominance from boundary stride outcomes. :contentReference[oaicite:23]{index=23}  
 - **Runtime:** tick pacing from `tick_speed` (stimulus-paced). :contentReference[oaicite:24]{index=24}  
 - **Observability:** WS contract & snapshot. :contentReference[oaicite:25]{index=25}
 

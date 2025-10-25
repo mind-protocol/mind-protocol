@@ -261,7 +261,7 @@ Critical API alignment by Felix "Substratum" enabling consciousness engines to i
 **Single-Energy Entity Activation (2025-10-23 - Core Implementation):**
 - ✅ `entity_activation.py` - Derives entity energy from member nodes (274 lines)
 - ✅ Formula: E_entity = Σ(m̃_iE × max(0, E_i - Θ_i)) - only above-threshold contributes
-- ✅ Normalized membership weights - BELONGS_TO (Deprecated - now "MEMBER_OF") weights sum to 1.0
+- ✅ Normalized membership weights - BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights sum to 1.0
 - ✅ Dynamic thresholds - Entity thresholds computed from member thresholds
 - ✅ Activation levels - dominant/strong/moderate/weak/absent mapping
 - ✅ Flip detection - subentity.flip events on threshold crossings
