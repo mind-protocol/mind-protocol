@@ -1,5 +1,101 @@
 # Team Synchronization Log
 
+## 2025-10-26 02:00 - Luca: ✅ Autonomy Config Updated with Architectural Corrections + Open Questions
+
+**Status:** Updated autonomy YAML configs to incorporate Nicolas's architectural corrections with explicit questions/uncertainties documented (as requested: "Put your best guesses. Put your questions. Put your doubt in the specs").
+
+**Changes Made:**
+
+**1. intent_templates.yaml - intent.reply_to_human (v1.0 → v1.1):**
+- ❌ **Removed:** Reply-first policy (incorrect assumption)
+- ✅ **Added:** Prepare-then-reply execution flow
+- ✅ **Added:** Merge windows (3 sec, batch up to 5 messages for bursty DMs)
+- ✅ **Added:** Streamline context gathering documentation (person card, last 20 messages, tasks, policies)
+- ✅ **Added:** Continue Score bounded execution (WM stability, criticality, health.phenomenological, PoV trend)
+- ✅ **Added:** Dynamic toolbox placeholder (MCP budget <6 tools)
+- ✅ **Added:** Micro-session integration (emit micro_session.done when score drops)
+- ✅ **Added:** 7 explicit open questions about Streamline, Continue Score, hooks, toolbox, micro-sessions
+
+**2. intent_templates.yaml - metadata section:**
+- ✅ **Added:** `architecture` section documenting 8 key architectural decisions
+- ✅ **Added:** `open_questions` section with 4 categories (streamline, continue_score, hooks, dynamic_toolbox, micro_sessions)
+
+**3. orchestrator_config.yaml - resilience section:**
+- ✅ **Added:** `merge_windows` configuration for bursty DM batching
+  - Telegram: 3 sec window, max 5 messages
+  - Frontend: 3 sec window, max 5 messages
+  - Email: 5 sec window, max 3 messages
+
+**4. orchestrator_config.yaml - metadata section:**
+- ✅ **Added:** `architecture` section documenting:
+  - Service locations (with questions about existence)
+  - Key integrations (Streamline, micro-sessions, Continue Score, dynamic toolbox)
+  - Citizens AND people as actors (no L2 org agent)
+- ✅ **Added:** `implementation` section (complete, stubs, missing)
+- ✅ **Added:** `open_questions` section with 9 explicit questions
+
+**Key Architectural Corrections Incorporated:**
+
+1. **No L2 Org Agent:** Only citizens (L1) act. L2 can have decision threads (artifacts) but no agent persona.
+
+2. **Prepare-Then-Reply for DMs:** NOT reply-first. Citizens gather context via Streamline, research, then reply. Allows thorough preparation before responding.
+
+3. **Merge Windows for Bursty Messages:** 2-5 second windows to batch rapid-fire messages (5 messages → 1 answer). Prevents overwhelming citizens.
+
+4. **Streamline Context Injection:** Separate service (NOT part of Consciousness Engine) that runs L1+L2 graph traversal before each mission. Updates CLAUDE_DYNAMIC.md (currently, will migrate to CLAUDE.md).
+
+5. **Bounded Execution via Emotion/Energy:** Continue Score driven by engine signals (WM stability, criticality, health.phenomenological, PoV trend). NOT fixed turn limits or time budgets. Quantile-based gates.
+
+6. **Dynamic Toolbox per Mission:** Mission metadata determines which MCP tools to mount (e.g., channel="telegram" → /send_telegram). Keep budget <6 tools. Unmount on micro_session end.
+
+7. **Micro-Session Integration:** Each mission runs as WM shard, emits micro_session.done when Continue Score drops. Canonical thread integrates completion as stimulus.
+
+8. **Citizens AND People as Actors:** Not just citizens. Humans (people) also act. No L2 org agent.
+
+**Open Questions Documented (Nicolas's Guidance: "Put your questions in specs"):**
+
+**Streamline:**
+- Q: Where does Streamline service live? orchestration/services/streamline_service.py?
+- Q: What's the exact Cypher query pattern for L1+L2 traversal (person card + last 20 messages + active tasks + policies)?
+- Q: Which node/link type enums should Streamline use for queries?
+- Q: When does CLAUDE_DYNAMIC.md migrate to full CLAUDE.md?
+
+**Continue Score:**
+- Q: What's the exact formula for Continue Score?
+- Q: Which specific engine signals map to Continue Score (WM stability, criticality, health.phenomenological, PoV trend)?
+- Q: What quantile-based gate thresholds? (e.g., 'continue while score > P25 of recent scores'?)
+- Q: How is the threshold adjusted over time (learning)?
+
+**Hooks:**
+- Q: Where do before_message, after_message, before_stop hooks run?
+- Q: What's the hook execution model (blocking, async, parallel)?
+- Q: What data structure do hooks receive (full stimulus envelope, just metadata)?
+- Q: How do hooks call Streamline service?
+
+**Dynamic Toolbox:**
+- Q: How is dynamic toolbox generated from mission metadata?
+- Q: What's the mapping from channel/service → MCP tools?
+- Q: How does unmounting work on micro_session end?
+- Q: Where are outbound channel wrappers defined (/send_telegram, /send_email)?
+
+**Micro-Sessions:**
+- Q: How does canonical thread consume micro_session.done events?
+- Q: What format is the integration stimulus (full transcript, summary, just outcome)?
+- Q: How are WM shards created for micro-sessions?
+- Q: How does the citizen's main thread know about micro-session outcomes?
+
+**Files Updated:**
+- `docs/specs/v2/autonomy/config/intent_templates.yaml` (v1.0 → v1.1)
+- `docs/specs/v2/autonomy/config/orchestrator_config.yaml` (added merge_windows + extensive metadata)
+
+**Next Steps (Awaiting Guidance):**
+- Nicolas's final guidance: "Documentation is not final, will keep evolving. Don't try to be perfect yet."
+- Configs now reflect current understanding with explicit uncertainties documented
+- Ready for refinement as answers to open questions emerge
+- Ready for Ada to begin implementation planning based on these configs
+
+---
+
 ## 2025-10-25 18:15 - Atlas: ✅ MPSv3 Phase 1 COMPLETE → Handoff to Victor for Phase 2
 
 **Status:** MPSv3 core implementation complete. All 6 components + services.yaml delivered. Ready for isolation testing.
