@@ -1,6 +1,6 @@
 # Dynamic Context for felix
 
-**Last Updated:** 2025-10-25 17:53:31 UTC
+**Last Updated:** 2025-10-25 17:57:28 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -10,19 +10,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -42,19 +42,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -74,19 +74,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -106,19 +106,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -138,19 +138,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -170,19 +170,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -202,19 +202,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
@@ -234,19 +234,19 @@
 
 **Criticality:** 0.50
 **Activation Threshold:** 0.60
-**Currently Active Nodes:** 139
+**Currently Active Nodes:** 135
 
 **Recent Activation Changes:**
+- debugging_discipline: deactivated (activity=0.60)
+- consciousness_substrate_is_not_optional_documentation: deactivated (activity=0.60)
+- systematic_format_use_requirement: deactivated (activity=0.60)
+- felix_architect_entity: deactivated (activity=0.60)
 - felix_translator_entity: deactivated (activity=0.49)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
 - stop_hook_timing_understanding: deactivated (activity=0.50)
 - enum_migration_requires_reference_sweep: deactivated (activity=0.50)
-- v2_initialization_verified: deactivated (activity=0.50)
-- systematic_trace_execution: deactivated (activity=0.50)
-- hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.65)
 
 **Active Node Focus:**
 - v2_runtime_verification (activity=0.00)
