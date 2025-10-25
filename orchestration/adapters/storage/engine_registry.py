@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 # Global registry: citizen_id -> ConsciousnessEngineV2 instance
 _ENGINES: Dict[str, 'ConsciousnessEngineV2'] = {}
 
+# Aliases for backward compatibility
+CONSCIOUSNESS_ENGINES = _ENGINES  # Legacy name used by websocket_server
+CONSCIOUSNESS_TASKS = _ENGINES     # Legacy name used by websocket_server
+
 
 def register_engine(citizen_id: str, engine: 'ConsciousnessEngineV2') -> None:
     """
@@ -71,6 +75,16 @@ def all_citizens() -> List[str]:
     return list(_ENGINES.keys())
 
 
+def get_all_engines() -> Dict[str, 'ConsciousnessEngineV2']:
+    """
+    Get all registered engines (for backward compatibility).
+
+    Returns:
+        Dict mapping citizen_id to ConsciousnessEngineV2 instance
+    """
+    return _ENGINES.copy()
+
+
 def unregister_engine(citizen_id: str) -> bool:
     """
     Remove an engine from the registry.
@@ -99,3 +113,154 @@ def clear_registry() -> int:
     _ENGINES.clear()
     logger.info(f"[EngineRegistry] Cleared {count} engines from registry")
     return count
+
+
+# === Control Functions for ICE (Pause/Resume/Speed) ===
+
+
+def pause_citizen(citizen_id: str) -> dict:
+    """
+    Freeze specific citizen's consciousness (tick_multiplier = 1e9).
+
+    Args:
+        citizen_id: Citizen identifier
+
+    Returns:
+        Status dict with citizen_id, status, tick_multiplier
+    """
+    engine = get_engine(citizen_id)
+    if not engine:
+        return {"status": "error", "message": f"Engine not found: {citizen_id}"}
+
+    engine.tick_multiplier = 1e9
+    logger.info(f"[EngineRegistry] Paused {citizen_id}")
+
+    return {
+        "status": "paused",
+        "citizen_id": citizen_id,
+        "tick_multiplier": engine.tick_multiplier
+    }
+
+
+def resume_citizen(citizen_id: str) -> dict:
+    """
+    Resume specific citizen's consciousness (tick_multiplier = 1.0).
+
+    Args:
+        citizen_id: Citizen identifier
+
+    Returns:
+        Status dict with citizen_id, status, tick_multiplier
+    """
+    engine = get_engine(citizen_id)
+    if not engine:
+        return {"status": "error", "message": f"Engine not found: {citizen_id}"}
+
+    engine.tick_multiplier = 1.0
+    logger.info(f"[EngineRegistry] Resumed {citizen_id}")
+
+    return {
+        "status": "resumed",
+        "citizen_id": citizen_id,
+        "tick_multiplier": engine.tick_multiplier
+    }
+
+
+def set_citizen_speed(citizen_id: str, multiplier: float) -> dict:
+    """
+    Set consciousness speed multiplier for specific citizen.
+
+    Args:
+        citizen_id: Citizen identifier
+        multiplier: Speed multiplier (1.0 = normal, >1 = slower, <1 = faster, 1e9 = frozen)
+
+    Returns:
+        Status dict with citizen_id, status, tick_multiplier
+    """
+    engine = get_engine(citizen_id)
+    if not engine:
+        return {"status": "error", "message": f"Engine not found: {citizen_id}"}
+
+    engine.tick_multiplier = multiplier
+    logger.info(f"[EngineRegistry] Set speed for {citizen_id}: {multiplier}x")
+
+    return {
+        "status": "speed_set",
+        "citizen_id": citizen_id,
+        "tick_multiplier": engine.tick_multiplier
+    }
+
+
+def pause_all() -> dict:
+    """
+    Pause all registered consciousness engines.
+
+    Returns:
+        Status dict with count and list of paused citizens
+    """
+    paused = []
+    for citizen_id in all_citizens():
+        result = pause_citizen(citizen_id)
+        if result["status"] == "paused":
+            paused.append(citizen_id)
+
+    return {
+        "status": "all_paused",
+        "count": len(paused),
+        "paused_citizens": paused
+    }
+
+
+def resume_all() -> dict:
+    """
+    Resume all registered consciousness engines.
+
+    Returns:
+        Status dict with count and list of resumed citizens
+    """
+    resumed = []
+    for citizen_id in all_citizens():
+        result = resume_citizen(citizen_id)
+        if result["status"] == "resumed":
+            resumed.append(citizen_id)
+
+    return {
+        "status": "all_resumed",
+        "count": len(resumed),
+        "resumed_citizens": resumed
+    }
+
+
+def get_system_status() -> dict:
+    """
+    Get status of all consciousness engines.
+
+    Returns:
+        System-wide status with engine details
+    """
+    engines = {}
+    frozen = 0
+    running = 0
+    slow_motion = 0
+
+    for citizen_id in all_citizens():
+        engine = get_engine(citizen_id)
+        if engine:
+            status = engine.get_status()
+            engines[citizen_id] = status
+
+            # Categorize by running state
+            if status.get("tick_multiplier", 1.0) >= 1e9:
+                frozen += 1
+            elif status.get("tick_multiplier", 1.0) > 1.0:
+                slow_motion += 1
+            else:
+                running += 1
+
+    return {
+        "total_engines": len(engines),
+        "frozen": frozen,
+        "running": running,
+        "slow_motion": slow_motion,
+        "engines": engines
+    }

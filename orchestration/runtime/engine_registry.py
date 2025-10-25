@@ -1,49 +1,55 @@
 """
-Engine Registry - Centralized Consciousness Engine References
+Engine Registry - Centralized Engine References
 
-Provides singleton registry for accessing running consciousness engines across services.
+Provides centralized access to running consciousness engines for control API
+and other services that need to interact with engines.
 
 Architecture:
-- websocket_server registers engines at boot
-- control_api accesses engines for stimulus injection
-- Thread-safe for concurrent access
+- Module-scope dict stores engine references
+- Engines register themselves at bootstrap
+- Control API retrieves engines by citizen_id for stimulus injection
+- Thread-safe through asyncio (all access from async contexts)
 
-Designer: Nicolas (blueprint), Felix (implementation)
+Author: Iris "The Aperture"
+Context: P0 ambient signal integration (queue → control API → engine)
 Date: 2025-10-25
-Purpose: P0 - Enable queue→engine stimulus injection (critical path to autonomy)
 """
 
 from typing import Dict, Optional
-from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2
 
-# Global engine registry
-_ENGINES: Dict[str, ConsciousnessEngineV2] = {}
+# Import moved to TYPE_CHECKING to avoid circular dependency
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2
+
+# Module-scope engine registry
+_ENGINES: Dict[str, 'ConsciousnessEngineV2'] = {}
 
 
-def register_engine(citizen_id: str, engine: ConsciousnessEngineV2) -> None:
+def register_engine(citizen_id: str, engine: 'ConsciousnessEngineV2') -> None:
     """
-    Register a consciousness engine for access by control services.
+    Register a consciousness engine.
 
-    Called by websocket_server when engines boot.
+    Called during engine bootstrap in websocket_server or launcher.
 
     Args:
-        citizen_id: Citizen identifier (e.g., 'felix', 'luca', 'mind_protocol')
-        engine: Running consciousness engine instance
+        citizen_id: Unique identifier for this citizen (e.g., "felix", "iris")
+        engine: ConsciousnessEngineV2 instance
     """
     _ENGINES[citizen_id] = engine
 
 
-def get_engine(citizen_id: str) -> Optional[ConsciousnessEngineV2]:
+def get_engine(citizen_id: str) -> Optional['ConsciousnessEngineV2']:
     """
-    Get running engine by citizen ID.
+    Retrieve a consciousness engine by citizen ID.
 
-    Used by control_api for stimulus injection.
+    Used by control API to route stimulus injections to specific engines.
 
     Args:
         citizen_id: Citizen identifier
 
     Returns:
-        Engine instance if registered, None otherwise
+        ConsciousnessEngineV2 instance if registered, None otherwise
     """
     return _ENGINES.get(citizen_id)
 
@@ -53,6 +59,16 @@ def all_citizens() -> list[str]:
     Get list of all registered citizen IDs.
 
     Returns:
-        List of citizen identifiers
+        List of citizen_id strings for all running engines
     """
     return list(_ENGINES.keys())
+
+
+def unregister_engine(citizen_id: str) -> None:
+    """
+    Remove engine from registry (cleanup on shutdown).
+
+    Args:
+        citizen_id: Citizen to unregister
+    """
+    _ENGINES.pop(citizen_id, None)

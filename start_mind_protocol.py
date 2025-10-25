@@ -406,7 +406,11 @@ class ProcessManager:
         if not await self.start_autonomy_orchestrator():
             return False
 
-        # 6. Consciousness engine (runs inside websocket_server)
+        # 7. Start Queue Poller (P0 - critical ambient signals bridge)
+        if not await self.start_queue_poller():
+            return False
+
+        # 8. Consciousness engine (runs inside websocket_server)
         if self.full_system:
             if not await self.start_consciousness_engine():
                 return False
@@ -690,6 +694,37 @@ class ProcessManager:
 
         except Exception as e:
             logger.error(f"  ❌ Failed to start Autonomy Orchestrator: {e}")
+            return False
+
+    async def start_queue_poller(self) -> bool:
+        """
+        Start Queue Poller service (no port - file-based).
+
+        Priority: P0 - Critical path to autonomy
+        Drains .stimuli/queue.jsonl and injects into consciousness engines.
+        """
+        logger.info("[6/8] Starting Queue Poller (P0 - Ambient Signals Bridge)...")
+
+        try:
+            process = subprocess.Popen(
+                [sys.executable, "-m", "orchestration.services.queue_poller"],
+                cwd=MIND_PROTOCOL_ROOT
+            )
+
+            self.processes['queue_poller'] = process
+
+            # Give it a moment to start and write heartbeat
+            await asyncio.sleep(2)
+
+            if process.poll() is None:
+                logger.info("  ✅ Queue Poller started (draining queue → engines)")
+                return True
+            else:
+                logger.error("  ❌ Queue Poller failed to start")
+                return False
+
+        except Exception as e:
+            logger.error(f"  ❌ Failed to start Queue Poller: {e}")
             return False
 
     async def start_consciousness_engine(self) -> bool:
@@ -1178,6 +1213,7 @@ class ProcessManager:
                         'stimulus_injection',
                         'signals_collector',
                         'autonomy_orchestrator',
+                        'queue_poller',
                         'trace_capture',
                         'consciousness_engine'
                     ]):
@@ -1325,6 +1361,8 @@ class ProcessManager:
                     success = await self.start_signals_collector()
                 elif name == 'autonomy_orchestrator':
                     success = await self.start_autonomy_orchestrator()
+                elif name == 'queue_poller':
+                    success = await self.start_queue_poller()
                 elif name == 'consciousness_engine':
                     success = await self.start_consciousness_engine()
                 elif name == 'dashboard':
