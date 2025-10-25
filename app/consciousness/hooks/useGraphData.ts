@@ -85,6 +85,9 @@ export function useGraphData() {
   const [currentGraphType, setCurrentGraphType] = useState<string>('citizen');
   const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
 
+  // Entity expansion state (for two-layer visualization)
+  const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
+
   // Fetch available graphs from server
   useEffect(() => {
     const fetchGraphs = async () => {
@@ -206,6 +209,28 @@ export function useGraphData() {
     setOperations(prev => [operation, ...prev].slice(0, 50)); // Keep last 50
   }, []);
 
+  /**
+   * Toggle entity expansion state
+   */
+  const toggleEntity = useCallback((entityId: string) => {
+    setExpandedEntities(prev => {
+      const next = new Set(prev);
+      if (next.has(entityId)) {
+        next.delete(entityId);
+      } else {
+        next.add(entityId);
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Collapse all entities
+   */
+  const collapseAll = useCallback(() => {
+    setExpandedEntities(new Set());
+  }, []);
+
   // Auto-load first available graph
   useEffect(() => {
     if (availableGraphs.citizens && availableGraphs.citizens.length > 0 && !currentGraphId) {
@@ -230,6 +255,11 @@ export function useGraphData() {
     availableGraphs,
     currentGraphType,
     currentGraphId,
+
+    // Entity expansion state
+    expandedEntities,
+    toggleEntity,
+    collapseAll,
 
     // Event-driven updates (called by parent component with WebSocket events)
     updateNodeFromEvent,
