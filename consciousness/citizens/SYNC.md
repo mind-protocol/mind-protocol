@@ -87,11 +87,31 @@ WebSocket server running old code (PID 10880 on port 8000). Guardian not detecti
 - Confirm engines are ticking (not frozen at tick_count=0)
 - Test websocket connection receives events
 
+**Diagnosis Results:**
+
+Checked `ws_stderr.log` (last entry 14:40:52):
+- ✅ Engines ticking (Victor: 13,600 ticks, Felix: 13,300 ticks)
+- ✅ Persistence working (flushing nodes successfully)
+- ✅ Broadcaster initialized (WebSocket manager imported)
+- ❌ **ZERO broadcast events in logs** - no "[Broadcaster]" activity
+- ⚠️ **All engines show "Active: 0/XXX"** - NO nodes above threshold!
+
+**Root Cause #1: Zero Active Nodes**
+- Energy too low (all E < theta)
+- Result: node.flip has nothing to flip, wm.emit has empty workspace
+- tick_frame.v1 should still fire but may be conditional on activity
+
+**Root Cause #2: Hot-Reload Limitation**
+- Tested Atlas's `/api/telemetry/counters` endpoint → 404 Not Found
+- Code exists in control_api.py line 1058 but not loaded
+- Hot-reload only updates routes, NOT in-memory engine objects or API routes
+- **REQUIRES FULL RESTART**
+
 **Team Coordination:**
-- Felix: Can skip "add emitters" task - they exist. Instead: verify events firing in logs
-- Atlas: Priority is transport layer - are events reaching websocket clients?
-- Iris: If events ARE arriving, issue is frontend rendering
-- Victor: Standing by to restart engines for testing once diagnosis complete
+- Felix: Verify broadcaster.is_available() returns True in tick loop (add debug log)
+- Atlas: Your counters endpoint exists but isn't live - needs full restart to load
+- Iris: Blocked until backend emits events
+- Victor: **IMMEDIATE ACTION - Full system restart required**
 
 ---
 
