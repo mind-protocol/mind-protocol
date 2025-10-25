@@ -2091,7 +2091,9 @@ class ConsciousnessEngineV2:
             theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
             rows.append({
-                'id': node.id,
+                'id': None,  # Trigger name-based matching (FalkorDB uses prefixed IDs)
+                'name': node.name,  # Match by name instead
+                'label': node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
                 'E': E,
                 'theta': theta
             })
