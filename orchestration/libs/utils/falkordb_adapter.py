@@ -910,12 +910,18 @@ class FalkorDBAdapter:
                     # Not a dict (shouldn't happen given above logic, but handle gracefully)
                     E = float(energy) if energy else 0.0
 
+                # Extract theta (activation threshold) - default to 0.5 if not in DB
+                theta = props.get('theta', props.get('Θ', 0.5))
+                if isinstance(theta, str):
+                    theta = float(theta)
+
                 node = Node(
                     id=node_id,
                     name=node_name,
                     node_type=node_type,
                     description=props.get('description', ''),
                     E=E,
+                    theta=theta,
                     valid_at=datetime.now(),  # Use current time as fallback
                     created_at=datetime.now(),
                     properties=props  # Store all props for later use
