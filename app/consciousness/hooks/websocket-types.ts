@@ -290,6 +290,32 @@ export interface StrideExecEvent {
 }
 
 /**
+ * Tier Link Strengthened Event (P2.1.3)
+ *
+ * Emitted when individual links are strengthened during stride execution,
+ * with tier classification and entity context.
+ * Frequency: ~2Hz (2% decimation at 100Hz tick rate)
+ * Source: orchestration/mechanisms/strengthening.py
+ * Author: Felix "Ironhand"
+ */
+export interface TierLinkStrengthenedEvent {
+  type: 'tier.link.strengthened';
+  v: string;                      // Event schema version ("2")
+  frame_id: number;                // Consciousness frame ID
+  citizen_id: string;              // Entity that owns this graph
+  link_id: string;                 // Link identifier (source→target)
+  source_id: string;               // Source node ID
+  target_id: string;               // Target node ID
+  new_weight: number;              // Link weight after strengthening
+  delta_weight: number;            // Weight change (+Δw)
+  tier: 'co_activation' | 'causal' | 'background';  // Learning mechanism
+  tier_scale: number;              // Scale factor (1.0 | 0.6 | 0.3)
+  energy_flow: number;             // Energy transferred through link
+  entity_context: string[];        // Active entities during strengthening
+  t_ms: number;                    // Unix timestamp (milliseconds)
+}
+
+/**
  * Affective Telemetry Events - PR-A Instrumentation Foundation
  *
  * Per IMPLEMENTATION_PLAN.md PR-A.2: Event schema definitions for affective coupling mechanisms.
@@ -653,6 +679,7 @@ export type WebSocketEvent =
   | LinkEmotionUpdateEvent
   | TickFrameEvent
   | StrideExecEvent
+  | TierLinkStrengthenedEvent
   | WeightsUpdatedTraceEvent
   | WeightsUpdatedTraversalEvent
   | StrideSelectionEvent

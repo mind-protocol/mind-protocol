@@ -11,3 +11,4 @@
 {"stimulus_id": "stim_1761366412095", "timestamp_ms": 1761366412095, "citizen_id": "felix", "text": "", "severity": 0.3, "origin": "external"}
 {"stimulus_id": "stim_1761366434380", "timestamp_ms": 1761366434380, "citizen_id": "felix", "text": "", "severity": 0.3, "origin": "external"}
 {"stimulus_id": "stim_1761367568268", "timestamp_ms": 1761367568268, "citizen_id": "felix", "text": "Test error from Atlas | test.py:1", "severity": 0.6, "origin": "dashboard_console"}
+{"stimulus_id": "stim_1761367689534", "timestamp_ms": 1761367689534, "citizen_id": "felix", "text": "P3.1 deployment verification test | atlas_verification.py:42", "severity": 0.6, "origin": "dashboard_console"}

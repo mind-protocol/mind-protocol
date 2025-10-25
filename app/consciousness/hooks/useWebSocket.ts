@@ -17,6 +17,7 @@ import type {
   NodeEmotionUpdateEvent,
   LinkEmotionUpdateEvent,
   StrideExecEvent,
+  TierLinkStrengthenedEvent,
   EmotionMetadata,
   TickFrameEvent,
   WeightsUpdatedTraceEvent,
