@@ -70,40 +70,43 @@ function selectVisibleGraph(
 3. For expanded entities → creates member nodes in radial layout
 4. Routes edges: node-level when both expanded, (entity-level when collapsed - TODO)
 
-## What Remains
+## Phase 2 Progress: Rendering Integration
 
-### Phase 2: Rendering Integration
+**Completed (2025-10-25):**
 
-**To Complete Full Implementation:**
+1. ✅ **visibleGraphSelector integrated in EntityGraphView**
+   - Memoized computation of render graph (lines 82-86)
+   - Recomputes on expansion state changes
 
-1. **Use visibleGraphSelector in EntityGraphView**
-   ```typescript
-   const visibleGraph = useMemo(() =>
-     selectVisibleGraph(nodes, links, subentities, expandedEntities),
-     [nodes, links, subentities, expandedEntities]
-   );
-   ```
+2. ✅ **entityToEntity aggregation added to store**
+   - State in useGraphData (line 93)
+   - Update method with decay (lines 220-238)
+   - Exported for use (line 293)
 
-2. **Pass visible graph to PixiCanvas instead of raw nodes**
-   ```typescript
-   <PixiCanvas
-     nodes={visibleGraph.nodes}  // RenderNode[] with kind: 'entity' | 'node'
-     edges={visibleGraph.edges}  // RenderEdge[] with proper routing
-     ...
-   />
-   ```
+3. ✅ **link.flow.summary wired to entityToEntity**
+   - useEffect in page.tsx (lines 177-213)
+   - Maps link flows to primary entities
+   - Incremental aggregation with 0.95 decay
 
-3. **Update PixiRenderer to handle entity/node kinds**
-   - Different sprite rendering for entity vs node
+4. ✅ **onClick handlers for entity toggle**
+   - handleEntityClick calls toggleEntity (line 138)
+   - Toggle logic wired through props
+   - Debug indicator shows expansion state (lines 223-233)
+
+**Remaining:**
+
+5. **Update PixiRenderer to handle RenderNode types**
+   - Pass visibleGraph to PixiCanvas (currently using raw nodes)
+   - Different sprite rendering for entity vs node kinds
    - Click handler for entities → calls toggleEntity
    - Animation on expand/collapse
 
-4. **Add entity-to-entity aggregated edges**
+6. **Add entity-to-entity aggregated edges to selector**
    - Currently skipped in selector (line 178: "TODO")
-   - Need incremental aggregation from link.flow.summary events
-   - Implement decay so quiet edges fade
+   - Use entityToEntity map for aggregated edges
+   - Show when at least one entity is collapsed
 
-5. **Add multi-membership proxies**
+7. **Add multi-membership proxies**
    - Currently simplified to primary placement only
    - Need proxy sprites for non-primary memberships
    - Proxy clicks delegate to canonical node
@@ -150,24 +153,63 @@ function selectVisibleGraph(
 5. Click again → collapse → see super-node
 6. Mixed state: some expanded, some collapsed
 
+## Session Summary (2025-10-25)
+
+**Work Completed:**
+
+Phase 2 foundation now complete - all state management and event wiring in place:
+
+1. **Store Updates**
+   - Added `entityToEntity: Record<string, number>` state for aggregated edges
+   - Implemented `updateEntityToEntityFlow()` with decay (0.95 per update)
+   - Exported through useGraphData hook
+
+2. **Event Wiring**
+   - Added useEffect in page.tsx to process link.flow.summary events
+   - Maps link flows to primary entities via entity_activations
+   - Incrementally updates entityToEntity with decay
+
+3. **Selector Integration**
+   - Called selectVisibleGraph in EntityGraphView (memoized)
+   - Computes render graph based on expansion state
+   - Debug indicator shows: entity nodes, member nodes, edges, expansion count
+
+4. **Interaction Handling**
+   - handleEntityClick now calls toggleEntity
+   - Click on entity → expansion state updates
+   - Props properly wired through component tree
+
+**Current State:**
+- Selector computes RenderNode[] with kind: 'entity' | 'node' ✅
+- entityToEntity aggregation updates from link flows ✅
+- Toggle handlers wired and functional ✅
+- Debug UI shows visible graph metrics ✅
+
+**Next Session:**
+- Pass visibleGraph to PixiCanvas (requires PixiRenderer type updates)
+- Update selector to use entityToEntity for aggregated edges
+- Add multi-membership proxy handling
+
 ## Implementation Priority
 
 **Recommended Next Steps:**
 
-1. **Fix stimulus injection** (separate blocker)
-   - Consciousness currently not responding to stimuli
-   - Blocks all visualization testing
+1. **Complete PixiRenderer integration** (Priority 1)
+   - Update PixiCanvas to accept RenderNode[] instead of Node[]
+   - Render entity super-nodes differently from member nodes
+   - Add entity click → toggleEntity handler
+   - Test expand/collapse with real rendering
 
-2. **Complete Phase 2 rendering integration**
-   - Wire visibleGraphSelector through to PixiRenderer
-   - Add entity click handling
-   - Test expand/collapse
+2. **Enhance selector with entityToEntity edges** (Priority 2)
+   - Pass entityToEntity map to selector
+   - Generate aggregated edges when entities collapsed
+   - Implement proper edge routing logic
 
-3. **Add entity-to-entity edges**
-   - Complete the selector's edge aggregation
-   - Wire link.flow.summary to update aggregates
+3. **Add multi-membership proxies** (Priority 3)
+   - Proxy sprites for non-primary memberships
+   - Delegate clicks to canonical nodes
 
-4. **Polish and optimize**
+4. **Polish and optimize** (Priority 4)
    - Animations, caching, multi-membership proxies
 
 ## Code Locations

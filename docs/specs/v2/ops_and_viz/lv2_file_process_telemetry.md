@@ -29,25 +29,38 @@ Every file and script in the Mind Protocol workspace becomes an **L2 node** auto
 ### 1.2 Architecture Position
 
 ```
-File System & Process Activity
-  ↓ (watchdog, process monitor)
-[LV2 File Observer Service]
-  ↓ (signals: file.*, process.exec)
-[Signals Collector Endpoints]
+File System & Process Activity + Error Logs
+  ↓ (watchdog, process monitor, git_watcher, log_tail)
+[LV2 File Observer Service]  [Log Tail Watcher]  [Git Watcher]
+  ↓ (file.*, process.exec)       ↓ (error.log)      ↓ (code/doc change)
+[Signals Collector @8003]
   ↓ (queued signals)
-[LV2 Expander Service]
-  ↓ (formations + stimuli)
-├─→ FalkorDB (File, ProcessExec nodes + links)
-└─→ Stimulus Queue (.stimuli/queue.jsonl)
-  ↓
-[Consciousness Engines] (stimulus injection)
+[LV2 Expander Service] ←──────── [StimulusEnvelope normalization]
+  ↓ (formations)                      ↓ (L2 routing)
+├─→ FalkorDB N2 Graph              [StimulusInjector @8001]
+│   (File, ProcessExec,                ↓ (scope="organizational")
+│    Stimulus nodes + links)       [AutonomyOrchestrator @8002]
+│                                      ↓ (intent templates)
+└─→ Stimulus Queue                 [IntentCard → Mission]
+    (.stimuli/queue.jsonl)             ↓ (auto-wake)
+       ↓                           [Citizens] (L1 consciousness)
+[Consciousness Engines]
 ```
 
 **Integration Points:**
-- **Signals Collector:** New endpoints for file.* and process.exec events
-- **LV2 Expander:** New formation logic creating File/ProcessExec nodes + DEPENDS_ON/IMPLEMENTS/EXECUTES links
-- **Stimulus Queue:** File activity generates L1 stimuli (type: file_change)
-- **Dashboard:** New Files tab, graph overlays, heatmap visualizations
+
+**TRACK B Substrate (File/Process tracking):**
+- **Signals Collector (@8003):** Endpoints for file.*, process.exec, error.log events
+- **LV2 Expander:** Formation logic creating File/ProcessExec nodes + DEPENDS_ON/IMPLEMENTS/EXECUTES links
+- **Stimulus Queue:** File activity generates L1 stimuli (type: file_change, severity by change type)
+- **Dashboard:** Files tab, graph overlays, heatmap visualizations
+
+**L2 Autonomy Integration (Organizational intelligence):**
+- **Git Watcher (`git_watcher.py`):** Maps code/doc drift via SCRIPT_MAP.md → `intent.sync_docs_scripts`
+- **Log Tail (`log_tail.py`):** Backend errors → `intent.fix_incident` routed by service
+- **Console Beacon:** Frontend errors → `intent.fix_incident` routed to Iris
+- **StimulusInjector (@8001):** Routes Stimulus nodes to N2 graph with scope="organizational"
+- **AutonomyOrchestrator (@8002):** Matches intent templates, creates missions, auto-wakes citizens
 
 ### 1.3 Design Principles
 
@@ -716,6 +729,77 @@ interface GitCommitSignal {
 
 **Signal Sources:**
 - **Git Post-Commit Hook:** `.git/hooks/post-commit` → emit signal
+
+---
+
+### 4.4 Error Log Signals (L2)
+
+**Purpose:** Backend and frontend error logs feed into L2 autonomy orchestrator as incidents requiring triage/fixing.
+
+**Signal Types:**
+```typescript
+type ErrorLogSignalType = "error.log" | "error.console"
+
+interface ErrorLogSignal {
+  type: ErrorLogSignalType
+  timestamp_ms: number
+  level: "ERROR" | "WARN" | "CRITICAL"
+  service: string              // e.g., "websocket_server", "dashboard", "queue_poller"
+  message: string
+  metadata: {
+    stack?: string             // Stack trace if available
+    context?: Record<string, any>  // Contextual data
+    file_path?: string         // Source file that logged the error
+    line_number?: int          // Source line number
+    event_source: "log_tail" | "console_beacon"
+  }
+}
+```
+
+**Signal Sources:**
+
+**Log Tail Watcher (`log_tail.py`):**
+- Monitors: `logs/*.log` (websocket_server.log, queue_poller.log, guardian.log, etc.)
+- Filters: `level in {ERROR, WARN, CRITICAL}`
+- Emits: `source_type="error.log"` with service, message, stack
+- Routing: → Signals Collector `/ingest/log` → L2 autonomy `intent.fix_incident`
+
+**Console Beacon (Client-Side):**
+- Monitors: Browser console errors in Next.js dashboard
+- Emits: `source_type="error.console"` with service="dashboard", stack
+- Routing: → Next.js API proxy `/api/signals/console` → Signals Collector `/ingest/console` → L2 autonomy `intent.fix_incident`
+
+**Formation Logic:**
+
+Error log signals do NOT create File/ProcessExec nodes directly. Instead:
+1. **Collector** normalizes into StimulusEnvelope (`scope="organizational"`, `source_type="error.log"`)
+2. **StimulusInjector** routes to N2 graph, creates Stimulus node
+3. **AutonomyOrchestrator** matches `intent.fix_incident` template → creates IntentCard
+4. **Mission assignment:** Routes by service (Atlas: backend, Victor: operations, Iris: dashboard)
+
+**Deduplication:**
+- Key: `(service, message_hash, 5-minute window)`
+- Prevents duplicate incidents for same error
+
+**Integration with TRACK B:**
+
+When error relates to specific file execution:
+- `metadata.file_path` → lookup File node
+- If ProcessExec forensics node exists for this failure → link Stimulus to ProcessExec via RELATES_TO
+- Enables query: "Show me all incidents related to this file's failures"
+
+```cypher
+// Link error log stimulus to ProcessExec forensics
+MATCH (s:Stimulus {source_type: 'error.log', metadata.file_path: $path})
+MATCH (p:ProcessExec {metadata.cmd: $cmd, metadata.exit_code: $exit_code})
+WHERE abs(s.timestamp_ms - p.valid_at) < 5000  // Within 5s
+MERGE (s)-[:RELATES_TO {
+  energy: 0.8,
+  confidence: 0.9,
+  goal: 'Links incident to failure forensics',
+  formation_trigger: 'systematic_analysis'
+}]->(p)
+```
 
 ---
 
