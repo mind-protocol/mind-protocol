@@ -154,9 +154,9 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/50 border-l border-observatory-cyan/20">
+    <div className="flex flex-col h-full bg-zinc-900 border-l border-observatory-cyan/20 font-sans">
       {/* Horizontal Citizen Selector Strip */}
-      <div className="flex items-center gap-2 px-3 py-3 border-b border-observatory-cyan/20 bg-zinc-900/80 backdrop-blur">
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-observatory-cyan/20 bg-zinc-900">
         {MOCK_CITIZENS.map(citizen => (
           <button
             key={citizen.id}
@@ -170,10 +170,10 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
             `}
             title={`${citizen.name} - Frame ${citizen.frame.toLocaleString()}`}
           >
-            {/* Large Avatar (56px for branding) - REAL PROFILE PICTURE */}
+            {/* Large Avatar (80px for branding) - REAL PROFILE PICTURE */}
             <div
               className={`
-                relative w-14 h-14 rounded-full overflow-hidden
+                relative w-20 h-20 rounded-full overflow-hidden
                 ${selectedCitizenId === citizen.id ? 'ring-2 ring-white/20' : ''}
               `}
             >
@@ -304,19 +304,19 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
               // Shift+Enter = new line (default textarea behavior)
             }}
             placeholder={`Message ${selectedCitizen?.name}... (Shift+Enter for new line)`}
-            rows={1}
+            rows={3}
             className="
-              flex-1 px-4 py-2 rounded-lg resize-none
+              flex-1 px-4 py-2 rounded-lg resize-none font-sans
               bg-zinc-800/50 border border-zinc-700/50
               text-sm text-observatory-text
               placeholder:text-observatory-text/40
               focus:outline-none focus:ring-2 focus:ring-observatory-cyan/50 focus:border-observatory-cyan/50
               transition-all
-              max-h-[72px] overflow-y-auto
+              max-h-[120px] overflow-y-auto
             "
             style={{
-              minHeight: '40px',
-              maxHeight: '72px' // ~3 lines
+              minHeight: '72px',
+              maxHeight: '120px' // ~5 lines max
             }}
           />
           <button
