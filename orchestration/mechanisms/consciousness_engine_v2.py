@@ -2139,6 +2139,11 @@ class ConsciousnessEngineV2:
             "sub_entity_count": sub_entity_count,
             "sub_entities": sub_entity_ids,
             "nodes": len(self.graph.nodes),
-            "links": len(self.graph.links)
+            "links": len(self.graph.links),
+            # Persistence configuration (Pass B)
+            "persistence_enabled": self._persist_enabled,
+            "persistence_min_batch": self._persist_min_batch,
+            "persistence_interval_sec": self._persist_interval_sec,
+            "dirty_nodes_count": len(self._dirty_nodes)
         }
 # Force reload
