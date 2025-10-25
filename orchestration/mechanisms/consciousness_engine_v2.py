@@ -921,62 +921,84 @@ class ConsciousnessEngineV2:
                             "t_ms": int(time.time() * 1000)
                         })
 
-        # === V2 Event: node.flip (detect threshold crossings) ===
+        # === V2 Event: node.flip (detect threshold crossings with top-K decimation) ===
         # NOTE: Single-energy architecture (E >= theta for activation)
+        # Decimation: Emit top-K (20) nodes by |ΔE| magnitude for frontend efficiency
         if self.broadcaster and self.broadcaster.is_available():
+            flips = []
             for node in self.graph.nodes.values():
                 prev_state = previous_states[node.id]
                 current_energy = node.E  # Single-energy
                 is_now_active = node.is_active()  # E >= theta check
 
-                # Emit flip event if activation state changed
+                # Collect flip if activation state changed
                 if prev_state['was_active'] != is_now_active:
+                    delta_E = abs(current_energy - prev_state['energy'])
+                    flips.append({
+                        "node_id": node.id,
+                        "E_pre": prev_state['energy'],
+                        "E_post": current_energy,
+                        "theta": node.theta,
+                        "delta_E": delta_E
+                    })
+
+            # Sort by |ΔE| magnitude descending and emit top-K (20)
+            if flips:
+                flips_sorted = sorted(flips, key=lambda f: f['delta_E'], reverse=True)
+                top_k_flips = flips_sorted[:20]  # Top 20 most significant flips
+
+                for flip in top_k_flips:
                     await self.broadcaster.broadcast_event("node.flip", {
                         "v": "2",
                         "frame_id": self.tick_count,
-                        "node": node.id,
-                        "E_pre": prev_state['energy'],
-                        "E_post": current_energy,
-                        "Θ": node.theta,
+                        "node": flip["node_id"],
+                        "E_pre": flip["E_pre"],
+                        "E_post": flip["E_post"],
+                        "Θ": flip["theta"],
                         "t_ms": int(time.time() * 1000)
                     })
 
-        # === V2 Event: link.flow.summary (aggregate link activity) ===
+        # === V2 Event: link.flow.summary (aggregate link activity with decimation) ===
+        # Decimation: Random sampling at 10% (~10Hz at 100Hz tick rate) to prevent frontend flood
         if self.broadcaster and self.broadcaster.is_available():
-            link_flows = []
-            for link in self.graph.links.values():
-                # Get energy flow through this link (single-energy)
-                source_energy = link.source.E
-                target_energy = link.target.E
+            import random
 
-                # Estimate flow as function of energy difference and link ease
-                ease = math.exp(link.log_weight)
-                alpha_tick = criticality_metrics.alpha_after
-                ΔE_estimate = source_energy * ease * alpha_tick * max(0, source_energy - target_energy)
+            # Random decimation: 10% sampling rate = ~10Hz at 100Hz tick rate
+            if random.random() < 0.10:
+                link_flows = []
+                for link in self.graph.links.values():
+                    # Get energy flow through this link (single-energy)
+                    source_energy = link.source.E
+                    target_energy = link.target.E
 
-                # Only include links with non-zero flow
-                if ΔE_estimate > 0.001:
-                    link_flows.append({
-                        "id": f"{link.source.id}->{link.target.id}",
-                        "ΔE_sum": round(ΔE_estimate, 4),
-                        "φ_max": round(ease, 3),  # Using ease = exp(log_weight)
-                        "z_flow": 0.0  # Would compute from cohort normalization
+                    # Estimate flow as function of energy difference and link ease
+                    ease = math.exp(link.log_weight)
+                    alpha_tick = criticality_metrics.alpha_after
+                    ΔE_estimate = source_energy * ease * alpha_tick * max(0, source_energy - target_energy)
+
+                    # Only include links with non-zero flow
+                    if ΔE_estimate > 0.001:
+                        link_flows.append({
+                            "id": f"{link.source.id}->{link.target.id}",
+                            "ΔE_sum": round(ΔE_estimate, 4),
+                            "φ_max": round(ease, 3),  # Using ease = exp(log_weight)
+                            "z_flow": 0.0  # Would compute from cohort normalization
+                        })
+
+                if link_flows:
+                    # Transform to frontend-expected format
+                    flows_payload = [{
+                        "link_id": flow["id"],
+                        "count": 1,  # Single traversal per link in this implementation
+                        "entity_ids": [subentity]  # Which subentity traversed this link (subentity is string)
+                    } for flow in link_flows]
+
+                    await self.broadcaster.broadcast_event("link.flow.summary", {
+                        "v": "2",
+                        "frame_id": self.tick_count,
+                        "flows": flows_payload,  # Changed from "links" to "flows"
+                        "t_ms": int(time.time() * 1000)
                     })
-
-            if link_flows:
-                # Transform to frontend-expected format
-                flows_payload = [{
-                    "link_id": flow["id"],
-                    "count": 1,  # Single traversal per link in this implementation
-                    "entity_ids": [subentity]  # Which subentity traversed this link (subentity is string)
-                } for flow in link_flows]
-
-                await self.broadcaster.broadcast_event("link.flow.summary", {
-                    "v": "2",
-                    "frame_id": self.tick_count,
-                    "flows": flows_payload,  # Changed from "links" to "flows"
-                    "t_ms": int(time.time() * 1000)
-                })
 
         # === Step 9: WM Select and Emit ===
         # Entity-first working memory selection (spec: subentity_layer.md §4)

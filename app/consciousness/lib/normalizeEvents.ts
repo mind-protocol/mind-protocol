@@ -24,6 +24,7 @@ export function normalizeEvent(e: any): any {
   switch (e.type) {
     // Timebase events - canonical: tick_frame_v1
     case 'tick_frame_v1':
+      console.log('[normalizeEvent] ✅ tick_frame_v1 received:', e.frame_id);
       return e; // Already canonical
 
     case 'frame.end':
@@ -44,12 +45,12 @@ export function normalizeEvent(e: any): any {
     case 'node.flip':
       return {
         type: 'node.flip',
-        node_id: e.id ?? e.node_id,
+        node_id: e.node ?? e.id ?? e.node_id,  // Backend uses "node" field
         E_pre: e.E_pre,
         E_post: e.E_post ?? e.energy_post ?? e.energy,
-        theta: e.theta ?? e.threshold,
+        theta: e.Θ ?? e.theta ?? e.threshold,  // Backend uses Greek "Θ"
         frame_id: e.frame_id,
-        direction: (e.E_post ?? e.energy_post ?? e.energy ?? 0) > (e.theta ?? e.threshold ?? 0) ? 'on' : 'off',
+        direction: (e.E_post ?? e.energy_post ?? e.energy ?? 0) > (e.Θ ?? e.theta ?? e.threshold ?? 0) ? 'on' : 'off',
         timestamp: e.timestamp ?? new Date().toISOString()
       };
 
@@ -83,6 +84,12 @@ export function normalizeEvent(e: any): any {
     case 'stride.exec':
     case 'stride.selection':
       return e; // Already canonical
+
+    // Legacy V1 events (pass through)
+    case 'consciousness_state':
+    case 'entity_activity':
+    case 'threshold_crossing':
+      return e;
 
     // All other events pass through unchanged
     case 'node.emotion.update':
