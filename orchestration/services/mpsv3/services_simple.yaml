@@ -1,0 +1,81 @@
+# MPSv3 Service Specifications (Simple - Phase 1 Compatible)
+# Incorporates Nicolas's env inheritance fix
+# Author: Atlas + Nicolas
+# Date: 2025-10-25
+
+services:
+  - id: falkordb
+    cmd: ["cmd", "/c", "docker", "start", "-a", "falkordb"]
+    env: {}  # Inherits full OS environment
+    cwd: null
+    criticality: CRITICAL
+    max_retries: 5
+    watched_files: []  # Never auto-reload database
+
+  - id: ws_api
+    cmd: ["python", "-m", "orchestration.adapters.ws.websocket_server"]
+    env:
+      WS_PORT: "8000"
+      MP_PERSIST_ENABLED: "1"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/**/*.py"
+
+  - id: dashboard
+    cmd: ["cmd", "/c", "npm", "run", "dev"]
+    env:
+      PORT: "3000"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files: []  # npm run dev has built-in hot reload
+
+  - id: conversation_watcher
+    cmd: ["python", "-m", "orchestration.services.watchers.conversation_watcher"]
+    env: {}
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/watchers/**/*.py"
+
+  - id: stimulus_injection
+    cmd: ["python", "-m", "orchestration.services.stimulus_injection_service"]
+    env:
+      PORT: "8001"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/stimulus_injection_service.py"
+
+  - id: signals_collector
+    cmd: ["python", "-m", "orchestration.services.signals_collector"]
+    env:
+      PORT: "8010"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: CORE
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/signals_collector.py"
+
+  - id: autonomy_orchestrator
+    cmd: ["python", "-m", "orchestration.services.autonomy_orchestrator"]
+    env:
+      PORT: "8002"
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: OPTIONAL
+    max_retries: 3
+    watched_files:
+      - "orchestration/services/autonomy_orchestrator.py"
+
+  # Socket probe for testing env inheritance fix
+  - id: socket_probe
+    cmd: ["python", "-c", "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); print('OK:', s.getsockname()); s.close()"]
+    env: {}
+    cwd: "C:\\Users\\reyno\\mind-protocol"
+    criticality: OPTIONAL
+    max_retries: 1
+    watched_files: []
