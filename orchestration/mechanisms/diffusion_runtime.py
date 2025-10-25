@@ -71,8 +71,9 @@ class DiffusionRuntime:
         delta_E: Accumulated energy deltas per node (staged)
         active: Nodes with E >= theta or touched this tick
         shadow: 1-hop neighbors of active (candidate frontier)
+        _frame_link_flow: Per-link flow accumulator for dashboard emission (PR-C)
     """
-    __slots__ = ("delta_E", "active", "shadow", "stride_relatedness_scores", "current_frontier_nodes")
+    __slots__ = ("delta_E", "active", "shadow", "stride_relatedness_scores", "current_frontier_nodes", "_frame_link_flow")
 
     def __init__(self):
         """Initialize empty runtime accumulator."""
@@ -83,6 +84,9 @@ class DiffusionRuntime:
         # Coherence tracking (E.6) - collected during stride execution
         self.stride_relatedness_scores: List[float] = []
         self.current_frontier_nodes: List[Any] = []
+
+        # PR-C: Link flow tracking for dashboard emission
+        self._frame_link_flow: Dict[str, float] = {}  # link_id -> accumulated flow
 
     def add(self, node_id: str, delta: float) -> None:
         """
