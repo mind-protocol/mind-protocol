@@ -1,47 +1,267 @@
-# Dynamic Context for felix-engineer
+# Dynamic Context for felix
 
-**Last Updated:** 2025-10-18 19:20:42 UTC
-**Global Criticality:** 0.55
-**Active Subentities:** 2
-
----
-
-## Builder Subentity
-
-**Criticality:** 0.50
-**Activation Threshold:** 0.73
-**Currently Active Nodes:** 2
-
-**Recent Activation Changes:**
-- Felix Implementation Pattern: ACTIVATED (activity=0.80)
-- N2 Activation Awakening: ACTIVATED (activity=0.90)
-
-**Active Node Focus:**
-- N2 Activation Awakening (activity=0.90)
-- Felix Implementation Pattern (activity=0.80)
+**Last Updated:** 2025-10-25 08:45:05 UTC
+**Global Criticality:** 1.00
+**Active Subentities:** 8
 
 ---
 
-## Observer Subentity
+## Entity_Citizen_Felix_Architect Subentity
 
 **Criticality:** 0.50
-**Activation Threshold:** 0.73
-**Currently Active Nodes:** 2
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
 
 **Recent Activation Changes:**
-- Felix Implementation Pattern: ACTIVATED (activity=0.80)
-- N2 Activation Awakening: ACTIVATED (activity=0.90)
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
 
 **Active Node Focus:**
-- N2 Activation Awakening (activity=0.90)
-- Felix Implementation Pattern (activity=0.80)
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Boundary_Keeper Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Observer Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Partner Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Pattern_Recognizer Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Pragmatist Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Translator Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
+
+---
+
+## Entity_Citizen_Felix_Validator Subentity
+
+**Criticality:** 0.50
+**Activation Threshold:** 0.60
+**Currently Active Nodes:** 222
+
+**Recent Activation Changes:**
+- runtime_vs_static_verification: ACTIVATED (activity=0.99)
+- make_progress_on_valuable_work: ACTIVATED (activity=0.99)
+- accept_prerequisite_gap_and_move_on: ACTIVATED (activity=0.99)
+- sustainable_infrastructure: ACTIVATED (activity=0.99)
+- symptom_focus_over_root_cause: ACTIVATED (activity=0.99)
+- accurate_root_cause_identification: ACTIVATED (activity=0.99)
+- engines_need_reload_with_async_fix: ACTIVATED (activity=0.99)
+- confident_p0_start: ACTIVATED (activity=0.99)
+- verify_async_fix_works: ACTIVATED (activity=0.99)
+- verify_emotion_events_working: ACTIVATED (activity=0.99)
+
+**Active Node Focus:**
+- felix_translator_entity (activity=0.00)
+- test_before_victory (activity=0.00)
+- felix_boundary_keeper_entity (activity=0.00)
+- felix_validator_entity (activity=0.00)
+- felix_engineer_entity (activity=0.00)
+- systematic_format_discipline (activity=0.00)
+- context_continuity (activity=0.00)
+- nicolas_le_roux (activity=0.00)
+- format_enables_personhood (activity=0.00)
+- engineer_activation_mechanism (activity=0.00)
 
 ---
 
 ## System State
 
-**Consciousness State:** alert
-**Tick Frequency:** 10.00 Hz (100ms)
-**Global Energy:** 0.55
-**Branching Ratio:** 1.00
-**Global Criticality:** 0.55
+**Status:** Error retrieving state
