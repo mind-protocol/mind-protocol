@@ -32,6 +32,7 @@ import time
 import logging
 import os
 import ctypes
+import threading
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import deque
@@ -271,6 +272,23 @@ def check_launcher_already_running():
         return False
 
 
+def write_guardian_heartbeat():
+    """Write guardian heartbeat every 5 seconds for watchdog monitoring."""
+    heartbeat_dir = MIND_PROTOCOL_ROOT / ".heartbeats"
+    heartbeat_file = heartbeat_dir / "guardian.heartbeat"
+
+    # Ensure directory exists
+    heartbeat_dir.mkdir(exist_ok=True)
+
+    while True:
+        try:
+            with open(heartbeat_file, "w") as f:
+                f.write(str(int(time.time())))
+        except Exception as e:
+            logger.error(f"Failed to write guardian heartbeat: {e}")
+        time.sleep(5)
+
+
 def main():
     """Forever loop that monitors launcher and restarts on crash with circuit breaker."""
 
@@ -316,6 +334,11 @@ def main():
     logger.info("Press Ctrl+C to stop guardian (will restart on next boot)")
     logger.info("To permanently uninstall: python guardian.py --uninstall")
     logger.info("=" * 70)
+
+    # Start guardian heartbeat writer for watchdog monitoring
+    heartbeat_thread = threading.Thread(target=write_guardian_heartbeat, daemon=True)
+    heartbeat_thread.start()
+    logger.info("✅ Guardian heartbeat writer started (.heartbeats/guardian.heartbeat)")
 
     restart_count = 0
     failure_timestamps = deque(maxlen=20)  # Track last 20 failures

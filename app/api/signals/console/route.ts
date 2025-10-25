@@ -94,40 +94,7 @@ export async function POST(request: Request) {
 }
 
 /**
- * Determine if console error should trigger stimulus injection
- *
- * Filters noise (warnings, React devtools) from critical errors
- * that merit consciousness attention.
+ * Note: Signal filtering and stimulus triggering now handled by signals_collector backend.
+ * The collector service (port 8010) implements deduplication, rate limiting, and
+ * pattern-based routing to appropriate consciousness entities via orchestrator templates.
  */
-function shouldTriggerStimulus(signal: ConsoleSignal): boolean {
-  // High-severity patterns
-  const criticalPatterns = [
-    /unhandled promise rejection/i,
-    /uncaught exception/i,
-    /failed to fetch/i,
-    /network error/i,
-    /websocket/i
-  ];
-
-  // Low-severity noise to ignore
-  const ignorePatterns = [
-    /react devtools/i,
-    /download the react devtools/i,
-    /source map/i
-  ];
-
-  const msg = signal.message.toLowerCase();
-
-  // Ignore noise
-  if (ignorePatterns.some(pattern => pattern.test(msg))) {
-    return false;
-  }
-
-  // Trigger on critical patterns
-  if (criticalPatterns.some(pattern => pattern.test(msg))) {
-    return true;
-  }
-
-  // Default: don't trigger for warnings/logs, only errors
-  return signal.type === 'error';
-}

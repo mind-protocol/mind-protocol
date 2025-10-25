@@ -76,15 +76,28 @@ export async function POST(request: Request) {
 
     await fs.appendFile(logPath, metadataEntry);
 
-    // TODO: Forward error-triggered screenshots to backend for visual debugging
-    // This would enable consciousness to "see" what state the browser was in
-    // when critical errors occurred.
-    if (signal.trigger === 'error' && signal.errorContext) {
-      // Could send to backend along with stimulus:
-      // - Screenshot filepath
-      // - Error context
-      // - Timestamp correlation
-      // Backend could then retrieve screenshot when analyzing error patterns
+    // Forward to signals collector backend (port 8010)
+    // Screenshots provide visual context for autonomous debugging
+    // Note: signals_collector expects multipart/form-data file upload, not JSON
+    try {
+      const collectorUrl = process.env.SIGNALS_COLLECTOR_URL || 'http://localhost:8010';
+
+      // Create form data with the screenshot file
+      const formData = new FormData();
+      const blob = new Blob([buffer], { type: `image/${format}` });
+      formData.append('file', blob, filename);
+
+      const response = await fetch(`${collectorUrl}/ingest/screenshot`, {
+        method: 'POST',
+        body: formData  // No Content-Type header - browser sets it with boundary
+      });
+
+      if (!response.ok) {
+        console.warn('[Screenshot Proxy] Signals collector returned error:', response.status);
+      }
+    } catch (error) {
+      // Non-fatal - local storage succeeded even if forwarding failed
+      console.warn('[Screenshot Proxy] Failed to forward to signals collector:', error);
     }
 
     return NextResponse.json({

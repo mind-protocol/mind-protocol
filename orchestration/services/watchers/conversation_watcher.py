@@ -54,7 +54,7 @@ from orchestration.adapters.storage.engine_registry import get_engine
 from orchestration.services.telemetry.heartbeat_writer import HeartbeatWriter
 
 # ConsciousnessStateBroadcaster for event emission
-from orchestration.services.telemetry.consciousness_state_broadcaster import ConsciousnessStateBroadcaster
+from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster
 
 # Configure logging
 logging.basicConfig(
