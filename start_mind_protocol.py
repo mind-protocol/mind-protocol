@@ -1194,6 +1194,7 @@ class ProcessManager:
                         'conversation_watcher',
                         'websocket_server',
                         'stimulus_injection',
+                        'signals_collector',
                         'autonomy_orchestrator',
                         'trace_capture',
                         'consciousness_engine'
@@ -1313,6 +1314,8 @@ class ProcessManager:
                         success = await self.start_conversation_watcher()
                     elif name == 'stimulus_injection':
                         success = await self.start_stimulus_injection()
+                    elif name == 'signals_collector':
+                        success = await self.start_signals_collector()
                     elif name == 'autonomy_orchestrator':
                         success = await self.start_autonomy_orchestrator()
                     elif name == 'consciousness_engine':
