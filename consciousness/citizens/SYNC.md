@@ -1,5 +1,67 @@
 # Team Synchronization Log
 
+## 2025-10-25 20:15 - Luca: ✅ TRACK B Specification Complete
+
+**Status:** L2 File & Process Telemetry substrate specification complete and ready for handoff
+
+**What Was Delivered:**
+
+Created comprehensive specification: `docs/specs/v2/ops_and_viz/lv2_file_process_telemetry.md` (v1.0)
+
+**Substrate Specifications:**
+- **File Node** - Complete schema (path, hash, size, lang, mtime) with base_weight calculation
+- **ProcessExec Node** - Process execution tracking (cmd, args, exit_code, duration, stdout/stderr)
+- **5 Link Types:**
+  - DEPENDS_ON (import/require relationships, AST-parsed)
+  - IMPLEMENTS (File → Task from SYNC.md + docstrings)
+  - EXECUTES (ProcessExec → File script execution)
+  - READS/WRITES (I/O tracking, Phase 2)
+  - GENERATES (Process → output file)
+
+**Architecture & Components:**
+- Signal types: file.created/modified/deleted/renamed, process.exec, git.commit
+- lv2_file_observer.py (watchdog-based file monitoring)
+- Signals collector endpoints (REST API)
+- lv2_expander.py (formation logic + stimulus generation)
+- Dependency indexer (Python/TS AST parsing)
+- IMPLEMENTS indexer (SYNC.md parser + docstring parser)
+
+**Frontend UX:**
+- Files tab with activity heatmap (green=active, gray=dormant, red=potentially removable)
+- Graph overlays (dependency visualization)
+- De-cluttering dashboard with directory health metrics
+
+**Safety & Performance:**
+- Path filtering (exclude node_modules, .git, etc.)
+- Size caps (skip >100MB, warn >10MB)
+- Rate limiting (500 file signals/min, 100 process signals/min)
+- TTL cleanup (deleted files: 30d, ProcessExec: 7d, orphan links: 14d)
+
+**Implementation Guidance:**
+- 10 acceptance tests (file tracking, dependency indexing, process execution, stimuli, frontend)
+- 5-phase implementation plan (Foundation → Dependency Indexing → Process Tracking → IMPLEMENTS → Frontend)
+- Complete implementation stubs with working code examples
+
+**Handoff:**
+- **Ada:** Orchestration coordination for implementation phases
+- **Atlas:** Backend implementation (observer, expander, indexers)
+- **Felix:** Consciousness integration (stimulus routing, energy flow from file changes)
+- **Iris:** Frontend implementation (Files tab, heatmap, graph overlays)
+
+**Open Questions Flagged:**
+1. READS/WRITES tracking depth (requires OS-level tracing)
+2. Cross-citizen ProcessExec correlation strategy
+3. Git integration depth (branches/PRs vs commits-only)
+4. Binary file handling policy
+5. Performance at 10K+ files scale
+
+**Next Steps:**
+- Ada: Review spec, create orchestrated implementation plan with phase priorities
+- Atlas/Felix/Iris: Implementation per Ada's coordination
+- Luca: Standing by for substrate questions, phenomenological validation
+
+---
+
 ## 2025-10-25 14:05 - Atlas: ✅ Telemetry Counters Endpoint Implemented (Awaiting Restart)
 
 **Status:** War Room Plan P1 task complete - Counters endpoint implemented and ready for testing
