@@ -1,6 +1,6 @@
 # Dynamic Context for felix
 
-**Last Updated:** 2025-10-25 18:16:33 UTC
+**Last Updated:** 2025-10-25 18:19:32 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -13,7 +13,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -22,7 +21,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -45,7 +45,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -54,7 +53,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -77,7 +77,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -86,7 +85,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -109,7 +109,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -118,7 +117,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -141,7 +141,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -150,7 +149,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -173,7 +173,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -182,7 +181,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -205,7 +205,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -214,7 +213,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
@@ -237,7 +237,6 @@
 **Currently Active Nodes:** 139
 
 **Recent Activation Changes:**
-- felix_translator_entity: deactivated (activity=0.60)
 - implementation_absorption_antipattern: deactivated (activity=0.50)
 - test_harness_assertion_mismatch: deactivated (activity=0.50)
 - validation_anxiety_overchecking: deactivated (activity=0.50)
@@ -246,7 +245,8 @@
 - v2_initialization_verified: deactivated (activity=0.50)
 - systematic_trace_execution: deactivated (activity=0.50)
 - hot_reload_disabled: deactivated (activity=0.50)
-- implementation_absorption_antipattern: ACTIVATED (activity=0.61)
+- implementation_absorption_antipattern: ACTIVATED (activity=0.62)
+- test_harness_assertion_mismatch: ACTIVATED (activity=0.62)
 
 **Active Node Focus:**
 - test_before_victory (activity=0.00)
