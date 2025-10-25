@@ -78,14 +78,17 @@ export function EntityGraphView({
   const entities = useMemo<Entity[]>(() => {
     return subentities.map(subentity => {
       // Get member nodes for this subentity
+      // Nodes "belong" to entities that have activated them recently
       const memberNodes = nodes.filter(node => {
         const nodeId = node.id || node.node_id;
         if (!nodeId) return false;
 
-        // Check if node belongs to this subentity
-        // This depends on how membership is tracked - adjust based on actual data structure
-        return (node as any).entity_id === subentity.entity_id ||
-               (node as any).primary_entity === subentity.entity_id;
+        // Check if this entity has activated this node (entity_activations field)
+        if (node.entity_activations && typeof node.entity_activations === 'object') {
+          return subentity.entity_id in node.entity_activations;
+        }
+
+        return false;
       });
 
       // Aggregate emotion from members
