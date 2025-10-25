@@ -1308,7 +1308,7 @@ class ProcessManager:
         return (True, "")
 
     async def monitor_processes(self):
-        """Monitor processes and restart on crash or degradation."""
+        """Monitor processes and restart on crash or degradation with exponential backoff."""
         while self.running:
             await asyncio.sleep(5)
 
@@ -1316,49 +1316,76 @@ class ProcessManager:
                 # Check both process death AND service degradation
                 is_healthy, failure_reason = self._check_service_health(name, process)
 
-                if not is_healthy:
-                    logger.error(f"❌ {name} unhealthy: {failure_reason}")
+                if is_healthy:
+                    # Service healthy - reset crash counter
+                    if name in self._consecutive_crashes and self._consecutive_crashes[name] > 0:
+                        logger.info(f"[Guardian] ✅ {name} recovered - resetting crash counter")
+                        self._consecutive_crashes[name] = 0
+                    continue
 
-                    # Send notification about failure
-                    self.notifier.notify_critical(
-                        f"{name.capitalize()} Unhealthy",
-                        f"{failure_reason}\nAttempting auto-restart..."
+                # Service unhealthy - apply exponential backoff
+                logger.error(f"❌ {name} unhealthy: {failure_reason}")
+
+                # Calculate backoff delay based on consecutive crashes
+                crash_count = self._consecutive_crashes.get(name, 0)
+                backoff_delay = 2 ** min(crash_count, 5)  # Max 32 seconds
+
+                # Check if enough time has passed since last crash restart
+                now = time.time()
+                last_restart = self._last_crash_restart.get(name, 0)
+                time_since_restart = now - last_restart
+
+                if time_since_restart < backoff_delay:
+                    wait_remaining = backoff_delay - time_since_restart
+                    logger.info(f"[Guardian] ⏳ {name} backoff: waiting {wait_remaining:.0f}s (attempt #{crash_count + 1})")
+                    continue
+
+                # Enough time passed - attempt restart
+                self._consecutive_crashes[name] = crash_count + 1
+                self._last_crash_restart[name] = now
+
+                # Send notification about failure
+                self.notifier.notify_critical(
+                    f"{name.capitalize()} Unhealthy",
+                    f"{failure_reason}\nAttempting restart (attempt #{crash_count + 1})..."
+                )
+
+                # Auto-restart
+                logger.info(f"🔄 Restarting {name} (crash #{crash_count + 1}, backoff was {backoff_delay}s)...")
+
+                success = False
+                if name == 'websocket_server':
+                    success = await self.start_websocket_server()
+                elif name == 'conversation_watcher':
+                    success = await self.start_conversation_watcher()
+                elif name == 'stimulus_injection':
+                    success = await self.start_stimulus_injection()
+                elif name == 'signals_collector':
+                    success = await self.start_signals_collector()
+                elif name == 'autonomy_orchestrator':
+                    success = await self.start_autonomy_orchestrator()
+                elif name == 'consciousness_engine':
+                    success = await self.start_consciousness_engine()
+                elif name == 'dashboard':
+                    success = await self.start_dashboard()
+
+                if not success:
+                    logger.error(f"❌ Failed to restart {name} - will retry with backoff")
+                    # Send warning about failed restart
+                    self.notifier.notify_warning(
+                        f"{name.capitalize()} Restart Failed",
+                        f"Will retry with exponential backoff (next: {2 ** min(crash_count + 1, 5)}s)"
                     )
-
-                    # Auto-restart
-                    logger.info(f"🔄 Restarting {name}...")
-
-                    success = False
-                    if name == 'websocket_server':
-                        success = await self.start_websocket_server()
-                    elif name == 'conversation_watcher':
-                        success = await self.start_conversation_watcher()
-                    elif name == 'stimulus_injection':
-                        success = await self.start_stimulus_injection()
-                    elif name == 'signals_collector':
-                        success = await self.start_signals_collector()
-                    elif name == 'autonomy_orchestrator':
-                        success = await self.start_autonomy_orchestrator()
-                    elif name == 'consciousness_engine':
-                        success = await self.start_consciousness_engine()
-                    elif name == 'dashboard':
-                        success = await self.start_dashboard()
-
-                    if not success:
-                        logger.error(f"❌ Failed to restart {name} - will retry on next monitoring cycle (5s)")
-                        # Send warning about failed restart
-                        self.notifier.notify_warning(
-                            f"{name.capitalize()} Restart Failed",
-                            f"Will retry automatically in 5 seconds"
-                        )
-                        # Leave failed process in dict - next cycle will detect it's still dead and retry
-                    else:
-                        logger.info(f"✅ Successfully restarted {name}")
-                        # Send info about successful restart
-                        self.notifier.notify_info(
-                            f"{name.capitalize()} Recovered",
-                            f"Service successfully restarted and operational"
-                        )
+                    # Leave failed process in dict - next cycle will detect it's still dead and retry with backoff
+                else:
+                    logger.info(f"✅ Successfully restarted {name}")
+                    # Reset crash counter on successful restart
+                    self._consecutive_crashes[name] = 0
+                    # Send info about successful restart
+                    self.notifier.notify_info(
+                        f"{name.capitalize()} Recovered",
+                        f"Service successfully restarted and operational"
+                    )
 
     async def shutdown(self):
         """Gracefully shutdown all processes."""
