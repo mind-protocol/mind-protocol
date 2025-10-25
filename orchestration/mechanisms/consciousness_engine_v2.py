@@ -236,6 +236,13 @@ class ConsciousnessEngineV2:
         self._persist_failures = 0
         self._persist_last_error: Optional[str] = None
 
+        # PR-C: Dashboard event emission state (node.flip, link.flow.summary)
+        self._last_E: Dict[str, float] = {}  # node_id -> last E seen (0..100) for dE computation
+        self._flip_last_emit = 0.0           # seconds, for 10Hz decimation
+        self._flip_fps = 10                  # emit at most 10 Hz
+        self._flip_topk = 25                 # number of nodes per emission
+        self._flow_last_emit = 0.0           # seconds, for 10Hz decimation
+
         logger.info(f"[ConsciousnessEngineV2] Initialized")
         logger.info(f"  Subentity: {self.config.entity_id}")
         logger.info(f"  Network: {self.config.network_id}")
