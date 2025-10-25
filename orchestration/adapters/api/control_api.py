@@ -1627,6 +1627,7 @@ async def inject_stimulus(citizen_id: str, payload: StimulusIn):
 
     # Inject stimulus into engine's queue (async-safe)
     # Diagnostic logging to trace flow
+    print(f"[DIAGNOSTIC] ControlAPI BEFORE inject_stimulus_async: citizen={citizen_id}, engine={type(eng).__name__}, sid={payload.stimulus_id}", flush=True)
     logger.info(f"[ControlAPI] BEFORE inject_stimulus_async: citizen={citizen_id}, engine={type(eng).__name__}, sid={payload.stimulus_id}, text_preview={payload.text[:50]}")
 
     try:
