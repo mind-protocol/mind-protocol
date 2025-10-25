@@ -1169,10 +1169,66 @@ async def healthz(selftest: int = 0):
 if __name__ == "__main__":
     logger.info("Starting Mind Protocol WebSocket Server...")
 
+    # Victor "The Resurrector" - Hot-reload implementation
+    # Check if MP_HOT_RELOAD=1 is set (enabled by default in guardian.py)
+    hot_reload_enabled = os.getenv("MP_HOT_RELOAD", "0") == "1"
+
+    if hot_reload_enabled:
+        logger.info("🔥 HOT-RELOAD ENABLED - File watcher active for engine code changes")
+        logger.info("   Watching: consciousness_engine_v2.py, control_api.py, websocket_broadcast.py")
+
+        # Start file watcher in background thread
+        import threading
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+
+        class EngineFileWatcher(FileSystemEventHandler):
+            """Watches critical engine files and triggers full restart on changes."""
+            def __init__(self):
+                self.restart_requested = threading.Event()
+                # Files that require full restart (not just route reload)
+                self.watched_patterns = [
+                    'consciousness_engine_v2.py',
+                    'control_api.py',
+                    'websocket_broadcast.py',
+                    'falkordb_adapter.py',
+                    'node.py',
+                    'graph.py'
+                ]
+
+            def on_modified(self, event):
+                if event.is_directory:
+                    return
+
+                # Check if modified file matches watched patterns
+                for pattern in self.watched_patterns:
+                    if pattern in event.src_path:
+                        logger.warning(f"🔥 HOT-RELOAD: Detected change in {Path(event.src_path).name}")
+                        logger.warning(f"🔥 Triggering full restart in 2 seconds...")
+                        self.restart_requested.set()
+                        # Give time for file write to complete
+                        threading.Timer(2.0, lambda: os._exit(99)).start()
+                        return
+
+        watcher = EngineFileWatcher()
+        observer = Observer()
+        observer.schedule(watcher, str(Path(__file__).parent.parent.parent), recursive=True)
+        observer.start()
+        logger.info("✅ File watcher started")
+
     # Run server on port 8000
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info"
-    )
+    try:
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8000,
+            log_level="info"
+        )
+    except SystemExit as e:
+        if e.code == 99:
+            logger.info("🔥 HOT-RELOAD: Clean exit for restart")
+            raise
+    finally:
+        if hot_reload_enabled:
+            observer.stop()
+            observer.join()
