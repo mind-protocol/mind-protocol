@@ -663,3 +663,4 @@
 {"stimulus_id": "stim_1761416360916", "timestamp_ms": 1761416360916, "citizen_id": "felix", "text": "Screenshot: screenshot-1761416358883.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
 {"type": "ambient_thought", "content": "Testing dual-energy fix - verifying energy_runtime updates", "citizen_id": "ada", "timestamp": "2025-10-25T18:25:36Z"}
 {"stimulus_id": "stim_1761416819940", "timestamp_ms": 1761416819940, "citizen_id": "felix", "text": "Screenshot: screenshot-1761416817863.png | Context: periodic_capture", "severity": 0.5, "origin": "screenshot_capture"}
+{"type": "ambient_thought", "content": "Dashboard integration test - verifying node.flip events", "citizen_id": "ada", "timestamp": "2025-10-25T18:29:39Z"}
