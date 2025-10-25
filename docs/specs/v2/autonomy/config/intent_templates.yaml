@@ -1,0 +1,290 @@
+# Intent Templates Configuration
+# Version: 1.0
+# Created: 2025-10-25
+# Purpose: Template definitions for L2 autonomy intent matching and mission assignment
+# Owner: Ada (orchestration) + Atlas (implementation)
+
+# ==============================================================================
+# Template Definitions
+# ==============================================================================
+
+templates:
+  # ----------------------------------------------------------------------------
+  # 1. Fix Incident (Console/Log Errors → Citizen Remediation)
+  # ----------------------------------------------------------------------------
+  - id: intent.fix_incident
+    version: "1.0"
+    description: "Route operational incidents (console errors, log errors, crashes) to appropriate citizen for autonomous remediation"
+
+    # Matching Conditions
+    match:
+      source_types:
+        - "error.console"     # Frontend console errors (console_beacon)
+        - "error.log"         # Backend log errors (log_tail)
+        - "process.crash"     # Process failures (ProcessExec forensics)
+
+      severity:
+        min: 0.5              # Only ERROR/CRITICAL (not WARN)
+        quantile_gate: 0.75   # Must be above P75 of recent error severity
+
+      # Optional: match specific error patterns
+      patterns:
+        - regex: "TypeError|ReferenceError|null is not"
+          description: "JavaScript runtime errors"
+        - regex: "ConnectionError|TimeoutError|ECONNREFUSED"
+          description: "Network/connection failures"
+        - regex: "AssertionError|ValidationError"
+          description: "Data validation failures"
+
+    # Routing Rules (who gets assigned based on signal metadata)
+    routing:
+      - condition:
+          service: ["dashboard", "app/"]
+        assignee: "iris"
+        reason: "Frontend/dashboard errors go to Iris"
+
+      - condition:
+          service: ["websocket_server", "consciousness_engine", "mechanisms"]
+        assignee: "atlas"
+        reason: "Backend infrastructure errors go to Atlas"
+
+      - condition:
+          service: ["guardian", "launcher", "mpsv3_supervisor"]
+        assignee: "victor"
+        reason: "Ops/process management errors go to Victor"
+
+      - condition:
+          source_type: "process.crash"
+        assignee: "victor"
+        reason: "All crashes route to Victor for forensics"
+
+      # Default fallback
+      - condition: {}
+        assignee: "atlas"
+        reason: "Default backend triage"
+
+    # Acceptance Gates (when to auto-execute vs require ACK)
+    acceptance:
+      # Auto-execute conditions (all must be true)
+      auto_execute:
+        - condition: "severity < 0.8"  # Not sev1 (sev1 = 0.8-1.0)
+        - condition: "service NOT IN ['falkordb', 'mpsv3_supervisor']"  # Not sentinel-critical
+        - condition: "origin_chain_depth == 0"  # Not self-observation cascade
+        - condition: "duplicate_count == 0"  # Not a recurring flood
+
+      # ACK required conditions (any true → require human approval)
+      ack_required:
+        - condition: "severity >= 0.8"
+          reason: "Sev1 incidents require human visibility"
+        - condition: "service IN ['falkordb', 'mpsv3_supervisor']"
+          reason: "Sentinel-critical services require careful handling"
+        - condition: "origin_chain_depth >= 2"
+          reason: "Deep self-observation chains must be vetted"
+        - condition: "duplicate_count >= 5"
+          reason: "Recurring failures may indicate systemic issue"
+
+    # Mission Configuration
+    mission:
+      template: |
+        ## Incident Report
+
+        **Error:** {metadata.message}
+        **Service:** {metadata.service}
+        **Severity:** {severity} (sev{severity_level})
+        **Timestamp:** {timestamp_ms}
+
+        **Stack Trace:**
+        ```
+        {metadata.stack}
+        ```
+
+        **Context:**
+        - File: {metadata.file_path}:{metadata.line_number}
+        - Recent similar incidents: {duplicate_count}
+        - Origin: {source_type} via {metadata.event_source}
+
+        ## Your Mission
+
+        1. **Diagnose:** Review the error and stack trace. Identify root cause.
+        2. **Fix:** Implement a fix that addresses the root cause (not just symptoms).
+        3. **Verify:**
+           - Run relevant tests (unit/integration)
+           - Check logs for recurrence (5 min monitoring window)
+           - Confirm error count drops to zero
+        4. **Document:** Update SYNC.md with findings and fix.
+
+        ## Verification Criteria
+
+        - ✅ Error no longer appears in logs/console (5 min clean window)
+        - ✅ Tests pass (exit code 0)
+        - ✅ No new errors introduced (regression guard)
+        - ✅ Root cause documented in SYNC.md
+
+      # Expected outcome for verification
+      expected_outcome:
+        error_count_drops: true
+        verification_query: |
+          MATCH (s:Stimulus {source_type: $source_type, metadata.service: $service})
+          WHERE s.timestamp_ms > $fix_timestamp
+          RETURN count(s) as post_fix_count
+        success_condition: "post_fix_count == 0"
+
+      # Time limits
+      sla:
+        max_duration_minutes: 30  # Citizen has 30 min to fix
+        verification_window_minutes: 5  # Monitor for 5 min post-fix
+
+    # Metadata for tracking
+    metadata:
+      priority_lane: "incidents"
+      cooldown_window_sec: 300  # 5 min cooldown for same error
+      merge_keys: ["service", "message"]  # Dedupe by service + message
+      max_fanout: 1  # Only create one intent per unique error
+
+  # ----------------------------------------------------------------------------
+  # 2. Sync Docs/Scripts (Code↔Doc Drift → Counterpart Update)
+  # ----------------------------------------------------------------------------
+  - id: intent.sync_docs_scripts
+    version: "1.0"
+    description: "Detect code↔doc drift and auto-sync counterparts to maintain coherence"
+
+    # Matching Conditions
+    match:
+      source_types:
+        - "code_change"      # git_watcher detects code change (SCRIPT_MAP.md)
+        - "doc_change"       # git_watcher detects doc change
+
+      # Drift threshold
+      drift_hours:
+        min: 24              # Only act if drift >24 hours
+        quantile_gate: 0.5   # Must be above median drift duration
+
+    # Routing Rules
+    routing:
+      - condition:
+          source_type: "code_change"
+          counterpart_type: "doc"
+        assignee: "ada"
+        reason: "Code changes → Ada updates documentation"
+
+      - condition:
+          source_type: "doc_change"
+          counterpart_type: "code"
+        assignee: "atlas"
+        reason: "Doc changes → Atlas syncs implementation"
+
+      # Default
+      - condition: {}
+        assignee: "ada"
+        reason: "Default documentation triage"
+
+    # Acceptance Gates
+    acceptance:
+      # Auto-execute (safe operations)
+      auto_execute:
+        - condition: "drift_hours >= 24 AND drift_hours < 168"  # 1 day - 1 week
+        - condition: "file_size_kb < 50"  # Small files only
+        - condition: "origin_chain_depth == 0"  # Not cascaded
+
+      # ACK required
+      ack_required:
+        - condition: "drift_hours >= 168"  # 1 week+ stale = review needed
+        - condition: "file_size_kb >= 50"  # Large files need review
+        - condition: "counterpart_path CONTAINS 'architecture' OR counterpart_path CONTAINS 'CRITICAL'"
+        reason: "Architecture docs need careful review"
+
+    # Mission Configuration
+    mission:
+      template: |
+        ## Code/Doc Drift Detected
+
+        **Source:** {metadata.file_path}
+        **Counterpart:** {metadata.counterpart_path}
+        **Drift Duration:** {metadata.drift_duration_hours} hours ({metadata.drift_duration_days} days)
+        **Change Type:** {source_type}
+
+        **Diff Excerpt:**
+        ```diff
+        {metadata.diff_excerpt}
+        ```
+
+        ## Your Mission
+
+        1. **Review:** Understand what changed in the source file.
+        2. **Sync:** Update the counterpart file to reflect changes:
+           - If code_change → update docs to match new implementation
+           - If doc_change → update code to match new spec
+        3. **Verify:**
+           - Ensure counterpart accurately reflects source
+           - Check for broken references or outdated examples
+           - Run tests if code was modified
+        4. **Document:** Add entry to SYNC.md noting sync completion.
+
+        ## Verification Criteria
+
+        - ✅ Counterpart file updated and committed
+        - ✅ No broken references or examples
+        - ✅ Tests pass (if code modified)
+        - ✅ SYNC.md updated
+
+      expected_outcome:
+        counterpart_updated: true
+        verification_query: |
+          MATCH (f:File {name: $counterpart_path})
+          WHERE f.metadata.mtime > $sync_timestamp
+          RETURN f.metadata.mtime as last_modified
+        success_condition: "last_modified > sync_timestamp"
+
+      sla:
+        max_duration_minutes: 45  # 45 min to sync
+        verification_window_minutes: 0  # No post-sync monitoring
+
+    metadata:
+      priority_lane: "sync"
+      cooldown_window_sec: 3600  # 1 hour cooldown per file pair
+      merge_keys: ["file_path", "counterpart_path"]
+      max_fanout: 1  # One intent per file pair
+
+# ==============================================================================
+# Template Metadata
+# ==============================================================================
+
+metadata:
+  schema_version: "1.0"
+  last_updated: "2025-10-25"
+  owner: "Ada Bridgekeeper (orchestration)"
+
+  # Validation rules
+  validation:
+    required_fields: ["id", "version", "match", "routing", "acceptance", "mission"]
+    allowed_source_types:
+      - "error.console"
+      - "error.log"
+      - "process.crash"
+      - "code_change"
+      - "doc_change"
+      - "runtime.anomaly"
+      - "screenshot"
+
+  # Usage notes
+  notes: |
+    Intent templates define:
+    1. Match conditions (which signals trigger this intent)
+    2. Routing rules (which citizen gets assigned)
+    3. Acceptance gates (auto-execute vs ACK required)
+    4. Mission template (instructions for the citizen)
+    5. Verification criteria (how to confirm success)
+
+    Templates are evaluated in order. First match wins.
+
+    ACK policies ensure human oversight for:
+    - High severity incidents (sev1/sev2)
+    - Sentinel-critical services (FalkorDB, supervisor)
+    - Deep self-observation chains (depth >= 2)
+    - Recurring failures (duplicate_count >= threshold)
+
+    Auto-execute is safe for:
+    - Low-medium severity incidents
+    - Non-critical services
+    - First-occurrence errors
+    - Code/doc sync for small files with moderate drift
