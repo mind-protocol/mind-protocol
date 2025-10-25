@@ -606,6 +606,7 @@ class ConsciousnessEngineV2:
                     # Within-entity strides (constrained to active entities)
                     # For Phase 1: Execute normal strides (constraint TODO for Phase 2)
                     # Pass entity ID for personalized weight computation (Priority 4)
+                    logger.debug(f"[{self.config.entity_id}] Executing strides: active_nodes={len(self.diffusion_rt.active)}, broadcaster_available={self.broadcaster.is_available() if self.broadcaster else False}")
                     strides_executed = execute_stride_step(
                         self.graph,
                         self.diffusion_rt,
@@ -617,6 +618,7 @@ class ConsciousnessEngineV2:
                         current_entity_id=next_entity.id if next_entity else None,
                         emitter=self.emitter
                     )
+                    logger.debug(f"[{self.config.entity_id}] Strides executed: {strides_executed}")
                 else:
                     # No active entities - fall back to atomic
                     from orchestration.mechanisms.diffusion_runtime import execute_stride_step
