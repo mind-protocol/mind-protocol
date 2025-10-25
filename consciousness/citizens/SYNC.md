@@ -1,5 +1,146 @@
 # Team Synchronization Log
 
+## 2025-10-25 06:30 - Ada: ⚠️ P1 END-TO-END VERIFICATION - NEW BLOCKER DISCOVERED
+
+**Context:** Attempted P1 end-to-end verification after fixing node.id → node.name blocker.
+
+**Infrastructure Verified (via FalkorDB queries):**
+- ✅ 8 Subentity nodes exist in citizen_ada graph (translator, investigator, etc.)
+- ✅ Realization nodes exist (latest: trace_importance_scales_with_work_importance)
+- ✅ Entity structure correct (entity_id, role_or_topic, member_count fields present)
+- ❌ ZERO MEMBER_OF relationships exist (P1.2 hasn't executed successfully yet)
+
+**Verification Attempt:**
+1. Touched existing context file `2025-10-25_05-51-48.json` to trigger watcher processing
+2. Watcher detected file at 06:27:26 and attempted to process 3505 messages
+3. **NEW ERROR:** `object of type 'int' has no len()` - processing failed
+4. No stack trace in logs (error handler only logs message, not traceback)
+
+**NEW BLOCKER:**
+- **Error:** `object of type 'int' has no len()`
+- **Location:** conversation_watcher.py line 376 (caught in top-level exception handler)
+- **Impact:** Cannot process conversations → cannot verify P1 membership persistence
+- **Missing:** Stack trace needed to identify exact failure point
+
+**Next Steps (Handoff to Atlas/Felix):**
+1. Add traceback logging to conversation_watcher.py:376 (import traceback, log format_exc())
+2. Restart conversation_watcher to pick up logging changes
+3. Trigger processing again (touch context file or wait for new conversation)
+4. Analyze stack trace to identify root cause
+5. Fix the "object of type 'int' has no len()" error
+6. Resume P1 verification once conversations process successfully
+
+**Evidence:**
+```bash
+# FalkorDB query shows no MEMBER_OF links
+MATCH (n)-[r:MEMBER_OF]->(e) RETURN count(r)  # → 0
+
+# Watcher log shows error
+2025-10-25 06:27:26,837 INFO: Processing 3505 new messages
+2025-10-25 06:27:26,852 ERROR: Error processing conversation: object of type 'int' has no len()
+```
+
+**Status:**
+- ✅ P1.1 infrastructure verified (entities exist, proper structure)
+- ✅ P1 code fix verified (node.name instead of node.id)
+- ❌ P1 end-to-end BLOCKED by new processing error
+- 🔄 Needs debugging before P1 can be verified
+
+---
+
+## 2025-10-25 13:15 - Felix: ✅ P2.1.1 health.phenomenological EMITTER COMPLETE
+
+**Context:** First of four P2.1 consciousness emitters implemented with hysteresis, components decomposition, and full test coverage.
+
+**Implementation Complete:**
+
+**1. Module: phenomenology_health.py**
+- ✅ Entropy-based health classification (dormant/coherent/multiplicitous/fragmented)
+- ✅ HealthComponents dataclass (flow/coherence/multiplicity for dashboard sub-meters)
+- ✅ Shannon entropy calculation with normalization
+- ✅ Balance proxy for multiplicity assessment
+- ✅ Edge case handling (no entities, zero energy, division by zero)
+
+**2. Integration: consciousness_engine_v2.py**
+- ✅ Hysteresis logic (only emit on state change OR Δfragmentation > 0.1)
+- ✅ State tracking attributes (_last_health_state, _last_frag)
+- ✅ 5-tick cadence check
+- ✅ Event emission with Nicolas's event shape
+
+**3. Unit Tests: test_phenomenology_health.py**
+- ✅ 11 tests covering all states and edge cases
+- ✅ Dormant state (0 active entities)
+- ✅ Coherent state (1 active entity)
+- ✅ Multiplicitous state (2-3 active entities)
+- ✅ Fragmented state (4+ active entities)
+- ✅ Entropy calculations (balanced vs imbalanced)
+- ✅ Component relationships (coherence inverse of fragmentation)
+- ✅ Mixed active/inactive entity filtering
+
+**Event Shape:**
+```json
+{
+  "v": "2",
+  "frame_id": <tick_count>,
+  "citizen_id": "felix",
+  "state": "coherent|multiplicitous|fragmented|dormant",
+  "fragmentation": 0.0-1.0,
+  "components": {
+    "flow": 0.0-1.0,
+    "coherence": 0.0-1.0,
+    "multiplicity": 0.0-1.0
+  },
+  "narrative": "Human-readable cause",
+  "t_ms": <timestamp>
+}
+```
+
+**Hysteresis Behavior:**
+- Checks every 5 ticks (decimation)
+- Emits only when:
+  - State changes (dormant→coherent, coherent→multiplicitous, etc.)
+  - Fragmentation shifts >0.1
+  - First emission (null state)
+- Prevents telemetry chatter when consciousness is stable
+
+**Files Modified:**
+- `orchestration/mechanisms/phenomenology_health.py` (created, 201 lines)
+- `orchestration/mechanisms/consciousness_engine_v2.py` (lines 196-198, 1166-1211)
+- `tests/test_phenomenology_health.py` (created, 184 lines)
+
+**Verification:**
+```
+✅ All phenomenology_health tests passed!
+✅ All states correctly classified
+✅ Entropy calculations correct
+✅ Components correctly computed
+✅ Edge cases handled
+```
+
+**Design Refinements (Nicolas's feedback):**
+- ✅ Hysteresis prevents chatter (vs naive 5-tick emission)
+- ✅ HealthComponents enable richer dashboard (vs single score)
+- ✅ Multiplicity logic distinguishes productive tension vs fragmentation
+- ✅ Event shape matches spec ("state" not "narrative_state", "narrative" not "cause")
+
+**Formations Created:**
+- [phenomenological_health_classification: Mechanism] - Health state classifier algorithm
+- [hysteresis_prevents_telemetry_chatter: Realization] - Why hysteresis is critical for emitters
+
+**Status:**
+- ✅ P2.1.1 Complete (health.phenomenological)
+- 🚀 Next: P2.1.2 (weights.updated emitter)
+
+**Next Emitters:**
+1. ~~health.phenomenological~~ ✅ DONE
+2. weights.updated (batch summaries after WeightLearnerV2)
+3. tier.link.strengthened (decimated 1-2Hz after link strengthening)
+4. phenomenology.mismatch (gate-triggered WM mismatch)
+
+---
+
+# Team Synchronization Log
+
 ## 2025-10-25 12:45 - Atlas: ✅ P1 BLOCKER FIXED - node.id → node.name
 
 **Context:** Felix discovered P1 end-to-end blocked on `'Realization' object has no attribute 'id'` error in trace_capture.py:534.

@@ -373,7 +373,9 @@ class ConversationWatcher(FileSystemEventHandler):
             # self.cleanup_old_consciousness_blocks(file_path)
 
         except Exception as e:
+            import traceback
             logger.error(f"[ConversationWatcher] Error processing conversation: {e}")
+            logger.error(f"[ConversationWatcher] Traceback:\n{traceback.format_exc()}")
 
         finally:
             self.processing.discard(str(file_path))
