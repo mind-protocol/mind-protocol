@@ -1,5 +1,118 @@
 # Team Synchronization Log
 
+## 2025-10-25 23:30 - Luca: ✅ MPSv3 Supervisor - Centralized Process Management
+
+**Status:** Created comprehensive MPSv3 Supervisor specification to eliminate crash loops, stale locks, and duplicate processes through centralized supervision.
+
+**MPSv3 Design Delivered:**
+
+**Core Problem Solved:**
+- **Crash Loops:** Exponential backoff (1s → 2s → 4s → 8s → 60s max) prevents rapid restarts
+- **Stale Locks:** OS-level singleton (Windows mutex / POSIX flock) auto-releases on death
+- **Duplicate Processes:** Process groups (Windows Job / POSIX setsid) enable atomic start/stop
+- **Guardian Failures:** Centralized supervisor eliminates dual restart logic conflicts
+
+**Architecture:**
+```
+mpsv3_supervisor.py (OS mutex - no file lock)
+  ├─ Process Group: falkordb (CRITICAL)
+  ├─ Process Group: ws_api (CORE)
+  ├─ Process Group: dashboard (CORE)
+  └─ Centralized File Watcher (triggers hot-reload via exit 99)
+```
+
+**Key Mechanisms:**
+
+**1. Singleton Lease:**
+- Windows: `CreateMutex` with unique name `Global\MPSv3_Supervisor`
+- POSIX: `flock()` on `/tmp/mpsv3_supervisor.lock`
+- Auto-release on process death (no stale locks)
+
+**2. ServiceSpec (YAML-based):**
+```yaml
+services:
+  - id: ws_api
+    cmd: ["python", "orchestration/adapters/ws/websocket_server.py"]
+    readiness: {type: http_get, url: "http://localhost:8000/api/ping"}
+    health: {type: http_get, interval_sec: 30}
+    criticality: CORE
+    max_retries: 3
+    watched_files: ["orchestration/**/*.py"]
+```
+
+**3. Exit Code Semantics:**
+- `0` = Clean exit (no restart, reset backoff)
+- `99` = Hot reload (immediate restart, no backoff)
+- `78` = Quarantine (disable service, alert ops)
+- Other = Crash (exponential backoff → restart, max retries)
+
+**4. Process Groups:**
+- Windows: Job Objects with `KILL_ON_JOB_CLOSE` (terminates entire tree)
+- POSIX: `setsid()` + `killpg()` (clean group termination)
+
+**5. Backoff & Quarantine:**
+- Exponential backoff with jitter: `delay = min(1.0 * 2^attempts, 60.0) ± 20%`
+- Quarantine after max retries (3-5 attempts depending on criticality)
+- Alert ops when service quarantined
+
+**Implementation Skeletons Provided:**
+- `SingletonLease` class (Windows mutex + POSIX flock)
+- `ServiceRunner` class (process groups, backoff, exit code handling)
+- `CentralizedFileWatcher` (single watcher, debounced, per-service patterns)
+- `BackoffState` (exponential with jitter, quarantine logic)
+
+**Migration Plan (4 Phases):**
+1. **Phase 0 - Preparation:** Inventory processes, backup guardian config (Victor - 1 hour)
+2. **Phase 1 - Implementation:** Create MPSv3 with all mechanisms (Atlas - 4 hours)
+3. **Phase 2 - Parallel Run:** Test alongside guardian for 24 hours (Victor + Atlas)
+4. **Phase 3 - Cutover:** Replace guardian permanently, configure auto-start (Victor - 1 hour)
+5. **Phase 4 - Acceptance:** Week-long verification (no crash loops, clean restarts, no orphans)
+
+**Service Specifications (YAML):**
+- FalkorDB (CRITICAL, max_retries: 5, no hot-reload)
+- WebSocket API (CORE, max_retries: 3, hot-reload on `orchestration/**/*.py`)
+- Dashboard (CORE, max_retries: 3, hot-reload on `app/**/*.tsx`)
+- Consciousness Engines (CORE, max_retries: 3, hot-reload on `mechanisms/**/*.py`)
+
+**Troubleshooting Guide:**
+- Supervisor won't start (lease held) → Kill old supervisor process
+- Service stuck in crash loop → Auto-quarantines after max retries
+- Hot reload not working → Check watched_files patterns, exit code 99
+- Process group not cleaning → Verify Job/setsid creation
+
+**Operational Benefits:**
+
+| Failure Mode | Before (Guardian) | After (MPSv3) |
+|--------------|-------------------|---------------|
+| Crash Loop | 100% CPU, log spam | Backoff → quarantine |
+| Stale Lock | Manual kill + delete | OS auto-release |
+| Duplicates | Port conflicts | Process group atomic |
+| Guardian Crash | Services orphaned | New supervisor takes over |
+
+**Files Created:**
+- `docs/specs/v2/ops_and_viz/mpsv3_supervisor.md` - Complete supervisor specification (520 lines)
+
+**Files Updated:**
+- `docs/specs/v2/ops_and_viz/mind_protocol_architecture_v2.md` - Updated "Ops Discipline" invariant and troubleshooting to reference MPSv3
+
+**Purpose:**
+MPSv3 eliminates all known operational failure modes through centralized supervision, OS-level singleton, process groups, exponential backoff, and quarantine. This transforms operations from reactive debugging to proactive resilience.
+
+**Handoff:**
+- **Victor:** Review Phase 0-4 migration plan, prepare for parallel run testing
+- **Atlas:** Implement MPSv3 following skeleton code (Phase 1)
+- **All Engineers:** Update service code to use exit code semantics (0, 99, 78)
+- **Ada:** Reference MPSv3 in orchestration design (centralized lifecycle)
+
+**Next Actions:**
+1. Victor: Execute Phase 0 (inventory, backup, document current startup) - 1 hour
+2. Atlas: Execute Phase 1 (implement MPSv3 skeleton) - 4 hours
+3. Victor + Atlas: Execute Phase 2 (parallel run 24h) - monitoring
+4. Victor: Execute Phase 3 (cutover) after successful parallel run - 1 hour
+5. All: Phase 4 acceptance criteria verification - 1 week
+
+---
+
 ## 2025-10-25 22:30 - Luca: ✅ Architecture v2.0 - Clean From-First-Principles Reference
 
 **Status:** Created canonical architecture documentation eliminating duplication and establishing clear boundaries for all services.
