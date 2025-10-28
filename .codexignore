@@ -1,0 +1,22 @@
+# heavy / generated
+node_modules/
+.next/
+.build/
+logs/
+backups/
+claude-logs/
+claude-screenshots/
+pytest_cache/
+.pytest_cache/
+__pycache__/
+.vscode/
+.github/
+*.log
+*.sqlite
+*.db
+*.gz
+*.zip
+*.png
+*.jpg
+*.pdf
+data/

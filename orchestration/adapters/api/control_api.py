@@ -19,9 +19,9 @@ Endpoints:
     WS   /ws                                       - Live operations stream
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 import json
 import logging
 from datetime import datetime, timezone
@@ -36,6 +36,15 @@ from orchestration.adapters.storage.engine_registry import (
     get_engine
 )
 from orchestration.mechanisms.affective_telemetry_buffer import get_affective_buffer
+from orchestration.libs.utils.falkordb_adapter import get_falkordb_graph
+from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
+from orchestration.services.economy.runtime import get_runtime as get_economy_runtime
+
+try:  # Wallet custody service is optional until configured
+    from orchestration.services.wallet_custody.config import WalletCustodySettings
+    from orchestration.services.wallet_custody.service import WalletCustodyService
+except Exception:  # pragma: no cover - service not configured
+    WalletCustodyService = None  # type: ignore[assignment]
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -179,6 +188,29 @@ class WebSocketManager:
 # Global singleton instance
 websocket_manager = WebSocketManager()
 
+# Lazy-initialised wallet custody service
+_wallet_custody_service: Optional["WalletCustodyService"] | bool = None
+
+
+def _get_wallet_service() -> Optional[WalletCustodyService]:
+    global _wallet_custody_service
+
+    if WalletCustodyService is None:
+        return None
+
+    if _wallet_custody_service is False:
+        return None
+
+    if _wallet_custody_service is None:
+        try:
+            settings = WalletCustodySettings.from_env()
+            _wallet_custody_service = WalletCustodyService(settings)
+        except Exception as exc:  # pragma: no cover - env not ready
+            logger.warning("[WebSocket] Wallet custody service unavailable: %s", exc)
+            _wallet_custody_service = False
+
+    return _wallet_custody_service or None
+
 # Snapshot generation will be added by Iris (TODO)
 
 # Create router
@@ -217,6 +249,108 @@ async def get_system_status_endpoint():
         }
     """
     return get_system_status()
+
+
+@router.get("/consciousness/constant-debt")
+async def get_constant_debt():
+    """
+    Get constant debt metrics (Tier 1 Amendment 4).
+
+    Tracks progress toward zero-constant architecture:
+    - WM alpha debt: How many COACTIVATES_WITH edges still use constant alpha
+    - Mode contour debt: How many contours are still from bootstrap vs learned
+
+    Returns:
+        {
+            "wm_alpha": {
+                "total_edges": 600,
+                "constant_count": 180,
+                "learned_count": 420,
+                "debt_ratio": 0.30
+            },
+            "mode_contours": [
+                {
+                    "mode_id": "guardian",
+                    "entry_source": "learned",
+                    "entry_samples": 450,
+                    "exit_source": "learned",
+                    "exit_samples": 520
+                }
+            ]
+        }
+    """
+    try:
+        # Get all graphs to check across citizens
+        graph_store = get_falkordb_graph()
+
+        # Metric 1: WM Alpha Debt
+        alpha_query = """
+        MATCH ()-[r:COACTIVATES_WITH]->()
+        WITH
+          count(*) AS total,
+          sum(CASE WHEN coalesce(r.alpha_source, 'constant') = 'constant' THEN 1 ELSE 0 END) AS constant,
+          sum(CASE WHEN coalesce(r.alpha_source, 'constant') = 'learned' THEN 1 ELSE 0 END) AS learned
+        RETURN
+          total AS total_edges,
+          constant AS constant_count,
+          learned AS learned_count,
+          CASE WHEN total > 0 THEN (constant * 1.0 / total) ELSE 0.0 END AS debt_ratio
+        """
+
+        # Metric 2: Mode Contour Debt
+        contour_query = """
+        MATCH (m:Mode)
+        OPTIONAL MATCH (m)-[:HAS_ENTRY_CONTOUR]->(entry:Contour)
+        OPTIONAL MATCH (m)-[:HAS_EXIT_CONTOUR]->(exit:Contour)
+        RETURN
+          m.id AS mode_id,
+          coalesce(entry.source, 'none') AS entry_source,
+          coalesce(entry.sample_size, 0) AS entry_samples,
+          coalesce(exit.source, 'none') AS exit_source,
+          coalesce(exit.sample_size, 0) AS exit_samples
+        """
+
+        # Execute queries
+        alpha_result = graph_store.query(alpha_query)
+        contour_result = graph_store.query(contour_query)
+
+        # Parse WM alpha results
+        wm_alpha = {
+            "total_edges": 0,
+            "constant_count": 0,
+            "learned_count": 0,
+            "debt_ratio": 0.0
+        }
+
+        if hasattr(alpha_result, 'result_set') and alpha_result.result_set:
+            row = alpha_result.result_set[0]
+            wm_alpha = {
+                "total_edges": int(row[0]),
+                "constant_count": int(row[1]),
+                "learned_count": int(row[2]),
+                "debt_ratio": float(row[3])
+            }
+
+        # Parse mode contour results
+        mode_contours = []
+        if hasattr(contour_result, 'result_set'):
+            for row in contour_result.result_set:
+                mode_contours.append({
+                    "mode_id": row[0],
+                    "entry_source": row[1],
+                    "entry_samples": int(row[2]),
+                    "exit_source": row[3],
+                    "exit_samples": int(row[4])
+                })
+
+        return {
+            "wm_alpha": wm_alpha,
+            "mode_contours": mode_contours
+        }
+
+    except Exception as e:
+        logger.error(f"[ConstantDebt] Failed to fetch metrics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch constant debt: {str(e)}")
 
 
 @router.post("/consciousness/pause-all")
@@ -448,6 +582,226 @@ def _normalize_timestamp(value):
     return None
 
 
+def _normalize_slug(value: str) -> str:
+    if not value:
+        return ''
+
+    normalized = value.strip().lower()
+    for delimiter in [' ', '_']:
+        normalized = normalized.replace(delimiter, '-')
+    while '--' in normalized:
+        normalized = normalized.replace('--', '-')
+    return normalized
+
+
+def _display_name(value: str) -> str:
+    return value.replace('-', ' ').replace('_', ' ').title()
+
+
+def _build_graph_name(ecosystem: str, organization: Optional[str] = None, citizen: Optional[str] = None) -> str:
+    parts = [_normalize_slug(ecosystem)]
+    if organization:
+        parts.append(_normalize_slug(organization))
+    if citizen:
+        parts.append(_normalize_slug(citizen))
+    return "_".join(parts)
+
+
+def _collect_graph_hierarchy(redis_client) -> Dict[str, Dict[str, Any]]:
+    graphs = redis_client.execute_command("GRAPH.LIST") or []
+    hierarchy: Dict[str, Dict[str, Any]] = {}
+
+    for raw in graphs:
+        graph_name = raw.decode('utf-8') if isinstance(raw, bytes) else raw
+        segments = graph_name.split('_')
+
+        if len(segments) == 1:
+            ecosystem_slug = segments[0]
+            entry = hierarchy.setdefault(ecosystem_slug, {
+                "graph_id": graph_name,
+                "organizations": {},
+                "citizens": {}
+            })
+            entry["graph_id"] = graph_name
+            continue
+
+        if len(segments) >= 2:
+            ecosystem_slug = segments[0]
+            organization_slug = segments[1]
+            entry = hierarchy.setdefault(ecosystem_slug, {
+                "graph_id": ecosystem_slug,
+                "organizations": {},
+                "citizens": {}
+            })
+            org_entry = entry["organizations"].setdefault(organization_slug, {
+                "graph_id": f"{ecosystem_slug}_{organization_slug}",
+                "citizens": {}
+            })
+
+            if len(segments) >= 3:
+                citizen_slug = "_".join(segments[2:])
+                org_entry["citizens"][citizen_slug] = graph_name
+
+    return hierarchy
+
+
+def _resolve_actual_graph_id(r, graph_type: str, requested_id: str) -> str:
+    all_graphs = r.execute_command("GRAPH.LIST") or []
+    normalized_graphs = {
+        g.decode('utf-8') if isinstance(g, bytes) else g for g in all_graphs
+    }
+
+    if requested_id in normalized_graphs:
+        return requested_id
+
+    raise HTTPException(status_code=404, detail=f"Graph not found: {requested_id}")
+
+
+@router.get("/ecosystems")
+async def list_ecosystems():
+    import redis
+
+    try:
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        hierarchy = _collect_graph_hierarchy(r)
+
+        ecosystems: List[Dict[str, Any]] = []
+        for ecosystem_slug, data in sorted(hierarchy.items()):
+            organizations = []
+            for org_slug, org_data in sorted(data["organizations"].items()):
+                citizens = [
+                    {
+                        "slug": citizen_slug,
+                        "graph_id": citizen_graph_id,
+                        "name": _display_name(citizen_slug)
+                    }
+                    for citizen_slug, citizen_graph_id in sorted(org_data["citizens"].items())
+                ]
+                organizations.append({
+                    "slug": org_slug,
+                    "graph_id": org_data["graph_id"],
+                    "name": _display_name(org_slug),
+                    "citizens": citizens
+                })
+
+            ecosystems.append({
+                "slug": ecosystem_slug,
+                "graph_id": data["graph_id"],
+                "name": _display_name(ecosystem_slug),
+                "organizations": organizations
+            })
+
+        return {"ecosystems": ecosystems}
+    except Exception as e:
+        logger.error(f"[API] Failed to enumerate ecosystems: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to enumerate ecosystems: {str(e)}")
+
+
+@router.get("/ecosystem/{ecosystem_slug}/graphs")
+async def get_ecosystem_graphs(ecosystem_slug: str):
+    import redis
+
+    ecosystem_key = _normalize_slug(ecosystem_slug)
+
+    try:
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        hierarchy = _collect_graph_hierarchy(r)
+        if ecosystem_key not in hierarchy:
+            raise HTTPException(status_code=404, detail=f"Ecosystem not found: {ecosystem_slug}")
+
+        data = hierarchy[ecosystem_key]
+        organizations = [
+            {
+                "slug": org_slug,
+                "graph_id": org_data["graph_id"],
+                "name": _display_name(org_slug)
+            }
+            for org_slug, org_data in sorted(data["organizations"].items())
+        ]
+
+        return {
+            "ecosystem": {
+                "slug": ecosystem_key,
+                "graph_id": data["graph_id"],
+                "name": _display_name(ecosystem_key)
+            },
+            "organizations": organizations
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[API] Failed to fetch ecosystem graphs: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch ecosystem graphs: {str(e)}")
+
+
+@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/graphs")
+async def get_organization_graphs(ecosystem_slug: str, organization_slug: str):
+    import redis
+
+    ecosystem_key = _normalize_slug(ecosystem_slug)
+    organization_key = _normalize_slug(organization_slug)
+
+    try:
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        hierarchy = _collect_graph_hierarchy(r)
+        if ecosystem_key not in hierarchy:
+            raise HTTPException(status_code=404, detail=f"Ecosystem not found: {ecosystem_slug}")
+
+        ecosystem_data = hierarchy[ecosystem_key]
+        org_data = ecosystem_data["organizations"].get(organization_key)
+        if not org_data:
+            raise HTTPException(status_code=404, detail=f"Organization not found: {organization_slug}")
+
+        citizens = [
+            {
+                "slug": citizen_slug,
+                "graph_id": citizen_graph_id,
+                "name": _display_name(citizen_slug)
+            }
+            for citizen_slug, citizen_graph_id in sorted(org_data["citizens"].items())
+        ]
+
+        return {
+            "ecosystem": {
+                "slug": ecosystem_key,
+                "graph_id": ecosystem_data["graph_id"],
+                "name": _display_name(ecosystem_key)
+            },
+            "organization": {
+                "slug": organization_key,
+                "graph_id": org_data["graph_id"],
+                "name": _display_name(organization_key)
+            },
+            "citizens": citizens
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[API] Failed to fetch organization graphs: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch organization graphs: {str(e)}")
+
+
+@router.get("/ecosystem/{ecosystem_slug}")
+async def get_ecosystem_graph_hierarchy(ecosystem_slug: str):
+    """Hierarchical Niveau route for ecosystem-level graph snapshots."""
+    graph_id = _build_graph_name(ecosystem_slug)
+    return await get_graph_data(graph_type='ecosystem', graph_id=graph_id)
+
+
+@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}")
+async def get_organization_graph_hierarchy(ecosystem_slug: str, organization_slug: str):
+    """Hierarchical Niveau route for organization graphs nested under an ecosystem."""
+    graph_id = _build_graph_name(ecosystem_slug, organization_slug)
+    return await get_graph_data(graph_type='organization', graph_id=graph_id)
+
+
+@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/citizen/{citizen_slug}")
+async def get_citizen_graph_hierarchy(ecosystem_slug: str, organization_slug: str, citizen_slug: str):
+    """Hierarchical Niveau route for citizen graphs nested under org + ecosystem."""
+    graph_id = _build_graph_name(ecosystem_slug, organization_slug, citizen_slug)
+    return await get_graph_data(graph_type='citizen', graph_id=graph_id)
+
+
 @router.get("/graph/{graph_type}/{graph_id}")
 async def get_graph_data(graph_type: str, graph_id: str):
     """
@@ -507,10 +861,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
         # Connect to FalkorDB
         r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-        # Verify graph exists
-        all_graphs = r.execute_command("GRAPH.LIST")
-        if graph_id not in all_graphs:
-            raise HTTPException(status_code=404, detail=f"Graph not found: {graph_id}")
+        actual_graph_id = _resolve_actual_graph_id(r, graph_type, graph_id)
 
         # Query all nodes
         # Return node properties we care about for visualization
@@ -518,7 +869,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
         node_query = """
         MATCH (n)
         RETURN
-            id(n) AS id,
+            COALESCE(n.id, toString(id(n))) AS id,
             n.name AS node_id,
             labels(n) AS labels,
             CASE
@@ -528,6 +879,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
             n.description AS text,
             n.confidence AS confidence,
             n.E AS energy,
+            n.entity_activations AS entity_activations,
             n.last_active AS last_active,
             n.last_traversal_time AS last_traversal_time,
             n.traversal_count AS traversal_count,
@@ -539,7 +891,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
         LIMIT 1000
         """
 
-        node_result = r.execute_command("GRAPH.QUERY", graph_id, node_query)
+        node_result = r.execute_command("GRAPH.QUERY", actual_graph_id, node_query)
 
         # FalkorDB returns: [header, rows, metadata]
         # header = list of column names
@@ -578,17 +930,24 @@ async def get_graph_data(graph_type: str, graph_id: str):
                     if ts_field in node_dict:
                         node_dict[ts_field] = _normalize_timestamp(node_dict[ts_field])
 
+                # Parse JSON fields back to objects
+                if 'entity_activations' in node_dict and node_dict['entity_activations']:
+                    try:
+                        node_dict['entity_activations'] = json.loads(node_dict['entity_activations'])
+                    except (json.JSONDecodeError, TypeError):
+                        node_dict['entity_activations'] = {}
+
                 nodes.append(node_dict)
 
         # Query all links
-        # Use internal IDs for source/target to match node.id
-        # Frontend expects numeric IDs, not node names
+        # Use actual node IDs (n.id property) for source/target to match corrected node.id
+        # FIXED: Was using id(a)/id(b) which returns internal numeric IDs, now uses actual node.id property
         link_query = """
         MATCH (a)-[r]->(b)
         RETURN
-            id(r) AS id,
-            id(a) AS source,
-            id(b) AS target,
+            COALESCE(r.id, toString(id(r))) AS id,
+            COALESCE(a.id, toString(id(a))) AS source,
+            COALESCE(b.id, toString(id(b))) AS target,
             type(r) AS type,
             r.confidence AS strength,
             r.last_traversed AS last_traversed,
@@ -597,7 +956,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
         LIMIT 5000
         """
 
-        link_result = r.execute_command("GRAPH.QUERY", graph_id, link_query)
+        link_result = r.execute_command("GRAPH.QUERY", actual_graph_id, link_query)
 
         links = []
         if link_result and len(link_result) > 1:
@@ -649,7 +1008,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
         LIMIT 100
         """
 
-        subentity_result = r.execute_command("GRAPH.QUERY", graph_id, subentity_query)
+        subentity_result = r.execute_command("GRAPH.QUERY", actual_graph_id, subentity_query)
 
         subentities = []
         if subentity_result and len(subentity_result) > 1:
@@ -820,10 +1179,10 @@ async def get_viz_snapshot(graph_id: str):
     active_nodes = sum(1 for node in graph.nodes.values() if node.E >= node.theta)
     active_links = len([link for link in graph.links.values() if link.energy > 0])
 
-    # Subentity breakdown (empty for V2 - entity differentiation via membership, not buffers)
+    # Subentity breakdown (empty for V2 - subentity differentiation via membership, not buffers)
     entity_energies = {}
     # NOTE: V2 architecture uses single-energy E per node
-    # Entity differentiation handled by mechanism layer, not energy buffers
+    # SubEntity differentiation handled by mechanism layer, not energy buffers
     if False:  # Disabled for V2
         for node in graph.nodes.values():
             for ent, energy in {}.items():  # Empty dict
@@ -1094,128 +1453,215 @@ async def get_telemetry_counters():
     }
 
 
-# === Entity Membership Endpoints ===
+# === SubEntity Membership Endpoints ===
 
 
-@router.get("/entity/{entity_name}/members")
-async def get_entity_members(
-    entity_name: str,
-    graph_name: Optional[str] = None,
-    node_type: Optional[str] = None,
-    limit: int = 100
+@router.get("/subentity/{subentity_id}/members")
+async def get_subentity_members(
+    subentity_id: str,
+    limit: int = Query(100, ge=1, le=1000),
+    sort: Literal["weight", "activation", "recent"] = "weight",
+    order: Literal["desc", "asc"] = "desc"
 ):
     """
-    Get members (nodes) belonging to an entity.
+    Query members of a subentity with their membership stats.
 
-    Queries BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links to find all nodes assigned to this entity.
-    Supports filtering by node type and limiting results.
+    NEW IMPLEMENTATION: Uses edge-based canonical truth with activation stats.
+    Replaces old implementation that used entity_citizen_X_role format.
 
     Args:
-        entity_name: Entity name (e.g., "translator", "architect")
-                    Function will construct full entity_id from this
-        graph_name: Optional graph name (default: inferred from context)
-        node_type: Optional filter by node type (e.g., "Realization", "Principle")
-        limit: Maximum members to return (default 100)
+        subentity_id: SubEntity to query (e.g., "E.architect", "E.runtime")
+        limit: Max members to return (1-1000, default 100)
+        sort: Sort by "weight" (structure), "activation" (recent activity), or "recent" (time)
+        order: "desc" or "asc"
 
     Returns:
         {
-            "entity_id": str,
-            "entity_name": str,
-            "member_count": int,
+            "subentity_id": str,
+            "count": int,
             "members": [
                 {
-                    "id": str,
+                    "node_id": str,
                     "name": str,
-                    "type": str,
-                    "membership_weight": float,
-                    "membership_role": str
+                    "weight": float,
+                    "activation_ema": float,
+                    "activation_count": int,
+                    "last_activated_ts": int
                 },
                 ...
             ]
         }
 
     Example:
-        GET /api/entity/translator/members?limit=50
-        GET /api/entity/translator/members?node_type=Realization
+        GET /api/subentity/E.architect/members?sort=activation&order=desc&limit=20
+        GET /api/subentity/E.runtime/members?sort=weight&limit=50
 
-    Author: Atlas
-    Date: 2025-10-25
+    Author: Atlas (Infrastructure Engineer)
+    Integration: MEMBER_OF_EDGE_PERSISTENCE_INTEGRATION.md Integration 3
+    Updated: 2025-10-26 - Updated to SubEntity terminology
     """
-    import redis
-    from typing import List, Dict, Any
+    # Map sort param to property (whitelist to prevent injection)
+    sort_map = {
+        "weight": "r.weight",
+        "activation": "r.activation_ema",
+        "recent": "r.last_activated_ts"
+    }
+    sort_by = sort_map.get(sort, "r.weight")
 
-    # Connect to FalkorDB
-    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+    query = f"""
+    MATCH (n:Node)-[r:MEMBER_OF]->(e:SubEntity {{id: $subentity_id}})
+    RETURN n.id AS node_id,
+           coalesce(n.name, n.id) AS name,
+           r.weight AS weight,
+           r.activation_ema AS activation_ema,
+           r.activation_count AS activation_count,
+           r.last_activated_ts AS last_activated_ts
+    ORDER BY {sort_by} {order.upper()}
+    LIMIT $limit
+    """
 
-    # Infer graph name if not provided (default to first citizen graph for now)
-    if not graph_name:
-        # Try to get from context or default to citizen_felix
-        graph_name = "citizen_felix"  # TODO: Get from request context
-
-    # Construct full entity ID (handle both short and full names)
-    if not entity_name.startswith("entity_"):
-        # Assume it's a short name like "translator" -> "entity_citizen_X_translator"
-        # For now, use the graph_name to infer the full entity ID
-        citizen_id = graph_name.replace("citizen_", "").replace("org_", "")
-        prefix = "citizen" if graph_name.startswith("citizen_") else "org"
-        entity_id = f"entity_{prefix}_{citizen_id}_{entity_name}"
-    else:
-        entity_id = entity_name
-
-    # Build query to find members
-    query_parts = []
-    query_parts.append(f'MATCH (n)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(e:Subentity {{id: "{entity_id}"}})')
-
-    # Add node type filter if provided
-    if node_type:
-        query_parts.append(f'WHERE n:{node_type}')
-
-    # Return member details
-    query_parts.append(
-        'RETURN n.name AS name, '
-        'labels(n) AS labels, '
-        'n.node_type AS node_type, '
-        'r.weight AS weight, '
-        'r.role AS role '
-        f'LIMIT {limit}'
-    )
-
-    query = '\n'.join(query_parts)
+    params = {"subentity_id": subentity_id, "limit": limit}
 
     try:
-        result = r.execute_command('GRAPH.QUERY', graph_name, query)
+        # Determine graph from subentity_id prefix or use default
+        graph_id = "citizen_felix"  # TODO: extract from subentity_id or query param
+
+        # Use FalkorDB Python client API (CORRECT: graph.query with params dict)
+        graph = get_falkordb_graph(graph_id)
+        result = graph.query(query, params)
 
         members = []
-        if result and len(result) > 1:
-            for row in result[1]:
-                # Extract node type from labels array or node_type property
-                node_type_value = "unknown"
-                if row[1] and isinstance(row[1], list) and len(row[1]) > 0:
-                    # labels(n) returns array like ['Realization', 'Node']
-                    # Take first label (most specific type)
-                    node_type_value = row[1][0]
-                elif row[2]:
-                    # Fall back to node_type property
-                    node_type_value = row[2]
-
-                members.append({
-                    "name": row[0] if row[0] else "unknown",
-                    "type": node_type_value,
-                    "membership_weight": float(row[3]) if row[3] is not None else 0.0,
-                    "membership_role": row[4] if row[4] else "unknown"
-                })
+        if result and result.result_set:
+            # FalkorDB client returns structured result set
+            for row in result.result_set:
+                member = {
+                    "node_id": row[0],
+                    "name": row[1],
+                    "weight": row[2],
+                    "activation_ema": row[3],
+                    "activation_count": row[4],
+                    "last_activated_ts": row[5]
+                }
+                members.append(member)
 
         return {
-            "entity_id": entity_id,
-            "entity_name": entity_name,
-            "graph_name": graph_name,
-            "member_count": len(members),
+            "subentity_id": subentity_id,
+            "count": len(members),
             "members": members
         }
 
     except Exception as e:
-        logger.error(f"Failed to get entity members for {entity_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+        logger.error(f"Failed to query subentity members: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# === Conversation Persistence Endpoints ===
+
+
+class ConversationMessage(BaseModel):
+    role: str  # "human" or "assistant"
+    content: str
+
+
+class CreateConversationRequest(BaseModel):
+    citizen_id: str
+    messages: List[ConversationMessage]
+    session_id: Optional[str] = None
+
+
+@router.post("/conversation/create")
+async def create_conversation(request: CreateConversationRequest):
+    """
+    Create a Conversation node in the graph from dashboard chat.
+
+    Stores message history for future stimulus generation. Creates Conversation
+    node and links it to Human participant (Nicolas). Citizen linking and active
+    node linking will be added in Phase 2.
+
+    Args:
+        request: Conversation data
+            - citizen_id: Which citizen participated (e.g., "atlas", "felix")
+            - messages: Array of {role, content} messages
+            - session_id: Optional session identifier
+
+    Returns:
+        {
+            "conversation_id": str (unique identifier),
+            "status": "created",
+            "timestamp": int (milliseconds)
+        }
+
+    Example:
+        POST /api/conversation/create
+        {
+            "citizen_id": "atlas",
+            "messages": [
+                {"role": "human", "content": "Can you fix the graph?"},
+                {"role": "assistant", "content": "I'll fix the FalkorDB API..."}
+            ],
+            "session_id": "session_123"
+        }
+
+    Author: Atlas (Infrastructure Engineer)
+    Created: 2025-10-26
+    Phase: 1 (Basic persistence, no linking)
+    """
+    from time import time
+
+    try:
+        # Generate unique conversation ID
+        timestamp_ms = int(time() * 1000)
+        conversation_id = f"conv_{timestamp_ms}_{request.citizen_id}"
+
+        # Convert messages to JSON
+        messages_json = json.dumps([msg.dict() for msg in request.messages])
+
+        # Create Conversation node and link to Human (nicolas) and Citizen
+        graph = get_falkordb_graph('citizen_felix')  # TODO: support multi-citizen graphs
+
+        query = """
+        // Ensure Human node exists for Nicolas
+        MERGE (h:Human {id: "nicolas", name: "Nicolas"})
+
+        // Create Conversation node
+        CREATE (c:Conversation {
+            id: $id,
+            citizen_id: $citizen_id,
+            timestamp: $timestamp,
+            session_id: $session_id,
+            messages: $messages,
+            created_at: timestamp()
+        })
+
+        // Link Human to Conversation
+        CREATE (h)-[:PARTICIPATED_IN]->(c)
+
+        RETURN c.id
+        """
+
+        params = {
+            "id": conversation_id,
+            "citizen_id": request.citizen_id,
+            "timestamp": timestamp_ms,
+            "session_id": request.session_id,
+            "messages": messages_json
+        }
+
+        result = graph.query(query, params)
+
+        if result and result.result_set:
+            logger.info(f"Created conversation: {conversation_id} for {request.citizen_id}")
+            return {
+                "conversation_id": conversation_id,
+                "status": "created",
+                "timestamp": timestamp_ms
+            }
+        else:
+            raise Exception("Failed to create conversation node")
+
+    except Exception as e:
+        logger.error(f"Failed to create conversation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # === Affective Telemetry Endpoints (PR-A, PR-B) ===
@@ -1318,7 +1764,7 @@ async def get_affective_coupling_recent_events():
             ],
             "coherence": [
                 {
-                    "entity_id": str,
+                    "subentity_id": str,
                     "coherence_persistence": int,
                     "lambda_res_effective": float,
                     "lock_in_risk": bool,
@@ -1365,7 +1811,7 @@ async def get_multi_pattern_recent_events():
             "patterns": [
                 {
                     "pattern_type": "regulation" | "rumination" | "distraction",
-                    "entity_id": str,
+                    "subentity_id": str,
                     "effectiveness": float (0-1),
                     "weight": float (0-1),
                     "consecutive_frames": int,
@@ -1375,7 +1821,7 @@ async def get_multi_pattern_recent_events():
             ],
             "rumination_caps": [
                 {
-                    "entity_id": str,
+                    "subentity_id": str,
                     "consecutive_frames": int,
                     "cap_triggered": bool (true if >= 10 frames),
                     "rumination_weight_penalty": float (0-1),
@@ -1418,7 +1864,7 @@ async def get_multi_pattern_recent_events():
         # Create pattern effectiveness entry
         patterns.append({
             "pattern_type": pattern_selected,
-            "entity_id": entity_id,
+            "subentity_id": subentity_id,
             "effectiveness": event.get("m_affect", 1.0) - 1.0,  # Convert multiplier to effectiveness
             "weight": weight,
             "consecutive_frames": rumination_streak if pattern_selected == "rumination" else 0,
@@ -1428,7 +1874,7 @@ async def get_multi_pattern_recent_events():
         # Track rumination state per entity
         if pattern_selected == "rumination":
             rumination_tracking[entity_id] = {
-                "entity_id": entity_id,
+                "subentity_id": subentity_id,
                 "consecutive_frames": rumination_streak,
                 "cap_triggered": capped,
                 "rumination_weight_penalty": pattern_weights[1] if capped else 0.0,
@@ -1455,7 +1901,7 @@ async def get_identity_multiplicity_status():
         {
             "statuses": [
                 {
-                    "entity_id": str,
+                    "subentity_id": str,
                     "is_multiplicity_active": bool,
                     "task_progress_rate": float (0-1),
                     "energy_efficiency": float (0-1),
@@ -1468,7 +1914,7 @@ async def get_identity_multiplicity_status():
             ],
             "recent_flips": [
                 {
-                    "entity_id": str,
+                    "subentity_id": str,
                     "from_identity": str,
                     "to_identity": str,
                     "trigger_reason": "task_stuck" | "energy_inefficient" | "exploration",
@@ -1491,7 +1937,7 @@ async def get_identity_multiplicity_status():
     for event in raw_events:
         entity_id = event.get("entity_id", "unknown")
         status_map[entity_id] = {
-            "entity_id": entity_id,
+            "subentity_id": subentity_id,
             "is_multiplicity_active": event.get("multiplicity_detected", False),
             "task_progress_rate": event.get("task_progress_rate", 0.0),
             "energy_efficiency": event.get("energy_efficiency", 0.0),
@@ -1563,7 +2009,7 @@ async def get_foundations_status():
             ],
             "coherence": [
                 {
-                    "entity_id": str,
+                    "subentity_id": str,
                     "coherence_score": float (0-1),
                     "entity_affect_magnitude": float,
                     "graph_affect_magnitude": float,
@@ -1668,79 +2114,159 @@ async def get_foundations_status():
 # === Stimulus Injection Endpoint (P0: Queue Poller → Engine Bridge) ===
 
 
-class StimulusIn(BaseModel):
-    """Request body for stimulus injection."""
-    stimulus_id: str
-    text: str
-    severity: Optional[float] = 0.3
-    origin: Optional[str] = "external"
-    timestamp_ms: Optional[int] = None
-    metadata: Optional[Dict[str, Any]] = None
-
-
 @router.post("/engines/{citizen_id}/inject")
-async def inject_stimulus(citizen_id: str, payload: StimulusIn):
-    """
-    Inject stimulus into consciousness engine (called by queue_poller).
-
-    This endpoint bridges the queue→engine gap, allowing ambient signals
-    (screenshots, console errors, etc.) to reach consciousness processing.
-
-    Args:
-        citizen_id: Target citizen (e.g., "felix", "ada", "atlas")
-        payload: Stimulus envelope with text, severity, metadata
-
-    Returns:
-        {
-            "status": "ok",
-            "citizen_id": str,
-            "stimulus_id": str
-        }
-
-    Architecture:
-        queue_poller drains .stimuli/queue.jsonl → POSTs here → engine.inject_stimulus_async()
-
-    Author: Atlas
-    Date: 2025-10-25
-    Priority: P0 (critical path to autonomy)
-    """
-    eng = get_engine(citizen_id)
-    if not eng:
-        raise HTTPException(status_code=404, detail=f"Unknown engine {citizen_id}")
-
-    # Inject stimulus into engine's queue (async-safe)
-    # Diagnostic logging to trace flow
-    print(f"[DIAGNOSTIC] ControlAPI BEFORE inject_stimulus_async: citizen={citizen_id}, engine={type(eng).__name__}, sid={payload.stimulus_id}", flush=True)
-    logger.info(f"[ControlAPI] BEFORE inject_stimulus_async: citizen={citizen_id}, engine={type(eng).__name__}, sid={payload.stimulus_id}, text_preview={payload.text[:50]}")
-
-    try:
-        await eng.inject_stimulus_async(
-            text=payload.text,
-            severity=payload.severity or 0.3,
-            metadata={
-                "stimulus_id": payload.stimulus_id,
-                "origin": payload.origin,
-                "timestamp_ms": payload.timestamp_ms,
-                **(payload.metadata or {})
-            }
-        )
-
-        logger.info(f"[ControlAPI] AFTER inject_stimulus_async: sid={payload.stimulus_id} - SUCCESS")
-
-    except Exception as e:
-        logger.error(f"[ControlAPI] Exception during inject_stimulus_async: {e}", exc_info=True)
-        raise
-
-    logger.info(f"[ControlAPI] Injected sid={payload.stimulus_id} citizen={citizen_id} len={len(payload.text)} severity={payload.severity}")
-
-    return {
-        "status": "ok",
-        "citizen_id": citizen_id,
-        "stimulus_id": payload.stimulus_id
-    }
+async def inject_stimulus_deprecated(citizen_id: str, payload: Dict[str, Any]):
+    """Deprecated legacy route."""
+    logger.warning(
+        "[ControlAPI] Deprecated POST /engines/%s/inject called. "
+        "Publish `membrane.inject` envelopes on the WebSocket bus instead.",
+        citizen_id,
+    )
+    raise HTTPException(
+        status_code=410,
+        detail="Stimulus injection API has been retired. Publish `membrane.inject` over ws://localhost:8000/api/ws."
+    )
 
 
 # === WebSocket Endpoint ===
+
+
+async def _handle_ws_message(message: Any):
+    """Process inbound WebSocket messages (membrane injections, etc.)."""
+    if not isinstance(message, dict):
+        logger.warning(f"[WebSocket] Ignoring non-object message: {message}")
+        return
+
+    msg_type = message.get("type")
+    org_id = message.get("org")
+
+    if msg_type in {"wallet.ensure@1.0", "wallet.transfer@1.0", "wallet.sign.request@1.0"}:
+        service = _get_wallet_service()
+        if not service:
+            logger.warning("[WebSocket] Wallet custody service not configured; ignoring %s", msg_type)
+            return
+
+        org = message.get("org")
+        payload = message.get("payload") or {}
+        if not org:
+            logger.warning("[WebSocket] %s missing org field", msg_type)
+            return
+
+        try:
+            if msg_type == "wallet.ensure@1.0":
+                await service.handle_wallet_ensure(org, payload)
+            elif msg_type == "wallet.transfer@1.0":
+                await service.handle_wallet_transfer(org, payload)
+            elif msg_type == "wallet.sign.request@1.0":
+                await service.handle_wallet_sign(org, payload)
+        except Exception as exc:
+            logger.exception("[WebSocket] Wallet custody handler failed for %s", msg_type)
+            error_type = {
+                "wallet.transfer@1.0": "wallet.transfer.result@1.0",
+                "wallet.sign.request@1.0": "wallet.signature.result@1.0",
+                "wallet.ensure@1.0": "wallet.ensure.error@1.0",
+            }.get(msg_type, "wallet.error@1.0")
+            await websocket_manager.broadcast({
+                "type": error_type,
+                "org": org,
+                "payload": {
+                    "ok": False,
+                    "error": str(exc),
+                },
+            })
+        return
+
+    if msg_type == "membrane.inject":
+        citizen_id = message.get("citizen_id")
+        content = message.get("content") or message.get("text", "")
+        if not citizen_id or not content:
+            logger.warning("[WebSocket] membrane.inject missing citizen_id or content")
+            return
+
+        eng = get_engine(citizen_id)
+        if not eng:
+            logger.warning(f"[WebSocket] membrane.inject target unknown citizen {citizen_id}")
+            return
+
+        raw_metadata = message.get("metadata") or {}
+        if isinstance(raw_metadata, dict):
+            merged_metadata = dict(raw_metadata)
+        else:
+            merged_metadata = {}
+
+        lane = message.get("lane") or merged_metadata.get("lane")
+        if not lane:
+            channel_hint = message.get("channel")
+            if isinstance(channel_hint, str) and "." in channel_hint:
+                lane = channel_hint.split(".", 1)[0]
+
+        economy_info = None
+        runtime = get_economy_runtime()
+        if runtime and lane and org_id:
+            try:
+                economy_info = await runtime.get_lane_multiplier(
+                    org_id=org_id,
+                    lane=lane,
+                    citizen_id=citizen_id,
+                )
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.debug("[WebSocket] Failed to compute economy multiplier for %s: %s", lane, exc)
+
+        if lane:
+            merged_metadata.setdefault("lane", lane)
+        if economy_info:
+            existing_economy = merged_metadata.get("economy")
+            if isinstance(existing_economy, dict):
+                merged_metadata["economy"] = {**existing_economy, **economy_info}
+            else:
+                merged_metadata["economy"] = economy_info
+
+        metadata = merged_metadata
+        features = message.get("features_raw") or {}
+        severity = message.get("severity")
+        if severity is None:
+            # Heuristic: fall back to urgency/salience if present, else default
+            heuristic = features.get("urgency", features.get("salience", 0.3))
+            try:
+                severity = float(heuristic)
+            except (TypeError, ValueError):
+                severity = 0.3
+
+        stimulus_id = metadata.get("stimulus_id") or message.get("stimulus_id") or f"ws_stim_{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+
+        injection_metadata = {
+            "stimulus_id": stimulus_id,
+            "origin": metadata.get("origin") or message.get("origin", "external"),
+            "timestamp_ms": metadata.get("timestamp_ms") or message.get("timestamp_ms"),
+            "channel": message.get("channel"),
+            **metadata,
+        }
+
+        try:
+            await eng.inject_stimulus_async(
+                text=content,
+                severity=severity,
+                metadata=injection_metadata,
+            )
+            ack_payload = {
+                "citizen_id": citizen_id,
+                "stimulus_id": stimulus_id,
+                "channel": message.get("channel"),
+                "t_ms": int(datetime.now(timezone.utc).timestamp() * 1000)
+            }
+            try:
+                aggregator = get_stream_aggregator()
+                await aggregator.ingest_event(citizen_id, "membrane.inject.ack", ack_payload)
+            except Exception as agg_exc:
+                logger.warning(f"[WebSocket] Failed to record inject ack in stream aggregator: {agg_exc}")
+
+            await websocket_manager.broadcast({"type": "membrane.inject.ack", **ack_payload})
+        except Exception as exc:
+            logger.error(f"[WebSocket] Failed to inject stimulus via membrane: {exc}", exc_info=True)
+        return
+
+    # Unknown inbound type – log for diagnostics
+    logger.warning(f"[WebSocket] Unhandled inbound message type: {msg_type}")
 
 
 @router.websocket("/ws")
@@ -1774,10 +2300,19 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         # Keep connection alive - wait for client messages (if any)
         while True:
-            # Client can send messages (e.g., subscribe/unsubscribe filters)
-            # For now, just receive and ignore
-            data = await websocket.receive_text()
-            logger.debug(f"[WebSocket] Received: {data}")
+            raw = await websocket.receive_text()
+            try:
+                parsed = json.loads(raw)
+            except json.JSONDecodeError:
+                logger.warning(f"[WebSocket] Received non-JSON payload: {raw}")
+                continue
+
+            # Allow batching (array of events) or single object
+            if isinstance(parsed, list):
+                for item in parsed:
+                    await _handle_ws_message(item)
+            else:
+                await _handle_ws_message(parsed)
 
     except WebSocketDisconnect:
         await websocket_manager.disconnect(websocket)

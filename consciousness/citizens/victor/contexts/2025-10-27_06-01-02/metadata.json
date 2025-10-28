@@ -1,0 +1,11 @@
+{
+  "context_id": "2025-10-27_06-01-02",
+  "entity_type": "citizen",
+  "entity_id": "victor",
+  "created_at": "2025-10-27T05:07:35.578307+00:00",
+  "last_updated": "2025-10-27T05:12:36.697094+00:00",
+  "message_count": 14901,
+  "has_tool_calls": true,
+  "closed_at": "2025-10-27T05:13:17.284026+00:00",
+  "closed_reason": "compact"
+}

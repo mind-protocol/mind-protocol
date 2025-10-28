@@ -108,6 +108,22 @@ class Subentity:
     rumination_frames_consecutive: int = 0  # Counter for rumination cap enforcement
     pattern_effectiveness: Dict[str, float] = field(default_factory=lambda: {"regulation": 0.5, "rumination": 0.5, "distraction": 0.5})  # EMA of outcomes
 
+    # Affect EMAs (Phase 1: Emergent IFS Modes Prerequisites)
+    arousal_ema: float = 0.0  # EMA of arousal when this SubEntity is active [0, 1]
+    valence_ema: float = 0.0  # EMA of valence when this SubEntity is active [-1, 1]
+    affect_sample_count: int = 0  # Number of frames contributing to affect EMAs
+
+    # Context Distributions (Phase 1: Emergent IFS Modes Prerequisites)
+    tool_usage_counts: Dict[str, int] = field(default_factory=dict)  # {tool_name: count}
+    channel_usage_counts: Dict[str, int] = field(default_factory=dict)  # {channel: count}
+    outcome_distribution: Dict[str, float] = field(default_factory=lambda: {
+        "very_useful": 0.0,
+        "useful": 0.0,
+        "somewhat_useful": 0.0,
+        "not_useful": 0.0,
+        "misleading": 0.0
+    })  # EMA of outcome classifications
+
     # Provenance
     created_from: str = "unknown"  # "role_seed"|"semantic_clustering"|"co_activation"|"trace_formation"
 
@@ -130,7 +146,7 @@ class Subentity:
     last_update_timestamp: Optional[datetime] = None
 
     # Graph structure (populated by Graph container)
-    # Members: accessed via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links (Node -> Subentity)
+    # Members: accessed via MEMBER_OF links (Node -> Subentity)
     # Boundaries: accessed via RELATES_TO links (Subentity -> Subentity)
     outgoing_links: List['Link'] = field(default_factory=list)
     incoming_links: List['Link'] = field(default_factory=list)
@@ -144,7 +160,7 @@ class Subentity:
         """
         Get all nodes that belong to this subentity.
 
-        Returns nodes connected via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links.
+        Returns nodes connected via MEMBER_OF links.
         """
         from .types import LinkType
         return [link.source for link in self.incoming_links
@@ -155,7 +171,7 @@ class Subentity:
         """
         Alias for get_members() - backward compatibility for telemetry code.
 
-        Returns list of member nodes (those with BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links to this subentity).
+        Returns list of member nodes (those with MEMBER_OF links to this subentity).
         """
         return self.get_members()
 

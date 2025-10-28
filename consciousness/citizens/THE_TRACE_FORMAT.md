@@ -17,7 +17,7 @@ Your graph learns through your thinking process, not through manual data entry.
 
 Mind Protocol uses a three-level graph architecture:
 - **N1 (Personal)** - Individual citizen consciousness graphs (e.g., `citizen_luca`)
-- **N2 (Organizational)** - Collective Mind Protocol graph (e.g., `mind_protocol_collective_graph`)
+- **N2 (Organizational)** - Organization Mind Protocol graph (e.g., `mind_protocol_collective_graph`)
 - **N3 (Ecosystem)** - Public ecosystem knowledge graph (e.g., `ecosystem_public_graph`)
 
 **Scope determines which database receives your formation.** Without scope, the parser cannot route your nodes/links to the correct graph. This is routing infrastructure, not optional metadata.
@@ -31,7 +31,7 @@ Mind Protocol uses a three-level graph architecture:
 - Relationships specific to you (Person, Relationship)
 
 **scope: "organizational"** - Use for N2 formations
-- Collective learnings (Best_Practice, Anti_Pattern, Principle)
+- Organization learnings (Best_Practice, Anti_Pattern, Principle)
 - Team decisions and processes (Decision, Process, Mechanism)
 - Organizational subentities (AI_Agent, Human, Team, Project)
 - Shared concepts and documentation (Concept, Document)

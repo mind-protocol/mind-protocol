@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-26_20-53-48",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-26T19:53:48.207417+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-26T19:53:48.207417+00:00",
+      "content": ". Fix conversation watcher - Address the networking\n  issue "
+    }
+  ],
+  "last_updated": "2025-10-26T19:53:48.207417+00:00",
+  "message_count": 1
+}

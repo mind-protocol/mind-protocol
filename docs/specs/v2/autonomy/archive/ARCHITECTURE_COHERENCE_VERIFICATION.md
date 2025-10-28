@@ -296,7 +296,7 @@ def record_outcome(self, intent: IntentCard, citizen_response: str):
 **Stimulus Injection:**
 - Envelope `scope` field routes to correct graph
 - `"personal"` → N1 citizen graph
-- `"organizational"` → N2 collective graph
+- `"organizational"` → N2 organization graph
 - `"ecosystem"` → N3 ecosystem graph
 
 **Autonomy Orchestrator:**

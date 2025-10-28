@@ -1,5 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
-
 export interface Node {
   id: string;
   node_id?: string;
@@ -7,6 +5,8 @@ export interface Node {
   node_type?: string;
   text?: string;
   energy?: number;
+  energy_runtime?: number;
+  theta?: number;
   confidence?: number;
   entity_activations?: Record<string, { energy: number; last_activated?: number }>;
   last_active?: number;
@@ -18,8 +18,22 @@ export interface Node {
   base_weight?: number;
   reinforcement_weight?: number;
   weight?: number;
+  log_weight?: number;
+  scope?: string;
+  properties?: Record<string, any>;
+  delta_energy?: number;
   x?: number;
   y?: number;
+  economyOverlay?: {
+    balance?: number;
+    spent60s?: number;
+    budgetRemain?: number;
+    softCap?: number;
+    kEcon?: number;
+    ubcNextEta?: string;
+    lastSigAt?: number;
+    lastUbcAt?: number;
+  };
 }
 
 export interface Link {
@@ -28,274 +42,76 @@ export interface Link {
   target: string | Node;
   type: string;
   strength?: number;
+  weight?: number;
   last_traversed?: number;
   created_at?: number;
-  weight?: number;
+  energy?: number;
+  confidence?: number;
+  scope?: string;
+  properties?: Record<string, any>;
   sub_entity_valences?: Record<string, number>;
   sub_entity_emotion_vectors?: Record<string, Record<string, number>>;
   entity_activations?: Record<string, { energy: number }>;
+  flow?: number;
 }
 
 export interface Subentity {
-  entity_id: string;
+  subentity_id: string;
   name?: string;
+  kind?: string;
+  energy?: number;
+  threshold?: number;
+  activation_level?: string;
+  member_count?: number;
+  quality?: number;
+  stability?: string;
+  properties?: Record<string, any>;
 }
 
 export interface Operation {
   type: string;
   node_id?: string;
   link_id?: string;
-  entity_id?: string;
+  subentity_id?: string;
   timestamp: number;
   data?: any;
 }
 
+export interface GraphOption {
+  id: string;
+  name: string;
+  ecosystem: string;
+  organization?: string;
+  citizen?: string;
+  slug?: string;
+  legacyId?: string;
+}
+
 export interface AvailableGraphs {
-  citizens: Array<{ id: string; name: string }>;
-  organizations: Array<{ id: string; name: string }>;
-  ecosystems: Array<{ id: string; name: string }>;
+  citizens: GraphOption[];
+  organizations: GraphOption[];
+  ecosystems: GraphOption[];
 }
 
-/**
- * useGraphData Hook
- *
- * Manages graph state via REST API for initial load
- * Provides methods to update state from WebSocket events
- *
- * Architecture:
- * - Initial load: REST API /api/graph/{type}/{id}
- * - Real-time updates: WebSocket events via useWebSocket hook
- *
- * Author: Iris "The Aperture"
- * Integration with: Felix "Ironhand"'s REST API
- */
-export function useGraphData() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [links, setLinks] = useState<Link[]>([]);
-  const [subentities, setSubentities] = useState<Subentity[]>([]);
-  const [operations, setOperations] = useState<Operation[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [availableGraphs, setAvailableGraphs] = useState<AvailableGraphs>({
-    citizens: [],
-    organizations: [],
-    ecosystems: []
-  });
+export type GraphType = 'ecosystem' | 'organization' | 'citizen';
 
-  const [currentGraphType, setCurrentGraphType] = useState<string>('citizen');
-  const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
+const FALLBACK_ECOSYSTEM_SLUG = 'consciousness-infrastructure';
+const FALLBACK_ORGANIZATION_SLUG = 'mind-protocol';
 
-  // Entity expansion state (for two-layer visualization)
-  const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
+export const normalizeSlug = (value: string | undefined, fallback: string) => {
+  if (!value) return fallback;
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_]+/g, '-');
+};
 
-  // Entity-to-entity edge aggregation (from link.flow.summary events)
-  // Key: "sourceEntityId->targetEntityId", Value: flow count
-  const [entityToEntity, setEntityToEntity] = useState<Record<string, number>>({});
+export const DEFAULT_ECOSYSTEM_SLUG = normalizeSlug(
+  process.env.NEXT_PUBLIC_PRIMARY_ECOSYSTEM,
+  FALLBACK_ECOSYSTEM_SLUG
+);
 
-  // Fetch available graphs from server
-  useEffect(() => {
-    const fetchGraphs = async () => {
-      try {
-        const response = await fetch('/api/graphs');
-        const data = await response.json();
-
-        // Transform backend format (string arrays) to frontend format (object arrays)
-        const normalizeGraphs = (graphs: string[] | Array<{id: string, name: string}>) => {
-          if (!graphs || graphs.length === 0) return [];
-
-          // If already objects, return as-is
-          if (typeof graphs[0] === 'object') {
-            return graphs as Array<{id: string, name: string}>;
-          }
-
-          // If strings, convert to objects
-          return (graphs as string[]).map(id => ({
-            id,
-            name: id.charAt(0).toUpperCase() + id.slice(1) // Capitalize first letter
-          }));
-        };
-
-        const normalizedGraphs = {
-          citizens: normalizeGraphs(data.citizens || []),
-          organizations: normalizeGraphs(data.organizations || []),
-          ecosystems: normalizeGraphs(data.ecosystems || [])
-        };
-
-        setAvailableGraphs(normalizedGraphs);
-      } catch (error) {
-        console.error('Error fetching graphs:', error);
-      }
-    };
-
-    fetchGraphs();
-  }, []); // Run once on mount
-
-  /**
-   * Load graph from REST API
-   * Called when user selects a graph from the dropdown
-   */
-  const selectGraph = useCallback(async (graphType: string, graphId: string) => {
-    if (!graphId) return;
-
-    setCurrentGraphType(graphType);
-    setCurrentGraphId(graphId);
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/graph/${graphType}/${graphId}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch graph: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      setNodes(data.nodes || []);
-      setLinks(data.links || []);
-      setSubentities(data.subentities || []);
-      setLoading(false);
-    } catch (err) {
-      console.error('[useGraphData] Error fetching graph:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load graph');
-      setLoading(false);
-    }
-  }, []);
-
-  /**
-   * Update node based on WebSocket events
-   * Called when threshold_crossing or entity_activity events arrive
-   * FIXED: Properly merges entity_activations and increments traversal_count
-   */
-  const updateNodeFromEvent = useCallback((nodeId: string, updates: Partial<Node>) => {
-    setNodes(prev => prev.map(node => {
-      if (node.id === nodeId || node.node_id === nodeId) {
-        // Handle special cases for incremental updates
-        const merged: Node = { ...node };
-
-        // Merge entity_activations instead of replacing
-        if (updates.entity_activations) {
-          merged.entity_activations = {
-            ...node.entity_activations,
-            ...updates.entity_activations
-          };
-        }
-
-        // Increment traversal_count instead of replacing
-        if (updates.traversal_count) {
-          merged.traversal_count = (node.traversal_count || 0) + updates.traversal_count;
-        }
-
-        // Apply all other updates normally
-        return { ...merged, ...updates, entity_activations: merged.entity_activations, traversal_count: merged.traversal_count };
-      }
-      return node;
-    }));
-  }, []);
-
-  /**
-   * Update link based on WebSocket events
-   * Called when subentity traverses a link
-   */
-  const updateLinkFromEvent = useCallback((linkId: string, updates: Partial<Link>) => {
-    setLinks(prev => prev.map(link => {
-      if (link.id === linkId) {
-        return { ...link, ...updates };
-      }
-      return link;
-    }));
-  }, []);
-
-  /**
-   * Add operation for animation tracking
-   */
-  const addOperation = useCallback((operation: Operation) => {
-    setOperations(prev => [operation, ...prev].slice(0, 50)); // Keep last 50
-  }, []);
-
-  /**
-   * Update entity-to-entity edge flow from link.flow.summary events
-   * Increments flow count and applies decay to all edges
-   */
-  const updateEntityToEntityFlow = useCallback((sourceEntityId: string, targetEntityId: string, flowCount: number) => {
-    setEntityToEntity(prev => {
-      const next: Record<string, number> = {};
-
-      // Apply decay to all existing edges (0.95 decay per update)
-      for (const [key, value] of Object.entries(prev)) {
-        const decayed = value * 0.95;
-        if (decayed > 0.1) { // Remove edges below threshold
-          next[key] = decayed;
-        }
-      }
-
-      // Add/increment the new flow
-      const edgeKey = `${sourceEntityId}->${targetEntityId}`;
-      next[edgeKey] = (next[edgeKey] || 0) + flowCount;
-
-      return next;
-    });
-  }, []);
-
-  /**
-   * Toggle entity expansion state
-   */
-  const toggleEntity = useCallback((entityId: string) => {
-    setExpandedEntities(prev => {
-      const next = new Set(prev);
-      if (next.has(entityId)) {
-        next.delete(entityId);
-      } else {
-        next.add(entityId);
-      }
-      return next;
-    });
-  }, []);
-
-  /**
-   * Collapse all entities
-   */
-  const collapseAll = useCallback(() => {
-    setExpandedEntities(new Set());
-  }, []);
-
-  // Auto-load first available graph
-  useEffect(() => {
-    if (availableGraphs.citizens && availableGraphs.citizens.length > 0 && !currentGraphId) {
-      const firstCitizen = availableGraphs.citizens[0];
-      selectGraph('citizen', firstCitizen.id);
-    }
-  }, [availableGraphs, currentGraphId, selectGraph]);
-
-  return {
-    // Graph state
-    nodes,
-    links,
-    subentities,
-    operations,
-
-    // Loading state
-    loading,
-    error,
-
-    // Graph selection
-    selectGraph,
-    availableGraphs,
-    currentGraphType,
-    currentGraphId,
-
-    // Entity expansion state
-    expandedEntities,
-    toggleEntity,
-    collapseAll,
-
-    // Entity-to-entity edge aggregation
-    entityToEntity,
-    updateEntityToEntityFlow,
-
-    // Event-driven updates (called by parent component with WebSocket events)
-    updateNodeFromEvent,
-    updateLinkFromEvent,
-    addOperation
-  };
-}
+export const DEFAULT_ORGANIZATION_SLUG = normalizeSlug(
+  process.env.NEXT_PUBLIC_PRIMARY_ORGANIZATION,
+  FALLBACK_ORGANIZATION_SLUG
+);

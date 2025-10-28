@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-26_13-24-41",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-26T12:24:41.809697+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-26T12:24:41.809697+00:00",
+      "content": "C:\\Users\\reyno\\mind-…useGraphData.ts:146 \n GET http://localhost:3000/api/graph/citizen/citizen_luca 500 (Internal Server Error)\n\nC:\\Users\\reyno\\mind-…alsCollector.tsx:95 [useGraphData] Error fetching graph: Error: Failed to fetch graph: 500 Internal Server Error\n    at useGraphData.useCallback[selectGraph] (C:\\Users\\reyno\\mind-…GraphData.ts:149:15) --> could we expose the 500? it would make debugging 10x easier"
+    }
+  ],
+  "last_updated": "2025-10-26T12:24:41.809697+00:00",
+  "message_count": 1
+}

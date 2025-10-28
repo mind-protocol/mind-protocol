@@ -80,14 +80,14 @@ export function StrideSparks({ nodes, links }: StrideSparkProps) {
 
     // Create new spark
     const spark: Spark = {
-      id: `${lastStride.entity_id}-${lastStride.source_node_id}-${lastStride.target_node_id}-${Date.now()}`,
+      id: `${lastStride.subentity_id}-${lastStride.source_node_id}-${lastStride.target_node_id}-${Date.now()}`,
       sourceX: sourcePos.x,
       sourceY: sourcePos.y,
       targetX: targetPos.x,
       targetY: targetPos.y,
       progress: 0,
-      color: getEntityColor(lastStride.entity_id),
-      entityId: lastStride.entity_id,
+      color: getEntityColor(lastStride.subentity_id),
+      entityId: lastStride.subentity_id,
       timestamp: Date.now()
     };
 

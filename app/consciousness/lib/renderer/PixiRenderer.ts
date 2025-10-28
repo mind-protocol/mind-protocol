@@ -24,6 +24,8 @@ import {
   NodeData,
   LinkData,
 } from './types';
+import { drawHull } from '../pixi/subentityDrawing';
+import { buildSubEntityHull } from '../graph/fields';
 
 // Node emoji map (same as SVG version)
 const NODE_TYPE_EMOJI: Record<string, string> = {
@@ -65,6 +67,7 @@ export class PixiRenderer implements RendererAdapter {
   private linksContainer!: PIXI.Container;
   private nodesContainer!: PIXI.Container;
   private entitiesContainer!: PIXI.Container;  // Subentity nodes (collapsed layer)
+  private hullsContainer!: PIXI.Container;  // Entity hull polygons (soft boundaries)
   private entityBoundariesContainer!: PIXI.Container;  // RELATES_TO edges
 
   // Data
@@ -152,6 +155,7 @@ export class PixiRenderer implements RendererAdapter {
     // Create scene hierarchy
     this.worldContainer = new PIXI.Container();
     this.entityBoundariesContainer = new PIXI.Container();  // Subentity RELATES_TO edges (bottom)
+    this.hullsContainer = new PIXI.Container();  // Entity hull polygons (soft boundaries)
     this.entitiesContainer = new PIXI.Container();  // Subentity nodes (middle)
     this.linksContainer = new PIXI.Container();  // Node links (when expanded)
     this.trailContainer = new PIXI.Container();  // Trail effects (above links)
@@ -160,6 +164,7 @@ export class PixiRenderer implements RendererAdapter {
     this.flashContainer = new PIXI.Container();  // Flash effects (top - most visible)
 
     this.worldContainer.addChild(this.entityBoundariesContainer);
+    this.worldContainer.addChild(this.hullsContainer);
     this.worldContainer.addChild(this.entitiesContainer);
     this.worldContainer.addChild(this.linksContainer);
     this.worldContainer.addChild(this.trailContainer);
@@ -395,7 +400,7 @@ export class PixiRenderer implements RendererAdapter {
   /**
    * Semantic force: Pull nodes left/right based on semantic domain
    * Different areas of thinking spread horizontally for natural clustering
-   * Uses node_type and entity_id to determine semantic polarity
+   * Uses node_type and subentity_id to determine semantic polarity
    */
   private forceSemanticX(width: number) {
     let nodes: NodeData[];
@@ -496,11 +501,15 @@ export class PixiRenderer implements RendererAdapter {
 
   private rebuildScene(): void {
     // Clear existing
+    this.hullsContainer.removeChildren();
     this.linksContainer.removeChildren();
     this.nodesContainer.removeChildren();
 
     // Ensure all nodes have positions (random if missing - will use D3 layout later)
     this.ensureNodePositions();
+
+    // Rebuild entity hulls (soft polygon boundaries)
+    this.buildHulls();
 
     // Rebuild links (batched lines)
     this.buildLinks();
@@ -664,8 +673,101 @@ export class PixiRenderer implements RendererAdapter {
     this.linksContainer.alpha = 1.0;
   }
 
+  private buildHulls(): void {
+    // Group nodes by entity using entity_activations field
+    const entityGroups = new Map<string, NodeData[]>();
+
+    this.viewModel.nodes.forEach((node) => {
+      // Skip nodes without entity_activations
+      if (!node.entity_activations || typeof node.entity_activations !== 'object') {
+        return;
+      }
+
+      // Each node can belong to multiple entities
+      Object.keys(node.entity_activations).forEach((entityId) => {
+        if (!entityGroups.has(entityId)) {
+          entityGroups.set(entityId, []);
+        }
+        entityGroups.get(entityId)!.push(node);
+      });
+    });
+
+    let hullsDrawn = 0;
+    let hullsSkippedTooFewNodes = 0;
+    let hullsSkippedNoHull = 0;
+
+    // Render hull for each entity with 3+ members
+    entityGroups.forEach((members, entityId) => {
+      if (members.length < 3) {
+        hullsSkippedTooFewNodes++;
+        return;
+      }
+
+      // Extract member positions (need x, y, and optional energy)
+      const memberPositions = members
+        .filter((node) => node.x !== undefined && node.y !== undefined)
+        .map((node) => {
+          // Handle energy: can be number or Record<string, number>
+          let energyValue = 0;
+          if (typeof node.energy === 'number') {
+            energyValue = node.energy;
+          } else if (node.energy && typeof node.energy === 'object') {
+            // If energy is a Record, use max value across all entities
+            const energyValues = Object.values(node.energy);
+            energyValue = energyValues.length > 0 ? Math.max(...energyValues) : 0;
+          }
+
+          return {
+            x: node.x!,
+            y: node.y!,
+            energy: energyValue,
+          };
+        });
+
+      if (memberPositions.length < 3) {
+        hullsSkippedTooFewNodes++;
+        return;
+      }
+
+      // Compute hull polygon (convex hull + inflation + smoothing)
+      const hull = buildSubEntityHull(entityId, memberPositions, 12); // 12px inflation
+
+      if (!hull) {
+        hullsSkippedNoHull++;
+        return;
+      }
+
+      // Create graphics for this hull
+      const graphics = new PIXI.Graphics();
+
+      // Draw hull (soft polygon with blur)
+      // Entity colors will be looked up in drawHull based on entityId
+      const avgEnergy = memberPositions.reduce((sum, p) => sum + p.energy, 0) / memberPositions.length;
+      drawHull(graphics, hull.polygon, entityId, avgEnergy);
+
+      this.hullsContainer.addChild(graphics);
+      hullsDrawn++;
+    });
+
+    // Logging
+    const totalEntities = entityGroups.size;
+    if (totalEntities > 0) {
+      console.log(`[PixiRenderer] Hull rendering:`, {
+        totalEntities,
+        hullsDrawn,
+        hullsSkippedTooFewNodes,
+        hullsSkippedNoHull,
+      });
+    }
+
+    // Force hullsContainer to be visible
+    this.hullsContainer.visible = true;
+    this.hullsContainer.alpha = 1.0;
+  }
+
   private buildNodes(): void {
     const workingMemory = this.viewModel.workingMemory || new Set<string>();
+    const now = Date.now();
 
     this.viewModel.nodes.forEach((node) => {
       const emoji = this.getNodeEmoji(node);
@@ -696,6 +798,56 @@ export class PixiRenderer implements RendererAdapter {
 
         // Store reference for fade-out animation (future enhancement)
         (glow as any).__nodeId = node.id;
+      }
+
+      const economy = node.economyOverlay;
+      if (economy) {
+        const baseRadius = size / 2 + 10;
+        const ring = new PIXI.Graphics();
+        const econColor = this.getEconomyColor(economy.kEcon);
+        const thickness = Math.max(2, Math.min(12, (economy.spent60s ?? 0) * 4));
+        ring.lineStyle(thickness, econColor, 0.75, 0.5, true);
+        ring.drawCircle(0, 0, baseRadius);
+        ring.position.set(node.x ?? 0, node.y ?? 0);
+        this.nodesContainer.addChild(ring);
+
+        if (economy.softCap && economy.softCap > 0 && economy.budgetRemain !== undefined) {
+          const ratio = Math.max(0, Math.min(1, economy.budgetRemain / economy.softCap));
+          const arc = new PIXI.Graphics();
+          const arcRadius = baseRadius + thickness / 2 + 3;
+          const startAngle = -Math.PI / 2;
+          arc.lineStyle(3, 0xffffff, 0.9);
+          arc.moveTo(
+            arcRadius * Math.cos(startAngle),
+            arcRadius * Math.sin(startAngle)
+          );
+          arc.arc(0, 0, arcRadius, startAngle, startAngle + Math.PI * 2 * ratio);
+          arc.position.set(node.x ?? 0, node.y ?? 0);
+          this.nodesContainer.addChild(arc);
+        }
+
+        if (economy.lastUbcAt && now - economy.lastUbcAt < 5000) {
+          const elapsed = (now - economy.lastUbcAt) / 5000;
+          const pulse = new PIXI.Graphics();
+          const pulseRadius = baseRadius + 20 * (1 - elapsed);
+          pulse.beginFill(econColor, 0.18 * (1 - elapsed));
+          pulse.drawCircle(0, 0, pulseRadius);
+          pulse.endFill();
+          pulse.position.set(node.x ?? 0, node.y ?? 0);
+          this.nodesContainer.addChild(pulse);
+        }
+
+        if (economy.lastSigAt && now - economy.lastSigAt < 15000) {
+          const sig = new PIXI.Text('✓', {
+            fontSize: size * 0.6,
+            fill: 0xffffff,
+            fontWeight: '700'
+          });
+          sig.anchor.set(0.5);
+          sig.position.set((node.x ?? 0) + baseRadius * 0.6, (node.y ?? 0) - baseRadius * 0.6);
+          sig.alpha = 0.9;
+          this.nodesContainer.addChild(sig);
+        }
       }
 
       // Create text sprite (PixiJS v7 API)
@@ -892,6 +1044,19 @@ export class PixiRenderer implements RendererAdapter {
 
   private getLinkThickness(link: LinkData): number {
     return 4; // THICK constant width for visibility testing
+  }
+
+  private getEconomyColor(kEcon?: number): number {
+    if (kEcon === undefined || kEcon === null || Number.isNaN(kEcon)) {
+      return 0x38bdf8; // default cyan glow
+    }
+    const clamped = Math.max(0, Math.min(1, kEcon));
+    const start = { r: 0xf9, g: 0x73, b: 0x16 }; // warm orange
+    const end = { r: 0x2d, g: 0xd4, b: 0xbf };   // bright teal
+    const r = Math.round(start.r + (end.r - start.r) * clamped);
+    const g = Math.round(start.g + (end.g - start.g) * clamped);
+    const b = Math.round(start.b + (end.b - start.b) * clamped);
+    return (r << 16) | (g << 8) | b;
   }
 
   // ========================================================================

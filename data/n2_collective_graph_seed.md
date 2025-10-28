@@ -1,4 +1,4 @@
-# Mind Protocol V2 - Collective Consciousness Seed Data
+# Mind Protocol V2 - Organization Consciousness Seed Data
 
 ## Team Structure
 
@@ -90,7 +90,7 @@ Goals:
 
 **Mechanism: 6-Way Parallel Retrieval**
 
-The retrieval mechanism executes 6 parallel queries: vector search and graph traversal for each level (N1 personal, N2 collective, N3 ecosystem). How it works: asyncio.gather() executes all queries simultaneously, temporal filters applied in Cypher at database layer, results assembled into ConsciousnessStream with full metadata.
+The retrieval mechanism executes 6 parallel queries: vector search and graph traversal for each level (N1 personal, N2 organization, N3 ecosystem). How it works: asyncio.gather() executes all queries simultaneously, temporal filters applied in Cypher at database layer, results assembled into ConsciousnessStream with full metadata.
 
 Inputs: RetrievalIntention (query text, temporal mode, citizen_id)
 Outputs: ConsciousnessStream (multi-level results with consciousness metadata)

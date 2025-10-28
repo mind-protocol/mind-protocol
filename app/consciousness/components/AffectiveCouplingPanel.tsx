@@ -46,7 +46,7 @@ interface MemoryAmplification {
 }
 
 interface CoherencePersistence {
-  entity_id: string;
+  subentity_id: string;
   coherence_persistence: number;  // Consecutive frames
   lambda_res_effective: number;  // Resonance strength after decay
   lock_in_risk: boolean;
@@ -93,7 +93,7 @@ export function AffectiveCouplingPanel() {
           if (data.coherence) {
             const coherenceMap = new Map<string, CoherencePersistence>();
             data.coherence.forEach((event: CoherencePersistence) => {
-              coherenceMap.set(event.entity_id, event);
+              coherenceMap.set(event.subentity_id, event);
             });
             setCoherenceStates(coherenceMap);
           }
@@ -288,7 +288,7 @@ export function AffectiveCouplingPanel() {
               }`}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-observatory-text/70 truncate flex-1 mr-2">
-                    {event.entity_id}
+                    {event.subentity_id}
                   </span>
                   <span className={`font-mono ${
                     event.lock_in_risk ? 'text-red-400' : 'text-observatory-text/60'

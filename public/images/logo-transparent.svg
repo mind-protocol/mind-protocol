@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" aria-label="Mind – three layered rings (palette 2, stroke 50, glow 5)">
+  <defs>
+    <!-- Palette 2 (Aqua → Copper Accent): blue/orange accents -->
+    <linearGradient id="gradTop" x1="120" y1="350" x2="880" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8CF7FF"/>
+      <stop offset="100%" stop-color="#18BBB6"/>
+    </linearGradient>
+    <linearGradient id="gradMid" x1="200" y1="500" x2="800" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#31C6D8"/>
+      <stop offset="100%" stop-color="#E4A631"/>
+    </linearGradient>
+    <linearGradient id="gradBot" x1="270" y1="650" x2="730" y2="650" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1AAE90"/>
+      <stop offset="100%" stop-color="#CE7C16"/>
+    </linearGradient>
+
+    <!-- Outer glow (reduced to match glow=5) -->
+    <filter id="glowTop" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowMid" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowBot" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      * { stroke-linecap: round; stroke-linejoin: round; }
+      .top { stroke-width: 50; }
+      .mid { stroke-width: 37.5; }
+      .bot { stroke-width: 27.5; }
+    </style>
+  </defs>
+
+  <!-- Draw order ensures the top ring appears above -->
+  <ellipse class="bot" cx="500" cy="685" rx="230" ry="95"
+           stroke="url(#gradBot)" fill="url(#gradBot)" fill-opacity="0.10" filter="url(#glowBot)"/>
+
+  <ellipse class="mid" cx="500" cy="535" rx="300" ry="120"
+           stroke="url(#gradMid)" fill="url(#gradMid)" fill-opacity="0.10" filter="url(#glowMid)"/>
+
+  <ellipse class="top" cx="500" cy="385" rx="380" ry="150"
+           stroke="url(#gradTop)" fill="url(#gradTop)" fill-opacity="0.10" filter="url(#glowTop)"/>
+</svg>

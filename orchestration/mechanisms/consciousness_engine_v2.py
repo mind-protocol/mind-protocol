@@ -2,6 +2,7 @@
 Consciousness Engine V2 - Phase 1+2 Architecture
 
 Last modified: 2025-10-25 (Pass B auto-flush integration)
+# Hot-reload test: 2025-10-25 21:50 (Atlas Phase 2B validation)
 
 Complete implementation using:
 - Phase 1: Multi-Energy (M01) + Bitemporal (M13)
@@ -28,10 +29,12 @@ import time
 import asyncio
 import logging
 import math
-import numpy as np
+import json
 from typing import Dict, List, Optional, Set, Tuple
 from datetime import datetime
 from dataclasses import dataclass
+
+import numpy as np
 
 # Core data structures
 from orchestration.core import Node, Link, Graph
@@ -168,7 +171,11 @@ class ConsciousnessEngineV2:
 
         # Observability (must initialize before learning mechanisms that need broadcaster)
         self.branching_tracker = BranchingRatioTracker(window_size=10)
-        self.broadcaster = ConsciousnessStateBroadcaster() if self.config.enable_websocket else None
+        self.broadcaster = (
+            ConsciousnessStateBroadcaster(default_citizen_id=self.config.entity_id)
+            if self.config.enable_websocket
+            else None
+        )
 
         # Telemetry bus for decimated dashboard events (10 Hz batching)
         from orchestration.mechanisms.telemetry_bus import TelemetryBus
@@ -205,8 +212,15 @@ class ConsciousnessEngineV2:
             self.emitter = None
 
         # Subentity Layer (advanced thresholding)
-        from orchestration.mechanisms.entity_activation import EntityCohortTracker
-        self.entity_cohort_tracker = EntityCohortTracker(window_size=100)
+        from orchestration.mechanisms.subentity_activation import SubEntityCohortTracker
+        self.entity_cohort_tracker = SubEntityCohortTracker(window_size=100)
+
+        # SubEntity Context Tracking (Phase 1: Emergent IFS Modes Prerequisites)
+        from orchestration.mechanisms.subentity_context_tracking import SubEntityContextTracker
+        self.subentity_context_tracker = SubEntityContextTracker(
+            alpha_affect=0.1,  # EMA window ~20 frames
+            alpha_context=0.05  # EMA window ~40 frames
+        )
 
         # Metrics
         self.last_tick_time = datetime.now()
@@ -308,6 +322,42 @@ class ConsciousnessEngineV2:
         logger.info(f"[{self.config.entity_id}] Engine resumed")
 
     # === Frame Pipeline Steps (spec: traversal_v2.md §2) ===
+
+    def _wm_signature(self, entity_ids: List[str], shares: List[dict]) -> Tuple[frozenset, Tuple[float, ...]]:
+        """
+        Compute WM signature for on-change detection.
+
+        Creates order-insensitive set signature and order-stable share vector
+        to detect when WM composition or token distribution changes significantly.
+
+        Args:
+            entity_ids: List of active entity IDs
+            shares: List of entity token share dicts (e.g., [{"id": "E1", "tokens": 500}, ...])
+
+        Returns:
+            Tuple of (ids_signature, share_vector)
+            - ids_signature: frozenset of entity IDs (order-insensitive)
+            - share_vector: tuple of token shares in stable order (for drift detection)
+
+        Example:
+            >>> sig = self._wm_signature(
+            ...     entity_ids=["E.backend", "E.consciousness"],
+            ...     shares=[{"id": "E.backend", "tokens": 800}, {"id": "E.consciousness", "tokens": 1200}]
+            ... )
+            >>> sig
+            (frozenset({'E.backend', 'E.consciousness'}), (800.0, 1200.0))
+
+        Author: Atlas (Infrastructure Engineer)
+        Implementation: Priority 0 - On-change WM detection
+        """
+        # Order-insensitive set for set change detection
+        ids_sig = frozenset(entity_ids)
+
+        # Stable ordering of shares by entity id to compute drift
+        share_map = {s["id"]: float(s.get("tokens", 0.0)) for s in shares}
+        vec = tuple(share_map.get(eid, 0.0) for eid in sorted(share_map.keys()))
+
+        return ids_sig, vec
 
     def _refresh_affect(self):
         """
@@ -431,7 +481,7 @@ class ConsciousnessEngineV2:
             await self.broadcaster.broadcast_event("frame.start", {
                 "v": "2",
                 "frame_id": self.tick_count,
-                "entity_index": entity_index,  # Entity snapshot for viz
+                "entity_index": entity_index,  # SubEntity snapshot for viz
                 "t_ms": int(time.time() * 1000)
             })
 
@@ -456,6 +506,15 @@ class ConsciousnessEngineV2:
             source_type = stimulus.get('source_type', 'user_message')
             metadata = stimulus.get('metadata', {})
             severity = stimulus.get('severity', 0.3)
+            economy_info = metadata.get('economy', {}) if isinstance(metadata, dict) else {}
+            economy_multiplier = float(economy_info.get('throttle', 1.0) or 1.0)
+
+            # Track channel for SubEntity context distribution
+            self._last_stimulus_channel = source_type
+
+            # Track stimulus for forged identity generation (Phase 3A)
+            self._last_stimulus_text = text
+            self._last_stimulus_id = metadata.get('stimulus_id', f"stim_{self.tick_count}")
 
             # Try to ensure embedding if Control API provided none
             injection_path = "vector"  # Default assumption
@@ -525,7 +584,8 @@ class ConsciousnessEngineV2:
                 result = self.stimulus_injector.inject(
                     stimulus_embedding=embedding if injection_path == "vector" else None,
                     matches=matches,
-                    source_type=source_type
+                    source_type=source_type,
+                    economy_multiplier=economy_multiplier
                 )
 
                 # Apply injections to nodes (dual-write to E and energy_runtime)
@@ -552,7 +612,8 @@ class ConsciousnessEngineV2:
                         "lam": getattr(result, 'lambda_param', None),
                         "B_top": getattr(result, 'B_top', None),
                         "B_amp": getattr(result, 'B_amp', None),
-                        "t_ms": int(time.time() * 1000)
+                        "t_ms": int(time.time() * 1000),
+                        "economy_multiplier": economy_multiplier,
                     })
 
                 logger.debug(
@@ -655,7 +716,7 @@ class ConsciousnessEngineV2:
                     choose_next_entity, select_representative_nodes
                 )
                 from orchestration.mechanisms.diffusion_runtime import execute_stride_step
-                from orchestration.mechanisms.entity_activation import learn_relates_to_from_boundary_stride
+                from orchestration.mechanisms.subentity_activation import learn_relates_to_from_boundary_stride
                 from orchestration.core.types import LinkType
 
                 # Get active entities
@@ -968,7 +1029,7 @@ class ConsciousnessEngineV2:
         # This computes α_tick for THIS frame. Spec suggests it should happen after to adjust
         # parameters for NEXT frame, but current approach works as first-order approximation.
 
-        # === Step 8.5: Update Entity Activations ===
+        # === Step 8.5: Update SubEntity Activations ===
         # Compute subentity energy from member nodes (spec: subentity_layer.md §2.2)
         # Formula: E_entity = Σ (m̃_iE × max(0, E_i - Θ_i))
         # With advanced thresholding: cohort-based, health modulation, hysteresis
@@ -976,7 +1037,7 @@ class ConsciousnessEngineV2:
         entity_activation_metrics = []
         lifecycle_transitions = []
         if hasattr(self.graph, 'subentities') and len(self.graph.subentities) > 0:
-            from orchestration.mechanisms.entity_activation import update_entity_activations
+            from orchestration.mechanisms.subentity_activation import update_entity_activations
 
             entity_activation_metrics, lifecycle_transitions = update_entity_activations(
                 self.graph,
@@ -1018,7 +1079,7 @@ class ConsciousnessEngineV2:
                         })
 
             logger.debug(
-                f"[Step 8.5] Entity activation: {len(entity_activation_metrics)} subentities, "
+                f"[Step 8.5] SubEntity activation: {len(entity_activation_metrics)} subentities, "
                 f"{sum(1 for m in entity_activation_metrics if m.flipped)} flipped"
             )
 
@@ -1027,7 +1088,7 @@ class ConsciousnessEngineV2:
         if (hasattr(self.graph, 'subentities') and len(self.graph.subentities) > 0 and
             settings.IDENTITY_MULTIPLICITY_ENABLED):
 
-            from orchestration.mechanisms.entity_activation import (
+            from orchestration.mechanisms.subentity_activation import (
                 track_task_progress, track_energy_efficiency, track_identity_flips,
                 assess_multiplicity_mode
             )
@@ -1154,6 +1215,11 @@ class ConsciousnessEngineV2:
             if random.random() < 0.10:
                 link_flows = []
                 for link in self.graph.links.values():
+                    # Skip links that don't connect two Nodes (e.g., links to/from Subentities)
+                    # Nodes have .E attribute, Subentities have .energy_runtime
+                    if not hasattr(link.source, 'E') or not hasattr(link.target, 'E'):
+                        continue
+
                     # Get energy flow through this link (single-energy)
                     source_energy = link.source.E
                     target_energy = link.target.E
@@ -1188,7 +1254,7 @@ class ConsciousnessEngineV2:
                     })
 
         # === Step 9: WM Select and Emit ===
-        # Entity-first working memory selection (spec: subentity_layer.md §4)
+        # SubEntity-first working memory selection (spec: subentity_layer.md §4)
         workspace_entities, wm_summary = self._select_workspace_entities(subentity)
 
         # P2.1.4: Detect phenomenological mismatch (expected vs actual WM)
@@ -1273,8 +1339,155 @@ class ConsciousnessEngineV2:
                 "t_ms": int(time.time() * 1000)
             })
 
+            # === Priority 0: On-Change WM Detection & COACTIVATES_WITH Update ===
+            # Emit wm.selected only when WM set or shares drift significantly
+            # Updates COACTIVATES_WITH edges for lean U-metric (O(k^2) with k≈5-7)
+            now_ms = int(time.time() * 1000)
+            ids_sig, vec_sig = self._wm_signature(entity_ids, entity_token_shares)
+
+            emit = False
+            if not hasattr(self, "_last_wm_sig"):
+                # First WM selection - always emit
+                emit = True
+            else:
+                last_ids, last_vec = self._last_wm_sig
+
+                # Set change detection
+                if ids_sig != last_ids:
+                    emit = True
+                else:
+                    # Share drift detection (cosine distance > threshold)
+                    if last_vec and vec_sig:
+                        a = np.array(last_vec)
+                        b = np.array(vec_sig)
+                        denom = (np.linalg.norm(a) * np.linalg.norm(b)) or 1.0
+                        drift = 1.0 - float(np.dot(a, b) / denom)
+                        emit = drift > 0.1  # Boot contour; will become learned percentile
+                    else:
+                        emit = True
+
+            # Store signature for next comparison
+            self._last_wm_sig = (ids_sig, vec_sig)
+
+            if emit:
+                # 1) WS event (for observability / consumers)
+                await self.broadcaster.broadcast_event("wm.selected", {
+                    "citizen": self.config.entity_id,
+                    "frame_id": self.tick_count,
+                    "entities_active": entity_ids,
+                    "timestamp_ms": now_ms
+                })
+
+                # 2) DB co-activation update (lean U metric)
+                try:
+                    alpha = 0.1  # Boot contour; will become learned per citizen
+                    await self.adapter.update_coactivation_edges_async(
+                        citizen_id=self.config.entity_id,
+                        entities_active=entity_ids,
+                        alpha=alpha,
+                        timestamp_ms=now_ms
+                    )
+                except Exception as e:
+                    logger.error(f"[WM Coactivation] Update failed: {e}")
+
             # P1: Store entity IDs for TraceCapture attribution
             self.last_wm_entity_ids = entity_ids
+
+            # Phase 3A: Forged Identity Generation (observe-only)
+            # Generate system prompt + input context from WM state
+            # Logs prompts for quality assessment, no LLM execution yet
+            logger.debug(f"[ForgedIdentity] Checking stimulus tracking: hasattr={hasattr(self, '_last_stimulus_text')}")
+            if hasattr(self, '_last_stimulus_text'):
+                logger.info(f"[ForgedIdentity] Stimulus tracked: {self._last_stimulus_text[:50]}...")
+                try:
+                    from orchestration.mechanisms.forged_identity_integration import get_forged_identity_integration
+
+                    integration = get_forged_identity_integration()
+                    logger.debug(f"[ForgedIdentity] Integration retrieved: {integration is not None}")
+
+                    if integration:
+                        logger.info(f"[ForgedIdentity] Starting prompt generation for {self.config.entity_id}")
+
+                        # Extract WM nodes from entities for prompt generation
+                        wm_nodes = []
+                        for entity in workspace_entities:
+                            entity_data = {
+                                "entity_id": entity.id,
+                                "energy": entity.energy_runtime,
+                                "members": []
+                            }
+                            # Add member nodes with their energies
+                            for member_id in entity.members[:10]:  # Top 10 members per entity
+                                node = self.graph.get_node(member_id)
+                                if node:
+                                    entity_data["members"].append({
+                                        "node_id": node.id,
+                                        "name": node.name,
+                                        "description": node.description,
+                                        "energy": node.E
+                                    })
+                            wm_nodes.append(entity_data)
+
+                        logger.info(f"[ForgedIdentity] Extracted {len(wm_nodes)} WM entities")
+
+                        # Generate prompt (Phase 3A: logs but doesn't execute)
+                        await integration.process_stimulus_response(
+                            citizen_id=self.config.entity_id,
+                            stimulus_text=self._last_stimulus_text,
+                            stimulus_id=self._last_stimulus_id,
+                            wm_nodes=wm_nodes,
+                            conversation_context=None  # TODO: Add conversation history when available
+                        )
+
+                        logger.info(f"[ForgedIdentity] Prompt generation completed")
+
+                        # Clear stimulus to prevent re-triggering on subsequent ticks
+                        self._last_stimulus_text = None
+                        self._last_stimulus_id = None
+                        logger.debug(f"[ForgedIdentity] Stimulus tracking cleared - will not re-trigger")
+                    else:
+                        logger.warning(f"[ForgedIdentity] Integration is None - not initialized properly")
+                except Exception as e:
+                    import traceback
+                    logger.error(f"[ForgedIdentity] Generation failed: {e}")
+                    logger.error(f"[ForgedIdentity] Traceback: {traceback.format_exc()}")
+                    # Clear stimulus even on failure to prevent infinite retry loops
+                    self._last_stimulus_text = None
+                    self._last_stimulus_id = None
+            else:
+                logger.debug(f"[ForgedIdentity] No stimulus tracked this tick")
+
+            # Phase 1: Update SubEntity context tracking (affect EMAs + context distributions)
+            # Extract frame-level affect from active entity (if available)
+            frame_affect = None
+            if wm_summary["entities"]:
+                # Use primary entity's affect as frame affect
+                primary_entity_id = wm_summary["entities"][0]["id"]
+                primary_entity = self.graph.subentities.get(primary_entity_id)
+                if primary_entity and hasattr(primary_entity, 'prev_affect_for_coherence'):
+                    if primary_entity.prev_affect_for_coherence is not None:
+                        # Format: [valence, arousal] -> need [arousal, valence]
+                        affect_vec = primary_entity.prev_affect_for_coherence
+                        if len(affect_vec) >= 2:
+                            # Swap to [arousal, valence] and normalize
+                            arousal = float(np.clip(abs(affect_vec[1]), 0.0, 1.0))
+                            valence = float(np.clip(affect_vec[0], -1.0, 1.0))
+                            frame_affect = np.array([arousal, valence])
+
+            # Extract frame-level channel from last stimulus (if any)
+            frame_channel = None
+            if hasattr(self, '_last_stimulus_channel'):
+                frame_channel = self._last_stimulus_channel
+
+            # Update context tracker for active SubEntities
+            self.subentity_context_tracker.update_from_wm_frame(
+                graph=self.graph,
+                active_subentities=entity_ids,
+                frame_affect=frame_affect,
+                frame_tool=None,  # TODO: Track from tool usage events
+                frame_channel=frame_channel,
+                frame_outcome=None  # TODO: Track from TRACE events
+            )
 
             # === V2 Event: subentity.snapshot (active subentity visualization) ===
             # Collect active subentities (energy >= threshold)
@@ -1386,9 +1599,9 @@ class ConsciousnessEngineV2:
             except Exception as e:
                 logger.warning(f"[DynamicPrompt] Update failed: {e}")
 
-        # === Step 10: Tick Frame V1 Event (Entity-First Telemetry) + TRIPWIRE: Observability ===
+        # === Step 10: Tick Frame V1 Event (SubEntity-First Telemetry) + TRIPWIRE: Observability ===
         # tick_frame.v1 is the heartbeat signal - missing events → monitoring blind
-        # Replaces legacy frame.end with entity-scale observability
+        # Replaces legacy frame.end with subentity-scale observability
         # Tripwire triggers Safe Mode after 5 consecutive failures
         frame_end_emitted = False
 
@@ -1417,7 +1630,6 @@ class ConsciousnessEngineV2:
                                     emotions.append(node.emotion_vector)
 
                             if emotions:
-                                import numpy as np
                                 avg_emotion = np.mean(emotions, axis=0)
                                 emotion_valence = float(avg_emotion[0]) if len(avg_emotion) > 0 else 0.0
                                 emotion_arousal = float(avg_emotion[1]) if len(avg_emotion) > 1 else 0.0
@@ -1720,7 +1932,6 @@ class ConsciousnessEngineV2:
             # Diversity bonus (semantic distance from already-selected)
             diversity_bonus = 0.0
             if entity.centroid_embedding is not None and selected_embeddings:
-                import numpy as np
 
                 # Compute min cosine distance to selected entities
                 min_similarity = 1.0
@@ -1816,7 +2027,7 @@ class ConsciousnessEngineV2:
         }
 
         logger.debug(
-            f"[Step 9] Entity-First WM: {len(selected_entities)} entities selected, "
+            f"[Step 9] SubEntity-First WM: {len(selected_entities)} entities selected, "
             f"{total_members} total members, {total_tokens}/{budget} tokens"
         )
 
@@ -2157,13 +2368,17 @@ class ConsciousnessEngineV2:
             E = max(0.0, E)
             theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
+            # Serialize entity_activations as JSON string for FalkorDB
+            entity_activations_json = json.dumps(node.entity_activations) if node.entity_activations else "{}"
+
             rows.append({
                 'node_id': node_id,  # For tracking in _last_persisted
                 'id': None,  # Trigger name-based matching (FalkorDB uses prefixed IDs)
                 'name': node.name,  # Match by name instead
                 'label': node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
                 'E': E,
-                'theta': theta
+                'theta': theta,
+                'entity_activations': entity_activations_json  # For frontend viz
             })
 
         if not rows:
@@ -2221,13 +2436,17 @@ class ConsciousnessEngineV2:
             E = max(0.0, E)
             theta = max(0.001, theta)  # theta > 0 to avoid division by zero
 
+            # Serialize entity_activations as JSON string for FalkorDB
+            entity_activations_json = json.dumps(node.entity_activations) if node.entity_activations else "{}"
+
             rows.append({
                 'node_id': node.id,  # For tracking in _last_persisted
                 'id': None,  # Trigger name-based matching (FalkorDB uses prefixed IDs)
                 'name': node.name,  # Match by name instead
                 'label': node.node_type.value if hasattr(node.node_type, 'value') else str(node.node_type),
                 'E': E,
-                'theta': theta
+                'theta': theta,
+                'entity_activations': entity_activations_json  # For frontend viz
             })
 
         if not rows:
@@ -2350,3 +2569,4 @@ class ConsciousnessEngineV2:
 # Force reload
 # Trigger hot-reload - Felix fix 2025-10-25
 # Trigger restart for Pass B test
+# Hot-reload test 1761424683

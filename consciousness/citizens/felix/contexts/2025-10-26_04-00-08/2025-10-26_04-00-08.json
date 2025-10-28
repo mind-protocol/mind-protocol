@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-26_04-00-08",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-26T03:00:08.085905+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-26T03:00:08.085905+00:00",
+      "content": "Cannot read properties of undefined (reading 'map')\n\napp\\consciousness\\hooks\\useWebSocket.ts (246:46) @ useWebSocket.useCallback[flushPendingUpdates]\n\n\n  244 |           setV2State(prev => {\n  245 |             // Unpack batch into individual flip records\n> 246 |             const newFlips = flipEvent.nodes.map(node => ({\n      |                                              ^\n  247 |               node_id: node.id,\n  248 |               direction: (node.dE > 0 ? 'on' : 'off') as 'on' | 'off',\n  249 |               dE: node.dE,\nCall Stack\n22\n\nShow 17 ignore-listed frame(s)\nuseWebSocket.useCallback[flushPendingUpdates]\napp\\consciousness\\hooks\\useWebSocket.ts (246:46)\nuseWebSocket\napp\\consciousness\\hooks\\useWebSocket.ts (85:41)\nStrideSparks\napp\\consciousness\\components\\StrideSparks.tsx (53:40)\nEntityGraphView\napp\\consciousness\\components\\EntityGraphView.tsx (289:9)\nConsciousnessPage\napp\\consciousness\\page.tsx (265:7)"
+    }
+  ],
+  "last_updated": "2025-10-26T03:00:08.085905+00:00",
+  "message_count": 1
+}

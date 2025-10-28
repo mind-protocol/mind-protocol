@@ -163,7 +163,7 @@ without_this: "UI would have no data source for autonomy measurement"
 - Your relationships (Person, Relationship)
 
 **Use "organizational" (N2) for:**
-- Collective learnings (Best_Practice, Anti_Pattern, Principle)
+- Organization learnings (Best_Practice, Anti_Pattern, Principle)
 - Team decisions and processes (Decision, Process, Mechanism)
 - Organizational entities (AI_Agent, Human, Team, Project)
 - Shared concepts (Concept, Document)

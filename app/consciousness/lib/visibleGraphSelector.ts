@@ -52,7 +52,7 @@ export function selectVisibleGraph(
   const renderNodes: RenderNode[] = [];
   const renderEdges: RenderEdge[] = [];
 
-  // Build membership index: node.id -> Set<entity_id>
+  // Build membership index: node.id -> Set<subentity_id>
   const membership = new Map<string, Set<string>>();
   for (const node of nodes) {
     const nodeId = node.id || node.node_id;
@@ -76,11 +76,11 @@ export function selectVisibleGraph(
       if (!nodeId) continue;
 
       const nodeMemberships = membership.get(nodeId);
-      if (nodeMemberships?.has(entity.entity_id)) {
+      if (nodeMemberships?.has(entity.subentity_id)) {
         members.push(node);
       }
     }
-    entityMembers.set(entity.entity_id, members);
+    entityMembers.set(entity.subentity_id, members);
   }
 
   // Calculate entity positions (simple grid layout for now)
@@ -90,7 +90,7 @@ export function selectVisibleGraph(
   subentities.forEach((entity, index) => {
     const row = Math.floor(index / gridSize);
     const col = index % gridSize;
-    entityPositions.set(entity.entity_id, {
+    entityPositions.set(entity.subentity_id, {
       x: col * spacing + 200,
       y: row * spacing + 200
     });
@@ -98,16 +98,16 @@ export function selectVisibleGraph(
 
   // 1) Add entity super-nodes (only for collapsed entities)
   for (const entity of subentities) {
-    if (!expandedEntities.has(entity.entity_id)) {
-      const members = entityMembers.get(entity.entity_id) || [];
-      const pos = entityPositions.get(entity.entity_id) || { x: 0, y: 0 };
+    if (!expandedEntities.has(entity.subentity_id)) {
+      const members = entityMembers.get(entity.subentity_id) || [];
+      const pos = entityPositions.get(entity.subentity_id) || { x: 0, y: 0 };
 
       // Aggregate energy from members
       const totalEnergy = members.reduce((sum, n) => sum + (parseFloat(String(n.energy || 0)) || 0), 0);
       const avgEnergy = members.length > 0 ? totalEnergy / members.length : 0;
 
       renderNodes.push({
-        id: entity.entity_id,
+        id: entity.subentity_id,
         x: pos.x,
         y: pos.y,
         r: 30 + Math.min(members.length * 0.5, 30), // Size based on member count
@@ -120,9 +120,9 @@ export function selectVisibleGraph(
 
   // 2) Add member nodes (only for expanded entities)
   for (const entity of subentities) {
-    if (expandedEntities.has(entity.entity_id)) {
-      const members = entityMembers.get(entity.entity_id) || [];
-      const entityPos = entityPositions.get(entity.entity_id) || { x: 0, y: 0 };
+    if (expandedEntities.has(entity.subentity_id)) {
+      const members = entityMembers.get(entity.subentity_id) || [];
+      const entityPos = entityPositions.get(entity.subentity_id) || { x: 0, y: 0 };
 
       // Simple radial layout around entity center
       const radius = 150;
@@ -141,7 +141,7 @@ export function selectVisibleGraph(
           r: 8 + (parseFloat(String(node.energy || 0)) || 0) * 0.1,
           energy: parseFloat(String(node.energy || 0)) || 0,
           kind: 'node',
-          entityId: entity.entity_id
+          entityId: entity.subentity_id
         });
       });
     }

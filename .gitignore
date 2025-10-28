@@ -48,9 +48,11 @@ nul
 
 # Mind Protocol System Files
 .heartbeats/
+.test_heartbeats/
 .launcher.lock
 guardian.log
 *.lock
+.stimuli/
 
 # Claude Code artifacts
 claude-logs/
@@ -73,3 +75,7 @@ task_*.xml
 # Backup files
 *.py.bak
 *.py.broken
+*.backup
+backups/
+
+orchestration/economy/node_modules/

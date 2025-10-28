@@ -114,6 +114,17 @@ class WeightLearnerV2:
         # Build cohorts by (type, scope)
         cohorts = self._build_cohorts(nodes)
 
+        # === NEGATIVE POOL SEPARATION (TC11 requirement) ===
+        # Separate positive (seats >= 1) and negative (seats < 1) reinforcement pools
+        # This enables bidirectional learning: positive marks increase weight, negative marks decrease weight
+        positive_pool = {nid: seats for nid, seats in reinforcement_seats.items() if seats >= 1}
+        negative_pool = {nid: seats for nid, seats in reinforcement_seats.items() if seats < 1}
+
+        logger.debug(
+            f"[WeightLearnerV2] Pool separation: "
+            f"positive={len(positive_pool)}, negative={len(negative_pool)}"
+        )
+
         # Get membership weights for context entities
         membership_weights = self._get_membership_weights(nodes, entity_context or [])
 
@@ -141,16 +152,22 @@ class WeightLearnerV2:
             else:
                 ema_formation_quality_new = ema_formation_quality_old
 
-            # Compute cohort z-scores
+            # Compute cohort z-scores with pool separation
             node_type = node.get('node_type', 'unknown')
             scope = node.get('scope', 'personal')
             cohort_key = (node_type, scope)
+
+            # Determine which pool this node belongs to
+            in_negative_pool = node_id in negative_pool
+            in_positive_pool = node_id in positive_pool
 
             z_rein, z_form, cohort_size = self._compute_z_scores(
                 node_id,
                 ema_trace_seats_new,
                 ema_formation_quality_new if formation_quality is not None else None,
-                cohorts.get(cohort_key, [])
+                cohorts.get(cohort_key, []),
+                positive_pool=positive_pool if in_positive_pool else None,
+                negative_pool=negative_pool if in_negative_pool else None
             )
 
             # Compute adaptive learning rate
@@ -250,9 +267,9 @@ class WeightLearnerV2:
             if not node_id:
                 continue
 
-            # Get BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships from node
+            # Get MEMBER_OF memberships from node
             # (Assumes memberships stored in node.properties or similar)
-            # TODO: Get from graph.get_links_by_type(BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")) filtered by node_id
+            # TODO: Get from graph.get_links_by_type(MEMBER_OF) filtered by node_id
             memberships = node.get('memberships', {})  # {entity_id: weight}
 
             # Filter to active entity context
@@ -286,34 +303,95 @@ class WeightLearnerV2:
         item_id: str,
         ema_trace: float,
         ema_quality: Optional[float],
-        cohort: List[Dict]
+        cohort: List[Dict],
+        positive_pool: Optional[Dict[str, int]] = None,
+        negative_pool: Optional[Dict[str, int]] = None
     ) -> Tuple[float, Optional[float], int]:
-        """Compute rank-based z-scores within cohort."""
+        """
+        Compute rank-based z-scores within cohort with negative pool separation.
+
+        Args:
+            item_id: Node/link ID
+            ema_trace: EMA of trace seats
+            ema_quality: EMA of formation quality (optional)
+            cohort: All items in this cohort
+            positive_pool: Positive reinforcement seats (seats >= 1)
+            negative_pool: Negative reinforcement seats (seats < 1)
+
+        Returns:
+            (z_rein, z_form, cohort_size)
+            - z_rein is INVERTED if item is in negative pool
+        """
         if len(cohort) < self.min_cohort_size:
             # Fallback: use raw EMAs as z-scores
             z_rein = ema_trace / 10.0  # Normalize roughly
+
+            # Apply negative pool inversion in fallback mode
+            if negative_pool and item_id in negative_pool:
+                z_rein = -abs(z_rein)  # Force negative
+
             z_form = (ema_quality / 1.0) if ema_quality is not None else None
             return z_rein, z_form, len(cohort)
 
-        # Extract EMAs for cohort
-        trace_values = [float(item.get('ema_trace_seats', 0.0)) for item in cohort]
-        quality_values = [float(item.get('ema_formation_quality', 0.0)) for item in cohort] if ema_quality is not None else None
+        # === SEPARATE COHORT POOLS FOR POSITIVE/NEGATIVE REINFORCEMENT ===
+        # Filter cohort to nodes that received reinforcement this TRACE
+        # Positive pool: nodes with seats >= 1
+        # Negative pool: nodes with seats < 1
 
-        # Rank-based z-scores (van der Waerden)
-        ranks_trace = rankdata(trace_values, method='average')
-        z_rein = norm.ppf(ranks_trace / (len(trace_values) + 1))
+        if positive_pool and item_id in positive_pool:
+            # Node is in positive pool - compute z-score among positive-pool cohort members
+            pool_cohort = [item for item in cohort if item.get('name') in positive_pool]
+            sign_multiplier = 1.0  # Normal sign
+            logger.debug(f"[WeightLearnerV2] {item_id} in positive pool ({len(pool_cohort)} cohort)")
 
-        # Find this item's position
-        item_idx = next((i for i, item in enumerate(cohort) if item.get('name') == item_id), 0)
-        z_rein_item = z_rein[item_idx]
+        elif negative_pool and item_id in negative_pool:
+            # Node is in negative pool - compute z-score among negative-pool cohort members
+            pool_cohort = [item for item in cohort if item.get('name') in negative_pool]
+            sign_multiplier = -1.0  # INVERTED sign for negative reinforcement
+            logger.debug(f"[WeightLearnerV2] {item_id} in negative pool ({len(pool_cohort)} cohort)")
 
+        else:
+            # Node not reinforced this TRACE - no z-score update
+            z_form_item = None
+            if ema_quality is not None:
+                # Still compute formation z-score if node was formed
+                quality_values = [float(item.get('ema_formation_quality', 0.0)) for item in cohort]
+                ranks_quality = rankdata(quality_values, method='average')
+                z_form = norm.ppf(ranks_quality / (len(quality_values) + 1))
+                item_idx = next((i for i, item in enumerate(cohort) if item.get('name') == item_id), 0)
+                z_form_item = z_form[item_idx]
+
+            return 0.0, float(z_form_item) if z_form_item is not None else None, len(cohort)
+
+        # Compute z-scores within pool cohort
+        if len(pool_cohort) < self.min_cohort_size:
+            # Pool too small - use raw EMA
+            z_rein = (ema_trace / 10.0) * sign_multiplier
+        else:
+            # Extract SEATS from this TRACE (not EMAs!) for ranking
+            # We rank by how much reinforcement each node got THIS TRACE
+            pool_to_use = positive_pool if positive_pool and item_id in positive_pool else negative_pool
+            trace_values = [float(pool_to_use.get(item.get('name'), 0)) for item in pool_cohort]
+
+            # Rank-based z-scores (van der Waerden)
+            ranks_trace = rankdata(trace_values, method='average')
+            z_rein_cohort = norm.ppf(ranks_trace / (len(trace_values) + 1))
+
+            # Find this item's position within pool cohort
+            item_idx = next((i for i, item in enumerate(pool_cohort) if item.get('name') == item_id), 0)
+            z_rein = z_rein_cohort[item_idx] * sign_multiplier  # Apply sign multiplier
+
+        # Formation quality z-score (not affected by pool separation)
         z_form_item = None
-        if ema_quality is not None and quality_values:
-            ranks_quality = rankdata(quality_values, method='average')
-            z_form = norm.ppf(ranks_quality / (len(quality_values) + 1))
-            z_form_item = z_form[item_idx]
+        if ema_quality is not None:
+            quality_values = [float(item.get('ema_formation_quality', 0.0)) for item in cohort]
+            if quality_values:
+                ranks_quality = rankdata(quality_values, method='average')
+                z_form = norm.ppf(ranks_quality / (len(quality_values) + 1))
+                item_idx = next((i for i, item in enumerate(cohort) if item.get('name') == item_id), 0)
+                z_form_item = z_form[item_idx]
 
-        return float(z_rein_item), float(z_form_item) if z_form_item is not None else None, len(cohort)
+        return float(z_rein), float(z_form_item) if z_form_item is not None else None, len(cohort)
 
     def _compute_learning_rate(self, last_update: Optional[datetime]) -> float:
         """Adaptive learning rate: η = 1 - exp(-Δt / τ)"""

@@ -400,7 +400,7 @@ From visualization requirements, all criteria met:
 **What's Working:**
 - Nodes show emotion via background colors
 - Links show emotion via stroke colors
-- Instruments show collective emotion metrics
+- Instruments show organization emotion metrics
 - Entity bubbles aggregate member emotions
 - Complete emotion color language across dashboard
 

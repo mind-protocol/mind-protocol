@@ -93,7 +93,7 @@ export function normalizeStrideEvent(event: any): StrideExecEvent {
 
   return {
     type: 'stride.exec',
-    entity_id: event.entity_id ?? 'unknown',
+    subentity_id: event.subentity_id ?? 'unknown',
     source_node_id: event.source_node_id ?? 'unknown',
     target_node_id: event.target_node_id ?? 'unknown',
     link_id: event.link_id ?? 'unknown',
@@ -121,7 +121,7 @@ export function normalizeWeightEvent(event: any): WeightsUpdatedTraceEvent {
     frame_id: event.frame_id ?? 0,
     scope: event.scope ?? 'link',
     cohort: event.cohort ?? 'unknown',
-    entity_contexts: event.entity_contexts ?? [],
+    subentity_contexts: event.subentity_contexts ?? [],
     global_context: event.global_context ?? false,
     n: event.n ?? 0,
     d_mu: event.d_mu ?? 0,
@@ -139,7 +139,7 @@ export function normalizeMismatchEvent(event: any): PhenomenologyMismatchEvent {
   return {
     type: 'phenomenology.mismatch',
     frame_id: event.frame_id ?? 0,
-    entity_id: event.entity_id ?? 'unknown',
+    subentity_id: event.subentity_id ?? 'unknown',
     substrate_valence: event.substrate_valence ?? 0,
     substrate_arousal: event.substrate_arousal ?? 0,
     substrate_mag: event.substrate_mag ?? 0,
@@ -161,7 +161,7 @@ export function normalizeHealthEvent(event: any): PhenomenologicalHealthEvent {
   return {
     type: 'phenomenological_health',
     frame_id: event.frame_id ?? 0,
-    entity_id: event.entity_id ?? 'unknown',
+    subentity_id: event.subentity_id ?? 'unknown',
 
     // Flow state metrics
     flow_state: clamp(event.flow_state ?? 0, 0, 1),

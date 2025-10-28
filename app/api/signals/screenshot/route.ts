@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const path = require('path');
     const timestamp = Date.now();
     const filename = `screenshot-${timestamp}.png`;
-    const evidenceDir = path.join(process.cwd(), '..', '..', 'data', 'evidence');
+    const evidenceDir = path.join(process.cwd(), 'data', 'evidence');
     const filepath = path.join(evidenceDir, filename);
 
     // Ensure evidence directory exists

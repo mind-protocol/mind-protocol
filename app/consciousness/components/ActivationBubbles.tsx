@@ -125,7 +125,7 @@ function Bubble({ bubble }: { bubble: Bubble }) {
 // ============================================================================
 
 function createBubbleFromOperation(operation: Operation, nodes: Node[]): Bubble | null {
-  const { type, node_id, entity_id, data } = operation;
+  const { type, node_id, subentity_id, data } = operation;
 
   // Find node position
   let node: Node | undefined;
@@ -142,7 +142,7 @@ function createBubbleFromOperation(operation: Operation, nodes: Node[]): Bubble 
 
   switch (type) {
     case 'entity_traversal':
-      message = `${entity_id} traversed here`;
+      message = `${subentity_id} traversed here`;
       bubbleType = 'traversal';
       break;
 
@@ -193,10 +193,10 @@ function createBubbleFromThresholdCrossing(
   let bubbleType: Bubble['type'] = 'activation';
 
   if (event.direction === 'on') {
-    message = `${event.entity_id}: activated "${event.node_name}"`;
+    message = `${event.subentity_id}: activated "${event.node_name}"`;
     bubbleType = 'activation';
   } else {
-    message = `${event.entity_id}: deactivated "${event.node_name}"`;
+    message = `${event.subentity_id}: deactivated "${event.node_name}"`;
     bubbleType = 'info';
   }
 

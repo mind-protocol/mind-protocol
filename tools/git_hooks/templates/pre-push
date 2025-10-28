@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Prevent direct pushes from IDEs or manual usage.
+
+set -euo pipefail
+
+if [[ "${GIT_RUNNER:-}" == "1" ]]; then
+  exit 0
+fi
+
+echo "❌ Push blocked. All pushes must flow through tool.request.git.pr (Git Runner)."
+exit 1

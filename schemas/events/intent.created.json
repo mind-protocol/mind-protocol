@@ -1,0 +1,45 @@
+{
+  "$id": "mind://events/intent.created.json",
+  "title": "intent.created",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "intent_id",
+    "channel",
+    "payload"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "intent.created"
+    },
+    "org": {
+      "type": "string"
+    },
+    "intent_id": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

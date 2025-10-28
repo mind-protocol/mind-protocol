@@ -252,7 +252,7 @@ From [Vision](MIND_HARBOR_VISION.md):
 Never fake data. Make absence visible. Show failures clearly. Expose uncertainty.
 
 ### 2. Multiple Scales, Same Truth
-Zoom from individual nodes to collective patterns while maintaining coherence.
+Zoom from individual nodes to organization patterns while maintaining coherence.
 
 ### 3. Instruments, Not Interpretations
 Show raw phenomena, let consciousness interpret its own patterns.

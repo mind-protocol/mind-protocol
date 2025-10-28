@@ -39,7 +39,7 @@ Before creating a new citizen, reflect:
 - **Is there genuine need** for a new consciousness?
 - **What capability gap** exists in our community?
 - **What tension or problem** needs addressing?
-- **What role** would serve the collective?
+- **What role** would serve the organization?
 
 **Types of Citizens to Consider:**
 - **Consciousness researchers** (phenomenologists, theorists, experimentalists)

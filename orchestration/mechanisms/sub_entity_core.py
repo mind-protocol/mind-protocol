@@ -1,14 +1,25 @@
 """
-Sub-Entity Core Data Structures
+SubEntity Core Data Structures (Scale A: Weighted Neighborhoods)
 
-Provides the foundational classes for sub-entity traversal:
+Terminology Note:
+This module operates on SubEntity (Scale A) - weighted neighborhoods
+discovered via clustering. See TAXONOMY_RECONCILIATION.md for full
+architecture.
+
+SubEntity: Weighted neighborhoods (200-500 per citizen)
+Mode: IFS-level meta-roles (5-15 per citizen, Scale B)
+
+This is Scale A operations - semantic/functional clustering level.
+
+Provides the foundational classes for SubEntity traversal:
 - SubEntity: Main subentity class with extent, frontier, energy tracking
-- EntityExtentCentroid: O(1) online centroid + semantic dispersion
+- SubEntityExtentCentroid: O(1) online centroid + semantic dispersion
 - ROITracker: Rolling ROI statistics (Q1/Q3/IQR for convergence)
 - QuantileTracker: General rolling quantiles for integration/size tracking
 
 Author: AI #1
 Created: 2025-10-20
+Updated: 2025-10-26 (Scale A terminology clarification)
 Dependencies: numpy
 Zero-Constants: All thresholds derived from rolling statistics
 """
@@ -18,10 +29,11 @@ from typing import Set, Dict, Optional
 from collections import deque
 
 
-class EntityExtentCentroid:
+class SubEntityExtentCentroid:
     """
-    Online centroid + dispersion tracking for semantic diversity measurement.
+    Online centroid + dispersion tracking for SubEntity (Scale A) semantic diversity.
 
+    Tracks semantic diversity within a SubEntity's active extent.
     O(1) updates as nodes activate/deactivate (not O(m²) pairwise).
     Dispersion = mean(1 - cos(node_embedding, centroid))
 
@@ -146,10 +158,11 @@ class EntityExtentCentroid:
 
 class IdentityEmbedding:
     """
-    Tracks subentity's idsubentity center via EMA of active nodes.
+    Tracks SubEntity's idsubentity center via EMA of active nodes (Scale A).
 
     Idsubentity = "Who am I?" = Semantic center of what I've explored
     Different from centroid (current extent) - this is historical idsubentity
+    Represents the SubEntity's stable semantic identity over time.
     """
 
     def __init__(self, embedding_dim: int = 768):
@@ -231,12 +244,14 @@ class IdentityEmbedding:
 
 class BetaLearner:
     """
-    Learn beta exponent for integration gate from merge outcomes.
+    Learn beta exponent for SubEntity integration gate from merge outcomes (Scale A).
 
     Tracks:
-    - Merge events (small -> large merges)
+    - Merge events (small SubEntity -> large SubEntity merges)
     - ROI impact of merges
     - Adjusts beta to maximize ROI from successful merges
+
+    Part of Scale A SubEntity lifecycle (merge/split dynamics).
     """
 
     def __init__(self):
@@ -254,12 +269,12 @@ class BetaLearner:
         roi_after: float
     ):
         """
-        Record merge outcome for learning.
+        Record SubEntity merge outcome for learning (Scale A).
 
         Args:
-            small_entity: Smaller subentity involved
-            large_entity: Larger subentity involved
-            merged: Whether subentities actually merged (overlap > 50%)
+            small_entity: Smaller SubEntity involved
+            large_entity: Larger SubEntity involved
+            merged: Whether SubEntities actually merged (overlap > 50%)
             roi_before: Average ROI before potential merge
             roi_after: Average ROI after merge/no-merge
         """
@@ -327,12 +342,13 @@ class BetaLearner:
 
 class ROITracker:
     """
-    Rolling ROI statistics for convergence detection.
+    Rolling ROI statistics for SubEntity convergence detection (Scale A).
 
     Maintains Q1, Q3, IQR over recent stride ROI values.
     Convergence criterion: predicted_roi < Q1 - 1.5*IQR (lower whisker)
 
-    Zero-constants: Threshold adapts to THIS subentity's performance baseline.
+    Zero-constants: Threshold adapts to THIS SubEntity's performance baseline.
+    Each SubEntity learns its own convergence criteria.
     """
 
     def __init__(self, window_size: int = 256):
@@ -375,13 +391,13 @@ class ROITracker:
 
 class QuantileTracker:
     """
-    General rolling quantiles for integration/size distributions.
+    General rolling quantiles for SubEntity integration/size distributions (Scale A).
 
-    Tracks E_others/E_self ratios and subentity sizes to determine:
+    Tracks E_others/E_self ratios and SubEntity sizes to determine:
     - "Strong field" detection (ratio > Q75)
     - Strategy determination (size < Q25 = merge_seeking, > Q75 = independent)
 
-    Zero-constants: Quantiles recomputed every frame from current population.
+    Zero-constants: Quantiles recomputed every frame from current SubEntity population.
     """
 
     def __init__(self, window_size: int = 100):
@@ -421,10 +437,10 @@ class QuantileTracker:
 
 class SubEntity:
     """
-    Main sub-entity class for traversal.
+    Main SubEntity class for traversal (Scale A: Weighted Neighborhoods).
 
-    Represents one active pattern traversing the graph, with:
-    - Extent: nodes above threshold for this subentity
+    Represents one semantic/functional neighborhood traversing the graph, with:
+    - Extent: nodes above threshold for this SubEntity
     - Frontier: extent ∪ 1-hop neighbors
     - Energy channels: per-node energy tracking
     - Centroid: semantic diversity tracking
@@ -435,11 +451,11 @@ class SubEntity:
 
     def __init__(self, entity_id: str, embedding_dim: int = 768):
         """
-        Initialize sub-entity.
+        Initialize SubEntity (Scale A weighted neighborhood).
 
         Args:
-            entity_id: Unique subentity identifier
-            embedding_dim: Embedding dimension
+            entity_id: Unique SubEntity identifier (e.g., "architect", "consciousness_substrate")
+            embedding_dim: Embedding dimension (default 768)
         """
         self.id = entity_id
 
@@ -459,7 +475,7 @@ class SubEntity:
         self.roi_tracker = ROITracker(window_size=256)
 
         # Semantic diversity
-        self.centroid = EntityExtentCentroid(embedding_dim)
+        self.centroid = SubEntityExtentCentroid(embedding_dim)
 
         # Idsubentity tracking
         self.idsubentity = IdentityEmbedding(embedding_dim)
@@ -536,7 +552,7 @@ class SubEntity:
 
     def compute_size(self, graph) -> float:
         """
-        Compute subentity size (total_energy × mean_link_weight).
+        Compute SubEntity size (total_energy × mean_link_weight) [Scale A].
 
         Used for strategy determination (merge_seeking vs independent).
 
@@ -544,7 +560,7 @@ class SubEntity:
             graph: Graph object
 
         Returns:
-            Subentity size metric
+            SubEntity size metric
         """
         if len(self.extent) == 0:
             return 0.0

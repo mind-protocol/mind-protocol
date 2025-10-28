@@ -1,0 +1,42 @@
+{
+  "$id": "mind://events/intent.assigned.json",
+  "title": "intent.assigned",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "intent_id",
+    "assignee_id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "intent.assigned"
+    },
+    "org": {
+      "type": "string"
+    },
+    "intent_id": {
+      "type": "string"
+    },
+    "assignee_id": {
+      "type": "string"
+    },
+    "route": {
+      "type": "string"
+    },
+    "lane_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

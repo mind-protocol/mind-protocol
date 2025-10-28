@@ -1,0 +1,64 @@
+ecosystem: trading-commodities
+version: 0.1.0
+
+topics:
+  inject: "org/{org_id}/inject/membrane"
+  broadcast: "org/{org_id}/broadcast/*"
+
+lanes:
+  - id: trades
+    capacity: 3
+    ack_policy: human_required
+  - id: logistics
+    capacity: 2
+    ack_policy: none
+
+intent_templates:
+  - id: rfq_to_term_sheet
+    when_inject:
+      channel: rfq.new
+      match:
+        commodity: "*"
+        counterparty: "*"
+    produce:
+      intent:
+        type: term_sheet
+        lane: trades
+        priority: 0.85
+
+tool_catalog:
+  - capability: doc.render
+    runner_image: ghcr.io/mind/tools/doc-render:1.0
+    resources:
+      cpu: "0.5"
+      mem: "512Mi"
+  - capability: git.commit
+    runner_image: ghcr.io/mind/tools/git-runner:1.0
+    resources:
+      cpu: "0.2"
+      mem: "128Mi"
+
+citizens:
+  - id: E.builder
+    image: ghcr.io/mind/citizen/builder:0.7
+    subscribe:
+      - "org/{org_id}/broadcast/intent.*"
+      - "org/{org_id}/broadcast/tool.requested"
+    publish:
+      - "org/{org_id}/inject/membrane"
+
+renderers:
+  - id: docs-mdx
+    triggers:
+      - mission.done
+      - tool.result
+    output: git:publications/docs
+    pr_branch_prefix: "auto/publish/"
+
+security:
+  allowed_keys:
+    - "ed25519:ecosystem-public-key-placeholder"
+
+defaults:
+  backpressure:
+    percept_lite: true

@@ -29,7 +29,7 @@ import asyncio
 from orchestration.mechanisms.health_modulation import HealthModulator
 from orchestration.mechanisms.source_impact import SourceImpactGate
 from orchestration.mechanisms.peripheral_amplification import PeripheralAmplifier
-from orchestration.mechanisms.entity_channels import EntityChannelSelector
+from orchestration.mechanisms.subentity_channels import SubEntityChannelSelector
 from orchestration.mechanisms.direction_priors import DirectionPriorDistributor
 
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ class StimulusInjector:
             min_cohort=20
         )
 
-        self.entity_selector = EntityChannelSelector(
+        self.entity_selector = SubEntityChannelSelector(
             window_size=100,
             min_samples=20
         )
@@ -169,7 +169,8 @@ class StimulusInjector:
         matches: List[InjectionMatch],
         source_type: str = "user_message",
         rho_proxy: Optional[float] = None,
-        context_embeddings: Optional[List[np.ndarray]] = None
+        context_embeddings: Optional[List[np.ndarray]] = None,
+        economy_multiplier: float = 1.0,
     ) -> InjectionResult:
         """
         Inject energy from stimulus into matched nodes.
@@ -221,6 +222,12 @@ class StimulusInjector:
             logger.debug(f"[StimulusInjector] Peripheral amplification: α={alpha:.2f}, budget×{(1+alpha):.2f}")
         else:
             budget = budget_base
+
+        if economy_multiplier != 1.0:
+            logger.debug(
+                f"[StimulusInjector] Economy multiplier applied: {economy_multiplier:.3f}"
+            )
+        budget *= max(economy_multiplier, 0.0)
 
         # P1 HOTFIX: Budget floor to prevent starvation when vector search broken
         # If we have matches but budget is near-zero (vector search issues), guarantee minimum energy flow
@@ -617,6 +624,101 @@ class StimulusInjector:
 
         return injections
 
+    def apply_entity_overlap_penalty(
+        self,
+        entity_scores: Dict[str, float],
+        entity_metrics_adapter,
+        redundancy_threshold: float = 0.7,
+        beta: float = 0.35
+    ) -> Dict[str, float]:
+        """
+        Apply entity overlap penalty to amplifier scores.
+
+        Prevents double-amplifying redundant entities by penalizing based on pairwise
+        redundancy scores (S_red).
+
+        Formula:
+        - P_E = sum(s_E × s_B × indicator(S_red(E,B) > Q90)) for B ≠ E
+        - s_E' = max(0, s_E - β × P_E)
+
+        Args:
+            entity_scores: Dict mapping entity_id -> similarity score
+            entity_metrics_adapter: SubEntityMetrics instance for S_red computation
+            redundancy_threshold: S_red threshold (Q90 ≈ 0.7)
+            beta: Overlap sensitivity (0.2-0.5, default 0.35)
+
+        Returns:
+            Adjusted entity scores with overlap penalty applied
+        """
+        if len(entity_scores) < 2:
+            # No overlap possible with single entity
+            return entity_scores
+
+        entity_ids = list(entity_scores.keys())
+        adjusted_scores = dict(entity_scores)
+
+        penalties_applied = 0
+
+        # Compute pairwise S_red and apply penalties
+        for i, entity_E in enumerate(entity_ids):
+            s_E = entity_scores[entity_E]
+            penalty = 0.0
+
+            for j, entity_B in enumerate(entity_ids):
+                if i == j:
+                    continue  # Skip self
+
+                s_B = entity_scores[entity_B]
+
+                # Compute S_red(E, B)
+                try:
+                    metrics = entity_metrics_adapter.compute_pair_metrics(entity_E, entity_B)
+
+                    if metrics:
+                        scores = entity_metrics_adapter.compute_scores(metrics)
+                        S_red = scores.S_red
+
+                        # Apply penalty if redundancy exceeds threshold
+                        if S_red > redundancy_threshold:
+                            penalty += s_E * s_B  # indicator(S_red > Q90) = 1
+
+                            logger.debug(
+                                f"[EntityOverlapPenalty] {entity_E} ↔ {entity_B}: "
+                                f"S_red={S_red:.3f} > {redundancy_threshold}, "
+                                f"penalty contribution={s_E * s_B:.4f}"
+                            )
+
+                except Exception as e:
+                    logger.warning(
+                        f"[EntityOverlapPenalty] Failed to compute S_red for "
+                        f"({entity_E}, {entity_B}): {e}"
+                    )
+                    continue
+
+            # Apply penalty: s_E' = s_E - β × P_E
+            if penalty > 0:
+                adjusted_score = max(0.0, s_E - beta * penalty)
+                adjusted_scores[entity_E] = adjusted_score
+
+                penalties_applied += 1
+
+                logger.info(
+                    f"[EntityOverlapPenalty] {entity_E}: "
+                    f"s={s_E:.3f}, P_E={penalty:.4f}, β={beta} "
+                    f"→ s'={adjusted_score:.3f}"
+                )
+
+        if penalties_applied > 0:
+            logger.info(
+                f"[EntityOverlapPenalty] Applied penalties to {penalties_applied}/{len(entity_ids)} entities"
+            )
+        else:
+            logger.debug(
+                f"[EntityOverlapPenalty] No redundancy detected (all S_red <= {redundancy_threshold})"
+            )
+
+        return adjusted_scores
+
     def _compute_threshold(
         self,
         node_type: str,
@@ -681,7 +783,8 @@ class StimulusInjector:
     def _distribute_budget_dual_channel(
         self,
         budget: float,
-        matches: List[InjectionMatch]
+        matches: List[InjectionMatch],
+        entity_scores: Optional[Dict[str, float]] = None
     ) -> List[Dict[str, Any]]:
         """
         Dual-channel injection: Top-Up + Amplifier.
@@ -692,6 +795,7 @@ class StimulusInjector:
         Args:
             budget: Total energy budget to distribute
             matches: Selected matches with computed thresholds
+            entity_scores: Optional entity scores for overlap penalty (entity_id -> score)
 
         Returns:
             List of injections: [{item_id, delta_energy, new_energy, channel_breakdown}, ...]
@@ -714,6 +818,16 @@ class StimulusInjector:
             # Amplifier: similarity^γ
             gamma = 1.3
             w_amp.append(pow(m.similarity, gamma))
+
+        # Step 1.5: Apply entity overlap penalty to amplifier weights (if entity channels enabled)
+        # NOTE: Requires entity-level allocation to be implemented by Felix
+        # entity_scores would map entity_id -> similarity score
+        # For now, this is a stub - overlap penalty applies at entity level, not node level
+        if self.entity_channels_enabled and entity_scores:
+            logger.debug(
+                f"[StimulusInjector] Entity overlap penalty requested but entity-level "
+                f"allocation not yet implemented. Skipping penalty."
+            )
 
         # Normalize weights
         sum_top = sum(w_top) or 1e-9

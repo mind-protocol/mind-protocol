@@ -1,17 +1,28 @@
 """
-Two-Scale Traversal - Entity → Atomic Selection
+Two-Scale Traversal - SubEntity → Atomic Selection (Scale A Operations)
+
+Terminology Note:
+This module operates on SubEntity (Scale A) - weighted neighborhoods
+discovered via clustering. See TAXONOMY_RECONCILIATION.md for full
+architecture.
+
+SubEntity: Weighted neighborhoods (200-500 per citizen)
+Mode: IFS-level meta-roles (5-15 per citizen, Scale B)
+
+This is Scale A operations - SubEntity-level traversal.
 
 ARCHITECTURAL PRINCIPLE: Traversal operates at two scales to reduce branching.
 
 Phase 1 Implementation (shipped):
-- Between-entity: Score entities by 5 hungers, pick next entity, select representative nodes
-- Within-entity: Existing atomic stride selection constrained to entity members
-- Budget split: Softmax over entity hungers determines entity allocation
+- Between-SubEntity: Score SubEntities by 5 hungers, pick next SubEntity, select representative nodes
+- Within-SubEntity: Existing atomic stride selection constrained to SubEntity members
+- Budget split: Softmax over SubEntity hungers determines SubEntity allocation
 
 This is the DEFAULT architecture (TWO_SCALE_ENABLED=true).
 
 Author: Felix (Engineer)
 Created: 2025-10-22
+Updated: 2025-10-26 (Scale A terminology clarification)
 Spec: docs/specs/v2/subentity_layer/subentity_layer.md §2.4
 Status: STABLE (Phase 1 shipped, Phase 2 gated by flags)
 """
@@ -32,17 +43,17 @@ if TYPE_CHECKING:
 @dataclass
 class EntityHungerScores:
     """
-    Hunger scores for entity selection (Phase 1: 5 hungers).
+    Hunger scores for SubEntity selection (Scale A, Phase 1: 5 hungers).
 
-    Each hunger ∈ [0, 1] represents motivation to activate this entity.
+    Each hunger ∈ [0, 1] represents motivation to activate this SubEntity.
     Higher score = more attractive.
     """
-    entity_id: str
+    entity_id: str  # SubEntity ID (kept as entity_id for backward compat)
     goal_fit: float  # Alignment with current goal embedding
     integration: float  # Semantic distance (novelty/complementarity)
-    completeness: float  # How much of entity is already active
+    completeness: float  # How much of SubEntity is already active
     ease: float  # Boundary precedence from RELATES_TO
-    novelty: float  # Unexplored entity (low ema_active)
+    novelty: float  # Unexplored SubEntity (low ema_active)
     total_score: float  # Softmax-weighted combination
 
 
@@ -51,12 +62,12 @@ def compute_goal_fit(
     goal_embedding: Optional[np.ndarray]
 ) -> float:
     """
-    Compute goal alignment hunger (higher = more aligned).
+    Compute goal alignment hunger for SubEntity (Scale A, higher = more aligned).
 
-    Uses cosine similarity between entity centroid and goal embedding.
+    Uses cosine similarity between SubEntity centroid and goal embedding.
 
     Args:
-        entity: Candidate entity
+        entity: Candidate SubEntity (variable name kept as 'entity' for brevity)
         goal_embedding: Current goal vector
 
     Returns:
@@ -82,13 +93,13 @@ def compute_integration_hunger(
     candidate_entity: 'Subentity'
 ) -> float:
     """
-    Compute integration hunger (semantic distance).
+    Compute integration hunger between SubEntities (Scale A, semantic distance).
 
     Higher distance = more integration potential (novelty/complementarity).
 
     Args:
-        current_entity: Entity we're currently in
-        candidate_entity: Entity we're considering
+        current_entity: SubEntity we're currently in
+        candidate_entity: SubEntity we're considering
 
     Returns:
         Integration score ∈ [0, 1] (higher = more distant/novel)
@@ -111,12 +122,12 @@ def compute_integration_hunger(
 
 def compute_completeness_hunger(entity: 'Subentity') -> float:
     """
-    Compute completeness hunger (how much already active).
+    Compute completeness hunger for SubEntity (Scale A, how much already active).
 
     Lower completeness = more room to explore.
 
     Args:
-        entity: Candidate entity
+        entity: Candidate SubEntity
 
     Returns:
         Completeness score ∈ [0, 1] (higher = more incomplete)
@@ -143,13 +154,13 @@ def compute_ease_hunger(
     graph: 'Graph'
 ) -> float:
     """
-    Compute ease hunger (boundary precedence from RELATES_TO).
+    Compute ease hunger for SubEntity (Scale A, boundary precedence from RELATES_TO).
 
     Strong RELATES_TO link = easy to traverse = high hunger.
 
     Args:
-        current_entity: Entity we're currently in
-        candidate_entity: Entity we're considering
+        current_entity: SubEntity we're currently in
+        candidate_entity: SubEntity we're considering
         graph: Graph containing RELATES_TO links
 
     Returns:
@@ -195,13 +206,13 @@ def score_entity_hungers(
     hunger_weights: Optional[Dict[str, float]] = None
 ) -> EntityHungerScores:
     """
-    Score candidate entity across all hungers (Phase 1: 5 hungers).
+    Score candidate SubEntity across all hungers (Phase 1: 5 hungers, Scale A).
 
     Args:
-        current_entity: Entity we're currently in (None if first selection)
-        candidate_entity: Entity to score
+        current_entity: SubEntity we're currently in (None if first selection)
+        candidate_entity: SubEntity to score
         goal_embedding: Current goal vector
-        graph: Graph containing entities and links
+        graph: Graph containing SubEntities and links
         hunger_weights: Optional weights for each hunger (default: uniform)
 
     Returns:
@@ -259,10 +270,10 @@ def choose_next_entity(
     hunger_weights: Optional[Dict[str, float]] = None
 ) -> Tuple[Optional['Subentity'], Optional[EntityHungerScores]]:
     """
-    Choose next entity to expand using hunger-based scoring (Phase 1).
+    Choose next SubEntity to expand (Scale A) using hunger-based scoring (Phase 1).
 
     Algorithm:
-    1. Score all active entities (or all entities if no current)
+    1. Score all active SubEntities (or all SubEntities if no current)
     2. Apply softmax to get distribution
     3. Sample from distribution (deterministic: argmax for now)
 
@@ -303,15 +314,15 @@ def select_representative_nodes(
     target_entity: 'Subentity'
 ) -> Tuple[Optional['Node'], Optional['Node']]:
     """
-    Select representative nodes for boundary stride (Phase 1 strategy).
+    Select representative nodes for boundary stride (Phase 1 strategy, Scale A).
 
     Strategy:
     - Source: Highest-E active member (E >= theta)
     - Target: Member with largest (gap-to-theta) × ease
 
     Args:
-        source_entity: Entity energy flows from
-        target_entity: Entity energy flows to
+        source_entity: SubEntity energy flows from
+        target_entity: SubEntity energy flows to
 
     Returns:
         Tuple of (source_node, target_node) or (None, None) if no valid pair
@@ -366,7 +377,7 @@ def split_stride_budget_by_entity(
     Split stride budget across entities using softmax over hunger scores.
 
     Args:
-        entity_scores: List of scored entities
+        entity_scores: List of scored SubEntities
         total_budget: Total strides available this frame
 
     Returns:

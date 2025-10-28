@@ -101,7 +101,7 @@ export function AttributionCard({ stride, edgeEmotion }: AttributionCardProps) {
       {/* Entity ID */}
       <div className="text-xs">
         <span className="text-slate-500">Entity:</span>{' '}
-        <span className="font-mono text-slate-300">{stride.entity_id}</span>
+        <span className="font-mono text-slate-300">{stride.subentity_id}</span>
       </div>
 
       {/* Edge info */}

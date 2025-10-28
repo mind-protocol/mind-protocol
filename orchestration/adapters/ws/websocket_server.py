@@ -89,13 +89,16 @@ import redis
 import shutil
 
 from orchestration.adapters.api.control_api import router, websocket_manager
+from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 from orchestration.adapters.api.citizen_snapshot import router as citizen_router
 from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2, EngineConfig
 from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS, get_all_engines
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
+from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster
 from orchestration.core.graph import Graph
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
 from orchestration.services.health import StartupSelfTests
+from orchestration.services.economy import initialize_economy_runtime
 
 # Configure logging
 logging.basicConfig(
@@ -103,6 +106,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Economy runtime handle
+ECONOMY_RUNTIME = None
 
 # Create FastAPI app
 app = FastAPI(
@@ -278,9 +284,11 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
         graphs = r.execute_command("GRAPH.LIST")
 
         # Categorize by network level
-        n1_graphs = [g for g in graphs if g.startswith("citizen_")]
-        n2_graphs = [g for g in graphs if g.startswith("collective_") or g.startswith("org_")]
-        n3_graphs = [g for g in graphs if g.startswith("ecosystem_")]
+        # Support both legacy naming (citizen_*, collective_*, ecosystem_*)
+        # and hierarchical naming (consciousness-infrastructure_mind-protocol_*)
+        n1_graphs = [g for g in graphs if g.startswith("citizen_") or ("_mind-protocol_" in g and g.count("_") == 2)]
+        n2_graphs = [g for g in graphs if g.startswith("collective_") or g.startswith("org_") or g == "consciousness-infrastructure_mind-protocol"]
+        n3_graphs = [g for g in graphs if g.startswith("ecosystem_") or g == "consciousness-infrastructure"]
 
         logger.info(f"[Discovery] Found {len(n1_graphs)} N1 citizen graphs")
         logger.info(f"[Discovery] Found {len(n2_graphs)} N2 organizational graphs")
@@ -310,15 +318,30 @@ async def get_graphs():
             "ecosystems": [...]
         }
     """
+    logger.info("[API] /api/graphs endpoint called")
     try:
         graphs = discover_graphs()
+        logger.info(f"[API] discover_graphs returned: {graphs}")
+
+        # Helper to extract citizen name from hierarchical format
+        def extract_citizen_info(graph_name):
+            # Handle hierarchical format: consciousness-infrastructure_mind-protocol_<name>
+            if "_mind-protocol_" in graph_name:
+                citizen_name = graph_name.split("_")[-1]
+                return f"citizen_{citizen_name}", citizen_name.title()
+            # Handle legacy format: citizen_<name>
+            elif graph_name.startswith("citizen_"):
+                citizen_name = graph_name.replace("citizen_", "")
+                return graph_name, citizen_name.title()
+            else:
+                return graph_name, graph_name.replace("_", " ").title()
 
         # Format for frontend consumption
-        return {
+        result = {
             "citizens": [
                 {
-                    "id": graph_name,
-                    "name": graph_name.replace("citizen_", "").title(),
+                    "id": extract_citizen_info(graph_name)[0],
+                    "name": extract_citizen_info(graph_name)[1],
                     "type": "personal"
                 }
                 for graph_name in graphs['n1']
@@ -340,6 +363,8 @@ async def get_graphs():
                 for graph_name in graphs.get('n3', [])
             ]
         }
+        logger.info(f"[API] Returning {len(result['citizens'])} citizens, {len(result['organizations'])} orgs, {len(result['ecosystems'])} ecosystems")
+        return result
     except Exception as e:
         logger.error(f"[API] Failed to discover graphs: {e}")
         return {
@@ -471,13 +496,13 @@ async def start_citizen_consciousness(
         else:
             logger.info(f"[N1:{citizen_id}] Bootstrapping subentity layer...")
 
-        from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
-        bootstrap = EntityBootstrap(graph)
+        from orchestration.mechanisms.subentity_bootstrap import SubEntityBootstrap
+        bootstrap = SubEntityBootstrap(graph)
         bootstrap_stats = bootstrap.run_complete_bootstrap()
         logger.info(f"[N1:{citizen_id}] entity_bootstrap: created={bootstrap_stats}")
 
         # Run post-bootstrap initialization
-        from orchestration.mechanisms.entity_post_bootstrap import run_post_bootstrap_initialization
+        from orchestration.mechanisms.subentity_post_bootstrap import run_post_bootstrap_initialization
         post_stats = run_post_bootstrap_initialization(graph)
         logger.info(f"[N1:{citizen_id}] post_bootstrap: {post_stats}")
 
@@ -523,6 +548,14 @@ async def start_citizen_consciousness(
 
     logger.info(f"[N1:{citizen_id}] ✅ Consciousness engine V2 ready")
     logger.info(f"[N1:{citizen_id}]   Graph nodes: {len(graph.nodes)}, links: {len(graph.links)}")
+
+    # Seed streaming working set so clients can reconstruct without snapshots
+    try:
+        stream_aggregator = get_stream_aggregator()
+        await stream_aggregator.seed_from_graph(citizen_id, graph, cause="bootstrap")
+        logger.info(f"[N1:{citizen_id}] Stream aggregator seeded ({len(graph.nodes)} nodes, {len(graph.links)} links)")
+    except Exception as exc:
+        logger.warning(f"[N1:{citizen_id}] Stream aggregator seed failed: {exc}")
 
     return engine
 
@@ -574,13 +607,13 @@ async def start_organizational_consciousness(
         else:
             logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
 
-        from orchestration.mechanisms.entity_bootstrap import EntityBootstrap
-        bootstrap = EntityBootstrap(graph)
+        from orchestration.mechanisms.subentity_bootstrap import SubEntityBootstrap
+        bootstrap = SubEntityBootstrap(graph)
         bootstrap_stats = bootstrap.run_complete_bootstrap()
         logger.info(f"[N2:{org_id}] entity_bootstrap: created={bootstrap_stats}")
 
         # Run post-bootstrap initialization
-        from orchestration.mechanisms.entity_post_bootstrap import run_post_bootstrap_initialization
+        from orchestration.mechanisms.subentity_post_bootstrap import run_post_bootstrap_initialization
         post_stats = run_post_bootstrap_initialization(graph)
         logger.info(f"[N2:{org_id}] post_bootstrap: {post_stats}")
 
@@ -619,6 +652,13 @@ async def start_organizational_consciousness(
 
     logger.info(f"[N2:{org_id}] ✅ Organizational consciousness engine V2 ready")
     logger.info(f"[N2:{org_id}]   Graph nodes: {len(graph.nodes)}, links: {len(graph.links)}")
+
+    try:
+        stream_aggregator = get_stream_aggregator()
+        await stream_aggregator.seed_from_graph(org_id, graph, cause="bootstrap")
+        logger.info(f"[N2:{org_id}] Stream aggregator seeded ({len(graph.nodes)} nodes, {len(graph.links)} links)")
+    except Exception as exc:
+        logger.warning(f"[N2:{org_id}] Stream aggregator seed failed: {exc}")
 
     return engine
 
@@ -1067,6 +1107,7 @@ async def initialize_consciousness_engines():
 @app.on_event("startup")
 async def startup_event():
     """Server startup - bind port quickly, then load engines in background."""
+    global ECONOMY_RUNTIME
     logger.info("=" * 70)
     logger.info("MIND PROTOCOL WEBSOCKET SERVER")
     logger.info("=" * 70)
@@ -1076,6 +1117,22 @@ async def startup_event():
 
     # Start heartbeat writer (fast)
     heartbeat_writer.start()
+
+    # Initialize forged identity integration (Phase 3A: observe-only)
+    from orchestration.mechanisms.forged_identity_integration import initialize_forged_identity_integration
+    initialize_forged_identity_integration(
+        telemetry=None,  # TODO: Connect telemetry when available
+        autonomous_mode=False  # Phase 3A: observe-only, no LLM execution
+    )
+    logger.info("✅ Forged Identity Integration initialized (Phase 3A: observe-only)")
+
+    # Start economy runtime (pricing, budget policies, UBC distributor)
+    try:
+        economy_broadcaster = ConsciousnessStateBroadcaster()
+        ECONOMY_RUNTIME = initialize_economy_runtime(economy_broadcaster)
+        await ECONOMY_RUNTIME.start()
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Economy runtime failed to start: %s", exc)
 
     # Launch engine initialization in background (don't block port binding)
     logger.info("")
@@ -1090,6 +1147,14 @@ async def startup_event():
 async def shutdown_event():
     """Server shutdown - cleanup heartbeat and consciousness engines."""
     logger.info("Shutting down WebSocket server...")
+
+    global ECONOMY_RUNTIME
+    if ECONOMY_RUNTIME is not None:
+        try:
+            await ECONOMY_RUNTIME.stop()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Economy runtime shutdown failed: %s", exc)
+        ECONOMY_RUNTIME = None
 
     # Cancel all consciousness tasks
     if CONSCIOUSNESS_TASKS:

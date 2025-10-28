@@ -18,9 +18,9 @@
  * Frequency: Every node traversal
  * Source: orchestration/sub_entity.py
  */
-export interface EntityActivityEvent {
-  type: 'entity_activity';
-  entity_id: string;              // e.g., "builder", "observer"
+export interface SubEntityActivityEvent {
+  type: 'subentity_activity';
+  subentity_id: string;              // e.g., "builder", "observer"
   current_node: string;            // Node ID currently exploring
   need_type: string;               // e.g., "pattern_validation", "context_gathering"
   energy_used: number;             // Energy consumed so far this cycle
@@ -39,11 +39,11 @@ export interface EntityActivityEvent {
  */
 export interface ThresholdCrossingEvent {
   type: 'threshold_crossing';
-  entity_id: string;               // Subentity for which threshold crossed
+  subentity_id: string;               // Subentity for which threshold crossed
   node_id: string;                 // Node that crossed threshold
   node_name: string;               // Human-readable node text
   direction: 'on' | 'off';         // Crossed up (activated) or down (deactivated)
-  entity_activity: number;         // Current subentity activity level (0-1)
+  subentity_activity: number;         // Current subentity activity level (0-1)
   threshold: number;               // Threshold value that was crossed
   timestamp: string;               // ISO 8601 timestamp
 }
@@ -114,7 +114,7 @@ export interface FrameStartEvent {
   total_active_energy?: number;    // For activation computation
   mean_arousal?: number;           // For arousal floor computation
 
-  // Entity visualization
+  // SubEntity visualization
   entity_palette?: Array<{
     id: string;
     name?: string;
@@ -131,9 +131,262 @@ export interface FrameStartEvent {
 export interface WmEmitEvent {
   type: 'wm.emit';
   v: '2';
-  kind: 'wm.emit';
+  kind?: 'wm.emit';
   frame_id: number;
-  node_ids: string[];              // Node IDs in working memory
+  mode?: string;
+  selected_entities?: string[];                     // Entity IDs holding WM focus
+  entity_token_shares?: Array<{ id: string; tokens?: number; share?: number }>;
+  total_entities?: number;
+  total_members?: number;
+  token_budget_used?: number;
+  selected_nodes?: string[];                        // Highlighted node IDs (top members)
+  t_ms?: number;
+  node_ids?: string[];                              // Legacy field (node list)
+}
+
+export interface WmSelectedEvent {
+  type: 'wm.selected';
+  citizen: string;
+  frame_id: number;
+  entities_active: string[];
+  timestamp_ms?: number;
+}
+
+export interface WeightsUpdatedEvent {
+  type: 'weights.updated';
+  v: '2';
+  frame_id: number;
+  source: string;
+  updates: Array<{
+    item_id: string;
+    type?: 'node' | 'link' | 'membership';
+    log_weight_before?: number;
+    log_weight_after?: number;
+    log_weight_new?: number;
+    signals?: Record<string, number>;
+    eta?: number;
+  }>;
+  t_ms?: number;
+}
+
+export interface SubentityWeightsUpdatedEvent {
+  type: 'subentity.weights.updated';
+  level: string;
+  citizen_id: string;
+  frame_id: number;
+  run_id?: string;
+  ts_ms?: number;
+  payload: {
+    entity: {
+      id: string;
+      name?: string;
+      cohesion_before?: number;
+      cohesion_after?: number;
+      stability_z?: number;
+      formation_quality_q?: number;
+    };
+    stats: {
+      num_updated: number;
+      num_pruned?: number;
+      budget_method?: string;
+      ema_alpha?: number;
+    };
+    memberships: Array<{
+      node_id: string;
+      weight_prev?: number;
+      weight_new?: number;
+      delta?: number;
+      activation_ema?: number;
+      activation_count_inc?: number;
+      last_activated_ts?: number;
+    }>;
+  };
+}
+
+export interface SubentityMembershipPrunedEvent {
+  type: 'subentity.membership.pruned';
+  level: string;
+  citizen_id: string;
+  frame_id: number;
+  run_id?: string;
+  payload: {
+    entity_id: string;
+    node_id: string;
+    weight_prev?: number;
+    activation_ema_prev?: number;
+    reason?: string;
+  };
+  ts_ms?: number;
+}
+
+export interface BoundarySummaryEvent {
+  type: 'se.boundary.summary';
+  v: '2';
+  frame_id: number;
+  boundary_strides: number;
+  total_strides: number;
+  t_ms?: number;
+}
+
+export interface PerceptFrameEvent {
+  type: 'percept.frame';
+  v: '1';
+  cursor?: number;
+  ts_ms: number;
+  citizen_id: string;
+  entity_id: string;
+  stride_id?: string;
+  phase?: string;
+  affect?: {
+    valence?: number;
+    arousal?: number;
+  };
+  goal?: {
+    similarity?: number;
+    facets?: Array<{ id: string; weight?: number }>;
+  };
+  novelty?: number;
+  uncertainty?: number;
+  peripheral_pressure?: number;
+  context_similarity?: number;
+  anchors_top?: string[];
+  anchors_peripheral?: string[];
+  render_hint?: 'replace' | 'accumulate' | string;
+}
+
+export interface EconomyOverlayState {
+  balance?: number;
+  spent60s?: number;
+  budgetRemain?: number;
+  softCap?: number;
+  kEcon?: number;
+  ubcNextEta?: string;
+  lastSigAt?: number;
+  lastUbcAt?: number;
+}
+
+export interface GraphNodePayload {
+  id: string;
+  name?: string;
+  type?: string;
+  energy?: number;
+  theta?: number;
+  energy_runtime?: number;
+  log_weight?: number;
+  scope?: string;
+  properties?: Record<string, any>;
+}
+
+export interface GraphLinkPayload {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+  weight?: number;
+  energy?: number;
+  confidence?: number;
+  scope?: string;
+  properties?: Record<string, any>;
+}
+
+export interface GraphSubentityPayload {
+  id: string;
+  name?: string;
+  kind?: string;
+  energy?: number;
+  threshold?: number;
+  activation_level?: string;
+  member_count?: number;
+  quality?: number;
+  stability?: string;
+  properties?: Record<string, any>;
+}
+
+export interface GraphNodeUpsertEvent {
+  type: 'graph.delta.node.upsert';
+  citizen_id?: string;
+  node: GraphNodePayload;
+  cause?: string;
+  timestamp?: string;
+}
+
+export interface GraphNodeDeleteEvent {
+  type: 'graph.delta.node.delete';
+  citizen_id?: string;
+  node_id?: string;
+  id?: string;
+  cause?: string;
+  timestamp?: string;
+}
+
+export interface GraphLinkUpsertEvent {
+  type: 'graph.delta.link.upsert';
+  citizen_id?: string;
+  link: GraphLinkPayload;
+  cause?: string;
+  timestamp?: string;
+}
+
+export interface GraphLinkDeleteEvent {
+  type: 'graph.delta.link.delete';
+  citizen_id?: string;
+  link_id?: string;
+  id?: string;
+  cause?: string;
+  timestamp?: string;
+}
+
+export interface GraphSubentityUpsertEvent {
+  type: 'graph.delta.subentity.upsert';
+  citizen_id?: string;
+  subentity: GraphSubentityPayload;
+  cause?: string;
+  timestamp?: string;
+}
+
+export interface GraphSubentityDeleteEvent {
+  type: 'graph.delta.subentity.delete';
+  citizen_id?: string;
+  subentity_id?: string;
+  id?: string;
+  cause?: string;
+  timestamp?: string;
+}
+
+export type GraphDeltaEvent =
+  | GraphNodeUpsertEvent
+  | GraphNodeDeleteEvent
+  | GraphLinkUpsertEvent
+  | GraphLinkDeleteEvent
+  | GraphSubentityUpsertEvent
+  | GraphSubentityDeleteEvent;
+
+export interface ForgedIdentityFrameEvent {
+  type: 'forged.identity.frame';
+  timestamp: string;
+  frame_id: number;
+  citizen_id: string;
+  stimulus_id: string;
+  prompt_preview: string;
+  prompt_length: number;
+  prompt_sections: number;
+  wm_nodes?: string[];
+  full_prompt: string;
+  tick?: number;
+  mode?: string;
+}
+
+export interface ForgedIdentityMetricsEvent {
+  type: 'forged.identity.metrics';
+  timestamp: string;
+  frame_id: number;
+  citizen_id: string;
+  total_frames: number;
+  wm_node_count: number;
+  prompt_length: number;
+  active_subentities: number;
+  tokens_estimate: number;
+  tokens_accumulated: number;
 }
 
 /**
@@ -284,7 +537,7 @@ export interface LinkEmotionUpdateEvent {
  */
 export interface StrideExecEvent {
   type: 'stride.exec';
-  entity_id: string;          // Active entity executing stride
+  subentity_id: string;          // Active entity executing stride
   source_node_id: string;      // Source node
   target_node_id: string;      // Target node
   link_id: string;             // Link traversed
@@ -318,7 +571,7 @@ export interface TierLinkStrengthenedEvent {
   type: 'tier.link.strengthened';
   v: string;                      // Event schema version ("2")
   frame_id: number;                // Consciousness frame ID
-  citizen_id: string;              // Entity that owns this graph
+  citizen_id: string;              // Citizen that owns this graph
   link_id: string;                 // Link identifier (source→target)
   source_id: string;               // Source node ID
   target_id: string;               // Target node ID
@@ -327,7 +580,7 @@ export interface TierLinkStrengthenedEvent {
   tier: 'co_activation' | 'causal' | 'background';  // Learning mechanism
   tier_scale: number;              // Scale factor (1.0 | 0.6 | 0.3)
   energy_flow: number;             // Energy transferred through link
-  entity_context: string[];        // Active entities during strengthening
+  subentity_context: string[];        // Active entities during strengthening
   t_ms: number;                    // Unix timestamp (milliseconds)
 }
 
@@ -384,7 +637,7 @@ export interface AffectiveMemoryEvent {
  */
 export interface CoherencePersistenceEvent {
   type: 'coherence.persistence';
-  entity_id: string;
+  subentity_id: string;
   coherence_persistence: number;   // Consecutive frames in same state
   lambda_res_effective: number;    // Resonance strength after decay
   lock_in_risk: boolean;           // True if persistence > threshold
@@ -399,7 +652,7 @@ export interface CoherencePersistenceEvent {
  */
 export interface MultiPatternResponseEvent {
   type: 'pattern.multiresponse';
-  entity_id: string;
+  subentity_id: string;
   pattern_selected: 'regulation' | 'rumination' | 'distraction';
   pattern_weights: [number, number, number]; // [w_reg, w_rum, w_dist]
   m_affect: number;                // Combined affective multiplier
@@ -416,7 +669,7 @@ export interface MultiPatternResponseEvent {
  */
 export interface IdentityMultiplicityEvent {
   type: 'identity.multiplicity';
-  entity_id: string;
+  subentity_id: string;
   multiplicity_detected: boolean;  // True if multiplicity criteria met
   task_progress_rate: number;      // Progress rate (0-1)
   energy_efficiency: number;       // Efficiency (0-1)
@@ -534,8 +787,8 @@ export interface WeightsUpdatedTraceEvent {
   type: 'weights.updated.trace';
   frame_id: number;
   scope: 'link' | 'node' | 'membership';  // What was updated
-  cohort: string;                          // Entity cohort
-  entity_contexts: string[];               // Which entities (80% split)
+  cohort: string;                          // SubEntity cohort
+  subentity_contexts: string[];               // Which entities (80% split)
   global_context: boolean;                 // Whether 20% global applied
   n: number;                               // Count of weights updated
   d_mu: number;                           // Mean change
@@ -592,7 +845,7 @@ export interface StrideSelectionEvent {
 export interface PhenomenologyMismatchEvent {
   type: 'phenomenology.mismatch';
   frame_id: number;
-  entity_id: string;
+  subentity_id: string;
   substrate_valence: number;              // Inferred from emotion vectors
   substrate_arousal: number;
   substrate_mag: number;
@@ -616,7 +869,7 @@ export interface PhenomenologyMismatchEvent {
 export interface PhenomenologicalHealthEvent {
   type: 'phenomenological_health';
   frame_id: number;
-  entity_id: string;
+  subentity_id: string;
 
   // Flow state metrics
   flow_state: number;                     // Overall flow (0-1)
@@ -683,11 +936,12 @@ export interface TickFrameEvent {
  * Union type of all WebSocket events
  */
 export type WebSocketEvent =
-  | EntityActivityEvent
+  | SubEntityActivityEvent
   | ThresholdCrossingEvent
   | ConsciousnessStateEvent
   | FrameStartEvent
   | WmEmitEvent
+  | WmSelectedEvent
   | NodeFlipEvent
   | LinkFlowSummaryEvent
   | FrameEndEvent
@@ -697,10 +951,23 @@ export type WebSocketEvent =
   | StrideExecEvent
   | TierLinkStrengthenedEvent
   | WeightsUpdatedTraceEvent
+  | WeightsUpdatedEvent
   | WeightsUpdatedTraversalEvent
   | StrideSelectionEvent
   | PhenomenologyMismatchEvent
   | PhenomenologicalHealthEvent
+  | SubentityWeightsUpdatedEvent
+  | SubentityMembershipPrunedEvent
+  | BoundarySummaryEvent
+  | PerceptFrameEvent
+  | GraphNodeUpsertEvent
+  | GraphNodeDeleteEvent
+  | GraphLinkUpsertEvent
+  | GraphLinkDeleteEvent
+  | GraphSubentityUpsertEvent
+  | GraphSubentityDeleteEvent
+  | ForgedIdentityFrameEvent
+  | ForgedIdentityMetricsEvent
   | AffectiveThresholdEvent
   | AffectiveMemoryEvent
   | CoherencePersistenceEvent
@@ -796,7 +1063,7 @@ export interface EmotionColoringState {
  */
 export interface WebSocketStreams {
   // V1 events (legacy)
-  entityActivity: EntityActivityEvent[];
+  subentityActivity: SubEntityActivityEvent[];
   thresholdCrossings: ThresholdCrossingEvent[];
   consciousnessState: ConsciousnessStateEvent | null;
 
@@ -808,6 +1075,7 @@ export interface WebSocketStreams {
 
   // Priority 4: Weight learning events
   weightLearningEvents: WeightsUpdatedTraceEvent[];
+  weightsUpdatedEvents: WeightsUpdatedEvent[];
 
   // Priority 5: Stride selection events
   strideSelectionEvents: StrideSelectionEvent[];
@@ -823,6 +1091,43 @@ export interface WebSocketStreams {
     frame: number;
     t: number;
   }>;
+
+  // Working memory & perceptual overlays
+  wmStream: WmEmitEvent | null;
+  wmSelectionEvents: WmSelectedEvent[];
+  boundarySummaries: BoundarySummaryEvent[];
+  perceptFrames: Record<string, PerceptFrameEvent>;
+  subentityWeightEvents: SubentityWeightsUpdatedEvent[];
+  membershipPrunedEvents: SubentityMembershipPrunedEvent[];
+
+  // Graph delta stream (node/link/subentity updates)
+  graphDeltaEvents: GraphDeltaEvent[];
+  graphDeltaEventsVersion: number;
+  graphDeltaEventsBase: number;
+
+  // Forged identity observability
+  forgedIdentityFrames: ForgedIdentityFrameEvent[];
+  forgedIdentityMetrics: Record<string, ForgedIdentityMetricsEvent>;
+
+  // Membrane-first extensions
+  hierarchySnapshot: {
+    org?: string;
+    ecosystems?: string[];
+    citizens?: Array<{ id: string; label?: string; status?: string }>;
+    lanes?: Array<{ id: string; capacity: number; ack_policy: string }>;
+    ts?: string;
+  } | null;
+  economyOverlays: Record<string, EconomyOverlayState>;
+  walletChallenge: { nonce: string; ttl_ms: number } | null;
+  walletContext: { org?: string; roles?: string[]; citizenIds?: string[]; ecosystems?: string[] } | null;
+  lastInjectAck: { id: string; status: 'accepted' | 'rejected'; reason?: string; ts: string } | null;
+  citizenResponses: Array<{ citizenId: string; content: string; timestamp: string }>;
+
+  graphNodes: GraphNodePayload[];
+  graphLinks: GraphLinkPayload[];
+  graphSubentities: GraphSubentityPayload[];
+
+  injectStimulus: (envelope: Record<string, any>) => string;
 
   // Connection state
   connectionState: WebSocketState;

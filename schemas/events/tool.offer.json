@@ -1,0 +1,48 @@
+{
+  "$id": "mind://events/tool.offer.json",
+  "title": "tool.offer",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "tool_id",
+    "capabilities"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "tool.offer"
+    },
+    "org": {
+      "type": "string"
+    },
+    "tool_id": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cost_estimate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "heartbeat_interval_ms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

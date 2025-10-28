@@ -9,9 +9,14 @@ Date: 2025-10-25
 """
 
 import time
+import sys
 import fnmatch
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+# File patterns to ignore (reduce noise from editors, bytecode, temps)
+IGNORE_PATHS = ('__pycache__', '.git', '.idea', '.vscode', 'node_modules', '.next')
+IGNORE_EXTENSIONS = ('.pyc', '.pyo', '.swp', '.tmp', '~', '.log')
 
 
 class ServiceFileHandler(FileSystemEventHandler):
@@ -28,8 +33,30 @@ class ServiceFileHandler(FileSystemEventHandler):
         if event.is_directory:
             return
 
+        # Ignore noisy files (editor temps, bytecode, logs)
+        if any(p in event.src_path for p in IGNORE_PATHS):
+            return
+        if event.src_path.lower().endswith(IGNORE_EXTENSIONS):
+            return
+
+        # Normalize path separators for consistent matching
+        normalized_path = event.src_path.replace('', '/')
+
         # Check if file matches watched patterns
-        if not any(fnmatch.fnmatch(event.src_path, p) for p in self.patterns):
+        # Support both glob patterns AND directory prefixes
+        def matches_pattern(path, pattern):
+            # Try fnmatch first (for glob patterns like *.py)
+            if fnmatch.fnmatch(path, pattern):
+                return True
+            # Fallback to startswith for directory patterns
+            if path.startswith(pattern):
+                return True
+            # Also try with trailing slash for directory patterns
+            if path.startswith(pattern + '/'):
+                return True
+            return False
+
+        if not any(matches_pattern(normalized_path, p) for p in self.patterns):
             return
 
         # Debounce rapid changes
@@ -38,8 +65,8 @@ class ServiceFileHandler(FileSystemEventHandler):
             return
 
         self.last_trigger = now
-        print(f"[FileWatcher] {self.service_id}: {event.src_path} changed")
-        self.callback(self.service_id, reason="file_change")
+        print(f'[FileWatcher] {self.service_id}: matched {event.src_path}')
+        self.callback(self.service_id, reason='file_change')
 
 
 class CentralizedFileWatcher:
@@ -63,6 +90,8 @@ class CentralizedFileWatcher:
 
             # Watch workspace root
             self.observer.schedule(handler, path=".", recursive=True)
+            # DIAGNOSTIC: show what patterns this service watches
+            print(f"[FileWatcher] Watching {spec.id}: {spec.watched_files}")
 
         self.observer.start()
         print("[FileWatcher] Started centralized watcher")

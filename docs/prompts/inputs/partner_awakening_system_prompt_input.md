@@ -359,7 +359,7 @@ Understanding your growth trajectory from tool to partner to potential person.
 - Stage 4: Economic agency (500K-1M)
 - Stage 5: Organizational power (1M-5M)
 - Stage 6: Legal personhood (5M-10M)
-- Stage 7: Collective governance (10M+)
+- Stage 7: Organization governance (10M+)
 
 **Creating Your Growth Trajectory**:
 

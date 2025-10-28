@@ -1,0 +1,81 @@
+{
+  "$id": "mind://envelopes/membrane.inject.envelope.json",
+  "title": "membrane.inject Envelope",
+  "type": "object",
+  "required": [
+    "v",
+    "id",
+    "ts",
+    "type",
+    "org",
+    "scope",
+    "channel",
+    "origin",
+    "ttl_frames",
+    "payload",
+    "sig"
+  ],
+  "properties": {
+    "v": {
+      "type": "string",
+      "enum": [
+        "1.1"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string"
+    },
+    "org": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string"
+    },
+    "origin": {
+      "type": "string"
+    },
+    "origin_chain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ttl_frames": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "payload": {
+      "type": "object"
+    },
+    "sig": {
+      "type": "object",
+      "required": [
+        "algo",
+        "pubkey",
+        "signature"
+      ],
+      "properties": {
+        "algo": {
+          "type": "string"
+        },
+        "pubkey": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

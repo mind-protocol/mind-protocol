@@ -450,12 +450,12 @@ def execute_stride_step(
             source_entities = []
             target_entities = []
 
-            # Check source node's BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
+            # Check source node's MEMBER_OF links
             for link in node.outgoing_links:
                 if link.link_type == LinkType.MEMBER_OF:
                     source_entities.append(link.target)
 
-            # Check target node's BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
+            # Check target node's MEMBER_OF links
             for link in best_link.target.outgoing_links:
                 if link.link_type == LinkType.MEMBER_OF:
                     target_entities.append(link.target)
@@ -465,7 +465,7 @@ def execute_stride_step(
                 for tgt_entity in target_entities:
                     if src_entity.id != tgt_entity.id:
                         # Boundary stride detected!
-                        from orchestration.mechanisms.entity_activation import learn_relates_to_from_boundary_stride
+                        from orchestration.mechanisms.subentity_activation import learn_relates_to_from_boundary_stride
                         learn_relates_to_from_boundary_stride(
                             src_entity,
                             tgt_entity,

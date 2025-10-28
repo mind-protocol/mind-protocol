@@ -1,0 +1,92 @@
+{
+  "$id": "mind://events/percept.frame.json",
+  "title": "percept.frame",
+  "type": "object",
+  "required": [
+    "v",
+    "id",
+    "ts",
+    "type",
+    "org",
+    "entity_id",
+    "affect",
+    "anchors_top"
+  ],
+  "properties": {
+    "v": {
+      "type": "string",
+      "enum": [
+        "1.1"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "percept.frame"
+    },
+    "org": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "affect": {
+      "type": "object",
+      "required": [
+        "valence",
+        "arousal"
+      ],
+      "properties": {
+        "valence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "arousal": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "goal_match": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "novelty": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "uncertainty": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "peripheral_pressure": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "anchors_top": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "anchors_peripheral": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

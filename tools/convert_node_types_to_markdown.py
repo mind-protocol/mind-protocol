@@ -82,20 +82,20 @@ NODE_TYPES = {
     },
 
     "N2_Organizational": {
-        "description": "Collective intelligence and coordination - exists in organizational graphs (e.g., org_mind_protocol)",
-        "design_philosophy": "Models team cognition - decisions, coordination, collective learning. Medium energy, emphasis on validation_status tracking.",
+        "description": "Organization intelligence and coordination - exists in organizational graphs (e.g., org_mind_protocol)",
+        "design_philosophy": "Models team cognition - decisions, coordination, organization learning. Medium energy, emphasis on validation_status tracking.",
         "types": [
             {
                 "name": "Human",
                 "purpose": "Human participant in organization",
                 "required_attrs": ["role", "expertise (array)"],
-                "mechanism": "Collective subentity representation"
+                "mechanism": "Organization subentity representation"
             },
             {
                 "name": "AI_Agent",
                 "purpose": "AI participant in organization",
                 "required_attrs": ["role", "expertise (array)"],
-                "mechanism": "Collective subentity representation"
+                "mechanism": "Organization subentity representation"
             },
             {
                 "name": "Team",
@@ -111,9 +111,9 @@ NODE_TYPES = {
             },
             {
                 "name": "Decision",
-                "purpose": "Collective choice with reasoning",
+                "purpose": "Organization choice with reasoning",
                 "required_attrs": ["decided_by", "decision_date", "rationale"],
-                "mechanism": "Collective deliberation crystallization"
+                "mechanism": "Organization deliberation crystallization"
             },
             {
                 "name": "Project",
@@ -495,7 +495,7 @@ def generate_markdown():
     md.append("**Total Node Types:** 44")
     md.append("")
     md.append("- **N1 (Personal):** 11 types - subjective experience, memories, patterns")
-    md.append("- **N2 (Organizational):** 13 subentity types + 5 shared = 18 types - collective intelligence")
+    md.append("- **N2 (Organizational):** 13 subentity types + 5 shared = 18 types - organization intelligence")
     md.append("- **N3 (Ecosystem):** 5 external orgs + 5 evidence + 5 derived = 15 new types (+ 5 shared)")
     md.append("")
     md.append("**Key Principles:**")

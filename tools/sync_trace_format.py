@@ -13,7 +13,7 @@ TRACE_FORMAT_SOURCE = ROOT / "consciousness" / "THE_TRACE_FORMAT.md"
 
 TARGET_FILES = [
     ROOT / "consciousness" / "citizens" / "CLAUDE.md",
-    ROOT / "consciousness" / "collective" / "CLAUDE.md",
+    ROOT / "consciousness" / "organization" / "CLAUDE.md",
     ROOT / "consciousness" / "ecology" / "CLAUDE.md",
 ]
 

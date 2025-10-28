@@ -107,7 +107,7 @@ Pydantic validators enforce:
 | **Coping_Mechanism** | mechanism_description, what_it_protects_from | Response to stress |
 | **Trigger** | stimulus_description, activated_entities | What awakens subentity coalitions |
 
-### Organizational/Collective Consciousness (N2) - 13 Types
+### Organizational/Organization Consciousness (N2) - 13 Types
 
 | Node Type | Required Fields | Purpose |
 |-----------|----------------|---------|
@@ -115,7 +115,7 @@ Pydantic validators enforce:
 | **AI_Agent** | role, expertise | AI participant in organization |
 | **Team** | members, purpose | Group within organization |
 | **Department** | function, members | Organizational subdivision |
-| **Decision** | decided_by, decision_date, rationale | Collective choice with reasoning |
+| **Decision** | decided_by, decision_date, rationale | Organization choice with reasoning |
 | **Project** | goals, status | Large initiative |
 | **Task** | priority, estimated_hours | Discrete unit of work |
 | **Milestone** | achievement_description, date_achieved | Organizational achievement |
@@ -425,7 +425,7 @@ Run: `pytest tests/test_schema_validation.py -v`
 ```json
 {
   "type_name": "Decision",
-  "description": "Collective choice with rationale",
+  "description": "Organization choice with rationale",
   "required_metadata": "{\"metadata\": {\"required\": [\"decided_by\", \"decision_date\", \"rationale\"]}}"
 }
 ```

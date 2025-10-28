@@ -1,0 +1,55 @@
+{
+  "$id": "mind://events/tool.result.v1.0.json",
+  "title": "tool.result",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "request_id",
+    "ok"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "tool.result"
+    },
+    "org": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

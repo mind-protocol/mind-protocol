@@ -1,16 +1,17 @@
 """
 Signals Collector Service - Autonomy Phase-A P3.1
 
-Collects ambient signals from environment and converts to stimulus envelopes:
+Collects ambient signals from environment and converts them into membrane.inject
+envelopes for the consciousness bus:
 - Console errors (from dashboard/frontend)
-- Screenshots (evidence capture)  
+- Screenshots (evidence capture)
 - Log anomalies (future: from service logs)
 
 Features:
 - Deduplication (hash-based, 60s window)
 - Rate limiting (per-type cooldowns)
-- Disk backlog (resilience when :8001 down)
-- Auto-forward to stimulus_injection_service (:8001)
+- Disk backlog (replayed automatically when the membrane is reachable again)
+- Direct publish to the membrane WebSocket (no intermediate HTTP service)
 
 Created: 2025-10-25 by Atlas (Infrastructure Engineer)
 Spec: Phase-A Autonomy - P3 Signals Collector MVP
@@ -19,13 +20,18 @@ Spec: Phase-A Autonomy - P3 Signals Collector MVP
 from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 import uvicorn
+import os
 import time
 import json
 import logging
 import hashlib
-import requests
 from pathlib import Path
 from typing import Dict, Optional
+
+try:
+    from websockets.sync.client import connect as ws_connect  # type: ignore
+except ImportError:  # pragma: no cover - dependency not installed
+    ws_connect = None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -53,8 +59,9 @@ RATE_LIMITS = {
     "log_anomaly": 15.0,
 }
 
-# Stimulus injection service endpoint
-STIMULUS_SERVICE_URL = "http://localhost:8001/inject"
+# Membrane WebSocket endpoint
+WS_ENDPOINT = "ws://127.0.0.1:8000/api/ws"
+DEFAULT_CITIZEN_ID = os.getenv("SIGNALS_DEFAULT_CITIZEN", "consciousness-infrastructure_mind-protocol_felix")
 
 app = FastAPI(title="Signals Collector", version="1.0")
 
@@ -78,6 +85,10 @@ def heartbeat_loop():
                 HEARTBEAT.write_text(str(int(time.time())))
             except Exception:
                 pass
+            try:
+                flush_backlog()
+            except Exception as exc:
+                logger.debug(f"[SignalsCollector] Backlog flush skipped: {exc}")
             time.sleep(5)
     thread = threading.Thread(target=_loop, daemon=True)
     thread.start()
@@ -111,34 +122,164 @@ def is_rate_limited(signal_type: str) -> bool:
     return False
 
 
-def write_to_backlog(stimulus: dict):
+def write_to_backlog(envelope: dict):
     try:
-        filename = f"stimulus_{int(time.time()*1000)}_{stimulus.get('stimulus_id', 'unknown')}.json"
+        metadata = envelope.get("metadata", {})
+        filename = f"stimulus_{int(time.time()*1000)}_{metadata.get('stimulus_id', 'unknown')}.json"
         filepath = BACKLOG_DIR / filename
-        filepath.write_text(json.dumps(stimulus, indent=2))
+        filepath.write_text(json.dumps(envelope, indent=2))
         logger.info(f"[Backlog] Wrote: {filename}")
     except Exception as e:
         logger.error(f"[Backlog] Failed: {e}")
 
 
-def forward_to_stimulus_service(stimulus: dict) -> bool:
+def build_membrane_envelope(
+    *,
+    signal_type: str,
+    content: str,
+    severity: float,
+    origin: str,
+    stimulus_id: Optional[str] = None,
+    timestamp_ms: Optional[int] = None,
+    dedupe_key: Optional[str] = None,
+    channel: Optional[str] = None,
+    citizen_id: Optional[str] = None,
+    metadata_extra: Optional[dict] = None,
+    features_extra: Optional[dict] = None,
+) -> dict:
+    timestamp_ms = timestamp_ms or int(time.time() * 1000)
+    stimulus_id = stimulus_id or f"signal_{signal_type}_{timestamp_ms}"
+    dedupe_key = dedupe_key or compute_signal_hash(signal_type, content)
+
+    envelope = {
+        "type": "membrane.inject",
+        "citizen_id": citizen_id or DEFAULT_CITIZEN_ID,
+        "channel": channel or f"signals.{signal_type}",
+        "content": content,
+        "severity": severity,
+        "features_raw": {
+            "urgency": severity,
+            "novelty": 0.25,
+            "trust": 0.6,
+        },
+        "metadata": {
+            "stimulus_id": stimulus_id,
+            "origin": origin,
+            "timestamp_ms": timestamp_ms,
+            "signal_type": signal_type,
+            "dedupe_key": dedupe_key,
+            "origin_chain_depth": 0,
+            "origin_chain": [origin],
+        },
+    }
+
+    if features_extra:
+        envelope["features_raw"].update(features_extra)
+
+    if metadata_extra:
+        extra = {**metadata_extra}
+        # Preserve canonical fields from overrides unless explicitly changed
+        extra.pop("stimulus_id", None)
+        extra.pop("timestamp_ms", None)
+        extra.pop("origin_chain_depth", None)
+        extra.pop("origin_chain", None)
+        extra.pop("signal_type", None)
+        extra.pop("dedupe_key", None)
+        envelope["metadata"].update(extra)
+
+    return envelope
+
+
+def ensure_membrane_envelope(payload: dict) -> dict:
+    """
+    Upgrade legacy backlog payloads (stimulus dicts) to membrane.inject envelopes.
+    """
+    if payload.get("type") == "membrane.inject":
+        return payload
+
+    signal_type = payload.get("signal_type", "console_error")
+    content = payload.get("content") or payload.get("text") or ""
+    severity = float(payload.get("severity", 0.3))
+    origin = payload.get("origin") or payload.get("metadata", {}).get("origin") or "signals_collector"
+    timestamp_ms = payload.get("timestamp_ms")
+    stimulus_id = payload.get("stimulus_id")
+    metadata_extra = payload.get("metadata") or {}
+    features_extra = payload.get("features_raw") or {}
+    channel = payload.get("channel")
+    citizen_id = payload.get("citizen_id")
+
+    dedupe_key = metadata_extra.get("dedupe_key")
+    if not dedupe_key:
+        dedupe_key = compute_signal_hash(signal_type, content)
+
+    return build_membrane_envelope(
+        signal_type=signal_type,
+        content=content,
+        severity=severity,
+        origin=origin,
+        stimulus_id=stimulus_id,
+        timestamp_ms=timestamp_ms,
+        dedupe_key=dedupe_key,
+        channel=channel,
+        citizen_id=citizen_id,
+        metadata_extra=metadata_extra,
+        features_extra=features_extra,
+    )
+
+
+def send_envelope_over_ws(envelope: dict) -> bool:
+    """
+    Publish envelope over the membrane WebSocket.
+    Opens a short-lived connection per send for resilience.
+    """
+    if ws_connect is None:
+        logger.error("[SignalsCollector] websockets package unavailable; cannot publish membrane.inject")
+        return False
+
     try:
-        response = requests.post(STIMULUS_SERVICE_URL, json=stimulus, timeout=2.0)
-        if response.status_code == 200:
-            logger.info(f"[Forward] OK - stimulus_id={stimulus.get('stimulus_id')}")
-            return True
+        with ws_connect(WS_ENDPOINT, open_timeout=2, close_timeout=1) as ws:
+            ws.send(json.dumps(envelope))
+        logger.info("[SignalsCollector] Published membrane.inject sid=%s channel=%s",
+                    envelope.get("metadata", {}).get("stimulus_id"),
+                    envelope.get("channel"))
+        return True
+    except Exception as exc:
+        logger.warning(f"[SignalsCollector] WebSocket publish failed: {exc}")
+        return False
+
+
+def flush_backlog():
+    """
+    Retry any envelopes that were previously backlogged.
+    Processes files oldest-first to preserve ordering semantics.
+    """
+    for backlog_file in sorted(BACKLOG_DIR.glob("stimulus_*.json")):
+        try:
+            raw_payload = json.loads(backlog_file.read_text())
+            envelope = ensure_membrane_envelope(raw_payload)
+        except Exception as exc:
+            logger.error(f"[Backlog] Corrupt entry {backlog_file.name}: {exc}")
+            backlog_file.unlink(missing_ok=True)
+            continue
+
+        if send_envelope_over_ws(envelope):
+            backlog_file.unlink(missing_ok=True)
         else:
-            logger.warning(f"[Forward] Failed ({response.status_code})")
-            return False
-    except requests.exceptions.ConnectionError:
-        logger.warning("[Forward] Connection refused (:8001 down)")
-        return False
-    except Exception as e:
-        logger.error(f"[Forward] Error: {e}")
-        return False
+            # Preserve ordering: stop once a publish fails
+            break
 
 
-def process_signal(signal_type: str, content: str, severity: float, origin: str = "signals_collector") -> dict:
+def process_signal(
+    signal_type: str,
+    content: str,
+    severity: float,
+    origin: str = "signals_collector",
+    *,
+    metadata_extra: Optional[dict] = None,
+    features_extra: Optional[dict] = None,
+    channel: Optional[str] = None,
+    citizen_id: Optional[str] = None,
+) -> dict:
     signal_hash = compute_signal_hash(signal_type, content)
     if is_duplicate(signal_hash):
         logger.debug(f"[Dedupe] Already seen (hash={signal_hash})")
@@ -146,20 +287,27 @@ def process_signal(signal_type: str, content: str, severity: float, origin: str 
     if is_rate_limited(signal_type):
         logger.debug(f"[RateLimit] {signal_type} cooling down")
         return {"status": "rate_limited", "type": signal_type}
-    stimulus = {
-        "stimulus_id": f"signal_{signal_type}_{int(time.time()*1000)}",
-        "timestamp_ms": int(time.time() * 1000),
-        "citizen_id": "felix",
-        "text": content,
-        "severity": severity,
-        "origin": origin,
-        "signal_type": signal_type
-    }
-    forwarded = forward_to_stimulus_service(stimulus)
-    if not forwarded:
-        write_to_backlog(stimulus)
-        return {"status": "backlogged", "stimulus_id": stimulus["stimulus_id"]}
-    return {"status": "forwarded", "stimulus_id": stimulus["stimulus_id"]}
+
+    envelope = build_membrane_envelope(
+        signal_type=signal_type,
+        content=content,
+        severity=severity,
+        origin=origin,
+        dedupe_key=signal_hash,
+        metadata_extra=metadata_extra,
+        features_extra=features_extra,
+        channel=channel,
+        citizen_id=citizen_id,
+    )
+    stimulus_id = envelope["metadata"]["stimulus_id"]
+
+    flush_backlog()
+
+    if send_envelope_over_ws(envelope):
+        return {"status": "published", "stimulus_id": stimulus_id}
+
+    write_to_backlog(envelope)
+    return {"status": "backlogged", "stimulus_id": stimulus_id}
 
 
 @app.on_event("startup")
@@ -180,7 +328,20 @@ def collect_console_error(signal: ConsoleErrorSignal = Body(...)):
         stack_first_line = signal.stack_trace.split('\\n')[0] if signal.stack_trace else ""
         content = f"{signal.error_message} | {stack_first_line}"
     severity = 0.7 if "TypeError" in signal.error_message or "ReferenceError" in signal.error_message else 0.6
-    result = process_signal(signal_type="console_error", content=content, severity=severity, origin="dashboard_console")
+    metadata = {}
+    if signal.stack_trace:
+        metadata["stack_trace"] = signal.stack_trace
+    if signal.url:
+        metadata["url"] = signal.url
+
+    result = process_signal(
+        signal_type="console_error",
+        content=content,
+        severity=severity,
+        origin="dashboard_console",
+        metadata_extra=metadata or None,
+        channel="signals.console_error",
+    )
     return result
 
 
@@ -192,7 +353,24 @@ def collect_screenshot(signal: ScreenshotSignal = Body(...)):
     content = f"Screenshot: {screenshot_path.name}"
     if signal.context:
         content = f"{content} | Context: {signal.context}"
-    result = process_signal(signal_type="screenshot", content=content, severity=0.5, origin="screenshot_capture")
+
+    metadata = {"screenshot_path": str(screenshot_path)}
+    if signal.context:
+        metadata["context"] = signal.context
+
+    features = {
+        "evidence": 1.0,
+    }
+
+    result = process_signal(
+        signal_type="screenshot",
+        content=content,
+        severity=0.5,
+        origin="screenshot_capture",
+        metadata_extra=metadata,
+        features_extra=features,
+        channel="signals.screenshot",
+    )
     return result
 
 
@@ -209,8 +387,9 @@ def flush_backlog():
     failed = 0
     for filepath in backlog_files:
         try:
-            stimulus = json.loads(filepath.read_text())
-            if forward_to_stimulus_service(stimulus):
+            payload = json.loads(filepath.read_text())
+            envelope = ensure_membrane_envelope(payload)
+            if send_envelope_over_ws(envelope):
                 filepath.unlink()
                 forwarded += 1
             else:

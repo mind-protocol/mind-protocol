@@ -704,7 +704,8 @@ class ConversationWatcher(FileSystemEventHandler):
                 matches=injection_matches,
                 source_type="user_message",
                 rho_proxy=rho_proxy,
-                context_embeddings=None  # V2: Skip S5/S6 context
+                context_embeddings=None,  # V2: Skip S5/S6 context
+                economy_multiplier=1.0,
             )
 
             logger.info(
@@ -928,15 +929,26 @@ class ConversationWatcher(FileSystemEventHandler):
                 if 'nodes' in data or 'links' in data:
                     # Add session metadata if missing
                     if 'session_metadata' not in data:
+                        # Handle both list and int format for nodes/links
+                        nodes = data.get('nodes', [])
+                        links = data.get('links', [])
+                        total_nodes = len(nodes) if isinstance(nodes, list) else nodes
+                        total_links = len(links) if isinstance(links, list) else links
+
                         data['session_metadata'] = {
                             'session_id': f"conversation_{datetime.now().isoformat()}",
-                            'total_nodes': len(data.get('nodes', [])),
-                            'total_links': len(data.get('links', [])),
+                            'total_nodes': total_nodes,
+                            'total_links': total_links,
                             'source': 'conversation_auto_inject'
                         }
 
                     json_blocks.append(data)
-                    logger.info(f"[ConversationWatcher] Found valid consciousness JSON: {len(data.get('nodes', []))} nodes, {len(data.get('links', []))} links")
+                    # Handle both list and int format for logging
+                    nodes = data.get('nodes', [])
+                    links = data.get('links', [])
+                    node_count = len(nodes) if isinstance(nodes, list) else nodes
+                    link_count = len(links) if isinstance(links, list) else links
+                    logger.info(f"[ConversationWatcher] Found valid consciousness JSON: {node_count} nodes, {link_count} links")
 
             except json.JSONDecodeError as e:
                 logger.debug(f"[ConversationWatcher] Skipping invalid JSON block: {e}")
@@ -1249,45 +1261,6 @@ class ConversationWatcher(FileSystemEventHandler):
             logger.error(f"[ConversationWatcher] Failed to report error: {e}")
 
 
-# JSONL stimulus queue consumption (P0.1 integration)
-QUEUE = Path(".stimuli/queue.jsonl")
-OFFSET = Path(".stimuli/queue.offset")
-
-def _load_offset():
-    """Load last processed offset from disk."""
-    try:
-        return int(OFFSET.read_text())
-    except:
-        return 0
-
-def _save_offset(n):
-    """Save current offset to disk."""
-    OFFSET.write_text(str(n))
-
-def drain_stimuli():
-    """
-    Drain stimulus queue (P0.1 JSONL integration).
-    Returns list of stimulus envelopes ready for processing.
-    Each envelope has: stimulus_id, timestamp_ms, citizen_id, text, severity, origin
-    """
-    if not QUEUE.exists():
-        return []
-
-    data = QUEUE.read_text(encoding="utf-8")
-    lines = data.splitlines()
-    start = _load_offset()
-    items = []
-
-    for idx in range(start, len(lines)):
-        try:
-            items.append(json.loads(lines[idx]))
-        except Exception as e:
-            logger.warning(f"[ConversationWatcher] Bad stimulus line at {idx}: {e}")
-
-    _save_offset(len(lines))
-    return items
-
-
 async def main():
     """Run the conversation watcher."""
     logger.info("=" * 70)
@@ -1354,45 +1327,10 @@ async def main():
         else:
             logger.info(f"[ConversationWatcher] Contexts directory not found for {citizen}")
 
-    # PR-B: Feature flag to disable Pass-A stimulus drain (let Pass-B engine handle it)
-    # Default OFF - queue_poller → control_api → engine is now the primary path
-    watcher_drain_enabled = os.getenv("WATCHER_DRAIN_L1", "0") == "1"
-
-    if watcher_drain_enabled:
-        logger.info("[ConversationWatcher] Pass-A stimulus drain ENABLED (legacy path)")
-    else:
-        logger.info("[ConversationWatcher] Pass-A stimulus drain DISABLED (queue_poller handles stimuli)")
+    logger.info("[ConversationWatcher] Legacy JSONL stimulus drain retired; membrane bus handles all injections")
 
     try:
         while True:
-            # P0.1: Drain stimulus queue and process (GUARDED - disabled by default)
-            # Pass-B path: queue_poller → control_api → engine.inject_stimulus_async()
-            # Pass-A path: ConversationWatcher.drain_stimuli() → immediate DB write (legacy)
-            if watcher_drain_enabled:
-                stimuli = drain_stimuli()
-                for stim in stimuli:
-                    sid = stim.get('stimulus_id', 'unknown')
-                    citizen_id = stim.get('citizen_id', 'felix')
-                    text = stim.get('text', '')
-
-                    logger.info(f"[ConversationWatcher] Processing queued stimulus sid={sid} for {citizen_id}")
-
-                    # Process stimulus via injection (triggers 5 diagnostic markers)
-                    graph_name = f"citizen_{citizen_id}"
-
-                    # Get handler for this citizen
-                    handler = None
-                    for h in handlers:
-                        if h.citizen_id == citizen_id:
-                            handler = h
-                            break
-
-                    if handler:
-                        handler.process_stimulus_injection(text, graph_name, citizen_id, stimulus_id=sid)
-                        logger.info(f"[ConversationWatcher] Completed stimulus processing sid={sid}")
-                    else:
-                        logger.warning(f"[ConversationWatcher] No handler found for citizen {citizen_id}, sid={sid}")
-
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         logger.info("\n[ConversationWatcher] Shutting down...")

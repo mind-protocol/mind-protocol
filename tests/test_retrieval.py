@@ -457,7 +457,7 @@ async def test_multi_level_integration(sample_intention):
 
     Validates:
     - Personal (N1) context retrieved
-    - Collective (N2) context retrieved
+    - Organization (N2) context retrieved
     - Ecosystem (N3) context retrieved
     - Level distribution tracked in summary
     """
@@ -471,7 +471,7 @@ async def test_multi_level_integration(sample_intention):
 
     print(f"\n[LEVEL DISTRIBUTION]")
     print(f"  N1 (Personal): {summary.n1_result_count} results")
-    print(f"  N2 (Collective): {summary.n2_result_count} results")
+    print(f"  N2 (Organization): {summary.n2_result_count} results")
     print(f"  N3 (Ecosystem): {summary.n3_result_count} results")
     print(f"  Total: {summary.total_results}")
 

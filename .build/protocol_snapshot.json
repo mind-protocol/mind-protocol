@@ -1,0 +1,1615 @@
+{
+  "generated_at": "2025-10-27T14:04:07Z",
+  "graph": "schema_registry",
+  "node_count": 24,
+  "link_count": 21,
+  "nodes": [
+    {
+      "id": "schema_registry/NodeTypeSchema/Adapter_Release",
+      "type_name": "Adapter_Release",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Release metadata for provider adapters (Claude/Codex/Gemini).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "features",
+          "type": "array",
+          "enum_values": [],
+          "description": "Supported feature list",
+          "required": true,
+          "parent_type": "Adapter_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "provider",
+          "type": "enum",
+          "enum_values": [
+            "claude",
+            "codex",
+            "gemini",
+            "other"
+          ],
+          "description": "Provider identifier",
+          "required": true,
+          "parent_type": "Adapter_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Adapter version",
+          "required": true,
+          "parent_type": "Adapter_Release",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "af6265e1c3a40a50885bb1ba026dfe46b6843c5f267ce8c90710f95365366477"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Bus_Instance",
+      "type_name": "Bus_Instance",
+      "level": "l4",
+      "category": "infra",
+      "description": "Concrete bus instance available to tenants.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "endpoint",
+          "type": "string",
+          "enum_values": [],
+          "description": "Endpoint URI",
+          "required": true,
+          "parent_type": "Bus_Instance",
+          "parent_category": "node"
+        },
+        {
+          "name": "retention_policy_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to Retention_Policy",
+          "required": true,
+          "parent_type": "Bus_Instance",
+          "parent_category": "node"
+        },
+        {
+          "name": "transport_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to Transport_Spec",
+          "required": true,
+          "parent_type": "Bus_Instance",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "b670b8e594ff896cb78f6f459bb00aafe3163a97110a1b9bccb82885c7fa8043"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Capability",
+      "type_name": "Capability",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Logical capability exposed through the protocol.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "capability",
+          "type": "string",
+          "enum_values": [],
+          "description": "Capability identifier (e.g. git.commit)",
+          "required": true,
+          "parent_type": "Capability",
+          "parent_category": "node"
+        },
+        {
+          "name": "input_schema_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to input Event_Schema",
+          "required": true,
+          "parent_type": "Capability",
+          "parent_category": "node"
+        },
+        {
+          "name": "output_schema_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to output Event_Schema",
+          "required": true,
+          "parent_type": "Capability",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "0eb3a9806bff778b9e4ea6558fbb44264f8ad1f6e1630afb4b6b1aa8c6d72cb7"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Compatibility_Matrix",
+      "type_name": "Compatibility_Matrix",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Compatibility matrix between releases and schemas.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "generated_at",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "Generation timestamp",
+          "required": true,
+          "parent_type": "Compatibility_Matrix",
+          "parent_category": "node"
+        },
+        {
+          "name": "matrix",
+          "type": "array",
+          "enum_values": [],
+          "description": "Rows describing compatibility states",
+          "required": true,
+          "parent_type": "Compatibility_Matrix",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "a32daadb8744ed62c49ed2fcabba93682e943fa711e62c0ac6c380d432de9d92"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Conformance_Case",
+      "type_name": "Conformance_Case",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Individual conformance test case.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "case_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Case identifier",
+          "required": true,
+          "parent_type": "Conformance_Case",
+          "parent_category": "node"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "enum_values": [],
+          "description": "Case description",
+          "required": true,
+          "parent_type": "Conformance_Case",
+          "parent_category": "node"
+        },
+        {
+          "name": "expected",
+          "type": "enum",
+          "enum_values": [
+            "pass",
+            "fail",
+            "warn"
+          ],
+          "description": "Expected outcome",
+          "required": true,
+          "parent_type": "Conformance_Case",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "2ea8e115d949884401da775fdd9811a8263f79d6fb85aebb2ef820320425a09e"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Conformance_Result",
+      "type_name": "Conformance_Result",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Execution result for a conformance suite.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "failing_cases",
+          "type": "array",
+          "enum_values": [],
+          "description": "Identifiers of failing cases",
+          "required": true,
+          "parent_type": "Conformance_Result",
+          "parent_category": "node"
+        },
+        {
+          "name": "pass_rate",
+          "type": "float",
+          "enum_values": [],
+          "description": "Pass ratio (0..1)",
+          "required": true,
+          "parent_type": "Conformance_Result",
+          "parent_category": "node"
+        },
+        {
+          "name": "suite_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Suite identifier",
+          "required": true,
+          "parent_type": "Conformance_Result",
+          "parent_category": "node"
+        },
+        {
+          "name": "target_release",
+          "type": "string",
+          "enum_values": [],
+          "description": "Target release identifier (e.g. sdk.ts@1.2.0)",
+          "required": true,
+          "parent_type": "Conformance_Result",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "8f4381dfe0a33b80a91db90b56448aab657b76c4934fc0d1b4b919583ee30a03"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Conformance_Suite",
+      "type_name": "Conformance_Suite",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Suite of protocol conformance tests.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "cases_count",
+          "type": "int",
+          "enum_values": [],
+          "description": "Number of test cases",
+          "required": true,
+          "parent_type": "Conformance_Suite",
+          "parent_category": "node"
+        },
+        {
+          "name": "schema_set_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to schema set",
+          "required": true,
+          "parent_type": "Conformance_Suite",
+          "parent_category": "node"
+        },
+        {
+          "name": "suite_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Suite identifier",
+          "required": true,
+          "parent_type": "Conformance_Suite",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "33be67b66ce7ff0d4aaaf182b8d2d3218c8eaef9d54d6734925d1d0fe2a043e9"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Deprecation_Notice",
+      "type_name": "Deprecation_Notice",
+      "level": "l4",
+      "category": "governance",
+      "description": "Notice announcing protocol deprecation of schema or release.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "effective_at",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "Effective timestamp",
+          "required": true,
+          "parent_type": "Deprecation_Notice",
+          "parent_category": "node"
+        },
+        {
+          "name": "end_of_support",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "End-of-support timestamp",
+          "required": true,
+          "parent_type": "Deprecation_Notice",
+          "parent_category": "node"
+        },
+        {
+          "name": "target_kind",
+          "type": "enum",
+          "enum_values": [
+            "Event_Schema",
+            "Capability",
+            "SDK_Release",
+            "Sidecar_Release"
+          ],
+          "description": "Kind being deprecated",
+          "required": true,
+          "parent_type": "Deprecation_Notice",
+          "parent_category": "node"
+        },
+        {
+          "name": "target_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to deprecated element",
+          "required": true,
+          "parent_type": "Deprecation_Notice",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "ec70022676ba6a28fab147da27c5296cfaa4b72ddf1f34dc18e0ac1f5a7ecd6c"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Envelope_Schema",
+      "type_name": "Envelope_Schema",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Schema for the transport envelope (metadata, signature, TTL).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "fields",
+          "type": "array",
+          "enum_values": [],
+          "description": "Canonical fields with constraints",
+          "required": true,
+          "parent_type": "Envelope_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Envelope schema name",
+          "required": true,
+          "parent_type": "Envelope_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "signature_path",
+          "type": "string",
+          "enum_values": [],
+          "description": "JSON path to signature payload (e.g. $.sig)",
+          "required": true,
+          "parent_type": "Envelope_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Envelope schema version",
+          "required": true,
+          "parent_type": "Envelope_Schema",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "28e1ff4371b37baf40b0bb55a04c018235e324a3aecc10a9485513cd4f17d9ff"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Event_Schema",
+      "type_name": "Event_Schema",
+      "level": "l4",
+      "category": "protocol",
+      "description": "JSON schema describing a protocol event (inject or broadcast).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "direction",
+          "type": "enum",
+          "enum_values": [
+            "inject",
+            "broadcast"
+          ],
+          "description": "Flow direction",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Event name (e.g. membrane.inject)",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "schema_hash",
+          "type": "string",
+          "enum_values": [],
+          "description": "SHA256 of the JSON schema",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "schema_uri",
+          "type": "string",
+          "enum_values": [],
+          "description": "Location of the JSON schema",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "topic_pattern",
+          "type": "string",
+          "enum_values": [],
+          "description": "Topic pattern used on the bus",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Schema version string",
+          "required": true,
+          "parent_type": "Event_Schema",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "be94cd1a30be066650d13483ea83d738121d755a175680f73813d782db72692b"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Governance_Policy",
+      "type_name": "Governance_Policy",
+      "level": "l4",
+      "category": "governance",
+      "description": "Protocol policy (lanes, backpressure, governance defaults).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "defaults",
+          "type": "object",
+          "enum_values": [],
+          "description": "Default settings (e.g. ack_policy)",
+          "required": true,
+          "parent_type": "Governance_Policy",
+          "parent_category": "node"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Policy identifier",
+          "required": true,
+          "parent_type": "Governance_Policy",
+          "parent_category": "node"
+        },
+        {
+          "name": "policy_doc_uri",
+          "type": "string",
+          "enum_values": [],
+          "description": "URI to policy documentation",
+          "required": true,
+          "parent_type": "Governance_Policy",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "44b60e18a30c0e7b55948e518dc53602dbdd1f6d362ae00f831c9b8ad93fc835"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Protocol_Version",
+      "type_name": "Protocol_Version",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Semantic version of the protocol specification.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "released_at",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "Release timestamp",
+          "required": true,
+          "parent_type": "Protocol_Version",
+          "parent_category": "node"
+        },
+        {
+          "name": "semver",
+          "type": "string",
+          "enum_values": [],
+          "description": "Semantic version identifier (e.g. 1.1.0)",
+          "required": true,
+          "parent_type": "Protocol_Version",
+          "parent_category": "node"
+        },
+        {
+          "name": "summary",
+          "type": "string",
+          "enum_values": [],
+          "description": "Release highlights",
+          "required": true,
+          "parent_type": "Protocol_Version",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "5b6007d21aa4431ab6c1d67aece5b97fab1936b725e01e48c1e8e7552abe7cbf"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Retention_Policy",
+      "type_name": "Retention_Policy",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Retention and de-duplication policy for the bus.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "dedupe_window_ms",
+          "type": "int",
+          "enum_values": [],
+          "description": "Deduplication window in milliseconds",
+          "required": true,
+          "parent_type": "Retention_Policy",
+          "parent_category": "node"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Policy name",
+          "required": true,
+          "parent_type": "Retention_Policy",
+          "parent_category": "node"
+        },
+        {
+          "name": "size_limit_mb",
+          "type": "int",
+          "enum_values": [],
+          "description": "Storage limit in megabytes",
+          "required": true,
+          "parent_type": "Retention_Policy",
+          "parent_category": "node"
+        },
+        {
+          "name": "time_limit",
+          "type": "duration",
+          "enum_values": [],
+          "description": "Retention duration (e.g. 3d)",
+          "required": true,
+          "parent_type": "Retention_Policy",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "7e9903a93242e2b9f5670e6bbea078e4d27ce5d5f54328d6c256892ef19e450e"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/SDK_Release",
+      "type_name": "SDK_Release",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Release metadata for SDK distributions.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "commit_hash",
+          "type": "string",
+          "enum_values": [],
+          "description": "Commit hash for release",
+          "required": true,
+          "parent_type": "SDK_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "language",
+          "type": "enum",
+          "enum_values": [
+            "typescript",
+            "python",
+            "go"
+          ],
+          "description": "SDK language",
+          "required": true,
+          "parent_type": "SDK_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "package_name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Package identifier",
+          "required": true,
+          "parent_type": "SDK_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "schema_min_version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Minimum compatible schema version",
+          "required": true,
+          "parent_type": "SDK_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "enum_values": [],
+          "description": "SDK version",
+          "required": true,
+          "parent_type": "SDK_Release",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "2d5ac1bc4333f26f012b9926beb9fff379294d1ecc25449eb3e909b85e4826e6"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Schema_Bundle",
+      "type_name": "Schema_Bundle",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Versioned archive of protocol schemas.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "bundle_hash",
+          "type": "string",
+          "enum_values": [],
+          "description": "Hash of bundle contents",
+          "required": true,
+          "parent_type": "Schema_Bundle",
+          "parent_category": "node"
+        },
+        {
+          "name": "bundle_uri",
+          "type": "string",
+          "enum_values": [],
+          "description": "URI to bundle (tar/zip)",
+          "required": true,
+          "parent_type": "Schema_Bundle",
+          "parent_category": "node"
+        },
+        {
+          "name": "contains",
+          "type": "array",
+          "enum_values": [],
+          "description": "List of schema refs included (name@version)",
+          "required": true,
+          "parent_type": "Schema_Bundle",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "cdd01935ebc3a2a827ac655ef928245e89975ae44f981828ce856e8bcb6ab9c3"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Security_Profile",
+      "type_name": "Security_Profile",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Security requirements for namespaces or schemas.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "min_key_length_bits",
+          "type": "int",
+          "enum_values": [],
+          "description": "Minimum key length in bits",
+          "required": true,
+          "parent_type": "Security_Profile",
+          "parent_category": "node"
+        },
+        {
+          "name": "profile_name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Profile identifier",
+          "required": true,
+          "parent_type": "Security_Profile",
+          "parent_category": "node"
+        },
+        {
+          "name": "required_signature_suites",
+          "type": "array",
+          "enum_values": [],
+          "description": "Allowed signature suites",
+          "required": true,
+          "parent_type": "Security_Profile",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "577b9a1e68bbd54c1ddfb2661bffbf172d95ea61e8dd0ef001f4d86fd420b440"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Sidecar_Release",
+      "type_name": "Sidecar_Release",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Release metadata for the Sidecar client.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "features",
+          "type": "array",
+          "enum_values": [],
+          "description": "Feature list (buffer_offline, replay, etc.)",
+          "required": true,
+          "parent_type": "Sidecar_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "image_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Container image reference",
+          "required": true,
+          "parent_type": "Sidecar_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "schema_min_version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Minimum compatible schema version",
+          "required": true,
+          "parent_type": "Sidecar_Release",
+          "parent_category": "node"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "enum_values": [],
+          "description": "Release version",
+          "required": true,
+          "parent_type": "Sidecar_Release",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "f7f6549996d16147a664e1f44db59c9e4827db84b309d1305ba5b00834cc74ce"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Signature_Suite",
+      "type_name": "Signature_Suite",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Cryptographic suite authorised for protocol signatures.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "algo",
+          "type": "enum",
+          "enum_values": [
+            "ed25519"
+          ],
+          "description": "Signature algorithm",
+          "required": true,
+          "parent_type": "Signature_Suite",
+          "parent_category": "node"
+        },
+        {
+          "name": "pubkey_encoding",
+          "type": "enum",
+          "enum_values": [
+            "base64",
+            "hex"
+          ],
+          "description": "Public key encoding",
+          "required": true,
+          "parent_type": "Signature_Suite",
+          "parent_category": "node"
+        },
+        {
+          "name": "signature_field",
+          "type": "string",
+          "enum_values": [],
+          "description": "Path to signature field (e.g. sig.signature)",
+          "required": true,
+          "parent_type": "Signature_Suite",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "3987f5bc615aa025b379afe028d0f438f5f227f6cba6e05581e66e74dded34fe"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Tenant",
+      "type_name": "Tenant",
+      "level": "l4",
+      "category": "governance",
+      "description": "Protocol-level tenant (organization identity).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "display_name",
+          "type": "string",
+          "enum_values": [],
+          "description": "Human readable name",
+          "required": true,
+          "parent_type": "Tenant",
+          "parent_category": "node"
+        },
+        {
+          "name": "org_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Tenant identifier",
+          "required": true,
+          "parent_type": "Tenant",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "a0286edebe8e5c5557de6765467379aa1c01a58175dd86fa44d1cd7ccd98486f"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Tenant_Key",
+      "type_name": "Tenant_Key",
+      "level": "l4",
+      "category": "governance",
+      "description": "Key material associated with a tenant.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "Creation timestamp",
+          "required": true,
+          "parent_type": "Tenant_Key",
+          "parent_category": "node"
+        },
+        {
+          "name": "key_version",
+          "type": "int",
+          "enum_values": [],
+          "description": "Sequential key version",
+          "required": true,
+          "parent_type": "Tenant_Key",
+          "parent_category": "node"
+        },
+        {
+          "name": "org_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Tenant identifier",
+          "required": true,
+          "parent_type": "Tenant_Key",
+          "parent_category": "node"
+        },
+        {
+          "name": "pubkey",
+          "type": "string",
+          "enum_values": [],
+          "description": "Public key material",
+          "required": true,
+          "parent_type": "Tenant_Key",
+          "parent_category": "node"
+        },
+        {
+          "name": "rotated_at",
+          "type": "datetime",
+          "enum_values": [],
+          "description": "Rotation timestamp (nullable)",
+          "required": true,
+          "parent_type": "Tenant_Key",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "3426f0e7afdfb08b3d1f02ab40e91aa81a018e74ac60855bcc1ad55319e05391"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Tool_Contract",
+      "type_name": "Tool_Contract",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Contract describing a tool's capabilities and schemas.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "args_schema_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to arguments schema",
+          "required": true,
+          "parent_type": "Tool_Contract",
+          "parent_category": "node"
+        },
+        {
+          "name": "capabilities",
+          "type": "array",
+          "enum_values": [],
+          "description": "Capabilities served by the tool",
+          "required": true,
+          "parent_type": "Tool_Contract",
+          "parent_category": "node"
+        },
+        {
+          "name": "result_schema_ref",
+          "type": "string",
+          "enum_values": [],
+          "description": "Reference to result schema",
+          "required": true,
+          "parent_type": "Tool_Contract",
+          "parent_category": "node"
+        },
+        {
+          "name": "tool_id",
+          "type": "string",
+          "enum_values": [],
+          "description": "Tool identifier",
+          "required": true,
+          "parent_type": "Tool_Contract",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "e35398db57f9360718b8a44fa702890c31af01a30cf243007fc8110c34a6ba14"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Topic_Namespace",
+      "type_name": "Topic_Namespace",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Bus namespace definition (wildcard patterns, scope).",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "description",
+          "type": "string",
+          "enum_values": [],
+          "description": "Purpose and usage notes",
+          "required": true,
+          "parent_type": "Topic_Namespace",
+          "parent_category": "node"
+        },
+        {
+          "name": "pattern",
+          "type": "string",
+          "enum_values": [],
+          "description": "Topic pattern (e.g. org/{org_id}/broadcast/*)",
+          "required": true,
+          "parent_type": "Topic_Namespace",
+          "parent_category": "node"
+        },
+        {
+          "name": "scope",
+          "type": "enum",
+          "enum_values": [
+            "org",
+            "global"
+          ],
+          "description": "Namespace scope",
+          "required": true,
+          "parent_type": "Topic_Namespace",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "53507d87134ccd9702d8987d2f5a22fa9f47f4ebe70ab4f07f0e93168890d293"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Topic_Route",
+      "type_name": "Topic_Route",
+      "level": "l4",
+      "category": "infra",
+      "description": "Documentation of logical routing between namespaces and components.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "from_namespace",
+          "type": "string",
+          "enum_values": [],
+          "description": "Source namespace pattern",
+          "required": true,
+          "parent_type": "Topic_Route",
+          "parent_category": "node"
+        },
+        {
+          "name": "routing_notes",
+          "type": "string",
+          "enum_values": [],
+          "description": "Routing behaviour description",
+          "required": true,
+          "parent_type": "Topic_Route",
+          "parent_category": "node"
+        },
+        {
+          "name": "to_component",
+          "type": "string",
+          "enum_values": [],
+          "description": "Destination component (e.g. orchestrator)",
+          "required": true,
+          "parent_type": "Topic_Route",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "1bad8a02e29ea4648d18ddbd40fd4665fab2085f75dbf99f19e8d3d74f1e23b5"
+    },
+    {
+      "id": "schema_registry/NodeTypeSchema/Transport_Spec",
+      "type_name": "Transport_Spec",
+      "level": "l4",
+      "category": "infra",
+      "description": "Transport semantics (WS/NATS/Kafka) for the bus.",
+      "version": "v4.0",
+      "required": [
+        {
+          "name": "qos",
+          "type": "object",
+          "enum_values": [],
+          "description": "Quality-of-service settings (durable, acks, etc.)",
+          "required": true,
+          "parent_type": "Transport_Spec",
+          "parent_category": "node"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "enum_values": [
+            "ws",
+            "nats",
+            "kafka"
+          ],
+          "description": "Transport type",
+          "required": true,
+          "parent_type": "Transport_Spec",
+          "parent_category": "node"
+        }
+      ],
+      "optional": [],
+      "layer": "L4",
+      "content_sha": "0f2ecec8ba317c1c23e4d568007458b4b7b47a105a578c125dd2ed185047d864"
+    }
+  ],
+  "links": [
+    {
+      "id": "schema_registry/LinkTypeSchema/ADAPTER_SUPPORTS",
+      "type_name": "ADAPTER_SUPPORTS",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Adapter release exposes a capability.",
+      "required": [
+        {
+          "name": "latency_hint_ms",
+          "type": "int",
+          "enum_values": [],
+          "description": "Latency hint in milliseconds",
+          "required": true,
+          "parent_type": "ADAPTER_SUPPORTS",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "ff8c79ce27226baab55f24d1d1f18188018d71918d80adc577189bf331a8f326"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/APPLIES_TO",
+      "type_name": "APPLIES_TO",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Retention policy applies to namespace or schema.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "1739b68a0cb052362572b1c0f478102a54ac1c94a041e729f806500874936f23"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/ASSIGNED_TO_TENANT",
+      "type_name": "ASSIGNED_TO_TENANT",
+      "level": "l4",
+      "category": "governance",
+      "description": "Associates tenant key with tenant identity.",
+      "required": [
+        {
+          "name": "key_version",
+          "type": "int",
+          "enum_values": [],
+          "description": "Version of key assignment",
+          "required": true,
+          "parent_type": "ASSIGNED_TO_TENANT",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "9924e1113069f5b7bb208cd5f26f2833ebc3d9894adece4a4c3826cf693dcb1e"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/BUNDLES",
+      "type_name": "BUNDLES",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Schema bundle contains specific schemas.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "b1b54f46ae6222500e1692ae4a2ea65b6092e4c555bcc6e67299039a1e250e98"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/CERTIFIES_CONFORMANCE",
+      "type_name": "CERTIFIES_CONFORMANCE",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Conformance result certifies a release.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "5e7cb32f3a75a05042cf1be035801d8d5f640b47eb2b084cf1ebcaa2f52c5b2f"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/COMPATIBLE_WITH",
+      "type_name": "COMPATIBLE_WITH",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Declares compatibility between releases.",
+      "required": [
+        {
+          "name": "level",
+          "type": "enum",
+          "enum_values": [
+            "schema",
+            "runtime"
+          ],
+          "description": "Compatibility level",
+          "required": true,
+          "parent_type": "COMPATIBLE_WITH",
+          "parent_category": "link"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "ok",
+            "warn",
+            "no"
+          ],
+          "description": "Compatibility status",
+          "required": true,
+          "parent_type": "COMPATIBLE_WITH",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "82b09f68d4773bcc9a83c1e6e9581d137a978b30e68ceed076d42e071328a971"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/CONFORMS_TO",
+      "type_name": "CONFORMS_TO",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Cross-layer artefact declares conformance to L4 schema or capability.",
+      "required": [
+        {
+          "name": "evidence_uri",
+          "type": "string",
+          "enum_values": [],
+          "description": "Evidence backing conformance",
+          "required": true,
+          "parent_type": "CONFORMS_TO",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "0fa426761e9efa6ac3663374d0b555bb1392265aac48c9ee6fad7c8176d4ebc0"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/DEFAULTS_FOR",
+      "type_name": "DEFAULTS_FOR",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Security profile provides defaults for namespace or schema.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "9fb95e4a46dbe451ec3eff2491d695942a9dc859559988ef83f5b98f50ac9307"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/DEPRECATES",
+      "type_name": "DEPRECATES",
+      "level": "l4",
+      "category": "governance",
+      "description": "Marks that one element deprecates or replaces an older one.",
+      "required": [
+        {
+          "name": "grace_period_days",
+          "type": "int",
+          "enum_values": [],
+          "description": "Grace period before removal",
+          "required": true,
+          "parent_type": "DEPRECATES",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "c143e2589a70f03d232b1c6fb7c31a753f5f568973c0d81b63bc28692952f76f"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/GOVERNS",
+      "type_name": "GOVERNS",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Schema or policy governs a capability or namespace.",
+      "required": [
+        {
+          "name": "governance_scope",
+          "type": "enum",
+          "enum_values": [
+            "schema",
+            "policy"
+          ],
+          "description": "Scope of governance",
+          "required": true,
+          "parent_type": "GOVERNS",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "26225099e6c8a6cef6bbba32503fd5ccf57f5cd83f8a3b18d821d73aa9f824be"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/HOSTED_ON",
+      "type_name": "HOSTED_ON",
+      "level": "l4",
+      "category": "infra",
+      "description": "Bus instance is hosted on a transport spec.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "561b1f921cc98399152207b2cabcfafc4f749190edb434ba379e42c5a0e4601f"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/IMPLEMENTS",
+      "type_name": "IMPLEMENTS",
+      "level": "l4",
+      "category": "artifact",
+      "description": "SDK release implements a schema or capability.",
+      "required": [
+        {
+          "name": "coverage",
+          "type": "float",
+          "enum_values": [],
+          "description": "Coverage ratio (0..1)",
+          "required": true,
+          "parent_type": "IMPLEMENTS",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "b838f923993083f0a695c8b229b531b8afcdce8d5cd062fd6f2318f4d3a8804b"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/MAPS_TO_TOPIC",
+      "type_name": "MAPS_TO_TOPIC",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Event schema maps to a topic namespace.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "492f065b90c6ac2e204c5a1c05979a408246bb5b9e039deb514c3250dacfb3e7"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/PUBLISHES_SCHEMA",
+      "type_name": "PUBLISHES_SCHEMA",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Protocol version publishes an event or envelope schema.",
+      "required": [
+        {
+          "name": "release_notes_uri",
+          "type": "string",
+          "enum_values": [],
+          "description": "Link to release notes",
+          "required": true,
+          "parent_type": "PUBLISHES_SCHEMA",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "a2a02039670699a112452d4036ed8df53ccf1893714cb61a1c2999baf3804469"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/REQUIRES_SIG",
+      "type_name": "REQUIRES_SIG",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Event schema requires a specific signature suite.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "06abbef1de33dea5977e19ef1fda019d8e57b92dfe17481ac1e11df90e6ea0e7"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/ROUTES_OVER",
+      "type_name": "ROUTES_OVER",
+      "level": "l4",
+      "category": "infra",
+      "description": "Namespace or route uses a transport specification.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "2b538981efca60eda7862cadc4361f693a9516940e66092f7322cebf53ee468d"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/SERVES_NAMESPACE",
+      "type_name": "SERVES_NAMESPACE",
+      "level": "l4",
+      "category": "infra",
+      "description": "Bus instance serves a topic namespace.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "48b3ec478b436551fc4452edc95d7e65e2091b3c55503c81429aae922e5cf7a4"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/SIGNED_WITH",
+      "type_name": "SIGNED_WITH",
+      "level": "l4",
+      "category": "governance",
+      "description": "Tenant key uses a signature suite.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "cb0d2c1570ba0af5c46a17942686f8ffd58e8cf48f2cd58f92bfc046a6405e86"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/SUPERSEDES",
+      "type_name": "SUPERSEDES",
+      "level": "l4",
+      "category": "artifact",
+      "description": "New release supersedes an older release.",
+      "required": [
+        {
+          "name": "compat_maintained",
+          "type": "boolean",
+          "enum_values": [],
+          "description": "Whether backwards compatibility is maintained",
+          "required": true,
+          "parent_type": "SUPERSEDES",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "3de39e3f143304dfd3f0f2b28709cc319a7e6b196ce7d846ef12e1602985aeea"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/SUPPORTS",
+      "type_name": "SUPPORTS",
+      "level": "l4",
+      "category": "artifact",
+      "description": "Sidecar release supports a schema or transport.",
+      "required": [
+        {
+          "name": "maturity",
+          "type": "enum",
+          "enum_values": [
+            "alpha",
+            "beta",
+            "ga"
+          ],
+          "description": "Support maturity level",
+          "required": true,
+          "parent_type": "SUPPORTS",
+          "parent_category": "link"
+        }
+      ],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "2c83dee303735e55a642af59a56249e5677ba8aabad59e356f4c408c895d35d0"
+    },
+    {
+      "id": "schema_registry/LinkTypeSchema/TESTS",
+      "type_name": "TESTS",
+      "level": "l4",
+      "category": "protocol",
+      "description": "Conformance suite covers specific schemas or capabilities.",
+      "required": [],
+      "optional": [],
+      "detection_pattern": "structured_event",
+      "detection_logic": {
+        "source": "broadcast"
+      },
+      "task_template": "review_protocol_relationship",
+      "mechanisms": [
+        "protocol_registry"
+      ],
+      "layer": "L4",
+      "content_sha": "f6476e032c96f7703e82fb3464a75a475f644108e27f512349afa4b3d11da5e8"
+    }
+  ]
+}

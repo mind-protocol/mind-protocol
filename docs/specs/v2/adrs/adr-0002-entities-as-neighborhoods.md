@@ -12,7 +12,7 @@ last_updated: 2025-10-22
 **Why:** Consciousness operates on chunks, not atoms. Biological plausibility (neural assemblies).
 
 **Implementation:**
-- Subentity nodes with members via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(weight)
+- Subentity nodes with members via MEMBER_OF(weight)
 - Derived activation from member energies
 - Relations via RELATES_TO (ease, precedence, dominance)
 

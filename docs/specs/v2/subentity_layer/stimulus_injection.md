@@ -23,9 +23,18 @@ summary: >
 
 Stimuli (user messages, tool results, timers) must **shape activation** quickly and safely:
 - **Coverage vs focus:** specific prompts need precision; broad prompts need diverse hits.
-- **Health & pacing:** don’t overdrive a supercritical graph; revive a subcritical one.
+- **Health & pacing:** don't overdrive a supercritical graph; revive a subcritical one.
 - **Attribution:** show *where* energy went and *why*.
-- **Entity-aware routing:** leverage subentities, not just raw nodes. :contentReference[oaicite:34]{index=34}
+- **SubEntity-aware routing:** leverage SubEntities, not just raw nodes. :contentReference[oaicite:34]{index=34}
+
+## Terminology Note
+
+This specification uses terminology from **TAXONOMY_RECONCILIATION.md**:
+- **Node** - Atomic knowledge (~1000 per citizen)
+- **SubEntity** - Weighted neighborhoods (200-500)
+- **Mode** - IFS-level meta-roles (5-15)
+
+When "entity" appears in this document, it refers to SubEntity (weighted neighborhoods) unless explicitly noted otherwise.
 
 ## 2. Mechanism (Design)
 
@@ -38,7 +47,7 @@ Stimuli (user messages, tool results, timers) must **shape activation** quickly 
 5) **Source impact gate \(g(\text{source})\)**: learn per-source yields and reweight budgets.
 6) **Peripheral amplification**: increase budget if stimulus aligns with persistent peripheral context.
 7) **Direction-aware link injection**: if the match is a link, split energy to endpoints using learned directional priors.
-8) **Subentity channeling**: split budget across active entities by affinity × recent success.
+8) **SubEntity channeling**: split budget across active SubEntities by affinity × recent success.
 All eight pieces are enumerated as tasks in the implementation checklist.
 
 ### 2.1.1 Floor-Biased Injection Policy (Dual-Channel)
@@ -56,6 +65,18 @@ All eight pieces are enumerated as tasks in the implementation checklist.
 **Amplifier Channel** (\((1-\lambda) B\)):
 - **Purpose:** Boost strong matches **regardless of threshold** (enables propagation)
 - **Weight:** \(w_i^\text{amp} = s_i^\gamma\) where \(s_i\) is similarity score and \(\gamma \in [1.2, 1.6]\)
+- **SubEntity Overlap Penalty (when using SubEntity-channel allocation):**
+  ```
+  For SubEntity E, compute overlap penalty:
+  P_E = sum(s_E × s_B × indicator(S_red(E,B) > Q90) for B ≠ E)
+
+  Adjust score before softmax:
+  s_E' = s_E - β × P_E
+
+  where β ≈ 0.2-0.5 (learned overlap sensitivity, citizen-local)
+  ```
+  **Effect:** Prevents double-amplifying near-duplicate SubEntities. When two SubEntities A, B have high redundancy (S_red > Q90), penalty biases allocation toward higher-quality one. Preserves dual-channel benefits while avoiding redundant amplification.
+  **Integration:** Uses S_red (redundancy score) from `entity_differentiation.md` §B. Only applies when SubEntity-channel is used (see §2.3).
 - **Injection:** \(\Delta E_i^\text{amp} = \hat{w}_i^\text{amp} \cdot B_\text{amp}\)
 - **No cap at threshold** (this is critical - allows momentum above floor)
 
@@ -118,7 +139,7 @@ Per-type baselines (0-100 energy scale):
 Let:
 - \(r \in [0,1]\): recency score (fresh = 1)
 - \(q \in [0,1]\): quality/trust score (higher is better)
-- \(a\): entity-affinity z-score to currently active entity (clip to \([-2, 2]\))
+- \(a\): SubEntity-affinity z-score to currently active SubEntity (clip to \([-2, 2]\))
 
 Compute deltas:
 \[
@@ -153,9 +174,9 @@ This keeps ~30% of nodes below floor at any time, preserving selectivity without
 
 For a matched link \(i \rightarrow j\), split \(\Delta E\) to source/target via a Beta prior over forward/backward precedence (bootstrap symmetric; learn from boundary/stride evidence later). :contentReference[oaicite:36]{index=36}
 
-### 2.3 Subentity channels
+### 2.3 SubEntity channels
 
-Compute entity **affinity** (embedding similarity) and **recent success** (share of flips & gap-closure), rank-normalize, softmax to proportions, then allocate budget per-entity before distributing to members. :contentReference[oaicite:37]{index=37}
+Compute SubEntity **affinity** (embedding similarity) and **recent success** (share of flips & gap-closure), rank-normalize, softmax to proportions, then allocate budget per-SubEntity before distributing to members. :contentReference[oaicite:37]{index=37}
 
 ### 2.4 Implementation Reference (Pseudocode)
 
@@ -268,7 +289,7 @@ def clamp(x, lo, hi):
 
 ### 3.1 Phenomenology
 
-Stimulus “feels” like half of reality—an urgency injection that clarifies direction and speeds time; the mechanism accelerates ticks, injects energy near relevant neighborhoods, and yields immediate **entity flips** when warranted. :contentReference[oaicite:38]{index=38}
+Stimulus "feels" like half of reality—an urgency injection that clarifies direction and speeds time; the mechanism accelerates ticks, injects energy near relevant neighborhoods, and yields immediate **SubEntity flips** when warranted. :contentReference[oaicite:38]{index=38}
 
 ### 3.2 Human bio-inspiration
 
@@ -276,22 +297,22 @@ Salience gating and arousal systems up-regulate processing when something import
 
 ### 3.3 Systems dynamics
 
-- Respects **single-energy** at nodes; no side-channels.  
-- Plays well with **tick-speed regulation** (first tick after injection; subsequent ticks paced by stimulus cadence). :contentReference[oaicite:39]{index=39}  
-- Keeps diffusion stride-based (we inject; traversal moves quanta).  
-- Works with **entity-first WM** by pre-biasing neighborhoods that are likely to matter. :contentReference[oaicite:40]{index=40}
+- Respects **single-energy** at nodes; no side-channels.
+- Plays well with **tick-speed regulation** (first tick after injection; subsequent ticks paced by stimulus cadence). :contentReference[oaicite:39]{index=39}
+- Keeps diffusion stride-based (we inject; traversal moves quanta).
+- Works with **SubEntity-first WM** by pre-biasing neighborhoods that are likely to matter. :contentReference[oaicite:40]{index=40}
 
 ## 4. Expected resulting behaviors
 
-- **Immediate relevance:** near-instant flips in strongly matched entities.  
-- **Stable pacing:** fewer runaways under supercritical conditions; better revival from dormancy.  
+- **Immediate relevance:** near-instant flips in strongly matched SubEntities.
+- **Stable pacing:** fewer runaways under supercritical conditions; better revival from dormancy.
 - **Transparent attribution:** viz shows where energy went, by reason (health, source, peripheral). :contentReference[oaicite:41]{index=41}
 
 ## 5. Why this over alternatives
 
-- **Vs fixed K & naive top-k:** entropy-aware coverage matches user intent and prevents mode-collapse. :contentReference[oaicite:42]{index=42}  
-- **Vs constant budgets:** health/source gates make injection adaptive and data-driven. :contentReference[oaicite:43]{index=43}  
-- **Vs node-only routing:** entity channels capture neighborhood-level coherence from the outset. :contentReference[oaicite:44]{index=44}
+- **Vs fixed K & naive top-k:** entropy-aware coverage matches user intent and prevents mode-collapse. :contentReference[oaicite:42]{index=42}
+- **Vs constant budgets:** health/source gates make injection adaptive and data-driven. :contentReference[oaicite:43]{index=43}
+- **Vs node-only routing:** SubEntity channels capture neighborhood-level coherence from the outset. :contentReference[oaicite:44]{index=44}
 
 ## 6. Observability — how & what
 
@@ -321,7 +342,7 @@ Integrate with the WS transport (frame ordering, reorder buffer) defined in the 
 
 ## 8. Integration points
 
-- **Mechanism:** `mechanisms/stimulus_injection.py` (health gate, source gate, peripheral amp, entity channels, link priors). :contentReference[oaicite:52]{index=52}  
+- **Mechanism:** `mechanisms/stimulus_injection.py` (health gate, source gate, peripheral amp, SubEntity channels, link priors). :contentReference[oaicite:52]{index=52}  
 - **Runtime:** first-class tick on new stimulus; pacing by `tick_speed`. :contentReference[oaicite:53]{index=53}  
 - **Viz:** events through the WS contract + snapshot merge. :contentReference[oaicite:54]{index=54}
 
@@ -353,7 +374,7 @@ Integrate with the WS transport (frame ordering, reorder buffer) defined in the 
 
 - At equal budgets, **flip yield** increases and waste (overshoot vs gap) decreases
 - Energy propagation observed: nodes go above threshold → diffusion spreads to neighbors → consciousness emerges
-- Viz dashboards show clear budget attributions and **entity-first** activation patterns
+- Viz dashboards show clear budget attributions and **SubEntity-first** activation patterns
 
 ## 10. Open questions & future improvements
 

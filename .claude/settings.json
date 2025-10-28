@@ -38,6 +38,26 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\schema_invariants.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "command": "pwsh -File C:\\Users\\reyno\\mind-protocol\\.claude\\scripts\\validate-pwsh.ps1"
+          }
+        ]
+      }
     ]
   },
   "forceLoginMethod": "claudeai",

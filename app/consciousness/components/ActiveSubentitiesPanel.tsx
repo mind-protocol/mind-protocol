@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import type { Node, Subentity } from '../hooks/useGraphData';
-import type { Entity } from './EntityMoodMap';
+import type { SubEntity } from './SubEntityMoodMap';
 
 interface ActiveSubentitiesPanelProps {
   /**
@@ -28,9 +28,9 @@ interface ActiveSubentitiesPanelProps {
   subentities: Subentity[];
 
   /**
-   * Enriched entity data (with energy, coherence, emotion)
+   * Enriched subentity data (with energy, coherence, emotion)
    */
-  entities: Entity[];
+  subentityData: SubEntity[];
 
   /**
    * All knowledge nodes
@@ -43,7 +43,7 @@ interface ActiveSubentitiesPanelProps {
   workingMemory: Set<string>;
 }
 
-interface ActiveSubentity {
+interface ActiveSubEntity {
   id: string;
   name: string;
   wmNodeCount: number;
@@ -61,20 +61,20 @@ interface ActiveSubentity {
  */
 export function ActiveSubentitiesPanel({
   subentities,
-  entities,
+  subentityData,
   nodes,
   workingMemory
 }: ActiveSubentitiesPanelProps) {
   // Calculate which subentities have nodes in WM
-  const activeSubentities = useMemo<ActiveSubentity[]>(() => {
+  const activeSubentities = useMemo<ActiveSubEntity[]>(() => {
     if (workingMemory.size === 0) return [];
 
-    // Build entity lookup for quick access to energy/coherence
-    const entityMap = new Map<string, Entity>();
-    entities.forEach(e => entityMap.set(e.id, e));
+    // Build subentity lookup for quick access to energy/coherence
+    const subentityMap = new Map<string, SubEntity>();
+    subentityData.forEach(e => subentityMap.set(e.id, e));
 
     // For each subentity, count how many of its nodes are in WM
-    const active: ActiveSubentity[] = [];
+    const active: ActiveSubEntity[] = [];
 
     for (const subentity of subentities) {
       // Find nodes that belong to this subentity and are in WM
@@ -84,31 +84,31 @@ export function ActiveSubentitiesPanel({
 
         // Check if this subentity has activated this node
         if (node.entity_activations && typeof node.entity_activations === 'object') {
-          return subentity.entity_id in node.entity_activations;
+          return subentity.subentity_id in node.entity_activations;
         }
 
         return false;
       });
 
       if (wmNodes.length > 0) {
-        // Get entity metadata if available
-        const entity = entityMap.get(subentity.entity_id);
+        // Get subentity metadata if available
+        const subentityInfo = subentityMap.get(subentity.subentity_id);
 
         active.push({
-          id: subentity.entity_id,
-          name: subentity.name || subentity.entity_id,
+          id: subentity.subentity_id,
+          name: subentity.name || subentity.subentity_id,
           wmNodeCount: wmNodes.length,
-          energy: entity?.energy || 0,
-          coherence: entity?.coherence || 0,
-          active: entity?.active || false,
-          color: entity?.color,
+          energy: subentityInfo?.energy || 0,
+          coherence: subentityInfo?.coherence || 0,
+          active: subentityInfo?.active || false,
+          color: subentityInfo?.color,
         });
       }
     }
 
     // Sort by WM node count (descending) - most active first
     return active.sort((a, b) => b.wmNodeCount - a.wmNodeCount);
-  }, [subentities, entities, nodes, workingMemory]);
+  }, [subentities, subentityData, nodes, workingMemory]);
 
   if (activeSubentities.length === 0) {
     return (
@@ -145,7 +145,7 @@ export function ActiveSubentitiesPanel({
                 }`}
               />
 
-              {/* Subentity name */}
+              {/* SubEntity name */}
               <span
                 className="text-slate-200 font-medium"
                 style={{ color: subentity.color || undefined }}

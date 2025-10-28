@@ -47,7 +47,7 @@ nodes_for_clustering = [
 - Personal graphs: 80-150 embedded nodes per citizen
 - Organizational graph: 200-500 embedded nodes
 - Per-citizen clustering: cluster citizen's personal nodes only
-- Collective clustering: cluster organizational nodes (future Phase 4)
+- Organization clustering: cluster organizational nodes (future Phase 4)
 
 ---
 
@@ -137,7 +137,7 @@ def create_semantic_entity(cluster_id, member_nodes, embeddings):
     - Generated name (from topic keywords)
     - Centroid embedding (cluster center in embedding space)
     - Stable color (from centroid position)
-    - BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships (soft assignment by distance)
+    - MEMBER_OF memberships (soft assignment by distance)
     """
     # Compute centroid
     cluster_embeddings = [embeddings[i] for i, label in enumerate(labels) if label == cluster_id]
@@ -198,7 +198,7 @@ def generate_entity_name(keywords):
 ```python
 def assign_memberships(node, embeddings, semantic_entities):
     """
-    Assign BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships based on distance to entity centroids.
+    Assign MEMBER_OF memberships based on distance to entity centroids.
 
     Strategy:
     - Compute cosine similarity to each entity centroid
@@ -234,13 +234,13 @@ def normalize_all_memberships(graph):
         total_membership = sum(
             link.weight
             for link in graph.links.values()
-            if link.source == node.id and link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")"
+            if link.source == node.id and link.link_type == "MEMBER_OF"
         )
 
         if total_membership > 1.0:
             # Rescale all memberships proportionally
             for link in graph.links.values():
-                if link.source == node.id and link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")":
+                if link.source == node.id and link.link_type == "MEMBER_OF":
                     link.weight = link.weight / total_membership
 ```
 
@@ -372,7 +372,7 @@ class SemanticClusteringService:
         2. Extract embeddings into matrix
         3. Run clustering algorithm (HDBSCAN or adaptive K-Means)
         4. Create Entity object for each cluster
-        5. Assign BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships
+        5. Assign MEMBER_OF memberships
         6. Normalize memberships across all entities
 
         Returns: List of semantic entities (ready for upsert to graph)
@@ -413,7 +413,7 @@ class SemanticClusteringService:
         for node in eligible_nodes:
             memberships = self._assign_memberships(node, entities)
             for entity_id, weight in memberships.items():
-                graph.upsert_belongs_to(node.id, entity_id, weight=weight)
+                graph.upsert_member_of(node.id, entity_id, weight=weight)
 
         # Step 6: Normalize (across functional + semantic)
         self._normalize_all_memberships(graph)
@@ -618,12 +618,12 @@ class SemanticClusteringService:
             total = sum(
                 link.weight
                 for link in graph.links.values()
-                if link.source == node.id and link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")"
+                if link.source == node.id and link.link_type == "MEMBER_OF"
             )
 
             if total > 1.0:
                 for link in graph.links.values():
-                    if link.source == node.id and link.link_type == "BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")":
+                    if link.source == node.id and link.link_type == "MEMBER_OF":
                         link.weight = link.weight / total
 ```
 

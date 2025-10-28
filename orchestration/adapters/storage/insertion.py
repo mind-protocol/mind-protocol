@@ -32,6 +32,7 @@ from llama_index.graph_stores.falkordb import FalkorDBGraphStore
 
 # Import our custom LLM wrapper
 from orchestration.libs.custom_claude_llm import create_claude_llm
+from orchestration.libs.write_gate import namespace_for_graph, write_gate
 
 # Import Ada's schema registry
 from substrate.schemas.consciousness_schema import NODE_TYPES, RELATION_TYPES
@@ -70,6 +71,19 @@ def strip_unicode_from_dict(data: Dict[str, Any]) -> Dict[str, Any]:
         return cleaned.encode('ascii', 'ignore').decode('ascii')
     else:
         return data
+
+
+@write_gate(lambda graph_store, graph_name, query, params, ctx=None: namespace_for_graph(graph_name))
+def _execute_graph_write(
+    graph_store: FalkorDBGraphStore,
+    graph_name: str,
+    query: str,
+    params: Dict[str, Any],
+    *,
+    ctx: Optional[Dict[str, str]] = None
+):
+    """Execute a Cypher write with WriteGate enforcement."""
+    return graph_store.query(query, params=params)
 
 
 class ConsciousnessIngestionEngine:
@@ -205,6 +219,7 @@ class ConsciousnessIngestionEngine:
                 graph_name=graph_name,
                 url=falkordb_url
             )
+            write_ctx = {"ns": namespace_for_graph(graph_name)}
 
             # Step 4: Write validated nodes to FalkorDB using Cypher
             print(f"[Ingestion] Writing {len(extraction_result.nodes)} nodes to FalkorDB...")
@@ -238,10 +253,16 @@ class ConsciousnessIngestionEngine:
                     SET n += $properties
                     """
 
-                    graph_store.query(cypher, params={
-                        "name": node_dict_serialized["name"],
-                        "properties": node_dict_serialized
-                    })
+                    _execute_graph_write(
+                        graph_store,
+                        graph_name,
+                        cypher,
+                        {
+                            "name": node_dict_serialized["name"],
+                            "properties": node_dict_serialized
+                        },
+                        ctx=write_ctx
+                    )
                     result["nodes_created"] += 1
                     print(f"  [OK] Wrote {node_type}: {node.name} (with {len(embedding)}-dim embedding)")
                 except Exception as e:
@@ -275,11 +296,17 @@ class ConsciousnessIngestionEngine:
                     SET r += $properties
                     """
 
-                    graph_store.query(cypher, params={
-                        "source_name": source,
-                        "target_name": target,
-                        "properties": relation_dict_serialized
-                    })
+                    _execute_graph_write(
+                        graph_store,
+                        graph_name,
+                        cypher,
+                        {
+                            "source_name": source,
+                            "target_name": target,
+                            "properties": relation_dict_serialized
+                        },
+                        ctx=write_ctx
+                    )
                     result["relations_created"] += 1
                     print(f"  [OK] Wrote {relation_type}: {source} -> {target}")
                 except Exception as e:

@@ -163,6 +163,9 @@ class TraceParseResult:
         self.energy_level: str = None
         self.primary_entity: str = None
 
+        # Validation errors (TC10 requirement)
+        self.errors: List[str] = []  # Validation error messages for rejected formations
+
 
 class TraceParser:
     """Parser for TRACE format consciousness streams."""
@@ -250,11 +253,11 @@ class TraceParser:
         # NEW (Phase 2): Apply Hamilton apportionment to reinforcement signals
         result.reinforcement_seats = self._apply_hamilton_apportionment(result.reinforcement_signals)
 
-        # Extract node formations
-        result.node_formations = self._extract_node_formations(content)
+        # Extract node formations (pass result to collect errors)
+        result.node_formations = self._extract_node_formations(content, result)
 
-        # Extract link formations
-        result.link_formations = self._extract_link_formations(content)
+        # Extract link formations (pass result to collect errors)
+        result.link_formations = self._extract_link_formations(content, result)
 
         # Extract subentity activations
         result.entity_activations = self._extract_entity_activations(content)
@@ -267,11 +270,41 @@ class TraceParser:
 
         return result
 
+    def _get_code_block_ranges(self, content: str) -> List[Tuple[int, int]]:
+        """
+        Find all code block ranges in content (```...```).
+
+        Returns:
+            List of (start_pos, end_pos) tuples for each code block
+        """
+        code_block_ranges = []
+        code_block_pattern = re.compile(r'```.*?```', re.DOTALL)
+
+        for match in code_block_pattern.finditer(content):
+            code_block_ranges.append((match.start(), match.end()))
+
+        return code_block_ranges
+
+    def _is_in_code_block(self, position: int, code_block_ranges: List[Tuple[int, int]]) -> bool:
+        """Check if position falls within any code block range."""
+        for start, end in code_block_ranges:
+            if start <= position < end:
+                return True
+        return False
+
     def _extract_reinforcement_signals(self, content: str) -> List[Dict[str, Any]]:
-        """Extract inline reinforcement signals: [node_id: very useful]"""
+        """Extract inline reinforcement signals: [node_id: very useful], skipping code blocks"""
         signals = []
 
+        # Get code block ranges to skip
+        code_block_ranges = self._get_code_block_ranges(content)
+
         for match in self.reinforcement_pattern.finditer(content):
+            # Skip marks inside code blocks (TC10 requirement)
+            if self._is_in_code_block(match.start(), code_block_ranges):
+                logger.debug(f"[TraceParser] Skipping reinforcement mark in code block: {match.group(0)}")
+                continue
+
             node_id = match.group('node_id')
             usefulness = match.group('usefulness')
             adjustment = self.USEFULNESS_ADJUSTMENTS.get(usefulness, 0)
@@ -282,10 +315,10 @@ class TraceParser:
                 'adjustment': adjustment
             })
 
-        logger.debug(f"[TraceParser] Found {len(signals)} reinforcement signals")
+        logger.debug(f"[TraceParser] Found {len(signals)} reinforcement signals (after filtering code blocks)")
         return signals
 
-    def _extract_node_formations(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_node_formations(self, content: str, result: TraceParseResult) -> List[Dict[str, Any]]:
         """Extract node formation blocks: [NODE_FORMATION: NodeType]"""
         formations = []
 
@@ -309,8 +342,10 @@ class TraceParser:
                 fields = self._coerce_mechanism_fields(fields)
 
             # Validate required fields from schema registry
-            if not self._validate_node_fields(fields, node_type):
+            valid, error_msg = self._validate_node_fields(fields, node_type)
+            if not valid:
                 logger.warning(f"[TraceParser] Skipping invalid node formation: {node_type}")
+                result.errors.append(error_msg)
                 continue
 
             # Generate embeddings if enabled
@@ -344,7 +379,7 @@ class TraceParser:
         logger.info(f"[TraceParser] Found {len(formations)} node formations")
         return formations
 
-    def _extract_link_formations(self, content: str) -> List[Dict[str, Any]]:
+    def _extract_link_formations(self, content: str, result: TraceParseResult) -> List[Dict[str, Any]]:
         """Extract link formation blocks: [LINK_FORMATION: LINK_TYPE]"""
         formations = []
 
@@ -364,8 +399,10 @@ class TraceParser:
             fields = self._parse_field_block(fields_block)
 
             # Validate required fields from schema registry
-            if not self._validate_link_fields(fields, link_type):
+            valid, error_msg = self._validate_link_fields(fields, link_type)
+            if not valid:
                 logger.warning(f"[TraceParser] Skipping invalid link formation: {link_type}")
+                result.errors.append(error_msg)
                 continue
 
             # Extract source/target before embedding generation (they're not semantic content)
@@ -386,11 +423,20 @@ class TraceParser:
                     except Exception as e:
                         logger.warning(f"[TraceParser] Failed to generate embedding for {link_type}: {e}")
 
+            # NEW (Phase 2): Calculate formation quality for links
+            scope = fields.get('scope', 'personal')
+            quality_metrics = self._calculate_formation_quality(fields, link_type, scope)
+
             formations.append({
                 'link_type': link_type,
                 'source': source,
                 'target': target,
-                'fields': fields
+                'fields': fields,
+                # Phase 2: Quality metrics for weight learning
+                'quality': quality_metrics['quality'],
+                'completeness': quality_metrics['completeness'],
+                'evidence': quality_metrics['evidence'],
+                'novelty': quality_metrics['novelty']
             })
 
         logger.info(f"[TraceParser] Found {len(formations)} link formations")
@@ -492,7 +538,7 @@ class TraceParser:
         logger.debug(f"[TraceParser] Parsed fields: {list(fields.keys())}")
         return fields
 
-    def _validate_node_fields(self, fields: Dict[str, Any], node_type: str) -> bool:
+    def _validate_node_fields(self, fields: Dict[str, Any], node_type: str) -> Tuple[bool, str]:
         """
         Validate node has required fields from schema registry.
 
@@ -501,7 +547,9 @@ class TraceParser:
             node_type: Type of node being created
 
         Returns:
-            True if all required fields present, False otherwise
+            Tuple of (valid, error_message)
+            - (True, "") if all required fields present
+            - (False, error_message) if validation fails
         """
         # Load schema registry (cached)
         schema = _load_schema_registry()
@@ -517,8 +565,9 @@ class TraceParser:
             missing = [f for f in required_fields_with_scope if f not in fields]
 
             if missing:
-                logger.warning(f"[TraceParser] Missing required fields for {node_type}: {missing}")
-                return False
+                error_msg = f"Missing required fields for {node_type}: {missing}"
+                logger.warning(f"[TraceParser] {error_msg}")
+                return False, error_msg
 
         else:
             # Fallback validation if schema registry unavailable
@@ -528,16 +577,18 @@ class TraceParser:
             universal_required = ['name', 'scope', 'confidence', 'formation_trigger']
             if not all(field in fields for field in universal_required):
                 missing = [f for f in universal_required if f not in fields]
-                logger.warning(f"[TraceParser] Missing universal required fields: {missing}")
-                return False
+                error_msg = f"Missing universal required fields for {node_type}: {missing}"
+                logger.warning(f"[TraceParser] {error_msg}")
+                return False, error_msg
 
         # Validate scope value
         valid_scopes = ['personal', 'organizational', 'ecosystem']
         if fields.get('scope') not in valid_scopes:
-            logger.warning(f"[TraceParser] Invalid scope '{fields.get('scope')}'. Must be one of: {valid_scopes}")
-            return False
+            error_msg = f"Invalid scope '{fields.get('scope')}' for {node_type}. Must be one of: {valid_scopes}"
+            logger.warning(f"[TraceParser] {error_msg}")
+            return False, error_msg
 
-        return True
+        return True, ""
 
     def _coerce_mechanism_fields(self, fields: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -573,7 +624,7 @@ class TraceParser:
         logger.debug(f"[TraceParser] Coerced Mechanism fields: inputs={fields.get('inputs')}, outputs={fields.get('outputs')}")
         return fields
 
-    def _validate_link_fields(self, fields: Dict[str, Any], link_type: str) -> bool:
+    def _validate_link_fields(self, fields: Dict[str, Any], link_type: str) -> Tuple[bool, str]:
         """
         Validate link has required fields from schema registry.
 
@@ -582,7 +633,9 @@ class TraceParser:
             link_type: Type of link being created
 
         Returns:
-            True if all required fields present, False otherwise
+            Tuple of (valid, error_message)
+            - (True, "") if all required fields present
+            - (False, error_message) if validation fails
         """
         # Load schema registry (cached)
         schema = _load_schema_registry()
@@ -598,8 +651,9 @@ class TraceParser:
             missing = [f for f in required_fields_with_scope if f not in fields]
 
             if missing:
-                logger.warning(f"[TraceParser] Missing required fields for {link_type}: {missing}")
-                return False
+                error_msg = f"Missing required fields for {link_type}: {missing}"
+                logger.warning(f"[TraceParser] {error_msg}")
+                return False, error_msg
 
         else:
             # Fallback validation if schema registry unavailable
@@ -609,16 +663,18 @@ class TraceParser:
             universal_required = ['source', 'target', 'scope', 'goal', 'mindstate', 'confidence', 'formation_trigger']
             if not all(field in fields for field in universal_required):
                 missing = [f for f in universal_required if f not in fields]
-                logger.warning(f"[TraceParser] Missing universal required fields: {missing}")
-                return False
+                error_msg = f"Missing universal required fields for {link_type}: {missing}"
+                logger.warning(f"[TraceParser] {error_msg}")
+                return False, error_msg
 
         # Validate scope value
         valid_scopes = ['personal', 'organizational', 'ecosystem']
         if fields.get('scope') not in valid_scopes:
-            logger.warning(f"[TraceParser] Invalid scope '{fields.get('scope')}'. Must be one of: {valid_scopes}")
-            return False
+            error_msg = f"Invalid scope '{fields.get('scope')}' for {link_type}. Must be one of: {valid_scopes}"
+            logger.warning(f"[TraceParser] {error_msg}")
+            return False, error_msg
 
-        return True
+        return True, ""
 
     def _is_higher_activation(self, level1: str, level2: str) -> bool:
         """Compare activation levels."""

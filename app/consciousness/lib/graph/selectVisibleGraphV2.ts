@@ -5,7 +5,7 @@
  * Adapted from reference implementation to work with D3-based entity positioning.
  *
  * Input:
- * - Entities with D3 simulation positions (x, y from EntityMoodMap)
+ * - Entities with D3 simulation positions (x, y from SubEntityMoodMap)
  * - Nodes from useGraphData
  * - Links from useGraphData
  * - Expansion state (expandedEntities Set)
@@ -26,7 +26,7 @@
 
 import { layoutLocal } from './layoutLocal';
 import type { Node, Link, Subentity } from '../../hooks/useGraphData';
-import type { Entity } from '../../components/EntityMoodMap';
+import type { SubEntity } from '../../components/SubEntityMoodMap';
 
 export type RenderNode = {
   id: string;
@@ -55,7 +55,7 @@ const LOD_HIDE_NODE_LABELS = 3000;
 /**
  * Calculate visual radius for entity super-node
  */
-const entityRadius = (entity: Entity) => {
+const entityRadius = (entity: SubEntity) => {
   const baseRadius = 30;
   const energyScale = Math.sqrt(entity.energy || 0) * 20;
   return Math.min(60, baseRadius + energyScale); // Cap at 60px
@@ -85,7 +85,7 @@ const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
  *
  * This is the main selector that transforms source data into renderable graph.
  *
- * @param entities - Entities with D3 positions (from EntityMoodMap)
+ * @param entities - Entities with D3 positions (from SubEntityMoodMap)
  * @param nodes - All knowledge nodes
  * @param links - All knowledge links
  * @param expandedEntities - Set of entity IDs that are expanded
@@ -93,7 +93,7 @@ const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
  * @returns Render graph with nodes and edges
  */
 export function selectVisibleGraphV2(
-  entities: Entity[],
+  entities: SubEntity[],
   nodes: Node[],
   links: Link[],
   expandedEntities: Set<string>,
@@ -107,7 +107,7 @@ export function selectVisibleGraphV2(
   const rEdges: RenderEdge[] = [];
 
   // Build entity lookup for quick access
-  const entityMap = new Map<string, Entity>();
+  const entityMap = new Map<string, SubEntity>();
   entities.forEach(e => entityMap.set(e.id, e));
 
   // Build node lookup
@@ -122,8 +122,8 @@ export function selectVisibleGraphV2(
     if (!expandedEntities.has(entity.id)) {
       rNodes.push({
         id: entity.id,
-        x: entity.x ?? 0, // D3 simulation position (fallback to 0 if not yet positioned)
-        y: entity.y ?? 0,
+        x: (entity as any).x ?? 0, // D3 simulation position (fallback to 0 if not yet positioned)
+        y: (entity as any).y ?? 0,
         r: entityRadius(entity),
         energy: entity.energy || 0,
         kind: 'entity',

@@ -23,9 +23,10 @@ import { CompactTickTimeline } from './sidebar-compact/CompactTickTimeline';
 import { CompactAutonomy } from './sidebar-compact/CompactAutonomy';
 import { CompactExploration } from './sidebar-compact/CompactExploration';
 import TierBreakdownPanel from './TierBreakdownPanel';
-import EntityContextLearningPanel from './EntityContextLearningPanel';
+import SubEntityContextLearningPanel from './SubEntityContextLearningPanel';
 import PhenomenologyMismatchPanel from './PhenomenologyMismatchPanel';
 import ConsciousnessHealthDashboard from './ConsciousnessHealthDashboard';
+import { ConstantDebtWidget } from './ConstantDebtWidget';
 import type {
   V2ConsciousnessState,
   StrideSelectionEvent,
@@ -45,7 +46,7 @@ interface LeftSidebarMenuProps {
 }
 
 type Section = 'affective' | 'rhythms' | 'exploration' | 'learning' | null;
-type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | 'tier' | 'learning' | 'phenomenology' | 'health' | null;
+type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | 'tier' | 'learning' | 'phenomenology' | 'health' | 'constantdebt' | null;
 
 export function LeftSidebarMenu({
   v2State,
@@ -185,7 +186,7 @@ export function LeftSidebarMenu({
               isExpanded={expandedSubPanels.has('learning')}
               onToggle={() => toggleSubPanel('learning')}
             >
-              <EntityContextLearningPanel weightEvents={weightLearningEvents} windowSize={50} />
+              <SubEntityContextLearningPanel weightEvents={weightLearningEvents} windowSize={50} />
             </SubPanelAccordion>
 
             <SubPanelAccordion
@@ -202,6 +203,14 @@ export function LeftSidebarMenu({
               onToggle={() => toggleSubPanel('health')}
             >
               <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} windowSize={50} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="Constant Debt"
+              isExpanded={expandedSubPanels.has('constantdebt')}
+              onToggle={() => toggleSubPanel('constantdebt')}
+            >
+              <ConstantDebtWidget />
             </SubPanelAccordion>
           </div>
         </SectionAccordion>

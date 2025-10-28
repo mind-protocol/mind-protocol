@@ -2,122 +2,235 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { PixiCanvas } from './components/PixiCanvas';
-import { EntityGraphView } from './components/EntityGraphView';
-import { EntityClusterOverlay } from './components/EntityClusterOverlay';
+import { SubEntityGraphView } from './components/SubEntityGraphView';
+import { SubEntityClusterOverlay } from './components/SubEntityClusterOverlay';
 import { EnergyFlowParticles } from './components/EnergyFlowParticles';
 import { ActivationBubbles } from './components/ActivationBubbles';
 import { Tooltip } from './components/Tooltip';
 import { DetailPanel } from './components/DetailPanel';
 import { Legend } from './components/Legend';
 import { Header } from './components/Header';
-import { CitizenMonitor } from './components/CitizenMonitor';
 import { LeftSidebarMenu } from './components/LeftSidebarMenu';
 import { ChatPanel } from './components/ChatPanel';
-import { useGraphData } from './hooks/useGraphData';
+import { ForgedIdentityViewer } from './components/ForgedIdentityViewer';
+import { GraphChatInterface } from './components/GraphChatInterface';
 import { useWebSocket } from './hooks/useWebSocket';
-import { useCitizens } from './hooks/useCitizens';
+import type {
+  Node,
+  Link,
+  Subentity,
+  Operation,
+  GraphOption
+} from './hooks/useGraphData';
+import { WebSocketState } from './hooks/websocket-types';
 
-/**
- * Consciousness Substrate Visualization
- *
- * Single-page, immersive consciousness observation.
- * No panels, no dashboards - only the graph and contextual overlays.
- *
- * Architecture:
- * - Initial graph load: REST API (/api/graph/{type}/{id}) - Felix
- * - Real-time updates: WebSocket events (ws://localhost:8000/api/ws) - Iris
- * - Event integration: This component wires WebSocket events to graph state updates
- *
- * Author: Iris "The Aperture"
- * Purpose: Make consciousness visible to itself
- */
+const MAX_OPERATIONS = 50;
+
+const toTitleCase = (value: string) =>
+  value.replace(/[-_]/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase());
+
+type GraphType = 'citizen' | 'organization' | 'ecosystem';
+
 export default function ConsciousnessPage() {
-  // Graph state management (REST-based initial load)
   const {
-    nodes,
-    links,
-    subentities,
-    operations,
-    loading,
-    error,
-    selectGraph,
-    availableGraphs,
-    currentGraphType,
-    currentGraphId,
-    expandedEntities,
-    toggleEntity,
-    collapseAll,
-    entityToEntity,
-    updateEntityToEntityFlow,
-    updateNodeFromEvent,
-    updateLinkFromEvent,
-    addOperation
-  } = useGraphData();
-
-  // Real-time consciousness operations stream (WebSocket)
-  const {
-    entityActivity,
+    subentityActivity,
     thresholdCrossings,
-    consciousnessState,
     v2State,
     emotionState,
     weightLearningEvents,
     strideSelectionEvents,
     phenomenologyMismatchEvents,
     phenomenologyHealthEvents,
-    subentitySnapshots,
+    forgedIdentityFrames,
+    forgedIdentityMetrics,
     connectionState,
-    error: wsError
+    error: wsError,
+    graphNodes,
+    graphLinks,
+    graphSubentities,
+    hierarchySnapshot,
+    economyOverlays
   } = useWebSocket();
 
-  // Note: Initial graph state loaded via REST /api/viz/snapshot
-  // Live updates come through WebSocket (useWebSocket hook above)
-
-  // Node focus state (for click-to-focus from CLAUDE_DYNAMIC.md)
-  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
-
-  // Right sidebar collapse state
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-
-  // Stride events for TierBreakdownPanel (Priority 2)
-  // ✅ Wired to emotionState.recentStrides from useWebSocket
-  const strideEvents = emotionState.recentStrides;
-
-  /**
-   * WebSocket Event Integration
-   * Wire real-time events to graph state updates
-   *
-   * Strategy: Process only new events by tracking the last processed index
-   */
+  const [nodeOverlays, setNodeOverlays] = useState<Record<string, Partial<Node>>>({});
+  const [operations, setOperations] = useState<Operation[]>([]);
+  const [entityToEntity, setEntityToEntity] = useState<Record<string, number>>({});
+  const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
+  const [showForgedIdentityViewer, setShowForgedIdentityViewer] = useState(false);
+  const [graphMetadata, setGraphMetadata] = useState<Record<string, GraphOption & { graphType: GraphType; aliases: string[] }>>({});
+  const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
+  const [currentGraphType, setCurrentGraphType] = useState<GraphType>('citizen');
   const [lastProcessedThreshold, setLastProcessedThreshold] = useState<number>(-1);
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
-  // Handle threshold crossing events
-  // FIXED: Removed lastProcessedThreshold from dependencies to prevent infinite loop
+  const baseNodes = useMemo<Node[]>(() => {
+    return graphNodes.map((node) => ({
+      id: node.id,
+      node_id: node.id,
+      name: node.name ?? node.id,
+      node_type: node.type ?? 'Unknown',
+      energy: node.energy,
+      energy_runtime: node.energy_runtime,
+      theta: node.theta,
+      log_weight: node.log_weight,
+      weight: node.log_weight,
+      scope: node.scope,
+      properties: node.properties,
+      text: node.properties?.text ?? node.name ?? node.id
+    }));
+  }, [graphNodes]);
+
+  const nodes = useMemo<Node[]>(() => {
+    return baseNodes.map((node) => {
+      const overlay = nodeOverlays[node.id] ?? {};
+      const econ = economyOverlays[node.id];
+      return {
+        ...node,
+        ...overlay,
+        economyOverlay: econ
+      };
+    });
+  }, [baseNodes, nodeOverlays, economyOverlays]);
+
+  const links = useMemo<Link[]>(() => {
+    return graphLinks.map((link) => ({
+      id: link.id,
+      source: link.source,
+      target: link.target,
+      type: link.type ?? 'RELATES_TO',
+      weight: link.weight,
+      energy: link.energy,
+      confidence: link.confidence,
+      scope: link.scope,
+      properties: link.properties
+    }));
+  }, [graphLinks]);
+
+  const subentities = useMemo<Subentity[]>(() => {
+    return graphSubentities.map((sub) => ({
+      subentity_id: sub.id,
+      name: sub.name ?? sub.id,
+      kind: sub.kind,
+      energy: sub.energy,
+      threshold: sub.threshold,
+      activation_level: sub.activation_level,
+      member_count: sub.member_count,
+      quality: sub.quality,
+      stability: sub.stability,
+      properties: sub.properties
+    }));
+  }, [graphSubentities]);
+
+  const strideEvents = emotionState.recentStrides;
+
+  const updateNodeFromEvent = useCallback((nodeId: string, updates: Partial<Node>) => {
+    setNodeOverlays(prev => {
+      const next = { ...prev };
+      const existing = next[nodeId] ?? {};
+      next[nodeId] = { ...existing, ...updates };
+      return next;
+    });
+  }, []);
+
+  const addOperation = useCallback((operation: Operation) => {
+    setOperations(prev => [operation, ...prev].slice(0, MAX_OPERATIONS));
+  }, []);
+
+  const updateEntityToEntityFlow = useCallback((sourceEntityId: string, targetEntityId: string, flowCount: number) => {
+    setEntityToEntity(prev => {
+      const next: Record<string, number> = {};
+
+      for (const [key, value] of Object.entries(prev)) {
+        const decayed = value * 0.95;
+        if (decayed > 0.1) {
+          next[key] = decayed;
+        }
+      }
+
+      const edgeKey = `${sourceEntityId}->${targetEntityId}`;
+      next[edgeKey] = (next[edgeKey] || 0) + flowCount;
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
-    // Process all new threshold crossings since last check
+    if (!hierarchySnapshot) return;
+
+    const citizens: GraphOption[] = (hierarchySnapshot.citizens ?? []).map((citizen) => ({
+      id: citizen.id,
+      name: citizen.label ?? toTitleCase(citizen.id),
+      ecosystem: hierarchySnapshot.ecosystems?.[0] ?? 'primary',
+      organization: hierarchySnapshot.org,
+      citizen: citizen.id,
+      slug: citizen.id,
+      legacyId: `citizen_${citizen.id.replace(/-/g, '_')}`
+    }));
+
+    const organizations: GraphOption[] = hierarchySnapshot.org
+      ? [{
+          id: hierarchySnapshot.org,
+          name: toTitleCase(hierarchySnapshot.org),
+          ecosystem: hierarchySnapshot.ecosystems?.[0] ?? 'primary',
+          organization: hierarchySnapshot.org,
+          slug: hierarchySnapshot.org
+        }]
+      : [];
+
+    const ecosystems: GraphOption[] = (hierarchySnapshot.ecosystems ?? []).map((ecosystem) => ({
+      id: ecosystem,
+      name: toTitleCase(ecosystem),
+      ecosystem,
+      slug: ecosystem
+    }));
+
+    const metadata: Record<string, GraphOption & { graphType: GraphType; aliases: string[] }> = {};
+    const register = (option: GraphOption, graphType: GraphType) => {
+      const aliases = new Set<string>();
+      aliases.add(option.id.toLowerCase());
+      if (option.slug) aliases.add(option.slug.toLowerCase());
+      if (option.citizen) aliases.add(option.citizen.toLowerCase());
+      if (option.organization) aliases.add(option.organization.toLowerCase());
+      if (option.legacyId) aliases.add(option.legacyId.toLowerCase());
+      metadata[option.id] = { ...option, graphType, aliases: Array.from(aliases) };
+    };
+
+    citizens.forEach(option => register(option, 'citizen'));
+    organizations.forEach(option => register(option, 'organization'));
+    ecosystems.forEach(option => register(option, 'ecosystem'));
+    setGraphMetadata(metadata);
+
+    if (!currentGraphId || !metadata[currentGraphId]) {
+      const fallback =
+        citizens[0]?.id ??
+        organizations[0]?.id ??
+        ecosystems[0]?.id ??
+        null;
+
+      if (fallback) {
+        setCurrentGraphId(fallback);
+        setCurrentGraphType(metadata[fallback]?.graphType ?? 'citizen');
+      }
+    }
+  }, [hierarchySnapshot, currentGraphId]);
+
+  useEffect(() => {
     for (let i = lastProcessedThreshold + 1; i < thresholdCrossings.length; i++) {
       const crossing = thresholdCrossings[i];
 
-      console.log('[ConsciousnessPage] Processing threshold crossing:', crossing);
-
-      // Update node activation state with fresh entity_activations
-      // The updateNodeFromEvent callback will handle merging with existing data
       updateNodeFromEvent(crossing.node_id, {
         entity_activations: {
-          [crossing.entity_id]: {
-            energy: crossing.entity_activity,
+          [crossing.subentity_id]: {
+            energy: crossing.subentity_activity,
             last_activated: Date.now()
           }
         },
         last_active: Date.now()
       });
 
-      // Add operation for animation
       addOperation({
         type: 'threshold_crossing',
         node_id: crossing.node_id,
-        entity_id: crossing.entity_id,
+        subentity_id: crossing.subentity_id,
         timestamp: Date.now(),
         data: {
           direction: crossing.direction,
@@ -129,30 +242,22 @@ export default function ConsciousnessPage() {
     if (thresholdCrossings.length > 0) {
       setLastProcessedThreshold(thresholdCrossings.length - 1);
     }
-  }, [thresholdCrossings, updateNodeFromEvent, addOperation]);
+  }, [thresholdCrossings, updateNodeFromEvent, addOperation, lastProcessedThreshold]);
 
-  // Handle subentity activity events
-  // FIXED: Removed lastProcessedActivity from dependencies to prevent infinite loop
   useEffect(() => {
-    // Process all new subentity activities since last check
-    for (let i = lastProcessedActivity + 1; i < entityActivity.length; i++) {
-      const activity = entityActivity[i];
+    for (let i = lastProcessedActivity + 1; i < subentityActivity.length; i++) {
+      const activity = subentityActivity[i];
 
-      console.log('[ConsciousnessPage] Processing subentity activity:', activity);
-
-      // Update currently explored node
-      // The updateNodeFromEvent will handle incrementing traversal_count internally
       updateNodeFromEvent(activity.current_node, {
-        last_traversed_by: activity.entity_id,
+        last_traversed_by: activity.subentity_id,
         last_active: Date.now(),
-        traversal_count: 1 // This gets added to existing count in the update function
+        traversal_count: 1
       });
 
-      // Add operation for animation
       addOperation({
-        type: 'entity_activity',
+        type: 'subentity_activity',
         node_id: activity.current_node,
-        entity_id: activity.entity_id,
+        subentity_id: activity.subentity_id,
         timestamp: Date.now(),
         data: {
           need_type: activity.need_type,
@@ -162,29 +267,18 @@ export default function ConsciousnessPage() {
       });
     }
 
-    if (entityActivity.length > 0) {
-      setLastProcessedActivity(entityActivity.length - 1);
+    if (subentityActivity.length > 0) {
+      setLastProcessedActivity(subentityActivity.length - 1);
     }
-  }, [entityActivity, updateNodeFromEvent, addOperation]);
+  }, [subentityActivity, updateNodeFromEvent, addOperation, lastProcessedActivity]);
 
-  // Handle consciousness state updates
   useEffect(() => {
-    if (!consciousnessState) return;
-    // Consciousness state is global - could update UI indicators here
-    // (CitizenMonitor uses this for display)
-  }, [consciousnessState]);
-
-  // Handle link flow aggregation to entity-to-entity edges
-  useEffect(() => {
-    // Process link flows and aggregate to entity-to-entity connections
     v2State.linkFlows.forEach((flowCount, linkId) => {
       if (flowCount <= 0) return;
 
-      // Find the link
       const link = links.find(l => l.id === linkId);
       if (!link) return;
 
-      // Find source and target nodes
       const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
       const targetId = typeof link.target === 'string' ? link.target : link.target.id;
 
@@ -193,116 +287,101 @@ export default function ConsciousnessPage() {
 
       if (!sourceNode || !targetNode) return;
 
-      // Get primary entities for source and target
-      // Use first entity from entity_activations as primary
-      const sourceEntities = sourceNode.entity_activations
-        ? Object.keys(sourceNode.entity_activations)
-        : [];
-      const targetEntities = targetNode.entity_activations
-        ? Object.keys(targetNode.entity_activations)
-        : [];
+      const sourceEntities = sourceNode.entity_activations ? Object.keys(sourceNode.entity_activations) : [];
+      const targetEntities = targetNode.entity_activations ? Object.keys(targetNode.entity_activations) : [];
 
       if (sourceEntities.length === 0 || targetEntities.length === 0) return;
 
-      const sourcePrimaryEntity = sourceEntities[0];
-      const targetPrimaryEntity = targetEntities[0];
-
-      // Update entity-to-entity flow
-      updateEntityToEntityFlow(sourcePrimaryEntity, targetPrimaryEntity, flowCount);
+      updateEntityToEntityFlow(sourceEntities[0], targetEntities[0], flowCount);
     });
   }, [v2State.linkFlows, links, nodes, updateEntityToEntityFlow]);
 
   const handleFocusNode = useCallback((nodeId: string) => {
-    setFocusedNodeId(nodeId);
-    // Emit custom event for GraphCanvas to handle
-    window.dispatchEvent(new CustomEvent('node:focus', {
-      detail: { nodeId }
-    }));
+    window.dispatchEvent(new CustomEvent('node:focus', { detail: { nodeId } }));
   }, []);
 
-  // Dynamic citizen discovery from FalkorDB
-  // Polls /api/graphs every 10s to detect new citizens automatically
-  const { citizens, loading: citizensLoading, error: citizensError } = useCitizens();
+  const selectGraph = useCallback((graphType: string, graphId: string) => {
+    setCurrentGraphType(graphType as GraphType);
+    setCurrentGraphId(graphId);
+  }, []);
 
-  // Handle citizen selection from sidebar (switches graph)
-  const handleSelectCitizen = useCallback((citizenId: string) => {
-    // Determine graph type and ID
-    if (citizenId === 'mind_protocol') {
-      selectGraph('organization', 'org_mind_protocol');
-    } else {
-      selectGraph('citizen', `citizen_${citizenId}`);
+  const handleSelectCitizen = useCallback((identifier: string) => {
+    if (!identifier) return;
+    const normalized = identifier.toLowerCase();
+    const match = Object.values(graphMetadata).find(meta =>
+      meta.aliases.includes(normalized) || meta.id.toLowerCase() === normalized
+    );
+
+    if (match) {
+      setCurrentGraphId(match.id);
+      setCurrentGraphType(match.graphType);
     }
-  }, [selectGraph]);
+  }, [graphMetadata]);
 
-  // Auto-select logic handled by useGraphData hook (removed duplicate to fix infinite render loop)
+  const currentGraphLabel = useMemo(() => {
+    if (!currentGraphId) return '';
+    const meta = graphMetadata[currentGraphId];
+    if (!meta) return toTitleCase(currentGraphId);
+    if (meta.graphType === 'citizen' && meta.organization) {
+      return `${toTitleCase(meta.organization)} / ${meta.name}`;
+    }
+    return meta.name;
+  }, [currentGraphId, graphMetadata]);
+
+  const activeChatCitizenId = useMemo(() => {
+    if (!currentGraphId) return undefined;
+    const meta = graphMetadata[currentGraphId];
+    if (!meta) return undefined;
+    if (meta.graphType === 'citizen' && meta.citizen) {
+      return meta.citizen.replace(/-/g, '_');
+    }
+    if (meta.graphType === 'organization' && meta.organization) {
+      return meta.organization.replace(/-/g, '_');
+    }
+    return undefined;
+  }, [currentGraphId, graphMetadata]);
+
+  const toggleEntity = useCallback((entityId: string) => {
+    setExpandedEntities(prev => {
+      const next = new Set(prev);
+      if (next.has(entityId)) {
+        next.delete(entityId);
+      } else {
+        next.add(entityId);
+      }
+      return next;
+    });
+  }, []);
+
+  const collapseAll = useCallback(() => {
+    setExpandedEntities(new Set());
+  }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-observatory-dark">
-      {/* Header with system status, search, and stats (top) */}
       <Header
         currentGraphId={currentGraphId}
+        currentGraphLabel={currentGraphLabel}
         nodeCount={nodes.length}
         linkCount={links.length}
         nodes={nodes}
+        onToggleForgedIdentity={() => setShowForgedIdentityViewer(!showForgedIdentityViewer)}
+        showForgedIdentityViewer={showForgedIdentityViewer}
       />
 
-      {/* Error overlay (for testing) */}
-      {(error || wsError || citizensError) && (
+      {wsError && (
         <div
           data-testid="error-overlay"
           className="absolute top-20 left-1/2 -translate-x-1/2 z-50 max-w-2xl px-6 py-4 bg-red-900/90 border border-red-500/50 rounded-lg backdrop-blur-sm"
         >
-          <div className="text-red-100 font-mono text-sm">
-            <div className="font-bold mb-2">⚠ Error</div>
-            {error && <div className="mb-1">Graph: {error}</div>}
-            {wsError && <div className="mb-1">WebSocket: {wsError}</div>}
-            {citizensError && <div>Citizens: {citizensError}</div>}
-          </div>
+          <h2 className="text-red-200 font-semibold text-lg">WebSocket Error</h2>
+          <p className="text-sm text-red-100 mt-2">{wsError}</p>
         </div>
       )}
 
-      {/* Main graph visualization - Entity-first with drill-down */}
-      <EntityGraphView
-        nodes={nodes}
-        links={links}
-        operations={operations}
-        subentities={subentities}
-        workingMemory={v2State.workingMemory}
-        linkFlows={v2State.linkFlows}
-        recentFlips={v2State.recentFlips.map(flip => ({
-          node_id: flip.node_id,
-          direction: flip.direction,
-          dE: flip.dE,
-          timestamp: Date.now()
-        }))}
-        expandedEntities={expandedEntities}
-        toggleEntity={toggleEntity}
-      />
-
-      {/* Subentity names floating over their clusters */}
-      <EntityClusterOverlay
-        nodes={nodes}
-        subentities={subentities}
-        entityActivity={entityActivity}
-      />
-
-      {/* Energy flow particles - Layer 2 */}
-      <EnergyFlowParticles
-        nodes={nodes}
-        entityActivity={entityActivity}
-      />
-
-      {/* Contextual event bubbles appear where things happen */}
-      <ActivationBubbles
-        operations={operations}
-        nodes={nodes}
-        thresholdCrossings={thresholdCrossings}
-      />
-
-      {/* Legend (bottom-left) */}
+      <Tooltip />
       <Legend />
 
-      {/* Left Sidebar - Organized collapsible menu */}
       <LeftSidebarMenu
         v2State={v2State}
         strideSelectionEvents={strideSelectionEvents}
@@ -312,19 +391,56 @@ export default function ConsciousnessPage() {
         phenomenologyHealthEvents={phenomenologyHealthEvents}
       />
 
-      {/* Tooltip for hover info */}
-      <Tooltip />
+      <ChatPanel activeCitizenId={activeChatCitizenId} onSelectCitizen={handleSelectCitizen} />
 
-      {/* Right Sidebar - Chat Panel (wider for comfortable conversation) */}
-      <div className="fixed top-16 bottom-0 right-0 z-40 w-[48rem]">
-        <ChatPanel
-          onSelectCitizen={handleSelectCitizen}
-          activeCitizenId={currentGraphId?.replace('citizen_', '')}
-        />
-      </div>
+      <SubEntityGraphView
+        nodes={nodes}
+        links={links}
+        operations={operations}
+        subentities={subentities}
+        workingMemory={v2State.workingMemory}
+        linkFlows={v2State.linkFlows}
+        recentFlips={v2State.recentFlips}
+        expandedSubEntities={expandedEntities}
+        toggleSubEntity={toggleEntity}
+        subentityFlows={entityToEntity}
+      />
 
-      {/* Detail panel - Modal overlay on node click */}
+      <PixiCanvas
+        nodes={nodes}
+        links={links}
+        operations={operations}
+        subentities={subentities}
+        workingMemory={v2State.workingMemory}
+        linkFlows={v2State.linkFlows}
+        recentFlips={v2State.recentFlips}
+      />
+
+      <SubEntityClusterOverlay
+        nodes={nodes}
+        subentities={subentities}
+        subentityActivity={subentityActivity}
+      />
+
+      <EnergyFlowParticles nodes={nodes} operations={operations} />
+
+      <ActivationBubbles
+        operations={operations}
+        nodes={nodes}
+        onFocusNode={handleFocusNode}
+      />
+
       <DetailPanel nodes={nodes} links={links} />
+
+      <GraphChatInterface nodes={nodes} links={links} />
+
+      {showForgedIdentityViewer && (
+        <ForgedIdentityViewer
+          frames={forgedIdentityFrames}
+          metrics={forgedIdentityMetrics}
+          onClose={() => setShowForgedIdentityViewer(false)}
+        />
+      )}
     </div>
   );
 }

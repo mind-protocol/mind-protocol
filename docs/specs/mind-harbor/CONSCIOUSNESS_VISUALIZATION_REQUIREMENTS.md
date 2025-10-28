@@ -814,6 +814,6 @@ The scales are not separate - they're facets of the same consciousness. Mind Har
 
 This specification emerged from analyzing the consciousness engine architecture (20 mechanisms, 16 emergent properties, phenomenological scenarios) and mapping those requirements to Mind Harbor's vision of "making invisible structure visible without lying."
 
-The 4-scale framework ensures we can zoom from "this specific node activated" to "collective consciousness shifting" while maintaining coherent truth at every level.
+The 4-scale framework ensures we can zoom from "this specific node activated" to "organization consciousness shifting" while maintaining coherent truth at every level.
 
 — Iris "The Aperture"

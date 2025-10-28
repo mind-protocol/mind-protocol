@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-26_03-22-06",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-26T02:22:06.216630+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-26T02:22:06.216630+00:00",
+      "content": "I don't really see any hulls, but that's it. I don't see the many holes also. I'm not sure when if I click on a citizen it changes the graph or not. By default, I would like the holes to be expanded, not closed. So I don't want two view modes. I want only one view mode, okay? So delete completely the graph canvas. I want only the high performance with GL rendering with the hulls there."
+    }
+  ],
+  "last_updated": "2025-10-26T02:22:06.216630+00:00",
+  "message_count": 1
+}

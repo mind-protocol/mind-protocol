@@ -31,7 +31,38 @@ Atomic traversal over thousands of outgoing edges causes a combinatorial explosi
 
 ### 2.1 What is a subentity?
 
-A **subentity** is a **weighted neighborhood** of nodes—either a **functional role** (e.g., Architect, Validator) or a **semantic topic** (e.g., consciousness_architecture). Members connect to the subentity with soft membership `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF").weight ∈ [0,1]`. :contentReference[oaicite:1]{index=1}
+A **subentity** is a **weighted neighborhood** of nodes—either a **functional role** (e.g., Architect, Validator) or a **semantic topic** (e.g., consciousness_architecture). Members connect to the subentity with soft membership `MEMBER_OF.weight ∈ [0,1]`.
+
+**Terminology note:** This spec uses "SubEntity" (capitalized, compound) to distinguish from historical usage of "entity." See `TAXONOMY_RECONCILIATION.md` for complete terminology clarification across specs.
+
+### 2.1.1 Two-Scale Architecture: SubEntities vs Modes
+
+The consciousness substrate has **two organizational scales:**
+
+**Scale A - SubEntities (this spec):**
+- **Count:** 200-500 per citizen
+- **Purpose:** Semantic/functional neighborhoods for traversal efficiency
+- **Types:**
+  - `semantic`: Learned topics/scenarios (e.g., launch_success, consciousness_architecture, €35K_hallucination_lesson)
+  - `functional`: Configured roles (e.g., architect, validator, translator)
+- **Activation:** Derived from member node energies (see §2.2)
+- **Lifecycle:** Bootstrap → quality gates → promotion → merge/split (see §2.6-2.7)
+
+**Scale B - Modes (see `emergent_ifs_modes.md`):**
+- **Count:** 5-15 per citizen
+- **Purpose:** IFS-level meta-roles providing regulation/policy nudges
+- **Examples:** Guardian (safety/regulation), Observer (meta-awareness), Explorer (novelty-seeking), Builder (construction), Anchor (stability)
+- **Emergence:** Discovered from stable communities in COACTIVATES_WITH graph (not configured)
+- **Relationship:** SubEntities `AFFILIATES_WITH` Modes with learned weights
+
+**The relationship:**
+```
+Node → MEMBER_OF → SubEntity → AFFILIATES_WITH → Mode
+```
+
+SubEntities are the **semantic/functional layer** (Scale A: many, fine-grained, learned topics and roles). Modes are the **regulatory/meta layer** (Scale B: few, coarse-grained, emergent IFS-level organization).
+
+This spec focuses on **Scale A (SubEntities)**. For Scale B (Modes), see `emergent_ifs_modes.md`.
 
 ### 2.2 Single-energy substrate → entity activation
 
@@ -54,7 +85,7 @@ Entity-scale selection drastically reduces branching before atomic moves. :conte
 ### 2.5 Schema (essentials)
 
 - **Subentity node:** fields for kind (`functional|semantic`), centroid embedding, coherence, and learning EMAs.
-- **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") (node→subentity):** soft membership `weight` learned from co-activation.
+- **MEMBER_OF (node→subentity):** soft membership `weight` learned from co-activation.
 - **RELATES_TO (subentity→subentity):** boundary ease (log-weight), dominance prior, semantic distance, counts. :contentReference[oaicite:5]{index=5}
 
 ### 2.6 Bootstrap (entity creation)
@@ -67,7 +98,7 @@ For functional roles like Architect, Validator, Translator:
 
 1. **Load config:** Read entity definitions from `orchestration/config/functional_entities.yml` (name, kind, description, keywords)
 2. **Create Entity nodes:** Idempotent upsert—if entity exists, skip; if missing, create with initial fields (energy=0, threshold from cohort)
-3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):** Keyword matching against node `name` + `description` → create `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(node→entity){weight}` relationships with initial weight (e.g., 0.5 if keyword match)
+3. **Seed MEMBER_OF:** Keyword matching against node `name` + `description` → create `MEMBER_OF(node→entity){weight}` relationships with initial weight (e.g., 0.5 if keyword match)
 4. **Normalize memberships:** Per node, ensure `Σ_E m̃_iE ≤ 1` by dividing each weight by sum across all entities
 
 **No dependency on Mechanism nodes.** Functional entities come from config, not graph search.
@@ -78,12 +109,58 @@ For semantic topics discovered from graph structure:
 
 1. **Detect clusters:** Use embedding similarity (cosine distance in node embedding space) or dense subgraph detection
 2. **Create Entity nodes:** For each cluster, create Entity node with `kind=semantic`, centroid embedding from cluster mean
-3. **Seed BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):** Nodes in cluster get `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(node→entity){weight}` with weight proportional to cluster membership strength
+3. **Seed MEMBER_OF:** Nodes in cluster get `MEMBER_OF(node→entity){weight}` with weight proportional to cluster membership strength
 4. **Normalize memberships:** Same per-node normalization as functional entities
 
 #### Learning phase
 
-After bootstrap, `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.
+After bootstrap, `MEMBER_OF` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.
+
+#### Creation-Time Redirect (Duplicate Prevention)
+
+**Purpose:** Prevent creating near-duplicate entities by redirecting to existing entities when redundancy is detected.
+
+**Integration:** Uses pair differentiation metrics from §2.8 and `entity_differentiation.md`.
+
+**Logic:** Before minting new candidate entity E':
+
+1. **Compute pair scores** vs nearest existing entities (by centroid similarity or attribution overlap)
+2. **Check redundancy threshold:**
+   ```python
+   for existing_entity B in nearest_candidates:
+       if S_red(E', B) > Q90:  # High redundancy detected
+           # REDIRECT instead of creating
+           attach_seeds_to_existing(E'_seeds, B, weight=weak_prior)
+           emit_event("candidate.redirected", from=E', to=B, S_red=score)
+           return  # Do not create E'
+   ```
+3. **Check complementarity:**
+   ```python
+   for existing_entity B in nearest_candidates:
+       if S_use(E', B) > Q80:  # High usefulness despite overlap
+           # ALLOW creation, mark complementarity
+           create_entity(E')
+           mark_complementarity(B, E', S_use=score)
+           emit_event("complementarity.marked", A=B, B=E')
+   ```
+4. **If no redirect/complement triggers:** Create entity E' normally
+
+**Parameters (learned, cohort-local):**
+- `weak_prior` = percentile-based initial weight for redirected members (e.g., q25 of existing MEMBER_OF weights)
+- `Q90`, `Q80` = percentile thresholds for S_red, S_use over citizen's entity pair history
+
+**Effect:**
+- Reduces entity proliferation by preventing true duplicates
+- Preserves useful overlap (complementary entities) via differentiation score
+- Maintains entity count tractability without arbitrary caps
+
+**Events:**
+- `candidate.redirected` - E' not created, seeds attached to B
+- `complementarity.marked` - E' created, marked as complement to B
+
+**Observability:** Track redirection rate (should be <5% of candidates in healthy substrate)
+
+**See:** `entity_differentiation.md` §D.1 for complete redirect specification and acceptance tests.
 
 ### 2.7 Entity Lifecycle & Quality Management
 
@@ -211,6 +288,84 @@ After implementing lifecycle with type discrimination:
 3. Emergent/semantic entities still subject to quality-based lifecycle
 4. No entities dissolve within first `MIN_AGE_FOR_DISSOLUTION_FRAMES` after creation
 
+### 2.8 Entity Pair Differentiation
+
+**Purpose:** Distinguish **useful overlap** (superposition, counterfactuals, complementary roles) from **redundant overlap** (near-duplicates, fragmented roles).
+
+**Core Principle:** High entity overlap is not inherently unhealthy—it enables superposition (same nodes, different contexts/meanings). The substrate measures overlap **differentiation quality**, not just overlap quantity.
+
+**Normative Reference:** See `entity_differentiation.md` for complete metric definitions, scoring formulas, and integration specifications.
+
+#### Pair Metrics (Cohort-Normalized)
+
+For any entity pair (A, B), compute five metrics over rolling window W (14-30 days, citizen-local):
+
+1. **Member Overlap (J):** Jaccard similarity `|M_A ∩ M_B| / |M_A ∪ M_B|`
+2. **Semantic Closeness (C):** Centroid cosine `cos(μ_A, μ_B)`
+3. **WM Co-Activation (U):** Frame overlap `|F_A ∩ F_B| / |F_A ∪ F_B|`
+4. **Highway Utility (H):** `ease(A↔B) × flow(A↔B)` from RELATES_TO
+5. **Context Divergence (ΔCtx):** JSD over (channel, tool, outcome) distributions
+
+All metrics rank-normalized against citizen's cohort → J̃, C̃, Ũ, H̃, ΔC̃tx
+
+#### Overlap Scores
+
+**Redundancy Score (S_red):** `softplus(J̃ + C̃ + Ũ) - softplus(H̃ + ΔC̃tx)`
+- High when entities share substrate, are semantically similar, co-activate, but have weak highways and low context divergence
+- Indicates **near-duplicates**
+
+**Usefulness Score (S_use):** `softplus(H̃ + ΔC̃tx) - softplus(J̃ + C̃)`
+- High when entities have strong highways and divergent contexts despite overlap
+- Indicates **complementary entities** or **useful superposition**
+
+#### Decision Classifier (Percentile-Based)
+
+| Condition | Action | Integration Point |
+|-----------|--------|-------------------|
+| S_red > Q90 AND min(Q_A, Q_B) < Q50 AND ΔCtx < Q50 | **MERGE** | §2.7 Merge procedures |
+| S_use > Q80 AND H > Q60 AND ΔCtx > Q60 | **KEEP_COMPLEMENTARY** | Mark RELATES_TO property |
+| Low silhouette AND bi-medoid split raises coherence + ΔCtx | **SPLIT** | §2.7 Split procedures |
+| else | **WATCH** | Re-score next window |
+
+**No fixed constants** - all cutoffs (Q90, Q80, Q60, Q50) are percentiles learned from citizen's cohort.
+
+#### Quality Modifier Integration
+
+The geometric mean quality score from §2.7 gets adjusted by overlap factors:
+
+```
+Q* = Q_geom × f_use × f_red
+
+where:
+f_use = exp(+α × percentile(D_E))  // Differentiation credit
+f_red = exp(-α × percentile(R_E))  // Redundancy pressure
+
+R_E = max_{B≠E} S_red(E, B)  // Worst-case duplicate
+D_E = max_{B≠E} S_use(E, B)  // Best-case complement
+α = learned from promotion effectiveness per citizen
+```
+
+**Effect:**
+- Entities with high redundancy face quality penalty → harder to promote, easier to dissolve
+- Entities with high differentiation get quality boost → easier to promote, harder to dissolve
+
+#### Observable Events
+
+- `subentity.overlap.pair_scored` - Metrics + scores + decision for pair
+- `subentity.merge.candidate` - Merge recommendation with acceptance criteria
+- `subentity.complementarity.marked` - High S_use pairs for WM diversity
+- `candidate.redirected` - Creation blocked, redirected to existing (see §2.6)
+
+#### Rollout Phasing
+
+**Week 1:** Observation only (scorer job + dashboard, no automation)
+**Week 2:** Enable creation-time redirect (§2.6)
+**Week 3:** Enable quality modifiers (f_use, f_red)
+**Week 4:** Enable auto-merge (feature flag, high-confidence only)
+**Week 5+:** Enable split review, complementarity ribbons
+
+See `entity_differentiation.md` for complete implementation details, Cypher queries, acceptance tests, and integration specifications.
+
 ## 3. Why this makes sense (three lenses)
 
 ### 3.1 Phenomenology (subentity feels like a growing pattern)
@@ -256,7 +411,7 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 
 ## 7. Failure Modes & Guards
 
-- **Entity creep (ever-growing memberships):** require periodic membership sparsification & floor on `BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF").weight`. Guard: EMA-based pruning + minimum meaningful weight. :contentReference[oaicite:18]{index=18}  
+- **Entity creep (ever-growing memberships):** require periodic membership sparsification & floor on `MEMBER_OF.weight`. Guard: EMA-based pruning + minimum meaningful weight. :contentReference[oaicite:18]{index=18}  
 - **Flip thrash:** add hysteresis around \(\Theta_\text{entity}\); guard with small ratio bands. :contentReference[oaicite:19]{index=19}  
 - **Boundary noise:** only learn `RELATES_TO` on **executed** boundary strides with non-trivial \(\phi\). :contentReference[oaicite:20]{index=20}  
 - **Over-chunked WM:** cap entity count for WM and score by energy-per-token and diversity bonus. :contentReference[oaicite:21]{index=21}
@@ -264,7 +419,7 @@ All are consumable via the snapshot + deltas WS contract. :contentReference[oaic
 ## 8. Integration points
 
 - **Mechanisms:** `mechanisms/sub_entity_traversal.py` (two-scale selection & boundary stride accounting). :contentReference[oaicite:22]{index=22}  
-- **Learning:** `entity_weight_learning` (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") updates); `RELATES_TO` ease/dominance from boundary stride outcomes. :contentReference[oaicite:23]{index=23}  
+- **Learning:** `entity_weight_learning` (MEMBER_OF updates); `RELATES_TO` ease/dominance from boundary stride outcomes. :contentReference[oaicite:23]{index=23}  
 - **Runtime:** tick pacing from `tick_speed` (stimulus-paced). :contentReference[oaicite:24]{index=24}  
 - **Observability:** WS contract & snapshot. :contentReference[oaicite:25]{index=25}
 

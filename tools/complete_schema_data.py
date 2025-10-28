@@ -544,7 +544,7 @@ NODE_TYPE_SCHEMAS = {
 
     "Decision": {
         "level": "n2", "category": "organizational",
-        "description": "Collective choice with reasoning",
+        "description": "Organization choice with reasoning",
         "required": [
             {"name": "decided_by", "type": "string",
              "description": "Who made the decision"},

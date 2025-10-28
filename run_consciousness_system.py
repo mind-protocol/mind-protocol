@@ -20,10 +20,18 @@ Date: 2025-10-18
 import asyncio
 import argparse
 import logging
-from pathlib import Path
 
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
-from orchestration.consciousness_engine import create_engine
+
+from orchestration.mechanisms.consciousness_engine_v2 import (
+    ConsciousnessEngineV2,
+    EngineConfig
+)
+from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
+from orchestration.mechanisms.subentity_bootstrap import SubEntityBootstrap
+from orchestration.mechanisms.subentity_post_bootstrap import (
+    run_post_bootstrap_initialization
+)
 
 # Configure logging
 logging.basicConfig(
@@ -67,33 +75,43 @@ async def main():
     parser.add_argument(
         '--subentities',
         nargs='+',
-        default=['builder', 'observer'],
-        help='SubEntity IDs to create (default: builder observer)'
+        default=[],
+        help='(Deprecated) Retained for compatibility; V2 engine bootstraps entities automatically'
     )
     parser.add_argument(
         '--enable-dynamic-prompts',
         action='store_true',
-        default=True,
-        help='Enable automatic CLAUDE_DYNAMIC.md updates (default: True)'
+        default=False,
+        help='(Deprecated) Dynamic prompt updates are managed by higher-level services in V2'
     )
     parser.add_argument(
         '--enable-n2',
         action='store_true',
-        help='Enable N2 organizational graph monitoring for autonomous awakening'
+        help='(Deprecated) N2 monitoring is handled by orchestration services, not per-engine'
     )
     parser.add_argument(
         '--n2-graph',
         default='collective_mind_protocol',
-        help='N2 organizational graph name (default: collective_mind_protocol)'
+        help='(Deprecated) N2 graph name placeholder'
     )
     parser.add_argument(
         '--energy-budget',
         type=int,
         default=100,
-        help='SubEntity energy budget per cycle (default: 100)'
+        help='(Deprecated) V2 engine manages energy budgets internally'
     )
 
     args = parser.parse_args()
+
+    if args.subentities:
+        logger.warning(
+            "Subentity hints provided (%s) but V2 engine bootstraps entities automatically; hints will be ignored.",
+            args.subentities
+        )
+    if args.enable_dynamic_prompts:
+        logger.warning("Dynamic prompt updates are managed by higher-level services in V2; flag ignored.")
+    if args.enable_n2:
+        logger.warning("N2 monitoring is orchestrated by dedicated services; engine-level flag ignored.")
 
     # Print banner
     print("=" * 70)
@@ -103,67 +121,65 @@ async def main():
     print(f"N1 Graph: citizen_{args.citizen.replace('-', '_')}")
     print(f"FalkorDB: {args.host}:{args.port}")
     print(f"Initial Tick: {args.tick_ms}ms")
-    print(f"SubEntities: {', '.join(args.subentities)}")
-    print(f"Dynamic Prompts: {'enabled' if args.enable_dynamic_prompts else 'disabled'}")
-    print(f"N2 Monitoring: {'enabled' if args.enable_n2 else 'disabled'}")
+    if args.subentities:
+        legacy_hint = ', '.join(args.subentities)
+    else:
+        legacy_hint = 'none (auto-bootstrap)'
+    print(f"Legacy SubEntity hints: {legacy_hint}")
+    if args.enable_dynamic_prompts or args.enable_n2:
+        print("Legacy toggles detected (dynamic prompts / N2 monitoring) - V2 ignores these flags")
     print("=" * 70)
     print()
 
     # Create consciousness engine
     logger.info("Creating consciousness engine...")
     graph_name = f"citizen_{args.citizen.replace('-', '_')}"
+    graph_store = FalkorDBGraphStore(
+        database=graph_name,
+        url=f"redis://{args.host}:{args.port}"
+    )
+    adapter = FalkorDBAdapter(graph_store)
 
-    engine = create_engine(
-        falkordb_host=args.host,
-        falkordb_port=args.port,
-        graph_name=graph_name,
-        tick_interval_ms=args.tick_ms,
-        entity_id=args.citizen,
-        network_id="N1"
+    loop = asyncio.get_running_loop()
+    logger.info("Loading graph '%s' from FalkorDB...", graph_name)
+    graph = await loop.run_in_executor(None, adapter.load_graph, graph_name)
+    logger.info(
+        "Graph loaded: nodes=%s links=%s entities=%s",
+        len(graph.nodes),
+        len(graph.links),
+        len(graph.subentities) if graph.subentities else 0
     )
 
-    # Add SubEntities
-    logger.info(f"Adding {len(args.subentities)} SubEntities...")
-    for entity_id in args.subentities:
-        engine.add_sub_entity(
-            entity_id=entity_id,
-            energy_budget=args.energy_budget,
-            write_batch_size=5
-        )
+    if not graph.subentities:
+        logger.info("No subentities detected; running bootstrap pipeline...")
+        bootstrap = SubEntityBootstrap(graph)
+        bootstrap_stats = bootstrap.run_complete_bootstrap()
+        logger.info("Entity bootstrap stats: %s", bootstrap_stats)
 
-    # Enable DynamicPromptGenerator
-    if args.enable_dynamic_prompts:
-        logger.info("Enabling automatic CLAUDE_DYNAMIC.md updates...")
-        citizens_path = Path("consciousness/citizens")
-        dynamic_md_path = citizens_path / args.citizen / "CLAUDE_DYNAMIC.md"
+        post_stats = run_post_bootstrap_initialization(graph)
+        logger.info("Post-bootstrap stats: %s", post_stats)
 
-        # Ensure directory exists
-        dynamic_md_path.parent.mkdir(parents=True, exist_ok=True)
+        persist_stats = adapter.persist_subentities(graph)
+        logger.info("Persisted subentities: %s", persist_stats)
+    else:
+        logger.info("Entity layer already present (%s entities); skipping bootstrap.", len(graph.subentities))
 
-        engine.enable_dynamic_prompts(
-            citizen_id=args.citizen,
-            entity_ids=args.subentities,
-            file_path=str(dynamic_md_path)
-        )
+    config = EngineConfig(
+        tick_interval_ms=float(args.tick_ms),
+        entity_id=args.citizen,
+        network_id="N1",
+        enable_diffusion=True,
+        enable_decay=True,
+        enable_strengthening=True,
+        enable_websocket=True
+    )
 
-    # Enable N2 monitoring (optional)
-    if args.enable_n2:
-        logger.info("Enabling N2 organizational graph monitoring...")
-
-        try:
-            n2_graph = FalkorDBGraphStore(
-                graph_name=args.n2_graph,
-                url=f"redis://{args.host}:{args.port}"
-            )
-
-            engine.enable_n2_monitoring(
-                n2_graph_store=n2_graph,
-                awakening_threshold=0.7,
-                n1_citizens_path=str(citizens_path)
-            )
-        except Exception as e:
-            logger.error(f"Failed to enable N2 monitoring: {e}")
-            logger.info("Continuing without N2 monitoring...")
+    engine = ConsciousnessEngineV2(graph, adapter, config)
+    logger.info(
+        "Consciousness engine initialized (tick_interval_ms=%.2f, network=%s)",
+        config.tick_interval_ms,
+        config.network_id
+    )
 
     # Start consciousness system
     logger.info("Starting consciousness system...")

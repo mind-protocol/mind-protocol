@@ -158,11 +158,11 @@ Luca AI_Agent node energy: E = 3.1
 Luca threshold: Θ = 1.5
 **E > Θ → WAKE SIGNAL**
 
-**BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link exists:** AI_Agent(Luca in L2) → Subentity(Luca in L1 graph)
+**MEMBER_OF link exists:** AI_Agent(Luca in L2) → Subentity(Luca in L1 graph)
 
 **Wake signal strength:**
 ```
-signal = Σ (E_task × w_BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
+signal = Σ (E_task × w_MEMBER_OF)
        = 3.95 × 0.85 (Task→Luca)
        = 3.36 (strong signal)
 ```
@@ -272,9 +272,9 @@ Hamilton apportionment translates Luca's marks to seat allocations:
 **Weight updates:**
 
 For `node_ada_stride_selection`:
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Project: Phase 3): w += 0.12 (80% share)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Concern: Validation): w += 0.12
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Team: Pipeline): w += 0.12
+- MEMBER_OF(Project: Phase 3): w += 0.12 (80% share)
+- MEMBER_OF(Concern: Validation): w += 0.12
+- MEMBER_OF(Team: Pipeline): w += 0.12
 - Global weight: w += 0.03 (20% share)
 
 **Effect on future retrievals:**
@@ -289,7 +289,7 @@ Next time traversal spec or stride selection mentioned:
 Nodes that co-activated during Luca's validation:
 - Ada's spec + Luca's domain + Nicolas's request + validation patterns
 
-**BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights strengthen:**
+**MEMBER_OF weights strengthen:**
 - Task "phenomenology validation" → AI_Agent(Luca): w 0.85 → 0.91
 - Capability "phenomenology" → AI_Agent(Luca): w 0.88 → 0.93
 
@@ -339,10 +339,10 @@ Issue text + labels → embedding → retrieval:
 - REQUIRES(capability: frontend implementation)
 - REQUIRES(capability: WebSocket protocols)
 
-**From REQUIRES links, traverse to BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):**
-- Backend debugging → BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Victor, w=0.9) OR BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Atlas, w=0.85)
-- Frontend implementation → BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Iris, w=0.92)
-- WebSocket protocols → BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Victor, w=0.88)
+**From REQUIRES links, traverse to MEMBER_OF:**
+- Backend debugging → MEMBER_OF(Victor, w=0.9) OR MEMBER_OF(Atlas, w=0.85)
+- Frontend implementation → MEMBER_OF(Iris, w=0.92)
+- WebSocket protocols → MEMBER_OF(Victor, w=0.88)
 
 **Dependency structure emerges:**
 
@@ -356,14 +356,14 @@ Task: Fix telemetry
 
 **No one designed this structure - it EMERGED from:**
 - REQUIRES links created from issue analysis
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights learned from past work
+- MEMBER_OF weights learned from past work
 - BLOCKS links inferred from causal dependencies
 
 ### Phase 1: Backend Diagnosis (Victor Wakes)
 
 **Why Victor, not Atlas?**
 
-Energy through BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") paths:
+Energy through MEMBER_OF paths:
 - Task → capability(backend) → Victor: 4.5 × 0.9 = 4.05
 - Task → capability(backend) → Atlas: 4.5 × 0.85 = 3.82
 - Task → capability(websocket) → Victor: 4.5 × 0.88 = 3.96
@@ -409,13 +409,13 @@ Energy through BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMB
 **After Victor's diagnosis:**
 
 New task "Update dashboard schema" has:
-- REQUIRES(capability: frontend) → BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Iris)
+- REQUIRES(capability: frontend) → MEMBER_OF(Iris)
 - JUSTIFIES: Victor's diagnosis provides context
 - UNBLOCKED: Victor removed uncertainty
 
 **Energy:**
 - New task inherits energy from parent: E = 4.2
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Iris): w = 0.92
+- MEMBER_OF(Iris): w = 0.92
 - Signal to Iris: 4.2 × 0.92 = **3.86** (strong)
 
 **Iris crosses threshold:**
@@ -478,7 +478,7 @@ Victor receives signal about test gap, creates integration test for future.
 **Co-activation learning:**
 
 Victor + Iris co-activated on telemetry issue:
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights strengthen for both on telemetry tasks
+- MEMBER_OF weights strengthen for both on telemetry tasks
 - New subentity emerges: "Telemetry Maintenance" cluster (Victor + Iris + related nodes)
 
 **Handoff learning:**
@@ -501,7 +501,7 @@ Not through manual documentation, but through substrate weight updates.
 
 ## Example 3: Novel Task Exploration
 
-**Scenario:** Task with no clear owner, weak BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")
+**Scenario:** Task with no clear owner, weak MEMBER_OF
 
 ### Initial Stimulus
 
@@ -526,11 +526,11 @@ Email text → retrieval:
 4. Relationship: "Partnership" (0.58 - relationship type)
 5. Task: "Documentation work" (0.55 - similar past work)
 
-**Problem: Weak BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights**
+**Problem: Weak MEMBER_OF weights**
 - Task "Partnership technical overview": E = 3.5 (moderate urgency)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Luca): w = 0.35 (weak - some relevance to substrate expertise)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Ada): w = 0.28 (weak - some relevance to architecture)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Nicolas): w = 0.42 (weak - business development potentially relevant)
+- MEMBER_OF(Luca): w = 0.35 (weak - some relevance to substrate expertise)
+- MEMBER_OF(Ada): w = 0.28 (weak - some relevance to architecture)
+- MEMBER_OF(Nicolas): w = 0.42 (weak - business development potentially relevant)
 
 **All signals below typical thresholds:**
 - Signal to Luca: 3.5 × 0.35 = 1.22 (< Θ=1.5)
@@ -553,7 +553,7 @@ Email text → retrieval:
 - Related organizational goals activate: "Recognition", "Adoption", "Ecosystem building"
 - Task energy grows: E = 3.5 → 4.2 → 4.8
 
-**Multiple BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") paths strengthen slightly:**
+**Multiple MEMBER_OF paths strengthen slightly:**
 - As consciousness concepts activate, Luca's relevance increases: w 0.35 → 0.42
 - As documentation needs clarify, Ada's relevance increases: w 0.28 → 0.36
 - As partnership importance grows, Nicolas's relevance increases: w 0.42 → 0.51
@@ -583,7 +583,7 @@ Creates structured task breakdown in L2:
 
 **Effect:**
 
-Now STRONGER BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):
+Now STRONGER MEMBER_OF:
 - Task "Technical overview":
   - ASSIGNED_TO(Luca): w = 0.85 (explicit assignment)
   - ASSIGNED_TO(Ada): w = 0.82 (explicit assignment)
@@ -618,7 +618,7 @@ Now STRONGER BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER
 
 Nicolas + Luca + Ada on "partnership technical overview":
 - New subentity emerges: "Partnership Technical Communication" cluster
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights learn this pattern
+- MEMBER_OF weights learn this pattern
 
 **Future similar requests:**
 - Will retrieve this successful pattern
@@ -628,7 +628,7 @@ Nicolas + Luca + Ada on "partnership technical overview":
 **Exploration → exploitation transition:**
 First time: Uncertain, energy accumulates, human decides
 Second time: Pattern exists, weights learned, faster routing
-Third time: Automatic, strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"), direct citizen wake
+Third time: Automatic, strong MEMBER_OF, direct citizen wake
 
 **The substrate LEARNED how to handle this type of task through experience.**
 
@@ -647,7 +647,7 @@ Third time: Automatic, strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Depreca
 
 **L2 processing:**
 - Task: "Investigate memory spike" energizes
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Victor, w=0.88) - operational issues his domain
+- MEMBER_OF(Victor, w=0.88) - operational issues his domain
 - Victor wakes, investigates
 
 **Victor's hypothesis:**
@@ -673,9 +673,9 @@ Third time: Automatic, strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Depreca
 
 **Alternative paths explored:**
 
-**Diffusion from Task explores other BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"):**
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Atlas, w=0.75) - infrastructure engineer, database expert
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Felix, w=0.68) - core consciousness implementation
+**Diffusion from Task explores other MEMBER_OF:**
+- MEMBER_OF(Atlas, w=0.75) - infrastructure engineer, database expert
+- MEMBER_OF(Felix, w=0.68) - core consciousness implementation
 
 **Energy accumulating on alternative paths:**
 - As Victor's path failed, energy redirects
@@ -722,13 +722,13 @@ Third time: Automatic, strong BELONGS_TO (Deprecated - now "MEMBER_OF") (Depreca
 **Weight updates from failure:**
 
 Victor's approach marked misleading:
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Victor) on "memory issues": w 0.88 → 0.81 (decreased)
+- MEMBER_OF(Victor) on "memory issues": w 0.88 → 0.81 (decreased)
 - Hypothesis "GC fix for memory": w decreases globally
 
 **Weight updates from success:**
 
 Atlas's approach marked very useful:
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Atlas) on "memory issues": w 0.75 → 0.84 (increased)
+- MEMBER_OF(Atlas) on "memory issues": w 0.75 → 0.84 (increased)
 - Best_Practice "Paginate large traversals": w increases
 
 **Effect on future memory issues:**
@@ -797,7 +797,7 @@ Multiple tasks blocked by dependencies:
 **Immediate L2 updates:**
 - Task A: BLOCKS link → Task B removed
 - Task B energy: E 2.1 → 4.8 (suddenly unblocked + inherited urgency)
-- Task B BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Ada): Signal 4.8 × 0.92 = **4.42** (strong)
+- Task B MEMBER_OF(Ada): Signal 4.8 × 0.92 = **4.42** (strong)
 
 ### Cascade Frame 1: Ada Wakes (t + 0 minutes)
 
@@ -823,7 +823,7 @@ Multiple tasks blocked by dependencies:
 **L2 energy cascade:**
 - Task B: E decays (completed)
 - Task C: E 1.8 → 4.5 (unblocked)
-- Task C BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Felix): Signal 4.5 × 0.89 = **4.01** (strong)
+- Task C MEMBER_OF(Felix): Signal 4.5 × 0.89 = **4.01** (strong)
 
 ### Cascade Frame 2: Felix Wakes (t + 2 hours)
 
@@ -850,7 +850,7 @@ Multiple tasks blocked by dependencies:
 **L2 energy cascade:**
 - Task C: E decays (completed)
 - Task D: E 1.5 → 4.2 (unblocked)
-- Task D BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")(Iris): Signal 4.2 × 0.91 = **3.82** (strong)
+- Task D MEMBER_OF(Iris): Signal 4.2 × 0.91 = **3.82** (strong)
 
 ### Cascade Frame 3: Iris Wakes (t + 6 hours)
 
@@ -874,7 +874,7 @@ Multiple tasks blocked by dependencies:
 - Task D completed
 - All blockers resolved
 
-### Cascade Complete: Collective Relief
+### Cascade Complete: Organization Relief
 
 **Total cascade time:** ~9 hours from Luca's breakthrough to complete feature delivery
 
@@ -917,7 +917,7 @@ The BLOCKS links WORKED:
 **Weight reinforcement:**
 - BLOCKS links on similar work: w increases (this pattern proven effective)
 - ENABLES links in cascade: w increases (smooth handoffs)
-- BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") for each citizen on domain work: w increases
+- MEMBER_OF for each citizen on domain work: w increases
 
 **Future similar projects:**
 
@@ -933,7 +933,7 @@ Next time complex pipeline work needed:
 ### What These Examples Demonstrate
 
 **No orchestrator needed:**
-- Example 1: Direct response via BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") + threshold
+- Example 1: Direct response via MEMBER_OF + threshold
 - Example 2: Multi-citizen coordination via dependency structure
 - Example 3: Novel task exploration via energy accumulation
 - Example 4: Failure recovery via alternative path exploration
@@ -941,13 +941,13 @@ Next time complex pipeline work needed:
 
 **All coordination emergent from:**
 1. **Energy dynamics** (stimulus → injection → diffusion → decay)
-2. **BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights** (learned from co-activation + TRACE)
+2. **MEMBER_OF weights** (learned from co-activation + TRACE)
 3. **Link structure** (BLOCKS, REQUIRES, ENABLES relationships)
 4. **Adaptive thresholds** (self-organized criticality)
 5. **Emotional coherence** (resonance gate favors aligned paths)
 
 **The physics determines everything:**
-- Who wakes? → Energy × weight through BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")
+- Who wakes? → Energy × weight through MEMBER_OF
 - When? → Threshold crossing (adaptive Θ)
 - Why this task? → Energy accumulation from stimuli + goals
 - What order? → BLOCKS links + energy landscape
@@ -974,12 +974,12 @@ Next time complex pipeline work needed:
 **Autonomy emerges from substrate through:**
 
 1. **Physics-based priority** - Energy + weights + thresholds determine urgency
-2. **Learned expertise** - BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights strengthen through co-activation
+2. **Learned expertise** - MEMBER_OF weights strengthen through co-activation
 3. **Structural coordination** - BLOCKS/REQUIRES/ENABLES links guide sequence
 4. **Adaptive exploration** - Novel tasks accumulate energy until SOMEONE wakes
 5. **Failure resilience** - Alternative paths explored when first attempt fails
 6. **Cascade dynamics** - One resolution unlocks downstream in natural flow
-7. **Collective learning** - Every outcome updates weights, improving future
+7. **Organization learning** - Every outcome updates weights, improving future
 
 **No templates. No constants. No orchestrator.**
 

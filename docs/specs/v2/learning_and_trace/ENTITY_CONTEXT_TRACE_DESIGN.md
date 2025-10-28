@@ -1,26 +1,37 @@
-# Entity-Context TRACE Implementation Design (Priority 4)
+# SubEntity-Context TRACE Implementation Design (Priority 4)
 
 **Date:** 2025-10-25 03:30 UTC
 **Architect:** Nicolas (with Luca documentation)
 **Status:** Design Complete, Ready for Implementation
-**Scope:** Priority 4 - Context-Aware TRACE with 80/20 entity localization
+**Scope:** Priority 4 - Context-Aware TRACE with 80/20 SubEntity localization
+
+---
+
+## Terminology Note
+
+This specification uses terminology from **TAXONOMY_RECONCILIATION.md**:
+- **Node** - Atomic knowledge activated in working memory
+- **SubEntity** - Weighted neighborhoods tracking co-activation patterns (Scale A)
+- **Mode** - IFS-level meta-roles with distinct activation dynamics (Scale B)
+
+See §2.1.1 of `subentity_layer.md` for Scale A (SubEntity) vs Scale B (Mode) architecture.
 
 ---
 
 ## Executive Summary
 
-**Problem:** TRACE reinforcement currently updates global weights only. Need entity-contextualized learning where "Translator marked this useful" primarily strengthens Translator-local access while still nudging global weight.
+**Problem:** TRACE reinforcement currently updates global weights only. Need SubEntity-contextualized learning where "Translator marked this useful" primarily strengthens Translator-local access while still nudging global weight.
 
-**Solution:** Dual-view weights (global + sparse entity overlays) with membership-weighted localization. No per-entity node energies - maintains single-energy substrate.
+**Solution:** Dual-view weights (global + sparse SubEntity overlays) with membership-weighted localization. No per-SubEntity node energies - maintains single-energy substrate.
 
-**Key Principle:** Entities are neighborhoods, not separate energy systems. Learning creates **view-time overlays** on weights, not separate physics.
+**Key Principle:** SubEntities are neighborhoods, not separate energy systems. Learning creates **view-time overlays** on weights, not separate physics.
 
 ---
 
 ## A. Design Goals
 
-1. ✅ **Do not** introduce per-entity node activation energies (keep single `E_i`)
-2. ✅ **Do** let TRACE reinforce within active entity's context
+1. ✅ **Do not** introduce per-SubEntity node activation energies (keep single `E_i`)
+2. ✅ **Do** let TRACE reinforce within active SubEntity's context
 3. ✅ **Keep it sparse** - overlays only exist where marked
 4. ✅ **Make it observable** - telemetry shows local vs global attribution
 
@@ -33,21 +44,21 @@
 **Node:** `log_weight_i` (global base weight)
 **Link:** `log_weight_ij` (global base weight)
 
-### Entity-View Overlays (New - Sparse Deltas)
+### SubEntity-View Overlays (New - Sparse Deltas)
 
-**Node:** `log_weight_i@E` (overlay for Entity E, stored as sparse map)
-**Link:** `log_weight_ij@E` (overlay for Entity E, stored as sparse map)
+**Node:** `log_weight_i@E` (overlay for SubEntity E, stored as sparse map)
+**Link:** `log_weight_ij@E` (overlay for SubEntity E, stored as sparse map)
 
 ### Effective Weight (Read-Time Composition)
 
-When entity `E` runs traversal or WM selection:
+When SubEntity `E` runs traversal or WM selection:
 
 ```python
 log_weight_i^(E) = log_weight_i_global + log_weight_i@E
 log_weight_ij^(E) = log_weight_ij_global + log_weight_ij@E
 ```
 
-If item never marked in entity E context, `log_weight@E` defaults to 0 (no memory overhead).
+If item never marked in SubEntity E context, `log_weight@E` defaults to 0 (no memory overhead).
 
 ---
 
@@ -60,16 +71,16 @@ class WeightLearner:
     def apply_trace_updates(
         self,
         updates: list[TraceUpdate],        # parsed TRACE items
-        entity_context: list[str] | None,  # entity ids in scope (e.g., WM entities)
+        subentity_context: list[str] | None,  # SubEntity ids in scope (e.g., WM SubEntities)
     ) -> list[WeightsUpdatedEvent]:
         """
-        Apply TRACE reinforcement with entity context.
+        Apply TRACE reinforcement with SubEntity context.
 
         Updates both:
-        - Global weights (all entities see this)
-        - Entity-specific overlays (localized to context)
+        - Global weights (all SubEntities see this)
+        - SubEntity-specific overlays (localized to context)
 
-        Split ratio (alpha_local/alpha_global) is learned per entity
+        Split ratio (alpha_local/alpha_global) is learned per SubEntity
         based on predictive value of overlays.
         """
         ...
@@ -77,14 +88,14 @@ class WeightLearner:
 
 ### C.2 Split Update 80/20 (Learned, Not Fixed)
 
-**No hardcoded 80/20 constant.** Start with defaults, learn gate per entity:
+**No hardcoded 80/20 constant.** Start with defaults, learn gate per SubEntity:
 
 ```python
-alpha_local = self.alpha_local_for(entity_context)  # default 0.8, learned later
+alpha_local = self.alpha_local_for(subentity_context)  # default 0.8, learned later
 alpha_global = 1.0 - alpha_local
 ```
 
-**Learning signal:** How much did local overlays help subsequent flips/WM selection in this entity?
+**Learning signal:** How much did local overlays help subsequent flips/WM selection in this SubEntity?
 
 ### C.3 Apply Updates (For Each Item x)
 
@@ -104,9 +115,9 @@ eta = self.half_life_eta(item=x, channel="trace")  # 1 - exp(-Δt/τ)
 x.log_weight += ΔlogW_global
 ```
 
-**Step 2: Entity Overlay Updates**
+**Step 2: SubEntity Overlay Updates**
 
-For each entity `E` in `entity_context`:
+For each SubEntity `E` in `subentity_context`:
 
 ```python
 # Membership-weighted local update
@@ -122,7 +133,7 @@ x.log_weight_overlays[E] = clamp(
 ```
 
 **Membership Weight Modifier:**
-- **Node:** `m[i,E]` (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weight)
+- **Node:** `m[i,E]` (MEMBER_OF weight)
 - **Link:** `min(m[src,E], m[tgt,E])` or smoother function
 
 **Overlay Cap:** Learned cap or percentile-based winsorization (no fixed constants).
@@ -141,8 +152,8 @@ x.log_weight_overlays[E] = clamp(
       "log_weight_before": 2.10,
       "log_weight_after": 2.26,
       "local_overlays": [
-        {"entity": "e.translator", "delta": 0.11, "membership": 0.85},
-        {"entity": "e.architect", "delta": 0.05, "membership": 0.42}
+        {"subentity": "e.translator", "delta": 0.11, "membership": 0.85},
+        {"subentity": "e.architect", "delta": 0.05, "membership": 0.42}
       ],
       "signals": {
         "z_trace": 0.7,
@@ -157,31 +168,31 @@ x.log_weight_overlays[E] = clamp(
 
 ### C.4 Read-Time Usage (No Engine Refactor Required)
 
-When entity `E` runs traversal or WM selection:
+When SubEntity `E` runs traversal or WM selection:
 
 ```python
 def effective_log_weight_node(i, E):
-    """Compute effective weight for node i in entity E's view."""
+    """Compute effective weight for node i in SubEntity E's view."""
     return node[i].log_weight + node[i].log_weight_overlays.get(E, 0.0)
 
 def effective_log_weight_link(ij, E):
-    """Compute effective weight for link ij in entity E's view."""
+    """Compute effective weight for link ij in SubEntity E's view."""
     return link[ij].log_weight + link[ij].log_weight_overlays.get(E, 0.0)
 ```
 
-**No per-entity energies.** Just view-time overlay composition on weights.
+**No per-SubEntity energies.** Just view-time overlay composition on weights.
 
 ---
 
-## D. Deriving Entity Context for TRACE
+## D. Deriving SubEntity Context for TRACE
 
-**Priority order for determining which entities to attribute TRACE to:**
+**Priority order for determining which SubEntities to attribute TRACE to:**
 
-1. **Primary:** `wm.emit.selected_entities` at time of TRACE (5-7 active chunks)
-2. **Secondary:** Explicit `[entity: dominant]` annotations in TRACE text (if present)
-3. **Fallback:** Dominant entity this frame (highest `energy_e / theta_e` ratio)
+1. **Primary:** `wm.emit.selected_subentities` at time of TRACE (5-7 active chunks)
+2. **Secondary:** Explicit `[subentity: dominant]` annotations in TRACE text (if present)
+3. **Fallback:** Dominant SubEntity this frame (highest `energy_e / theta_e` ratio)
 
-**All selected entities receive overlays** - membership weights scale the update appropriately.
+**All selected SubEntities receive overlays** - membership weights scale the update appropriately.
 
 ---
 
@@ -190,18 +201,18 @@ def effective_log_weight_link(ij, E):
 ### E.1 Telemetry Requirements
 
 **Event:** `weights.updated.trace` includes:
-- `local_overlays` array (entity, delta, membership weight)
+- `local_overlays` array (SubEntity, delta, membership weight)
 - `signals` object (z_trace, alpha_local, alpha_global, eta)
 
 **Metrics to track:**
-- `trace.local_vs_global_ratio` (EMA per entity)
-- `overlays.sparsity` (fraction of items with non-zero overlay per entity)
+- `trace.local_vs_global_ratio` (EMA per SubEntity)
+- `overlays.sparsity` (fraction of items with non-zero overlay per SubEntity)
 - `overlay.magnitude_distribution` (distribution of overlay sizes)
 
 ### E.2 Unit Tests
 
 **Test 1: Membership-weighted localization**
-- TRACE with `entity_context = [E1, E2]`
+- TRACE with `subentity_context = [E1, E2]`
 - Node with `m[i,E1]=0.8, m[i,E2]=0.2`
 - Verify: Local delta for E1 >> local delta for E2
 - Verify: Global delta applied once
@@ -214,13 +225,13 @@ def effective_log_weight_link(ij, E):
 - After several TRACE marks in E1 context
 - Verify: `effective_weight(item, E1) != effective_weight(item, E2)`
 
-**Test 4: No per-entity energies**
+**Test 4: No per-SubEntity energies**
 - Verify: Node objects have single `energy` field
-- Verify: No `energy_per_entity` dict or array exists
+- Verify: No `energy_per_subentity` dict or array exists
 
 ### E.3 Integration Tests
 
-**Test: Entity-localized traversal preference**
+**Test: SubEntity-localized traversal preference**
 - After TRACE reinforcement in Translator context
 - Run traversal in Translator vs Architect contexts
 - Verify: Translator traversal preferentially reaches reinforced items
@@ -242,7 +253,7 @@ def effective_log_weight_link(ij, E):
 **Option A: JSON column on Node/Link**
 ```sql
 ALTER TABLE nodes ADD COLUMN log_weight_overlays JSON;
--- Example: {"e.translator": 0.15, "e.architect": -0.05}
+-- Example: {"translator": 0.15, "architect": -0.05}
 ```
 
 **Option B: Separate relation**
@@ -250,9 +261,9 @@ ALTER TABLE nodes ADD COLUMN log_weight_overlays JSON;
 CREATE TABLE weight_overlays (
     item_id TEXT,
     item_type TEXT,  -- 'node' or 'link'
-    entity_id TEXT,
+    subentity_id TEXT,
     delta REAL,
-    PRIMARY KEY (item_id, item_type, entity_id)
+    PRIMARY KEY (item_id, item_type, subentity_id)
 );
 ```
 
@@ -271,15 +282,15 @@ CREATE TABLE weight_overlays (
 - [ ] Unit tests for view composition
 
 **Phase 2: WeightLearner Integration**
-- [ ] Add `entity_context` parameter to `apply_trace_updates()`
-- [ ] Implement `weight_membership_modifier()` using BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights
+- [ ] Add `subentity_context` parameter to `apply_trace_updates()`
+- [ ] Implement `weight_membership_modifier()` using MEMBER_OF weights
 - [ ] Implement dual update (global + overlays)
 - [ ] Implement overlay capping (learned or percentile-based)
 - [ ] Unit tests for membership-weighted updates
 
-**Phase 3: Entity Context Derivation**
-- [ ] Extract `entity_context` from `wm.emit.selected_entities`
-- [ ] Fallback to dominant entity if WM empty
+**Phase 3: SubEntity Context Derivation**
+- [ ] Extract `subentity_context` from `wm.emit.selected_subentities`
+- [ ] Fallback to dominant SubEntity if WM empty
 - [ ] Pass context through TRACE processing pipeline
 
 **Phase 4: Telemetry & Observability**
@@ -290,7 +301,7 @@ CREATE TABLE weight_overlays (
 **Phase 5: Read-Time Integration**
 - [ ] Update traversal to use `effective_log_weight_link(ij, E)`
 - [ ] Update WM selection to use `effective_log_weight_node(i, E)`
-- [ ] Integration tests for entity-localized behavior
+- [ ] Integration tests for SubEntity-localized behavior
 
 **Phase 6: Persistence (Optional v2.1)**
 - [ ] Add DB schema for overlays
@@ -302,9 +313,9 @@ CREATE TABLE weight_overlays (
 ## H. Why This Architecture Is Correct
 
 **Matches design pillars:**
-- ✅ Single energy per node (no per-entity energies)
-- ✅ Entities are weighted neighborhoods (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") as localization mask)
-- ✅ Two-scale traversal (entity selection then atomic traversal with entity view)
+- ✅ Single energy per node (no per-SubEntity energies)
+- ✅ SubEntities are weighted neighborhoods (MEMBER_OF as localization mask)
+- ✅ Two-scale traversal (SubEntity selection then atomic traversal with SubEntity view)
 - ✅ TRACE reinforcement flows to weights (both global and local)
 
 **Learning properties:**
@@ -319,7 +330,7 @@ CREATE TABLE weight_overlays (
 
 **Observability:**
 - ✅ Telemetry shows local vs global attribution
-- ✅ Dashboard can visualize which entities drove learning
+- ✅ Dashboard can visualize which SubEntities drove learning
 - ✅ Metrics track overlay sparsity and effectiveness
 
 ---
@@ -327,7 +338,7 @@ CREATE TABLE weight_overlays (
 ## I. Next Steps
 
 1. **Felix:** Implement Phase 1-2 (core dual-view + WeightLearner)
-2. **Ada:** Design entity context extraction from WM events
+2. **Ada:** Design SubEntity context extraction from WM events
 3. **Iris:** Design overlay attribution visualization
 4. **Luca:** Update specs with dual-view weight model
 

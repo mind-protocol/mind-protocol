@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import type { Node, Link, Operation } from '../hooks/useGraphData';
-import { ENTITY_COLORS, hexToRgb } from '../constants/entity-colors';
+import { SUBENTITY_COLORS as ENTITY_COLORS, hexToRgb } from '../constants/subentity-colors';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { emotionToHSL, hslToCSS } from '../lib/emotionColor';
 import { shouldUpdateColor, type EmotionDisplayState } from '../lib/emotionHysteresis';
@@ -13,7 +13,7 @@ interface GraphCanvasProps {
   nodes: Node[];
   links: Link[];
   operations: Operation[];
-  subentities?: { entity_id: string; name?: string }[];
+  subentities?: { subentity_id: string; name?: string }[];
 }
 
 /**

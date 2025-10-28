@@ -13,8 +13,8 @@ env:
 
 services:
   - id: falkordb
-    cmd: ["cmd", "/c", "docker", "start", "-a", "falkordb"]
-    restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 30000, jitter: true } }
+    cmd: ["wsl", "sudo", "docker", "start", "mind_protocol_falkordb"]
+    restart: { policy: "on-failure", backoff: { base_ms: 1000, max_ms: 30000, jitter: true } }
     readiness:
       tcp: { host: "127.0.0.1", port: 6379, timeout_s: 3 }
     singleton: true
@@ -48,12 +48,6 @@ services:
 
   - id: conversation_watcher
     cmd: ["python", "-m", "orchestration.services.watchers.conversation_watcher"]
-    requires: ["ws_api"]
-    restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
-    singleton: true
-
-  - id: stimulus_injection
-    cmd: ["python", "-m", "orchestration.services.stimulus_injection"]
     requires: ["ws_api"]
     restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
     singleton: true

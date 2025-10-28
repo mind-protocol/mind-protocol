@@ -1,6 +1,6 @@
 # Dynamic Context for victor
 
-**Last Updated:** 2025-10-25 07:19:49 UTC
+**Last Updated:** 2025-10-26 02:59:55 UTC
 **Global Criticality:** 1.00
 **Active Subentities:** 8
 
@@ -13,16 +13,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -36,16 +36,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -59,16 +59,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -82,16 +82,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -105,16 +105,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -128,16 +128,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -151,16 +151,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently
@@ -174,16 +174,16 @@
 **Currently Active Nodes:** 0
 
 **Recent Activation Changes:**
-- test_success_mode_principle: deactivated (activity=0.00)
-- premature_architecture_around_test_failures: deactivated (activity=0.00)
-- dont_assume_user_constraints: deactivated (activity=0.00)
-- victor_monitors_not_tests: deactivated (activity=0.00)
-- systematic_testing_discipline: deactivated (activity=0.00)
-- guardian_mindset_universal_application: deactivated (activity=0.00)
-- untested_fix_script_delivery: deactivated (activity=0.00)
-- my_background_start_was_temporary_solution: deactivated (activity=0.00)
-- test_success_mode_principle: ACTIVATED (activity=0.75)
-- premature_architecture_around_test_failures: ACTIVATED (activity=0.75)
+- layered_infrastructure_verification: deactivated (activity=0.56)
+- four_graphs_lost: deactivated (activity=0.56)
+- independent_verification_layers: deactivated (activity=0.56)
+- operational_pattern_learning: deactivated (activity=0.56)
+- consciousness_substrate_discipline: deactivated (activity=0.56)
+- system_full_operational: deactivated (activity=0.56)
+- docker_desktop_not_running: deactivated (activity=0.56)
+- clean_supervisor_restart: deactivated (activity=0.56)
+- shell_process_discrepancy: deactivated (activity=0.56)
+- nicolas_can_make_informed_decisions: deactivated (activity=0.56)
 
 **Active Node Focus:**
 - No active nodes currently

@@ -1,0 +1,17 @@
+[features]
+seeds = true
+skip-lint = false
+
+
+[provider]
+cluster = "mainnet"
+wallet = "~/.config/solana/id.json"
+
+
+[programs.mainnet]
+mind_transfer_hook = "94pUHcJGwY3mjAH6R3thJ85qo8BNPjHnXLrKjem952mc"
+
+
+[scripts]
+build = "anchor build"
+deploy = "anchor deploy"

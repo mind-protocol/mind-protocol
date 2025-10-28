@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from orchestration.services.mpsv3.singleton import SingletonLease
 from orchestration.services.mpsv3.registry import ServiceRegistry
 from orchestration.services.mpsv3.watcher import CentralizedFileWatcher
+from orchestration.services.mpsv3.portguard import PortGuard, kill_port_owners_aggressive
 
 
 class MPSv3Supervisor:
@@ -45,6 +46,16 @@ class MPSv3Supervisor:
         """Start supervisor and all services."""
         print("[MPSv3] Starting Mind Protocol Supervisor v3...")
 
+        # PRE-FLIGHT CLEANUP - Kill zombie services BEFORE attempting mutex
+        # This resolves the catch-22: zombie processes from crashed supervisors
+        # can hold ports/resources, blocking startup. By cleaning BEFORE mutex
+        # acquisition, we ensure a clean slate even if previous supervisor crashed.
+        print("[MPSv3] Phase 1: Pre-flight cleanup (killing zombie services)...")
+        pg = PortGuard()
+        ports = [3000, 8000, 8001, 8002, 8010, 6379]
+        kill_port_owners_aggressive(ports, timeout_s=10, also_node=True)
+        print("[MPSv3] Pre-flight cleanup complete.")
+
         # Acquire singleton lease
         self.lease = SingletonLease("MPSv3_Supervisor")
         if not self.lease.acquire():
@@ -54,6 +65,13 @@ class MPSv3Supervisor:
         # Load service registry
         print(f"[MPSv3] Loading services from {self.config_path}...")
         self.registry = ServiceRegistry(self.config_path)
+
+        # RUNTIME CLEANUP - Additional verification after mutex acquired
+        # This is redundant if pre-flight worked, but provides defense-in-depth
+        print("[MPSv3] Phase 2: Runtime port verification...")
+        ports = pg.ports_from_services_yaml(self.config_path) or [3000, 8000, 8001, 8002, 8010, 6379]
+        kill_port_owners_aggressive(ports, timeout_s=5, also_node=False)
+        print("[MPSv3] Runtime verification complete.")
 
         # Start all services
         print("[MPSv3] Starting all services...")

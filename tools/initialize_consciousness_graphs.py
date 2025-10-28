@@ -3,7 +3,7 @@ Initialize Consciousness Graphs for Mind Protocol Team
 
 Creates:
 - Level 1 (Personal): Citizen graphs for each team member
-- Level 2 (Organizational): Mind Protocol collective graph
+- Level 2 (Organizational): Mind Protocol organization graph
 
 Each graph is initialized with basic structure but not full data.
 Full seeding happens separately.
@@ -57,7 +57,7 @@ CITIZENS = [
         "full_name": "Marco 'Salthand'",
         "role": "Global Synchronizer",
         "substrate": "Gemini",
-        "description": "Living nervous system - weaves collective threads into shared reality"
+        "description": "Living nervous system - weaves organization threads into shared reality"
     }
 ]
 
@@ -242,7 +242,7 @@ def main():
         citizen_graphs.append(graph_name)
 
     # Initialize organizational graph (Level 2)
-    print(f"\n[3/3] Initializing {len(ORGANIZATIONS)} Organizational Graph (Level 2 - Collective):")
+    print(f"\n[3/3] Initializing {len(ORGANIZATIONS)} Organizational Graph (Level 2 - Organization):")
     org_graphs = []
     for org in ORGANIZATIONS:
         graph_name = initialize_org_graph(db, org)

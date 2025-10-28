@@ -1,0 +1,20 @@
+{
+  "name": "mind-hook-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node --loader ts-node/esm src/cli.ts",
+    "dev": "TS_NODE_TRANSPILE_ONLY=1 node --loader ts-node/esm src/cli.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.95.0",
+    "yargs": "^17.7.2",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

@@ -34,13 +34,13 @@ Nodes that capture personal consciousness experiences:
 10. **Trigger** - Stimulus that activates specific subentity coalitions
 11. **Wound** - Personal scar, trauma, formative failure
 
-### Organizational/Collective Level Nodes
+### Organizational/Organization Level Nodes
 Nodes that capture organizational consciousness:
 
 12. **AI_Agent** - AI participant in organization
 13. **Anti_Pattern** - Organizational lesson from failure
 14. **Best_Practice** - Proven organizational pattern
-15. **Decision** - Collective choice with rationale
+15. **Decision** - Organization choice with rationale
 16. **Department** - Organizational subdivision
 17. **Human** - Human participant in organization
 18. **Milestone** - Organizational achievement
@@ -134,7 +134,7 @@ All link types in V1 carry rich consciousness metadata:
 
 The `level_mappings` table assigns each node type and link type to hierarchical levels:
 - **Level 1.0**: Personal/Individual consciousness
-- **Level 2.0**: Organizational/Collective consciousness
+- **Level 2.0**: Organizational/Organization consciousness
 - **Level 3.0**: Ecosystem/Public consciousness
 
 This enables the N1/N2/N3 multi-tenancy architecture where:

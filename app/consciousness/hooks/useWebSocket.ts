@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type {
   WebSocketEvent,
-  EntityActivityEvent,
+  SubEntityActivityEvent,
   ThresholdCrossingEvent,
   ConsciousnessStateEvent,
   WebSocketStreams,
   V2ConsciousnessState,
   FrameStartEvent,
   WmEmitEvent,
+  WmSelectedEvent,
   NodeFlipEvent,
   NodeFlipRecord,
   LinkFlowSummaryEvent,
@@ -22,20 +23,42 @@ import type {
   EmotionMetadata,
   TickFrameEvent,
   WeightsUpdatedTraceEvent,
+  WeightsUpdatedEvent,
   StrideSelectionEvent,
   PhenomenologyMismatchEvent,
-  PhenomenologicalHealthEvent
+  PhenomenologicalHealthEvent,
+  SubentityWeightsUpdatedEvent,
+  SubentityMembershipPrunedEvent,
+  BoundarySummaryEvent,
+  PerceptFrameEvent,
+  GraphDeltaEvent,
+  GraphNodePayload,
+  GraphLinkPayload,
+  GraphSubentityPayload,
+  ForgedIdentityFrameEvent,
+  ForgedIdentityMetricsEvent,
+  EconomyOverlayState
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 import { diagOnEvent } from '../lib/ws-diagnostics';
 import { normalizeEvent } from '../lib/normalizeEvents';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
+const WS_BROADCAST_URL =
+  process.env.NEXT_PUBLIC_WS_BROADCAST ||
+  process.env.NEXT_PUBLIC_WS_URL ||
+  'ws://localhost:8000/api/ws';
+const WS_URL = WS_BROADCAST_URL;
+const WS_INJECT_URL =
+  process.env.NEXT_PUBLIC_WS_INJECT ||
+  process.env.NEXT_PUBLIC_WS_URL?.replace('/ws', '/inject') ||
+  'ws://localhost:8000/api/ws';
 const RECONNECT_DELAY = 3000; // 3 seconds
 
 // 🎯 SINGLETON: Module-scope WebSocket to prevent mount/unmount churn
 let _ws: WebSocket | null = null;
 let _connecting = false;
+let _injectWs: WebSocket | null = null;
+let _injectConnecting = false;
 const MAX_ENTITY_ACTIVITIES = 100; // Keep last 100 subentity activities
 const MAX_THRESHOLD_CROSSINGS = 50; // Keep last 50 threshold crossings
 const MAX_NODE_FLIPS = 20; // Keep last 20 node flips (v2)
@@ -44,6 +67,12 @@ const MAX_FRAME_EVENTS = 200; // Keep last 200 frame.start events (Priority 3 ti
 const MAX_WEIGHT_LEARNING_EVENTS = 200; // Keep last 200 weight learning events (Priority 4 dual-view viz)
 const MAX_STRIDE_SELECTION_EVENTS = 200; // Keep last 200 stride selection events (Priority 5 fan-out viz)
 const MAX_PHENOMENOLOGY_EVENTS = 200; // Keep last 200 phenomenology events (Priority 6 health viz)
+const MAX_WM_SELECTED_EVENTS = 200; // Keep last 200 wm.selected events for diagnostics
+const MAX_WEIGHT_UPDATE_EVENTS = 200; // Keep last 200 direct weight update batches
+const MAX_SUBENTITY_WEIGHT_EVENTS = 200; // Keep last 200 subentity weight batches
+const MAX_BOUNDARY_SUMMARIES = 200; // Keep last 200 boundary summaries
+const MAX_FORGED_IDENTITY_FRAMES = 50; // Keep last 50 forged identity frames for viewer
+const MAX_GRAPH_DELTA_EVENTS = 512; // Bounded queue of graph delta events
 const SATURATION_THRESHOLD = 0.9; // Emotion magnitude threshold for saturation warning
 
 // 🔴 MEMORY LEAK FIX: TTL for emotion and flow maps to prevent unbounded growth
@@ -66,7 +95,7 @@ const UPDATE_THROTTLE_MS = 100; // Batch updates and flush at 10Hz (100ms interv
  * - Error handling
  *
  * Usage:
- * const { entityActivity, thresholdCrossings, consciousnessState } = useWebSocket();
+ * const { subentityActivity, thresholdCrossings, consciousnessState } = useWebSocket();
  *
  * Author: Iris "The Aperture"
  * Backend integration: Felix "Ironhand"'s WebSocket infrastructure
@@ -75,9 +104,10 @@ export function useWebSocket(): WebSocketStreams {
   // Connection state
   const [connectionState, setConnectionState] = useState<WebSocketState>(WebSocketState.CONNECTING);
   const [error, setError] = useState<string | null>(null);
+  const orgFilterRef = useRef<string | undefined>(process.env.NEXT_PUBLIC_ORG_ID);
 
   // Event streams (v1 legacy)
-  const [entityActivity, setEntityActivity] = useState<EntityActivityEvent[]>([]);
+  const [subentityActivity, setSubEntityActivity] = useState<SubEntityActivityEvent[]>([]);
   const [thresholdCrossings, setThresholdCrossings] = useState<ThresholdCrossingEvent[]>([]);
   const [consciousnessState, setConsciousnessState] = useState<ConsciousnessStateEvent | null>(null);
 
@@ -124,6 +154,45 @@ export function useWebSocket(): WebSocketStreams {
     saturationWarnings: []
   });
 
+  // Membrane-first org hierarchy (sidebar routing)
+  const [hierarchySnapshot, setHierarchySnapshot] = useState<{
+    org?: string;
+    ecosystems?: string[];
+    citizens?: Array<{ id: string; label?: string; status?: string }>;
+    lanes?: Array<{ id: string; capacity: number; ack_policy: string }>;
+    ts?: string;
+  } | null>(null);
+
+  // Economy overlays keyed by citizen/organization id
+  const [economyOverlays, setEconomyOverlays] = useState<Record<string, EconomyOverlayState>>({});
+
+  // Wallet auth + attestation state
+  const [walletChallenge, setWalletChallenge] = useState<{ nonce: string; ttl_ms: number } | null>(null);
+  const [walletContext, setWalletContext] = useState<{ org?: string; roles?: string[]; citizenIds?: string[]; ecosystems?: string[] } | null>(null);
+  const [lastInjectAck, setLastInjectAck] = useState<{ id: string; status: 'accepted' | 'rejected'; reason?: string; ts: string } | null>(null);
+  const [citizenResponses, setCitizenResponses] = useState<Array<{ citizenId: string; content: string; timestamp: string }>>([]);
+
+  const [graphNodesState, setGraphNodesState] = useState<Record<string, GraphNodePayload>>({});
+  const [graphLinksState, setGraphLinksState] = useState<Record<string, GraphLinkPayload>>({});
+  const [graphSubentitiesState, setGraphSubentitiesState] = useState<Record<string, GraphSubentityPayload>>({});
+
+  const updateEconomyOverlay = useCallback((key: string, updates: Partial<{
+    balance: number;
+    spent60s: number;
+    budgetRemain: number;
+    softCap: number;
+    kEcon: number;
+    ubcNextEta: string | undefined;
+    lastSigAt: number;
+    lastUbcAt: number;
+  }>) => {
+    setEconomyOverlays(prev => {
+      const existing = prev[key] ?? { };
+      const next = { ...existing, ...updates };
+      return { ...prev, [key]: next };
+    });
+  }, []);
+
   // Priority 4: Weight learning events
   const [weightLearningEvents, setWeightLearningEvents] = useState<WeightsUpdatedTraceEvent[]>([]);
 
@@ -142,6 +211,23 @@ export function useWebSocket(): WebSocketStreams {
     t: number;
   }>>({});
 
+  // Working memory + perceptual overlays
+  const [wmStream, setWmStream] = useState<WmEmitEvent | null>(null);
+  const [wmSelectionEvents, setWmSelectionEvents] = useState<WmSelectedEvent[]>([]);
+  const [weightsUpdatedEvents, setWeightsUpdatedEvents] = useState<WeightsUpdatedEvent[]>([]);
+  const [subentityWeightEvents, setSubentityWeightEvents] = useState<SubentityWeightsUpdatedEvent[]>([]);
+  const [membershipPrunedEvents, setMembershipPrunedEvents] = useState<SubentityMembershipPrunedEvent[]>([]);
+  const [boundarySummaries, setBoundarySummaries] = useState<BoundarySummaryEvent[]>([]);
+  const [perceptFrames, setPerceptFrames] = useState<Record<string, PerceptFrameEvent>>({});
+
+  const graphDeltaQueueRef = useRef<GraphDeltaEvent[]>([]);
+  const graphDeltaBaseRef = useRef(0);
+  const [graphDeltaVersion, setGraphDeltaVersion] = useState(0);
+
+  // Forged identity telemetry streams
+  const [forgedIdentityFrames, setForgedIdentityFrames] = useState<ForgedIdentityFrameEvent[]>([]);
+  const [forgedIdentityMetrics, setForgedIdentityMetrics] = useState<Record<string, ForgedIdentityMetricsEvent>>({});
+
   // WebSocket reference (persists across renders)
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -154,6 +240,7 @@ export function useWebSocket(): WebSocketStreams {
   // 🎯 PHASE 4: Throttling infrastructure - batch updates and flush at 10Hz
   const pendingUpdatesRef = useRef<any[]>([]);
   const flushIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const forgedFrameTrackerRef = useRef<Map<string, number>>(new Map());
 
   /**
    * 🎯 PHASE 4: Flush pending updates at 10Hz
@@ -167,14 +254,21 @@ export function useWebSocket(): WebSocketStreams {
     // Clear buffer immediately to avoid processing duplicates
     pendingUpdatesRef.current = [];
 
+    const nodeUpserts: GraphNodePayload[] = [];
+    const nodeDeletes: string[] = [];
+    const linkUpserts: GraphLinkPayload[] = [];
+    const linkDeletes: string[] = [];
+    const subentityUpserts: GraphSubentityPayload[] = [];
+    const subentityDeletes: string[] = [];
+
     // Process all updates in single pass
     updates.forEach((data) => {
       const eventType = (data as any).type;
 
       switch (eventType) {
         // V1 events (legacy)
-        case 'entity_activity':
-          setEntityActivity(prev => {
+        case 'subentity_activity':
+          setSubEntityActivity(prev => {
             const updated = [...prev, data];
             return updated.slice(-MAX_ENTITY_ACTIVITIES);
           });
@@ -190,6 +284,58 @@ export function useWebSocket(): WebSocketStreams {
         case 'consciousness_state':
           setConsciousnessState(data);
           break;
+
+        case 'graph.delta.node.upsert':
+        case 'graph.delta.node.delete':
+        case 'graph.delta.link.upsert':
+        case 'graph.delta.link.delete':
+        case 'graph.delta.subentity.upsert':
+        case 'graph.delta.subentity.delete': {
+          const event = data as GraphDeltaEvent;
+          graphDeltaQueueRef.current.push(event);
+          if (graphDeltaQueueRef.current.length > MAX_GRAPH_DELTA_EVENTS) {
+            const removed = graphDeltaQueueRef.current.length - MAX_GRAPH_DELTA_EVENTS;
+            graphDeltaQueueRef.current.splice(0, removed);
+            graphDeltaBaseRef.current += removed;
+          }
+          setGraphDeltaVersion(prev => prev + 1);
+
+          switch (eventType) {
+            case 'graph.delta.node.upsert':
+              if ((event as any).node?.id) {
+                nodeUpserts.push((event as any).node as GraphNodePayload);
+              }
+              break;
+            case 'graph.delta.node.delete': {
+              const id = (event as any).node_id || (event as any).id;
+              if (id) nodeDeletes.push(id);
+              break;
+            }
+            case 'graph.delta.link.upsert':
+              if ((event as any).link?.id) {
+                linkUpserts.push((event as any).link as GraphLinkPayload);
+              }
+              break;
+            case 'graph.delta.link.delete': {
+              const id = (event as any).link_id || (event as any).id;
+              if (id) linkDeletes.push(id);
+              break;
+            }
+            case 'graph.delta.subentity.upsert':
+              if ((event as any).subentity?.id) {
+                subentityUpserts.push((event as any).subentity as GraphSubentityPayload);
+              }
+              break;
+            case 'graph.delta.subentity.delete': {
+              const id = (event as any).subentity_id || (event as any).id;
+              if (id) subentityDeletes.push(id);
+              break;
+            }
+            default:
+              break;
+          }
+          break;
+        }
 
         // V2 events (frame-based)
         case 'frame.start': {
@@ -225,8 +371,24 @@ export function useWebSocket(): WebSocketStreams {
 
         case 'wm.emit': {
           const wmEvent = data as WmEmitEvent;
+          setWmStream(prev => {
+            // Avoid unnecessary updates if payload unchanged (shallow)
+            if (prev && prev.frame_id === wmEvent.frame_id && prev.t_ms === wmEvent.t_ms) {
+              return prev;
+            }
+            return wmEvent;
+          });
           setV2State(prev => {
-            const newNodeIds = new Set(wmEvent.node_ids);
+            const nodeIds = wmEvent.selected_nodes
+              ?? (wmEvent as any).node_ids
+              ?? [];
+
+            if (!Array.isArray(nodeIds)) {
+              console.warn('[useWebSocket] wm.emit event missing iterable node ids:', wmEvent);
+              return prev;
+            }
+
+            const newNodeIds = new Set<string>(nodeIds as string[]);
             if (prev.workingMemory.size === newNodeIds.size &&
                 [...newNodeIds].every(id => prev.workingMemory.has(id))) {
               return prev;
@@ -239,9 +401,24 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'wm.selected': {
+          const wmSelectedEvent = data as WmSelectedEvent;
+          setWmSelectionEvents(prev => {
+            const updated = [...prev, wmSelectedEvent];
+            return updated.slice(-MAX_WM_SELECTED_EVENTS);
+          });
+          break;
+        }
+
         case 'node.flip': {
           const flipEvent = data as NodeFlipEvent;
           setV2State(prev => {
+            // Defensive validation: ensure nodes array exists
+            if (!flipEvent.nodes || !Array.isArray(flipEvent.nodes)) {
+              console.warn('[useWebSocket] node.flip event missing nodes array:', flipEvent);
+              return prev;
+            }
+
             // Unpack batch into individual flip records
             const newFlips = flipEvent.nodes.map(node => ({
               node_id: node.id,
@@ -414,6 +591,33 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'weights.updated': {
+          const weightEvent = data as WeightsUpdatedEvent;
+          setWeightsUpdatedEvents(prev => {
+            const updated = [...prev, weightEvent];
+            return updated.slice(-MAX_WEIGHT_UPDATE_EVENTS);
+          });
+          break;
+        }
+
+        case 'subentity.weights.updated': {
+          const weightsEvent = data as SubentityWeightsUpdatedEvent;
+          setSubentityWeightEvents(prev => {
+            const updated = [...prev, weightsEvent];
+            return updated.slice(-MAX_SUBENTITY_WEIGHT_EVENTS);
+          });
+          break;
+        }
+
+        case 'subentity.membership.pruned': {
+          const prunedEvent = data as SubentityMembershipPrunedEvent;
+          setMembershipPrunedEvents(prev => {
+            const updated = [...prev, prunedEvent];
+            return updated.slice(-MAX_SUBENTITY_WEIGHT_EVENTS);
+          });
+          break;
+        }
+
         // Priority 5: Stride selection events
         case 'stride.selection': {
           const strideSelectionEvent = data as StrideSelectionEvent;
@@ -443,6 +647,130 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'citizen.response': {
+          const response = data as any;
+          if (response) {
+            setCitizenResponses(prev => {
+              const updated = [...prev, {
+                citizenId: response.citizen_id ?? response.citizen,
+                content: response.response_text ?? response.content ?? '',
+                timestamp: response.ts ?? new Date().toISOString()
+              }];
+              return updated.slice(-200);
+            });
+          }
+          break;
+        }
+
+        case 'hierarchy.snapshot@1.0': {
+          const snapshot = data as any;
+          setHierarchySnapshot({
+            org: snapshot.org,
+            ecosystems: snapshot.ecosystems,
+            citizens: snapshot.citizens,
+            lanes: snapshot.lanes,
+            ts: snapshot.ts
+          });
+          break;
+        }
+
+        case 'telemetry.economy.spend@1.0': {
+          const spend = data as any;
+          if (spend.by === 'node' && typeof spend.key === 'string') {
+            const citizenKey = spend.key.startsWith('citizen:') ? spend.key.replace(/^citizen:/, '') : spend.key;
+            const updates: Record<string, any> = {};
+            if (spend.metrics?.balance_mind !== undefined) updates.balance = spend.metrics.balance_mind;
+            if (spend.window === '60s' && spend.metrics?.spent_mind !== undefined) updates.spent60s = spend.metrics.spent_mind;
+            if (spend.metrics?.budget_remaining_mind !== undefined) updates.budgetRemain = spend.metrics.budget_remaining_mind;
+            if (spend.metrics?.soft_cap_mind !== undefined) updates.softCap = spend.metrics.soft_cap_mind;
+            if (spend.metrics?.k_econ !== undefined) updates.kEcon = spend.metrics.k_econ;
+            if (spend.metrics?.ubc_next_eta !== undefined) updates.ubcNextEta = spend.metrics.ubc_next_eta;
+            updateEconomyOverlay(citizenKey, updates);
+          }
+          break;
+        }
+
+        case 'telemetry.economy.ubc_tick@1.0': {
+          const tick = data as any;
+          if (tick?.citizen_id) {
+            updateEconomyOverlay(tick.citizen_id, {
+              lastUbcAt: Date.now()
+            });
+          }
+          break;
+        }
+
+        case 'wallet.signature.attested@1.0': {
+          const attestation = data as any;
+          if (attestation?.citizen_id) {
+            updateEconomyOverlay(attestation.citizen_id, {
+              lastSigAt: Date.now()
+            });
+          }
+          break;
+        }
+
+        case 'auth.wallet.challenge.issued@1.0': {
+          const issued = data as any;
+          setWalletChallenge({
+            nonce: issued.nonce,
+            ttl_ms: issued.ttl_ms
+          });
+          break;
+        }
+
+        case 'auth.wallet.accepted@1.0': {
+          const accepted = data as any;
+          setWalletContext({
+            org: accepted.org,
+            roles: accepted.roles,
+            citizenIds: accepted.citizen_ids,
+            ecosystems: accepted.ecosystems
+          });
+          if (accepted.org) {
+            orgFilterRef.current = accepted.org;
+            if (_ws && _ws.readyState === WebSocket.OPEN) {
+              try {
+                _ws.send(JSON.stringify({
+                  type: 'subscribe@1.0',
+                  topics: [
+                    'graph.delta.node.*',
+                    'graph.delta.link.*',
+                    'wm.emit',
+                    'percept.frame',
+                    'hierarchy.snapshot',
+                    'auth.wallet.*',
+                    'telemetry.economy.spend',
+                    'telemetry.economy.ubc_tick',
+                    'wallet.signature.attested',
+                    'inject.ack'
+                  ],
+                  filters: { org: orgFilterRef.current }
+                }));
+              } catch (resubErr) {
+                console.error('[WebSocket] Failed to resubscribe after wallet acceptance:', resubErr);
+              }
+            }
+          }
+          break;
+        }
+
+        case 'inject.ack': {
+          const ack = data as any;
+          setLastInjectAck({
+            id: ack.id,
+            status: ack.status,
+            reason: ack.reason,
+            ts: ack.ts
+          });
+          break;
+        }
+
+        case 'subscribe.ack@1.0': {
+          console.log('[WebSocket] Subscribe ACK:', data);
+          break;
+        }
+
         // Subentity activation snapshots (active subentities panel)
         case 'subentity.snapshot': {
           const snapshot = data as any; // {v, frame_id, citizen_id, active, wm, t_ms}
@@ -468,6 +796,82 @@ export function useWebSocket(): WebSocketStreams {
           break;
         }
 
+        case 'se.boundary.summary': {
+          const summary = data as BoundarySummaryEvent;
+          setBoundarySummaries(prev => {
+            const updated = [...prev, summary];
+            return updated.slice(-MAX_BOUNDARY_SUMMARIES);
+          });
+          break;
+        }
+
+        case 'percept.frame': {
+          const percept = data as PerceptFrameEvent;
+          setPerceptFrames(prev => {
+            const key = `${percept.entity_id}:${percept.phase ?? 'default'}`;
+            const existing = prev[key];
+            if (existing && existing.cursor === percept.cursor && existing.ts_ms === percept.ts_ms) {
+              return prev;
+            }
+            const next = { ...prev, [key]: percept };
+            const keys = Object.keys(next);
+            if (keys.length > 128) {
+              const pruned: Record<string, PerceptFrameEvent> = {};
+              keys.slice(-128).forEach(k => {
+                pruned[k] = next[k];
+              });
+              return pruned;
+            }
+            return next;
+          });
+          break;
+        }
+
+        case 'forged.identity.frame': {
+          const frameEvent = data as ForgedIdentityFrameEvent;
+          const citizenKey = frameEvent.citizen_id || 'unknown';
+          const lastMap = forgedFrameTrackerRef.current;
+          const lastFrameId = lastMap.get(citizenKey);
+
+          if (lastFrameId !== undefined && frameEvent.frame_id <= lastFrameId) {
+            break;
+          }
+
+          lastMap.set(citizenKey, frameEvent.frame_id);
+          setForgedIdentityFrames(prev => {
+            const withoutDuplicates = prev.filter(
+              frame => !(frame.citizen_id === citizenKey && frame.frame_id === frameEvent.frame_id)
+            );
+            const updated = [frameEvent, ...withoutDuplicates];
+            return updated.slice(0, MAX_FORGED_IDENTITY_FRAMES);
+          });
+          break;
+        }
+
+        case 'forged.identity.metrics': {
+          const metricsEvent = data as ForgedIdentityMetricsEvent;
+          if (!metricsEvent.citizen_id) {
+            break;
+          }
+
+          setForgedIdentityMetrics(prev => {
+            const existing = prev[metricsEvent.citizen_id];
+            if (
+              existing &&
+              existing.frame_id === metricsEvent.frame_id &&
+              existing.tokens_accumulated === metricsEvent.tokens_accumulated
+            ) {
+              return prev;
+            }
+
+            return {
+              ...prev,
+              [metricsEvent.citizen_id]: metricsEvent
+            };
+          });
+          break;
+        }
+
         // P2.1.3: Tier link strengthening (Felix) - received but not stored yet
         // Future: Store for detailed link-level learning observability
         case 'tier.link.strengthened':
@@ -484,6 +888,57 @@ export function useWebSocket(): WebSocketStreams {
           console.warn('[WebSocket] Unknown event type:', eventType, data);
       }
     });
+
+    if (nodeUpserts.length || nodeDeletes.length) {
+      setGraphNodesState(prev => {
+        const next = { ...prev };
+        nodeUpserts.forEach(node => {
+          if (node?.id) {
+            next[node.id] = { ...(next[node.id] ?? {}), ...node };
+          }
+        });
+        nodeDeletes.forEach(id => {
+          if (id && next[id]) {
+            delete next[id];
+          }
+        });
+        return next;
+      });
+    }
+
+    if (linkUpserts.length || linkDeletes.length) {
+      setGraphLinksState(prev => {
+        const next = { ...prev };
+        linkUpserts.forEach(link => {
+          if (link?.id) {
+            next[link.id] = { ...(next[link.id] ?? {}), ...link };
+          }
+        });
+        linkDeletes.forEach(id => {
+          if (id && next[id]) {
+            delete next[id];
+          }
+        });
+        return next;
+      });
+    }
+
+    if (subentityUpserts.length || subentityDeletes.length) {
+      setGraphSubentitiesState(prev => {
+        const next = { ...prev };
+        subentityUpserts.forEach(sub => {
+          if (sub?.id) {
+            next[sub.id] = { ...(next[sub.id] ?? {}), ...sub };
+          }
+        });
+        subentityDeletes.forEach(id => {
+          if (id && next[id]) {
+            delete next[id];
+          }
+        });
+        return next;
+      });
+    }
   }, []);
 
   /**
@@ -551,6 +1006,30 @@ export function useWebSocket(): WebSocketStreams {
         console.log('[WebSocket] Connected');
         setConnectionState(WebSocketState.CONNECTED);
         setError(null);
+
+        const subscribePayload: Record<string, any> = {
+          type: 'subscribe@1.0',
+          topics: [
+            'graph.delta.node.*',
+            'graph.delta.link.*',
+            'wm.emit',
+            'percept.frame',
+            'hierarchy.snapshot',
+            'auth.wallet.*',
+            'telemetry.economy.spend',
+            'telemetry.economy.ubc_tick',
+            'wallet.signature.attested',
+            'inject.ack'
+          ]
+        };
+        if (orgFilterRef.current) {
+          subscribePayload.filters = { org: orgFilterRef.current };
+        }
+        try {
+          ws.send(JSON.stringify(subscribePayload));
+        } catch (sendErr) {
+          console.error('[WebSocket] Failed to send subscribe payload:', sendErr);
+        }
       };
 
       ws.onmessage = handleMessage;
@@ -693,9 +1172,92 @@ export function useWebSocket(): WebSocketStreams {
     return () => clearInterval(cleanupInterval);
   }, []);
 
+  const ensureInjectSocket = useCallback(() => {
+    if (_injectWs && (_injectWs.readyState === WebSocket.OPEN || _injectWs.readyState === WebSocket.CONNECTING)) {
+      return _injectWs;
+    }
+
+    if (_injectConnecting) {
+      return _injectWs;
+    }
+
+    try {
+      const socket = new WebSocket(WS_INJECT_URL);
+      _injectWs = socket;
+      _injectConnecting = true;
+
+      socket.onopen = () => {
+        _injectConnecting = false;
+        console.log('[InjectWS] Connected');
+      };
+
+      socket.onclose = () => {
+        _injectConnecting = false;
+        _injectWs = null;
+        console.log('[InjectWS] Disconnected');
+      };
+
+      socket.onerror = (err) => {
+        console.error('[InjectWS] Error', err);
+      };
+    } catch (err) {
+      console.error('[InjectWS] Failed to open socket', err);
+      _injectConnecting = false;
+      _injectWs = null;
+    }
+
+    return _injectWs;
+  }, []);
+
+  const injectStimulus = useCallback((envelope: Record<string, any>) => {
+    const id = envelope.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `stim-${Date.now()}`);
+    const payload = {
+      v: envelope.v ?? '1.1',
+      type: 'membrane.inject',
+      id,
+      ts: envelope.ts ?? new Date().toISOString(),
+      org: envelope.org ?? walletContext?.org ?? orgFilterRef.current,
+      scope: envelope.scope ?? 'organizational',
+      origin: envelope.origin ?? 'ui',
+      ttl_frames: envelope.ttl_frames ?? 300,
+      ...envelope,
+      id,
+      ts: envelope.ts ?? new Date().toISOString()
+    };
+
+    const socket = ensureInjectSocket();
+    if (!socket) {
+      throw new Error('Injection socket unavailable');
+    }
+
+    const sendPayload = () => {
+      try {
+        socket.send(JSON.stringify(payload));
+      } catch (err) {
+        console.error('[InjectWS] Failed to send payload', err);
+      }
+    };
+
+    if (socket.readyState === WebSocket.OPEN) {
+      sendPayload();
+    } else {
+      const handleOpen = () => {
+        socket.removeEventListener('open', handleOpen);
+        sendPayload();
+      };
+      socket.addEventListener('open', handleOpen);
+    }
+
+    return id;
+  }, [ensureInjectSocket, walletContext]);
+
+  const graphNodes = useMemo(() => Object.values(graphNodesState), [graphNodesState]);
+  const graphLinks = useMemo(() => Object.values(graphLinksState), [graphLinksState]);
+  const graphSubentities = useMemo(() => Object.values(graphSubentitiesState), [graphSubentitiesState]);
+
   return {
     // V1 events
-    entityActivity,
+    subentityActivity,
     thresholdCrossings,
     consciousnessState,
 
@@ -707,6 +1269,7 @@ export function useWebSocket(): WebSocketStreams {
 
     // Priority 4: Weight learning
     weightLearningEvents,
+    weightsUpdatedEvents,
 
     // Priority 5: Stride selection
     strideSelectionEvents,
@@ -717,6 +1280,36 @@ export function useWebSocket(): WebSocketStreams {
 
     // Subentity activation snapshots
     subentitySnapshots,
+
+    // Working memory + perceptual overlays
+    wmStream,
+    wmSelectionEvents,
+    boundarySummaries,
+    perceptFrames,
+    subentityWeightEvents,
+    membershipPrunedEvents,
+
+    // Graph delta stream
+    graphDeltaEvents: graphDeltaQueueRef.current,
+    graphDeltaEventsVersion: graphDeltaVersion,
+    graphDeltaEventsBase: graphDeltaBaseRef.current,
+
+    // Forged identity observability
+    forgedIdentityFrames,
+    forgedIdentityMetrics,
+
+    // Membrane-first additions
+    hierarchySnapshot,
+    economyOverlays,
+    walletChallenge,
+    walletContext,
+    lastInjectAck,
+    citizenResponses,
+    graphNodes,
+    graphLinks,
+    graphSubentities,
+
+    injectStimulus,
 
     // Connection
     connectionState,

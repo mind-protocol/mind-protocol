@@ -37,7 +37,7 @@
   },
   {
     "type_name": "Decision",
-    "description": "Collective choice with rationale",
+    "description": "Organization choice with rationale",
     "required_metadata": "\"{\\\"metadata\\\": {\\\"type\\\": \\\"object\\\", \\\"required\\\": [\\\"decided_by\\\", \\\"decision_date\\\", \\\"rationale\\\"], \\\"properties\\\": {\\\"decided_by\\\": {\\\"type\\\": \\\"string\\\"}, \\\"decision_date\\\": {\\\"type\\\": \\\"string\\\"}, \\\"rationale\\\": {\\\"type\\\": \\\"string\\\"}}}}\"",
     "optional_metadata": "\"{\\\"metadata\\\": {\\\"properties\\\": {\\\"alternatives_considered\\\": {\\\"type\\\": \\\"array\\\", \\\"items\\\": {\\\"type\\\": \\\"string\\\"}}, \\\"reversible\\\": {\\\"type\\\": \\\"boolean\\\"}, \\\"review_date\\\": {\\\"type\\\": \\\"string\\\"}}}}\""
   },

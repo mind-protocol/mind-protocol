@@ -9,6 +9,8 @@
 // Data Types
 // ============================================================================
 
+import type { EconomyOverlayState } from '../../hooks/websocket-types';
+
 export interface NodeData {
   id: string;
   name: string;
@@ -39,6 +41,7 @@ export interface NodeData {
   // Positioning (may be null for first render)
   x?: number;
   y?: number;
+  economyOverlay?: EconomyOverlayState;
 }
 
 export interface LinkData {
@@ -59,7 +62,7 @@ export interface LinkData {
 }
 
 export interface EntityData {
-  entity_id: string;
+  subentity_id: string;
   name?: string;
   color?: string;
 }

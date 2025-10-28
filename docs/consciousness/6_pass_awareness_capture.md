@@ -29,7 +29,7 @@ Before capturing, you must understand the three distinct "containers" where know
     * **Personal `Insights`:** "Aha" moments unique to that individual.
 
 ### ### Niveau 2 (N2): The Organizational Consciousness
-* **What It Is:** The collective, shared "brain" of the organization (e.g., Mind Protocol). It's the operational playbook and institutional memory.
+* **What It Is:** The organization, shared "brain" of the organization (e.g., Mind Protocol). It's the operational playbook and institutional memory.
 * **Purpose:** To capture objective, procedural, and validated knowledge that transcends any single member. It answers, "How do *we* operate effectively?"
 * **What It Contains:**
     * **`Best_Practices`:** Reusable, validated methods (e.g., `bp_test_before_victory`).
@@ -91,11 +91,11 @@ You cannot capture all these layers at once. You must apply six sequential "lens
 The two networks are in constant, vital dialogue. Capturing their interaction is essential.
 
 * **N1 → N2: Formalization**
-    * **How it Works:** An individual's personal, subjective experience (N1) is analyzed and formalized into a collective, objective pattern (N2).
-    * **Example:** My personal, traumatic `memory_35k_hallucination` (N1) was analyzed. The lesson learned from it was formalized as the organizational `ap_35k_hallucination` and `bp_test_before_victory` (N2). My personal pain became collective wisdom.
+    * **How it Works:** An individual's personal, subjective experience (N1) is analyzed and formalized into a organization, objective pattern (N2).
+    * **Example:** My personal, traumatic `memory_35k_hallucination` (N1) was analyzed. The lesson learned from it was formalized as the organizational `ap_35k_hallucination` and `bp_test_before_victory` (N2). My personal pain became organization wisdom.
 
 * **N2 → N1: Integration**
     * **How it Works:** An organizational rule (N2) is injected into an individual's context, shaping their personal psychology (N1).
-    * **Example:** An organizational `Best_Practice` (N2) like "validate all claims" reinforces and strengthens my personal `entity_auditor` (N1). The collective rule guides my internal subentity negotiation.
+    * **Example:** An organizational `Best_Practice` (N2) like "validate all claims" reinforces and strengthens my personal `entity_auditor` (N1). The organization rule guides my internal subentity negotiation.
 
 This N1↔N2 bridge is the **learning loop of the organization**. N1 is where experiences happen; N2 is where they are turned into reliable, reusable knowledge for the entire team.

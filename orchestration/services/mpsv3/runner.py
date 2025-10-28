@@ -32,6 +32,7 @@ class ServiceSpec:
     criticality: str  # CRITICAL | CORE | OPTIONAL
     max_retries: int
     watched_files: List[str]
+    depends_on: List[str]
 
 
 class ServiceRunner:
@@ -44,6 +45,16 @@ class ServiceRunner:
         self.job_handle = None  # Windows Job object
         self.backoff = BackoffState(max_retries=spec.max_retries)
         self.quarantined = False
+        self.started_at: Optional[float] = None  # Timestamp when service started
+
+
+    def _mark_started(self):
+        """Record service start time for uptime tracking."""
+        self.started_at = time.time()
+
+    def uptime(self) -> float:
+        """Return service uptime in seconds (0.0 if not started)."""
+        return 0.0 if not self.started_at else (time.time() - self.started_at)
 
     def start(self):
         """Start service in new process group."""
@@ -97,6 +108,7 @@ class ServiceRunner:
             self.job_handle, int(self.process._handle)
         )
 
+        self._mark_started()
         print(f"[{self.spec.id}] Started Windows process group (PID {self.process.pid})")
 
     def _start_posix(self):
@@ -111,6 +123,7 @@ class ServiceRunner:
             preexec_fn=preexec_fn
         )
         self.pgid = self.process.pid  # Process group ID = session leader PID
+        self._mark_started()
         print(f"[{self.spec.id}] Started POSIX process group (PGID {self.pgid})")
 
     def handle_exit(self, exit_code: int):

@@ -1,0 +1,44 @@
+{
+  "$id": "mind://events/membrane.inject.ack.json",
+  "title": "membrane.inject.ack",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "envelope_id",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "membrane.inject.ack"
+    },
+    "org": {
+      "type": "string"
+    },
+    "envelope_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "expired"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

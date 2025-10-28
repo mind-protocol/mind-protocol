@@ -13,7 +13,7 @@
 
 1. **Entity architecture clarified:** Nicolas provided comprehensive field guide (`docs/team/FIELD_GUIDE_ENTITIES_TRAVERSAL.md`) correcting entity architecture:
    - Entities are **first-class graph nodes** (Entity type), not discovered by searching for Mechanism nodes
-   - BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weighted memberships define node→entity relationships
+   - MEMBER_OF weighted memberships define node→entity relationships
    - Bootstrap creates entities from config (functional) or clustering (semantic)
    - See `subentity_layer.md` §2.6 for complete bootstrap specification
 
@@ -26,14 +26,14 @@
 3. **Entity bootstrap fixed:** Felix implemented config-driven bootstrap in `entity_bootstrap.py`:
    - Loads from `orchestration/config/functional_entities.yml`
    - Creates Entity nodes directly (no Mechanism dependency)
-   - Seeds BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") via keyword matching
+   - Seeds MEMBER_OF via keyword matching
    - Status: ✅ **COMPLETE AND VERIFIED** (2025-10-24 23:30 UTC)
 
 **2025-10-24 23:30 - Entity Bootstrap Verified:**
 
 ✅ **Implementation complete:**
 - Config-driven bootstrap operational (`orchestration/config/functional_entities.yml`)
-- Keyword-based membership seeding working (357 BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links created)
+- Keyword-based membership seeding working (357 MEMBER_OF links created)
 - FalkorDB persistence working (serialization bugs fixed)
 - Entity reload verified (8 entities successfully restored from database)
 
@@ -64,7 +64,7 @@
 - `orchestration/mechanisms/strengthening.py` (comprehensive refactor)
 
 ⚠️ **Engine restart required:** Engines need full restart to load entities from FalkorDB
-- Entities successfully persisted: 8 functional entities with 357 BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links
+- Entities successfully persisted: 8 functional entities with 357 MEMBER_OF links
 - `load_graph()` correctly loads subentities (lines 969-989 in falkordb_adapter.py)
 - Guardian hot-reload restarted services but engines kept old in-memory graphs
 - **Action:** Stop guardian (Ctrl+C), restart (`python guardian.py`) to reload graphs with entities
@@ -107,7 +107,7 @@
 **Status (2025-10-25 00:15):** Entity layer operational ✅, PR-A core learning complete ✅, PR-B tick speed complete ✅, foundation specs ~50% implemented, PRs C-D awaiting implementation.
 
 **Recent Progress:**
-- ✅ Entity layer fixed (Priority 1): 8 functional entities with 357 BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") memberships
+- ✅ Entity layer fixed (Priority 1): 8 functional entities with 357 MEMBER_OF memberships
 - ✅ 3-tier strengthening implemented (Priority 2): Co-activation learning now enabled
 - ✅ Three-factor tick speed (Priority 3): Autonomous momentum + arousal modulation
 - ⏳ Context-aware TRACE (Priority 4): Awaiting implementation
@@ -502,7 +502,7 @@ sub_entities: ['self', 'translator', 'architect', 'validator', ...]
 
 **What Works:**
 - ✅ Entity bootstrap creates 8 functional entities in memory
-- ✅ BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links created correctly (357 per citizen)
+- ✅ MEMBER_OF links created correctly (357 per citizen)
 - ✅ Entities persist to FalkorDB successfully (verified for 5/9 active citizens)
 - ✅ Entity traversal logic exists in consciousness_engine_v2.py
 - ✅ Entity-aware weight computation implemented
@@ -512,7 +512,7 @@ sub_entities: ['self', 'translator', 'architect', 'validator', ...]
 - ❌ All citizens showing only self-entity (`sub_entity_count: 1`)
 - ❌ No entity.flip events (entities never activate - they don't exist in engine)
 - ❌ No entity-based WM selection (no entities to select)
-- ❌ No BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") link traversal (links not loaded)
+- ❌ No MEMBER_OF link traversal (links not loaded)
 
 **Diagnosis:**
 
@@ -529,7 +529,7 @@ Entities persist successfully but engines fail to reload them. Two hypotheses:
 
 3. **Bootstrap Persistence Flow**
    - Check: Does entity_bootstrap script call `persist_subentities()` after creation?
-   - Atlas report says Task 1 had "early return" bug that skipped BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") persistence
+   - Atlas report says Task 1 had "early return" bug that skipped MEMBER_OF persistence
    - This might also affect Subentity node persistence
 
 ### Impact Assessment

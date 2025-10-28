@@ -26,6 +26,9 @@ llama-index-graph-stores-falkordb
 # from the .env file.
 python-dotenv
 
+# Secure secret storage via the system keyring (DPAPI/Keychain/libsecret)
+keyring
+
 # Used for any direct HTTP calls, if our hooks or services need them.
 httpx
 
@@ -69,3 +72,37 @@ spacy
 # Ollama Python client (optional - for nomic-embed-text)
 # Only needed if Ollama server is installed
 # ollama
+
+# ----------------------------------------------------------------------
+# Blockchain & Token Infrastructure (Solana)
+# ----------------------------------------------------------------------
+# Solana Python SDK for SPL token operations
+solana
+solders
+
+# NaCl bindings (libsodium) for sealed box encryption of custody keys
+PyNaCl
+
+# SPL Token program bindings
+spl-token
+
+# Anchor framework client for Solana programs
+anchorpy
+
+# Base58 encoding/decoding for Solana addresses
+base58
+
+# JWT/HMAC signing for custody capability tokens
+PyJWT
+
+# ----------------------------------------------------------------------
+# Testing Infrastructure
+# ----------------------------------------------------------------------
+# Core testing framework
+pytest
+
+# JSON report generation for automated test results
+pytest-json-report
+
+# Code coverage measurement for test quality
+pytest-cov

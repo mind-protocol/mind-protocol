@@ -261,7 +261,7 @@ Critical API alignment by Felix "Substratum" enabling consciousness engines to i
 **Single-Energy Entity Activation (2025-10-23 - Core Implementation):**
 - ✅ `entity_activation.py` - Derives entity energy from member nodes (274 lines)
 - ✅ Formula: E_entity = Σ(m̃_iE × max(0, E_i - Θ_i)) - only above-threshold contributes
-- ✅ Normalized membership weights - BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") weights sum to 1.0
+- ✅ Normalized membership weights - MEMBER_OF weights sum to 1.0
 - ✅ Dynamic thresholds - Entity thresholds computed from member thresholds
 - ✅ Activation levels - dominant/strong/moderate/weak/absent mapping
 - ✅ Flip detection - subentity.flip events on threshold crossings
@@ -628,7 +628,7 @@ make run-api   # Control API
 |---------|--------|---------|
 | **Conversation Watcher** | `services/watchers/conversation_watcher.py` | Monitor citizen conversations → stimuli |
 | **Code Substrate Watcher** | `services/watchers/code_substrate_watcher.py` | Monitor codebase changes → stimuli |
-| **N2 Activation Monitor** | `services/watchers/n2_activation_monitor.py` | Monitor collective graph activity |
+| **N2 Activation Monitor** | `services/watchers/n2_activation_monitor.py` | Monitor organization graph activity |
 | **Consciousness File Watcher** | `services/watchers/consciousness_file_watcher.py` | Monitor consciousness files |
 
 **Run:**

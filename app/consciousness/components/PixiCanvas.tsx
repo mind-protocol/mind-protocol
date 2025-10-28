@@ -18,7 +18,7 @@ interface PixiCanvasProps {
   nodes: Node[];
   links: Link[];
   operations: Operation[];
-  subentities?: { entity_id: string; name?: string }[];
+  subentities?: { subentity_id: string; name?: string }[];
   selectedSubentity?: string;
   workingMemory?: Set<string>;
   linkFlows?: Map<string, number>;
@@ -90,7 +90,7 @@ export function PixiCanvas({
         traversal_count: (l as any).traversal_count,
       })),
       subentities: subentities.map((e) => ({
-        entity_id: e.entity_id,
+        subentity_id: e.subentity_id,
         name: e.name,
       })),
       operations: operations as any,

@@ -1,0 +1,47 @@
+{
+  "$id": "mind://events/tool.request.json",
+  "title": "tool.request",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "request_id",
+    "capability",
+    "args"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "tool.request"
+    },
+    "org": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "capability": {
+      "type": "string"
+    },
+    "target_agent": {
+      "type": "string"
+    },
+    "args": {
+      "type": "object"
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

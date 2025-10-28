@@ -606,7 +606,7 @@ class Trigger(BaseNode):
 
 
 # ==============================================================================
-# NODE TYPES - Organizational/Collective Consciousness (N2)
+# NODE TYPES - Organizational/Organization Consciousness (N2)
 # ==============================================================================
 
 class Human(BaseNode):
@@ -651,7 +651,7 @@ class Department(BaseNode):
 
 
 class Decision(BaseNode):
-    """Collective choice with rationale"""
+    """Organization choice with rationale"""
     decided_by: str
     decision_date: str
     rationale: str

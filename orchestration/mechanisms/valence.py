@@ -17,14 +17,14 @@ import numpy as np
 from typing import Dict, List, Set
 from orchestration.mechanisms.sub_entity_core import (
     SubEntity,
-    EntityExtentCentroid,
+    SubEntityExtentCentroid,
     IdentityEmbedding,
     BetaLearner
 )
 
 
 # --- Data Structures for Advanced Hungers ---
-# Note: EntityExtentCentroid, IdentityEmbedding, BetaLearner are in sub_entity_core.py
+# Note: SubEntityExtentCentroid, IdentityEmbedding, BetaLearner are in sub_entity_core.py
 
 class AffectVector:
     """

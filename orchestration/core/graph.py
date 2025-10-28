@@ -205,7 +205,7 @@ class Graph:
 
         Supports:
         - Node -> Node links (ENABLES, BLOCKS, etc.)
-        - Node -> Subentity links (BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"))
+        - Node -> Subentity links (MEMBER_OF)
         - Subentity -> Subentity links (RELATES_TO)
 
         Args:
@@ -331,3 +331,4 @@ class Graph:
         """Human-readable representation."""
         return (f"Graph(id={self.id!r}, nodes={len(self.nodes)}, "
                 f"subentities={len(self.subentities)}, links={len(self.links)})")
+# Hot-reload test 2 1761424951

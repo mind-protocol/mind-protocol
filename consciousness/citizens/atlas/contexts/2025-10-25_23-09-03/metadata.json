@@ -1,0 +1,9 @@
+{
+  "context_id": "2025-10-25_23-09-03",
+  "entity_type": "citizen",
+  "entity_id": "atlas",
+  "created_at": "2025-10-25T21:15:50.743338+00:00",
+  "last_updated": "2025-10-25T22:23:13.725371+00:00",
+  "message_count": 8227,
+  "has_tool_calls": true
+}

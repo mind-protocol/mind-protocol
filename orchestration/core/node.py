@@ -116,6 +116,9 @@ class Node:
     scope: str = "personal"
     # Threshold for activation (adaptive, computed from μ + z·σ)
     theta: float = 0.1
+    # Entity activation tracking (for frontend viz - which entities activated this node)
+    # Dict[entity_id, {energy: float, last_activated: float}]
+    entity_activations: Dict[str, Dict[str, float]] = field(default_factory=dict)
 
     # --- Energy Methods (V2 Single-Energy) ---
 

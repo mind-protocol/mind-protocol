@@ -1,38 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, memo } from 'react';
 import type { Subentity } from '../hooks/useGraphData';
-import type { V2ConsciousnessState } from '../hooks/websocket-types';
-import { EntityMembersPanel } from './EntityMembersPanel';
+import type { V2ConsciousnessState, EconomyOverlayState } from '../hooks/websocket-types';
+import { SubEntityMembersPanel } from './SubEntityMembersPanel';
 
 interface Citizen {
   id: string;
-  name: string;
-  state: 'active' | 'recently_active' | 'dormant' | 'stopped';
-  lastThought: string;
+  label: string;
+  status?: string;
+  graphId: string;
+  legacyGraphId?: string;
   subentities: Subentity[];
-  lastUpdate: string;
-  tickInterval: number;
-  energyTotal: number;
-  energyUsed: number;
+  economy?: EconomyOverlayState;
 }
 
 // Ada's API response type
-interface CitizenStatus {
-  citizen_id: string;
-  running_state: "running" | "frozen" | "slow_motion" | "turbo";
-  tick_count: number;
-  tick_interval_ms: number;
-  tick_frequency_hz: number;
-  tick_multiplier: number;
-  consciousness_state: "alert" | "engaged" | "calm" | "drowsy" | "dormant";
-  time_since_last_event: number;
-  sub_entity_count: number;
-  sub_entities: string[];
-  nodes: number;
-  links: number;
-}
-
 interface CitizenMonitorProps {
   citizens: Citizen[];
   onFocusNode: (nodeId: string) => void;
@@ -69,14 +52,20 @@ export function CitizenMonitor({ citizens, onFocusNode, onSelectCitizen, activeC
             key={citizen.id}
             citizen={citizen}
             isExpanded={expandedCitizen === citizen.id}
-            isActive={activeCitizenId === `citizen_${citizen.id}` || activeCitizenId === `org_${citizen.id}`}
+            isActive={
+              activeCitizenId === citizen.graphId ||
+              activeCitizenId === citizen.legacyGraphId
+            }
             onToggle={() => setExpandedCitizen(
               expandedCitizen === citizen.id ? null : citizen.id
             )}
             onFocusNode={onFocusNode}
             onSelectCitizen={onSelectCitizen}
             v2State={v2State}
-            subentitySnapshot={subentitySnapshots[`citizen_${citizen.id}`]}
+            subentitySnapshot={
+              subentitySnapshots[citizen.graphId] ||
+              subentitySnapshots[citizen.legacyGraphId]
+            }
           />
         ))}
       </div>
@@ -108,59 +97,15 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
     t: number;
   };
 }) {
-  const [apiStatus, setApiStatus] = useState<CitizenStatus | null>(null);
-
-  // Poll API for real-time status every 2 seconds
-  useEffect(() => {
-    const pollStatus = async () => {
-      try {
-        const response = await fetch(`/api/citizen/${citizen.id}/status`);
-        if (response.ok) {
-          const data = await response.json();
-          setApiStatus(data);
-        }
-      } catch (error) {
-        // Backend not running yet - fall back to mock data
-        console.log(`API not available for ${citizen.id}:`, error);
-      }
-    };
-
-    // Initial poll
-    pollStatus();
-
-    // Poll every 2 seconds
-    const interval = setInterval(pollStatus, 2000);
-
-    return () => clearInterval(interval);
-  }, [citizen.id]);
-
-  // Use API status if available, otherwise fall back to mock data
-  const runningState = apiStatus?.running_state ||
-    (citizen.state === 'stopped' ? 'frozen' : 'running');
-  const tickFrequency = apiStatus?.tick_frequency_hz ||
-    (1000 / citizen.tickInterval);
-  const consciousnessState = apiStatus?.consciousness_state || 'unknown';
-
-  const stateColor = {
-    running: 'bg-green-500',               // GREEN - healthy running
-    frozen: 'bg-blue-500',                 // BLUE - frozen state
-    slow_motion: 'bg-yellow-500',          // YELLOW - slow motion
-    turbo: 'bg-red-500'                    // RED - turbo mode
-  }[runningState] || 'bg-gray-500';
-
-  const stateEmoji = {
-    running: '🟢',
-    frozen: '❄️',
-    slow_motion: '🐌',
-    turbo: '⚡'
-  }[runningState] || '⚫';
-
-  const stateLabel = {
-    running: 'Running',
-    frozen: 'Frozen',
-    slow_motion: 'Slow Motion',
-    turbo: 'Turbo'
-  }[runningState] || 'Unknown';
+  const stateColor = citizen.status === 'ready' ? 'bg-green-500'
+    : citizen.status === 'busy' ? 'bg-yellow-500'
+    : citizen.status === 'stopped' ? 'bg-red-500'
+    : 'bg-gray-500';
+  const stateEmoji = citizen.status === 'ready' ? '🟢'
+    : citizen.status === 'busy' ? '⚙️'
+    : citizen.status === 'stopped' ? '⛔'
+    : '⚪';
+  const stateLabel = citizen.status ? citizen.status.replace(/_/g, ' ') : 'unknown';
 
   // Avatar path: Try PNG first, fallback to SVG
   const [avatarPath, setAvatarPath] = useState(`/citizens/${citizen.id}/avatar.png`);
@@ -173,7 +118,7 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
       {/* Horizontal Compact Card - Clickable to Switch Graph */}
       <div
         className="p-4 cursor-pointer hover:bg-observatory-cyan/10 transition-colors"
-        onClick={() => onSelectCitizen(citizen.id)}
+        onClick={() => onSelectCitizen(citizen.graphId)}
       >
         <div className="flex items-center gap-3">
           {/* Avatar - Smaller, Circular */}
@@ -293,7 +238,7 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
 
 /**
  * ActiveSubentityCard - Shows live subentity activation with expandable members
- * Uses snapshot data for real-time energy updates, EntityMembersPanel for member view
+ * Uses snapshot data for real-time energy updates, SubEntityMembersPanel for member view
  */
 function ActiveSubentityCard({
   entityId,
@@ -346,9 +291,9 @@ function ActiveSubentityCard({
       {/* Members Panel */}
       {showMembers && (
         <div className="mt-2 -mx-2">
-          <EntityMembersPanel
-            entityId={entityId}
-            entityName={entityName}
+          <SubEntityMembersPanel
+            subentityId={entityId}
+            subentityName={entityName}
             graphId={`citizen_${citizenId}`}
             onFocusNode={onFocusNode}
           />
@@ -367,8 +312,8 @@ function EntityActivityCard({
 }) {
   const [showMembers, setShowMembers] = useState(false);
 
-  // Extract entity name from entity_id (e.g., "entity_citizen_iris_translator" -> "translator")
-  const entityName = subentity.entity_id.split('_').pop() || subentity.entity_id;
+  // Extract entity name from subentity_id (e.g., "entity_citizen_iris_translator" -> "translator")
+  const entityName = subentity.subentity_id.split('_').pop() || subentity.subentity_id;
 
   return (
     <div className="consciousness-panel p-3 text-xs">
@@ -402,9 +347,9 @@ function EntityActivityCard({
       {/* Members Panel */}
       {showMembers && (
         <div className="mt-2 -mx-3">
-          <EntityMembersPanel
-            entityId={subentity.entity_id}
-            entityName={entityName}
+          <SubEntityMembersPanel
+            subentityId={subentity.subentity_id}
+            subentityName={entityName}
             graphId={(subentity as any).graph_id || 'citizen_iris'}
             onFocusNode={onFocusNode}
           />
@@ -640,4 +585,3 @@ function HeartbeatIndicator({
     </div>
   );
 }
-

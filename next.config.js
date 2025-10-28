@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Development settings
@@ -14,6 +16,23 @@ const nextConfig = {
         destination: 'http://localhost:8000/api/:path*',
       },
     ];
+  },
+  webpack(config, { dev }) {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = config.resolve.alias || {};
+    config.resolve.alias['pino-pretty'] = path.resolve(__dirname, 'app/lib/pinoPrettyStub.cjs');
+
+    if (dev) {
+      config.watchOptions = config.watchOptions || {};
+      const ignored = config.watchOptions.ignored || [];
+      const ignoredList = Array.isArray(ignored) ? ignored : [ignored].filter(Boolean);
+      config.watchOptions.ignored = [
+        ...ignoredList,
+        /C:\\(DumpStack\.log\.tmp|hiberfil\.sys|pagefile\.sys|swapfile\.sys)$/i
+      ];
+    }
+
+    return config;
   },
 }
 

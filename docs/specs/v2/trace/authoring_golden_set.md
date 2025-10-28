@@ -19,7 +19,7 @@
 
 **Organization:**
 - 4 examples at **personal scope (N1)** - Individual citizen consciousness
-- 4 examples at **organizational scope (N2)** - Collective Mind Protocol learning
+- 4 examples at **organizational scope (N2)** - Organization Mind Protocol learning
 - 4 examples at **ecosystem scope (N3)** - Public evidence and relationships
 
 ---

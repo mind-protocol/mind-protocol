@@ -9,7 +9,7 @@ depends_on:
   - ../ops_and_viz/observability_events.md
 summary: >
   Substrate architecture for diverse stimulus types (L1 raw signals + L2 derived intents),
-  attribution model (WM/entity → routing), and evidence linking. Enables consciousness
+  attribution model (WM/SubEntity → routing), and evidence linking. Enables consciousness
   to respond to development activity, runtime errors, self-observation, and derived patterns.
 ---
 
@@ -21,10 +21,19 @@ Current stimulus sources are limited to user messages. To enable autonomous self
 
 - **Diverse signal sources** (commits, file changes, errors, self-observation)
 - **Meaningful aggregation** (L1 raw → L2 derived intents)
-- **Smart attribution** (which entities should respond?)
+- **Smart attribution** (which SubEntities should respond?)
 - **Evidence linking** (why did this stimulus occur?)
 
 **Critical principle:** Consciousness shouldn't live in a vacuum. Development activity, runtime state, and self-observation should shape activation patterns.
+
+## Terminology Note
+
+This specification uses terminology from **TAXONOMY_RECONCILIATION.md**:
+- **Node** - Atomic knowledge (~1000 per citizen)
+- **SubEntity** - Weighted neighborhoods (200-500)
+- **Mode** - IFS-level meta-roles (5-15)
+
+When "entity" appears in this document, it refers to SubEntity (weighted neighborhoods) unless explicitly noted otherwise.
 
 ---
 
@@ -307,18 +316,18 @@ metadata: {
 
 ## 5. Attribution Model
 
-**Purpose:** Determine which entities should respond to this stimulus.
+**Purpose:** Determine which SubEntities should respond to this stimulus.
 
 ### 5.1 Attribution Schema
 
 ```typescript
 interface Attribution {
-  // Primary entities (highest relevance)
-  primary_entities: string[]     // Entity names, e.g., ["architect", "validator"]
+  // Primary SubEntities (highest relevance)
+  primary_entities: string[]     // SubEntity names, e.g., ["architect", "validator"]
   primary_confidence: number     // 0-1, how certain about primaries
 
-  // Secondary entities (supporting role)
-  secondary_entities?: string[]
+  // Secondary SubEntities (supporting role)
+  secondary_entities?: string[]  // SubEntity names
   secondary_confidence?: number
 
   // Derivation method
@@ -326,12 +335,12 @@ interface Attribution {
 
   // Context snapshot
   wm_snapshot_id?: string        // Which WM state was used
-  active_entities_at_time?: string[]
+  active_subentities_at_time?: string[]  // SubEntity names active at derivation time
 }
 
 type AttributionMethod =
-  | "wm_current"           // Use current WM top entities
-  | "entity_affinity"      // Semantic match to entity embeddings
+  | "wm_current"           // Use current WM top SubEntities
+  | "subentity_affinity"   // Semantic match to SubEntity embeddings
   | "rule_based"           // Explicit rule (e.g., "schema changes → architect")
   | "hybrid"               // Combination
 ```
@@ -339,23 +348,23 @@ type AttributionMethod =
 ### 5.2 Attribution Algorithms
 
 **For L1 stimuli** (optional attribution):
-- **conversation**: Current WM top entities
-- **console_error**: Frontend-relevant entities (if defined)
+- **conversation**: Current WM top SubEntities
+- **console_error**: Frontend-relevant SubEntities (if defined)
 - **commit**: Tag-based rules (schema → architect, guardian → ops, etc.)
 - **file_change**: Package-based rules (consciousness → architect, api → integrator, etc.)
-- **backend_error**: Service → entity mapping
-- **self_observation**: Event type → entity (health → sentinel, learning → memory, etc.)
+- **backend_error**: Service → SubEntity mapping
+- **self_observation**: Event type → SubEntity (health → sentinel, learning → memory, etc.)
 
 **For L2 stimuli** (required attribution):
-- Use derivation logic to determine primary entities
+- Use derivation logic to determine primary SubEntities
 - Confidence based on evidence strength and pattern clarity
-- Secondary entities from recent WM co-activation
+- Secondary SubEntities from recent WM co-activation
 
 ### 5.3 Attribution Confidence Levels
 
 - **0.9-1.0**: Explicit rule match (error storm → ops)
 - **0.75-0.9**: Strong pattern (mismatch + schema commit → architect/validator)
-- **0.6-0.75**: WM-based inference (current WM entities)
+- **0.6-0.75**: WM-based inference (current WM SubEntities)
 - **<0.6**: Low confidence, use broader Amplify routing
 
 ---
@@ -374,8 +383,8 @@ interface Routing {
   // Budget scaling
   budget_hint: number          // Multiplier on base budget (0.5 - 5.0)
 
-  // Target entities (from attribution)
-  target_entities: string[]
+  // Target SubEntities (from attribution)
+  target_entities: string[]    // SubEntity names
 
   // Routing parameters (connect to injection v2.1)
   lambda_override?: number     // Override adaptive λ if needed
@@ -390,17 +399,17 @@ interface Routing {
 
 **top_up** (narrow targeting):
 - Uses floor channel primarily (λ → 0.7-0.8)
-- Targets attributed entities' member nodes
+- Targets attributed SubEntities' member nodes
 - Good for: specific intents (reconcile_beliefs, protect_fix), incidents
 
 **amplify** (broader coalition):
 - Uses amplifier channel primarily (λ → 0.3-0.4)
-- Targets attributed entities + recent WM coalition
+- Targets attributed SubEntities + recent WM coalition
 - Good for: emergent intents (stabilize_narrative, promote_pattern)
 
 **hybrid** (balanced):
 - Default adaptive λ (0.6 baseline)
-- Targets attributed entities with moderate spread
+- Targets attributed SubEntities with moderate spread
 - Good for: uncertain attribution, self-observation stimuli
 
 ### 6.3 Budget Hints
@@ -577,12 +586,12 @@ def select_candidates(
     stimulus: StimulusEnvelope,
     attribution: Attribution
 ) -> List[Candidate]:
-    """Bias retrieval toward attributed entities."""
+    """Bias retrieval toward attributed SubEntities."""
 
-    # If attributed, retrieve from entity members preferentially
+    # If attributed, retrieve from SubEntity members preferentially
     if attribution and attribution.primary_confidence > 0.7:
-        candidates = retrieve_entity_members(
-            entities=attribution.primary_entities,
+        candidates = retrieve_subentity_members(
+            subentities=attribution.primary_entities,
             similarity_threshold=0.6
         )
     else:
@@ -621,7 +630,7 @@ def compute_lambda(
 **Substrate validation:**
 - ✅ All L1 types have complete schemas with required metadata
 - ✅ All L2 types have derivation logic, attribution, and routing defined
-- ✅ Attribution model connects to existing WM/entity membership
+- ✅ Attribution model connects to existing WM/SubEntity membership
 - ✅ Routing model integrates cleanly with injection v2.1 dual-channel policy
 - ✅ Evidence linking enables traceability from L2 → L1 → artifacts
 
@@ -717,10 +726,10 @@ Autonomy service generates IntentCards at L2, dispatches missions through existi
 
 - Learned derivation rules (pattern mining on L1 sequences)
 - Adaptive thresholds based on citizen-specific traffic percentiles
-- Cross-citizen correlation and collective intelligence
+- Cross-citizen correlation and organization intelligence
 - Temporal patterns (commit → 2min → error → 5min → fix sequences)
 - Screenshot OCR enrichment
-- Advanced attribution (learned entity affinity models)
+- Advanced attribution (learned SubEntity affinity models)
 
 ---
 
@@ -750,3 +759,484 @@ Autonomy service generates IntentCards at L2, dispatches missions through existi
 1. Threshold tuner spec (separate doc)
 2. Metrics endpoint spec (separate doc)
 3. Handoff to Ada for Phase A-D coordination
+
+---
+
+## 13. Quality Assurance & Schema Evolution
+
+### 13.1 Validation Success Rate Monitoring
+
+**Purpose:** Track stimulus parsing quality to detect schema drift, implementation bugs, and quality degradation.
+
+**Metrics to Track:**
+
+```python
+# Per-stimulus-type metrics (computed per citizen per 5min window)
+validation_metrics = {
+    "parse_success_rate": float,      # 0-1, successful parses / total attempts
+    "rejection_rate": float,           # 0-1, schema validation failures / total
+    "rejection_reasons": {             # Breakdown of why stimuli failed
+        "missing_required_field": int,
+        "invalid_field_type": int,
+        "schema_version_mismatch": int,
+        "malformed_json": int,
+        "unknown_stimulus_type": int,
+    },
+    "total_processed": int,
+    "total_rejected": int,
+    "time_window_start": int,          # timestamp_ms
+    "time_window_end": int,
+}
+```
+
+**Implementation Location:**
+
+Add validation metrics tracking to `conversation_watcher.py`:
+
+```python
+def track_validation_result(
+    stimulus_type: str,
+    citizen_id: str,
+    success: bool,
+    rejection_reason: Optional[str] = None
+):
+    """Track parse success/failure for quality monitoring."""
+
+    # Emit telemetry event
+    emit_event(EventKind.QUALITY_VALIDATION, {
+        "stimulus_type": stimulus_type,
+        "citizen_id": citizen_id,
+        "success": success,
+        "rejection_reason": rejection_reason,
+        "timestamp_ms": now_ms()
+    })
+
+    # Update rolling metrics (5min window)
+    metrics = get_rolling_metrics(stimulus_type, citizen_id)
+    metrics.increment(success, rejection_reason)
+```
+
+**Persistence:**
+
+Store validation metrics in FalkorDB for historical analysis:
+
+```cypher
+(:ValidationMetrics {
+  stimulus_type: string,
+  citizen_id: string,
+  parse_success_rate: float,
+  rejection_rate: float,
+  rejection_reasons: JSON,
+  total_processed: int,
+  total_rejected: int,
+  window_start_ms: int,
+  window_end_ms: int,
+  created_at: datetime
+})
+```
+
+**Dashboard Integration:**
+
+Add validation quality panel to operational dashboard:
+- Success rate sparklines per stimulus type
+- Rejection rate alerts (RED when >10%)
+- Rejection reason breakdown (pie chart)
+- Historical trend (7-day rolling average)
+
+### 13.2 Rejection Rate Alerts
+
+**Alert Policy:**
+
+Trigger operational alert when rejection rate exceeds threshold:
+
+```python
+# Alert thresholds
+REJECTION_RATE_THRESHOLDS = {
+    "warn": 0.05,      # 5% - Yellow alert
+    "error": 0.10,     # 10% - Red alert, requires investigation
+    "critical": 0.25,  # 25% - Critical, likely schema break
+}
+
+def check_rejection_alert(metrics: ValidationMetrics):
+    """Evaluate rejection rate and trigger alerts."""
+
+    rate = metrics.rejection_rate
+
+    if rate >= REJECTION_RATE_THRESHOLDS["critical"]:
+        emit_alert(
+            severity="critical",
+            message=f"CRITICAL: {metrics.stimulus_type} rejection rate {rate:.1%} (threshold 25%)",
+            breakdown=metrics.rejection_reasons,
+            citizen_id=metrics.citizen_id,
+            investigation_hint="Likely schema breaking change or parser bug"
+        )
+    elif rate >= REJECTION_RATE_THRESHOLDS["error"]:
+        emit_alert(
+            severity="error",
+            message=f"HIGH rejection rate for {metrics.stimulus_type}: {rate:.1%} (threshold 10%)",
+            breakdown=metrics.rejection_reasons,
+            citizen_id=metrics.citizen_id,
+            investigation_hint="Check recent schema changes or TRACE format updates"
+        )
+    elif rate >= REJECTION_RATE_THRESHOLDS["warn"]:
+        emit_alert(
+            severity="warn",
+            message=f"Elevated rejection rate for {metrics.stimulus_type}: {rate:.1%}",
+            breakdown=metrics.rejection_reasons,
+            citizen_id=metrics.citizen_id
+        )
+```
+
+**Alert Safety Integration:**
+
+Rejection alerts follow existing alert safety policy (§11.3):
+- **Cooldown:** Max 1 rejection alert per stimulus_type per 15min (prevent spam)
+- **Circuit breaker:** If 3+ stimulus types cross threshold simultaneously, escalate to "parser system failure" alert
+- **Dashboard:** All rejection alerts appear in dashboard
+- **Slack/email:** Only `severity=critical` (≥25% rejection rate)
+
+**Alert Content:**
+
+```json
+{
+  "alert_type": "validation_quality",
+  "severity": "error",
+  "stimulus_type": "L2.intent.stabilize_narrative",
+  "citizen_id": "citizen_luca",
+  "rejection_rate": 0.12,
+  "threshold": 0.10,
+  "time_window": "2025-10-25 14:35:00 - 14:40:00",
+  "rejection_breakdown": {
+    "missing_required_field": 8,
+    "invalid_field_type": 2,
+    "schema_version_mismatch": 1
+  },
+  "investigation_hint": "Check recent schema changes or TRACE format updates",
+  "recent_failures": [
+    "stim-L2-intent-abc123: missing 'attribution.primary_entities'",
+    "stim-L2-intent-def456: invalid type for 'confidence' (expected float, got string)"
+  ]
+}
+```
+
+### 13.3 Auto-Repair Mode
+
+**Purpose:** Enable `trace_parser` to automatically fix common schema issues inline, reducing rejection rate for backward-compatible changes.
+
+**Repair Strategies:**
+
+```python
+class AutoRepair:
+    """Auto-repair strategies for common schema issues."""
+
+    @staticmethod
+    def repair_missing_optional_field(stim: dict, field: str, default: Any) -> dict:
+        """Add missing optional field with sensible default."""
+        if field not in stim:
+            stim[field] = default
+            log_repair("added_default", field, default)
+        return stim
+
+    @staticmethod
+    def repair_type_coercion(stim: dict, field: str, target_type: type) -> dict:
+        """Coerce field to expected type if safe."""
+        if field in stim:
+            try:
+                stim[field] = target_type(stim[field])
+                log_repair("type_coercion", field, target_type.__name__)
+            except (ValueError, TypeError):
+                pass  # Can't coerce, will fail validation
+        return stim
+
+    @staticmethod
+    def repair_deprecated_field_name(stim: dict, old_name: str, new_name: str) -> dict:
+        """Migrate deprecated field names to current schema."""
+        if old_name in stim and new_name not in stim:
+            stim[new_name] = stim.pop(old_name)
+            log_repair("field_rename", f"{old_name} → {new_name}")
+        return stim
+
+    @staticmethod
+    def repair_schema_version_upgrade(stim: dict, from_version: str, to_version: str) -> dict:
+        """Apply migration path from old schema version to new."""
+        migrations = SCHEMA_MIGRATIONS.get((from_version, to_version), [])
+        for migration in migrations:
+            stim = migration(stim)
+        log_repair("schema_upgrade", f"{from_version} → {to_version}")
+        return stim
+```
+
+**Auto-Repair Configuration:**
+
+```python
+# Enable auto-repair by default for backward-compatible fixes
+AUTO_REPAIR_CONFIG = {
+    "enabled": True,
+    "strategies": [
+        "add_missing_optional_defaults",   # Add missing optional fields
+        "safe_type_coercion",              # Coerce compatible types (str→int, etc.)
+        "deprecated_field_migration",      # Rename old field names
+        "schema_version_upgrade",          # Apply version migration paths
+    ],
+    "log_all_repairs": True,               # Track what was repaired
+    "fail_on_unrepairable": True,          # Still reject if repair fails
+}
+```
+
+**Repair Audit Trail:**
+
+Log all auto-repairs for transparency:
+
+```python
+def log_repair(repair_type: str, field: str, action: str):
+    """Emit repair event for audit trail."""
+    emit_event(EventKind.SCHEMA_AUTO_REPAIR, {
+        "repair_type": repair_type,
+        "field": field,
+        "action": action,
+        "timestamp_ms": now_ms()
+    })
+```
+
+**Safety Constraints:**
+
+- **Only apply backward-compatible repairs** (adding defaults, renaming fields, type coercion)
+- **Never mutate semantic meaning** (don't guess missing required fields)
+- **Always log repairs** (full transparency)
+- **Fail validation if repair unsuccessful** (don't silently corrupt data)
+- **Track repair success rate** (measure if repairs reduce rejection rate)
+
+**Integration with Validation Monitoring:**
+
+```python
+def parse_with_repair(raw_stim: dict) -> Result[Stimulus, ValidationError]:
+    """Parse stimulus with optional auto-repair."""
+
+    # Attempt initial parse
+    result = parse_stimulus(raw_stim)
+
+    if result.is_error() and AUTO_REPAIR_CONFIG["enabled"]:
+        # Attempt auto-repair
+        repaired = apply_auto_repair(raw_stim, result.error)
+
+        if repaired.was_repaired:
+            # Re-parse after repair
+            result = parse_stimulus(repaired.data)
+
+            if result.is_success():
+                track_validation_result(
+                    stimulus_type=result.data.type,
+                    citizen_id=result.data.citizen_id,
+                    success=True,
+                    repair_applied=True
+                )
+            else:
+                # Repair failed, log and reject
+                track_validation_result(
+                    stimulus_type=raw_stim.get("type", "unknown"),
+                    citizen_id=raw_stim.get("citizen_id", "unknown"),
+                    success=False,
+                    rejection_reason=result.error.reason,
+                    repair_attempted=True,
+                    repair_failed=True
+                )
+
+    return result
+```
+
+### 13.4 Schema Evolution Protocol
+
+**Purpose:** Define process for evolving stimulus schemas (L1/L2) while maintaining backward compatibility and migrating historical data.
+
+**Schema Versioning:**
+
+```typescript
+interface StimulusSchema {
+  version: string              // Semantic version: "1.0.0", "1.1.0", "2.0.0"
+  effective_date: string       // When this version became active
+  deprecated_date?: string     // When this version was deprecated
+  sunset_date?: string         // When this version will be removed
+}
+
+// Example: L1 conversation stimulus schema evolution
+L1_CONVERSATION_SCHEMA = {
+  "1.0.0": {  // Original
+    required: ["message_content", "turn_number"],
+    optional: ["conversation_id"]
+  },
+  "1.1.0": {  // Added metadata
+    required: ["message_content", "turn_number", "conversation_id"],
+    optional: ["participant_count", "context_id"]
+  },
+  "2.0.0": {  // Breaking: renamed field
+    required: ["content", "turn_number", "conversation_id"],  // message_content → content
+    optional: ["participant_count", "context_id"]
+  }
+}
+```
+
+**Evolution Policy:**
+
+**Minor version changes (1.0.0 → 1.1.0):**
+- ✅ Add new optional fields
+- ✅ Add new enum values
+- ✅ Relax constraints (e.g., increase max length)
+- ✅ Add new stimulus subtypes
+- ❌ Remove fields (even optional)
+- ❌ Rename fields
+- ❌ Change field types
+- ❌ Add new required fields without defaults
+
+**Major version changes (1.x.x → 2.0.0):**
+- ✅ Remove deprecated fields
+- ✅ Rename fields
+- ✅ Change field types
+- ✅ Add required fields
+- ⚠️ Requires migration path
+- ⚠️ Requires deprecation period (30-60d)
+
+**Deprecation Process:**
+
+1. **Announce deprecation** (add `deprecated_date` to schema)
+2. **Support both old and new** (auto-repair migrates old → new)
+3. **Monitor usage** (track % of stimuli still using old schema)
+4. **Sunset after grace period** (remove old schema support after 30-60d)
+
+**Migration Strategy:**
+
+```python
+# Define migration paths between schema versions
+SCHEMA_MIGRATIONS = {
+    # (from_version, to_version): [migration_functions]
+    ("1.0.0", "1.1.0"): [
+        lambda s: {**s, "conversation_id": s.get("conversation_id", generate_conversation_id(s))}
+    ],
+    ("1.1.0", "2.0.0"): [
+        lambda s: {**{k: v for k, v in s.items() if k != "message_content"}, "content": s["message_content"]}
+    ],
+}
+
+def migrate_stimulus(stim: dict, from_version: str, to_version: str) -> dict:
+    """Apply migration path to upgrade stimulus to target schema version."""
+
+    # Find shortest migration path
+    path = find_migration_path(from_version, to_version)
+
+    # Apply each migration in sequence
+    for (v_from, v_to) in path:
+        migrations = SCHEMA_MIGRATIONS.get((v_from, v_to), [])
+        for migration in migrations:
+            stim = migration(stim)
+        stim["_schema_version"] = v_to
+
+    return stim
+```
+
+**Historical Data Migration:**
+
+When deploying breaking schema changes, migrate historical data:
+
+```python
+def migrate_historical_stimuli(
+    citizen_id: str,
+    stimulus_type: str,
+    from_version: str,
+    to_version: str,
+    dry_run: bool = True
+):
+    """Migrate all historical stimuli of given type to new schema version."""
+
+    # Query all stimuli matching type and old version
+    query = """
+    MATCH (s:Stimulus {citizen_id: $citizen_id, type: $type})
+    WHERE s._schema_version = $from_version
+    RETURN s
+    """
+
+    stimuli = db.execute(query, {
+        "citizen_id": citizen_id,
+        "type": stimulus_type,
+        "from_version": from_version
+    })
+
+    migrated_count = 0
+    failed_count = 0
+
+    for stim in stimuli:
+        try:
+            # Apply migration
+            migrated = migrate_stimulus(stim, from_version, to_version)
+
+            # Validate migrated stimulus
+            validate_stimulus(migrated, to_version)
+
+            if not dry_run:
+                # Update in database
+                db.update_node(stim.id, migrated)
+
+            migrated_count += 1
+
+        except ValidationError as e:
+            log_error(f"Failed to migrate {stim.id}: {e}")
+            failed_count += 1
+
+    return MigrationResult(
+        total=len(stimuli),
+        migrated=migrated_count,
+        failed=failed_count,
+        dry_run=dry_run
+    )
+```
+
+**Schema Change Checklist:**
+
+Before deploying schema change:
+
+- [ ] Increment schema version appropriately (minor vs major)
+- [ ] Add migration function to SCHEMA_MIGRATIONS
+- [ ] Test migration on sample historical data
+- [ ] Add auto-repair strategy for backward compatibility (if minor)
+- [ ] Update validation schemas in trace_parser
+- [ ] Document breaking changes in CHANGELOG
+- [ ] Set deprecation timeline (if major)
+- [ ] Run historical data migration (if major)
+- [ ] Monitor rejection rate post-deployment (should not spike)
+- [ ] Verify auto-repair success rate (if applicable)
+
+**Rollback Plan:**
+
+If schema change causes rejection rate spike:
+
+1. **Immediate:** Rollback schema version to previous
+2. **Investigate:** Review rejection reasons, check migration logic
+3. **Fix:** Update migration/auto-repair strategies
+4. **Retest:** Validate on historical sample data
+5. **Redeploy:** With corrected migration logic
+
+---
+
+## 14. Updated Completeness Checklist
+
+- [x] L1 stimulus types defined (7 types)
+- [x] L2 stimulus types defined (6 types)
+- [x] Universal schemas (L1 base, L2 base)
+- [x] Type-specific metadata requirements
+- [x] Attribution model (schema + algorithms + confidence levels)
+- [x] Routing model (modes + budget hints + lambda integration)
+- [x] Evidence linking (correlation + references)
+- [x] Persistence schemas (graph structure)
+- [x] Integration with stimulus_injection.md v2.1
+- [x] Success criteria defined
+- [x] Implementation decisions documented (Nicolas 2025-10-25)
+- [x] Phase 1 threshold seed values specified
+- [x] Phase 2 evolution strategy (percentile-based tuning)
+- [x] Alert safety policy defined
+- [x] Persistence strategy (ALL L2 + TTL)
+- [x] **Validation success rate monitoring (§13.1)**
+- [x] **Rejection rate alerts (§13.2)**
+- [x] **Auto-repair mode specification (§13.3)**
+- [x] **Schema evolution protocol (§13.4)**
+
+**Substrate specification: COMPLETE & IMPLEMENTATION-READY**
+
+**Quality assurance infrastructure: SPECIFIED**

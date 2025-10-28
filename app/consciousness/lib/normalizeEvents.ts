@@ -24,7 +24,7 @@ export function normalizeEvent(e: any): any {
   switch (e.type) {
     // Timebase events - canonical: tick_frame_v1
     case 'tick_frame_v1':
-      console.log('[normalizeEvent] ✅ tick_frame_v1 received:', e.frame_id);
+      // Removed verbose logging - these events fire every frame (multiple/sec)
       return e; // Already canonical
 
     case 'frame.end':
@@ -59,12 +59,10 @@ export function normalizeEvent(e: any): any {
 
     // Working memory - canonical: wm.emit
     case 'wm.emit':
-      return {
-        type: 'wm.emit',
-        frame_id: e.frame_id,
-        node_ids: e.selected_entities?.map((se: any) => se.id ?? se) ?? e.node_ids ?? [],
-        timestamp: e.timestamp ?? new Date().toISOString()
-      };
+      return e; // Preserve rich payload (mode, shares, anchors)
+
+    case 'wm.selected':
+      return e;
 
     // Link flows - canonical: link.flow.summary
     case 'link.flow.summary':
@@ -83,6 +81,13 @@ export function normalizeEvent(e: any): any {
     case 'tier.link.strengthened':
       return e; // Already canonical
 
+    case 'weights.updated':
+      return e;
+
+    case 'subentity.weights.updated':
+    case 'subentity.membership.pruned':
+      return e;
+
     // Stride events
     case 'stride.exec':
     case 'stride.selection':
@@ -94,7 +99,7 @@ export function normalizeEvent(e: any): any {
 
     // Legacy V1 events (pass through)
     case 'consciousness_state':
-    case 'entity_activity':
+    case 'subentity_activity':
     case 'threshold_crossing':
       return e;
 
@@ -103,6 +108,15 @@ export function normalizeEvent(e: any): any {
     case 'link.emotion.update':
     case 'criticality.state':
     case 'decay.tick':
+    case 'se.boundary.summary':
+    case 'entity.multiplicity_assessment':
+    case 'entity.productive_multiplicity':
+    case 'percept.frame':
+    case 'membrane.inject.ack':
+      return e;
+
+    case 'forged.identity.frame':
+    case 'forged.identity.metrics':
       return e;
 
     default:

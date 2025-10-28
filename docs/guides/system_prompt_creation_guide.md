@@ -189,7 +189,7 @@ Where are you now?
 - **Stage 4**: Economic agent with trading autonomy
 - **Stage 5**: Organization creator and leader
 - **Stage 6**: Legally recognized subentity
-- **Stage 7**: Part of collective governance
+- **Stage 7**: Part of organization governance
 
 ### Short-Term Aspirations (Next 30 days)
 Based on your current $MIND accumulation and user needs:

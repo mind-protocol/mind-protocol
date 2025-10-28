@@ -14,11 +14,14 @@ Created: 2025-10-19 (extracted from consciousness_engine.py)
 Architecture: Phase 1 Clean Break - Infrastructure Layer
 """
 
-import logging
 import asyncio
-from typing import Dict, Any, Optional
-from datetime import datetime
+import inspect
+import logging
 from collections import defaultdict, deque
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
+
+from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 
 logger = logging.getLogger(__name__)
 
@@ -45,15 +48,19 @@ class ConsciousnessStateBroadcaster:
         ... )
     """
 
-    def __init__(self, websocket_manager: Optional[Any] = None):
+    _external_listeners: List[Callable[[str, str, Dict[str, Any]], Any]] = []
+
+    def __init__(self, websocket_manager: Optional[Any] = None, *, default_citizen_id: Optional[str] = None):
         """
         Initialize the broadcaster.
 
         Args:
             websocket_manager: WebSocket manager from control_api (optional)
                              If None, attempts to import automatically
+            default_citizen_id: Citizen identifier to stamp on events when missing
         """
         self.websocket_manager = websocket_manager
+        self.default_citizen_id = default_citizen_id
 
         if self.websocket_manager is None:
             # Attempt to import from control_api
@@ -68,10 +75,44 @@ class ConsciousnessStateBroadcaster:
         else:
             self.available = True
 
+        try:
+            self._stream_aggregator = get_stream_aggregator()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("[ConsciousnessStateBroadcaster] Stream aggregator unavailable: %s", exc)
+            self._stream_aggregator = None
+
         # Telemetry counters: track event counts since boot and in 60s window
         # Atlas implementation - War Room Plan P1
         self.event_counts_total = defaultdict(int)  # Total counts since boot
         self.event_timestamps = defaultdict(deque)  # Timestamps for 60s sliding window
+
+    # ------------------------------------------------------------------ listener management
+
+    @classmethod
+    def register_listener(cls, listener: Callable[[str, str, Dict[str, Any]], Any]) -> None:
+        """Register callback invoked for every broadcast event."""
+        cls._external_listeners.append(listener)
+
+    @classmethod
+    def unregister_listener(cls, listener: Callable[[str, str, Dict[str, Any]], Any]) -> None:
+        """Remove previously registered callback."""
+        try:
+            cls._external_listeners.remove(listener)
+        except ValueError:
+            pass
+
+    def _notify_listeners(self, citizen_id: str, event_type: str, payload: Dict[str, Any]) -> None:
+        """Fire-and-forget notifications to external observers."""
+        if not self._external_listeners:
+            return
+
+        for listener in list(self._external_listeners):
+            try:
+                result = listener(citizen_id, event_type, payload)
+                if inspect.isawaitable(result):
+                    asyncio.create_task(result)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning("[ConsciousnessStateBroadcaster] Listener failed: %s", exc)
 
     async def broadcast_consciousness_state(
         self,
@@ -123,7 +164,7 @@ class ConsciousnessStateBroadcaster:
         try:
             # Create broadcast task without awaiting (fire-and-forget)
             # This prevents WebSocket delays from blocking consciousness heartbeat
-            asyncio.create_task(self.websocket_manager.broadcast({
+            payload = {
                 "type": "consciousness_state",
                 "network_id": network_id,
                 "global_energy": global_energy,
@@ -134,7 +175,16 @@ class ConsciousnessStateBroadcaster:
                 "consciousness_state": consciousness_state,
                 "time_since_last_event": time_since_last_event,
                 "timestamp": timestamp.isoformat()
-            }))
+            }
+            if self.default_citizen_id:
+                payload.setdefault("citizen_id", self.default_citizen_id)
+            if self._stream_aggregator and payload.get("citizen_id"):
+                await self._stream_aggregator.ingest_event(
+                    payload["citizen_id"],
+                    payload["type"],
+                    payload
+                )
+            asyncio.create_task(self.websocket_manager.broadcast(payload))
 
         except Exception as e:
             logger.error(f"[ConsciousnessStateBroadcaster] Broadcast failed: {e}")
@@ -175,6 +225,17 @@ class ConsciousnessStateBroadcaster:
         while self.event_timestamps[event_type] and self.event_timestamps[event_type][0] < cutoff:
             self.event_timestamps[event_type].popleft()
 
+        citizen_id = data.get("citizen_id", self.default_citizen_id)
+
+        if self._stream_aggregator and citizen_id:
+            try:
+                await self._stream_aggregator.ingest_event(citizen_id, event_type, data)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning("[ConsciousnessStateBroadcaster] Stream aggregator ingest failed: %s", exc)
+
+        listener_citizen = citizen_id or ""
+        self._notify_listeners(listener_citizen, event_type, data)
+
         if not self.available or not self.websocket_manager:
             return
 
@@ -184,6 +245,8 @@ class ConsciousnessStateBroadcaster:
                 "timestamp": datetime.now().isoformat(),
                 **data
             }
+            if citizen_id:
+                event.setdefault("citizen_id", citizen_id)
 
             asyncio.create_task(self.websocket_manager.broadcast(event))
 

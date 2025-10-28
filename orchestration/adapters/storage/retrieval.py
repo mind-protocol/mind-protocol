@@ -780,7 +780,7 @@ def assemble_consciousness_stream(
     Assemble consciousness stream via simple concatenation.
 
     Order: Vector results first (semantic context), then graph results (relational context)
-    Within each: N1 (personal) � N2 (collective) � N3 (ecosystem)
+    Within each: N1 (personal) � N2 (organization) � N3 (ecosystem)
 
     ARCHITECTURAL DECISION #4: Pure concatenation, let LLM synthesize.
     """

@@ -609,7 +609,7 @@ Mind Harbor should feel like:
 1. Historical playback with time slider
 2. Pattern detection visualization
 3. Multi-scale navigation (zoom system → citizen → subentity → node)
-4. Collective consciousness view (N2)
+4. Organization consciousness view (N2)
 
 ---
 

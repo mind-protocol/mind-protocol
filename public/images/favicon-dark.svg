@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" aria-label="Mind favicon (dark)">
+  <defs>
+    <!-- Solid strokes for tiny sizes (no filters). Slight fill to suggest containment. -->
+    <style>
+      *{stroke-linecap:round;stroke-linejoin:round}
+      .t{stroke-width:2.2}
+      .m{stroke-width:1.9}
+      .b{stroke-width:1.7}
+    </style>
+  </defs>
+  <!-- Transparent canvas for dark UI; colors are brighter for contrast on dark tabs -->
+  <!-- TOP (largest) -->
+  <ellipse class="t" cx="16" cy="10" rx="11" ry="4" stroke="#46E1DA" fill="#46E1DA" fill-opacity="0.12"/>
+  <!-- MID -->
+  <ellipse class="m" cx="16" cy="16" rx="9" ry="3.4" stroke="#31C6D8" fill="#31C6D8" fill-opacity="0.12"/>
+  <!-- BOT (smallest) -->
+  <ellipse class="b" cx="16" cy="22" rx="7.2" ry="3" stroke="#CE7C16" fill="#CE7C16" fill-opacity="0.12"/>
+</svg>

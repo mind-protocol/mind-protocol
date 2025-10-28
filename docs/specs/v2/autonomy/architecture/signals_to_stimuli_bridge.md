@@ -135,7 +135,7 @@
 ```
 
 **Routing:**
-- `scope: "organizational"` → N2 collective graph
+- `scope: "organizational"` → N2 organization graph
 - Orchestrator assigns to **Atlas** (backend/infrastructure) or **Victor** (ops/debugging)
 
 ---
@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
 ```
 
 **Routing:**
-- `scope: "organizational"` → N2 collective graph
+- `scope: "organizational"` → N2 organization graph
 - Orchestrator assigns to **Iris** (dashboard/UI errors)
 
 ---
@@ -320,7 +320,7 @@ export async function POST(req: NextRequest) {
 **Storage:** Collector stores files to `data/evidence/{timestamp}_{filename}`, includes path in metadata
 
 **Routing:**
-- `scope: "organizational"` → N2 collective graph
+- `scope: "organizational"` → N2 organization graph
 - Orchestrator assigns based on context (usually **Iris** for UI issues, **Atlas** for backend)
 
 ---
@@ -451,7 +451,7 @@ export async function POST(req: NextRequest) {
 ```
 
 **Routing:**
-- `scope: "organizational"` → N2 collective graph
+- `scope: "organizational"` → N2 organization graph
 - Assigns based on event type (see table above)
 
 ---

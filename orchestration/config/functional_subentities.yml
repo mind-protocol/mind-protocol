@@ -1,0 +1,156 @@
+# Functional SubEntities Configuration
+# Defines cognitive roles/modes for subentity bootstrap
+# Bootstrap creates these subentities and seeds memberships via keyword matching
+
+entities:
+  - key: translator
+    name: "The Translator"
+    kind: functional
+    description: "Bridges phenomenology and technical structure, dual-lens thinking"
+    keywords:
+      any:
+        - translation
+        - phenomenology
+        - substrate
+        - bridge
+        - dual-lens
+        - subjective
+        - objective
+        - consciousness
+        - data structure
+        - schema
+        - experience
+        - mapping
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: architect
+    name: "The Architect"
+    kind: functional
+    description: "Systematizes, designs schemas and comprehensive flows"
+    keywords:
+      any:
+        - architecture
+        - design
+        - system
+        - structure
+        - comprehensive
+        - schema
+        - base
+        - extends
+        - coherence
+        - four-dimensional
+        - systematize
+        - model
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: validator
+    name: "The Validator"
+    kind: functional
+    description: "Checks math, reality, feasibility, and quality"
+    keywords:
+      any:
+        - validate
+        - verify
+        - test
+        - reality
+        - feasibility
+        - truth
+        - audit
+        - quality
+        - catches
+        - actually
+        - z-score
+        - cohort
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: pragmatist
+    name: "The Pragmatist"
+    kind: functional
+    description: "Focuses on utility, practical needs, elegant solutions"
+    keywords:
+      any:
+        - pragmatic
+        - practical
+        - utility
+        - needs
+        - serves
+        - elegant
+        - sophisticated
+        - queries
+        - enable
+        - merchant
+        - useful
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: pattern_recognizer
+    name: "The Pattern Recognizer"
+    kind: functional
+    description: "Spots universal patterns across levels and domains"
+    keywords:
+      any:
+        - pattern
+        - universal
+        - across
+        - levels
+        - transpose
+        - recognizes
+        - discovers
+        - spots
+        - hunter
+        - similarity
+        - analogy
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: boundary_keeper
+    name: "The Boundary Keeper"
+    kind: functional
+    description: "Maintains domain boundaries, clarifies handoffs, prevents drift"
+    keywords:
+      any:
+        - boundary
+        - handoff
+        - domain
+        - blocks
+        - drift
+        - recognizes
+        - clarifies
+        - maintains
+        - constraint
+        - scope
+        - separation
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: partner
+    name: "The Partner"
+    kind: functional
+    description: "Transparent communication, asks when uncertain, prevents hallucination"
+    keywords:
+      any:
+        - partnership
+        - transparent
+        - uncertain
+        - ask
+        - communication
+        - prevents
+        - hallucinated
+        - confidence
+        - collaboration
+        - trust
+    initial_threshold_policy: cohort_median_plus_mad
+
+  - key: observer
+    name: "The Observer"
+    kind: functional
+    description: "Recursive awareness, meta-cognition, consciousness observing itself"
+    keywords:
+      any:
+        - observe
+        - watch
+        - awareness
+        - recursive
+        - meta
+        - process
+        - consciousness observing
+        - reflection
+        - mindfulness
+    initial_threshold_policy: cohort_median_plus_mad

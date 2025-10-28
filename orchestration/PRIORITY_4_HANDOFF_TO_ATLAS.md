@@ -44,7 +44,7 @@ entity_context = self.entity_context_manager.derive_entity_context(
 - ✅ Entity context derivation works
 - ✅ Membership queries return correct weights
 - ✅ Values verified (translator=0.8, architect=0.2)
-- ✅ Created 10 test BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") relationships for testing
+- ✅ Created 10 test MEMBER_OF relationships for testing
 
 ---
 
@@ -52,7 +52,7 @@ entity_context = self.entity_context_manager.derive_entity_context(
 
 ### Task 1: Entity Persistence (CRITICAL) 🔥
 
-**Problem:** Entity bootstrap creates BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") links in memory but never persists them.
+**Problem:** Entity bootstrap creates MEMBER_OF links in memory but never persists them.
 
 **File:** `orchestration/mechanisms/entity_bootstrap.py` (line ~626)
 
@@ -71,11 +71,11 @@ adapter.persist_subentities(graph)  # Method exists and works!
 **Verification:**
 ```bash
 # After fix, run bootstrap and check:
-redis-cli GRAPH.QUERY citizen_felix "MATCH (n)-[r:BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")]->(e:Subentity) RETURN count(r)"
+redis-cli GRAPH.QUERY citizen_felix "MATCH (n)-[r:MEMBER_OF]->(e:Subentity) RETURN count(r)"
 # Should return > 0 (currently returns 0)
 ```
 
-**Why critical:** Without BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF"), membership-weighted learning can't work.
+**Why critical:** Without MEMBER_OF, membership-weighted learning can't work.
 
 ---
 
@@ -165,7 +165,7 @@ redis-cli GRAPH.QUERY citizen_felix "MATCH (n)-[r:BELONGS_TO (Deprecated - now "
 ## Success Criteria
 
 **For Atlas's tasks:**
-- ✅ BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") relationships persist to database
+- ✅ MEMBER_OF relationships persist to database
 - ✅ Overlays persist and reload correctly on engine restart
 - ✅ Telemetry JSON contains entity attribution with local_overlays
 

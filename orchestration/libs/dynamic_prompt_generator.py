@@ -124,7 +124,7 @@ class DynamicPromptGenerator:
             if network_id == "N1":
                 self.file_path = Path(f"consciousness/citizens/{citizen_id}/CLAUDE.md")
             elif network_id == "N2":
-                self.file_path = Path(f"consciousness/collective/{citizen_id}/CLAUDE.md")
+                self.file_path = Path(f"consciousness/organization/{citizen_id}/CLAUDE.md")
             elif network_id == "N3":
                 self.file_path = Path(f"consciousness/ecosystem/{citizen_id}/CLAUDE.md")
             else:

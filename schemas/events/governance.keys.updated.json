@@ -1,0 +1,43 @@
+{
+  "$id": "mind://events/governance.keys.updated.json",
+  "title": "governance.keys.updated",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "key_version",
+    "pubkey_new"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "governance.keys.updated"
+    },
+    "org": {
+      "type": "string"
+    },
+    "key_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pubkey_new": {
+      "type": "string"
+    },
+    "pubkey_previous": {
+      "type": "string"
+    },
+    "emitted_by": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

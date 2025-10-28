@@ -14,10 +14,35 @@ Date: 2025-10-25
 
 import redis
 import logging
-from typing import List
+from typing import List, Sequence
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def _fetch_existing_index_tokens(graph_name: str, r: redis.Redis) -> Sequence[str]:
+    try:
+        result = r.execute_command('GRAPH.QUERY', graph_name, "CALL db.indexes()")
+    except Exception:
+        return []
+
+    if not isinstance(result, (list, tuple)) or len(result) < 2:
+        return []
+
+    rows = result[1] or []
+    tokens: List[str] = []
+    for row in rows:
+        tokens.append(str(row).lower())
+    return tokens
+
+
+def _index_exists(existing_tokens: Sequence[str], label: str, prop: str) -> bool:
+    target_label = label.lower()
+    target_prop = prop.lower()
+    for token in existing_tokens:
+        if target_label in token and target_prop in token:
+            return True
+    return False
 
 
 def create_indexes_for_graph(graph_name: str, r: redis.Redis) -> None:
@@ -34,27 +59,44 @@ def create_indexes_for_graph(graph_name: str, r: redis.Redis) -> None:
         # Index on Subentity.name for fast entity lookup
         {
             'query': "CREATE INDEX FOR (e:Subentity) ON (e.name)",
-            'description': "Subentity.name (entity lookup)"
+            'description': "Subentity.name (entity lookup)",
+            'label': 'Subentity',
+            'property': 'name'
         },
         # Index on Node.primary_entity for fast member queries
         {
             'query': "CREATE INDEX FOR (n:Node) ON (n.primary_entity)",
-            'description': "Node.primary_entity (member queries)"
+            'description': "Node.primary_entity (member queries)",
+            'label': 'Node',
+            'property': 'primary_entity'
         },
         # Index on Subentity.id for ID-based lookup
         {
             'query': "CREATE INDEX FOR (e:Subentity) ON (e.id)",
-            'description': "Subentity.id (ID lookup)"
+            'description': "Subentity.id (ID lookup)",
+            'label': 'Subentity',
+            'property': 'id'
         }
     ]
 
+    existing_tokens = _fetch_existing_index_tokens(graph_name, r)
+
     for index in indexes:
+        if index['label'] and index['property'] and _index_exists(existing_tokens, index['label'], index['property']):
+            logger.debug(f"  ⏭️  Index already exists: {index['description']}")
+            continue
+
         try:
             r.execute_command('GRAPH.QUERY', graph_name, index['query'])
             logger.info(f"  ✅ Created index: {index['description']}")
+            existing_tokens = _fetch_existing_index_tokens(graph_name, r)
         except Exception as e:
             error_msg = str(e).lower()
-            if 'already exists' in error_msg or 'index already exists' in error_msg:
+            if (
+                'already exists' in error_msg
+                or 'index already exists' in error_msg
+                or 'already indexed' in error_msg
+            ):
                 logger.debug(f"  ⏭️  Index already exists: {index['description']}")
             else:
                 logger.warning(f"  ❌ Failed to create index {index['description']}: {e}")

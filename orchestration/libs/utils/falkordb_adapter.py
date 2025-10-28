@@ -20,14 +20,70 @@ Architecture: V2 Single-Energy (foundations/diffusion.md)
 
 import json
 import logging
+import re
+import redis
 from datetime import datetime
 from typing import Dict, Any, Optional, List
+from falkordb import FalkorDB
 
 from orchestration.core.node import Node
 from orchestration.core.link import Link
 from orchestration.core.types import NodeType, LinkType
+from orchestration.libs.write_gate import namespace_for_graph, write_gate
 
 logger = logging.getLogger(__name__)
+
+
+def safe_float(value, default=0.0, property_name="unknown"):
+    """
+    Safely convert value to float with defensive parsing.
+    
+    Handles corrupted data like "0.85 Rich, specific value" by extracting numeric prefix.
+    
+    Args:
+        value: Value to convert (any type)
+        default: Default value if conversion fails (default: 0.0)
+        property_name: Name of property for logging (default: "unknown")
+    
+    Returns:
+        float value or default
+    
+    Examples:
+        >>> safe_float(0.85)
+        0.85
+        >>> safe_float("0.85")
+        0.85
+        >>> safe_float("0.85 Rich, specific value")
+        0.85
+        >>> safe_float("invalid", default=0.5)
+        0.5
+    """
+    try:
+        # Try direct conversion first (fast path for clean data)
+        return float(value)
+    except (ValueError, TypeError):
+        # Defensive parsing: extract numeric prefix
+        if isinstance(value, str):
+            # Try to extract numeric part from beginning of string
+            match = re.match(r"^([+-]?\d+\.?\d*)", value.strip())
+            if match:
+                try:
+                    numeric_str = match.group(1)
+                    result = float(numeric_str)
+                    logger.warning(
+                        f"[FalkorDB] Extracted numeric prefix from corrupted {property_name}: "
+                        f"'{value}' -> {result}"
+                    )
+                    return result
+                except ValueError:
+                    pass
+        
+        # Fallback to default
+        logger.warning(
+            f"[FalkorDB] Could not convert {property_name} to float: '{value}', using default {default}"
+        )
+        return default
+
 
 
 # --- Node Serialization ---
@@ -87,6 +143,9 @@ def serialize_node(node: Node) -> Dict[str, Any]:
         'ema_wm_presence': node.ema_wm_presence,
         'ema_formation_quality': node.ema_formation_quality,
         'scope': node.scope,
+
+        # Entity activation tracking (for frontend viz)
+        'entity_activations': json.dumps(node.entity_activations),  # Dict[str, Dict[str, float]] → JSON
 
         # Properties (Dict → JSON string)
         'properties': json.dumps(node.properties),
@@ -148,6 +207,9 @@ def deserialize_node(props: Dict[str, Any]) -> Node:
         ema_wm_presence=props.get('ema_wm_presence', 0.0),
         ema_formation_quality=props.get('ema_formation_quality', 0.0),
         scope=props.get('scope', 'personal'),
+
+        # Entity activation tracking (for frontend viz)
+        entity_activations=json.loads(props.get('entity_activations', '{}')),  # JSON → Dict[str, Dict[str, float]]
 
         # Properties (JSON string → Dict)
         properties=json.loads(props.get('properties', '{}')),
@@ -782,6 +844,197 @@ def extract_link_from_result(result: Any) -> Link:
     return deserialize_link(props)
 
 
+# --- MEMBER_OF Edge Persistence (Entity Membership) ---
+
+def get_falkordb_client():
+    """
+    Get Redis client connected to FalkorDB.
+
+    DEPRECATED: Use get_falkordb_graph() for parametrized queries.
+    Only use this for raw redis commands.
+
+    Returns:
+        redis.Redis: Client connected to localhost:6379
+    """
+    return redis.Redis(host='localhost', port=6379, decode_responses=False)
+
+
+def get_falkordb_graph(graph_name: str):
+    """
+    Get FalkorDB graph object for parametrized queries.
+
+    This is the CORRECT way to execute parametrized Cypher queries in FalkorDB.
+    Uses FalkorDB Python client's graph.query(query, params) API.
+
+    Args:
+        graph_name: Graph name (e.g., "citizen_felix", "citizen_luca")
+
+    Returns:
+        FalkorDB Graph object
+
+    Example:
+        >>> graph = get_falkordb_graph("citizen_felix")
+        >>> result = graph.query("MATCH (n:Node {id: $id}) RETURN n", {'id': 'node_1'})
+
+    Author: Atlas (Infrastructure Engineer)
+    Fix: 2025-10-26 - Corrected API usage (was using redis-cli syntax in Python)
+    """
+    db = FalkorDB(host='localhost', port=6379)
+    return db.select_graph(graph_name)
+
+
+def flush_membership_edges(graph_id: str, memberships: List[Dict[str, Any]]) -> int:
+    """
+    Batch upsert MEMBER_OF edges with activation stats.
+
+    Implements edge-based canonical truth for entity membership. Each membership edge
+    contains weight, activation stats, and timestamps. This is the single source of
+    truth for membership data - node.entity_activations is derived cache.
+
+    Args:
+        graph_id: Target graph (e.g., "citizen_felix")
+        memberships: List of membership updates, each containing:
+            {
+                "node_id": str,
+                "entity_id": str,
+                "weight_new": float,        // updated weight
+                "weight_init": float,       // initial weight if creating edge
+                "activation_ema": float,    // running average of activation
+                "activation_count_inc": int,  // increment to activation count
+                "last_activated_ts": int    // milliseconds timestamp
+            }
+
+    Returns:
+        Number of edges upserted
+
+    Example:
+        >>> memberships = [
+        ...     {"node_id": "n1", "entity_id": "E.architect",
+        ...      "weight_new": 1.42, "weight_init": 0.4,
+        ...      "activation_ema": 0.63, "activation_count_inc": 1,
+        ...      "last_activated_ts": 1730074800000},
+        ...     {"node_id": "n2", "entity_id": "E.architect",
+        ...      "weight_new": 0.88, "weight_init": 0.3,
+        ...      "activation_ema": 0.27, "activation_count_inc": 0,
+        ...      "last_activated_ts": 1730074798000}
+        ... ]
+        >>> flush_membership_edges("citizen_felix", memberships)
+        2
+
+    Author: Atlas (Infrastructure Engineer)
+    Integration: MEMBER_OF_EDGE_PERSISTENCE_INTEGRATION.md Integration 2
+    Fixed: 2025-10-26 - Use FalkorDB graph.query() API instead of redis execute_command()
+    """
+    if not memberships:
+        return 0
+
+    # Batched upsert query - MERGE creates edge if not exists, updates if exists
+    query = """
+    UNWIND $memberships AS m
+    MERGE (n:Node {id: m.node_id})
+    MERGE (e:SubEntity {id: m.entity_id})
+    MERGE (n)-[r:MEMBER_OF]->(e)
+    ON CREATE SET
+      r.weight = m.weight_init,
+      r.activation_ema = coalesce(m.activation_ema, 0.0),
+      r.activation_count = coalesce(m.activation_count_inc, 0),
+      r.last_activated_ts = coalesce(m.last_activated_ts, timestamp()),
+      r.created_at = timestamp(),
+      r.updated_at = timestamp()
+    ON MATCH SET
+      r.weight = m.weight_new,
+      r.activation_ema = m.activation_ema,
+      r.activation_count = coalesce(r.activation_count, 0) + coalesce(m.activation_count_inc, 0),
+      r.last_activated_ts = coalesce(m.last_activated_ts, r.last_activated_ts),
+      r.updated_at = timestamp()
+    """
+
+    params = {"memberships": memberships}
+
+    try:
+        graph = get_falkordb_graph(graph_id)
+        result = graph.query(query, params)  # CORRECT: FalkorDB Python client API
+        logger.debug(f"Flushed {len(memberships)} membership edges to graph {graph_id}")
+        return len(memberships)
+    except Exception as e:
+        logger.error(f"Failed to flush {len(memberships)} membership edges: {e}")
+        raise
+
+
+def rebuild_node_entity_activations_cache(graph_id: str, node_id: str, k: int = 10) -> Dict:
+    """
+    Rebuild node.entity_activations cache from MEMBER_OF edges (top-K by activation_ema).
+
+    Implements write-through cache pattern: after updating MEMBER_OF edges, rebuild
+    the denormalized cache on the node for fast access. Cache contains top-K entities
+    by activation strength.
+
+    APOC-free implementation: Builds dict in Python instead of using apoc.map.fromPairs
+    for maximum FalkorDB compatibility.
+
+    Args:
+        graph_id: Target graph (e.g., "citizen_felix")
+        node_id: Node to rebuild cache for
+        k: Number of top entities to cache (default: 10)
+
+    Returns:
+        Rebuilt cache dict {entity_id: {activation_ema, last_ts, weight}}
+
+    Example:
+        >>> cache = rebuild_node_entity_activations_cache("citizen_felix", "n1", k=5)
+        >>> cache
+        {
+            "E.architect": {"activation_ema": 0.63, "last_ts": 1730074800000, "weight": 1.42},
+            "E.runtime": {"activation_ema": 0.27, "last_ts": 1730074798000, "weight": 0.88}
+        }
+
+    Author: Atlas (Infrastructure Engineer)
+    Integration: MEMBER_OF_EDGE_PERSISTENCE_INTEGRATION.md Integration 2
+    Pattern: Write-through cache (truth on edges, cache on nodes)
+    Fixed: 2025-10-26 - Use FalkorDB graph.query() API instead of redis execute_command()
+    """
+    graph = get_falkordb_graph(graph_id)
+
+    # Query top-K MEMBER_OF edges by activation_ema
+    query = """
+    MATCH (n:Node {id: $node_id})-[r:MEMBER_OF]->(e:SubEntity)
+    RETURN e.id AS eid, r.activation_ema AS a, r.last_activated_ts AS ts, r.weight AS w
+    ORDER BY a DESC
+    LIMIT $k
+    """
+
+    params = {"node_id": node_id, "k": k}
+    result = graph.query(query, params)  # CORRECT: FalkorDB Python client API
+
+    # Build cache dict in Python (APOC-free alternative)
+    cache = {}
+    if result and result.result_set:
+        for row in result.result_set:
+            eid = row[0]
+            a = row[1] if row[1] is not None else 0.0
+            ts = row[2] if row[2] is not None else 0
+            w = row[3] if row[3] is not None else 0.0
+
+            cache[eid] = {
+                "activation_ema": a,
+                "last_ts": ts,
+                "weight": w
+            }
+
+    # Write cache back to node property
+    update_query = """
+    MATCH (n:Node {id: $node_id})
+    SET n.entity_activations = $cache,
+        n.entity_activations_updated_at = timestamp()
+    """
+
+    cache_json = json.dumps(cache)  # Dict → JSON string for FalkorDB storage
+    graph.query(update_query, {"node_id": node_id, "cache": cache_json})  # CORRECT API
+
+    logger.debug(f"Rebuilt entity_activations cache for {node_id}: {len(cache)} entities")
+    return cache
+
+
 # --- FalkorDB Adapter ---
 
 class FalkorDBAdapter:
@@ -891,7 +1144,7 @@ class FalkorDBAdapter:
                     except:
                         energy = {}
                 elif isinstance(energy_raw, (int, float)):
-                    energy = {"default": float(energy_raw)}
+                    energy = {"default": safe_float(energy_raw, default=0.0, property_name="node.energy")}
                 else:
                     energy = {}
 
@@ -899,21 +1152,21 @@ class FalkorDBAdapter:
                 if isinstance(energy, dict):
                     if "default" in energy:
                         # V2 format: {"default": value}
-                        E = float(energy["default"])
+                        E = safe_float(energy["default"], default=0.0, property_name="node.E[default]")
                     elif energy:
                         # V1 format: {"entity_name": value} - use first entity's value
-                        E = float(next(iter(energy.values())))
+                        E = safe_float(next(iter(energy.values())), default=0.0, property_name="node.E[first_value]")
                     else:
                         # Empty dict
                         E = 0.0
                 else:
                     # Not a dict (shouldn't happen given above logic, but handle gracefully)
-                    E = float(energy) if energy else 0.0
+                    E = safe_float(energy, default=0.0, property_name="node.E") if energy else 0.0
 
                 # Extract theta (activation threshold) - default to 0.5 if not in DB
                 theta = props.get('theta', props.get('Θ', 0.5))
                 if isinstance(theta, str):
-                    theta = float(theta)
+                    theta = safe_float(theta, default=0.5, property_name="node.theta")
 
                 node = Node(
                     id=node_id,
@@ -929,7 +1182,55 @@ class FalkorDBAdapter:
 
                 graph.add_node(node)
 
-        # Load all links
+        # Load all subentities FIRST (before links) so MEMBER_OF links can reference them
+        query_subentities = "MATCH (e:Subentity) RETURN e"
+        result_subentities = self.graph_store.query(query_subentities)
+
+        # Handle both QueryResult and list return types
+        result_set_subentities = []
+        if result_subentities:
+            if isinstance(result_subentities, list):
+                result_set_subentities = result_subentities
+            elif hasattr(result_subentities, 'result_set'):
+                result_set_subentities = result_subentities.result_set
+
+        if result_set_subentities:
+            logger.info(f"Loaded {len(result_set_subentities)} subentities from FalkorDB")
+            for row in result_set_subentities:
+                entity_obj = row[0]
+                props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}
+
+                # Deserialize subentity
+                try:
+                    entity = deserialize_entity(props)
+
+                    # LAYER 2: Initialize functional entities with neutral EMAs to prevent premature dissolution
+                    # Functional entities are permanent infrastructure - their quality shouldn't start at ~0.01
+                    if entity.entity_kind == "functional":
+                        # Set neutral baselines (0.4-0.6 range) so geometric mean yields healthy quality ~0.5-0.6
+                        entity.ema_active = max(getattr(entity, 'ema_active', 0.6), 0.6)
+                        entity.coherence_ema = max(getattr(entity, 'coherence_ema', 0.6), 0.6)
+                        entity.ema_wm_presence = max(getattr(entity, 'ema_wm_presence', 0.5), 0.5)
+                        entity.ema_trace_seats = max(getattr(entity, 'ema_trace_seats', 0.4), 0.4)
+                        entity.ema_formation_quality = max(getattr(entity, 'ema_formation_quality', 0.6), 0.6)
+
+                        # Start "old enough" to pass any age-based gates (1000 frames = ~100s)
+                        entity.frames_since_creation = max(getattr(entity, 'frames_since_creation', 1000), 1000)
+
+                        # Consider them stable from the start
+                        if entity.stability_state == "candidate":
+                            entity.stability_state = "mature"
+
+                    graph.add_entity(entity)
+                    logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
+                except Exception as e:
+                    logger.warning(f"  Failed to deserialize subentity {props.get('id', 'unknown')}: {e}")
+
+            logger.info(f"Loaded {len(graph.subentities)} subentities from FalkorDB")
+        else:
+            logger.debug("No subentities found in FalkorDB")
+
+        # Load all links (AFTER subentities so MEMBER_OF links can reference entities)
         query = "MATCH ()-[r]->() RETURN r"
         result = self.graph_store.query(query)
 
@@ -998,11 +1299,11 @@ class FalkorDBAdapter:
                             subentity=props.get('subentity', props.get('created_by', 'system')),
                             source=source,
                             target=target,
-                            weight=float(props.get('weight', props.get('link_strength', 0.5))),
+                            weight=safe_float(props.get('weight', props.get('link_strength', 0.5)), default=0.5, property_name="link.weight"),
                             goal=props.get('goal', ''),
                             mindstate=props.get('mindstate', ''),
-                            energy=float(props.get('energy', props.get('valence', 0.5))),
-                            confidence=float(props.get('confidence', 0.5)),
+                            energy=safe_float(props.get('energy', props.get('valence', 0.5)), default=0.5, property_name="link.energy"),
+                            confidence=safe_float(props.get('confidence', 0.5), default=0.5, property_name="link.confidence"),
                             valid_at=datetime.now(),
                             created_at=datetime.now()
                         )
@@ -1016,55 +1317,6 @@ class FalkorDBAdapter:
                                 logger.debug(f"Skipping duplicate link {link.id}: {e}")
                             else:
                                 raise
-
-
-        # Load all subentities
-        query_subentities = "MATCH (e:Subentity) RETURN e"
-        result_subentities = self.graph_store.query(query_subentities)
-
-        # Handle both QueryResult and list return types
-        result_set_subentities = []
-        if result_subentities:
-            if isinstance(result_subentities, list):
-                result_set_subentities = result_subentities
-            elif hasattr(result_subentities, 'result_set'):
-                result_set_subentities = result_subentities.result_set
-
-        if result_set_subentities:
-            logger.info(f"Loaded {len(result_set_subentities)} subentities from FalkorDB")
-            for row in result_set_subentities:
-                entity_obj = row[0]
-                props = entity_obj.properties if hasattr(entity_obj, 'properties') else {}
-
-                # Deserialize subentity
-                try:
-                    entity = deserialize_entity(props)
-
-                    # LAYER 2: Initialize functional entities with neutral EMAs to prevent premature dissolution
-                    # Functional entities are permanent infrastructure - their quality shouldn't start at ~0.01
-                    if entity.entity_kind == "functional":
-                        # Set neutral baselines (0.4-0.6 range) so geometric mean yields healthy quality ~0.5-0.6
-                        entity.ema_active = max(getattr(entity, 'ema_active', 0.6), 0.6)
-                        entity.coherence_ema = max(getattr(entity, 'coherence_ema', 0.6), 0.6)
-                        entity.ema_wm_presence = max(getattr(entity, 'ema_wm_presence', 0.5), 0.5)
-                        entity.ema_trace_seats = max(getattr(entity, 'ema_trace_seats', 0.4), 0.4)
-                        entity.ema_formation_quality = max(getattr(entity, 'ema_formation_quality', 0.6), 0.6)
-
-                        # Start "old enough" to pass any age-based gates (1000 frames = ~100s)
-                        entity.frames_since_creation = max(getattr(entity, 'frames_since_creation', 1000), 1000)
-
-                        # Consider them stable from the start
-                        if entity.stability_state == "candidate":
-                            entity.stability_state = "mature"
-
-                    graph.add_entity(entity)
-                    logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
-                except Exception as e:
-                    logger.warning(f"  Failed to deserialize subentity {props.get('id', 'unknown')}: {e}")
-
-            logger.info(f"Loaded {len(graph.subentities)} subentities from FalkorDB")
-        else:
-            logger.debug("No subentities found in FalkorDB")
 
         return graph
 
@@ -1128,7 +1380,7 @@ class FalkorDBAdapter:
            OR ( (r.id IS NULL OR n.id IS NULL)
                 AND n.name = r.name
                 AND (r.label IS NULL OR r.label IN labels(n)) )
-        SET n.E = r.E, n.theta = r.theta
+        SET n.E = r.E, n.theta = r.theta, n.entity_activations = r.entity_activations
         RETURN count(n) AS updated
         """
 
@@ -1187,11 +1439,86 @@ class FalkorDBAdapter:
             self.update_link_weight(link)
 
 
+    def update_coactivation_edges(self, selected_entities: list, alpha: float = 0.1):
+        """
+        Update COACTIVATES_WITH edges between entity pairs based on WM co-selection.
+
+        Lean U metric implementation (wm_coactivation_tracking.md).
+        Instead of storing Frame nodes (7M/year, 280GB), maintains aggregate
+        co-activation statistics on edges (~600 edges, 48KB).
+
+        Updates O(k²) edges per WM event where k ≈ 5-7 entities.
+
+        Args:
+            selected_entities: List of entity IDs currently in WM
+            alpha: EMA decay rate (default 0.1)
+
+        Edge properties updated:
+            both_ema: EMA of P(both entities in WM together)
+            either_ema: EMA of P(either entity in WM)
+            u_jaccard: both_ema / either_ema (U metric)
+            both_count: Total co-occurrence count
+            either_count: Total occurrence count
+            last_ts: Last update timestamp
+
+        Example:
+            >>> adapter.update_coactivation_edges(
+            ...     selected_entities=["entity_backend", "entity_consciousness"],
+            ...     alpha=0.1
+            ... )
+        """
+        if len(selected_entities) < 2:
+            return  # Need at least 2 entities to form pairs
+
+        try:
+            # Update pairwise co-activation edges
+            query = """
+            UNWIND $pairs AS pair
+            MERGE (a:SubEntity {id: pair.entity_a})
+            MERGE (b:SubEntity {id: pair.entity_b})
+            MERGE (a)-[r:COACTIVATES_WITH]-(b)
+            ON CREATE SET
+                r.both_ema = $alpha,
+                r.either_ema = $alpha,
+                r.u_jaccard = 1.0,
+                r.both_count = 1,
+                r.either_count = 1,
+                r.last_ts = timestamp()
+            ON MATCH SET
+                r.both_ema = $alpha * 1.0 + (1 - $alpha) * r.both_ema,
+                r.either_ema = $alpha * 1.0 + (1 - $alpha) * r.either_ema,
+                r.both_count = r.both_count + 1,
+                r.either_count = r.either_count + 1,
+                r.u_jaccard = (r.both_ema + $alpha * 1.0) / (r.either_ema + $alpha * 1.0),
+                r.last_ts = timestamp()
+            """
+
+            # Generate pairs (only upper triangle to avoid duplicates)
+            pairs = []
+            for i, entity_a in enumerate(selected_entities):
+                for entity_b in selected_entities[i+1:]:
+                    # Ensure consistent ordering (A < B lexicographically)
+                    if entity_a < entity_b:
+                        pairs.append({"entity_a": entity_a, "entity_b": entity_b})
+                    else:
+                        pairs.append({"entity_a": entity_b, "entity_b": entity_a})
+
+            params = {
+                "pairs": pairs,
+                "alpha": alpha
+            }
+
+            self.graph_store.query(query, params)
+            logger.debug(f"[WM Coactivation] Updated {len(pairs)} entity pair edges")
+
+        except Exception as e:
+            logger.error(f"[WM Coactivation] Failed to update edges: {e}")
+
     def persist_subentities(self, graph: 'Graph'):
         """
         Persist all subentities from graph to FalkorDB.
 
-        Creates Subentity nodes and their BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF")/RELATES_TO links.
+        Creates Subentity nodes and their MEMBER_OF/RELATES_TO links.
         Used after bootstrap to make subentities permanent.
 
         Args:
@@ -1228,7 +1555,7 @@ class FalkorDBAdapter:
 
         if existing_count > 0:
             logger.info(f"Subentities already exist in FalkorDB ({existing_count} found), skipping entity creation")
-            # NOTE: We still persist BELONGS_TO (Deprecated - now "MEMBER_OF") (Deprecated - now "MEMBER_OF") and RELATES_TO links below (they may be missing)
+            # NOTE: We still persist MEMBER_OF and RELATES_TO links below (they may be missing)
         else:
             logger.info(f"Persisting {len(graph.subentities)} subentities to FalkorDB...")
 
@@ -1310,6 +1637,128 @@ class FalkorDBAdapter:
         logger.info(f"Subentity persistence complete: {stats}")
         return stats
 
+    async def run_write(self, cypher: str, params: Dict[str, Any]) -> Any:
+        """
+        Execute write Cypher query asynchronously.
+
+        Wraps synchronous FalkorDB query in async executor for non-blocking operation.
+
+        Args:
+            cypher: Cypher query string
+            params: Query parameters
+
+        Returns:
+            Query result
+
+        Example:
+            >>> result = await adapter.run_write(
+            ...     "MERGE (n:Node {id: $id}) SET n.value = $value",
+            ...     {"id": "n1", "value": 42}
+            ... )
+        """
+        import asyncio
+        loop = asyncio.get_event_loop()
+
+        # Run synchronous query in thread executor to avoid blocking
+        def _execute():
+            try:
+                return self.graph_store.query(cypher, params)
+            except Exception as e:
+                logger.error(f"[FalkorDB] Write query failed: {e}")
+                raise
+
+        return await loop.run_in_executor(None, _execute)
+
+    async def update_coactivation_edges_async(
+        self,
+        citizen_id: str,
+        entities_active: List[str],
+        alpha: float,
+        timestamp_ms: int
+    ) -> None:
+        """
+        Update COACTIVATES_WITH EMAs for all unordered pairs in entities_active.
+
+        Implements lean U-metric (wm_coactivation_tracking.md Priority 0).
+        Updates O(k^2) edges per WM event where k ≈ 5-7 entities.
+
+        Edge properties updated:
+            both_ema: EMA of P(both entities in WM together)
+            either_ema: EMA of P(either entity in WM)
+            u_jaccard: both_ema / either_ema (U metric)
+            both_count: Total co-occurrence count
+            either_count: Total occurrence count
+            last_ts: Last update timestamp
+            alpha: EMA decay rate
+
+        Args:
+            citizen_id: Citizen graph name (for context/logging)
+            entities_active: List of entity IDs currently in WM
+            alpha: EMA decay rate (default 0.1)
+            timestamp_ms: Update timestamp in milliseconds
+
+        Returns:
+            None
+
+        Example:
+            >>> await adapter.update_coactivation_edges_async(
+            ...     citizen_id="citizen_felix",
+            ...     entities_active=["entity_backend", "entity_consciousness"],
+            ...     alpha=0.1,
+            ...     timestamp_ms=1730074800000
+            ... )
+
+        Author: Atlas (Infrastructure Engineer)
+        Spec: docs/specs/v2/subentity/wm_coactivation_tracking.md
+        Implementation: Priority 0 - COACTIVATES_WITH tracking
+        """
+        if not entities_active or len(entities_active) == 1:
+            return  # Need at least 2 entities to form pairs
+
+        # Ensure deterministic A<B ordering for undirected edge
+        act = sorted(set(entities_active))
+        updates = []
+
+        # Generate all pairwise combinations (O(k^2) where k ≈ 5-7)
+        for i in range(len(act)):
+            for j in range(i+1, len(act)):
+                A, B = act[i], act[j]
+                updates.append({
+                    "A": A,
+                    "B": B,
+                    "both_signal": 1.0,   # Both present in WM
+                    "either_signal": 1.0,  # Either present
+                    "alpha": alpha,
+                    "ts": timestamp_ms
+                })
+
+        if not updates:
+            return
+
+        # Batched upsert with EMA math
+        cypher = """
+        UNWIND $updates AS u
+        MERGE (a:SubEntity {id: u.A})-[r:COACTIVATES_WITH]->(b:SubEntity {id: u.B})
+        ON CREATE SET
+          r.both_ema=0.0, r.either_ema=0.0, r.u_jaccard=0.0,
+          r.both_count=0, r.either_count=0, r.alpha=u.alpha
+        SET
+          r.both_ema   = u.alpha * u.both_signal   + (1 - u.alpha) * r.both_ema,
+          r.either_ema = u.alpha * u.either_signal + (1 - u.alpha) * r.either_ema,
+          r.both_count   = r.both_count   + u.both_signal,
+          r.either_count = r.either_count + u.either_signal,
+          r.last_ts = datetime({epochMillis:u.ts}),
+          r.u_jaccard = CASE WHEN r.either_ema > 1e-12 THEN r.both_ema / r.either_ema ELSE 0.0 END
+        """
+
+        try:
+            await self.run_write(cypher, {"updates": updates})
+            logger.debug(f"[WM Coactivation] Updated {len(updates)} COACTIVATES_WITH edges for {citizen_id}")
+        except Exception as e:
+            logger.error(f"[WM Coactivation] Failed to update edges for {citizen_id}: {e}")
+            raise
+
+    @write_gate(lambda self, graph_name, *args, **kwargs: namespace_for_graph(graph_name))
     def persist_membership(
         self,
         graph_name: str,
@@ -1317,7 +1766,8 @@ class FalkorDBAdapter:
         entity_name: str,
         weight: float = 1.0,
         role: str = "primary",
-        timestamp: Optional[int] = None
+        timestamp: Optional[int] = None,
+        ctx: Optional[Dict[str, str]] = None
     ) -> bool:
         """
         Persist entity membership for a node using hardened MEMBER_OF pattern.
@@ -1353,6 +1803,7 @@ class FalkorDBAdapter:
             ... )
             True
         """
+        _ = ctx  # Context enforced by WriteGate
         try:
             # Set graph context
             self.graph_store.database = graph_name

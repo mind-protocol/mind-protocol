@@ -1,7 +1,7 @@
 """
 Code Substrate Watcher - Auto-create Code and Documentation nodes
 
-Watches code and documentation files, auto-creating nodes in N2 collective graph.
+Watches code and documentation files, auto-creating nodes in N2 organization graph.
 
 Monitors:
 - orchestration/*.py

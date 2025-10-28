@@ -1,0 +1,8 @@
+{
+  "citizen_id": "atlas",
+  "messages": [
+    {"role": "human", "content": "Can you fix the FalkorDB API?"},
+    {"role": "assistant", "content": "Yes, I fixed the parametrized query issue using graph.query() instead of execute_command()."}
+  ],
+  "session_id": "test_session_1"
+}

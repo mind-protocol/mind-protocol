@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-26_04-17-02",
+  "entity_type": "citizen",
+  "entity_id": "felix",
+  "created_at": "2025-10-26T03:17:02.414520+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-26T03:17:02.414520+00:00",
+      "content": " ⚠️ stimulus_injection failed to load: \"No module named\n  orchestration.services.stimulus_injection\""
+    }
+  ],
+  "last_updated": "2025-10-26T03:17:02.414520+00:00",
+  "message_count": 1
+}

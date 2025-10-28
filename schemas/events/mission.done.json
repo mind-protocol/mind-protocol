@@ -1,0 +1,50 @@
+{
+  "$id": "mind://events/mission.done.json",
+  "title": "mission.done",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "mission_id",
+    "success"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "mission.done"
+    },
+    "org": {
+      "type": "string"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,140 @@
+{
+  "$id": "mind://events/membrane.inject.json",
+  "title": "membrane.inject",
+  "type": "object",
+  "required": [
+    "v",
+    "id",
+    "ts",
+    "type",
+    "org",
+    "scope",
+    "channel",
+    "origin",
+    "ttl_frames",
+    "payload",
+    "sig"
+  ],
+  "properties": {
+    "v": {
+      "type": "string",
+      "enum": [
+        "1.1"
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "membrane.inject"
+    },
+    "org": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "organizational",
+        "personal",
+        "infrastructure"
+      ]
+    },
+    "channel": {
+      "type": "string"
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "ui",
+        "signals",
+        "tool",
+        "membrane",
+        "orchestrator",
+        "governance",
+        "external"
+      ]
+    },
+    "origin_chain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "origin_chain_depth": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ttl_frames": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "dedupe_key": {
+      "type": "string"
+    },
+    "intent_merge_key": {
+      "type": "string"
+    },
+    "rate_limit_bucket": {
+      "type": "string"
+    },
+    "business_impact": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "source_trust_estimate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "ack_policy": {
+      "type": "string",
+      "enum": [
+        "none",
+        "human_required",
+        "tool_execution_required"
+      ]
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "payload": {
+      "type": "object"
+    },
+    "sig": {
+      "type": "object",
+      "required": [
+        "algo",
+        "pubkey",
+        "signature"
+      ],
+      "properties": {
+        "algo": {
+          "type": "string",
+          "enum": [
+            "ed25519"
+          ]
+        },
+        "pubkey": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

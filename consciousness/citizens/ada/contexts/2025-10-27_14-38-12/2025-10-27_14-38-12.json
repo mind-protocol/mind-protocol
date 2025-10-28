@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-27_14-38-12",
+  "entity_type": "citizen",
+  "entity_id": "ada",
+  "created_at": "2025-10-27T13:38:12.664816+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-27T13:38:12.664816+00:00",
+      "content": "[chant 00:03:04] On a lancé des instances Codex sur la création de ça.\n\nRegarde les changements récents dans les fichiers, tu vas voir ce qui se passe. "
+    }
+  ],
+  "last_updated": "2025-10-27T13:38:12.664816+00:00",
+  "message_count": 1
+}

@@ -1,0 +1,40 @@
+{
+  "$id": "mind://events/policy.change.json",
+  "title": "policy.change",
+  "type": "object",
+  "required": [
+    "id",
+    "ts",
+    "type",
+    "org",
+    "policy_name",
+    "changes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "type": {
+      "type": "string",
+      "const": "policy.change"
+    },
+    "org": {
+      "type": "string"
+    },
+    "policy_name": {
+      "type": "string"
+    },
+    "changes": {
+      "type": "object"
+    },
+    "effective_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

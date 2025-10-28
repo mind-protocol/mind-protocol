@@ -16,20 +16,23 @@ Enhanced: 2025-10-21 (Phase 1-6 weight learning integration)
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
 
+import redis
+
 from orchestration.libs.trace_parser import parse_trace_format, TraceParseResult
 from orchestration.mechanisms.weight_learning_v2 import WeightLearnerV2
-from orchestration.libs.entity_context_trace_integration import (
-    EntityContextManager,
+from orchestration.libs.subentity_context_trace_integration import (
+    SubEntityContextManager,
     MembershipQueryHelper,
     enhance_nodes_with_memberships
 )
 from orchestration.services.learning.learning_heartbeat import LearningHeartbeat
 from orchestration.adapters.ws.weight_learning_emitter import WeightLearningEmitter, NoOpTransport
 from orchestration.adapters.search.embedding_service import get_embedding_service
+from orchestration.libs.write_gate import namespace_for_graph, write_gate
 from substrate.schemas.consciousness_schema import (
     get_node_type_by_name,
     get_relation_type_by_name,
@@ -73,12 +76,42 @@ class TraceCapture:
         # Track current graph name (FalkorDBGraphStore doesn't expose this)
         self._current_graph_name = "falkor"
 
-        # Map scope to graph name
-        self.scope_to_graph = {
+        # Determine available graphs to select canonical routing
+        primary_graphs = {
+            "personal": f"consciousness-infrastructure_mind-protocol_{citizen_id}",
+            "organizational": "consciousness-infrastructure_mind-protocol",
+            "ecosystem": "consciousness-infrastructure"
+        }
+        fallback_graphs = {
             "personal": f"citizen_{citizen_id}",
             "organizational": "org_mind_protocol",
             "ecosystem": "ecosystem_public"
         }
+
+        try:
+            redis_client = redis.Redis(host=self.host, port=self.port, decode_responses=True)
+            graph_list = redis_client.execute_command("GRAPH.LIST") or []
+            self._graph_names = {name for name in graph_list if name}
+        except Exception as exc:  # pragma: no cover - connectivity guard
+            logger.debug("[TraceCapture] Unable to list graphs (%s); defaulting to preferred names", exc)
+            self._graph_names = set()
+
+        self.scope_to_graph: Dict[str, str] = {}
+        for scope in ("personal", "organizational", "ecosystem"):
+            preferred = primary_graphs[scope]
+            fallback = fallback_graphs[scope]
+            if self._graph_names:
+                if preferred in self._graph_names:
+                    chosen = preferred
+                elif fallback in self._graph_names:
+                    chosen = fallback
+                else:
+                    chosen = preferred
+            else:
+                chosen = preferred
+            self.scope_to_graph[scope] = chosen
+
+        logger.info("[TraceCapture] Scope routing configured: %s", self.scope_to_graph)
 
         # Weight learning mechanism (Priority 4: Entity-context-aware)
         self.weight_learner = WeightLearnerV2(
@@ -89,8 +122,8 @@ class TraceCapture:
             overlay_cap=2.0      # Max absolute overlay
         )
 
-        # Entity context tracking (Priority 4)
-        self.entity_context_manager = EntityContextManager(self.graph_store)
+        # SubEntity context tracking (Priority 4)
+        self.entity_context_manager = SubEntityContextManager(self.graph_store)
         self.membership_helper = MembershipQueryHelper(self.graph_store)
 
         # FalkorDB adapter for entity membership persistence (P1)
@@ -109,7 +142,7 @@ class TraceCapture:
 
         logger.info(f"[TraceCapture] Initialized for {citizen_id} with multi-niveau routing")
         logger.info(f"[TraceCapture] WeightLearnerV2 enabled (α={self.weight_learner.alpha}, local={self.weight_learner.alpha_local}, global={self.weight_learner.alpha_global})")
-        logger.info(f"[TraceCapture] Entity context tracking enabled (Priority 4)")
+        logger.info(f"[TraceCapture] SubEntity context tracking enabled (Priority 4)")
         logger.info(f"[TraceCapture] Learning heartbeat enabled (dir={self.learning_heartbeat.heartbeat_dir})")
 
     def set_wm_entities(self, entity_ids: List[str]) -> None:
@@ -120,10 +153,18 @@ class TraceCapture:
         selected entities to TRACE reinforcement learning.
 
         Args:
-            entity_ids: List of entity IDs from wm.emit selected_entities
+            subentity_ids: List of subentity IDs from wm.emit selected_entities
         """
         self.last_wm_entities = entity_ids if entity_ids else []
         logger.debug(f"[TraceCapture] Updated WM entities: {self.last_wm_entities}")
+
+    def _namespace_for_scope(self, scope: str) -> str:
+        """Return hierarchical namespace for a given scope."""
+        return namespace_for_graph(self.scope_to_graph.get(scope))
+
+    def _ctx_for_scope(self, scope: str) -> Dict[str, str]:
+        """Build WriteGate context for a scope."""
+        return {"ns": self._namespace_for_scope(scope)}
 
     def _get_graph_for_scope(self, scope: str) -> FalkorDBGraphStore:
         """
@@ -147,6 +188,19 @@ class TraceCapture:
         self._current_graph_name = graph_name
 
         return self.graph_store
+
+    @write_gate(lambda self, scope, **kwargs: self._namespace_for_scope(scope))
+    def _run_write(
+        self,
+        *,
+        scope: str,
+        graph: FalkorDBGraphStore,
+        query: str,
+        params: Optional[Dict[str, Any]] = None,
+        ctx: Optional[Dict[str, Any]] = None
+    ):
+        """Execute a write query under WriteGate enforcement."""
+        return graph.query(query, params=params)
 
     async def process_response(self, response_content: str) -> Dict[str, Any]:
         """
@@ -358,13 +412,20 @@ class TraceCapture:
                 RETURN n.name as name, n.log_weight as log_weight
                 """
 
-                result = graph.query(update_query, params={
-                    'node_id': node_id,
-                    'log_weight': float(update.log_weight_new),
-                    'log_weight_overlays': json.dumps(overlays_dict),
-                    'ema_trace_seats': float(update.ema_trace_seats_new),
-                    'ema_formation_quality': float(update.ema_formation_quality_new or 0.0)
-                })
+                ctx = self._ctx_for_scope(scope)
+                result = self._run_write(
+                    scope=scope,
+                    graph=graph,
+                    query=update_query,
+                    params={
+                        'node_id': node_id,
+                        'log_weight': float(update.log_weight_new),
+                        'log_weight_overlays': json.dumps(overlays_dict),
+                        'ema_trace_seats': float(update.ema_trace_seats_new),
+                        'ema_formation_quality': float(update.ema_formation_quality_new or 0.0)
+                    },
+                    ctx=ctx
+                )
 
                 if result and len(result) > 0:
                     delta_log_weight = update.delta_log_weight_global
@@ -514,7 +575,8 @@ class TraceCapture:
                 node = NodeClass(**fields)
 
                 # Insert into scope-appropriate graph with node type label
-                await self._insert_node(node, node_type, graph)
+                scope_ctx = self._ctx_for_scope(scope)
+                await self._insert_node(node, node_type, scope, graph, ctx=scope_ctx)
 
                 # P1: Persist entity membership based on current WM state (MEMBER_OF pattern)
                 logger.info(f"[TraceCapture] P1 CHECK: scope={scope}, last_wm_entities={self.last_wm_entities}")
@@ -529,12 +591,14 @@ class TraceCapture:
                     logger.info(f"[TraceCapture] P1 ATTEMPTING: persist_membership({graph_name}, {node_id}, {primary_entity_name})")
 
                     try:
+                        membership_ctx = {"ns": namespace_for_graph(graph_name)}
                         membership_success = self.adapter.persist_membership(
                             graph_name=graph_name,
                             node_id=node_id,
                             entity_name=primary_entity_name,
                             weight=1.0,  # Full weight for primary assignment
-                            role='primary'
+                            role='primary',
+                            ctx=membership_ctx
                         )
                         if membership_success:
                             logger.debug(f"[TraceCapture] Assigned {node_id} to entity {primary_entity_name}")
@@ -623,7 +687,14 @@ class TraceCapture:
                 logger.error(f"[TraceCapture] Link formation failed: {e}")
                 stats['errors'].append(f"Link formation failed: {link_type} - {e}")
 
-    async def _insert_node(self, node: BaseNode, node_type: str, graph: FalkorDBGraphStore):
+    async def _insert_node(
+        self,
+        node: BaseNode,
+        node_type: str,
+        scope: str,
+        graph: FalkorDBGraphStore,
+        ctx: Optional[Dict[str, str]] = None
+    ):
         """
         Insert node into specified FalkorDB graph with proper label.
 
@@ -681,7 +752,14 @@ class TraceCapture:
             logger.debug(f"[TraceCapture] Query: {query}")
             logger.debug(f"[TraceCapture] Params: {props}")
 
-            result = graph.query(query, params=props)
+            ctx = ctx or self._ctx_for_scope(scope)
+            result = self._run_write(
+                scope=scope,
+                graph=graph,
+                query=query,
+                params=props,
+                ctx=ctx
+            )
 
             logger.debug(f"[TraceCapture] Insert result: {result}")
 
@@ -717,7 +795,8 @@ class TraceCapture:
                 reinforcement_weight=0.5
             )
 
-            await self._insert_node(stub_node, 'Concept', graph)
+            ctx = self._ctx_for_scope(scope)
+            await self._insert_node(stub_node, 'Concept', scope, graph, ctx=ctx)
 
             logger.warning(f"[TraceCapture] Created stub node: {node_name} (scope: {scope})")
 
@@ -795,7 +874,14 @@ class TraceCapture:
             """
 
             params = {**props, 'source': source, 'target': target}
-            result = graph.query(query, params=params)
+            ctx = self._ctx_for_scope(scope)
+            result = self._run_write(
+                scope=scope,
+                graph=graph,
+                query=query,
+                params=params,
+                ctx=ctx
+            )
 
             # LlamaIndex returns list - check if link was created
             if not result or len(result) == 0:
@@ -826,11 +912,18 @@ class TraceCapture:
             RETURN cs
             """
 
-            graph.query(query, params={
-                'citizen_id': self.citizen_id,
-                'activations': str(activations),  # Serialize dict as string
-                'energy_level': energy_level or 'Unknown'
-            })
+            ctx = self._ctx_for_scope('personal')
+            self._run_write(
+                scope='personal',
+                graph=graph,
+                query=query,
+                params={
+                    'citizen_id': self.citizen_id,
+                    'activations': str(activations),  # Serialize dict as string
+                    'energy_level': energy_level or 'Unknown'
+                },
+                ctx=ctx
+            )
 
             logger.debug(f"[TraceCapture] Updated subentity activations in personal graph: {activations}")
 

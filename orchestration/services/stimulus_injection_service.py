@@ -1,68 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
 """
-Stimulus Injection Service - FastAPI server for Phase-A autonomy infrastructure
+Stimulus Injection Service (Retired)
 
-Provides:
-- Health endpoint for guardian monitoring
-- Heartbeat file for dashboard System Status
-- /inject endpoint for stimulus processing (writes to JSONL queue)
+Historically exposed `/inject` over HTTP and wrote to `.stimuli/queue.jsonl` so
+auxiliary services could feed the consciousness engines. The membrane now acts
+as the sole control surface, so this service has been decommissioned.
 
-Created: 2025-10-24 by Victor "The Resurrector"
-Updated: 2025-10-25 by Atlas - P0.1 JSONL queue integration
-Purpose: Queue stimuli for conversation_watcher processing
+Running this module simply logs the deprecation notice to ensure any lingering
+supervisor configuration highlights the new workflow instead of silently
+failing.
 """
 
-from fastapi import FastAPI, Body
-import uvicorn, time, os, json, threading
-from pathlib import Path
+from __future__ import annotations
 
-APP_NAME = "stimulus_injection"
-HEARTBEAT = f".heartbeats/{APP_NAME}.heartbeat"
-os.makedirs(".heartbeats", exist_ok=True)
+import logging
+import sys
 
-# JSONL queue for stimulus processing
-QUEUE = Path(".stimuli/queue.jsonl")
-QUEUE.parent.mkdir(exist_ok=True)
+NOTICE = (
+    "[stimulus_injection] Service retired — publish `membrane.inject` envelopes "
+    "over ws://127.0.0.1:8000/api/ws instead of calling /inject."
+)
 
-app = FastAPI(title="Stimulus Injection", version="1.0")
 
-def heartbeat_loop():
-    while True:
-        try:
-            with open(HEARTBEAT, "w") as f:
-                f.write(str(int(time.time())))
-        except Exception:
-            pass
-        time.sleep(5)
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logging.warning(NOTICE)
+    return 0
 
-@app.on_event("startup")
-def _start_hb():
-    threading.Thread(target=heartbeat_loop, daemon=True).start()
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-@app.post("/inject")
-def inject(stimulus: dict = Body(...)):
-    """
-    Queue a stimulus for processing by conversation_watcher.
-    Writes to .stimuli/queue.jsonl with correlation ID for tracing.
-    """
-    # Generate stimulus envelope with correlation ID
-    stim = {
-        "stimulus_id": stimulus.get("id") or f"stim_{int(time.time()*1000)}",
-        "timestamp_ms": int(time.time()*1000),
-        "citizen_id": stimulus.get("citizen_id", "felix"),
-        "text": (stimulus.get("text") or "").strip(),
-        "severity": float(stimulus.get("severity", 0.3)),
-        "origin": stimulus.get("origin", "external")
-    }
-
-    # Append to JSONL queue (single writer, safe)
-    with QUEUE.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(stim) + "\n")
-
-    return {"status": "injected", "stimulus_id": stim["stimulus_id"]}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    sys.exit(main())

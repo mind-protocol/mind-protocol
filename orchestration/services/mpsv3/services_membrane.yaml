@@ -1,0 +1,87 @@
+# MPSv3 Service Specifications (Membrane-First, No Snapshots)
+# Focused on WS bus + live engines, without preload/snapshot services.
+# Author: Atlas (refactored via Codex)
+# Date: 2025-10-27
+
+env:
+  WS_PORT: "8000"
+  DASHBOARD_PORT: "3000"
+  MP_HOT_RELOAD: "1"
+  MP_PERSIST_ENABLED: "0"
+
+services:
+  - id: bus_ws
+    cmd: ["python", "-m", "orchestration.services.websocket.main"]
+    env:
+      WS_PORT: "${WS_PORT}"
+      MP_HOT_RELOAD: "${MP_HOT_RELOAD}"
+      MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED}"
+    cwd: null
+    criticality: CORE
+    max_retries: 5
+    watch:
+      paths:
+        - "orchestration/adapters/ws/**/*.py"
+        - "orchestration/services/websocket/**/*.py"
+        - "orchestration/core/**/*.py"
+
+  - id: orchestrator_l2
+    cmd: ["python", "-m", "orchestration.services.autonomy_orchestrator"]
+    env: {}
+    depends_on: [bus_ws]
+    cwd: null
+    criticality: CORE
+    max_retries: 5
+    watch:
+      paths:
+        - "orchestration/services/autonomy_orchestrator.py"
+
+  - id: economy_collector
+    cmd: ["python", "-m", "orchestration.services.signals_collector"]
+    env: {}
+    depends_on: [bus_ws]
+    cwd: null
+    criticality: CORE
+    max_retries: 5
+    watch:
+      paths:
+        - "orchestration/services/signals_collector.py"
+
+  - id: ui_frontend
+    cmd: ["cmd", "/c", "npm", "run", "dev"]
+    env:
+      PORT: "${DASHBOARD_PORT}"
+    depends_on: [bus_ws]
+    cwd: "."
+    criticality: OPTIONAL
+    max_retries: 3
+    watch:
+      paths: []
+
+citizens:
+  template:
+    id: "engine_{{id}}"
+    cmd:
+      - python
+      - run_consciousness_system.py
+      - "--citizen"
+      - "{{citizen}}"
+    env:
+      CITIZEN_ID: "{{citizen}}"
+      MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED}"
+    depends_on: [bus_ws]
+    cwd: null
+    criticality: CORE
+    max_retries: 5
+    watch:
+      paths:
+        - "run_consciousness_system.py"
+        - "orchestration/consciousness_engine.py"
+        - "consciousness/citizens/{{citizen}}/**/*.md"
+  items:
+    - id: felix
+      citizen: felix-engineer
+    - id: iris
+      citizen: iris-archivist
+    - id: merchant
+      citizen: merchant-strategist

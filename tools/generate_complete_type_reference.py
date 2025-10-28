@@ -26,7 +26,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 MIND_PROTOCOL_ROOT = Path(__file__).parent.parent
 OUTPUT_PATH = MIND_PROTOCOL_ROOT / "docs" / "COMPLETE_TYPE_REFERENCE.md"
 CITIZENS_CLAUDE_PATH = MIND_PROTOCOL_ROOT / "consciousness" / "citizens" / "CLAUDE.md"
-COLLECTIVE_CLAUDE_PATH = MIND_PROTOCOL_ROOT / "consciousness" / "collective" / "CLAUDE.md"
+COLLECTIVE_CLAUDE_PATH = MIND_PROTOCOL_ROOT / "consciousness" / "organization" / "CLAUDE.md"
 
 
 def connect_to_falkordb():
@@ -336,6 +336,7 @@ Every link in the consciousness graph has these base attributes in addition to i
     n1_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n1'}
     n2_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n2'}
     n3_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n3'}
+    l4_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'l4'}
     shared_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'shared'}
 
     if n1_nodes:
@@ -414,6 +415,25 @@ Every link in the consciousness graph has these base attributes in addition to i
 
             md += "\n"
 
+    if l4_nodes:
+        md += f"### Level 4 (Protocol) - {len(l4_nodes)} Types\n\n"
+        for type_name, schema in sorted(l4_nodes.items()):
+            md += f"**{type_name}**\n\n"
+            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Description:** {schema['description']}\n"
+
+            if schema['required_fields']:
+                md += "\n**Type-Specific Required Fields:**\n"
+                for field in schema['required_fields']:
+                    md += render_field(field)
+
+            if schema['optional_fields']:
+                md += "\n**Type-Specific Optional Fields:**\n"
+                for field in schema['optional_fields']:
+                    md += render_field(field)
+
+            md += "\n"
+
     md += f"""---
 
 ## Part 4: Link Type Inventory
@@ -426,6 +446,8 @@ Every link in the consciousness graph has these base attributes in addition to i
     shared_links = {k: v for k, v in link_schemas.items() if v['level'] == 'shared'}
     n1_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n1'}
     n2_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n2'}
+    n3_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n3'}
+    l4_links = {k: v for k, v in link_schemas.items() if v['level'] == 'l4'}
 
     if shared_links:
         md += f"### Shared Link Types - {len(shared_links)} Types\n\n"
@@ -468,6 +490,44 @@ Every link in the consciousness graph has these base attributes in addition to i
     if n2_links:
         md += f"### Level 2 (Organizational) Link Types - {len(n2_links)} Types\n\n"
         for type_name, schema in sorted(n2_links.items()):
+            md += f"**{type_name}**\n\n"
+            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Description:** {schema['description']}\n"
+
+            if schema['required_fields']:
+                md += "\n**Type-Specific Required Fields:**\n"
+                for field in schema['required_fields']:
+                    md += render_field(field)
+
+            if schema['optional_fields']:
+                md += "\n**Type-Specific Optional Fields:**\n"
+                for field in schema['optional_fields']:
+                    md += render_field(field)
+
+            md += "\n"
+
+    if n3_links:
+        md += f"### Level 3 (Ecosystem) Link Types - {len(n3_links)} Types\n\n"
+        for type_name, schema in sorted(n3_links.items()):
+            md += f"**{type_name}**\n\n"
+            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Description:** {schema['description']}\n"
+
+            if schema['required_fields']:
+                md += "\n**Type-Specific Required Fields:**\n"
+                for field in schema['required_fields']:
+                    md += render_field(field)
+
+            if schema['optional_fields']:
+                md += "\n**Type-Specific Optional Fields:**\n"
+                for field in schema['optional_fields']:
+                    md += render_field(field)
+
+            md += "\n"
+
+    if l4_links:
+        md += f"### Level 4 (Protocol) Link Types - {len(l4_links)} Types\n\n"
+        for type_name, schema in sorted(l4_links.items()):
             md += f"**{type_name}**\n\n"
             md += f"- **Category:** {schema['category']}\n"
             md += f"- **Description:** {schema['description']}\n"
