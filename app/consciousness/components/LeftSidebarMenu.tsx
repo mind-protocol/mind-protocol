@@ -25,8 +25,12 @@ import { CompactExploration } from './sidebar-compact/CompactExploration';
 import TierBreakdownPanel from './TierBreakdownPanel';
 import SubEntityContextLearningPanel from './SubEntityContextLearningPanel';
 import PhenomenologyMismatchPanel from './PhenomenologyMismatchPanel';
-import ConsciousnessHealthDashboard from './ConsciousnessHealthDashboard';
+import { HealthDashboard } from './health/HealthDashboard';
 import { ConstantDebtWidget } from './ConstantDebtWidget';
+import { EmergenceMonitor } from './emergence/EmergenceMonitor';
+import { TopologyMonitor } from './topology/TopologyMonitor';
+import { IntegrationHeatmap } from './topology/IntegrationHeatmap';
+import { StateModulationPanel } from './topology/StateModulationPanel';
 import type {
   V2ConsciousnessState,
   StrideSelectionEvent,
@@ -35,6 +39,7 @@ import type {
   PhenomenologyMismatchEvent,
   PhenomenologicalHealthEvent
 } from '../hooks/websocket-types';
+import type { EmergenceState, TopologyState } from '../hooks/useGraphStream';
 
 interface LeftSidebarMenuProps {
   v2State: V2ConsciousnessState;
@@ -43,10 +48,13 @@ interface LeftSidebarMenuProps {
   weightLearningEvents: WeightsUpdatedTraceEvent[];
   phenomenologyMismatchEvents: PhenomenologyMismatchEvent[];
   phenomenologyHealthEvents: PhenomenologicalHealthEvent[];
+  currentGraphId: string | null;
+  emergenceState: EmergenceState;
+  topologyState: TopologyState;
 }
 
-type Section = 'affective' | 'rhythms' | 'exploration' | 'learning' | null;
-type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | 'tier' | 'learning' | 'phenomenology' | 'health' | 'constantdebt' | null;
+type Section = 'affective' | 'rhythms' | 'exploration' | 'learning' | 'topology' | null;
+type SubPanel = 'regulation' | 'telemetry' | 'autonomy' | 'timeline' | 'tier' | 'learning' | 'phenomenology' | 'health' | 'emergence' | 'constantdebt' | 'topology-hubs' | 'topology-integration' | 'topology-modulation' | null;
 
 export function LeftSidebarMenu({
   v2State,
@@ -54,7 +62,10 @@ export function LeftSidebarMenu({
   strideEvents,
   weightLearningEvents,
   phenomenologyMismatchEvents,
-  phenomenologyHealthEvents
+  phenomenologyHealthEvents,
+  currentGraphId,
+  emergenceState,
+  topologyState
 }: LeftSidebarMenuProps) {
   const [expandedSection, setExpandedSection] = useState<Section>('affective');
   const [expandedSubPanels, setExpandedSubPanels] = useState<Set<string>>(
@@ -198,11 +209,25 @@ export function LeftSidebarMenu({
             </SubPanelAccordion>
 
             <SubPanelAccordion
-              title="Consciousness Health"
+              title="Graph Health Diagnostics"
               isExpanded={expandedSubPanels.has('health')}
               onToggle={() => toggleSubPanel('health')}
             >
-              <ConsciousnessHealthDashboard healthEvents={phenomenologyHealthEvents} windowSize={50} />
+              {currentGraphId ? (
+                <HealthDashboard graph_id={currentGraphId} />
+              ) : (
+                <div className="text-sm text-observatory-silver/60 py-4">
+                  No graph selected
+                </div>
+              )}
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="SubEntity Emergence"
+              isExpanded={expandedSubPanels.has('emergence')}
+              onToggle={() => toggleSubPanel('emergence')}
+            >
+              <EmergenceMonitor emergence={emergenceState} />
             </SubPanelAccordion>
 
             <SubPanelAccordion
@@ -211,6 +236,40 @@ export function LeftSidebarMenu({
               onToggle={() => toggleSubPanel('constantdebt')}
             >
               <ConstantDebtWidget />
+            </SubPanelAccordion>
+          </div>
+        </SectionAccordion>
+
+        {/* Topology Analysis Section */}
+        <SectionAccordion
+          title="Topology Analysis"
+          emoji="🔗"
+          isExpanded={expandedSection === 'topology'}
+          onToggle={() => toggleSection('topology')}
+        >
+          <div className="bg-slate-900/30">
+            <SubPanelAccordion
+              title="Rich-Club Hubs"
+              isExpanded={expandedSubPanels.has('topology-hubs')}
+              onToggle={() => toggleSubPanel('topology-hubs')}
+            >
+              <TopologyMonitor topology={topologyState} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="Integration Space"
+              isExpanded={expandedSubPanels.has('topology-integration')}
+              onToggle={() => toggleSubPanel('topology-integration')}
+            >
+              <IntegrationHeatmap topology={topologyState} />
+            </SubPanelAccordion>
+
+            <SubPanelAccordion
+              title="State Modulation"
+              isExpanded={expandedSubPanels.has('topology-modulation')}
+              onToggle={() => toggleSubPanel('topology-modulation')}
+            >
+              <StateModulationPanel topology={topologyState} />
             </SubPanelAccordion>
           </div>
         </SectionAccordion>

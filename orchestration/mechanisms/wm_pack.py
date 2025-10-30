@@ -138,7 +138,7 @@ def select_wm_nodes(
         5. Return selected nodes + statistics
 
     Args:
-        subentities: Active sub-entities with energy distributions
+        subentities: Active subentities with energy distributions
         graph: Graph object
         token_budget: Available token budget (from compute_wm_token_budget)
 
@@ -222,7 +222,7 @@ def aggregate_entity_energies(
         E_total[node] = Σ (E[subentity, node] for subentity in subentities)
 
     Args:
-        subentities: Active sub-entities
+        subentities: Active subentities
         graph: Graph object
 
     Returns:
@@ -383,7 +383,7 @@ def construct_workspace_prompt(
     Args:
         selected_nodes: Nodes selected for WM
         graph: Graph object
-        subentities: Active sub-entities
+        subentities: Active subentities
 
     Returns:
         Formatted workspace prompt string
@@ -452,7 +452,7 @@ def construct_workspace_prompt(
         lines.append("")  # Blank line between nodes
 
     # Subentity summary
-    lines.append("\n**Active Sub-Entities:**\n")
+    lines.append("\n**Active SubEntities:**\n")
     for subentity in subentities:
         extent_size = len(subentity.extent)
         # Find highest-energy node in extent as "center"

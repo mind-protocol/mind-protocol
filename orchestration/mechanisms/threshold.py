@@ -4,11 +4,11 @@ Mechanism 16 Part 1: Adaptive Activation Threshold
 ARCHITECTURAL PRINCIPLE: Nodes Become Subentities via Threshold Crossing
 
 "Every time a node reaches the threshold of activation from a sensory input,
-it becomes a sub-entity." - Nicolas
+it becomes a subentity." - Nicolas
 
 Core Truth (CORRECTED 2025-10-20):
 - NOT pre-defined subentities (Translator, Architect) - those are CLUSTERS of micro-subentities
-- ANY node crossing activation threshold becomes its own sub-entity
+- ANY node crossing activation threshold becomes its own subentity
 - Subentity name = node name (simple one-to-one mapping)
 - Thousands of simultaneous micro-subentities (normal and expected)
 - Threshold is DYNAMIC - depends on system criticality (active nodes/links)

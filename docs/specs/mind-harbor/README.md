@@ -19,14 +19,14 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 
 ### Approved Terms ✅
 - **Energy** - The ONLY term for activation/intensity levels. Range: [0,∞) unbounded.
-- **Sub-Entity** - ANY active node. Idsubentity optional. Core consciousness unit.
+- **SubEntity** - ANY active node. Idsubentity optional. Core consciousness unit.
 - **Workspace** - ONLY when referring to Global Workspace Theory implementation. Otherwise use "active nodes".
 - **Active Nodes** - Nodes currently above threshold (in consciousness).
 - **Peripheral** - Nodes primed but below threshold.
 
 ### Forbidden Terms ❌
 - **Arousal** - NEVER use. Completely deprecated. Always use "energy".
-- **Cluster** (standalone) - Use "sub-entity activity visualization" or "aggregated view". Clusters are visual groupings, sub-entities are the real units.
+- **Cluster** (standalone) - Use "subentity activity visualization" or "aggregated view". Clusters are visual groupings, subentities are the real units.
 - **Context** (as explicit subentity) - Context system deprecated. Context = emergent property of peripheral priming.
 
 **Why This Matters:** Using deprecated terminology creates confusion and violates architectural decisions. Mind Harbor must reflect actual consciousness architecture, not obsolete concepts.
@@ -106,18 +106,18 @@ Mind Harbor is the observability interface for Mind Protocol's consciousness inf
 
 ---
 
-### 5. Layer 1: Sub-Entity Activity Visualization
+### 5. Layer 1: SubEntity Activity Visualization
 
 **Implementation:** Sub-entity activity visualization on graph.
 
 **What Layer 1 Does:**
 - Applies subentity-colored glows to recently active nodes (last 10 sec)
-- Shows floating sub-entity names above spatial clusters
+- Shows floating subentity names above spatial clusters
 - Uses `last_activated` timestamps from `entity_activations`
 - Optimized for large graphs (1000+ nodes)
 
 **Technical:**
-- Subentity color scheme (12 sub-entities)
+- Subentity color scheme (12 subentities)
 - SVG subentity-specific glow filters
 - Performance: useMemo for cluster computation
 - D3 simulation optimizations for large graphs
@@ -216,7 +216,7 @@ Implementation:
 ├── app/consciousness/components/GraphCanvas.tsx
 │   └── Layer 1: Sub-entity colored glows on active nodes
 ├── app/consciousness/components/EntityClusterOverlay.tsx
-│   └── Layer 1: Floating sub-entity names
+│   └── Layer 1: Floating subentity names
 └── app/consciousness/constants/subentity-colors.ts
     └── Sub-entity color scheme
 ```
@@ -299,11 +299,11 @@ Mind Harbor succeeds when:
 - ✅ 4-scale visualization framework
 - ✅ Design language specification
 - ✅ Venice aesthetic integration
-- ✅ **Layer 1: Sub-Entity Activity Visualization** (subentity-colored glows + floating names)
+- ✅ **Layer 1: SubEntity Activity Visualization** (subentity-colored glows + floating names)
 - ✅ **Layer 2: Energy Flow Animation** (particles moving along links)
 
 **In Progress:**
-- 🔄 Testing Layer 2 with live sub-entity traversal
+- 🔄 Testing Layer 2 with live subentity traversal
 
 **Planned:**
 - ⏳ **Layer 3: Mechanism Visualization** (per-mechanism overlays)

@@ -99,6 +99,7 @@ from orchestration.core.graph import Graph
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
 from orchestration.services.health import StartupSelfTests
 from orchestration.services.economy import initialize_economy_runtime
+from orchestration.services.topology import TopologyAnalyzerService
 
 # Configure logging
 logging.basicConfig(
@@ -109,6 +110,9 @@ logger = logging.getLogger(__name__)
 
 # Economy runtime handle
 ECONOMY_RUNTIME = None
+
+# Topology analyzer services (one per citizen)
+TOPOLOGY_ANALYZERS = {}
 
 # Create FastAPI app
 app = FastAPI(
@@ -458,6 +462,8 @@ async def start_citizen_consciousness(
         database=graph_name,  # FIXED: use 'database' not 'graph_name'
         url=f"redis://{host}:{port}"
     )
+    # Set name attribute for WriteGate namespace enforcement
+    graph_store.name = graph_name
     adapter = FalkorDBAdapter(graph_store)
 
     # Run blocking load_graph in thread with 30s timeout
@@ -482,44 +488,33 @@ async def start_citizen_consciousness(
         logger.error(f"[N1:{citizen_id}] Graph load timed out after 30s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
-    # Bootstrap subentity layer if not already present
-    # Force re-bootstrap if entity count != 8 (fixes 0-entities bug from Mechanism confusion)
+    # === EMERGENCE-ONLY ARCHITECTURE (NO BOOTSTRAP) ===
+    # Per specs/v2/subentity_layer/subentity_emergence.md:
+    # "Emergence detection happens **during stimulus injection**, not on periodic timer."
+    # "Consciousness doesn't wake up every hour and ask 'do I have new parts?' Parts emerge
+    # **in the moment** when you encounter something that doesn't fit. The stimulus IS the trigger."
+    #
+    # SubEntities will emerge naturally via gap detection during stimulus injection:
+    # 1. Stimulus arrives → retrieval finds nodes → gap detection runs
+    # 2. If gap detected (novelty/tension/coverage) → coalition assembly → validation
+    # 3. Engine validates proposal → ACCEPT (spawn) / REDIRECT / REJECT
+    # 4. Membership weights learn continuously via co-activation
+    #
+    # First stimulus when zero SubEntities exist → bootstrap scenario (high structural gap) → ACCEPT
+    #
+    # NO scheduled clustering, NO periodic bootstrap
+    # ================================================
+
     current_entity_count = len(graph.subentities) if graph.subentities else 0
-    expected_entity_count = 8  # 8 functional entities from config
-    logger.info(f"[N1:{citizen_id}] DEBUG: current_entity_count={current_entity_count}, expected={expected_entity_count}")
-
-    if not graph.subentities or current_entity_count < expected_entity_count:
-        if current_entity_count > 0:
-            logger.info(f"[N1:{citizen_id}] Re-bootstrapping entity layer (current: {current_entity_count}, expected: {expected_entity_count})...")
-            # Clear old entities before re-bootstrap
-            graph.subentities = {}
-        else:
-            logger.info(f"[N1:{citizen_id}] Bootstrapping subentity layer...")
-
-        from orchestration.mechanisms.subentity_bootstrap import SubEntityBootstrap
-        bootstrap = SubEntityBootstrap(graph)
-        bootstrap_stats = bootstrap.run_complete_bootstrap()
-        logger.info(f"[N1:{citizen_id}] entity_bootstrap: created={bootstrap_stats}")
-
-        # Run post-bootstrap initialization
-        from orchestration.mechanisms.subentity_post_bootstrap import run_post_bootstrap_initialization
-        post_stats = run_post_bootstrap_initialization(graph)
-        logger.info(f"[N1:{citizen_id}] post_bootstrap: {post_stats}")
-
-        # Persist subentities to FalkorDB
-        persist_stats = adapter.persist_subentities(graph)
-        logger.info(f"[N1:{citizen_id}] subentity_persistence: {persist_stats}")
+    if current_entity_count == 0:
+        logger.info(f"[N1:{citizen_id}] Starting with zero SubEntities - will emerge via stimulus-driven gap detection")
+        logger.info(f"[N1:{citizen_id}] First stimulus will trigger bootstrap scenario (high structural gap → ACCEPT)")
     else:
-        logger.info(f"[N1:{citizen_id}] Subentities already present: {current_entity_count} (expected: {expected_entity_count})")
+        logger.info(f"[N1:{citizen_id}] Loaded {current_entity_count} SubEntities from FalkorDB")
 
     # Metrics: entities.total gauge
-    if graph.subentities:
-        logger.info(f"[N1:{citizen_id}] entities.total={len(graph.subentities)}")
-        logger.info(f"[N1:{citizen_id}] DEBUG CHECKPOINT A: graph.subentities has {len(graph.subentities)} items BEFORE engine creation")
-        logger.info(f"[N1:{citizen_id}] DEBUG: graph object id={id(graph)}, subentities object id={id(graph.subentities)}")
-    else:
-        logger.warning(f"[N1:{citizen_id}] entities.total=0 - WM will fallback to node-only mode")
-        logger.warning(f"[N1:{citizen_id}] DEBUG CHECKPOINT A: graph.subentities is EMPTY BEFORE engine creation!")
+    logger.info(f"[N1:{citizen_id}] entities.total={current_entity_count}")
+    logger.info(f"[N1:{citizen_id}] DEBUG CHECKPOINT A: graph.subentities has {len(graph.subentities) if graph.subentities else 0} items BEFORE engine creation")
 
     # Create engine configuration
     config = EngineConfig(
@@ -579,6 +574,8 @@ async def start_organizational_consciousness(
         database=graph_name,  # FIXED: use 'database' not 'graph_name'
         url=f"redis://{host}:{port}"
     )
+    # Set name attribute for WriteGate namespace enforcement
+    graph_store.name = graph_name
     adapter = FalkorDBAdapter(graph_store)
 
     # Run blocking load_graph in thread with 30s timeout
@@ -594,40 +591,20 @@ async def start_organizational_consciousness(
         logger.error(f"[N2:{org_id}] Graph load timed out after 30s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
-    # Bootstrap subentity layer if not already present
-    # Force re-bootstrap if entity count != 8 (fixes 0-entities bug from Mechanism confusion)
+    # === EMERGENCE-ONLY ARCHITECTURE (NO BOOTSTRAP) ===
+    # Per specs/v2/subentity_layer/subentity_emergence.md:
+    # SubEntities emerge during stimulus injection via gap detection, not via scheduled clustering.
+    # First stimulus when zero SubEntities exist → bootstrap scenario (high structural gap) → ACCEPT
+    # ================================================
+
     current_entity_count = len(graph.subentities) if graph.subentities else 0
-    expected_entity_count = 8  # 8 functional entities from config
-
-    if not graph.subentities or current_entity_count < expected_entity_count:
-        if current_entity_count > 0:
-            logger.info(f"[N2:{org_id}] Re-bootstrapping entity layer (current: {current_entity_count}, expected: {expected_entity_count})...")
-            # Clear old entities before re-bootstrap
-            graph.subentities = {}
-        else:
-            logger.info(f"[N2:{org_id}] Bootstrapping subentity layer...")
-
-        from orchestration.mechanisms.subentity_bootstrap import SubEntityBootstrap
-        bootstrap = SubEntityBootstrap(graph)
-        bootstrap_stats = bootstrap.run_complete_bootstrap()
-        logger.info(f"[N2:{org_id}] entity_bootstrap: created={bootstrap_stats}")
-
-        # Run post-bootstrap initialization
-        from orchestration.mechanisms.subentity_post_bootstrap import run_post_bootstrap_initialization
-        post_stats = run_post_bootstrap_initialization(graph)
-        logger.info(f"[N2:{org_id}] post_bootstrap: {post_stats}")
-
-        # Persist subentities to FalkorDB
-        persist_stats = adapter.persist_subentities(graph)
-        logger.info(f"[N2:{org_id}] subentity_persistence: {persist_stats}")
+    if current_entity_count == 0:
+        logger.info(f"[N2:{org_id}] Starting with zero SubEntities - will emerge via stimulus-driven gap detection")
     else:
-        logger.info(f"[N2:{org_id}] Subentities already present: {len(graph.subentities)}")
+        logger.info(f"[N2:{org_id}] Loaded {current_entity_count} SubEntities from FalkorDB")
 
     # Metrics: entities.total gauge
-    if graph.subentities:
-        logger.info(f"[N2:{org_id}] entities.total={len(graph.subentities)}")
-    else:
-        logger.warning(f"[N2:{org_id}] entities.total=0 - WM will fallback to node-only mode")
+    logger.info(f"[N2:{org_id}] entities.total={current_entity_count}")
 
     # Create engine configuration
     config = EngineConfig(
@@ -1042,6 +1019,60 @@ heartbeat_writer = HeartbeatWriter()
 
 # === Lifecycle Events ===
 
+async def initialize_topology_analyzers():
+    """
+    Initialize topology analyzer services for all citizens.
+
+    Creates event-driven topology analyzers that listen to graph mutations
+    and activation events, performing reactive topology analysis.
+    """
+    global TOPOLOGY_ANALYZERS
+
+    logger.info("")
+    logger.info("=" * 70)
+    logger.info("TOPOLOGY ANALYZER INITIALIZATION")
+    logger.info("=" * 70)
+
+    graphs = discover_graphs()
+
+    # Create topology analyzers for N1 citizens
+    if graphs['n1']:
+        logger.info(f"[TopologyAnalyzers] Initializing analyzers for {len(graphs['n1'])} citizens...")
+
+        # Create all analyzers first (synchronous, instant)
+        analyzers_to_init = []
+        for graph_name in graphs['n1']:
+            citizen_id = extract_citizen_id(graph_name)
+            try:
+                analyzer = TopologyAnalyzerService(
+                    citizen_id=citizen_id,
+                    broadcaster=ConsciousnessStateBroadcaster(default_citizen_id=citizen_id)
+                )
+                analyzers_to_init.append((citizen_id, analyzer))
+            except Exception as e:
+                logger.error(f"[TopologyAnalyzers] Failed to create analyzer for {citizen_id}: {e}")
+
+        # Initialize all analyzers in parallel (non-blocking I/O)
+        init_tasks = [analyzer.async_init() for _, analyzer in analyzers_to_init]
+        await asyncio.gather(*init_tasks, return_exceptions=True)
+
+        # Start all analyzers and store references
+        for citizen_id, analyzer in analyzers_to_init:
+            try:
+                if analyzer._initialized:
+                    analyzer.start()
+                    TOPOLOGY_ANALYZERS[citizen_id] = analyzer
+                    logger.info(f"[TopologyAnalyzers] ✅ {citizen_id} - analyzer started")
+                else:
+                    logger.error(f"[TopologyAnalyzers] ❌ {citizen_id} - initialization failed")
+            except Exception as e:
+                logger.error(f"[TopologyAnalyzers] Failed to start analyzer for {citizen_id}: {e}")
+
+    logger.info(f"[TopologyAnalyzers] {len(TOPOLOGY_ANALYZERS)} analyzers initialized")
+    logger.info("=" * 70)
+    logger.info("")
+
+
 async def initialize_consciousness_engines():
     """Background task to initialize all consciousness engines."""
     # Discover all graphs from FalkorDB
@@ -1142,11 +1173,28 @@ async def startup_event():
 
     asyncio.create_task(initialize_consciousness_engines())
 
+    # Initialize topology analyzers after engines start
+    # (analyzers need graphs to exist)
+    await asyncio.sleep(2.0)  # Give engines time to register
+    asyncio.create_task(initialize_topology_analyzers())
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Server shutdown - cleanup heartbeat and consciousness engines."""
     logger.info("Shutting down WebSocket server...")
+
+    # Stop topology analyzers
+    global TOPOLOGY_ANALYZERS
+    if TOPOLOGY_ANALYZERS:
+        logger.info(f"[TopologyAnalyzers] Stopping {len(TOPOLOGY_ANALYZERS)} analyzers...")
+        for citizen_id, analyzer in TOPOLOGY_ANALYZERS.items():
+            try:
+                analyzer.stop()
+                logger.info(f"[TopologyAnalyzers] ✅ {citizen_id} - stopped")
+            except Exception as e:
+                logger.warning(f"[TopologyAnalyzers] Failed to stop {citizen_id}: {e}")
+        TOPOLOGY_ANALYZERS.clear()
 
     global ECONOMY_RUNTIME
     if ECONOMY_RUNTIME is not None:
@@ -1212,7 +1260,7 @@ async def healthz(selftest: int = 0):
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "engines": {
             "count": len(get_all_engines()),
-            "running": [e.citizen_id for e in get_all_engines()]
+            "running": list(get_all_engines().keys())  # Use keys (citizen IDs) directly
         }
     }
     

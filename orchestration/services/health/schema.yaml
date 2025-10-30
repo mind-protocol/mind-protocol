@@ -1,0 +1,74 @@
+# Graph Health Metrics Schema Configuration
+#
+# Defines how health metrics compute membership and relationships
+# in the current production schema.
+#
+# View Options:
+#   - prod-weighted-neighborhood: Uses relationship weights and path exploration
+#   - spec-explicit-membership: Uses explicit MEMBER_OF/RELATES_TO edges (future)
+
+view: prod-weighted-neighborhood
+
+# Maximum hops for neighborhood exploration
+max_hops: 2
+
+# Threshold for binary membership classification
+# Nodes with w_s(n) >= threshold are considered "members"
+membership_threshold: 0.5
+
+# Relationship type weights (semantic strength of membership signal)
+# Higher weight = stronger signal that node "belongs to" SubEntity
+rel_weights:
+  # Strongest ownership/operational signals (0.85)
+  OWNS: 0.85
+  OPERATES: 0.85
+  RUNS: 0.85
+
+  # Implementation/extension signals (0.80)
+  IMPLEMENTS: 0.80
+  EXTENDS: 0.80
+
+  # Documentation/specification signals (0.75)
+  DOCUMENTS: 0.75
+  DOCUMENTED_BY: 0.75
+  PROCESS_FOR: 0.75
+
+  # Validation/measurement signals (0.70)
+  MEASURES: 0.70
+  JUSTIFIES: 0.70
+  REFUTES: 0.70
+
+  # Dependency signals (0.60)
+  ENABLES: 0.60
+  REQUIRES: 0.60
+  AFFECTS: 0.60
+  AFFECTED_BY: 0.60
+  BLOCKS: 0.60
+
+  # Causal/learning signals (0.55)
+  CAUSES: 0.55
+  REVEALS: 0.55
+  LEARNED_FROM: 0.55
+  RESOLVES: 0.55
+
+  # Motivational signals (0.50)
+  DRIVES_TOWARD: 0.50
+
+  # Lateral/weak signals (0.40)
+  RELATES_TO: 0.40
+  SUPERSEDES: 0.40
+
+  # Coactivation (0.30 - weak membership signal)
+  COACTIVATES_WITH: 0.30
+
+  # Fallback for unknown relationships
+  _default: 0.20
+
+# Future: explicit relationship names for spec view
+member_rel: MEMBER_OF
+highway_rel: RELATES_TO
+
+# Schema evolution notes:
+# Phase 1 (now): Use weighted neighborhood with current relationships
+# Phase 2 (future): Membrane job back-fills MEMBER_OF/RELATES_TO
+# Phase 3 (future): Switch view to "spec-explicit-membership"

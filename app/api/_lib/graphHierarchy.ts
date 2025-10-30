@@ -41,8 +41,8 @@ async function getRedisClient(): Promise<RedisClientType> {
       console.error('[GraphHierarchy] Redis connection error:', err);
     });
     redisClientPromise = client.connect().then(instance => {
-      redisClient = instance;
-      return instance;
+      redisClient = instance as RedisClientType;
+      return instance as RedisClientType;
     }).catch(err => {
       redisClientPromise = null;
       throw err;

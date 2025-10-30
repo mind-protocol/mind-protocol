@@ -53,7 +53,7 @@
 
 ```bash
 # Felix progress
-cd C:/Users/reyno/mind-protocol
+cd /home/mind-protocol/mindprotocol
 python -c "
 import subprocess
 result = subprocess.run(['tail', '-100', 'felix_backfill.log'], capture_output=True, text=True, shell=True)
@@ -80,7 +80,7 @@ ps aux | grep -E "temp_backfill_(ada|felix)" | grep -v grep
 
 ```bash
 # Watch Felix backfill
-cd C:/Users/reyno/mind-protocol
+cd /home/mind-protocol/mindprotocol
 tail -f felix_backfill.log | grep -E "\[([0-9]+)/416\]|nodes created|BACKFILL COMPLETE"
 
 # Watch Ada backfill
@@ -104,7 +104,7 @@ BashOutput(bash_id="2c13cc", filter="\[([0-9]+)/67\]|BACKFILL COMPLETE")
 ### 1. Verify Completion
 
 ```bash
-cd C:/Users/reyno/mind-protocol
+cd /home/mind-protocol/mindprotocol
 tail -50 ada_backfill.log | grep -A 10 "BACKFILL COMPLETE"
 ```
 
@@ -138,7 +138,7 @@ print(f'Ada links: {result[1][0][0]}')
 ### 1. Verify Completion
 
 ```bash
-cd C:/Users/reyno/mind-protocol
+cd /home/mind-protocol/mindprotocol
 tail -50 felix_backfill.log | grep -A 10 "BACKFILL COMPLETE"
 ```
 
@@ -167,7 +167,7 @@ print(f'Felix links: {result[1][0][0]}')
 ### 3. Run MEMBER_OF Backfill for New Nodes
 
 ```bash
-cd C:/Users/reyno/mind-protocol
+cd /home/mind-protocol/mindprotocol
 python orchestration/scripts/smart_backfill_membership.py citizen_felix
 ```
 
@@ -222,7 +222,7 @@ kill $(ps aux | grep "temp_backfill_felix" | grep -v grep | awk '{print $2}')
 **Command to check formation counts in conversations:**
 
 ```bash
-cd C:/Users/reyno/mind-protocol/consciousness/citizens/luca/contexts
+cd /home/mind-protocol/mindprotocol/consciousness/citizens/luca/contexts
 grep -r "\[NODE_FORMATION:" */202*.json | wc -l
 grep -r "\[LINK_FORMATION:" */202*.json | wc -l
 ```
@@ -242,8 +242,8 @@ Compare these counts to actual nodes in FalkorDB to see if backfill needed.
 
 ### Log Files
 
-- `C:/Users/reyno/mind-protocol/felix_backfill.log`
-- `C:/Users/reyno/mind-protocol/ada_backfill.log`
+- `/home/mind-protocol/mindprotocol/felix_backfill.log`
+- `/home/mind-protocol/mindprotocol/ada_backfill.log`
 
 ### Background Process IDs
 

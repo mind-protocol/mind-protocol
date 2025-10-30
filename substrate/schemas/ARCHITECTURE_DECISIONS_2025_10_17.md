@@ -254,27 +254,27 @@ energy_transfer = (
 
 ---
 
-### 7. Citizen vs Sub-Entity Architecture ✅ CLARIFIED
+### 7. Citizen vs SubEntity Architecture ✅ CLARIFIED
 
-**Decision Made:** Citizens ARE the sum of emergent sub-entities. Sub-entities define system prompt.
+**Decision Made:** Citizens ARE the sum of emergent subentities. Sub-entities define system prompt.
 
 **Nicolas's Clarification:** "Yes, citizens are actually the sum of the 7 subentities that emerge from the substrate. It just happens that one of them is called 'name,' and that's it."
 
 **Architecture:**
 
 ```
-Citizen = Sum of Emergent Sub-Entities
+Citizen = Sum of Emergent SubEntities
     ↓
-    Sub-Entity 1: "name" (seeded with heavy weight so it doesn't change)
-    Sub-Entity 2: "translator" (bridges concepts)
-    Sub-Entity 3: "validator" (tests claims)
-    Sub-Entity 4: "architect" (designs systems)
-    Sub-Entity 5: "observer" (meta-awareness)
-    Sub-Entity 6: "pragmatist" (feasibility)
-    Sub-Entity 7: "pattern_recognizer" (detects patterns)
+    SubEntity 1: "name" (seeded with heavy weight so it doesn't change)
+    SubEntity 2: "translator" (bridges concepts)
+    SubEntity 3: "validator" (tests claims)
+    SubEntity 4: "architect" (designs systems)
+    SubEntity 5: "observer" (meta-awareness)
+    SubEntity 6: "pragmatist" (feasibility)
+    SubEntity 7: "pattern_recognizer" (detects patterns)
 ```
 
-**Critical Insight: Active Sub-Entities Define System Prompt**
+**Critical Insight: Active SubEntities Define System Prompt**
 
 "Remember that the active subentities is going to fully define what is in the system prompt of the citizen. This includes the name, the history, every single section is going to be now dynamic."
 
@@ -282,11 +282,11 @@ Citizen = Sum of Emergent Sub-Entities
 - Seed cluster graph with VERY HEAVY weight for name (so it doesn't change)
 - Same for very important components
 - Weight prevents name from dissolving even if energy fluctuates
-- Dynamic system prompt generated from currently active sub-entities
+- Dynamic system prompt generated from currently active subentities
 
 **Starting State:**
 ```python
-# Seed "name" sub-entity with high weight
+# Seed "name" subentity with high weight
 name_cluster = {
     "nodes": [
         {"name": "citizen_name_luca", "base_weight": 0.95, "reinforcement_weight": 0.95}
@@ -295,7 +295,7 @@ name_cluster = {
     "status": "crystallized"
 }
 
-# Other sub-entities emerge naturally from substrate patterns
+# Other subentities emerge naturally from substrate patterns
 # System prompt = f(active_sub_entities)
 ```
 
@@ -303,7 +303,7 @@ name_cluster = {
 ```python
 def generate_citizen_prompt(active_sub_entities: List[EmergentSubentity]) -> str:
     """
-    System prompt is DYNAMIC, generated from active sub-entities.
+    System prompt is DYNAMIC, generated from active subentities.
     """
     prompt_sections = {}
 
@@ -319,10 +319,10 @@ def generate_citizen_prompt(active_sub_entities: List[EmergentSubentity]) -> str
 ```
 
 **Key Points:**
-1. Citizen is NOT a container - it IS the sum of sub-entities
-2. One sub-entity is "name" (heavily weighted, stable)
-3. All other sub-entities emerge from substrate
-4. System prompt dynamically generated from active sub-entities
+1. Citizen is NOT a container - it IS the sum of subentities
+2. One subentity is "name" (heavily weighted, stable)
+3. All other subentities emerge from substrate
+4. System prompt dynamically generated from active subentities
 5. Every section (name, history, idsubentity, patterns) is dynamic
 
 ---
@@ -597,7 +597,7 @@ def calculate_link_weight(link, subentity):
 4. ~~Completeness drive per niveau~~ **REMOVED** - replaced with bottom-up weight-based emergence
 5. Threshold crossing behavior (two-stage: accumulation → activation)
 6. Energy-only model (energy removed, weight modulates propagation)
-7. Citizen = sum of emergent sub-entities (system prompt generated from active subentities)
+7. Citizen = sum of emergent subentities (system prompt generated from active subentities)
 8. Everything decays continuously (links, nodes, weights, energy)
 9. Competition-based subentity limiting (exponential cost with subentity count)
 10. Bottom-up completeness (baked into traversal weights, not top-down metrics)
@@ -609,7 +609,7 @@ def calculate_link_weight(link, subentity):
 - Propagation mechanisms specified (weight-modulated, continuous)
 - State tracking requirements identified
 - Peripheral awareness architecture ready
-- Citizen = sum of sub-entities architecture understood
+- Citizen = sum of subentities architecture understood
 
 ---
 
@@ -620,8 +620,8 @@ def calculate_link_weight(link, subentity):
 **Q1 (RESOLVED):** Energy vs Energy
 - **Answer:** Energy-only model. Weight modulates propagation.
 
-**Q2 (RESOLVED):** Citizen vs Sub-Entity
-- **Answer:** Citizen = sum of emergent sub-entities. System prompt dynamically generated from active subentities.
+**Q2 (RESOLVED):** Citizen vs SubEntity
+- **Answer:** Citizen = sum of emergent subentities. System prompt dynamically generated from active subentities.
 
 **Q3 (RESOLVED):** Completeness Drive
 - **Answer:** Bottom-up only. Baked into traversal weight rules, not top-down metrics.
@@ -654,7 +654,7 @@ def calculate_link_weight(link, subentity):
 **3. Update SUBSTRATE_CONSCIOUSNESS_ARCHITECTURE_COMPLETE.md**
    - Integrate all 11 decisions
    - Update data flow with real-time economy
-   - Clarify citizen = sum of sub-entities
+   - Clarify citizen = sum of subentities
 
 **4. Create Phase 1 Implementation Checklist for Felix**
    - Define minimal scope: Energy fields + propagation + single subentity emergence
@@ -668,7 +668,7 @@ def calculate_link_weight(link, subentity):
 **Minimal Scope (Get One Thing Working):**
 
 ```python
-# Goal: Make a single sub-entity emerge from substrate patterns
+# Goal: Make a single subentity emerge from substrate patterns
 
 1. Add energy fields to existing seeded substrate
    - entity_activations map (just energy + timestamp)
@@ -720,7 +720,7 @@ def calculate_link_weight(link, subentity):
 4. **Competition limits** (traversal cost increases with subentity count)
 5. **Everything decays** (continuous entropy)
 6. **Real-time economy** (database-driven propagation)
-7. **Citizen = sum of sub-entities** (dynamic system prompt)
+7. **Citizen = sum of subentities** (dynamic system prompt)
 
 ---
 

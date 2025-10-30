@@ -13,7 +13,7 @@
 
 ## ✅ Design Conformance (Truths vs Myths)
 
-* [ ] Entities = **neighborhoods** (functional/semantic); sub-entity = **active entity**
+* [ ] Entities = **neighborhoods** (functional/semantic); subentity = **active entity**
 * [ ] **One** activation energy per node; **no** per-entity node energies
 * [ ] Links **do not** store activation energy (transport only); `link.energy` = **affect** metadata
 * [ ] **Stimuli inject activation**; **TRACE updates weights** (nodes/links), not activation

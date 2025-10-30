@@ -16,8 +16,20 @@
  */
 
 export function normalizeEvent(e: any): any {
-  if (!e || !e.type) {
-    console.warn('[normalizeEvent] Event missing type:', e);
+  if (!e) {
+    console.warn('[normalizeEvent] Null event received');
+    return e;
+  }
+
+  // MIGRATION LAYER: Handle legacy "topic" field → "type"
+  // Backend is transitioning from "topic" to normative "type" field
+  if (!e.type && e.topic) {
+    e.type = e.topic;
+    console.log(`[normalizeEvent] Migrated legacy field: topic="${e.topic}" → type="${e.type}"`);
+  }
+
+  if (!e.type) {
+    console.warn('[normalizeEvent] Event missing both type and topic:', e);
     return e;
   }
 
@@ -43,17 +55,32 @@ export function normalizeEvent(e: any): any {
 
     // Node energy changes - canonical: node.flip
     case 'node.flip': {
+      // Handle two backend formats:
+      // Format 1: {nodes: [{id, E, dE}]} - batch format
+      // Format 2: {node, E_pre, E_post, Θ} - single flip format
+
+      // Format 1: Batch format with nodes array (skip - too verbose for console)
+      if (e.nodes && Array.isArray(e.nodes)) {
+        return e; // Keep as-is, processed elsewhere
+      }
+
+      // Format 2: Single flip format
+      const E_pre = e.E_pre ?? 0;  // Fallback to 0 if missing
+      const E_post = e.E_post ?? e.energy_post ?? e.energy ?? 0;
+      const theta = e.Θ ?? e.theta ?? e.threshold ?? 0;
+
       const normalized = {
         type: 'node.flip',
         node_id: e.node ?? e.id ?? e.node_id,  // Backend uses "node" field
-        E_pre: e.E_pre,
-        E_post: e.E_post ?? e.energy_post ?? e.energy,
-        theta: e.Θ ?? e.theta ?? e.threshold,  // Backend uses Greek "Θ"
+        E_pre,
+        E_post,
+        theta,
         frame_id: e.frame_id,
-        direction: (e.E_post ?? e.energy_post ?? e.energy ?? 0) > (e.Θ ?? e.theta ?? e.threshold ?? 0) ? 'on' : 'off',
+        direction: E_post > theta ? 'on' : 'off',
         timestamp: e.timestamp ?? new Date().toISOString()
       };
-      console.log(`[normalizeEvent] ✅ node.flip: ${normalized.node_id} ${normalized.direction} (E: ${normalized.E_pre.toFixed(2)} → ${normalized.E_post.toFixed(2)})`);
+
+      console.log(`[normalizeEvent] ✅ node.flip: ${normalized.node_id} ${normalized.direction} (E: ${E_pre.toFixed(2)} → ${E_post.toFixed(2)})`);
       return normalized;
     }
 
@@ -97,6 +124,10 @@ export function normalizeEvent(e: any): any {
     case 'subentity.snapshot':
       return e; // Already canonical
 
+    // SubEntity activation events (normative format)
+    case 'subentity.activation':
+      return e; // Already canonical
+
     // Legacy V1 events (pass through)
     case 'consciousness_state':
     case 'subentity_activity':
@@ -118,6 +149,153 @@ export function normalizeEvent(e: any): any {
     case 'forged.identity.frame':
     case 'forged.identity.metrics':
       return e;
+
+    // Stimulus injection debugging
+    case 'stimulus.injection.debug':
+      return e; // Diagnostic event
+
+    // Emergence events (normative emergence.v1 spec)
+    case 'emergence.gap.detected':
+    case 'gap.detected':  // Backend variant (naming inconsistency)
+    case 'emergence.coalition.formed':
+    case 'emergence.coalition.assembled':  // Backend variant (naming inconsistency)
+    case 'emergence.validation.passed':
+    case 'emergence.validation.failed':
+    case 'emergence.spawn.completed':
+    case 'emergence.spawn':  // Backend variant (naming inconsistency)
+    case 'emergence.reject':
+    case 'emergence.redirect':
+      return e; // Already canonical normative format
+
+    // Mode detection events (mode.v1 spec)
+    case 'mode.snapshot':
+    case 'mode.metastable_pattern':
+    case 'mode.community.detected':
+      return e; // Already canonical
+
+    // Topology events (topology.v1 spec)
+    case 'rich_club.snapshot':
+    case 'rich_club.hub_at_risk':
+    case 'integration_metrics.node':
+    case 'integration_metrics.population':
+    case 'state_modulation.frame':
+      return e; // Already canonical
+
+    // Graph delta events (graph.delta.v1 spec)
+    case 'graph.delta.node.upsert':
+    case 'graph.delta.node.delete': {
+      const payload = (e as any).payload ?? {};
+      const node = payload.node ?? (e as any).node ?? {};
+      const nodeId =
+        node?.id ??
+        payload.node_id ??
+        (e as any).node_id ??
+        (e as any).id ??
+        payload.id;
+
+      const mergedNode = nodeId
+        ? {
+            ...node,
+            id: nodeId,
+            type: node?.type ?? payload.node_type ?? (e as any).node_type,
+            properties: node?.properties ?? payload.properties ?? (e as any).properties ?? undefined
+          }
+        : undefined;
+
+      return {
+        ...e,
+        ...payload,
+        node_id: nodeId,
+        node: mergedNode
+      };
+    }
+    case 'graph.delta.link.upsert':
+    case 'graph.delta.link.delete': {
+      const payload = (e as any).payload ?? {};
+      const link = payload.link ?? (e as any).link ?? {};
+
+      const source =
+        link.source ??
+        payload.source ??
+        payload.source_id ??
+        (e as any).source ??
+        (e as any).source_id;
+      const target =
+        link.target ??
+        payload.target ??
+        payload.target_id ??
+        (e as any).target ??
+        (e as any).target_id;
+      const linkType =
+        link.type ??
+        payload.link_type ??
+        payload.type ??
+        (e as any).link_type ??
+        (e as any).type;
+      const linkId =
+        link.id ??
+        payload.link_id ??
+        (e as any).link_id ??
+        (e as any).id ??
+        (source && target ? `${source}->${target}:${linkType ?? 'link'}` : undefined);
+
+      const weight =
+        link.weight ??
+        payload.weight ??
+        payload.metadata?.weight ??
+        (e as any).weight ??
+        (e as any).metadata?.weight;
+
+      const mergedLink = linkId
+        ? {
+            ...link,
+            id: linkId,
+            source,
+            target,
+            type: linkType,
+            weight,
+            metadata: {
+              ...(link.metadata ?? {}),
+              ...(payload.metadata ?? {}),
+              ...((e as any).metadata ?? {})
+            }
+          }
+        : undefined;
+
+      return {
+        ...e,
+        ...payload,
+        link_id: linkId,
+        link: mergedLink
+      };
+    }
+    case 'graph.delta.subentity.upsert':
+    case 'graph.delta.subentity.delete': {
+      const payload = (e as any).payload ?? {};
+      const subentity = payload.subentity ?? (e as any).subentity ?? {};
+      const subentityId =
+        subentity.id ??
+        payload.subentity_id ??
+        (e as any).subentity_id ??
+        (e as any).id ??
+        payload.id;
+
+      const mergedSubentity = subentityId
+        ? {
+            ...subentity,
+            id: subentityId,
+            kind: subentity.kind ?? payload.subentity_type ?? (e as any).subentity_type,
+            properties: subentity.properties ?? payload.properties ?? (e as any).properties ?? undefined
+          }
+        : undefined;
+
+      return {
+        ...e,
+        ...payload,
+        subentity_id: subentityId,
+        subentity: mergedSubentity
+      };
+    }
 
     default:
       // Unknown event type - log warning but don't drop

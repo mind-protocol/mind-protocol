@@ -3982,7 +3982,7 @@
           "id": "toolu_01EEQHaQfYQDVu6tHRJTCtru",
           "tool": "Bash",
           "input": {
-            "command": "python -c \"import os; print('\\n'.join([f for f in os.listdir('C:/Users/reyno/mind-protocol/orchestration/mechanisms') if f.endswith('.py')]))\"",
+            "command": "python -c \"import os; print('\\n'.join([f for f in os.listdir('home/mindprotocol/mind-protocol/orchestration/mechanisms') if f.endswith('.py')]))\"",
             "description": "List Python files using Python os.listdir"
           }
         }
@@ -4825,7 +4825,7 @@
           "id": "toolu_014yEx7M1DSWEnPEGKa7Y685",
           "tool": "Bash",
           "input": {
-            "command": "python -c \"import os; files = [f for f in os.listdir('C:/Users/reyno/mind-protocol/orchestration/mechanisms') if 'context' in f.lower()]; print('\\n'.join(files) if files else 'No context files found')\"",
+            "command": "python -c \"import os; files = [f for f in os.listdir('home/mindprotocol/mind-protocol/orchestration/mechanisms') if 'context' in f.lower()]; print('\\n'.join(files) if files else 'No context files found')\"",
             "description": "Search for context-related files in mechanisms"
           }
         }
@@ -5884,7 +5884,7 @@
           "id": "toolu_01HoTubgjKqNmg7uNTncjf7j",
           "tool": "Bash",
           "input": {
-            "command": "python -c \"import os; files = [f for f in os.listdir('C:/Users/reyno/mind-protocol/orchestration') if 'schema' in f.lower() or 'validation' in f.lower()]; print('\\n'.join(files) if files else 'No schema/validation files found')\"",
+            "command": "python -c \"import os; files = [f for f in os.listdir('home/mindprotocol/mind-protocol/orchestration') if 'schema' in f.lower() or 'validation' in f.lower()]; print('\\n'.join(files) if files else 'No schema/validation files found')\"",
             "description": "Search for schema/validation files"
           }
         }
@@ -5916,7 +5916,7 @@
           "id": "toolu_01AdfEk8Bsyi9qVpRrdC9CDq",
           "tool": "Bash",
           "input": {
-            "command": "python -c \"import os; print('\\n'.join([f for f in os.listdir('C:/Users/reyno/mind-protocol/substrate/schemas') if f.endswith('.py')]))\"",
+            "command": "python -c \"import os; print('\\n'.join([f for f in os.listdir('home/mindprotocol/mind-protocol/substrate/schemas') if f.endswith('.py')]))\"",
             "description": "List schema files in substrate"
           }
         }
@@ -9928,7 +9928,7 @@
           "id": "toolu_018vT3CuDJyP4cBZSTfo7c2s",
           "tool": "Bash",
           "input": {
-            "command": "find C:/Users/reyno/mind-protocol/tests -type f -name \"*.py\" | grep -i stimulus",
+            "command": "find home/mindprotocol/mind-protocol/tests -type f -name \"*.py\" | grep -i stimulus",
             "description": "Find stimulus-related test files"
           }
         }
@@ -9943,7 +9943,7 @@
           "id": "toolu_01HMHqWiBNz4hm7yaTNYNHE4",
           "tool": "Bash",
           "input": {
-            "command": "find C:/Users/reyno/mind-protocol/tests -type f -name \"*.py\" | head -20",
+            "command": "find home/mindprotocol/mind-protocol/tests -type f -name \"*.py\" | head -20",
             "description": "List first 20 test files"
           }
         }
@@ -9956,7 +9956,7 @@
       "tool_results": [
         {
           "id": "toolu_01HMHqWiBNz4hm7yaTNYNHE4",
-          "output": "C:/Users/reyno/mind-protocol/tests/phase_implementation/test_falkordb_learning_fields.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_learning_fields.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase2_parser.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase3_weight_learning.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase4_stimulus_injection.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase6_integration.py\nC:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase7_2_bootstrap.py\nC:/Users/reyno/mind-protocol/tests/test_bitemporal.py\nC:/Users/reyno/mind-protocol/tests/test_energy_global_arousal.py\nC:/Users/reyno/mind-protocol/tests/test_insertion.py\nC:/Users/reyno/mind-protocol/tests/test_mcp_tools.py\nC:/Users/reyno/mind-protocol/tests/test_multi_tenancy.py\nC:/Users/reyno/mind-protocol/tests/test_n2_activation_awakening.py\nC:/Users/reyno/mind-protocol/tests/test_retrieval.py\nC:/Users/reyno/mind-protocol/tests/test_serialization.py\nC:/Users/reyno/mind-protocol/tests/test_variable_tick_frequency.py\nC:/Users/reyno/mind-protocol/tests/test_viz_streaming.py",
+          "output": "home/mindprotocol/mind-protocol/tests/phase_implementation/test_falkordb_learning_fields.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_learning_fields.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_phase2_parser.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_phase3_weight_learning.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_phase4_stimulus_injection.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_phase6_integration.py\nhome/mindprotocol/mind-protocol/tests/phase_implementation/test_phase7_2_bootstrap.py\nhome/mindprotocol/mind-protocol/tests/test_bitemporal.py\nhome/mindprotocol/mind-protocol/tests/test_energy_global_arousal.py\nhome/mindprotocol/mind-protocol/tests/test_insertion.py\nhome/mindprotocol/mind-protocol/tests/test_mcp_tools.py\nhome/mindprotocol/mind-protocol/tests/test_multi_tenancy.py\nhome/mindprotocol/mind-protocol/tests/test_n2_activation_awakening.py\nhome/mindprotocol/mind-protocol/tests/test_retrieval.py\nhome/mindprotocol/mind-protocol/tests/test_serialization.py\nhome/mindprotocol/mind-protocol/tests/test_variable_tick_frequency.py\nhome/mindprotocol/mind-protocol/tests/test_viz_streaming.py",
           "is_error": false
         }
       ]
@@ -9968,7 +9968,7 @@
       "tool_results": [
         {
           "id": "toolu_018vT3CuDJyP4cBZSTfo7c2s",
-          "output": "C:/Users/reyno/mind-protocol/tests/phase_implementation/test_phase4_stimulus_injection.py",
+          "output": "home/mindprotocol/mind-protocol/tests/phase_implementation/test_phase4_stimulus_injection.py",
           "is_error": false
         }
       ]
@@ -10001,7 +10001,7 @@
           "id": "toolu_015QbSKHvQhZFYAXxsnk674i",
           "tool": "Bash",
           "input": {
-            "command": "cd C:/Users/reyno/mind-protocol && python -m pytest tests/phase_implementation/test_phase4_stimulus_injection.py -v",
+            "command": "cd home/mindprotocol/mind-protocol && python -m pytest tests/phase_implementation/test_phase4_stimulus_injection.py -v",
             "description": "Run stimulus injection tests",
             "timeout": 60000
           }
@@ -10241,7 +10241,7 @@
           "id": "toolu_01CPMuV39GgT2Pwzi9ZXPQWh",
           "tool": "Bash",
           "input": {
-            "command": "cd C:/Users/reyno/mind-protocol && python -m pytest tests/phase_implementation/test_phase4_stimulus_injection.py -v",
+            "command": "cd home/mindprotocol/mind-protocol && python -m pytest tests/phase_implementation/test_phase4_stimulus_injection.py -v",
             "description": "Run stimulus injection tests after fixes",
             "timeout": 60000
           }
@@ -10738,7 +10738,7 @@
           "id": "toolu_01SuhMym6RnopnqNzDCggnKp",
           "tool": "Bash",
           "input": {
-            "command": "cd C:/Users/reyno/mind-protocol && python -m pytest tests/test_relationship_classification.py -v",
+            "command": "cd home/mindprotocol/mind-protocol && python -m pytest tests/test_relationship_classification.py -v",
             "description": "Run relationship classification tests",
             "timeout": 60000
           }
@@ -10983,7 +10983,7 @@
           "id": "toolu_012AXvPYSK9TQ2xZbxBVTRpG",
           "tool": "Bash",
           "input": {
-            "command": "cd C:/Users/reyno/mind-protocol && python -c \"from orchestration.mechanisms import relationship_classification; print('Import successful:', relationship_classification.__name__)\"",
+            "command": "cd home/mindprotocol/mind-protocol && python -c \"from orchestration.mechanisms import relationship_classification; print('Import successful:', relationship_classification.__name__)\"",
             "description": "Verify module import works"
           }
         }
@@ -11597,7 +11597,7 @@
           "id": "toolu_014sg5bC7yCvdXpuotPEqQBg",
           "tool": "Bash",
           "input": {
-            "command": "ls -la C:/Users/reyno/mind-protocol/orchestration/core/",
+            "command": "ls -la home/mindprotocol/mind-protocol/orchestration/core/",
             "description": "List files in core directory"
           }
         }
@@ -11686,7 +11686,7 @@
           "id": "toolu_01QdeHwFeU3m4hvwo8SpVTmL",
           "tool": "Bash",
           "input": {
-            "command": "cd C:/Users/reyno/mind-protocol && python -m pytest tests/test_telemetry_pr_a.py -v",
+            "command": "cd home/mindprotocol/mind-protocol && python -m pytest tests/test_telemetry_pr_a.py -v",
             "description": "Run PR-A telemetry tests",
             "timeout": 60000
           }
@@ -23042,7 +23042,7 @@
       "tool_results": [
         {
           "id": "toolu_017F2FXk3SPte32bbGL84hY6",
-          "output": "   ▲ Next.js 15.5.6\n   - Experiments (use with caution):\n     ✓ optimizeCss\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 5.6s\n   Linting and checking validity of types ...\nFailed to compile.\n\n./app/consciousness/components/GraphCanvas.tsx:253:41\nType error: Property 'zoomIdsubentity' does not exist on type 'typeof import(\"C:/Users/reyno/mind-protocol/node_modules/@types/d3/index\")'. Did you mean 'zoomIdentity'?\n\n\u001b[0m \u001b[90m 251 |\u001b[39m       svg\u001b[33m.\u001b[39mtransition()\n \u001b[90m 252 |\u001b[39m         \u001b[33m.\u001b[39mduration(\u001b[35m750\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 253 |\u001b[39m         \u001b[33m.\u001b[39mcall(zoom\u001b[33m.\u001b[39mtransform \u001b[36mas\u001b[39m any\u001b[33m,\u001b[39m d3\u001b[33m.\u001b[39mzoomIdsubentity)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 254 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 255 |\u001b[39m\n \u001b[90m 256 |\u001b[39m     \u001b[90m// Filter out invalid links (null source/target from backend)\u001b[39m\u001b[0m\nNext.js build worker exited with code: 1 and signal: null",
+          "output": "   ▲ Next.js 15.5.6\n   - Experiments (use with caution):\n     ✓ optimizeCss\n\n   Creating an optimized production build ...\n ✓ Compiled successfully in 5.6s\n   Linting and checking validity of types ...\nFailed to compile.\n\n./app/consciousness/components/GraphCanvas.tsx:253:41\nType error: Property 'zoomIdsubentity' does not exist on type 'typeof import(\"home/mindprotocol/mind-protocol/node_modules/@types/d3/index\")'. Did you mean 'zoomIdentity'?\n\n\u001b[0m \u001b[90m 251 |\u001b[39m       svg\u001b[33m.\u001b[39mtransition()\n \u001b[90m 252 |\u001b[39m         \u001b[33m.\u001b[39mduration(\u001b[35m750\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 253 |\u001b[39m         \u001b[33m.\u001b[39mcall(zoom\u001b[33m.\u001b[39mtransform \u001b[36mas\u001b[39m any\u001b[33m,\u001b[39m d3\u001b[33m.\u001b[39mzoomIdsubentity)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 254 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 255 |\u001b[39m\n \u001b[90m 256 |\u001b[39m     \u001b[90m// Filter out invalid links (null source/target from backend)\u001b[39m\u001b[0m\nNext.js build worker exited with code: 1 and signal: null",
           "is_error": false
         }
       ]
@@ -23656,7 +23656,7 @@
     {
       "role": "user",
       "timestamp": "2025-10-23T00:49:33.002Z",
-      "content": "\n\n● Services running:\n  - ✅ Port 3000: Dashboard (Next.js)\n  - ✅ Port 8000: WebSocket Server\n  - ❌ Port 8788: Control API (not running)\n\n  Let me check if Control API should auto-start or needs manual\n   start:\n\n● Bash(grep -i \"control.*api\\|api.*service\\|8788\"\n      C:/Users/reyno/mind-protocol/guardian.py)\n  ⎿  No matches found"
+      "content": "\n\n● Services running:\n  - ✅ Port 3000: Dashboard (Next.js)\n  - ✅ Port 8000: WebSocket Server\n  - ❌ Port 8788: Control API (not running)\n\n  Let me check if Control API should auto-start or needs manual\n   start:\n\n● Bash(grep -i \"control.*api\\|api.*service\\|8788\"\n      home/mindprotocol/mind-protocol/guardian.py)\n  ⎿  No matches found"
     },
     {
       "role": "user",

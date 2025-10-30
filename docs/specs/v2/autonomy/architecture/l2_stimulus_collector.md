@@ -694,7 +694,7 @@ class L2ActivityWatcher:
         self.file_observer = Observer()
         self.file_observer.schedule(
             FileEventHandler(collector),
-            path="C:/Users/reyno/mind-protocol",
+            path="/home/mind-protocol/mindprotocol",
             recursive=True
         )
 

@@ -45,9 +45,9 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
   const emotionDisplayStates = useRef<Map<string, EmotionDisplayState>>(new Map());
   const linkEmotionDisplayStates = useRef<Map<string, EmotionDisplayState>>(new Map());
 
-  // PERFORMANCE: Identify sub-entities (nodes in working memory - last 10 seconds) - computed once per nodes update
-  // Sub-entity architecture: entity_name = node_name, any node with recent traversal + energy becomes sub-entity
-  // For visualization: all sub-entities get 'default' color glow (slate)
+  // PERFORMANCE: Identify subentities (nodes in working memory - last 10 seconds) - computed once per nodes update
+  // Sub-entity architecture: entity_name = node_name, any node with recent traversal + energy becomes subentity
+  // For visualization: all subentities get 'default' color glow (slate)
   const activeNodesBySubentity = useMemo(() => {
     const now = Date.now();
     const workingMemoryWindow = 10000; // 10 seconds
@@ -59,8 +59,8 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       const energy = node.energy || 0;
 
       if (lastTraversal && energy > 0 && (now - lastTraversal) < workingMemoryWindow) {
-        // All active sub-entities get mapped to 'default' for visualization
-        // (Each node is technically its own sub-entity, but we use single color for all)
+        // All active subentities get mapped to 'default' for visualization
+        // (Each node is technically its own subentity, but we use single color for all)
         const entityId = 'default';
         if (!entityMap.has(entityId)) {
           entityMap.set(entityId, new Set());
@@ -181,7 +181,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       .attr('in', 'SourceGraphic')
       .attr('stdDeviation', '3');
 
-    // SUBENTITY-COLORED GLOWS (for sub-entity active nodes)
+    // SUBENTITY-COLORED GLOWS (for subentity active nodes)
     // Create a glow filter for each subentity color
     Object.entries(ENTITY_COLORS).forEach(([entityId, colorHex]) => {
       const rgb = hexToRgb(colorHex);

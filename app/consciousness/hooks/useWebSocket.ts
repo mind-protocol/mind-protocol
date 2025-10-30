@@ -37,7 +37,8 @@ import type {
   GraphSubentityPayload,
   ForgedIdentityFrameEvent,
   ForgedIdentityMetricsEvent,
-  EconomyOverlayState
+  EconomyOverlayState,
+  MembraneInjectAckEvent
 } from './websocket-types';
 import { WebSocketState } from './websocket-types';
 import { diagOnEvent } from '../lib/ws-diagnostics';
@@ -81,6 +82,210 @@ const CLEANUP_INTERVAL_MS = 60 * 1000; // Run cleanup every 60 seconds
 
 // 🎯 PHASE 4 STABILITY: 10Hz throttling to prevent flicker and excessive re-renders
 const UPDATE_THROTTLE_MS = 100; // Batch updates and flush at 10Hz (100ms intervals)
+
+const memoizedLinkId = (source?: string, target?: string, linkType?: string) =>
+  source && target ? `${source}->${target}:${linkType ?? 'link'}` : undefined;
+
+const coalesce = <T>(...values: Array<T | null | undefined>): T | undefined => {
+  for (const value of values) {
+    if (value !== undefined && value !== null) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+const normalizeNodePayload = (event: any): GraphNodePayload | null => {
+  const directNode = event?.node ?? event?.payload?.node;
+  if (directNode?.id) {
+    return {
+      ...directNode,
+      properties: directNode.properties ?? event?.properties ?? event?.updates
+    };
+  }
+
+  const nodeId = coalesce(
+    event?.node_id,
+    event?.id,
+    event?.payload?.node_id
+  );
+  if (!nodeId) return null;
+
+  const properties =
+    event?.properties ??
+    event?.updates ??
+    event?.payload?.properties ??
+    event?.payload?.updates;
+
+  return {
+    id: nodeId,
+    name: coalesce(
+      event?.name,
+      properties?.name,
+      event?.payload?.name
+    ),
+    type: coalesce(
+      event?.node_type,
+      event?.payload?.node_type,
+      properties?.type
+    ),
+    energy: coalesce(event?.energy, properties?.energy),
+    theta: coalesce(event?.theta, properties?.theta),
+    log_weight: coalesce(event?.log_weight, properties?.log_weight),
+    scope: properties?.scope,
+    properties: properties && Object.keys(properties).length ? properties : undefined
+  };
+};
+
+const normalizeLinkPayload = (event: any): GraphLinkPayload | null => {
+  const directLink = event?.link ?? event?.payload?.link;
+  const source = coalesce(
+    directLink?.source,
+    event?.source,
+    event?.source_id,
+    event?.payload?.source,
+    event?.payload?.source_id
+  );
+  const target = coalesce(
+    directLink?.target,
+    event?.target,
+    event?.target_id,
+    event?.payload?.target,
+    event?.payload?.target_id
+  );
+  if (!source || !target) return null;
+
+  const linkType = coalesce(
+    directLink?.type,
+    event?.link_type,
+    event?.payload?.link_type,
+    event?.payload?.type
+  );
+
+  const baseId = coalesce(
+    directLink?.id,
+    event?.link_id,
+    event?.id,
+    event?.payload?.link_id,
+    memoizedLinkId(source, target, linkType)
+  );
+
+  const weightRaw = coalesce(
+    directLink?.weight,
+    event?.weight,
+    event?.payload?.weight,
+    event?.metadata?.weight,
+    event?.payload?.metadata?.weight
+  );
+
+  const weight =
+    typeof weightRaw === 'number'
+      ? weightRaw
+      : typeof weightRaw?.w_total === 'number'
+        ? weightRaw.w_total
+        : typeof weightRaw?.weight === 'number'
+          ? weightRaw.weight
+          : undefined;
+
+  const metadata = {
+    ...(directLink?.metadata ?? {}),
+    ...(event?.metadata ?? {}),
+    ...(event?.payload?.metadata ?? {}),
+    ...(typeof weightRaw === 'object' && weightRaw !== null ? { weight_components: weightRaw } : {})
+  };
+
+  return {
+    id: baseId ?? memoizedLinkId(source, target, linkType) ?? `${source}->${target}`,
+    source,
+    target,
+    type: linkType,
+    weight,
+    properties: Object.keys(metadata).length ? metadata : undefined
+  };
+};
+
+const normalizeSubentityPayload = (event: any): GraphSubentityPayload | null => {
+  const directSubentity = event?.subentity ?? event?.payload?.subentity;
+  if (directSubentity?.id) {
+    return {
+      ...directSubentity,
+      properties: directSubentity.properties ?? event?.properties ?? event?.payload?.properties
+    };
+  }
+
+  const subId = coalesce(
+    event?.subentity_id,
+    event?.id,
+    event?.payload?.subentity_id
+  );
+  if (!subId) return null;
+
+  const properties =
+    event?.properties ??
+    event?.payload?.properties;
+
+  return {
+    id: subId,
+    name: coalesce(event?.name, properties?.name),
+    kind: coalesce(event?.kind, properties?.kind, event?.subentity_type),
+    energy: coalesce(event?.energy, properties?.energy),
+    threshold: coalesce(event?.threshold, properties?.threshold),
+    activation_level: coalesce(event?.activation_level, properties?.activation_level),
+    member_count: coalesce(event?.member_count, properties?.member_count),
+    quality: coalesce(event?.quality, properties?.quality),
+    stability: coalesce(event?.stability, properties?.stability_state),
+    properties: properties && Object.keys(properties).length ? properties : undefined
+  };
+};
+
+const deriveLinkId = (event: any): string | undefined => {
+  const link = event?.link ?? event?.payload?.link;
+  const source = coalesce(
+    link?.source,
+    event?.source,
+    event?.source_id,
+    event?.payload?.source,
+    event?.payload?.source_id
+  );
+  const target = coalesce(
+    link?.target,
+    event?.target,
+    event?.target_id,
+    event?.payload?.target,
+    event?.payload?.target_id
+  );
+  const linkType = coalesce(
+    link?.type,
+    event?.link_type,
+    event?.payload?.link_type,
+    event?.payload?.type
+  );
+  return coalesce(
+    link?.id,
+    event?.link_id,
+    event?.id,
+    event?.payload?.link_id,
+    memoizedLinkId(source, target, linkType)
+  );
+};
+
+const deriveSubentityId = (event: any): string | undefined =>
+  coalesce(
+    event?.subentity?.id,
+    event?.payload?.subentity?.id,
+    event?.subentity_id,
+    event?.payload?.subentity_id,
+    event?.id
+  );
+
+const deriveNodeId = (event: any): string | undefined =>
+  coalesce(
+    event?.node?.id,
+    event?.payload?.node?.id,
+    event?.node_id,
+    event?.payload?.node_id,
+    event?.id
+  );
 
 /**
  * useWebSocket Hook
@@ -291,7 +496,10 @@ export function useWebSocket(): WebSocketStreams {
         case 'graph.delta.link.delete':
         case 'graph.delta.subentity.upsert':
         case 'graph.delta.subentity.delete': {
-          const event = data as GraphDeltaEvent;
+          const event = data as GraphDeltaEvent & { payload?: any };
+          const payload = event?.payload ?? {};
+          const normalizedEvent = { ...payload, ...event };
+
           graphDeltaQueueRef.current.push(event);
           if (graphDeltaQueueRef.current.length > MAX_GRAPH_DELTA_EVENTS) {
             const removed = graphDeltaQueueRef.current.length - MAX_GRAPH_DELTA_EVENTS;
@@ -302,32 +510,41 @@ export function useWebSocket(): WebSocketStreams {
 
           switch (eventType) {
             case 'graph.delta.node.upsert':
-              if ((event as any).node?.id) {
-                nodeUpserts.push((event as any).node as GraphNodePayload);
+              {
+                const resolvedNode = normalizeNodePayload(normalizedEvent);
+                if (resolvedNode) {
+                  nodeUpserts.push(resolvedNode);
+                }
               }
               break;
             case 'graph.delta.node.delete': {
-              const id = (event as any).node_id || (event as any).id;
+              const id = deriveNodeId(normalizedEvent);
               if (id) nodeDeletes.push(id);
               break;
             }
             case 'graph.delta.link.upsert':
-              if ((event as any).link?.id) {
-                linkUpserts.push((event as any).link as GraphLinkPayload);
+              {
+                const resolvedLink = normalizeLinkPayload(normalizedEvent);
+                if (resolvedLink) {
+                  linkUpserts.push(resolvedLink);
+                }
               }
               break;
             case 'graph.delta.link.delete': {
-              const id = (event as any).link_id || (event as any).id;
+              const id = deriveLinkId(normalizedEvent);
               if (id) linkDeletes.push(id);
               break;
             }
             case 'graph.delta.subentity.upsert':
-              if ((event as any).subentity?.id) {
-                subentityUpserts.push((event as any).subentity as GraphSubentityPayload);
+              {
+                const resolvedSubentity = normalizeSubentityPayload(normalizedEvent);
+                if (resolvedSubentity) {
+                  subentityUpserts.push(resolvedSubentity);
+                }
               }
               break;
             case 'graph.delta.subentity.delete': {
-              const id = (event as any).subentity_id || (event as any).id;
+              const id = deriveSubentityId(normalizedEvent);
               if (id) subentityDeletes.push(id);
               break;
             }
@@ -439,13 +656,30 @@ export function useWebSocket(): WebSocketStreams {
         case 'link.flow.summary': {
           const flowEvent = data as LinkFlowSummaryEvent;
           setV2State(prev => {
-            if (!flowEvent.flows || !Array.isArray(flowEvent.flows)) {
+            const rawFlows =
+              (flowEvent as any).flows ??
+              (flowEvent as any).payload?.flows ??
+              (flowEvent as any).payload?.flow_summary; // legacy alias
+
+            if (!rawFlows || !Array.isArray(rawFlows)) {
               console.warn('[useWebSocket] link.flow.summary event missing flows array:', flowEvent);
               return prev;
             }
 
+            const flows = rawFlows
+              .map((flow: any) => ({
+                link_id: flow.link_id ?? flow.link?.id ?? flow.id,
+                flow: flow.flow ?? flow.value ?? flow.amount,
+              }))
+              .filter((flow: any) => flow.link_id);
+
+            if (flows.length === 0) {
+              console.warn('[useWebSocket] link.flow.summary event contained no identifiable link_ids:', flowEvent);
+              return prev;
+            }
+
             let hasChanges = false;
-            for (const flow of flowEvent.flows) {
+            for (const flow of flows) {
               if (prev.linkFlows.get(flow.link_id) !== flow.flow) {
                 hasChanges = true;
                 break;
@@ -457,7 +691,7 @@ export function useWebSocket(): WebSocketStreams {
             }
 
             const newFlows = new Map(prev.linkFlows);
-            flowEvent.flows.forEach(flow => {
+            flows.forEach(flow => {
               newFlows.set(flow.link_id, flow.flow);
             });
             return {
@@ -743,7 +977,8 @@ export function useWebSocket(): WebSocketStreams {
                     'telemetry.economy.spend',
                     'telemetry.economy.ubc_tick',
                     'wallet.signature.attested',
-                    'inject.ack'
+                    'inject.ack',
+                    'membrane.inject.ack'
                   ],
                   filters: { org: orgFilterRef.current }
                 }));
@@ -765,6 +1000,45 @@ export function useWebSocket(): WebSocketStreams {
           });
           break;
         }
+
+        case 'membrane.inject.ack': {
+          const ackEvent = data as MembraneInjectAckEvent;
+          const payload = ackEvent?.payload ?? (data as any);
+          const ackId =
+            payload?.envelope_id ??
+            payload?.stimulus_id ??
+            payload?.id ??
+            ackEvent?.id;
+          const ackTimestamp =
+            typeof payload?.t_ms === 'number'
+              ? new Date(payload.t_ms).toISOString()
+              : payload?.ts ?? ackEvent?.ts ?? new Date().toISOString();
+
+          setLastInjectAck({
+            id: ackId,
+            status: payload?.status ?? 'accepted',
+            reason: payload?.reason,
+            ts: ackTimestamp
+          });
+          break;
+        }
+
+        case 'gap.detected':
+        case 'emergence.reject':
+        case 'emergence.candidate':
+        case 'emergence.spawn':
+        case 'emergence.redirect':
+        case 'membership.updated':
+        case 'mode.snapshot':
+        case 'mode.metastable_pattern':
+        case 'mode.community.detected':
+        case 'state_modulation.frame':
+        case 'rich_club.snapshot':
+        case 'rich_club.hub_at_risk':
+        case 'integration_metrics.node':
+        case 'integration_metrics.population':
+          // These events feed membrane-first graph streams handled elsewhere; ignore to avoid duplicate state.
+          break;
 
         case 'subscribe.ack@1.0': {
           console.log('[WebSocket] Subscribe ACK:', data);
@@ -959,8 +1233,10 @@ export function useWebSocket(): WebSocketStreams {
       // flushPendingUpdates will process at 10Hz
       pendingUpdatesRef.current.push(data);
     } catch (err) {
-      console.error('[WebSocket] Failed to parse message:', err);
-      setError('Failed to parse WebSocket message');
+      // Malformed JSON is expected when server sends concatenated/partial messages
+      // Don't treat as error - just skip this message and continue
+      console.warn('[WebSocket] Skipping malformed message:', err instanceof Error ? err.message : 'unknown error');
+      // Don't set error state - this is not a critical failure
     }
   }, []);
 
@@ -1019,7 +1295,8 @@ export function useWebSocket(): WebSocketStreams {
             'telemetry.economy.spend',
             'telemetry.economy.ubc_tick',
             'wallet.signature.attested',
-            'inject.ack'
+            'inject.ack',
+            'membrane.inject.ack'
           ]
         };
         if (orgFilterRef.current) {
@@ -1127,6 +1404,22 @@ export function useWebSocket(): WebSocketStreams {
     };
   }, [flushPendingUpdates]);
 
+  useEffect(() => {
+    (window as any).__ws_debug_dispatch = (payload: any) => {
+      try {
+        const message = typeof payload === 'string' ? payload : JSON.stringify(payload);
+        handleMessage({ data: message } as MessageEvent);
+        flushPendingUpdates();
+      } catch (err) {
+        console.error('[WebSocket] __ws_debug_dispatch failed:', err);
+      }
+    };
+
+    return () => {
+      delete (window as any).__ws_debug_dispatch;
+    };
+  }, [handleMessage, flushPendingUpdates]);
+
   /**
    * 🔴 MEMORY LEAK FIX: Periodic cleanup of emotion Maps
    * Removes entries older than EMOTION_TTL_MS to prevent unbounded growth
@@ -1220,9 +1513,7 @@ export function useWebSocket(): WebSocketStreams {
       scope: envelope.scope ?? 'organizational',
       origin: envelope.origin ?? 'ui',
       ttl_frames: envelope.ttl_frames ?? 300,
-      ...envelope,
-      id,
-      ts: envelope.ts ?? new Date().toISOString()
+      ...envelope
     };
 
     const socket = ensureInjectSocket();

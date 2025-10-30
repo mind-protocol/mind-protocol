@@ -53,7 +53,7 @@ def check_git_status() -> dict:
             ["git", "log", "-1", "--format=%h %s - %ar"],
             capture_output=True,
             text=True,
-            cwd="C:/Users/reyno/mind-protocol"
+            cwd="/home/mind-protocol/mindprotocol"
         )
         last_commit = result.stdout.strip() if result.returncode == 0 else "ERROR"
 
@@ -62,7 +62,7 @@ def check_git_status() -> dict:
             ["git", "status", "--porcelain"],
             capture_output=True,
             text=True,
-            cwd="C:/Users/reyno/mind-protocol"
+            cwd="/home/mind-protocol/mindprotocol"
         )
         has_changes = bool(result.stdout.strip())
 

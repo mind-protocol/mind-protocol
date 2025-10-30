@@ -88,30 +88,6 @@ Entity-scale selection drastically reduces branching before atomic moves. :conte
 - **MEMBER_OF (node→subentity):** soft membership `weight` learned from co-activation.
 - **RELATES_TO (subentity→subentity):** boundary ease (log-weight), dominance prior, semantic distance, counts. :contentReference[oaicite:5]{index=5}
 
-### 2.6 Bootstrap (entity creation)
-
-Entities are **first-class graph nodes** created by bootstrap processes, not discovered by searching for existing node types. Two bootstrap approaches:
-
-#### Config-driven (functional entities)
-
-For functional roles like Architect, Validator, Translator:
-
-1. **Load config:** Read entity definitions from `orchestration/config/functional_entities.yml` (name, kind, description, keywords)
-2. **Create Entity nodes:** Idempotent upsert—if entity exists, skip; if missing, create with initial fields (energy=0, threshold from cohort)
-3. **Seed MEMBER_OF:** Keyword matching against node `name` + `description` → create `MEMBER_OF(node→entity){weight}` relationships with initial weight (e.g., 0.5 if keyword match)
-4. **Normalize memberships:** Per node, ensure `Σ_E m̃_iE ≤ 1` by dividing each weight by sum across all entities
-
-**No dependency on Mechanism nodes.** Functional entities come from config, not graph search.
-
-#### Clustering-based (semantic entities)
-
-For semantic topics discovered from graph structure:
-
-1. **Detect clusters:** Use embedding similarity (cosine distance in node embedding space) or dense subgraph detection
-2. **Create Entity nodes:** For each cluster, create Entity node with `kind=semantic`, centroid embedding from cluster mean
-3. **Seed MEMBER_OF:** Nodes in cluster get `MEMBER_OF(node→entity){weight}` with weight proportional to cluster membership strength
-4. **Normalize memberships:** Same per-node normalization as functional entities
-
 #### Learning phase
 
 After bootstrap, `MEMBER_OF` weights **learn from co-activation** (not static). High co-activation with entity members → weight increases. Low co-activation → weight decays. This allows memberships to refine over time.

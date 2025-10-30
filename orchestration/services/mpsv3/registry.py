@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from .runner import ServiceRunner, ServiceSpec
+from .health import ServiceHealthMonitor
 
 # Quiescence window: refuse reload until service stable
 DEFAULT_MIN_UPTIME = 25  # seconds - allows engines to initialize
@@ -32,6 +33,7 @@ class ServiceRegistry:
         self.config_path = Path(config_path)
         self.specs: Dict[str, ServiceSpec] = {}
         self.runners: Dict[str, ServiceRunner] = {}
+        self.health_monitors: Dict[str, ServiceHealthMonitor] = {}  # Health monitoring
         self._timers: Dict[str, threading.Timer] = {}  # Deferred reload timers
         self._load_config()
 
@@ -131,6 +133,16 @@ class ServiceRegistry:
             self.specs[spec.id] = spec
             self.runners[spec.id] = ServiceRunner(spec)
 
+            # Create health monitor if readiness/liveness checks defined
+            readiness_check = self._expand_vars(service.get("readiness"), global_env)
+            liveness_check = self._expand_vars(service.get("liveness"), global_env)
+            if readiness_check or liveness_check:
+                self.health_monitors[spec.id] = ServiceHealthMonitor(
+                    service_id=spec.id,
+                    readiness_check=readiness_check,
+                    liveness_check=liveness_check
+                )
+
         print(f"[Registry] Loaded {len(self.specs)} service specifications")
 
     def start_all(self):
@@ -182,6 +194,89 @@ class ServiceRegistry:
         print(f"[Registry] Reloading {service_id} (uptime {uptime:.1f}s)...")
         runner.shutdown()
         runner.start()
+
+    def wait_for_readiness(self, overall_timeout_s: float = 60.0):
+        """
+        Wait for all services with readiness checks to become ready.
+
+        Args:
+            overall_timeout_s: Maximum time to wait for ALL services (default 60s)
+        """
+        import time
+        print("[Registry] Waiting for services to become ready...")
+        start_time = time.time()
+
+        for service_id, monitor in self.health_monitors.items():
+            # Check overall timeout
+            elapsed = time.time() - start_time
+            if elapsed >= overall_timeout_s:
+                print(f"[Registry] ⚠️ Overall readiness timeout ({overall_timeout_s}s) exceeded - proceeding anyway")
+                break
+
+            if not monitor.readiness_check:
+                continue  # No readiness check defined
+
+            # Check if process is still alive before waiting
+            runner = self.runners.get(service_id)
+            if runner and runner.process and runner.process.poll() is not None:
+                print(f"[Registry] ⚠️ {service_id} process died - skipping readiness check")
+                continue
+
+            remaining = overall_timeout_s - elapsed
+            max_attempts = min(30, int(remaining))  # Don't exceed remaining time
+
+            ready = monitor.check_readiness(max_attempts=max_attempts, interval_s=1.0)
+            if not ready:
+                print(f"[Registry] WARNING: {service_id} failed readiness check")
+
+    def check_all_health(self) -> Dict[str, bool]:
+        """
+        Check health of all monitored services.
+
+        Returns dict mapping service_id -> is_healthy.
+        """
+        health_status = {}
+        for service_id, monitor in self.health_monitors.items():
+            runner = self.runners.get(service_id)
+
+            # Check if process is dead - RESURRECT IMMEDIATELY
+            if not runner or not runner.process or runner.process.poll() is not None:
+                print(f"[Registry] {service_id} process died - resurrecting...")
+                health_status[service_id] = False
+
+                # Restart dead process
+                if runner:
+                    runner.shutdown()  # Clean up any remnants
+                    runner.start()
+
+                    # Wait for readiness after resurrection
+                    if monitor.readiness_check:
+                        monitor.is_ready = False
+                        monitor.consecutive_failures = 0
+                        ready = monitor.check_readiness(max_attempts=30, interval_s=1.0)
+                        health_status[service_id] = ready
+                    else:
+                        health_status[service_id] = True  # Assume healthy if no readiness check
+                continue
+
+            # Check liveness for running processes
+            is_healthy = monitor.check_liveness()
+            health_status[service_id] = is_healthy
+
+            # Restart if exceeded failure threshold (3 consecutive liveness failures)
+            if monitor.should_restart(failure_threshold=3):
+                print(f"[Registry] {service_id} exceeded health failure threshold, restarting...")
+                runner.shutdown()
+                runner.start()
+
+                # Wait for readiness after restart
+                if monitor.readiness_check:
+                    monitor.is_ready = False
+                    monitor.consecutive_failures = 0
+                    ready = monitor.check_readiness(max_attempts=30, interval_s=1.0)
+                    health_status[service_id] = ready
+
+        return health_status
 
     def shutdown_all(self):
         """Shutdown all services cleanly."""

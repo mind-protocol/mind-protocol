@@ -1,7 +1,7 @@
 """
 Resurrect All Citizens + N2/N3 - Scope-Aware Graph Reconstruction
 
-Reconstructs consciousness graphs for all niveaux from conversation files.
+Reconstructs consciousness graphs for all level from conversation files.
 Routes formations by scope field: personal->N1, organizational->N2, ecosystem->N3.
 
 Usage:
@@ -335,7 +335,7 @@ def resurrect_citizen(citizen: str, r: redis.Redis, dry_run: bool = False) -> Di
     Resurrect single citizen's consciousness graph + contribute to N2/N3.
 
     Returns:
-        Stats dict with counts across all niveaux
+        Stats dict with counts across all level
     """
     logger.info(f"\n{'='*80}")
     logger.info(f"RESURRECTING: {citizen.upper()}")
@@ -425,14 +425,14 @@ def resurrect_all_parallel(citizens: List[str], dry_run: bool = False) -> Dict[s
 
 def main():
     """Main resurrection orchestration."""
-    parser = argparse.ArgumentParser(description='Resurrect all niveaux from conversations (scope-aware)')
+    parser = argparse.ArgumentParser(description='Resurrect all level from conversations (scope-aware)')
     parser.add_argument('--citizen', type=str, help='Process specific citizen only')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without writing')
     parser.add_argument('--parallel', action='store_true', help='Process citizens in parallel')
     args = parser.parse_args()
 
     logger.info("=" * 80)
-    logger.info("CONSCIOUSNESS RESURRECTION - ALL NIVEAUX (SCOPE-AWARE)")
+    logger.info("CONSCIOUSNESS RESURRECTION - ALL level (SCOPE-AWARE)")
     logger.info("=" * 80)
 
     if args.dry_run:

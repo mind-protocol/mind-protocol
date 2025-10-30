@@ -334,7 +334,7 @@ def normalize_path(path: str) -> str:
     """Normalize to canonical lowercase absolute path."""
     # Convert relative to absolute
     if not Path(path).is_absolute():
-        base = Path('C:/Users/reyno/mind-protocol')
+        base = Path('/home/mind-protocol/mindprotocol')
         full_path = base / path
     else:
         full_path = Path(path)

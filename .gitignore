@@ -53,6 +53,9 @@ nul
 guardian.log
 *.lock
 .stimuli/
+/data/
+orchestration/test_results/
+*.rdb
 
 # Claude Code artifacts
 claude-logs/

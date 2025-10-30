@@ -13,10 +13,10 @@
 
 ```bash
 # Check that falkordb_adapter.py includes entity persistence fix
-grep -A 5 "def persist_subentities" C:/Users/reyno/mind-protocol/orchestration/libs/utils/falkordb_adapter.py
+grep -A 5 "def persist_subentities" /home/mind-protocol/mindprotocol/orchestration/libs/utils/falkordb_adapter.py
 
 # Check that websocket_server.py calls persist_subentities()
-grep -B 2 -A 2 "persist_subentities" C:/Users/reyno/mind-protocol/orchestration/adapters/ws/websocket_server.py
+grep -B 2 -A 2 "persist_subentities" /home/mind-protocol/mindprotocol/orchestration/adapters/ws/websocket_server.py
 ```
 
 **Expected:** Both files should show persistence logic with error handling.

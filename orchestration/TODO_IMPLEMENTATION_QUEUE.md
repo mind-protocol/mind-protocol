@@ -28,7 +28,7 @@
 **Priority Reason:** Marked by Nicolas for future implementation
 
 **What it likely involves:**
-- Detecting when multiple sub-entities have conflicting goals/identities
+- Detecting when multiple subentities have conflicting goals/identities
 - Resolution mechanisms (consensus, priority-based, complementarity-driven)
 - Observability for identity coherence vs fragmentation
 

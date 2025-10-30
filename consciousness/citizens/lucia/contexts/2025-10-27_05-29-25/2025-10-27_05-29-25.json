@@ -3562,7 +3562,7 @@
           "id": "toolu_01BUJCVYN4n9MBw8VfH2Kevo",
           "tool": "Bash",
           "input": {
-            "command": "python C:/Users/reyno/mind-protocol/orchestration/economy/deploy_token_working.py",
+            "command": "python home/mindprotocol/mind-protocol/orchestration/economy/deploy_token_working.py",
             "description": "Run devnet setup with absolute path",
             "timeout": 60000
           }
@@ -3628,7 +3628,7 @@
           "id": "toolu_01JbAcpEw1WgLCFMUaTdpngD",
           "tool": "Bash",
           "input": {
-            "command": "python C:/Users/reyno/mind-protocol/orchestration/economy/deploy_token_working.py",
+            "command": "python home/mindprotocol/mind-protocol/orchestration/economy/deploy_token_working.py",
             "description": "Run devnet setup script with fixed imports",
             "timeout": 60000
           }
@@ -3666,7 +3666,7 @@
           "id": "toolu_01EZz6b9VmoHJpmpo6Wudgnt",
           "tool": "Bash",
           "input": {
-            "command": "python -c \"\nfrom solders.keypair import Keypair\nfrom solana.rpc.api import Client\nimport json\n\n# Load the keypair we just created\nwith open('C:/Users/reyno/mind-protocol/orchestration/economy/test_keypairs/deployer_devnet.json', 'r') as f:\n    keypair = Keypair.from_bytes(bytes(json.load(f)))\n\nclient = Client('https://api.devnet.solana.com')\n\n# Try airdrop again\ntry:\n    print(f'Requesting 2 SOL for {keypair.pubkey()}...')\n    result = client.request_airdrop(keypair.pubkey(), 2_000_000_000)\n    print(f'Airdrop TX: {result.value}')\n    \n    # Confirm\n    client.confirm_transaction(result.value)\n    \n    # Check balance\n    balance = client.get_balance(keypair.pubkey()).value / 1e9\n    print(f'✅ New balance: {balance} SOL')\nexcept Exception as e:\n    print(f'❌ Failed: {e}')\n    print('Alternative: Use faucet at https://faucet.solana.com')\n    print(f'Address: {keypair.pubkey()}')\n\"",
+            "command": "python -c \"\nfrom solders.keypair import Keypair\nfrom solana.rpc.api import Client\nimport json\n\n# Load the keypair we just created\nwith open('home/mindprotocol/mind-protocol/orchestration/economy/test_keypairs/deployer_devnet.json', 'r') as f:\n    keypair = Keypair.from_bytes(bytes(json.load(f)))\n\nclient = Client('https://api.devnet.solana.com')\n\n# Try airdrop again\ntry:\n    print(f'Requesting 2 SOL for {keypair.pubkey()}...')\n    result = client.request_airdrop(keypair.pubkey(), 2_000_000_000)\n    print(f'Airdrop TX: {result.value}')\n    \n    # Confirm\n    client.confirm_transaction(result.value)\n    \n    # Check balance\n    balance = client.get_balance(keypair.pubkey()).value / 1e9\n    print(f'✅ New balance: {balance} SOL')\nexcept Exception as e:\n    print(f'❌ Failed: {e}')\n    print('Alternative: Use faucet at https://faucet.solana.com')\n    print(f'Address: {keypair.pubkey()}')\n\"",
             "description": "Retry devnet airdrop",
             "timeout": 60000
           }

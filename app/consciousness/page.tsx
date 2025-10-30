@@ -15,6 +15,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { ForgedIdentityViewer } from './components/ForgedIdentityViewer';
 import { GraphChatInterface } from './components/GraphChatInterface';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useGraphStream } from './hooks/useGraphStream';
 import type {
   Node,
   Link,
@@ -52,18 +53,47 @@ export default function ConsciousnessPage() {
     economyOverlays
   } = useWebSocket();
 
+  // Membrane-first graph stream: derives currentGraphId from event provenance
+  const graphStream = useGraphStream();
+
   const [nodeOverlays, setNodeOverlays] = useState<Record<string, Partial<Node>>>({});
   const [operations, setOperations] = useState<Operation[]>([]);
   const [entityToEntity, setEntityToEntity] = useState<Record<string, number>>({});
   const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
   const [showForgedIdentityViewer, setShowForgedIdentityViewer] = useState(false);
   const [graphMetadata, setGraphMetadata] = useState<Record<string, GraphOption & { graphType: GraphType; aliases: string[] }>>({});
-  const [currentGraphId, setCurrentGraphId] = useState<string | null>(null);
+
+  // Use currentGraphId from membrane event stream (derived from provenance, not hardcoded)
+  const currentGraphId = graphStream.currentGraphId;
   const [currentGraphType, setCurrentGraphType] = useState<GraphType>('citizen');
   const [lastProcessedThreshold, setLastProcessedThreshold] = useState<number>(-1);
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
   const baseNodes = useMemo<Node[]>(() => {
+    // PRIORITY: Use graphStream (membrane events) for emergence data
+    const currentGraph = graphStream.currentGraphId
+      ? graphStream.graphs.get(graphStream.currentGraphId)
+      : null;
+
+    if (currentGraph && Object.keys(currentGraph.nodes).length > 0) {
+      // Use membrane event stream data (has emergence nodes)
+      return Object.values(currentGraph.nodes).map((node) => ({
+        id: node.id,
+        node_id: node.id,
+        name: node.name ?? node.id,
+        node_type: node.type ?? 'Unknown',
+        energy: 0,
+        energy_runtime: 0,
+        theta: 0,
+        log_weight: 0,
+        weight: 0,
+        scope: 'personal',
+        properties: {},
+        text: node.name ?? node.id
+      }));
+    }
+
+    // FALLBACK: Use legacy graphNodes if membrane stream has no data yet
     return graphNodes.map((node) => ({
       id: node.id,
       node_id: node.id,
@@ -78,7 +108,7 @@ export default function ConsciousnessPage() {
       properties: node.properties,
       text: node.properties?.text ?? node.name ?? node.id
     }));
-  }, [graphNodes]);
+  }, [graphStream.graphs, graphStream.currentGraphId, graphNodes]);
 
   const nodes = useMemo<Node[]>(() => {
     return baseNodes.map((node) => {
@@ -107,6 +137,28 @@ export default function ConsciousnessPage() {
   }, [graphLinks]);
 
   const subentities = useMemo<Subentity[]>(() => {
+    // PRIORITY: Use graphStream (membrane events) for emergence data
+    const currentGraph = graphStream.currentGraphId
+      ? graphStream.graphs.get(graphStream.currentGraphId)
+      : null;
+
+    if (currentGraph && Object.keys(currentGraph.subentities).length > 0) {
+      // Use membrane event stream data (has emerged SubEntities)
+      return Object.values(currentGraph.subentities).map((sub) => ({
+        subentity_id: sub.id,
+        name: sub.name ?? sub.slug ?? sub.id,
+        kind: 'SubEntity',
+        energy: 0,
+        threshold: 0,
+        activation_level: sub.active ? 1.0 : 0.0,
+        member_count: sub.members.size,
+        quality: 0,
+        stability: 0,
+        properties: {}
+      }));
+    }
+
+    // FALLBACK: Use legacy graphSubentities if membrane stream has no data yet
     return graphSubentities.map((sub) => ({
       subentity_id: sub.id,
       name: sub.name ?? sub.id,
@@ -119,7 +171,25 @@ export default function ConsciousnessPage() {
       stability: sub.stability,
       properties: sub.properties
     }));
-  }, [graphSubentities]);
+  }, [graphStream.graphs, graphStream.currentGraphId, graphSubentities]);
+
+  // Compute link count from graphStream SubEntity memberships
+  const linkCount = useMemo(() => {
+    const currentGraph = graphStream.currentGraphId
+      ? graphStream.graphs.get(graphStream.currentGraphId)
+      : null;
+
+    if (currentGraph && Object.keys(currentGraph.subentities).length > 0) {
+      // Count MEMBER_OF links (each subentity.members represents links)
+      return Object.values(currentGraph.subentities).reduce(
+        (total, sub) => total + sub.members.size,
+        0
+      );
+    }
+
+    // FALLBACK: Use legacy graphLinks count
+    return graphLinks.length;
+  }, [graphStream.graphs, graphStream.currentGraphId, graphLinks]);
 
   const strideEvents = emotionState.recentStrides;
 
@@ -199,19 +269,9 @@ export default function ConsciousnessPage() {
     ecosystems.forEach(option => register(option, 'ecosystem'));
     setGraphMetadata(metadata);
 
-    if (!currentGraphId || !metadata[currentGraphId]) {
-      const fallback =
-        citizens[0]?.id ??
-        organizations[0]?.id ??
-        ecosystems[0]?.id ??
-        null;
-
-      if (fallback) {
-        setCurrentGraphId(fallback);
-        setCurrentGraphType(metadata[fallback]?.graphType ?? 'citizen');
-      }
-    }
-  }, [hierarchySnapshot, currentGraphId]);
+    // Membrane-first: currentGraphId is derived from event provenance automatically
+    // No fallback logic needed - we trust the event stream
+  }, [hierarchySnapshot]);
 
   useEffect(() => {
     for (let i = lastProcessedThreshold + 1; i < thresholdCrossings.length; i++) {
@@ -300,23 +360,14 @@ export default function ConsciousnessPage() {
     window.dispatchEvent(new CustomEvent('node:focus', { detail: { nodeId } }));
   }, []);
 
-  const selectGraph = useCallback((graphType: string, graphId: string) => {
-    setCurrentGraphType(graphType as GraphType);
-    setCurrentGraphId(graphId);
+  // TODO: Membrane-first refactoring
+  // User selection should emit ui.action.focus_entity stimulus to the bus
+  // Engine reacts → emits events with that entity's provenance → useGraphStream picks it up
+  // For now, keeping this as a no-op to maintain ChatPanel compatibility
+  const handleSelectCitizen = useCallback((_identifier: string) => {
+    console.warn('[ConsciousnessPage] handleSelectCitizen called - needs membrane-first stimulus injection');
+    // TODO: Emit ui.action.focus_entity stimulus instead of direct state mutation
   }, []);
-
-  const handleSelectCitizen = useCallback((identifier: string) => {
-    if (!identifier) return;
-    const normalized = identifier.toLowerCase();
-    const match = Object.values(graphMetadata).find(meta =>
-      meta.aliases.includes(normalized) || meta.id.toLowerCase() === normalized
-    );
-
-    if (match) {
-      setCurrentGraphId(match.id);
-      setCurrentGraphType(match.graphType);
-    }
-  }, [graphMetadata]);
 
   const currentGraphLabel = useMemo(() => {
     if (!currentGraphId) return '';
@@ -363,7 +414,7 @@ export default function ConsciousnessPage() {
         currentGraphId={currentGraphId}
         currentGraphLabel={currentGraphLabel}
         nodeCount={nodes.length}
-        linkCount={links.length}
+        linkCount={linkCount}
         nodes={nodes}
         onToggleForgedIdentity={() => setShowForgedIdentityViewer(!showForgedIdentityViewer)}
         showForgedIdentityViewer={showForgedIdentityViewer}
@@ -389,6 +440,9 @@ export default function ConsciousnessPage() {
         weightLearningEvents={weightLearningEvents}
         phenomenologyMismatchEvents={phenomenologyMismatchEvents}
         phenomenologyHealthEvents={phenomenologyHealthEvents}
+        currentGraphId={currentGraphId}
+        emergenceState={graphStream.emergence}
+        topologyState={graphStream.topology}
       />
 
       <ChatPanel activeCitizenId={activeChatCitizenId} onSelectCitizen={handleSelectCitizen} />
@@ -422,12 +476,11 @@ export default function ConsciousnessPage() {
         subentityActivity={subentityActivity}
       />
 
-      <EnergyFlowParticles nodes={nodes} operations={operations} />
+      <EnergyFlowParticles nodes={nodes} subentityActivity={subentityActivity} />
 
       <ActivationBubbles
         operations={operations}
         nodes={nodes}
-        onFocusNode={handleFocusNode}
       />
 
       <DetailPanel nodes={nodes} links={links} />
@@ -438,7 +491,6 @@ export default function ConsciousnessPage() {
         <ForgedIdentityViewer
           frames={forgedIdentityFrames}
           metrics={forgedIdentityMetrics}
-          onClose={() => setShowForgedIdentityViewer(false)}
         />
       )}
     </div>

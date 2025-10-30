@@ -24,7 +24,7 @@ interface Particle {
 /**
  * EnergyFlowParticles - Layer 2: Energy Flow Visualization
  *
- * Shows particles moving along links when sub-entities traverse.
+ * Shows particles moving along links when subentities traverse.
  * Uses real-time WebSocket subentity_activity events.
  *
  * Performance: Only animates recent events (last 2 seconds)

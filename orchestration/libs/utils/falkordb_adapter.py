@@ -144,7 +144,7 @@ def serialize_node(node: Node) -> Dict[str, Any]:
         'ema_formation_quality': node.ema_formation_quality,
         'scope': node.scope,
 
-        # Entity activation tracking (for frontend viz)
+        # SubEntity activation tracking (for frontend viz)
         'entity_activations': json.dumps(node.entity_activations),  # Dict[str, Dict[str, float]] → JSON
 
         # Properties (Dict → JSON string)
@@ -208,7 +208,7 @@ def deserialize_node(props: Dict[str, Any]) -> Node:
         ema_formation_quality=props.get('ema_formation_quality', 0.0),
         scope=props.get('scope', 'personal'),
 
-        # Entity activation tracking (for frontend viz)
+        # SubEntity activation tracking (for frontend viz)
         entity_activations=json.loads(props.get('entity_activations', '{}')),  # JSON → Dict[str, Dict[str, float]]
 
         # Properties (JSON string → Dict)
@@ -1110,7 +1110,8 @@ class FalkorDBAdapter:
                 labels = node_obj.labels if hasattr(node_obj, 'labels') else []
 
                 # Skip Subentity nodes - they're loaded separately below
-                if 'Subentity' in labels:
+                # Check both 'Subentity' and 'SubEntity' (case variations)
+                if any(label.lower() == 'subentity' for label in labels):
                     continue
 
                 # Extract properties - actual schema varies by node type
@@ -1346,20 +1347,23 @@ class FalkorDBAdapter:
 
         self.graph_store.query(query, params)
 
-    def persist_node_scalars_bulk(self, rows: list[dict]) -> int:
+    @write_gate(lambda self, rows, *args, ctx=None, **kwargs: namespace_for_graph(getattr(self.graph_store, 'name', getattr(self.graph_store, 'database', None))))
+    def persist_node_scalars_bulk(self, rows: list[dict], ctx: Optional[Dict[str, str]] = None) -> int:
         """
         Batch persist E and theta for many nodes using UNWIND.
 
         Args:
             rows: List of dicts with keys: id, name, label, E, theta
                   Example: [{"id": "node_123", "name": "my_node", "label": "Concept", "E": 42.0, "theta": 30.0}, ...]
+            ctx: Optional context dict with 'ns' key for WriteGate namespace enforcement
+                 Example: {"ns": "L1:citizen_felix"}
 
         Returns:
             Number of nodes updated
 
         Example:
             >>> rows = [{"id": "n1", "name": "n1", "label": "Concept", "E": 0.8, "theta": 0.5}]
-            >>> updated = adapter.persist_node_scalars_bulk(rows)
+            >>> updated = adapter.persist_node_scalars_bulk(rows, ctx={"ns": "L1:citizen_felix"})
             >>> print(f"Updated {updated} nodes")
 
         Note:
@@ -1367,6 +1371,8 @@ class FalkorDBAdapter:
             - Prefer matching by id if present in both row and database
             - Fallback to matching by name+label for nodes without id
             This allows gradual migration from name-based to id-based schema.
+
+            WriteGate enforcement: ctx['ns'] must match graph namespace or PermissionError is raised
         """
         if not rows:
             return 0
@@ -1747,7 +1753,7 @@ class FalkorDBAdapter:
           r.either_ema = u.alpha * u.either_signal + (1 - u.alpha) * r.either_ema,
           r.both_count   = r.both_count   + u.both_signal,
           r.either_count = r.either_count + u.either_signal,
-          r.last_ts = datetime({epochMillis:u.ts}),
+          r.last_ts = u.ts,
           r.u_jaccard = CASE WHEN r.either_ema > 1e-12 THEN r.both_ema / r.either_ema ELSE 0.0 END
         """
 

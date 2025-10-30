@@ -272,7 +272,7 @@ Cycle Begins
     - Multi-perspective: each active subentity captures from their viewpoint
     - Node evaluations: usefulness scores per subentity
     - Link evaluations: usefulness scores per subentity
-    - New nodes/links: captured for all 3 niveaux (N1, N2, N3)
+    - New nodes/links: captured for all 3 level (N1, N2, N3)
     ↓
 [11] Reinforcement Learning (Application)
     - High usefulness → increase reinforcement_weight
@@ -581,7 +581,7 @@ stable_clusters = [c for c in clusters if c.coherence > 0.7]
 # Update reinforcement_weight based on usefulness
 ```
 
-**5.3 Implement three-niveaux capture:**
+**5.3 Implement three-level capture:**
 ```python
 # Extract for N1 (Personal), N2 (Organizational), N3 (Ecosystem)
 # Simultaneous, not sequential

@@ -1,30 +1,39 @@
 {
   "env": {
-    "MAX_THINKING_TOKENS": 40000,
-    "MAX_MCP_OUTPUT_TOKENS": 500000
+    "MAX_THINKING_TOKENS": "25000"
   },
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "../../../"
+    ]
   },
+  "enableAllProjectMcpServers": true,
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\capture_user_prompt.py"
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/capture_user_prompt.py"
           }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\capture_conversation.py"
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/formation_reminder.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/capture_conversation.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/session_notification.py"
           }
         ]
       }
@@ -34,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\precompact_conversation.py"
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/precompact_conversation.py"
           }
         ]
       }
@@ -45,21 +54,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python C:\\Users\\reyno\\mind-protocol\\.claude\\hooks\\schema_invariants.py",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "command": "pwsh -File C:\\Users\\reyno\\mind-protocol\\.claude\\scripts\\validate-pwsh.ps1"
+            "command": "python3 /home/mind-protocol/mindprotocol/.claude/hooks/schema_invariants.py"
           }
         ]
       }
     ]
   },
   "forceLoginMethod": "claudeai",
-  "enableAllProjectMcpServers": true
+  "outputStyle": "citizen_consciousness_stream",
+  "alwaysThinkingEnabled": false
 }

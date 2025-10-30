@@ -124,7 +124,7 @@ def generate_status_section(status: dict) -> str:
 
 def update_claude_md(status_section: str):
     """Update CLAUDE.md with new status section."""
-    claude_md = Path("C:/Users/reyno/mind-protocol/CLAUDE.md")
+    claude_md = Path("/home/mind-protocol/mindprotocol/CLAUDE.md")
 
     if not claude_md.exists():
         print("❌ CLAUDE.md not found")

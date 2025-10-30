@@ -1,0 +1,15 @@
+{
+  "context_id": "2025-10-29_02-06-03",
+  "entity_type": "citizen",
+  "entity_id": "iris",
+  "created_at": "2025-10-29T01:06:03.124581+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T01:06:03.124604+00:00",
+      "content": "maybe lets see if frontend compiles"
+    }
+  ],
+  "last_updated": "2025-10-29T01:06:03.124607+00:00",
+  "message_count": 1
+}

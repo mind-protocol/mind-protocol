@@ -1,7 +1,7 @@
 # Mind Protocol - Complete Type Reference
 
 **Auto-generated from schema_registry (FalkorDB)**
-**Last updated:** 2025-10-27 14:11:13
+**Last updated:** 2025-10-30 01:20:10
 
 This is the **single source of truth** for all node and link types in the Mind Protocol consciousness infrastructure.
 
@@ -15,7 +15,7 @@ This is the **single source of truth** for all node and link types in the Mind P
 
 ## Part 1: Universal Node Attributes
 
-**These attributes are inherited by ALL 45 node types.**
+**These attributes are inherited by ALL 88 node types.**
 
 Every node in the consciousness graph has these base attributes in addition to its type-specific fields.
 
@@ -66,7 +66,7 @@ Every node in the consciousness graph has these base attributes in addition to i
 
 ## Part 2: Universal Link Attributes
 
-**These attributes are inherited by ALL 23 link types.**
+**These attributes are inherited by ALL 61 link types.**
 
 Every link in the consciousness graph has these base attributes in addition to its type-specific fields.
 
@@ -111,7 +111,7 @@ Every link in the consciousness graph has these base attributes in addition to i
 
 ## Part 3: Node Type Inventory
 
-**Total:** 45 node types defined
+**Total:** 88 node types defined
 
 ### Level 1 (Personal) - 11 Types
 
@@ -451,7 +451,35 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `why_it_matters` (string)
   - Why this principle is important
 
-### Level 3 (Ecosystem) - 15 Types
+### Level 3 (Ecosystem) - 34 Types
+
+**Agreement**
+
+- **Category:** ecosystem
+- **Description:** Signed agreement associated with a deal
+
+**Type-Specific Required Fields:**
+- `agreement_type` (enum) - Allowed values: `MSA`, `NDA`, `SLA`, `Confirmation`
+  - Agreement type
+- `effective_at` (datetime)
+  - Effective date
+
+**Type-Specific Optional Fields:**
+- `expires_at` (datetime)
+  - Expiration date, if any
+
+**Attestation**
+
+- **Category:** evidence
+- **Description:** Signed attestation backing an artefact
+
+**Type-Specific Required Fields:**
+- `issuer` (string)
+  - Issuing party
+- `purpose` (string)
+  - Purpose of the attestation
+- `sig` (string)
+  - Signature or hash
 
 **Behavioral_Pattern**
 
@@ -466,6 +494,38 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `subject` (string)
   - Who exhibits this (node ID)
 
+**Capability_Descriptor**
+
+- **Category:** ecosystem
+- **Description:** Descriptor of a capability (mapped to L4 schema references)
+
+**Type-Specific Required Fields:**
+- `name` (string)
+  - Capability name
+- `schema_ref` (string)
+  - Reference to L4 schema or SDK module
+
+**Type-Specific Optional Fields:**
+- `cost_hint` (string)
+  - Human readable pricing hint
+
+**Citizen_Template**
+
+- **Category:** ecosystem
+- **Description:** Citizen template provided by ecosystem bootstrap
+
+**Type-Specific Required Fields:**
+- `default_publish` (array)
+  - Default inject channels
+- `default_subscribe` (array)
+  - Default broadcast topics to subscribe
+- `image` (string)
+  - Container image or package ref
+
+**Type-Specific Optional Fields:**
+- `limits` (object)
+  - Resource limits (cpu/mem)
+
 **Company**
 
 - **Category:** ecosystem
@@ -479,20 +539,65 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `website` (string)
   - Company website
 
+**Contact_Channel**
+
+- **Category:** ecosystem
+- **Description:** Contact channel for a public presence
+
+**Type-Specific Required Fields:**
+- `address` (string)
+  - Contact address / endpoint
+- `channel_type` (enum) - Allowed values: `email`, `api`, `portal`
+  - Channel modality
+
+**Counterparty**
+
+- **Category:** ecosystem
+- **Description:** Counterparty participating in deals
+
+**Type-Specific Required Fields:**
+- `company_type` (enum) - Allowed values: `startup`, `enterprise`, `dao`, `protocol`
+  - Type of counterparty
+- `status` (enum) - Allowed values: `active`, `inactive`, `suspended`
+  - Status in ecosystem
+
+**Type-Specific Optional Fields:**
+- `website` (string)
+  - Website or landing page
+
 **Deal**
 
 - **Category:** evidence
-- **Description:** Business deal or partnership
+- **Description:** Business deal / transaction record
 
 **Type-Specific Required Fields:**
-- `announced_date` (datetime)
-  - When announced
-- `deal_type` (enum) - Allowed values: `investment`, `partnership`, `acquisition`
-  - Type of deal
-- `parties` (array)
-  - Parties involved
-- `status` (enum) - Allowed values: `announced`, `completed`, `cancelled`
-  - Deal status
+- `deal_type` (enum) - Allowed values: `trade`, `partnership`, `service`
+  - Deal category
+- `instrument` (enum) - Allowed values: `TermSheet`, `Confirmation`
+  - Instrument used
+- `state` (enum) - Allowed values: `Proposed`, `Negotiating`, `Agreed`, `Settled`, `Cancelled`
+  - Lifecycle state
+
+**Type-Specific Optional Fields:**
+- `incoterm` (string)
+  - Applicable incoterm
+- `price` (float)
+  - Price agreed
+- `qty` (float)
+  - Quantity involved
+
+**Ecosystem**
+
+- **Category:** ecosystem
+- **Description:** Domain container (e.g. trading commodities)
+
+**Type-Specific Required Fields:**
+- `domain` (string)
+  - Domain vertical
+- `slug` (string)
+  - URL-friendly identifier
+- `version` (string)
+  - Manifest version
 
 **Event**
 
@@ -518,6 +623,62 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `primary_platform` (enum) - Allowed values: `twitter`, `linkedin`, `github`
   - Primary social platform
 
+**Info_Asset**
+
+- **Category:** evidence
+- **Description:** Shareable information asset
+
+**Type-Specific Required Fields:**
+- `access` (enum) - Allowed values: `public`, `bilateral`, `paid`
+  - Access level
+- `pointer` (string)
+  - CID/URI reference
+- `title` (string)
+  - Title of the asset
+
+**Type-Specific Optional Fields:**
+- `tags` (array)
+  - Classification tags
+
+**Info_Offer**
+
+- **Category:** ecosystem
+- **Description:** Offer to provide access to an information asset
+
+**Type-Specific Required Fields:**
+- `price_model` (enum) - Allowed values: `free`, `one_off`, `subscription`
+  - Pricing model
+- `terms` (string)
+  - Key terms of access
+
+**Info_Request**
+
+- **Category:** ecosystem
+- **Description:** Request for information
+
+**Type-Specific Required Fields:**
+- `deadline` (datetime)
+  - Deadline for response
+- `topic` (string)
+  - Topic of interest
+
+**Type-Specific Optional Fields:**
+- `constraints` (string)
+  - Constraints / filters
+
+**Instrument**
+
+- **Category:** ecosystem
+- **Description:** Negotiation instrument / template
+
+**Type-Specific Required Fields:**
+- `instrument_type` (enum) - Allowed values: `TermSheet`, `Confirmation`
+  - Type of instrument
+- `template_uri` (string)
+  - URI to template or repository
+- `version` (string)
+  - Template version
+
 **Integration**
 
 - **Category:** derived
@@ -532,6 +693,21 @@ Every link in the consciousness graph has these base attributes in addition to i
   - First system
 - `system_b` (string)
   - Second system
+
+**Market**
+
+- **Category:** ecosystem
+- **Description:** Market segment / geography
+
+**Type-Specific Required Fields:**
+- `name` (string)
+  - Market name
+
+**Type-Specific Optional Fields:**
+- `product_class` (string)
+  - Product class or family
+- `region` (string)
+  - Geographical region
 
 **Market_Signal**
 
@@ -560,6 +736,34 @@ Every link in the consciousness graph has these base attributes in addition to i
   - How cohesive the cluster is
 - `members` (array)
   - Cluster members
+
+**Org_Profile**
+
+- **Category:** ecosystem
+- **Description:** Organization profile within the ecosystem layer
+
+**Type-Specific Required Fields:**
+- `jurisdiction` (string)
+  - Primary legal jurisdiction
+- `org_id` (string)
+  - Organization identifier
+
+**Type-Specific Optional Fields:**
+- `tags` (array)
+  - Free-form labels for search
+
+**Policy_Lane**
+
+- **Category:** ecosystem
+- **Description:** Lane definition used by orchestrator
+
+**Type-Specific Required Fields:**
+- `ack_policy` (enum) - Allowed values: `none`, `human_required`, `tool_required`
+  - Acknowledgement policy
+- `capacity` (int)
+  - Concurrent capacity
+- `lane_id` (string)
+  - Lane identifier
 
 **Post**
 
@@ -590,6 +794,72 @@ Every link in the consciousness graph has these base attributes in addition to i
   - Description of the trait
 - `trait_type` (enum) - Allowed values: `bullish`, `bearish`, `risk-averse`, `aggressive`
   - Type of trait
+
+**Public_Presence**
+
+- **Category:** ecosystem
+- **Description:** Published surface of an organization (capabilities, channels)
+
+**Type-Specific Required Fields:**
+- `capabilities` (array)
+  - Capabilities exposed publicly
+- `channels` (array)
+  - List of supported public channels
+- `visibility` (enum) - Allowed values: `public`, `partners`, `private`
+  - Audience scope
+
+**Type-Specific Optional Fields:**
+- `attestations` (array)
+  - Evidence node IDs backing the presence
+
+**Quote**
+
+- **Category:** evidence
+- **Description:** Offer of price responding to an RFQ
+
+**Type-Specific Required Fields:**
+- `currency` (string)
+  - ISO currency code
+- `price` (float)
+  - Quoted price
+- `terms` (string)
+  - Key contractual terms
+- `valid_until` (datetime)
+  - Expiration timestamp
+
+**RFQ**
+
+- **Category:** evidence
+- **Description:** Structured request for quote
+
+**Type-Specific Required Fields:**
+- `commodity` (string)
+  - Requested commodity / product
+- `delivery_window` (object)
+  - Object {from, to} specifying delivery period
+- `incoterm` (string)
+  - Incoterm (FOB, CIF, etc.)
+- `qty` (object)
+  - Quantity object {value, unit}
+
+**Type-Specific Optional Fields:**
+- `counterparty_pref` (array)
+  - Preferred counterparties
+
+**Renderer_Template**
+
+- **Category:** ecosystem
+- **Description:** Renderer template for publications
+
+**Type-Specific Required Fields:**
+- `output` (enum) - Allowed values: `git:publications`, `site:static`
+  - Output target
+- `triggers` (array)
+  - Events that trigger rendering
+
+**Type-Specific Optional Fields:**
+- `branch_prefix` (string)
+  - Branch prefix used for PRs
 
 **Reputation_Assessment**
 
@@ -630,6 +900,21 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `platform` (enum) - Allowed values: `twitter`, `linkedin`, `github`, `farcaster`
   - Platform
 
+**Tool_Template**
+
+- **Category:** ecosystem
+- **Description:** Tool runner template
+
+**Type-Specific Required Fields:**
+- `capabilities` (array)
+  - Capabilities served
+- `runner_image` (string)
+  - Container image
+
+**Type-Specific Optional Fields:**
+- `resources` (object)
+  - Resource hints (cpu/mem)
+
 **Transaction**
 
 - **Category:** evidence
@@ -662,13 +947,347 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `wallet_type` (enum) - Allowed values: `eoa`, `contract`, `multisig`
   - Type of wallet
 
+### Level 4 (Protocol) - 24 Types
+
+**Adapter_Release**
+
+- **Category:** artifact
+- **Description:** Release metadata for provider adapters (Claude/Codex/Gemini).
+
+**Type-Specific Required Fields:**
+- `features` (array)
+  - Supported feature list
+- `provider` (enum) - Allowed values: `claude`, `codex`, `gemini`, `other`
+  - Provider identifier
+- `version` (string)
+  - Adapter version
+
+**Bus_Instance**
+
+- **Category:** infra
+- **Description:** Concrete bus instance available to tenants.
+
+**Type-Specific Required Fields:**
+- `endpoint` (string)
+  - Endpoint URI
+- `retention_policy_ref` (string)
+  - Reference to Retention_Policy
+- `transport_ref` (string)
+  - Reference to Transport_Spec
+
+**Capability**
+
+- **Category:** protocol
+- **Description:** Logical capability exposed through the protocol.
+
+**Type-Specific Required Fields:**
+- `capability` (string)
+  - Capability identifier (e.g. git.commit)
+- `input_schema_ref` (string)
+  - Reference to input Event_Schema
+- `output_schema_ref` (string)
+  - Reference to output Event_Schema
+
+**Compatibility_Matrix**
+
+- **Category:** protocol
+- **Description:** Compatibility matrix between releases and schemas.
+
+**Type-Specific Required Fields:**
+- `generated_at` (datetime)
+  - Generation timestamp
+- `matrix` (array)
+  - Rows describing compatibility states
+
+**Conformance_Case**
+
+- **Category:** protocol
+- **Description:** Individual conformance test case.
+
+**Type-Specific Required Fields:**
+- `case_id` (string)
+  - Case identifier
+- `description` (string)
+  - Case description
+- `expected` (enum) - Allowed values: `pass`, `fail`, `warn`
+  - Expected outcome
+
+**Conformance_Result**
+
+- **Category:** protocol
+- **Description:** Execution result for a conformance suite.
+
+**Type-Specific Required Fields:**
+- `failing_cases` (array)
+  - Identifiers of failing cases
+- `pass_rate` (float)
+  - Pass ratio (0..1)
+- `suite_id` (string)
+  - Suite identifier
+- `target_release` (string)
+  - Target release identifier (e.g. sdk.ts@1.2.0)
+
+**Conformance_Suite**
+
+- **Category:** protocol
+- **Description:** Suite of protocol conformance tests.
+
+**Type-Specific Required Fields:**
+- `cases_count` (int)
+  - Number of test cases
+- `schema_set_ref` (string)
+  - Reference to schema set
+- `suite_id` (string)
+  - Suite identifier
+
+**Deprecation_Notice**
+
+- **Category:** governance
+- **Description:** Notice announcing protocol deprecation of schema or release.
+
+**Type-Specific Required Fields:**
+- `effective_at` (datetime)
+  - Effective timestamp
+- `end_of_support` (datetime)
+  - End-of-support timestamp
+- `target_kind` (enum) - Allowed values: `Event_Schema`, `Capability`, `SDK_Release`, `Sidecar_Release`
+  - Kind being deprecated
+- `target_ref` (string)
+  - Reference to deprecated element
+
+**Envelope_Schema**
+
+- **Category:** protocol
+- **Description:** Schema for the transport envelope (metadata, signature, TTL).
+
+**Type-Specific Required Fields:**
+- `fields` (array)
+  - Canonical fields with constraints
+- `name` (string)
+  - Envelope schema name
+- `signature_path` (string)
+  - JSON path to signature payload (e.g. $.sig)
+- `version` (string)
+  - Envelope schema version
+
+**Event_Schema**
+
+- **Category:** protocol
+- **Description:** JSON schema describing a protocol event (inject or broadcast).
+
+**Type-Specific Required Fields:**
+- `direction` (enum) - Allowed values: `inject`, `broadcast`
+  - Flow direction
+- `name` (string)
+  - Event name (e.g. membrane.inject)
+- `schema_hash` (string)
+  - SHA256 of the JSON schema
+- `schema_uri` (string)
+  - Location of the JSON schema
+- `topic_pattern` (string)
+  - Topic pattern used on the bus
+- `version` (string)
+  - Schema version string
+
+**Governance_Policy**
+
+- **Category:** governance
+- **Description:** Protocol policy (lanes, backpressure, governance defaults).
+
+**Type-Specific Required Fields:**
+- `defaults` (object)
+  - Default settings (e.g. ack_policy)
+- `name` (string)
+  - Policy identifier
+- `policy_doc_uri` (string)
+  - URI to policy documentation
+
+**Protocol_Version**
+
+- **Category:** protocol
+- **Description:** Semantic version of the protocol specification.
+
+**Type-Specific Required Fields:**
+- `released_at` (datetime)
+  - Release timestamp
+- `semver` (string)
+  - Semantic version identifier (e.g. 1.1.0)
+- `summary` (string)
+  - Release highlights
+
+**Retention_Policy**
+
+- **Category:** protocol
+- **Description:** Retention and de-duplication policy for the bus.
+
+**Type-Specific Required Fields:**
+- `dedupe_window_ms` (int)
+  - Deduplication window in milliseconds
+- `name` (string)
+  - Policy name
+- `size_limit_mb` (int)
+  - Storage limit in megabytes
+- `time_limit` (duration)
+  - Retention duration (e.g. 3d)
+
+**SDK_Release**
+
+- **Category:** artifact
+- **Description:** Release metadata for SDK distributions.
+
+**Type-Specific Required Fields:**
+- `commit_hash` (string)
+  - Commit hash for release
+- `language` (enum) - Allowed values: `typescript`, `python`, `go`
+  - SDK language
+- `package_name` (string)
+  - Package identifier
+- `schema_min_version` (string)
+  - Minimum compatible schema version
+- `version` (string)
+  - SDK version
+
+**Schema_Bundle**
+
+- **Category:** artifact
+- **Description:** Versioned archive of protocol schemas.
+
+**Type-Specific Required Fields:**
+- `bundle_hash` (string)
+  - Hash of bundle contents
+- `bundle_uri` (string)
+  - URI to bundle (tar/zip)
+- `contains` (array)
+  - List of schema refs included (name@version)
+
+**Security_Profile**
+
+- **Category:** protocol
+- **Description:** Security requirements for namespaces or schemas.
+
+**Type-Specific Required Fields:**
+- `min_key_length_bits` (int)
+  - Minimum key length in bits
+- `profile_name` (string)
+  - Profile identifier
+- `required_signature_suites` (array)
+  - Allowed signature suites
+
+**Sidecar_Release**
+
+- **Category:** artifact
+- **Description:** Release metadata for the Sidecar client.
+
+**Type-Specific Required Fields:**
+- `features` (array)
+  - Feature list (buffer_offline, replay, etc.)
+- `image_ref` (string)
+  - Container image reference
+- `schema_min_version` (string)
+  - Minimum compatible schema version
+- `version` (string)
+  - Release version
+
+**Signature_Suite**
+
+- **Category:** protocol
+- **Description:** Cryptographic suite authorised for protocol signatures.
+
+**Type-Specific Required Fields:**
+- `algo` (enum) - Allowed values: `ed25519`
+  - Signature algorithm
+- `pubkey_encoding` (enum) - Allowed values: `base64`, `hex`
+  - Public key encoding
+- `signature_field` (string)
+  - Path to signature field (e.g. sig.signature)
+
+**Tenant**
+
+- **Category:** governance
+- **Description:** Protocol-level tenant (organization identity).
+
+**Type-Specific Required Fields:**
+- `display_name` (string)
+  - Human readable name
+- `org_id` (string)
+  - Tenant identifier
+
+**Tenant_Key**
+
+- **Category:** governance
+- **Description:** Key material associated with a tenant.
+
+**Type-Specific Required Fields:**
+- `created_at` (datetime)
+  - Creation timestamp
+- `key_version` (int)
+  - Sequential key version
+- `org_id` (string)
+  - Tenant identifier
+- `pubkey` (string)
+  - Public key material
+- `rotated_at` (datetime)
+  - Rotation timestamp (nullable)
+
+**Tool_Contract**
+
+- **Category:** protocol
+- **Description:** Contract describing a tool's capabilities and schemas.
+
+**Type-Specific Required Fields:**
+- `args_schema_ref` (string)
+  - Reference to arguments schema
+- `capabilities` (array)
+  - Capabilities served by the tool
+- `result_schema_ref` (string)
+  - Reference to result schema
+- `tool_id` (string)
+  - Tool identifier
+
+**Topic_Namespace**
+
+- **Category:** protocol
+- **Description:** Bus namespace definition (wildcard patterns, scope).
+
+**Type-Specific Required Fields:**
+- `description` (string)
+  - Purpose and usage notes
+- `pattern` (string)
+  - Topic pattern (e.g. org/{org_id}/broadcast/*)
+- `scope` (enum) - Allowed values: `org`, `global`
+  - Namespace scope
+
+**Topic_Route**
+
+- **Category:** infra
+- **Description:** Documentation of logical routing between namespaces and components.
+
+**Type-Specific Required Fields:**
+- `from_namespace` (string)
+  - Source namespace pattern
+- `routing_notes` (string)
+  - Routing behaviour description
+- `to_component` (string)
+  - Destination component (e.g. orchestrator)
+
+**Transport_Spec**
+
+- **Category:** infra
+- **Description:** Transport semantics (WS/NATS/Kafka) for the bus.
+
+**Type-Specific Required Fields:**
+- `qos` (object)
+  - Quality-of-service settings (durable, acks, etc.)
+- `type` (enum) - Allowed values: `ws`, `nats`, `kafka`
+  - Transport type
+
 ---
 
 ## Part 4: Link Type Inventory
 
-**Total:** 23 link types defined
+**Total:** 61 link types defined
 
-### Shared Link Types - 17 Types
+### Shared Link Types - 15 Types
 
 **ASSIGNED_TO**
 
@@ -749,11 +1368,6 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `what_is_added` (string)
   - What the extension adds to the base
 
-**IMPLEMENTS**
-
-- **Category:** documentation
-- **Description:** Putting pattern or best practice into reality
-
 **JUSTIFIES**
 
 - **Category:** evidence
@@ -807,22 +1421,12 @@ Every link in the consciousness graph has these base attributes in addition to i
 - `verification_method` (string)
   - How to verify requirement is satisfied
 
-**SUPERSEDES**
-
-- **Category:** documentation
-- **Description:** This replaces older version
-
 **THREATENS**
 
 - **Category:** organizational
 - **Description:** Danger or risk to goal/project
 
-### Level 1 (Personal) Link Types - 6 Types
-
-**ACTIVATES**
-
-- **Category:** activation
-- **Description:** Trigger awakens subentity coalition
+### Level 1 (Personal) Link Types - 5 Types
 
 **DEEPENED_WITH**
 
@@ -848,6 +1452,317 @@ Every link in the consciousness graph has these base attributes in addition to i
 
 - **Category:** activation
 - **Description:** What caused memory/pattern to activate
+
+### Level 3 (Ecosystem) Link Types - 21 Types
+
+**ACTIVATES**
+
+- **Category:** ecosystem
+- **Description:** Ecosystem activates template (citizen/tool/renderer)
+
+**Type-Specific Required Fields:**
+- `activation_id` (string)
+  - Activation identifier
+
+**CONFORMS_TO**
+
+- **Category:** ecosystem
+- **Description:** Descriptor/template conforms to L4 schema
+
+**Type-Specific Required Fields:**
+- `schema_version` (string)
+  - Schema version
+
+**DEPLOYS**
+
+- **Category:** ecosystem
+- **Description:** Ecosystem deploys org profile into workspace
+
+**Type-Specific Required Fields:**
+- `deployment_id` (string)
+  - Deployment identifier
+
+**ENDORSES**
+
+- **Category:** ecosystem
+- **Description:** Org endorses another org/capability
+
+**Type-Specific Required Fields:**
+- `endorsement_type` (enum) - Allowed values: `reputation`, `capability`
+  - Nature of endorsement
+
+**EVIDENCED_BY**
+
+- **Category:** ecosystem
+- **Description:** Artefact evidenced by attestation
+
+**Type-Specific Required Fields:**
+- `evidence_type` (enum) - Allowed values: `doc`, `hash`
+  - Evidence modality
+
+**HAS_CHANNEL**
+
+- **Category:** ecosystem
+- **Description:** Public presence exposes a contact channel
+
+**Type-Specific Required Fields:**
+- `priority` (enum) - Allowed values: `primary`, `secondary`
+  - Priority of channel
+
+**LISTS_CAPABILITY**
+
+- **Category:** ecosystem
+- **Description:** Public presence lists a capability descriptor
+
+**NEGOTIATES**
+
+- **Category:** ecosystem
+- **Description:** Org negotiates a deal
+
+**Type-Specific Required Fields:**
+- `role` (enum) - Allowed values: `buyer`, `seller`
+  - Role in negotiation
+
+**OFFERS**
+
+- **Category:** ecosystem
+- **Description:** Org offers an info asset or info offer
+
+**Type-Specific Required Fields:**
+- `access_level` (enum) - Allowed values: `public`, `bilateral`, `paid`
+  - Access level granted
+
+**PROPOSES**
+
+- **Category:** ecosystem
+- **Description:** Org proposes a deal or RFQ
+
+**PUBLISHES**
+
+- **Category:** ecosystem
+- **Description:** Org profile publishes a public presence
+
+**Type-Specific Required Fields:**
+- `audience` (enum) - Allowed values: `public`, `partners`
+  - Intended audience
+
+**QUOTES_FOR**
+
+- **Category:** ecosystem
+- **Description:** Org issues a quote responding to an RFQ
+
+**REFERENCES_MARKET**
+
+- **Category:** ecosystem
+- **Description:** Deal/RFQ/Quote references market
+
+**RESPONDS_TO**
+
+- **Category:** ecosystem
+- **Description:** Quote responds to an RFQ
+
+**Type-Specific Required Fields:**
+- `response_time_ms` (float)
+  - Response latency in milliseconds
+
+**RESTRICTED_BY**
+
+- **Category:** ecosystem
+- **Description:** Asset or offer restricted by lane or agreement
+
+**Type-Specific Required Fields:**
+- `restriction_type` (enum) - Allowed values: `lane`, `agreement`
+  - Restriction source
+
+**ROUTES_VIA**
+
+- **Category:** ecosystem
+- **Description:** Lane routes requests via capability
+
+**Type-Specific Required Fields:**
+- `priority` (int)
+  - Routing priority
+
+**SEEKS**
+
+- **Category:** ecosystem
+- **Description:** Org seeks an info request
+
+**SETTLED_BY**
+
+- **Category:** ecosystem
+- **Description:** Deal settled by an agreement
+
+**Type-Specific Required Fields:**
+- `settlement_date` (datetime)
+  - Settlement date
+
+**SHARES_WITH**
+
+- **Category:** ecosystem
+- **Description:** Info asset is shared with an org profile
+
+**Type-Specific Required Fields:**
+- `access_level` (enum) - Allowed values: `trial`, `full`
+  - Granted access level
+
+**TRUSTS**
+
+- **Category:** ecosystem
+- **Description:** Org trusts a reputation assessment
+
+**Type-Specific Required Fields:**
+- `context` (string)
+  - Context for trust decision
+
+**USES_INSTRUMENT**
+
+- **Category:** ecosystem
+- **Description:** Deal uses a specific instrument
+
+**Type-Specific Required Fields:**
+- `version` (string)
+  - Instrument version
+
+### Level 4 (Protocol) Link Types - 20 Types
+
+**ADAPTER_SUPPORTS**
+
+- **Category:** artifact
+- **Description:** Adapter release exposes a capability.
+
+**Type-Specific Required Fields:**
+- `latency_hint_ms` (int)
+  - Latency hint in milliseconds
+
+**APPLIES_TO**
+
+- **Category:** protocol
+- **Description:** Retention policy applies to namespace or schema.
+
+**ASSIGNED_TO_TENANT**
+
+- **Category:** governance
+- **Description:** Associates tenant key with tenant identity.
+
+**Type-Specific Required Fields:**
+- `key_version` (int)
+  - Version of key assignment
+
+**BUNDLES**
+
+- **Category:** artifact
+- **Description:** Schema bundle contains specific schemas.
+
+**CERTIFIES_CONFORMANCE**
+
+- **Category:** protocol
+- **Description:** Conformance result certifies a release.
+
+**COMPATIBLE_WITH**
+
+- **Category:** protocol
+- **Description:** Declares compatibility between releases.
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `schema`, `runtime`
+  - Compatibility level
+- `status` (enum) - Allowed values: `ok`, `warn`, `no`
+  - Compatibility status
+
+**DEFAULTS_FOR**
+
+- **Category:** protocol
+- **Description:** Security profile provides defaults for namespace or schema.
+
+**DEPRECATES**
+
+- **Category:** governance
+- **Description:** Marks that one element deprecates or replaces an older one.
+
+**Type-Specific Required Fields:**
+- `grace_period_days` (int)
+  - Grace period before removal
+
+**GOVERNS**
+
+- **Category:** protocol
+- **Description:** Schema or policy governs a capability or namespace.
+
+**Type-Specific Required Fields:**
+- `governance_scope` (enum) - Allowed values: `schema`, `policy`
+  - Scope of governance
+
+**HOSTED_ON**
+
+- **Category:** infra
+- **Description:** Bus instance is hosted on a transport spec.
+
+**IMPLEMENTS**
+
+- **Category:** artifact
+- **Description:** SDK release implements a schema or capability.
+
+**Type-Specific Required Fields:**
+- `coverage` (float)
+  - Coverage ratio (0..1)
+
+**MAPS_TO_TOPIC**
+
+- **Category:** protocol
+- **Description:** Event schema maps to a topic namespace.
+
+**PUBLISHES_SCHEMA**
+
+- **Category:** protocol
+- **Description:** Protocol version publishes an event or envelope schema.
+
+**Type-Specific Required Fields:**
+- `release_notes_uri` (string)
+  - Link to release notes
+
+**REQUIRES_SIG**
+
+- **Category:** protocol
+- **Description:** Event schema requires a specific signature suite.
+
+**ROUTES_OVER**
+
+- **Category:** infra
+- **Description:** Namespace or route uses a transport specification.
+
+**SERVES_NAMESPACE**
+
+- **Category:** infra
+- **Description:** Bus instance serves a topic namespace.
+
+**SIGNED_WITH**
+
+- **Category:** governance
+- **Description:** Tenant key uses a signature suite.
+
+**SUPERSEDES**
+
+- **Category:** artifact
+- **Description:** New release supersedes an older release.
+
+**Type-Specific Required Fields:**
+- `compat_maintained` (boolean)
+  - Whether backwards compatibility is maintained
+
+**SUPPORTS**
+
+- **Category:** artifact
+- **Description:** Sidecar release supports a schema or transport.
+
+**Type-Specific Required Fields:**
+- `maturity` (enum) - Allowed values: `alpha`, `beta`, `ga`
+  - Support maturity level
+
+**TESTS**
+
+- **Category:** protocol
+- **Description:** Conformance suite covers specific schemas or capabilities.
 
 ---
 

@@ -251,7 +251,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
                 : 'bg-zinc-800/50 hover:bg-zinc-700/50 hover:ring-1 hover:ring-observatory-cyan/40'
               }
             `}
-            title={`${citizen.name} • Frame ${citizen.frame.toLocaleString()}`}
+            title={`${citizen.name} • Frame ${citizen.frame}`}
           >
             <div
               className={`
@@ -291,7 +291,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
               {citizen.name}
             </span>
             <span className="text-[10px] tabular-nums text-observatory-text/50">
-              {citizen.frame.toLocaleString()}
+              {citizen.frame}
             </span>
           </button>
         ))}

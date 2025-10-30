@@ -27,7 +27,7 @@ Context reconstruction infrastructure **partially exists** across multiple modul
 
 **Compliance:** Implements step 1 (identify entry nodes) + step 2 (inject activation)
 
-### ✅ Sub-Entity Traversal (`sub_entity_traversal.py`)
+### ✅ SubEntity Traversal (`sub_entity_traversal.py`)
 - **Purpose:** Goal-driven graph traversal
 - **Capabilities:**
   - Multiple goal types (find_answer, explore_completely, seek_security, etc.)

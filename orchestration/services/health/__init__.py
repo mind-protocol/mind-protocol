@@ -17,6 +17,7 @@ from .safe_mode import (
     TripwireViolation,
     get_safe_mode_controller
 )
+from .graph_health_monitor import GraphHealthMonitor
 
 __all__ = [
     "HealthStatus",
@@ -27,5 +28,6 @@ __all__ = [
     "SafeModeController",
     "TripwireType",
     "TripwireViolation",
-    "get_safe_mode_controller"
+    "get_safe_mode_controller",
+    "GraphHealthMonitor"
 ]

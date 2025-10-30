@@ -19,12 +19,14 @@ Endpoints:
     WS   /ws                                       - Live operations stream
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any, Literal
 import json
 import logging
 from datetime import datetime, timezone
+from dataclasses import asdict, is_dataclass
+from typing import Optional, List, Dict, Any, Literal
+
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
+from pydantic import BaseModel
 
 from orchestration.adapters.storage.engine_registry import (
     pause_citizen,
@@ -39,6 +41,8 @@ from orchestration.mechanisms.affective_telemetry_buffer import get_affective_bu
 from orchestration.libs.utils.falkordb_adapter import get_falkordb_graph
 from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 from orchestration.services.economy.runtime import get_runtime as get_economy_runtime
+from orchestration.libs.stimuli import emit_ui_action
+from orchestration.schemas.membrane_envelopes import Scope, StimulusFeatures
 
 try:  # Wallet custody service is optional until configured
     from orchestration.services.wallet_custody.config import WalletCustodySettings
@@ -48,6 +52,11 @@ except Exception:  # pragma: no cover - service not configured
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+try:  # Optional dependency guard
+    import numpy as np  # type: ignore[import]
+except Exception:  # pragma: no cover - runtime normally has numpy, guard for safety
+    np = None
 
 
 # === Telemetry Event Types ===
@@ -169,7 +178,8 @@ class WebSocketManager:
         if "timestamp" not in event:
             event["timestamp"] = datetime.now(timezone.utc).isoformat()
 
-        message = json.dumps(event)
+        safe_event = _ensure_json_serializable(event)
+        message = json.dumps(safe_event)
 
         # Broadcast to all connections (handle disconnects gracefully)
         disconnected = []
@@ -183,6 +193,35 @@ class WebSocketManager:
         # Remove failed connections
         for connection in disconnected:
             await self.disconnect(connection)
+
+
+def _ensure_json_serializable(value: Any) -> Any:
+    """
+    Recursively coerce values into JSON-serializable primitives.
+
+    Converts numpy scalars/arrays, dataclasses, sets, tuples, and datetime objects.
+    Leaves native Python primitives untouched.
+    """
+    if isinstance(value, dict):
+        return {key: _ensure_json_serializable(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [_ensure_json_serializable(item) for item in value]
+    if isinstance(value, tuple):
+        return [_ensure_json_serializable(item) for item in value]
+    if isinstance(value, set):
+        return [_ensure_json_serializable(item) for item in value]
+    if is_dataclass(value):
+        return _ensure_json_serializable(asdict(value))
+    if isinstance(value, datetime):
+        return value.isoformat()
+
+    if np is not None:
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+
+    return value
 
 
 # Global singleton instance
@@ -2166,9 +2205,21 @@ async def _handle_ws_message(message: Any):
                 "wallet.sign.request@1.0": "wallet.signature.result@1.0",
                 "wallet.ensure@1.0": "wallet.ensure.error@1.0",
             }.get(msg_type, "wallet.error@1.0")
+
+            # Broadcast with normative envelope (type/id/spec/provenance/payload)
+            import hashlib
+            import time
+            event_id_base = f"{error_type}_{org}_{int(time.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
             await websocket_manager.broadcast({
                 "type": error_type,
-                "org": org,
+                "id": event_id,
+                "spec": {"name": "consciousness.v2", "rev": "2.0.0"},
+                "provenance": {
+                    "scope": "organizational",
+                    "org_id": org
+                },
                 "payload": {
                     "ok": False,
                     "error": str(exc),
@@ -2239,19 +2290,29 @@ async def _handle_ws_message(message: Any):
             "origin": metadata.get("origin") or message.get("origin", "external"),
             "timestamp_ms": metadata.get("timestamp_ms") or message.get("timestamp_ms"),
             "channel": message.get("channel"),
+            "citizen_id": citizen_id,
+            "text": content,  # Add original text for context
             **metadata,
         }
 
         try:
+            # 🎯 MEMBRANE BUS ENDPOINT: WebSocket server IS the membrane
+            # Dashboard chat → WebSocket handler → direct inject into consciousness engine
+            # (External components use SDK to emit TO this endpoint)
+
             await eng.inject_stimulus_async(
                 text=content,
                 severity=severity,
                 metadata=injection_metadata,
             )
+
+            logger.info(f"[WebSocket] Injected stimulus {stimulus_id} → {citizen_id} via membrane bus")
+
             ack_payload = {
                 "citizen_id": citizen_id,
                 "stimulus_id": stimulus_id,
                 "channel": message.get("channel"),
+                "status": "accepted",
                 "t_ms": int(datetime.now(timezone.utc).timestamp() * 1000)
             }
             try:
@@ -2260,7 +2321,22 @@ async def _handle_ws_message(message: Any):
             except Exception as agg_exc:
                 logger.warning(f"[WebSocket] Failed to record inject ack in stream aggregator: {agg_exc}")
 
-            await websocket_manager.broadcast({"type": "membrane.inject.ack", **ack_payload})
+            # Broadcast with normative envelope (type/id/spec/provenance/payload)
+            import hashlib
+            import time
+            event_id_base = f"membrane_inject_ack_{citizen_id}_{int(time.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
+            await websocket_manager.broadcast({
+                "type": "membrane.inject.ack",
+                "id": event_id,
+                "spec": {"name": "consciousness.v2", "rev": "2.0.0"},
+                "provenance": {
+                    "scope": "personal",
+                    "citizen_id": citizen_id
+                },
+                "payload": ack_payload
+            })
         except Exception as exc:
             logger.error(f"[WebSocket] Failed to inject stimulus via membrane: {exc}", exc_info=True)
         return

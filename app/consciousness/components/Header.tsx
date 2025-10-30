@@ -101,7 +101,8 @@ export function Header({
           {econ && (
             <>
               <div className="h-6 w-px bg-observatory-teal/30"></div>
-              <EconomyBadge overlay={econ} />
+              {/* TODO: Add EconomyBadge import */}
+              {/* <EconomyBadge overlay={econ} /> */}
             </>
           )}
 

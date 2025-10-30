@@ -129,20 +129,20 @@ class BaseNode(BaseModel):
     )
 
     # Self-Observing Substrate Fields (Phase 2 - Subconscious Subentities)
-    # Per-Sub-Entity Weight Tracking (Learned Importance)
+    # Per-SubEntity Weight Tracking (Learned Importance)
     sub_entity_weights: Dict[str, float] = Field(
         default_factory=dict,
-        description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+        description="Learned importance per subentity: {sub_entity_id: weight (0.0-1.0)}"
     )
     sub_entity_weight_counts: Dict[str, int] = Field(
         default_factory=dict,
-        description="How many times each sub-entity accessed this node (for decay calculation)"
+        description="How many times each subentity accessed this node (for decay calculation)"
     )
 
     # Sequence-Based Temporal Tracking (NOT timestamps - activation proximity)
     sub_entity_last_sequence_positions: Dict[str, int] = Field(
         default_factory=dict,
-        description="Most recent activation sequence position for each sub-entity"
+        description="Most recent activation sequence position for each subentity"
     )
 
     # Hebbian Learning (Co-Activation Tracking)
@@ -304,14 +304,14 @@ class BaseRelation(BaseModel):
     )
 
     # Self-Observing Substrate Fields (Phase 2 - Subconscious Subentities)
-    # Per-Sub-Entity Weight Tracking (Learned Importance)
+    # Per-SubEntity Weight Tracking (Learned Importance)
     sub_entity_weights: Dict[str, float] = Field(
         default_factory=dict,
-        description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+        description="Learned importance per subentity: {sub_entity_id: weight (0.0-1.0)}"
     )
     sub_entity_traversal_counts: Dict[str, int] = Field(
         default_factory=dict,
-        description="How many times each sub-entity traversed this link (for decay calculation)"
+        description="How many times each subentity traversed this link (for decay calculation)"
     )
 
     # Hebbian Learning (Fire Together, Wire Together)
@@ -343,17 +343,17 @@ class BaseRelation(BaseModel):
     # Retrieval-Time Hebbian Learning (Secondary)
     co_retrieval_count: Dict[str, int] = Field(
         default_factory=dict,
-        description="How many times co-retrieved per sub-entity (validates usefulness): {sub_entity_id: count}"
+        description="How many times co-retrieved per subentity (validates usefulness): {sub_entity_id: count}"
     )
 
-    # Per-Sub-Entity Subjective Experience
+    # Per-SubEntity Subjective Experience
     sub_entity_valences: Dict[str, float] = Field(
         default_factory=dict,
-        description="Subjective link experience per sub-entity (-1.0=aversive, 0.0=neutral, +1.0=attractive): {sub_entity_id: valence}"
+        description="Subjective link experience per subentity (-1.0=aversive, 0.0=neutral, +1.0=attractive): {sub_entity_id: valence}"
     )
     sub_entity_emotion_vectors: Dict[str, Dict[str, float]] = Field(
         default_factory=dict,
-        description="Emotion vectors per sub-entity during traversal: {sub_entity_id: {emotion: intensity (0.0-1.0)}}"
+        description="Emotion vectors per subentity during traversal: {sub_entity_id: {emotion: intensity (0.0-1.0)}}"
     )
 
     # Activation State (Dynamic)
@@ -751,7 +751,7 @@ class Process(BaseNode):
 class Concept(BaseNode):
     """Atomic idea or theoretical construct"""
     definition: str
-    applies_to_niveaux: Optional[List[int]] = Field(
+    applies_to_level: Optional[List[int]] = Field(
         default=None,
         description="Which levels this concept applies to (1, 2, 3)"
     )

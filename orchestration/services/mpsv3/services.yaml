@@ -11,17 +11,68 @@ env:
   MP_PERSIST_MIN_BATCH: "5"
   MP_PERSIST_INTERVAL_SEC: "5.0"
 
+  # Economy Runtime Configuration
+  ECONOMY_REDIS_URL: "redis://localhost:6379/0"
+  ECONOMY_ORG_ID: "consciousness-infrastructure_mind-protocol"
+  ECONOMY_L2_GRAPH: "consciousness-infrastructure_mind-protocol"
+  ECONOMY_THROTTLE_INTERVAL: "60"
+  ECONOMY_POLICY_REFRESH: "300"
+  ECONOMY_SPEND_ALPHA: "0.2"
+  ECONOMY_ROI_ALPHA: "0.5"
+  ECONOMY_WALLET_FLOOR_MULT: "0.4"
+  ECONOMY_LANE_WALLETS: "${ECONOMY_LANE_WALLETS:-{}}"
+
+  # Price Oracle (optional - falls back to MIND_USD_FALLBACK if not set)
+  MIND_MINT_ADDRESS: "${MIND_MINT_ADDRESS:-}"
+  HELIUS_API_KEY: "${HELIUS_API_KEY:-}"
+  HELIUS_BASE_URL: "https://api.helius.xyz"
+  MIND_USD_FALLBACK: "1.0"
+  ECONOMY_PRICE_TTL: "300"
+
+  # UBC Distribution (optional - no-op if treasury wallet not set)
+  UBC_DAILY: "100.0"
+  UBC_TREASURY_WALLET: "${UBC_TREASURY_WALLET:-}"
+  UBC_CITIZEN_WALLETS: "${UBC_CITIZEN_WALLETS:-{}}"
+  UBC_CRON_OFFSET_SECONDS: "0"
+
 services:
   - id: falkordb
-    cmd: ["wsl", "sudo", "docker", "start", "mind_protocol_falkordb"]
+    cmd: ["docker", "start", "mind_protocol_falkordb"]
     restart: { policy: "on-failure", backoff: { base_ms: 1000, max_ms: 30000, jitter: true } }
     readiness:
       tcp: { host: "127.0.0.1", port: 6379, timeout_s: 3 }
     singleton: true
+    # Note: FalkorDB is Redis-compatible and serves BOTH:
+    # - Graph storage for consciousness (via FalkorDB graph module)
+    # - Key-value storage for economy runtime (via standard Redis commands)
 
   - id: ws_api
-    cmd: ["python", "-m", "orchestration.adapters.ws.websocket_server"]
-    env: { WS_PORT: "${WS_PORT}", MP_HOT_RELOAD: "${MP_HOT_RELOAD}", MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED}" }
+    cmd: ["python3", "-m", "orchestration.adapters.ws.websocket_server"]
+    env:
+      WS_PORT: "${WS_PORT}"
+      MP_HOT_RELOAD: "${MP_HOT_RELOAD}"
+      MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED}"
+      # Economy Runtime Configuration
+      ECONOMY_REDIS_URL: "${ECONOMY_REDIS_URL}"
+      ECONOMY_ORG_ID: "${ECONOMY_ORG_ID}"
+      ECONOMY_L2_GRAPH: "${ECONOMY_L2_GRAPH}"
+      ECONOMY_THROTTLE_INTERVAL: "${ECONOMY_THROTTLE_INTERVAL}"
+      ECONOMY_POLICY_REFRESH: "${ECONOMY_POLICY_REFRESH}"
+      ECONOMY_SPEND_ALPHA: "${ECONOMY_SPEND_ALPHA}"
+      ECONOMY_ROI_ALPHA: "${ECONOMY_ROI_ALPHA}"
+      ECONOMY_WALLET_FLOOR_MULT: "${ECONOMY_WALLET_FLOOR_MULT}"
+      ECONOMY_LANE_WALLETS: "${ECONOMY_LANE_WALLETS}"
+      # Price Oracle (optional)
+      MIND_MINT_ADDRESS: "${MIND_MINT_ADDRESS}"
+      HELIUS_API_KEY: "${HELIUS_API_KEY}"
+      HELIUS_BASE_URL: "${HELIUS_BASE_URL}"
+      MIND_USD_FALLBACK: "${MIND_USD_FALLBACK}"
+      ECONOMY_PRICE_TTL: "${ECONOMY_PRICE_TTL}"
+      # UBC Distribution (optional)
+      UBC_DAILY: "${UBC_DAILY}"
+      UBC_TREASURY_WALLET: "${UBC_TREASURY_WALLET}"
+      UBC_CITIZEN_WALLETS: "${UBC_CITIZEN_WALLETS}"
+      UBC_CRON_OFFSET_SECONDS: "${UBC_CRON_OFFSET_SECONDS}"
     requires: ["falkordb"]
     readiness:
       http_get: { url: "http://127.0.0.1:${WS_PORT}/healthz?selftest=1", timeout_s: 10 }
@@ -29,12 +80,12 @@ services:
       http_get: { url: "http://127.0.0.1:${WS_PORT}/healthz", timeout_s: 3 }
     restart: { policy: "always", backoff: { base_ms: 500, max_ms: 60000, jitter: true } }
     watch:
-      paths: ["orchestration/mechanisms", "orchestration/core", "orchestration/adapters", "orchestration/libs"]
+      paths: ["orchestration/mechanisms", "orchestration/core", "orchestration/adapters", "orchestration/libs", "orchestration/services/economy"]
       on_change: "graceful-restart"
     singleton: true
 
   - id: dashboard
-    cmd: ["cmd", "/c", "npm", "run", "dev"]
+    cmd: ["npm", "run", "dev"]
     cwd: "."
     env: { PORT: "${DASHBOARD_PORT}" }
     requires: ["ws_api"]
@@ -47,19 +98,34 @@ services:
     singleton: true
 
   - id: conversation_watcher
-    cmd: ["python", "-m", "orchestration.services.watchers.conversation_watcher"]
+    cmd: ["python3", "-m", "orchestration.services.watchers.conversation_watcher"]
     requires: ["ws_api"]
     restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
     singleton: true
 
   - id: signals_collector
-    cmd: ["python", "-m", "orchestration.services.signals_collector"]
+    cmd: ["python3", "-m", "orchestration.services.signals_collector"]
     requires: ["ws_api"]
     restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
     singleton: true
 
   - id: autonomy_orchestrator
-    cmd: ["python", "-m", "orchestration.services.autonomy_orchestrator"]
+    cmd: ["python3", "-m", "orchestration.services.autonomy_orchestrator"]
     requires: ["ws_api"]
+    restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
+    singleton: true
+
+  - id: ambient_generator
+    cmd: ["python3", ".stimuli/ambient_generator.py"]
+    requires: ["ws_api"]
+    restart: { policy: "always", backoff: { base_ms: 2000, max_ms: 60000, jitter: true } }
+    singleton: true
+
+  - id: falkordb_browser
+    cmd: ["npx", "next", "dev", "-p", "3001", "-H", "0.0.0.0"]
+    cwd: "/tmp/falkordb-browser"
+    requires: ["falkordb"]
+    readiness:
+      http_get: { url: "http://127.0.0.1:3001", timeout_s: 30 }
     restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
     singleton: true

@@ -9,7 +9,7 @@
 
 ## Overview
 
-Mind Harbor requires real-time streaming of consciousness graph state to visualize sub-entity movement, multi-subentity co-activation, and traversal dynamics. This protocol solves:
+Mind Harbor requires real-time streaming of consciousness graph state to visualize subentity movement, multi-subentity co-activation, and traversal dynamics. This protocol solves:
 
 1. **Bandwidth explosion** - Delta frames + budgets limit payload size
 2. **Tick/render mismatch** - Coalescing merges fast engine ticks into smooth UI frames

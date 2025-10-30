@@ -284,7 +284,7 @@
 ### Substrate Quality (`67`)
 
 - **Node Type**: Metric
-- **Description**: Do my schemas accurately capture consciousness patterns? Are they technically implementable by Felix? Do they enable the queries Ada needs to design? Are they consistent across all three niveaux? Do they honor both phenomenology and pragmatic constraints?
+- **Description**: Do my schemas accurately capture consciousness patterns? Are they technically implementable by Felix? Do they enable the queries Ada needs to design? Are they consistent across all three level? Do they honor both phenomenology and pragmatic constraints?
 - **Weight**: medium
   └─ [MEASURES] → `103`
     - *Goal*: Connection of type MEASURES
@@ -611,7 +611,7 @@
 ### Work Output: Universal Pattern Documentation (`73`)
 
 - **Node Type**: Concept
-- **Description**: Substrate patterns that apply across niveaux: four-dimensional substrate architecture (consciousness + intelligence + evidence + temporal), base node/link schemas that all types inherit, extension patterns for domain-specific metadata, transposition rules for cross-niveau analogies.
+- **Description**: Substrate patterns that apply across level: four-dimensional substrate architecture (consciousness + intelligence + evidence + temporal), base node/link schemas that all types inherit, extension patterns for domain-specific metadata, transposition rules for cross-niveau analogies.
 - **Weight**: medium
 
 ### Work Output: Validation Reports (`74`)

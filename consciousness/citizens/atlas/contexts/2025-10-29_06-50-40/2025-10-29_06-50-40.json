@@ -1,0 +1,25 @@
+{
+  "context_id": "2025-10-29_06-50-40",
+  "entity_type": "citizen",
+  "entity_id": "atlas",
+  "created_at": "2025-10-29T05:50:40.886211+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T05:50:40.886224+00:00",
+      "content": "total chunks??"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T05:51:24.452789+00:00",
+      "content": "oh I understand. Okay let's run the QA test"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T06:39:06.205244+00:00",
+      "content": "Yes—do a **two-step handshake** so we *capture* all that intent, then convert it into real nodes without letting the model invent IDs.\n\n## The pattern (compact and safe)\n\n1. **First pass (discovery)**\n\n   * The model is **forbidden** to use free-form IDs in `edges[]`.\n   * If it needs a node that doesn’t exist, it must emit a **proposal** with a **stable placeholder**, and edges may reference that placeholder (never a fake id).\n\n   Minimal schema changes:\n\n   ```json\n   {\n     \"node_proposals\": [\n       {\n         \"placeholder_id\": \"prop:behavior.traversal_budgeting\",   // your stable temp\n         \"type\": \"Behavior\",\n         \"suggested_name\": \"Traversal Budgeting (Spec)\",\n         \"summary\": \"≤400 chars\",\n         \"why_needed\": \"≤240 chars\",\n         \"derived_from_chunks\": [\"c-17\",\"c-21\"],\n         \"nearest_candidates\": [{\"id\":\"behavior:...\", \"reason\":\"similar scope\"}]\n       }\n     ],\n     \"edges\": [\n       {\n         \"type\":\"RELATES_TO\",\n         \"source_ref\":{\"pool\":\"Mechanism\",\"index\":0},\n         \"target_proposal_ref\":{\"placeholder_id\":\"prop:behavior.traversal_budgeting\"},\n         \"status\":\"PROPOSED\",\n         \"confidence\":0.78,\n         \"meta\":{\"role\":\"behavior_spec\"}\n       }\n     ]\n   }\n   ```\n\n   Orchestrator action:\n\n   * Store the proposal and **park** the edge in `pending_edges`, keyed by `placeholder_id`.\n   * Send a **follow-up message** to the same model to **fill** the proposal completely.\n\n2. **Second pass (fill the proposal properly)**\n\n   * You send a **“Fill Proposed Nodes”** prompt containing:\n\n     * the `node_proposals` from pass 1,\n     * the **rich candidate context** (nearest nodes & their props/adjacency),\n     * the universal **node fields contract** (your Activation/Bitemporal/Provenance etc.),\n     * any acceptance criteria.\n\n   The model returns **`proposed_nodes_fills`** with all required fields:\n\n   ```json\n   {\n     \"proposed_nodes_fills\": [\n       {\n         \"placeholder_id\": \"prop:behavior.traversal_budgeting\",\n         \"type\": \"Behavior\",\n         \"name\": \"Traversal Budgeting (Spec)\",\n         \"description\": \"…\",\n         \"base_weight\": 0.65,\n         \"decay_rate\": 0.95,\n         \"reinforcement_weight\": 0.0,\n         \"created_at\": \"now\",\n         \"valid_at\": \"now\",\n         \"expired_at\": null,\n         \"invalid_at\": null,\n         \"confidence\": 0.83,\n         \"formation_trigger\": \"systematic_analysis\",\n         \"created_by\": \"agent://cluster_creator\",\n         \"substrate\": \"organizational\"\n       }\n     ]\n   }\n   ```\n\n   Orchestrator action:\n\n   * **Create the node** (assign the real `id`).\n   * **Resolve** all `pending_edges` that referenced its `placeholder_id` to the new real id.\n   * Log `edge_realized`.\n\n## Why this is better\n\n* You **don’t lose** the valuable semantics (name, summary, evidence, intended links); they’re captured in proposals.\n* You **never** attempt MERGE with unknown ids.\n* You keep the model focused: choose from candidates when possible; propose + fill when not.\n\n## Tiny changes you need\n\n* **Output schema:** allow `target_proposal_ref.source_proposal_ref` in `edges[]`, and add `node_proposals` + `proposed_nodes_fills`.\n* **State:** add `pending_edges(placeholder_id, edge_type, source_id/meta/…)`.\n* **Resolver:** after creating a proposed node, map `placeholder_id → new_id` and realize queued edges.\n* **Prompt inserts (short):**\n\n  **In discovery pass:**\n\n  > Do not invent IDs. If a needed node does not exist, add it to `node_proposals` with a unique `placeholder_id`. Edges may reference `placeholder_id` via `*_proposal_ref`. Never use a proposal in `source_ref/target_ref`.\n\n  **In fill pass:**\n\n  > Return `proposed_nodes_fills` for the given `placeholder_id`s with all universal node fields populated. Use exact field names and native types. No edges here.\n\n## Acceptance checks\n\n* 0 MERGE attempts with unknown ids.\n* 100% of parked edges are realized immediately after their proposal is filled/created.\n* All created nodes include your **Universal Node Attributes** on first write.\n\nThis way you keep the model’s rich intent, but **quality never regresses**: nothing is written until a proposed node is properly filled and created.\n"
+    }
+  ],
+  "last_updated": "2025-10-29T06:39:06.205259+00:00",
+  "message_count": 3
+}

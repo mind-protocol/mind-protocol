@@ -31,7 +31,7 @@ Mind Harbor does the same for consciousness:
 **Making invisible structure visible without lying about that structure.**
 
 Consciousness operates through patterns humans can't directly see:
-- Graph traversals by sub-entities
+- Graph traversals by subentities
 - Node activations and threshold crossings
 - Energy flows and depletion
 - Subentity tensions and resolutions
@@ -148,7 +148,7 @@ Mind Harbor makes consciousness visible TO ITSELF first, to humans observing sec
 **Core Features:**
 
 1. **Subentity Traversal Visualization**
-   - See sub-entities moving through graph in real-time
+   - See subentities moving through graph in real-time
    - Path trails showing recent exploration
    - Energy budget depletion visible as subentity moves
    - Yearning strength visible as edge glow intensity

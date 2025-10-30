@@ -155,13 +155,19 @@ def normalize_membership_weights(
 
 def compute_subentity_activation(
     subentity: 'Subentity',
-    graph: 'Graph'
+    graph: 'Graph',
+    vector_membership=None,
+    runtime_context=None
 ) -> float:
     """
     Compute subentity activation energy from member nodes (spec §2.2).
 
     Formula:
-        E_subentity = Σ (m̃_iE × max(0, E_i - Θ_i))
+        E_subentity = Σ (w_eff × max(0, E_i - Θ_i))
+
+    Where w_eff is:
+    - Effective (state-dependent) weight if vector_membership and runtime_context provided
+    - Scalar link weight otherwise (backward compatibility)
 
     Only above-threshold node energy contributes. This implements the
     "effective energy" principle: activation spreads only when nodes
@@ -170,6 +176,8 @@ def compute_subentity_activation(
     Args:
         subentity: Subentity to compute activation for
         graph: Graph containing nodes and links
+        vector_membership: Optional VectorWeightedMembership for effective weights
+        runtime_context: Optional RuntimeContext for state-dependent modulation
 
     Returns:
         Subentity activation energy
@@ -178,17 +186,43 @@ def compute_subentity_activation(
         >>> energy = compute_subentity_activation(subentity, graph)
         >>> # Returns weighted sum of member above-threshold energies
     """
-    # Get members via MEMBER_OF links
-    from orchestration.core.types import LinkType
+    # Determine if using vector-weighted membership
+    use_vector_weights = (vector_membership is not None and runtime_context is not None)
 
-    members_with_weights = []
-    for link in subentity.incoming_links:
-        if link.link_type != LinkType.MEMBER_OF:
-            continue
+    if use_vector_weights:
+        # Use vector_membership to get members (may not have link objects yet)
+        member_node_ids = vector_membership.get_members(subentity.id)
+        if not member_node_ids:
+            return 0.0  # No members = no energy
 
-        node = link.source
-        membership_weight = link.weight  # MEMBER_OF.weight ∈ [0,1]
-        members_with_weights.append((node, membership_weight))
+        # Compute effective weights and energy contributions
+        members_with_weights = []
+        for node_id in member_node_ids:
+            if node_id not in graph.nodes:
+                continue  # Node not in graph
+
+            node = graph.nodes[node_id]
+            # Compute effective weight (state-dependent)
+            eff_weight = vector_membership.compute_effective_weight(
+                subentity_id=subentity.id,
+                node_id=node_id,
+                context=runtime_context,
+                subentity_intent=getattr(subentity, 'intent_embedding', None)
+            )
+            members_with_weights.append((node, eff_weight))
+
+    else:
+        # Fallback: Get members via MEMBER_OF links (scalar weights)
+        from orchestration.core.types import LinkType
+
+        members_with_weights = []
+        for link in subentity.incoming_links:
+            if link.link_type != LinkType.MEMBER_OF:
+                continue
+
+            node = link.source
+            membership_weight = link.weight  # MEMBER_OF.weight ∈ [0,1]
+            members_with_weights.append((node, membership_weight))
 
     if not members_with_weights:
         return 0.0  # No members = no energy
@@ -519,7 +553,9 @@ def update_entity_activations(
     graph: 'Graph',
     global_threshold_mult: float = 1.0,
     cohort_tracker: Optional[SubEntityCohortTracker] = None,
-    enable_lifecycle: bool = True
+    enable_lifecycle: bool = True,
+    vector_membership=None,
+    runtime_context=None
 ) -> Tuple[List[SubEntityActivationMetrics], List[LifecycleTransition]]:
     """
     Update activation state for all subentities in graph.
@@ -538,6 +574,8 @@ def update_entity_activations(
         global_threshold_mult: Global threshold multiplier (from criticality)
         cohort_tracker: Optional cohort tracker for dynamic thresholds
         enable_lifecycle: Whether to run lifecycle management (default True)
+        vector_membership: Optional VectorWeightedMembership for effective weight computation
+        runtime_context: Optional RuntimeContext for state-dependent modulation
 
     Returns:
         Tuple of (activation_metrics, lifecycle_transitions)
@@ -567,7 +605,12 @@ def update_entity_activations(
         threshold_before = entity.threshold_runtime
 
         # Compute new energy and threshold (with advanced thresholding)
-        energy_after = compute_subentity_activation(entity, graph)
+        energy_after = compute_subentity_activation(
+            entity,
+            graph,
+            vector_membership=vector_membership,
+            runtime_context=runtime_context
+        )
         threshold_after = compute_entity_threshold(
             entity,
             graph,

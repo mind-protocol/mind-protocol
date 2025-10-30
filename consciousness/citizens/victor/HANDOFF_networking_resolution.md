@@ -89,13 +89,13 @@ wsl cd /mnt/c/Users/reyno/mind-protocol && python3 orchestration/mpsv3_superviso
 
 ## Files Modified This Session
 
-1. **`C:/Users/reyno/mind-protocol/orchestration/scripts/resurrect_roundrobin_embedded.py`**
+1. **`/home/mind-protocol/mindprotocol/orchestration/scripts/resurrect_roundrobin_embedded.py`**
    - Improved `sanitize_value()` - aggressive cleaning
    - Added 4-level hierarchical naming
    - Fixed `parse_trace_formations()` - stops at blank lines
    - Integrated checkpoint functions
 
-2. **`C:/Users/reyno/.wslconfig`**
+2. **`/home/mindprotocol/.wslconfig`**
    - Added mirrored networking mode (not effective)
    - Added localhostForwarding=true
 

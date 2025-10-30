@@ -147,16 +147,37 @@ class GraphWorkingSet:
         if event_type == "graph.delta.node.upsert":
             node = payload.get("node") or {}
             node_id = node.get("id")
+            if not node_id:
+                node_id = payload.get("node_id")
+                if node_id:
+                    # Normalize into unified structure expected by callers
+                    node = {
+                        "id": node_id,
+                        "type": payload.get("node_type"),
+                        "properties": payload.get("properties"),
+                    }
             if node_id:
                 entry = self._ensure_node_entry(node_id)
-                entry.update(node)
+                entry.update({k: v for k, v in node.items() if v is not None})
                 entry["last_cursor"] = self.cursor
         elif event_type == "graph.delta.link.upsert":
             link = payload.get("link") or {}
             link_id = link.get("id")
+            if not link_id:
+                source = payload.get("source")
+                target = payload.get("target")
+                if source and target:
+                    link_id = f"{source}->{target}"
+                    link = {
+                        "id": link_id,
+                        "source": source,
+                        "target": target,
+                        "type": payload.get("type"),
+                        "weight": payload.get("weight"),
+                    }
             if link_id:
                 entry = self._ensure_link_entry(link_id)
-                entry.update(link)
+                entry.update({k: v for k, v in link.items() if v is not None})
                 entry["last_cursor"] = self.cursor
         elif event_type == "graph.delta.node.delete":
             node_id = payload.get("node_id") or payload.get("id")

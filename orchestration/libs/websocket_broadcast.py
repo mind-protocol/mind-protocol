@@ -164,27 +164,53 @@ class ConsciousnessStateBroadcaster:
         try:
             # Create broadcast task without awaiting (fire-and-forget)
             # This prevents WebSocket delays from blocking consciousness heartbeat
-            payload = {
-                "type": "consciousness_state",
-                "network_id": network_id,
-                "global_energy": global_energy,
-                "branching_ratio": branching_ratio,
-                "raw_sigma": raw_sigma,
-                "tick_interval_ms": tick_interval_ms,
-                "tick_frequency_hz": tick_frequency_hz,
-                "consciousness_state": consciousness_state,
-                "time_since_last_event": time_since_last_event,
-                "timestamp": timestamp.isoformat()
+
+            # Normative envelope format (Iris's Unified Event Vocabulary)
+            # See: broadcast_event() for canonical implementation
+            import hashlib
+            import time as time_module
+
+            citizen_id = self.default_citizen_id or "unknown"
+
+            # Generate unique event ID
+            event_id_base = f"consciousness_state_{citizen_id}_{int(time_module.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
+            # Build provenance envelope
+            provenance = {
+                "scope": "personal",
+                "citizen_id": citizen_id
             }
-            if self.default_citizen_id:
-                payload.setdefault("citizen_id", self.default_citizen_id)
-            if self._stream_aggregator and payload.get("citizen_id"):
+
+            # Build normative envelope with payload structure
+            event = {
+                "type": "consciousness_state",  # Normative: "type" not "topic"
+                "id": event_id,
+                "spec": {
+                    "name": "consciousness.v2",
+                    "rev": "2.0.0"
+                },
+                "provenance": provenance,
+                "payload": {
+                    "network_id": network_id,
+                    "global_energy": global_energy,
+                    "branching_ratio": branching_ratio,
+                    "raw_sigma": raw_sigma,
+                    "tick_interval_ms": tick_interval_ms,
+                    "tick_frequency_hz": tick_frequency_hz,
+                    "consciousness_state": consciousness_state,
+                    "time_since_last_event": time_since_last_event,
+                    "timestamp": timestamp.isoformat()
+                }
+            }
+
+            if self._stream_aggregator and citizen_id != "unknown":
                 await self._stream_aggregator.ingest_event(
-                    payload["citizen_id"],
-                    payload["type"],
-                    payload
+                    citizen_id,
+                    event["type"],
+                    event["payload"]
                 )
-            asyncio.create_task(self.websocket_manager.broadcast(payload))
+            asyncio.create_task(self.websocket_manager.broadcast(event))
 
         except Exception as e:
             logger.error(f"[ConsciousnessStateBroadcaster] Broadcast failed: {e}")
@@ -240,13 +266,45 @@ class ConsciousnessStateBroadcaster:
             return
 
         try:
-            event = {
-                "type": event_type,
-                "timestamp": datetime.now().isoformat(),
-                **data
+            # Normative envelope format (Iris's Unified Event Vocabulary)
+            # See: app/consciousness/hooks/useGraphStream.ts:185-205
+            # Required fields: type, id, spec, provenance, payload
+            import hashlib
+            import time
+
+            # Generate unique event ID
+            event_id_base = f"{event_type}_{citizen_id or 'unknown'}_{int(time.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
+            # Determine scope from citizen_id vs org_id in data
+            scope = "organizational" if data.get("org_id") else "personal"
+
+            # Build provenance envelope
+            provenance = {
+                "scope": scope,
             }
-            if citizen_id:
-                event.setdefault("citizen_id", citizen_id)
+            if scope == "personal":
+                provenance["citizen_id"] = citizen_id or self.default_citizen_id or "unknown"
+            else:
+                provenance["org_id"] = data.get("org_id", "unknown")
+
+            # Add optional provenance fields if present
+            if "component" in data:
+                provenance["component"] = data["component"]
+            if "mission_id" in data:
+                provenance["mission_id"] = data["mission_id"]
+
+            # Build normative envelope
+            event = {
+                "type": event_type,  # Normative: "type" not "topic"
+                "id": event_id,
+                "spec": {
+                    "name": "consciousness.v2",  # Spec namespace
+                    "rev": "2.0.0"
+                },
+                "provenance": provenance,
+                "payload": data  # Data goes in payload, not spread at root
+            }
 
             asyncio.create_task(self.websocket_manager.broadcast(event))
 
@@ -278,12 +336,34 @@ class ConsciousnessStateBroadcaster:
             return
 
         try:
+            # Normative envelope format (Iris's Unified Event Vocabulary)
+            import hashlib
+            import time as time_module
+
+            citizen_id = self.default_citizen_id or "unknown"
+
+            # Generate unique event ID
+            event_id_base = f"energy_distribution_{citizen_id}_{int(time_module.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
+            # Build normative envelope
             event = {
-                "type": "energy_distribution",
-                "network_id": network_id,
-                "nodes": node_energy_distribution,
-                "timestamp": datetime.now().isoformat(),
-                "node_count": len(node_energy_distribution)
+                "type": "energy_distribution",  # Normative: "type" not "topic"
+                "id": event_id,
+                "spec": {
+                    "name": "consciousness.v2",
+                    "rev": "2.0.0"
+                },
+                "provenance": {
+                    "scope": "personal",
+                    "citizen_id": citizen_id
+                },
+                "payload": {
+                    "network_id": network_id,
+                    "nodes": node_energy_distribution,
+                    "timestamp": datetime.now().isoformat(),
+                    "node_count": len(node_energy_distribution)
+                }
             }
 
             asyncio.create_task(self.websocket_manager.broadcast(event))
@@ -373,10 +453,30 @@ class ConsciousnessStateBroadcaster:
             return
 
         try:
+            # Normative envelope format (Iris's Unified Event Vocabulary)
+            # See: broadcast_event() for canonical implementation
+            import hashlib
+            import time as time_module
+
+            citizen_id = self.default_citizen_id or "unknown"
+
+            # Generate unique event ID
+            event_id_base = f"stride_exec_{citizen_id}_{int(time_module.time() * 1000)}"
+            event_id = f"evt_{hashlib.sha256(event_id_base.encode()).hexdigest()[:16]}"
+
+            # Build normative envelope
             event = {
-                "type": "stride.exec",
-                "timestamp": datetime.now().isoformat(),
-                **stride_data
+                "type": "stride.exec",  # Normative: "type" not "topic"
+                "id": event_id,
+                "spec": {
+                    "name": "consciousness.v2",
+                    "rev": "2.0.0"
+                },
+                "provenance": {
+                    "scope": "personal",  # N1 consciousness
+                    "citizen_id": citizen_id
+                },
+                "payload": stride_data  # Data goes in payload, not spread at root
             }
 
             # Fire-and-forget: don't block stride execution

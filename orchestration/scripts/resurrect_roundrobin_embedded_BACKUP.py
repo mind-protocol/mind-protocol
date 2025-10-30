@@ -518,7 +518,7 @@ def resurrect_all_roundrobin(citizens: List[str], r: redis.Redis, embedding_serv
 
 def main():
     """Main resurrection orchestration."""
-    parser = argparse.ArgumentParser(description='Resurrect all niveaux (round-robin with embeddings)')
+    parser = argparse.ArgumentParser(description='Resurrect all level (round-robin with embeddings)')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without writing')
     parser.add_argument('--delete-first', action='store_true', help='Delete existing graphs before starting')
     args = parser.parse_args()

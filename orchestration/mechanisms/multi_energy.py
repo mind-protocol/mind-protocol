@@ -82,9 +82,9 @@ def get_total_energy(node: 'Node') -> float:
     """
     Get TOTAL energy across all subentities on this node.
 
-    This is the canonical energy used for sub-entity activation detection.
+    This is the canonical energy used for subentity activation detection.
     Per spec (05_sub_entity_system.md:1514-1522):
-        Sub-Entity = ANY Active Node
+        SubEntity = ANY Active Node
         is_sub_entity(node) = total_energy >= threshold
 
     Args:

@@ -17,7 +17,7 @@ No component should create ad-hoc message formats. Use these schemas.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Literal
 from pydantic import BaseModel, Field, validator
 
 
@@ -117,7 +117,7 @@ class StimulusEnvelope(BaseModel):
     flows through this envelope.
     """
 
-    type: str = Field("membrane.inject", const=True)
+    type: Literal["membrane.inject"] = "membrane.inject"
     scope: Scope = Field(..., description="Which graph database to target")
     channel: str = Field(..., description="Logical channel (e.g., 'ui.action.select_nodes')")
     content: str = Field(..., description="Human-readable description of stimulus")
@@ -143,7 +143,7 @@ class PerceptFrame(BaseModel):
     This is consciousness made observable.
     """
 
-    type: str = Field("percept.frame", const=True)
+    type: str = "percept.frame"
     entity_id: str = Field(..., description="Which subentity perceived this")
     citizen_id: str = Field(..., description="Which citizen this subentity belongs to")
 
@@ -182,7 +182,7 @@ class WMEmission(BaseModel):
     Shows which nodes are currently in working memory (the 'chunked attention').
     """
 
-    type: str = Field("wm.emit", const=True)
+    type: str = "wm.emit"
     citizen_id: str = Field(..., description="Which citizen's working memory")
 
     selected_nodes: List[str] = Field(..., description="Node IDs in working memory")
@@ -209,7 +209,7 @@ class GraphDeltaBase(BaseModel):
 class NodeUpsert(GraphDeltaBase):
     """Node created or updated."""
 
-    type: GraphDeltaType = Field(GraphDeltaType.NODE_UPSERT, const=True)
+    type: GraphDeltaType = GraphDeltaType.NODE_UPSERT
     node_id: str
     node_type: str
     properties: Dict[str, Any] = Field(..., description="Node properties (metadata JSON)")
@@ -218,14 +218,14 @@ class NodeUpsert(GraphDeltaBase):
 class NodeDelete(GraphDeltaBase):
     """Node deleted."""
 
-    type: GraphDeltaType = Field(GraphDeltaType.NODE_DELETE, const=True)
+    type: GraphDeltaType = GraphDeltaType.NODE_DELETE
     node_id: str
 
 
 class LinkUpsert(GraphDeltaBase):
     """Link created or updated."""
 
-    type: GraphDeltaType = Field(GraphDeltaType.LINK_UPSERT, const=True)
+    type: GraphDeltaType = GraphDeltaType.LINK_UPSERT
     link_id: str
     link_type: str
     source_id: str
@@ -236,14 +236,14 @@ class LinkUpsert(GraphDeltaBase):
 class LinkDelete(GraphDeltaBase):
     """Link deleted."""
 
-    type: GraphDeltaType = Field(GraphDeltaType.LINK_DELETE, const=True)
+    type: GraphDeltaType = GraphDeltaType.LINK_DELETE
     link_id: str
 
 
 class ActivationDelta(GraphDeltaBase):
     """Energy/activation change on nodes."""
 
-    type: GraphDeltaType = Field(GraphDeltaType.ACTIVATION, const=True)
+    type: GraphDeltaType = GraphDeltaType.ACTIVATION
     activations: Dict[str, float] = Field(..., description="{node_id: new_energy}")
 
 
@@ -254,9 +254,9 @@ class ActivationDelta(GraphDeltaBase):
 class MembraneTransferUp(BaseModel):
     """L1 → L2 upward export."""
 
-    type: str = Field("membrane.transfer.up", const=True)
+    type: str = "membrane.transfer.up"
     source_citizen_id: str = Field(..., description="Which citizen exported")
-    target_scope: Scope = Field(Scope.ORGANIZATIONAL, const=True)
+    target_scope: Literal[Scope.ORGANIZATIONAL] = Scope.ORGANIZATIONAL
 
     # Transfer payload (becomes stimulus at L2)
     stimulus: StimulusEnvelope = Field(..., description="Packaged stimulus for L2")
@@ -278,8 +278,8 @@ class MembraneTransferUp(BaseModel):
 class MembraneTransferDown(BaseModel):
     """L2 → L1 downward mission."""
 
-    type: str = Field("membrane.transfer.down", const=True)
-    source_scope: Scope = Field(Scope.ORGANIZATIONAL, const=True)
+    type: str = "membrane.transfer.down"
+    source_scope: Literal[Scope.ORGANIZATIONAL] = Scope.ORGANIZATIONAL
     target_citizen_id: str = Field(..., description="Which citizen receives mission")
 
     # Mission payload (becomes stimulus at L1)
@@ -294,7 +294,7 @@ class MembraneTransferDown(BaseModel):
 class MembranePermeabilityUpdate(BaseModel):
     """κ learning event."""
 
-    type: str = Field("membrane.permeability.updated", const=True)
+    type: str = "membrane.permeability.updated"
     citizen_id: str = Field(..., description="Which citizen's membrane")
     direction: str = Field(..., description="'up' or 'down'")
 
@@ -311,7 +311,7 @@ class MembranePermeabilityUpdate(BaseModel):
 class MembraneExportRejected(BaseModel):
     """Candidate export blocked by hardening."""
 
-    type: str = Field("membrane.export.rejected", const=True)
+    type: str = "membrane.export.rejected"
     citizen_id: str = Field(..., description="Which citizen attempted export")
     direction: str = Field(..., description="'up' or 'down'")
 
@@ -332,7 +332,7 @@ class MembraneExportRejected(BaseModel):
 class IntentEvent(BaseModel):
     """Intent lifecycle event."""
 
-    type: str = Field("intent.event", const=True)
+    type: str = "intent.event"
     intent_id: str = Field(..., description="Unique intent identifier")
     status: IntentStatus = Field(..., description="Current intent status")
 
@@ -352,7 +352,7 @@ class IntentEvent(BaseModel):
 class MissionEvent(BaseModel):
     """Mission assignment/outcome event."""
 
-    type: str = Field("mission.event", const=True)
+    type: str = "mission.event"
     mission_id: str = Field(..., description="Unique mission identifier")
     intent_id: str = Field(..., description="Parent intent")
     citizen_id: str = Field(..., description="Assigned citizen")
@@ -378,7 +378,7 @@ class MissionEvent(BaseModel):
 class ToolOffer(BaseModel):
     """Tool advertises capabilities."""
 
-    type: str = Field("tool.offer", const=True)
+    type: str = "tool.offer"
     tool_id: str = Field(..., description="Unique tool identifier")
 
     capabilities: List[str] = Field(..., description="What this tool can do")
@@ -390,7 +390,7 @@ class ToolOffer(BaseModel):
 class ToolRequest(BaseModel):
     """Citizen requests tool execution (as stimulus)."""
 
-    type: str = Field("tool.request", const=True)
+    type: str = "tool.request"
     request_id: str = Field(..., description="Unique request identifier")
     tool_id: str = Field(..., description="Which tool to invoke")
     citizen_id: str = Field(..., description="Requesting citizen")
@@ -405,7 +405,7 @@ class ToolRequest(BaseModel):
 class ToolResult(BaseModel):
     """Tool returns result."""
 
-    type: str = Field("tool.result", const=True)
+    type: str = "tool.result"
     request_id: str = Field(..., description="Which request this answers")
     tool_id: str = Field(..., description="Which tool executed")
 
@@ -433,7 +433,7 @@ class OutcomeSignal(BaseModel):
     Consumed by stimulus integrator to update trust/utility/harm EMAs.
     """
 
-    type: str = Field("outcome.signal", const=True)
+    type: str = "outcome.signal"
 
     # Which stimulus/source to credit
     source_id: str = Field(..., description="Which source to update")
@@ -462,7 +462,7 @@ class OutcomeSignal(BaseModel):
 
 
 class EconomyRateObserved(BaseModel):
-    type: str = Field("economy.rate.observed", const=True)
+    type: str = "economy.rate.observed"
     request_id: str = Field(...)
     capability: str = Field(...)
     lane: str = Field(...)
@@ -474,7 +474,7 @@ class EconomyRateObserved(BaseModel):
 
 
 class EconomyChargeRequest(BaseModel):
-    type: str = Field("economy.charge.request", const=True)
+    type: str = "economy.charge.request"
     request_id: str = Field(...)
     capability: str = Field(...)
     lane: str = Field(...)
@@ -488,7 +488,7 @@ class EconomyChargeRequest(BaseModel):
 
 
 class EconomyChargeSettle(BaseModel):
-    type: str = Field("economy.charge.settle", const=True)
+    type: str = "economy.charge.settle"
     request_id: str = Field(...)
     capability: str = Field(...)
     lane: str = Field(...)
@@ -502,7 +502,7 @@ class EconomyChargeSettle(BaseModel):
 
 
 class TelemetryEconomySpend(BaseModel):
-    type: str = Field("telemetry.economy.spend", const=True)
+    type: str = "telemetry.economy.spend"
     lane: str = Field(...)
     org_id: str = Field(...)
     throttle: float = Field(...)
@@ -516,7 +516,7 @@ class TelemetryEconomySpend(BaseModel):
 
 
 class TelemetryEconomyUbcTick(BaseModel):
-    type: str = Field("telemetry.economy.ubc_tick", const=True)
+    type: str = "telemetry.economy.ubc_tick"
     citizen_id: str = Field(...)
     amount_mind: float = Field(..., ge=0.0)
     wallet: Optional[str] = Field(default=None)
@@ -526,7 +526,7 @@ class TelemetryEconomyUbcTick(BaseModel):
 class StimulusMassAnomaly(BaseModel):
     """Spam detection telemetry."""
 
-    type: str = Field("stimulus.mass_anomaly", const=True)
+    type: str = "stimulus.mass_anomaly"
     source_id: str = Field(..., description="Which source triggered anomaly")
 
     current_mass: float = Field(..., ge=0.0)
@@ -540,7 +540,7 @@ class StimulusMassAnomaly(BaseModel):
 class StimulusProcessed(BaseModel):
     """Stimulus processing telemetry."""
 
-    type: str = Field("stimulus.processed", const=True)
+    type: str = "stimulus.processed"
     citizen_id: str = Field(..., description="Which citizen processed")
 
     stimuli_count: int = Field(..., ge=0, description="Stimuli this frame")

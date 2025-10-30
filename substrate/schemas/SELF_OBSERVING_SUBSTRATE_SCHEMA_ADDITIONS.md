@@ -20,16 +20,16 @@ All additions are **backward compatible** (use default values, don't break exist
 
 ## BaseNode Additions (7 New Fields)
 
-### 1. Per-Sub-Entity Weight Tracking
+### 1. Per-SubEntity Weight Tracking
 
 ```python
 sub_entity_weights: Dict[str, float] = Field(
     default_factory=dict,
-    description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+    description="Learned importance per subentity: {sub_entity_id: weight (0.0-1.0)}"
 )
 ```
 
-**Purpose:** Each sub-entity (Builder, Skeptic, Observer, etc.) learns which nodes are important TO THEM. Not global importance - subentity-specific.
+**Purpose:** Each subentity (Builder, Skeptic, Observer, etc.) learns which nodes are important TO THEM. Not global importance - subentity-specific.
 
 **Example:**
 ```json
@@ -45,11 +45,11 @@ sub_entity_weights: Dict[str, float] = Field(
 ```python
 sub_entity_weight_counts: Dict[str, int] = Field(
     default_factory=dict,
-    description="How many times each sub-entity accessed this node (for decay calculation)"
+    description="How many times each subentity accessed this node (for decay calculation)"
 )
 ```
 
-**Purpose:** Track access frequency per sub-entity. Used for **activation-based decay** (patterns fade through disuse, not age).
+**Purpose:** Track access frequency per subentity. Used for **activation-based decay** (patterns fade through disuse, not age).
 
 **Example:**
 ```json
@@ -66,11 +66,11 @@ sub_entity_weight_counts: Dict[str, int] = Field(
 ```python
 sub_entity_last_sequence_positions: Dict[str, int] = Field(
     default_factory=dict,
-    description="Most recent activation sequence position for each sub-entity"
+    description="Most recent activation sequence position for each subentity"
 )
 ```
 
-**Purpose:** Track WHEN (in activation sequence, not calendar time) each sub-entity last accessed this node. Enables sequence-based temporal alignment.
+**Purpose:** Track WHEN (in activation sequence, not calendar time) each subentity last accessed this node. Enables sequence-based temporal alignment.
 
 **Why NOT timestamps:** Patterns activated close together in sequence resonate, regardless of calendar time. This is **activation proximity**, not temporal proximity.
 
@@ -144,27 +144,27 @@ weight: float = Field(
 
 ## BaseRelation Additions (10 New Fields)
 
-### 1. Per-Sub-Entity Weight Tracking
+### 1. Per-SubEntity Weight Tracking
 
 ```python
 sub_entity_weights: Dict[str, float] = Field(
     default_factory=dict,
-    description="Learned importance per sub-entity: {sub_entity_id: weight (0.0-1.0)}"
+    description="Learned importance per subentity: {sub_entity_id: weight (0.0-1.0)}"
 )
 ```
 
-Same as nodes - each sub-entity learns which LINKS are useful to them.
+Same as nodes - each subentity learns which LINKS are useful to them.
 
 ---
 
 ```python
 sub_entity_traversal_counts: Dict[str, int] = Field(
     default_factory=dict,
-    description="How many times each sub-entity traversed this link (for decay calculation)"
+    description="How many times each subentity traversed this link (for decay calculation)"
 )
 ```
 
-Track traversal frequency per sub-entity for activation-based decay.
+Track traversal frequency per subentity for activation-based decay.
 
 ---
 
@@ -236,7 +236,7 @@ last_co_injection: Optional[datetime] = Field(
 ```python
 co_retrieval_count: Dict[str, int] = Field(
     default_factory=dict,
-    description="How many times co-retrieved per sub-entity (validates usefulness): {sub_entity_id: count}"
+    description="How many times co-retrieved per subentity (validates usefulness): {sub_entity_id: count}"
 )
 ```
 
@@ -312,7 +312,7 @@ These additions implement the requirements from:
 4. **implementation_roadmap.md (lines 9-44):** Phase 1 foundation requirements
 
 **Status:** Schema now supports:
-- ✅ Per-sub-entity weight tracking
+- ✅ Per-subentity weight tracking
 - ✅ Activation-based decay (not time-based)
 - ✅ Hebbian learning (injection + retrieval)
 - ✅ Sequence-based temporal alignment

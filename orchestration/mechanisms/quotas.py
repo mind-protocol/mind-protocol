@@ -28,7 +28,7 @@ def compute_modulation_factors(
     All factors normalized to mean=1.0 across current active subentities.
 
     Args:
-        subentities: Active sub-entities this frame
+        subentities: Active subentities this frame
         graph: Graph object
         recent_stimuli: Recent stimulus history (list of dicts with 'embedding' key)
 
@@ -131,7 +131,7 @@ def hamilton_quota_allocation(
     Prevents rounding bias that could systematically favor certain subentities.
 
     Args:
-        subentities: Active sub-entities
+        subentities: Active subentities
         Q_total: Total stride budget for this frame
         weights: Per-subentity allocation weights (already computed)
 
@@ -211,7 +211,7 @@ def allocate_quotas(
     Combines inverse-size weighting, modulation factors, and Hamilton allocation.
 
     Args:
-        subentities: Active sub-entities this frame
+        subentities: Active subentities this frame
         Q_total: Total stride budget for this frame
         graph: Graph object
         recent_stimuli: Recent stimulus history

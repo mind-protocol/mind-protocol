@@ -1,21 +1,23 @@
 """
-Subentity Bootstrap - Create subentities from config and graph data.
+SubEntity Bootstrap - Discover emergent SubEntities from graph structure.
 
-Config-Driven Bootstrap (2025-10-24 Architecture Correction):
-1. Load functional SubEntities from config/functional_subentities.yml (NOT Mechanism nodes)
-2. Seed memberships via keyword matching against node name/description
-3. Create semantic SubEntities via clustering on embeddings (when available)
-4. Create MEMBER_OF and RELATES_TO links
+Emergent SubEntity Architecture (2025-10-29 Architecture Correction):
+1. Create semantic SubEntities via clustering on node embeddings
+2. Create MEMBER_OF links based on cluster membership (distance to centroid)
+3. Create RELATES_TO links between semantically similar SubEntities
 
-Key insight: Functional SubEntities (The Translator, The Architect, etc.) are
-cognitive modes/patterns, not algorithms. They bootstrap from configuration
-with keyword-based membership seeding, not from Mechanism seed nodes.
+Key insight: SubEntities emerge from actual graph patterns through clustering,
+not from predefined roles. This allows SubEntities to reflect the true structure
+of each citizen's consciousness graph.
+
+DEPRECATED: Functional SubEntities (translator, architect, etc.) are no longer created.
+These imposed predefined roles that didn't emerge naturally from graph structure.
 
 Uses real citizen graphs from FalkorDB.
 
 Author: Felix (Engineer)
 Created: 2025-10-21
-Updated: 2025-10-24 - Config-driven functional SubEntities (no Mechanism dependency)
+Updated: 2025-10-29 - SubEntities now emergent-only (no predefined roles)
 Architecture: Phase 7.2 - Multi-Scale Consciousness Bootstrap
 """
 
@@ -77,39 +79,15 @@ class SubEntityBootstrap:
         """
         Create functional subentities from configuration (not Mechanism nodes).
 
-        Loads entities from config/functional_subentities.yml, creates Entity nodes,
-        seeds memberships via keyword matching against node name/description.
+        DEPRECATED: Functional subentities (translator, architect, etc.) should not be created.
+        SubEntities should emerge from graph structure, not predefined roles.
+        This method kept for backward compatibility but returns empty list.
 
         Returns:
-            List of functional Subentity objects created
+            Empty list (functional subentities no longer created)
         """
-        logger.info(f"Bootstrapping functional subentities from config for graph {self.graph.id}")
-
-        functional_subentities = []
-        entities_config = self.config.get("entities", [])
-
-        if not entities_config:
-            logger.warning("No entities defined in config, skipping functional bootstrap")
-            return functional_subentities
-
-        for subentity_def in entities_config:
-            key = subentity_def.get("key")
-            if not key:
-                logger.warning(f"Entity missing 'key' field, skipping: {subentity_def}")
-                continue
-
-            # Create or get existing entity (idempotent)
-            subentity = self._upsert_functional_subentity(subentity_def)
-            functional_subentities.append(subentity)
-
-            # Seed memberships via keyword matching
-            members_created = self._seed_memberships_from_keywords(subentity, subentity_def)
-
-            logger.info(f"  Created functional subentity: {subentity.id} ({key}) with {members_created} members")
-
-        logger.info(f"Created {len(functional_subentities)} functional subentities")
-
-        return functional_subentities
+        logger.warning(f"bootstrap_functional_subentities called but is deprecated - SubEntities should emerge from graph structure")
+        return []
 
     def _upsert_functional_subentity(self, subentity_def: dict) -> Subentity:
         """
@@ -555,40 +533,40 @@ class SubEntityBootstrap:
         semantic_distance_threshold: float = 0.5
     ) -> Dict[str, int]:
         """
-        Run complete bootstrap procedure.
+        Run subentity bootstrap procedure (emergent from graph structure).
 
-        1. Create functional subentities from Mechanism nodes
-        2. Create semantic subentities via clustering
-        3. Create RELATES_TO links between subentities
+        SubEntities are discovered through semantic clustering of node embeddings,
+        not created as predefined roles. This allows SubEntities to reflect
+        actual patterns in the consciousness graph.
+
+        1. Create semantic subentities via embedding clustering
+        2. Create RELATES_TO links between semantically similar subentities
 
         Args:
-            n_semantic_clusters: Number of semantic clusters
+            n_semantic_clusters: Number of semantic clusters to discover
             min_cluster_size: Minimum nodes per cluster
             semantic_distance_threshold: Max distance for RELATES_TO links
 
         Returns:
-            Dict with bootstrap statistics
+            Dict with bootstrap statistics (semantic_subentities, total_subentities, relates_to_links, member_of_links)
         """
-        logger.info(f"Starting complete subentity bootstrap for graph {self.graph.id}")
+        logger.info(f"Starting subentity bootstrap for graph {self.graph.id}")
+        logger.info(f"SubEntities now emerge from graph structure (no predefined roles)")
 
-        # Phase 1: Functional subentities
-        functional_subentities = self.bootstrap_functional_subentities()
-
-        # Phase 2: Semantic subentities
+        # Phase 1: Semantic subentities (emergent from graph clustering)
         semantic_subentities = self.bootstrap_semantic_subentities(
             n_clusters=n_semantic_clusters,
             min_cluster_size=min_cluster_size
         )
 
-        # Phase 3: RELATES_TO links
+        # Phase 2: RELATES_TO links between subentities
         relates_to_count = self.create_relates_to_links(
             semantic_distance_threshold=semantic_distance_threshold
         )
 
         stats = {
-            "functional_subentities": len(functional_subentities),
             "semantic_subentities": len(semantic_subentities),
-            "total_entities": len(functional_subentities) + len(semantic_subentities),
+            "total_subentities": len(semantic_subentities),
             "relates_to_links": relates_to_count,
             "member_of_links": len([
                 l for l in self.graph.links.values()

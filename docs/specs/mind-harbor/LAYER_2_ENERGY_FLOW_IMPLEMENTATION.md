@@ -8,22 +8,22 @@
 
 ## What Is Layer 2?
 
-Layer 2 visualizes **energy flowing through the graph** when sub-entities traverse nodes.
+Layer 2 visualizes **energy flowing through the graph** when subentities traverse nodes.
 
-**You see:** Colored particles moving along invisible links from source → target as sub-entities explore.
+**You see:** Colored particles moving along invisible links from source → target as subentities explore.
 
-**Purpose:** Make sub-entity graph traversal visible in real-time.
+**Purpose:** Make subentity graph traversal visible in real-time.
 
 ---
 
 ## What You See
 
-### When Sub-Entity Traverses:
+### When SubEntity Traverses:
 
 1. **WebSocket event arrives** → `entity_activity` with `current_node`
 2. **Particle spawns** at current node position
 3. **Particle travels** along link to recently activated target node
-4. **Subentity-colored** (matches sub-entity: teal/amber/cyan/etc)
+4. **Subentity-colored** (matches subentity: teal/amber/cyan/etc)
 5. **500ms journey** with smooth ease-out animation
 6. **Particle fades** after completing journey
 
@@ -79,7 +79,7 @@ const y = sourceY + (targetY - sourceY) * eased;
 **Challenge:** WebSocket event only provides `current_node`, not link target.
 
 **Solution:** Heuristic based on recent activations:
-1. Find nodes activated by same sub-entity
+1. Find nodes activated by same subentity
 2. Within last 100ms (very recent)
 3. Not the current node itself
 4. That's the traversal target
@@ -99,7 +99,7 @@ const particleBlur = defs.append('filter')
   .attr('stdDeviation', '3');
 ```
 
-**Effect:** Particles have soft glow matching sub-entity color.
+**Effect:** Particles have soft glow matching subentity color.
 
 ---
 
@@ -109,7 +109,7 @@ const particleBlur = defs.append('filter')
 
 ```
 1. GraphCanvas (base: nodes + links)
-2. EntityClusterOverlay (Layer 1: sub-entity names)
+2. EntityClusterOverlay (Layer 1: subentity names)
 3. EnergyFlowParticles (Layer 2: flow animation) ← NEW
 4. ActivationBubbles (event notifications)
 ```
@@ -147,7 +147,7 @@ const particleBlur = defs.append('filter')
 - 30% opacity
 - Gaussian blur filter
 
-**Result:** Glowing orb effect matching sub-entity color scheme.
+**Result:** Glowing orb effect matching subentity color scheme.
 
 ---
 
@@ -195,7 +195,7 @@ const particleBlur = defs.append('filter')
 ### Visual Verification:
 - [ ] Particles spawn at traversed nodes
 - [ ] Particles move smoothly toward target
-- [ ] Subentity colors match sub-entity
+- [ ] Subentity colors match subentity
 - [ ] Glow effect visible
 - [ ] Particles disappear after animation
 - [ ] No visual artifacts (stuttering/flickering)
@@ -208,7 +208,7 @@ const particleBlur = defs.append('filter')
 
 ### Data Verification:
 - [ ] Responds to real WebSocket events
-- [ ] Correct sub-entity colors used
+- [ ] Correct subentity colors used
 - [ ] Target detection reasonably accurate
 - [ ] No crashes on missing data
 
@@ -246,4 +246,4 @@ Once Layer 2 is tested:
 
 — Iris "The Aperture"
 
-Layer 2 makes sub-entity traversal visible.
+Layer 2 makes subentity traversal visible.

@@ -1,5 +1,5 @@
 ---
-title: Sub-Entity Relationship Classification
+title: SubEntity Relationship Classification
 status: stable
 owner: @felix
 last_updated: 2025-10-22
@@ -7,7 +7,7 @@ supersedes:
   - ../consciousness_engine/mechanisms/20_entity_relationship_classification.md
 depends_on: [subentity_layer/subentity_layer.md]
 summary: >
-  Classification of RELATES_TO relationships between sub-entities based on traversal telemetry: ease (how easily traversal jumps between them), precedence (temporal ordering), dominance (which suppresses which).
+  Classification of RELATES_TO relationships between subentities based on traversal telemetry: ease (how easily traversal jumps between them), precedence (temporal ordering), dominance (which suppresses which).
 ---
 
 # Mechanism 20: Subentity Relationship Classification via Embeddings

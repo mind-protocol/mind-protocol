@@ -57,7 +57,13 @@ RATE_LIMITS = {
     "console_error": 5.0,
     "screenshot": 10.0,
     "log_anomaly": 15.0,
+    "script_error": 15.0,
 }
+
+# Per-fingerprint rate limiting (fingerprint -> last_sent_timestamp)
+fingerprint_rate_limit_cache: Dict[str, float] = {}
+FINGERPRINT_RATE_LIMIT_SEC = 10.0  # Max 1 inject per 10s per unique fingerprint
+FINGERPRINT_JITTER_PERCENT = 0.1  # ±10% jitter to prevent thundering herd
 
 # Membrane WebSocket endpoint
 WS_ENDPOINT = "ws://127.0.0.1:8000/api/ws"
@@ -119,6 +125,29 @@ def is_rate_limited(signal_type: str) -> bool:
     if now - last_sent < cooldown:
         return True
     rate_limit_cache[signal_type] = now
+    return False
+
+
+def is_fingerprint_rate_limited(fingerprint: str) -> bool:
+    """
+    Per-fingerprint rate limiting with jitter.
+    Max 1 inject per 10s per unique stack_fingerprint to prevent duplicate error storms.
+    """
+    if not fingerprint or fingerprint == "no_stack":
+        return False
+
+    import random
+    # Add ±10% jitter to prevent thundering herd
+    jitter = random.uniform(-FINGERPRINT_JITTER_PERCENT, FINGERPRINT_JITTER_PERCENT)
+    cooldown = FINGERPRINT_RATE_LIMIT_SEC * (1 + jitter)
+
+    now = time.time()
+    last_sent = fingerprint_rate_limit_cache.get(fingerprint, 0)
+
+    if now - last_sent < cooldown:
+        return True
+
+    fingerprint_rate_limit_cache[fingerprint] = now
     return False
 
 
@@ -288,6 +317,12 @@ def process_signal(
         logger.debug(f"[RateLimit] {signal_type} cooling down")
         return {"status": "rate_limited", "type": signal_type}
 
+    # Check per-fingerprint rate limiting if fingerprint provided
+    fingerprint = metadata_extra.get("stack_fingerprint") if metadata_extra else None
+    if fingerprint and is_fingerprint_rate_limited(fingerprint):
+        logger.debug(f"[FingerprintRateLimit] {fingerprint} cooling down")
+        return {"status": "fingerprint_rate_limited", "fingerprint": fingerprint}
+
     envelope = build_membrane_envelope(
         signal_type=signal_type,
         content=content,
@@ -372,6 +407,48 @@ def collect_screenshot(signal: ScreenshotSignal = Body(...)):
         channel="signals.screenshot",
     )
     return result
+
+
+@app.post("/ingest")
+def ingest_membrane_envelope(envelope: dict = Body(...)):
+    """
+    Generic ingestion endpoint for full membrane.inject envelopes.
+    Used by L2 logger and other graph-aware signal sources.
+
+    Performs deduplication and per-fingerprint rate limiting before injection.
+    """
+    # Validate envelope structure
+    if envelope.get("type") != "membrane.inject":
+        raise HTTPException(status_code=400, detail="Envelope must be type 'membrane.inject'")
+
+    metadata = envelope.get("metadata", {})
+    dedupe_key = metadata.get("dedupe_key")
+    fingerprint = metadata.get("stack_fingerprint")
+
+    # Deduplication check
+    if dedupe_key and is_duplicate(dedupe_key):
+        logger.debug(f"[Dedupe] Already seen envelope (key={dedupe_key})")
+        return {"status": "deduplicated", "dedupe_key": dedupe_key}
+
+    # Per-fingerprint rate limiting
+    if fingerprint and is_fingerprint_rate_limited(fingerprint):
+        logger.debug(f"[FingerprintRateLimit] {fingerprint} cooling down")
+        return {"status": "fingerprint_rate_limited", "fingerprint": fingerprint}
+
+    # Mark as seen for dedup
+    if dedupe_key:
+        dedup_cache[dedupe_key] = time.time()
+
+    # Attempt to flush backlog first
+    flush_backlog()
+
+    # Publish to membrane
+    if send_envelope_over_ws(envelope):
+        return {"status": "published", "stimulus_id": metadata.get("stimulus_id")}
+
+    # Backlog on failure
+    write_to_backlog(envelope)
+    return {"status": "backlogged", "stimulus_id": metadata.get("stimulus_id")}
 
 
 @app.get("/backlog/count")

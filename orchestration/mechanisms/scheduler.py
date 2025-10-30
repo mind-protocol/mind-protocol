@@ -41,7 +41,7 @@ def zippered_schedule(
     One stride per turn, round-robin until all quotas exhausted.
 
     Args:
-        subentities: Active sub-entities with assigned quotas
+        subentities: Active subentities with assigned quotas
         deadline_ms: Optional wall-clock deadline (ms from epoch)
 
     Returns:
@@ -106,7 +106,7 @@ def execute_frame(
     Execute one traversal frame with zippered scheduling.
 
     Args:
-        subentities: Active sub-entities this frame
+        subentities: Active subentities this frame
         graph: Graph object
         goal_embedding: Current goal vector
         Q_total: Total stride budget for this frame
@@ -419,7 +419,7 @@ def filter_active_entities(subentities: List[SubEntity]) -> List[SubEntity]:
     Filter subentities that still have quota remaining.
 
     Args:
-        subentities: All sub-entities
+        subentities: All subentities
 
     Returns:
         List of subentities with quota_remaining > 0

@@ -361,6 +361,32 @@ export type GraphDeltaEvent =
   | GraphSubentityUpsertEvent
   | GraphSubentityDeleteEvent;
 
+export interface MembraneInjectAckEvent {
+  type: 'membrane.inject.ack';
+  id?: string;
+  ts?: string;
+  spec?: {
+    name: string;
+    rev: string;
+  };
+  provenance?: {
+    scope: string;
+    citizen_id?: string;
+    org_id?: string;
+    frame?: number;
+  };
+  payload?: {
+    citizen_id?: string;
+    stimulus_id?: string;
+    envelope_id?: string;
+    channel?: string;
+    status: 'accepted' | 'rejected' | 'expired';
+    reason?: string;
+    t_ms?: number;
+    ts?: string;
+  };
+}
+
 export interface ForgedIdentityFrameEvent {
   type: 'forged.identity.frame';
   timestamp: string;
@@ -966,6 +992,7 @@ export type WebSocketEvent =
   | GraphLinkDeleteEvent
   | GraphSubentityUpsertEvent
   | GraphSubentityDeleteEvent
+  | MembraneInjectAckEvent
   | ForgedIdentityFrameEvent
   | ForgedIdentityMetricsEvent
   | AffectiveThresholdEvent

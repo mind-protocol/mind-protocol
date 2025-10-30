@@ -28,7 +28,7 @@ Operational health monitoring for consciousness graphs (N1 citizens, N2 org, N3 
 
 **Subentity = Weighted Neighborhood**
 - Not "every node is a subentity"
-- Entity energy is read-out from member nodes' energy (single-energy invariant)
+- SubEntity energy is read-out from member nodes' energy (single-energy invariant)
 - Avoids WM flooding, makes diagnostics meaningful at chunk level
 
 **Healthy WM Shows ~5-7 Coherent Entities**
@@ -36,7 +36,7 @@ Operational health monitoring for consciousness graphs (N1 citizens, N2 org, N3 
 - Diagnostics look for structure that supports crisp WM, fast context reconstruction, stable highways (RELATES_TO)
 
 **Failure Modes to Watch:**
-- Entity creep (ever-growing memberships)
+- SubEntity creep (ever-growing memberships)
 - Flip-thrash around thresholds
 - Boundary noise
 - Over-chunked WM
@@ -172,7 +172,7 @@ interface OverlapMetric {
 
 ---
 
-### 3. Entity Size & Dominance
+### 3. SubEntity Size & Dominance
 
 **What It Measures:** Distribution of members per entity; do a few entities dominate?
 
@@ -305,7 +305,7 @@ interface OrphanMetric {
 
 ---
 
-### 5. Entity Coherence
+### 5. SubEntity Coherence
 
 **What It Measures:** Semantic cohesiveness of each entity (member similarity).
 
@@ -724,7 +724,7 @@ RETURN
   toFloat(orphans)/N AS orphan_ratio;
 ```
 
-### Entity Sizes with Distribution
+### SubEntity Sizes with Distribution
 
 ```cypher
 MATCH (n:Node)-[r:MEMBER_OF]->(e:Subentity)
@@ -766,7 +766,7 @@ ORDER BY n.created_at DESC
 LIMIT 200;
 ```
 
-### Entity Coherence Data Fetch
+### SubEntity Coherence Data Fetch
 
 ```cypher
 // For a specific entity
@@ -779,31 +779,38 @@ RETURN
 
 ---
 
-## D. API Design
+## D. WebSocket Event Architecture
 
-### Endpoint: GET /api/health/:graph_id
+### Core Philosophy
 
-**Purpose:** Return comprehensive health report for specified graph.
+Health diagnostics are delivered via **streaming WebSocket events**, not REST polling. Aligns with existing consciousness telemetry architecture (subentity.snapshot, subentity.flip, etc.).
 
-**Path Parameters:**
-- `graph_id`: Graph identifier (e.g., "citizen_ada", "citizen_luca", "collective_n2")
+**Benefits:**
+- Real-time health updates (no polling)
+- Consistent with existing telemetry patterns
+- Dashboard subscribes once, receives continuous updates
+- Lower latency, lower server load
 
-**Query Parameters:**
-- `history_days`: Days of history for percentile calculation (default: 30)
-- `metrics`: Comma-separated list of metrics to include (default: all)
-  - Options: "density", "overlap", "size", "orphans", "coherence", "highways", "wm", "reconstruction", "flux", "sectors"
+---
 
-**Response Schema:**
+### Event Type 1: Health Snapshot (Periodic)
+
+**Event Name:** `graph.health.snapshot`
+
+**Emission Frequency:** Configurable (default: every 60 seconds)
+
+**Payload Schema:**
 
 ```typescript
-interface GraphHealthReport {
+interface GraphHealthSnapshotEvent {
+  type: 'graph.health.snapshot';
   graph_id: string;
   timestamp: number;
-  history_window_days: number;
+  history_window_days: number;      // Used for percentile calculation
 
   // Summary
   overall_status: 'GREEN' | 'AMBER' | 'RED';
-  flagged_metrics: string[];          // Metrics in AMBER/RED
+  flagged_metrics: string[];        // Metrics in AMBER/RED
 
   // 10 Core Metrics
   density: DensityMetric;
@@ -817,97 +824,404 @@ interface GraphHealthReport {
   learning_flux: LearningFluxMetric;
   sector_connectivity: SectorConnectivityMetric;
 
-  // Recommended Procedures
-  procedures: Array<{
-    metric: string;
-    severity: 'HIGH' | 'MEDIUM' | 'LOW';
-    procedure: string;
-    description: string;
-  }>;
-}
-```
-
-**Example Response:**
-
-```json
-{
-  "graph_id": "citizen_ada",
-  "timestamp": 1698345600000,
-  "history_window_days": 30,
-  "overall_status": "RED",
-  "flagged_metrics": ["orphans", "wm_health"],
-
-  "orphans": {
-    "total_nodes": 8,
-    "orphan_count": 0,
-    "orphan_ratio": 0.0,
-    "new_orphans_last_24h": 0,
-    "percentile": 0,
-    "trend": "stable",
-    "status": "RED",
-    "sample_orphans": []
-  },
-
-  "procedures": [
-    {
-      "metric": "orphans",
-      "severity": "HIGH",
-      "procedure": "one_time_backfill",
-      "description": "50% orphan ratio detected. Run one-time backfill using centroid/medoid matching with learned priors (weight_init = cohort median). Then stimulate cross-context missions and sparsify weak memberships after 1 week."
-    }
-  ]
-}
-```
-
-### Endpoint: GET /api/health/:graph_id/history
-
-**Purpose:** Return historical trends for health metrics.
-
-**Response Schema:**
-
-```typescript
-interface HealthHistoryResponse {
-  graph_id: string;
-  window_days: number;
-  samples: Array<{
-    timestamp: number;
-    density: number;
-    overlap_ratio: number;
-    orphan_ratio: number;
-    median_entity_size: number;
-    // ... other metrics
-  }>;
-  percentiles: {
-    density: { q10: number; q20: number; q80: number; q90: number; };
-    overlap_ratio: { q10: number; q20: number; q80: number; q90: number; };
+  // Trend indicators (computed from history)
+  trends: {
+    density: 'rising' | 'stable' | 'falling';
+    overlap: 'rising' | 'stable' | 'falling';
+    orphan_ratio: 'rising' | 'stable' | 'falling';
     // ... other metrics
   };
 }
 ```
 
-### Endpoint: POST /api/health/:graph_id/procedure
+**Example Event:**
 
-**Purpose:** Trigger automated procedure for health issue.
+```json
+{
+  "type": "graph.health.snapshot",
+  "graph_id": "citizen_ada",
+  "timestamp": 1730246400000,
+  "history_window_days": 30,
+  "overall_status": "RED",
+  "flagged_metrics": ["orphans", "wm_health"],
 
-**Request Body:**
+  "density": {
+    "entities": 8,
+    "nodes": 253,
+    "density": 0.0316,
+    "percentile": 45.2,
+    "trend": "stable",
+    "status": "GREEN"
+  },
 
-```typescript
-interface ProcedureTriggerRequest {
-  procedure: 'backfill_orphans' | 'sparsify_memberships' | 'split_entity' | 'merge_entities' | 'seed_highways';
-  parameters?: Record<string, any>;
+  "orphans": {
+    "total_nodes": 253,
+    "orphan_count": 127,
+    "orphan_ratio": 0.502,
+    "new_orphans_last_24h": 3,
+    "percentile": 95.8,
+    "trend": "rising",
+    "status": "RED",
+    "sample_orphans": [
+      {
+        "id": "node:principle:substrate_validation",
+        "name": "Substrate Validation",
+        "type": "Principle",
+        "created_at": 1730240000000
+      }
+    ]
+  },
+
+  "trends": {
+    "density": "stable",
+    "overlap": "rising",
+    "orphan_ratio": "rising"
+  }
 }
 ```
 
-**Response:**
+**Dashboard Usage:**
+```typescript
+// Subscribe to health snapshots
+websocket.on('graph.health.snapshot', (event) => {
+  if (event.graph_id === selectedGraph) {
+    updateHealthDashboard(event);
+  }
+});
+```
+
+---
+
+### Event Type 2: Health Alert (Status Change)
+
+**Event Name:** `graph.health.alert`
+
+**Emission Trigger:** Emitted when overall status changes (GREEN→AMBER, AMBER→RED, etc.) or when new critical issues detected.
+
+**Payload Schema:**
 
 ```typescript
-interface ProcedureTriggerResponse {
-  job_id: string;
-  procedure: string;
-  status: 'queued' | 'running' | 'completed' | 'failed';
-  started_at?: number;
-  completed_at?: number;
+interface GraphHealthAlertEvent {
+  type: 'graph.health.alert';
+  graph_id: string;
+  timestamp: number;
+  severity: 'GREEN' | 'AMBER' | 'RED';
+  previous_severity: 'GREEN' | 'AMBER' | 'RED';
+
+  flagged_metrics: Array<{
+    metric: string;
+    status: 'AMBER' | 'RED';
+    current_value: number;
+    percentile: number;
+    threshold: string;              // e.g., "q90", "q10"
+  }>;
+
+  procedures: Array<{
+    metric: string;
+    severity: 'HIGH' | 'MEDIUM' | 'LOW';
+    procedure: string;
+    description: string;
+    parameters?: Record<string, any>;
+  }>;
 }
+```
+
+**Example Event:**
+
+```json
+{
+  "type": "graph.health.alert",
+  "graph_id": "citizen_ada",
+  "timestamp": 1730246460000,
+  "severity": "RED",
+  "previous_severity": "AMBER",
+
+  "flagged_metrics": [
+    {
+      "metric": "orphans",
+      "status": "RED",
+      "current_value": 0.502,
+      "percentile": 95.8,
+      "threshold": "q90"
+    },
+    {
+      "metric": "wm_health",
+      "status": "AMBER",
+      "current_value": 12.3,
+      "percentile": 87.5,
+      "threshold": "q80"
+    }
+  ],
+
+  "procedures": [
+    {
+      "metric": "orphans",
+      "severity": "HIGH",
+      "procedure": "backfill_orphans",
+      "description": "50% orphan ratio detected (q95.8). Run one-time backfill using centroid/medoid matching with learned priors (weight_init = cohort median). Then stimulate cross-context missions and sparsify weak memberships after 1 week.",
+      "parameters": {
+        "learned_threshold": 0.55,
+        "weight_init": 0.42
+      }
+    }
+  ]
+}
+```
+
+**Dashboard Usage:**
+```typescript
+// Subscribe to alerts for notifications
+websocket.on('graph.health.alert', (event) => {
+  if (event.severity === 'RED') {
+    showCriticalNotification(event);
+  }
+  logHealthAlert(event);
+});
+```
+
+---
+
+### Event Type 3: Procedure Execution (Lifecycle)
+
+**Event Name:** `graph.health.procedure.<status>`
+
+**Variants:**
+- `graph.health.procedure.started`
+- `graph.health.procedure.progress`
+- `graph.health.procedure.completed`
+- `graph.health.procedure.failed`
+
+**Payload Schema:**
+
+```typescript
+interface GraphHealthProcedureEvent {
+  type: 'graph.health.procedure.started' | 'graph.health.procedure.progress' | 'graph.health.procedure.completed' | 'graph.health.procedure.failed';
+  graph_id: string;
+  timestamp: number;
+  procedure_id: string;             // Unique execution ID
+  procedure: 'backfill_orphans' | 'sparsify_memberships' | 'split_subentity' | 'merge_subentities' | 'seed_highways';
+
+  // For started
+  parameters?: Record<string, any>;
+
+  // For progress
+  progress?: {
+    current: number;
+    total: number;
+    message: string;
+  };
+
+  // For completed
+  result?: {
+    before: Record<string, number>;   // Metrics before procedure
+    after: Record<string, number>;    // Metrics after procedure
+    changes: {
+      orphan_ratio?: number;          // Delta
+      overlap_ratio?: number;
+      // ... other metric changes
+    };
+    duration_ms: number;
+  };
+
+  // For failed
+  error?: {
+    message: string;
+    code: string;
+    retryable: boolean;
+  };
+}
+```
+
+**Example Events:**
+
+```json
+// Started
+{
+  "type": "graph.health.procedure.started",
+  "graph_id": "citizen_ada",
+  "timestamp": 1730246500000,
+  "procedure_id": "proc_backfill_ada_1730246500",
+  "procedure": "backfill_orphans",
+  "parameters": {
+    "learned_threshold": 0.55,
+    "weight_init": 0.42
+  }
+}
+
+// Progress
+{
+  "type": "graph.health.procedure.progress",
+  "graph_id": "citizen_ada",
+  "timestamp": 1730246520000,
+  "procedure_id": "proc_backfill_ada_1730246500",
+  "procedure": "backfill_orphans",
+  "progress": {
+    "current": 63,
+    "total": 127,
+    "message": "Backfilled 63/127 orphans"
+  }
+}
+
+// Completed
+{
+  "type": "graph.health.procedure.completed",
+  "graph_id": "citizen_ada",
+  "timestamp": 1730246600000,
+  "procedure_id": "proc_backfill_ada_1730246500",
+  "procedure": "backfill_orphans",
+  "result": {
+    "before": {
+      "orphan_ratio": 0.502,
+      "orphan_count": 127
+    },
+    "after": {
+      "orphan_ratio": 0.142,
+      "orphan_count": 36
+    },
+    "changes": {
+      "orphan_ratio": -0.360,
+      "orphan_count": -91
+    },
+    "duration_ms": 98457
+  }
+}
+```
+
+**Dashboard Usage:**
+```typescript
+// Track procedure execution
+websocket.on('graph.health.procedure.started', (event) => {
+  showProcedureProgress(event.procedure_id, 0);
+});
+
+websocket.on('graph.health.procedure.progress', (event) => {
+  updateProcedureProgress(event.procedure_id, event.progress);
+});
+
+websocket.on('graph.health.procedure.completed', (event) => {
+  showProcedureSuccess(event.procedure_id, event.result);
+  refreshHealthSnapshot();
+});
+```
+
+---
+
+### Event Type 4: Historical Metrics (On Request)
+
+**Event Name:** `graph.health.history.response`
+
+**Trigger:** Client sends `graph.health.history.request` to request historical data.
+
+**Request Payload:**
+
+```typescript
+interface HealthHistoryRequest {
+  type: 'graph.health.history.request';
+  graph_id: string;
+  window_days: number;              // How far back to fetch
+  metrics?: string[];               // Optional: specific metrics only
+}
+```
+
+**Response Payload:**
+
+```typescript
+interface HealthHistoryResponse {
+  type: 'graph.health.history.response';
+  graph_id: string;
+  window_days: number;
+
+  samples: Array<{
+    timestamp: number;
+    density: number;
+    overlap_ratio: number;
+    orphan_ratio: number;
+    median_subentity_size: number;
+    mean_coherence: number;
+    highway_count: number;
+    mean_wm_subentities: number;
+    p90_reconstruction_ms: number;
+    update_rate: number;
+    prune_rate: number;
+  }>;
+
+  percentiles: {
+    density: { q10: number; q20: number; q80: number; q90: number; };
+    overlap_ratio: { q10: number; q20: number; q80: number; q90: number; };
+    orphan_ratio: { q10: number; q20: number; q80: number; q90: number; };
+    // ... other metrics
+  };
+}
+```
+
+**Dashboard Usage:**
+```typescript
+// Request historical data for trend chart
+function loadHistoricalTrends(graphId: string, days: number) {
+  websocket.send({
+    type: 'graph.health.history.request',
+    graph_id: graphId,
+    window_days: days
+  });
+}
+
+websocket.on('graph.health.history.response', (event) => {
+  renderTrendChart(event.samples, event.percentiles);
+});
+```
+
+---
+
+### Service Architecture
+
+**Health Monitor Service** (`orchestration/services/health/graph_health_monitor.py`):
+
+```python
+class GraphHealthMonitor:
+    """
+    Periodic health monitoring service that computes 10 metrics
+    and emits WebSocket events.
+    """
+
+    def __init__(self, websocket_server, interval_seconds=60):
+        self.ws = websocket_server
+        self.interval = interval_seconds
+        self.history_store = HealthHistoryStore()
+
+    async def monitor_loop(self):
+        """Main monitoring loop - runs continuously"""
+        while True:
+            for graph_id in get_active_graphs():
+                snapshot = await self.compute_health_snapshot(graph_id)
+
+                # Emit periodic snapshot
+                await self.ws.emit('graph.health.snapshot', snapshot)
+
+                # Check for status changes → emit alert
+                if self.status_changed(graph_id, snapshot.overall_status):
+                    alert = self.generate_alert(snapshot)
+                    await self.ws.emit('graph.health.alert', alert)
+
+                # Store for historical trends
+                await self.history_store.save_snapshot(graph_id, snapshot)
+
+            await asyncio.sleep(self.interval)
+```
+
+**Integration with Existing WebSocket Server:**
+
+Add to `orchestration/services/websocket/main.py`:
+
+```python
+from orchestration.services.health.graph_health_monitor import GraphHealthMonitor
+
+# In WebSocket server startup
+health_monitor = GraphHealthMonitor(
+    websocket_server=ws_server,
+    interval_seconds=60
+)
+
+asyncio.create_task(health_monitor.monitor_loop())
 ```
 
 ---
@@ -1020,7 +1334,7 @@ interface ProcedureTriggerResponse {
 
 ---
 
-### Procedure: Split Entity (low coherence)
+### Procedure: Split SubEntity (low coherence)
 
 **When to Apply:** Large entity (>100 nodes) with coherence <0.4.
 
@@ -1138,7 +1452,7 @@ interface ProcedureTriggerResponse {
 │                                                         │
 │ Density (E/N):        0.08  🟢  [q20-q80: 0.05-0.11]   │
 │ Overlap (M/N):        2.1   🟡  [q20-q80: 1.2-1.8]     │
-│ Median Entity Size:   42    🟢  [q20-q80: 20-65]       │
+│ Median SubEntity Size:   42    🟢  [q20-q80: 20-65]       │
 │ Orphan Ratio:         50%   🔴  [q20-q80: 5-15%]       │
 │ Mean Coherence:       0.65  🟢  [q20-q80: 0.55-0.75]   │
 │ Highway Count:        23    🟢  [q20-q80: 15-45]       │
@@ -1178,21 +1492,17 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ graph_id }) => {
 ## G. Implementation Checklist
 
 **For Backend (Atlas):**
-- [ ] Implement health computation service (`orchestration/services/health_monitor.py`)
-- [ ] Create API endpoint `/api/health/:graph_id`
-- [ ] Create API endpoint `/api/health/:graph_id/history`
-- [ ] Create API endpoint `/api/health/:graph_id/procedure`
+- [ ] Implement health computation service (`orchestration/services/health/graph_health_monitor.py`)
 - [ ] Implement percentile-based health judgment
 - [ ] Implement procedure execution (backfill, sparsify, split, seed)
 - [ ] Store health metrics history (30-60 day retention)
-- [ ] Emit WebSocket events for health status changes
 
 **For Frontend (Iris):**
 - [ ] Create HealthDashboard component
 - [ ] Create MetricsGrid component (10 metrics display)
 - [ ] Create ProcedurePanel component (trigger interventions)
 - [ ] Create HistoricalTrends chart component
-- [ ] Subscribe to WebSocket health events
+- [ ] Subscribe to WebSocket events: graph.health.*
 - [ ] Add health overview to main dashboard navigation
 
 **For Operations (Victor):**
@@ -1209,7 +1519,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ graph_id }) => {
 - ✅ All 10 metrics compute correctly for any graph
 - ✅ Percentile-based judgment working (no hardcoded thresholds)
 - ✅ Historical trends visible for 30-60 days
-- ✅ API responds <500ms for health report
+- ✅ WebSocket events emit within 100ms of computation
 
 **Dashboard:**
 - ✅ One-screen neurosurgeon view shows all metrics

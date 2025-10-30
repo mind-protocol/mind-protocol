@@ -77,6 +77,10 @@ class MPSv3Supervisor:
         print("[MPSv3] Starting all services...")
         self.registry.start_all()
 
+        # Wait for readiness checks
+        print("[MPSv3] Waiting for services to become ready...")
+        self.registry.wait_for_readiness()
+
         # Start file watcher
         print("[MPSv3] Starting file watcher...")
         self.watcher = CentralizedFileWatcher(self.registry)
@@ -87,13 +91,28 @@ class MPSv3Supervisor:
         signal.signal(signal.SIGTERM, self._signal_handler)
 
         self.running = True
-        print("[MPSv3] Supervisor running. Press Ctrl+C to stop.")
+        print("[MPSv3] ✅ All services ready. Monitoring health...")
+        print("[MPSv3] Press Ctrl+C to stop.")
 
-        # Main loop (monitor services)
+        # Main loop - health monitoring
         try:
+            check_interval = 10  # Check health every 10 seconds
+            last_check = 0
+
             while self.running:
+                now = time.time()
+
+                # Perform health checks periodically
+                if now - last_check >= check_interval:
+                    health_status = self.registry.check_all_health()
+                    last_check = now
+
+                    # Log unhealthy services
+                    unhealthy = [sid for sid, healthy in health_status.items() if not healthy]
+                    if unhealthy:
+                        print(f"[MPSv3] ⚠️ Unhealthy services: {', '.join(unhealthy)}")
+
                 time.sleep(1)
-                # TODO: Add health checks and service monitoring here
         except KeyboardInterrupt:
             pass
 

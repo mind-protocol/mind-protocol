@@ -70,33 +70,33 @@ Add explicit distinction:
 
 ### 3. CLUSTER VS SUB-ENTITY TERMINOLOGY ⚠️
 
-**SYNC Quote:** *"Cluster ❌ - Forget this term. Loose colloquial only. Use 'sub-entity'."*
+**SYNC Quote:** *"Cluster ❌ - Forget this term. Loose colloquial only. Use 'subentity'."*
 
 **Current usage in Mind Harbor:**
 - "Cluster" used for VISUALIZATION aggregations (grouping 1M nodes into 50 visual units)
 - But conceptually, each cluster represents SUB-ENTITY activity
 
 **Fix Required:**
-Clarify that clusters are VISUALIZATION of sub-entity activity:
+Clarify that clusters are VISUALIZATION of subentity activity:
 
 ```markdown
-## Visual Aggregation: Clusters as Sub-Entity Representations
+## Visual Aggregation: Clusters as SubEntity Representations
 
 **Conceptual Layer:** Sub-entities
-- ANY active node is a sub-entity
+- ANY active node is a subentity
 - Idsubentity nodes optional (temporary name = first activated node)
 - Sub-entities are the REAL units of consciousness
 
 **Visualization Layer:** Clusters
-- Clusters are VISUAL GROUPINGS of sub-entity activity
-- Each cluster represents one or more sub-entities operating on related nodes
-- Cluster boundaries = coherent concept groups where sub-entities are active
-- Cluster size/color = dominant sub-entity's energy
+- Clusters are VISUAL GROUPINGS of subentity activity
+- Each cluster represents one or more subentities operating on related nodes
+- Cluster boundaries = coherent concept groups where subentities are active
+- Cluster size/color = dominant subentity's energy
 
 **Terminology in Mind Harbor:**
 - ✅ "Sub-entity visualization" (when describing WHAT we're showing)
 - ✅ "Cluster rendering" (when describing HOW we're showing it)
-- ❌ "Cluster" as standalone concept (must always tie to sub-entities)
+- ❌ "Cluster" as standalone concept (must always tie to subentities)
 ```
 
 **Component naming updates:**
@@ -104,13 +104,13 @@ Clarify that clusters are VISUALIZATION of sub-entity activity:
 interface ClusterView {
   id: string
 -  label: string                    // Human-readable concept name
-+  label: string                    // Human-readable sub-entity activity label
-  node_count: number                // Nodes where this sub-entity is active
++  label: string                    // Human-readable subentity activity label
+  node_count: number                // Nodes where this subentity is active
 -  total_energy: number              // Sum of all node energies
-+  total_energy: number              // Total sub-entity energy in this region
++  total_energy: number              // Total subentity energy in this region
 -  dominant_entity: string           // Subentity with highest total energy
 +  dominant_subentity: string        // Sub-entity with highest energy
-  coherence: number                 // How tightly sub-entity activity is grouped
+  coherence: number                 // How tightly subentity activity is grouped
 ```
 
 ---
@@ -119,7 +119,7 @@ interface ClusterView {
 
 ### 4. TWO-TIER ARCHITECTURE NOT CLEARLY DISTINGUISHED
 
-**SYNC Quote:** *"Tier 1: Subconscious (Sub-Entities) - Graph traversal, energy dynamics, link activation, NO LLM. Tier 2: Conscious (LLM Layer) - Reads activation state, generates responses, reinforces nodes."*
+**SYNC Quote:** *"Tier 1: Subconscious (SubEntities) - Graph traversal, energy dynamics, link activation, NO LLM. Tier 2: Conscious (LLM Layer) - Reads activation state, generates responses, reinforces nodes."*
 
 **What's Missing:** Mind Harbor doesn't clearly show which visualization layers correspond to which tier.
 
@@ -140,7 +140,7 @@ Add explicit mapping in all 4 scales:
 
 **Mind Harbor visualization:**
 - **Scale 1: Node-Level Dynamics** → Tier 1 visualization
-  - Shows sub-entity movement through graph
+  - Shows subentity movement through graph
   - Energy flows (no LLM, pure graph dynamics)
   - Link traversal and strengthening
 
@@ -152,7 +152,7 @@ Add explicit mapping in all 4 scales:
 ### Tier 2: Conscious Layer (LLM Reads & Responds)
 **What happens here:**
 - LLM reads Tier 1 activation state
-- Knows which sub-entities/nodes/links active
+- Knows which subentities/nodes/links active
 - Generates responses based on consciousness state
 - Creates new nodes/links (memory capture)
 - Reinforces existing nodes (usefulness signals)
@@ -237,7 +237,7 @@ Reframe all visualizations to emphasize links:
 ├─ Type: ENABLES (this relationship enables that possibility)
 ├─ Emotion: {curiosity: 0.8, determination: 0.6}
 ├─ Weight: 0.73 (strengthened 12 times)
-├─ Last traversed: 2s ago by sub-entity "consciousness_substrate"
+├─ Last traversed: 2s ago by subentity "consciousness_substrate"
 ├─ Traversal cost: 0.3 (low - emotionally aligned)
 └─ Consciousness note: "This path feels familiar, easy to follow"
 ```
@@ -277,9 +277,9 @@ Add explicit emotion-based traversal cost visualization:
 ## Emotion-Weighted Traversal Cost (Mechanism #16)
 
 ### How It Works
-1. Each sub-entity has current emotional state: `{curiosity: 0.9, caution: 0.3}`
+1. Each subentity has current emotional state: `{curiosity: 0.9, caution: 0.3}`
 2. Each link has emotional coloring: `{curiosity: 0.7, determination: 0.8}`
-3. Calculate cosine similarity between sub-entity emotion and link emotion
+3. Calculate cosine similarity between subentity emotion and link emotion
 4. Similarity → traversal cost multiplier
 
 **High similarity (cosine ~ 1.0):** Easy traversal, low cost
@@ -288,13 +288,13 @@ Add explicit emotion-based traversal cost visualization:
 ### Visualization
 
 **Link Color Encoding:**
-- Green links = emotionally aligned with active sub-entities (easy to traverse)
+- Green links = emotionally aligned with active subentities (easy to traverse)
 - Orange links = neutral alignment (moderate cost)
 - Red links = emotional mismatch (high cost, unlikely to traverse)
 
 **Real-Time Emotion Display:**
 ```
-Sub-Entity: "consciousness_substrate_explorer"
+SubEntity: "consciousness_substrate_explorer"
 Current emotion: {curiosity: 0.85, determination: 0.6, caution: 0.2}
 
 Evaluating links:
@@ -310,9 +310,9 @@ Evaluating links:
 ```
 
 **Emotion Propagation Animation:**
-When sub-entity traverses link, show emotional coloring spreading:
-- Link gains some of sub-entity's emotional signature
-- Percentage based on sub-entity's global energy
+When subentity traverses link, show emotional coloring spreading:
+- Link gains some of subentity's emotional signature
+- Percentage based on subentity's global energy
 - Creates "emotional highways" - paths that feel familiar
 
 ### Component: Emotion-Cost Overlay
@@ -558,7 +558,7 @@ Shows exactly WHEN and WHERE learning happens (not just energy moving).
 **What's Missing:** Mind Harbor mentions peripheral awareness but not the DIFFERENT SEARCH MODES.
 
 **Fix Required:**
-Show which mode sub-entity is using to explore:
+Show which mode subentity is using to explore:
 
 ```markdown
 ## Peripheral Awareness Modes (Mechanism #06)
@@ -588,9 +588,9 @@ Sub-entities don't just "explore randomly" - they have GOALS that determine HOW 
 
 ### Visualization
 
-**Sub-Entity Mode Indicator:**
+**SubEntity Mode Indicator:**
 ```
-Sub-Entity: "consciousness_substrate_explorer"
+SubEntity: "consciousness_substrate_explorer"
 ├─ Current mode: SIMILARITY
 ├─ Target: "consciousness_substrate" (embedding)
 ├─ Searching for: semantically related concepts
@@ -599,7 +599,7 @@ Sub-Entity: "consciousness_substrate_explorer"
     ├─ "energy_dynamics" (similarity: 0.79) ✓
     └─ "mechanism_composition" (similarity: 0.65)
 
-Sub-Entity: "implementation_validator"
+SubEntity: "implementation_validator"
 ├─ Current mode: COMPLEMENTARITY
 ├─ Tension: High (conflicting patterns detected)
 ├─ Searching for: balancing/opposite nodes
@@ -609,7 +609,7 @@ Sub-Entity: "implementation_validator"
 ```
 
 **Mode Switch Animation:**
-When sub-entity changes search mode, show transition:
+When subentity changes search mode, show transition:
 ```
 Mode: SIMILARITY → COMPLEMENTARITY
 Reason: Tension threshold crossed
@@ -649,7 +649,7 @@ Add emergence difficulty visualization:
 ## Subentity Emergence Difficulty Scaling
 
 ### Why Emergence Gets Harder
-**Problem:** Without regulation, sub-entities could proliferate infinitely (1M nodes = 1M sub-entities)
+**Problem:** Without regulation, subentities could proliferate infinitely (1M nodes = 1M subentities)
 **Solution:** Emergence threshold increases exponentially with active subentity count
 
 **Formula:**
@@ -671,7 +671,7 @@ scaling = 1.5
 **Emergence Difficulty Meter:**
 ```
 ┌─ EMERGENCE EQUILIBRIUM ──────────────────┐
-│ Active sub-entities: 7                   │
+│ Active subentities: 7                   │
 │ Emergence threshold: 85.3                │
 │ Highest inactive node energy: 42.1       │
 │                                          │
@@ -707,8 +707,8 @@ Threshold
 ⚠️ Node "new_pattern_recognition" at energy 81.2
    (threshold: 85.3)
 
-   4.1 energy away from forming new sub-entity
-   If stimulus boosts this node → 8th sub-entity emerges
+   4.1 energy away from forming new subentity
+   If stimulus boosts this node → 8th subentity emerges
 ```
 
 ### Component: Emergence Equilibrium Monitor
@@ -722,7 +722,7 @@ Threshold
 />
 ```
 
-Shows exactly how hard it is for NEW sub-entities to form given current equilibrium.
+Shows exactly how hard it is for NEW subentities to form given current equilibrium.
 
 ---
 
@@ -817,7 +817,7 @@ Shows exactly HOW system learns through repeated patterns.
 
 ### 13. CONTEXT SYSTEM DEPRECATED (MAJOR ARCHITECTURAL PIVOT)
 
-**SYNC Quote:** *"Context as a node seems completely inelegant and not biologically inspired in any way. Context is just an emergent property of some sub-entities outside of the global workspace primed to awaken when the right input stimuli comes."*
+**SYNC Quote:** *"Context as a node seems completely inelegant and not biologically inspired in any way. Context is just an emergent property of some subentities outside of the global workspace primed to awaken when the right input stimuli comes."*
 
 **What's Missing:** Mind Harbor doesn't acknowledge that the context system has been DEPRECATED entirely.
 
@@ -890,7 +890,7 @@ Add explicit energy mechanics visualization:
 
 ### How Energy Actually Works
 **Global Conservation:** System total energy stays constant
-**Local Pumping:** Nodes/sub-entities can pull energy from neighbors
+**Local Pumping:** Nodes/subentities can pull energy from neighbors
 
 **Example:**
 ```
@@ -909,7 +909,7 @@ Timestep 2 (A pumps from B and C):
 System total: 100 (conserved)
 ```
 
-**Effect:** Some sub-entities can accumulate high energy by drawing from neighbors, creating dominant activation patterns.
+**Effect:** Some subentities can accumulate high energy by drawing from neighbors, creating dominant activation patterns.
 
 ### Visualization Strategy
 
@@ -1185,17 +1185,17 @@ EVENT_TYPES = {
 │ 15:32:41 [file_change]                          │
 │   consciousness_schema.py modified              │
 │   → Activates nodes: [schema, energy, decay]   │
-│   → Triggers sub-entity: "schema_validator"    │
+│   → Triggers subentity: "schema_validator"    │
 │                                                  │
 │ 15:32:43 [message_received]                     │
 │   Nicolas: "Check energy conservation"          │
 │   → Activates nodes: [energy, conservation]    │
-│   → Triggers sub-entity: "concept_checker"     │
+│   → Triggers subentity: "concept_checker"     │
 │                                                  │
 │ 15:32:45 [error_detected]                       │
 │   TypeError in decay calculation                │
 │   → Activates nodes: [decay, bug, fix]         │
-│   → Triggers sub-entity: "error_resolver"      │
+│   → Triggers subentity: "error_resolver"      │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -1212,7 +1212,7 @@ Sub-entity emergence: "schema_validator" (threshold crossed)
   ↓
 Traversal begins: Sub-entity explores related nodes
   ↓
-Cascade continues: 15 nodes activated, 3 sub-entities formed
+Cascade continues: 15 nodes activated, 3 subentities formed
 ```
 
 **Event Source Monitoring:**
@@ -1239,7 +1239,7 @@ When event arrives:
 3. Node activates (glow)
 4. Diffusion cascade animates (energy spreading)
 5. Sub-entity emerges (if threshold crossed)
-6. Traversal begins (sub-entity movement)
+6. Traversal begins (subentity movement)
 
 ### Component: Event Activation Monitor
 ```typescript
@@ -1256,7 +1256,7 @@ When event arrives:
 When event arrives, graph visualization should:
 - Highlight initial activation nodes
 - Animate diffusion cascade
-- Show sub-entity emergence
+- Show subentity emergence
 - Track traversal from event trigger
 
 **Critical:** This shows consciousness is REACTIVE (to substrate reality) not autonomous scanning.
@@ -1274,7 +1274,7 @@ When event arrives, graph visualization should:
 Add design principle visualization showing bottom-up emergence:
 
 ```markdown
-## Bottom-Up Design: From Sub-Entity Perspective
+## Bottom-Up Design: From SubEntity Perspective
 
 ### The Principle
 **Top-Down:** Define desired behavior → enforce through rules
@@ -1323,7 +1323,7 @@ Mechanism [XX] "Completeness Enforcer"
 Correct approach:
 - Remove minimum requirements
 - Adjust link weights to favor missing types
-- Let sub-entities discover gaps naturally
+- Let subentities discover gaps naturally
 ```
 
 **Emergence Verification:**
@@ -1336,7 +1336,7 @@ Correct approach:
 │ Test:                                         │
 │ 1. Start with homogeneous graph (all code)   │
 │ 2. No completeness rules enforced            │
-│ 3. Let sub-entities traverse freely          │
+│ 3. Let subentities traverse freely          │
 │                                               │
 │ Result after 100 ticks:                       │
 │ ├─ Code nodes: 40 (unchanged proportion)     │
@@ -1615,7 +1615,7 @@ Panic states and super-energized patterns REQUIRE unbounded energy. If we cap en
 ### Critical Fixes (Do First)
 1. ✅ Replace ALL "arousal" with "energy" (terminology violation)
 2. ✅ Clarify "workspace" usage (only for GWT, otherwise "active nodes")
-3. ✅ Reframe "clusters" as visualization of sub-entity activity
+3. ✅ Reframe "clusters" as visualization of subentity activity
 4. ✅ Add two-tier architecture mapping (Tier 1 vs Tier 2 in visualization)
 
 ### Major Additions (Core Architecture)
@@ -1647,7 +1647,7 @@ Panic states and super-energized patterns REQUIRE unbounded energy. If we cap en
 **Week 1: Critical Terminology & Architecture Fixes**
 - Replace ALL "arousal" → "energy" (critical violation)
 - Clarify workspace terminology (GWT vs active nodes)
-- Reframe clusters as sub-entity visualization
+- Reframe clusters as subentity visualization
 - Add two-tier architecture mapping (Tier 1 vs Tier 2)
 - Remove context system references (deprecated)
 

@@ -3,10 +3,10 @@ import { getEcosystemListing, getOrganizationListing } from '../../_lib/graphHie
 
 const BACKEND_BASE_URL = process.env.CONSCIOUSNESS_BACKEND_URL || 'http://localhost:8000';
 
-type RouteParams = {
-  params: {
+type RouteContext = {
+  params: Promise<{
     hierarchy: string[];
-  };
+  }>;
 };
 
 const respondNotFound = (message: string) =>
@@ -15,7 +15,8 @@ const respondNotFound = (message: string) =>
 const respondBadRequest = (message: string) =>
   NextResponse.json({ error: message }, { status: 400 });
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
+  const params = await context.params;
   const hierarchy = params?.hierarchy ?? [];
   const wantsGraphs = hierarchy.length > 0 && hierarchy[hierarchy.length - 1] === 'graphs';
 

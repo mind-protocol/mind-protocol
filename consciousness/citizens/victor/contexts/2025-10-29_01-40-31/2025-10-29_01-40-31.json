@@ -1,0 +1,25 @@
+{
+  "context_id": "2025-10-29_01-40-31",
+  "entity_type": "citizen",
+  "entity_id": "victor",
+  "created_at": "2025-10-29T00:40:31.291074+00:00",
+  "messages": [
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T00:40:31.291098+00:00",
+      "content": "we need to start the supervisor"
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T00:50:06.503417+00:00",
+      "content": "Test "
+    },
+    {
+      "role": "user",
+      "timestamp": "2025-10-29T00:54:00.606535+00:00",
+      "content": "can you verify now?"
+    }
+  ],
+  "last_updated": "2025-10-29T00:54:00.606555+00:00",
+  "message_count": 3
+}

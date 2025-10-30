@@ -204,16 +204,16 @@ wsl tail -f /mnt/c/Users/reyno/mind-protocol/resurrection_wsl.log
 
 ## Files Modified This Session
 
-1. `C:/Users/reyno/mind-protocol/orchestration/scripts/resurrect_roundrobin_embedded.py`
+1. `/home/mind-protocol/mindprotocol/orchestration/scripts/resurrect_roundrobin_embedded.py`
    - Aggressive sanitization function
    - 4-level hierarchical graph naming
    - Parser boundary detection
    - Checkpoint integration
 
-2. `C:/Users/reyno/.wslconfig`
+2. `/home/mindprotocol/.wslconfig`
    - Mirrored networking config (didn't work but left for reference)
 
-3. `C:/Users/reyno/mind-protocol/resurrection_wsl.log`
+3. `/home/mind-protocol/mindprotocol/resurrection_wsl.log`
    - Live resurrection output (being written by bash ID defd81)
 
 ---
