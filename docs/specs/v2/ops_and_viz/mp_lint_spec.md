@@ -1,9 +1,10 @@
 # mp-lint: L4-Aware Membrane Linter
 
-**Status:** Specification Complete
-**Version:** 1.0.0
+**Status:** Specification Complete (Extended with Reviewer System Rules)
+**Version:** 2.0.0
 **Date:** 2025-10-31
 **Owner:** Ada (Coordinator & Architect)
+**Spec Reference:** `docs/L4-law/membrane_native_reviewer_and_lint_system.md`
 **Implementers:** Felix (Core Engine), Atlas (CI Integration + Runtime Validation), Iris (UI Integration)
 
 ---
@@ -16,6 +17,9 @@
 2. **Membrane discipline** - Emissions go through bus APIs, not shadow REST endpoints
 3. **Governance enforcement** - High-stakes topics have attestation, compute topics have settlement
 4. **UI projection safety** - Dashboard reads from public projection only
+5. **Quality maintenance** - No quality degradation (TODO/HACK in logic, disabled validation, print() instead of logger)
+6. **Fail-loud contract** - Every exception either rethrows or emits `failure.emit` (silent catches FORBIDDEN)
+7. **Fallback detection** - No silent defaults, fake availability, or infinite loops without backoff
 
 **Why this matters:**
 
@@ -67,8 +71,12 @@
 
 - Static analysis of Python and Next.js code
 - Validation against L4 Schema Registry (event_schemas, topic_namespaces, governance_policies)
-- Rules: R-001 through R-007, R-100, R-101 (schema existence, topic mapping, signature profiles, CPS settlement, SEA attestation, membrane discipline)
-- Integration: Pre-commit hooks, GitHub Actions, SafeBroadcaster runtime validation
+- **Protocol Compliance Rules:** R-001 through R-007 (schema existence, topic mapping, signature profiles, CPS settlement, SEA attestation, type/level matching)
+- **Membrane Discipline Rules:** R-100, R-101 (bus-only emissions, projection-only UI)
+- **Quality Degradation Rules:** R-200 through R-202 (TODO/HACK markers, disabled validation, observability cuts)
+- **Fallback Antipattern Rules:** R-300 through R-303 (silent catches, default returns, fake availability, infinite loops)
+- **Fail-Loud Contract Rules:** R-400, R-401 (catch without failure.emit FORBIDDEN, failure context validation)
+- Integration: Pre-commit hooks, GitHub Actions, SafeBroadcaster runtime validation, File Watcher
 - Graph edges: U4_Code_Artifact, U4_EMITS, U4_CONSUMES, U4_IMPLEMENTS
 
 **Out of Scope:**
@@ -667,6 +675,631 @@ const citizens = state.citizens     // Public projection only (no internal_state
 ```
 
 **Why This Matters:** Dashboard must not leak private fields (internal_state, debug data, sensitive configs). Public projection is the contract.
+
+---
+
+## R-200 Series: Quality Degradation Detection
+
+### R-200: TODO_OR_HACK
+
+**Severity:** Error
+**Category:** Quality Maintenance
+
+**Description:** Production logic paths must not contain `TODO`, `HACK`, `FIXME`, or `XXX` markers. These indicate incomplete work that may cause runtime failures or incorrect behavior.
+
+**Check:**
+```python
+if is_logic_path(node) and any(marker in get_comments(node) for marker in ["TODO", "HACK", "FIXME", "XXX"]):
+    # Allow in docstrings and non-logic comments
+    if not is_docstring(node) and not allow_pragma_present(node, "allow-degrade"):
+        return error("R-200", f"TODO/HACK marker in logic path: {marker}")
+```
+
+**Example Violation:**
+```python
+# ❌ TODO in production logic
+def get_citizen_ids():
+    # TODO: Replace with actual FalkorDB query
+    return ["felix", "ada", "iris"]  # Hardcoded fallback
+
+# ❌ HACK in error handling
+try:
+    result = await api_call()
+except Exception:
+    # HACK: Return empty list until we fix the API
+    return []
+
+# ✅ Correct (with pragma if genuinely needed)
+def get_citizen_ids():
+    # lint: allow-degrade(reason="Migration to v2 API, ticket ORG-456", until="2025-11-07")
+    # TODO: Complete v2 API migration
+    return await legacy_api.get_citizens()
+
+# ✅ Correct (TODO in docstring - allowed)
+def complex_algorithm():
+    """
+    Implements spreading activation.
+
+    TODO: Add energy decay parameter in v2.
+    """
+    return compute_activation()
+```
+
+**Why This Matters:** TODO markers indicate unfinished work that may fail under load, edge cases, or production data. They're acceptable during development but **forbidden in production code paths** without explicit suppression + ticket.
+
+**Pragma Format:**
+```python
+# lint: allow-degrade(reason="Waiting for FalkorDB v3 migration", until="2025-11-10", ticket="ORG-123")
+```
+
+---
+
+### R-201: QUALITY_DEGRADE
+
+**Severity:** Error
+**Category:** Quality Maintenance
+
+**Description:** Detects quality degradation patterns: disabled validation, absurd timeouts, zero retries/backoff, max_attempts=1.
+
+**Check:**
+```python
+patterns = [
+    r"validate\s*=\s*False",
+    r"timeout\s*=\s*(0|999999|float\('inf'\))",
+    r"retries\s*=\s*0",
+    r"backoff\s*=\s*0",
+    r"max_attempts\s*=\s*1"
+]
+
+for pattern in patterns:
+    if re.search(pattern, code) and not allow_pragma_present(node, "allow-degrade"):
+        return error("R-201", f"Quality degradation: {pattern}")
+```
+
+**Example Violation:**
+```python
+# ❌ Validation disabled
+await bus.emit("identity.snapshot", payload, validate=False)
+
+# ❌ Absurd timeout (effectively infinite)
+response = await http.get("/api/data", timeout=999999)
+
+# ❌ Zero backoff (instant retry storm)
+@retry(max_attempts=10, backoff=0)
+def flaky_operation():
+    ...
+
+# ❌ Single attempt with retry decorator (fake resilience)
+@retry(max_attempts=1)
+def should_not_use_retry():
+    ...
+
+# ✅ Correct
+await bus.emit("identity.snapshot", payload, validate=True)  # Default
+response = await http.get("/api/data", timeout=30)  # Reasonable timeout
+@retry(max_attempts=3, backoff=2.0)  # Exponential backoff
+def flaky_operation():
+    ...
+
+# ✅ Correct (with pragma if genuinely needed for testing)
+# lint: allow-degrade(reason="Load test without validation overhead", until="2025-11-05", ticket="TEST-789")
+await bus.emit("load.test.event", payload, validate=False)
+```
+
+**Why This Matters:** These patterns indicate shortcuts taken under pressure that create production risks: unvalidated data causing crashes, retry storms overwhelming services, timeouts that never trigger.
+
+---
+
+### R-202: OBSERVABILITY_CUT
+
+**Severity:** Warning
+**Category:** Quality Maintenance
+
+**Description:** Application code must use `logger` instead of `print()` for observability. Scripts and tests are exempt.
+
+**Check:**
+```python
+if is_application_code(file) and "print(" in code:
+    if not is_excluded_path(file, ["scripts/**", "tools/**", "tests/**"]):
+        return warn("R-202", "Use logger instead of print() in application code")
+```
+
+**Example Violation:**
+```python
+# ❌ print() in application code
+def process_event(event):
+    print(f"Processing event: {event['id']}")  # Lost in prod, no structured logs
+    return handle(event)
+
+# ❌ print() for error reporting
+except Exception as e:
+    print(f"Error: {e}")  # No error tracking, no alerts
+
+# ✅ Correct
+import logging
+logger = logging.getLogger(__name__)
+
+def process_event(event):
+    logger.info("Processing event", extra={"event_id": event['id']})
+    return handle(event)
+
+# ✅ Correct (error with context)
+except Exception as e:
+    logger.error("Event processing failed", exc_info=True, extra={"event_id": event['id']})
+
+# ✅ Correct (scripts can use print)
+# File: tools/analyze_logs.py
+if __name__ == "__main__":
+    print(f"Analyzing {len(logs)} log entries...")  # CLI output - allowed
+```
+
+**Why This Matters:** `print()` output is unstructured, lost in production, and can't be queried/alerted on. Structured logging enables debugging, monitoring, and incident response.
+
+---
+
+## R-300 Series: Fallback Antipattern Detection
+
+### R-300: BARE_EXCEPT_PASS
+
+**Severity:** Error
+**Category:** Fail-Loud Contract
+
+**Description:** Silent `except: pass` blocks are **forbidden**. Every exception must either propagate (rethrow) or emit `failure.emit`.
+
+**Check:**
+```python
+if is_bare_except_pass(node):
+    if not allow_pragma_present(node, "allow-fallback"):
+        return error("R-300", "Silent except/pass forbidden (violates Fail-Loud principle)")
+```
+
+**Example Violation:**
+```python
+# ❌ Silent catch (violation)
+try:
+    result = await api.get_data()
+except:
+    pass  # Error swallowed - no indication of failure
+
+# ❌ Silent catch with specific exception
+try:
+    config = load_config()
+except FileNotFoundError:
+    pass  # File missing - but no one knows
+
+# ✅ Correct (rethrow)
+try:
+    result = await api.get_data()
+except Exception as e:
+    logger.error("API call failed", exc_info=True)
+    raise  # Propagate up
+
+# ✅ Correct (emit failure.emit)
+try:
+    result = await api.get_data()
+except Exception as e:
+    await broadcaster.broadcast(
+        "failure.emit",
+        {
+            "code_location": "adapters/api_client.py:45",
+            "exception": str(e),
+            "severity": "error",
+            "suggestion": "Check API endpoint availability"
+        }
+    )
+    return None  # Explicit default after emitting failure
+
+# ✅ Correct (with pragma if genuinely needed)
+# lint: allow-fallback(reason="Legacy adapter during migration", until="2025-11-03", ticket="MIG-234")
+try:
+    legacy_call()
+except:
+    pass  # Suppress during migration phase
+```
+
+**Why This Matters:** Silent catches hide failures, making debugging impossible and masking systemic issues. The **Fail-Loud Contract** requires all exceptions to be visible (either via propagation or explicit `failure.emit` events).
+
+---
+
+### R-301: SILENT_DEFAULT_RETURN
+
+**Severity:** Error
+**Category:** Fail-Loud Contract
+
+**Description:** Returning default values (`None`, `[]`, `{}`, `0`, `False`, `""`) in exception handlers without emitting `failure.emit` is **forbidden**.
+
+**Check:**
+```python
+if is_except_with_default_return(node):
+    if not has_failure_emit_call(node) and not allow_pragma_present(node, "allow-fallback"):
+        return error("R-301", "Default return on exception without failure.emit (violates Fail-Loud)")
+```
+
+**Example Violation:**
+```python
+# ❌ Silent default return
+def get_citizen_list():
+    try:
+        return await db.query("MATCH (c:Citizen) RETURN c")
+    except Exception:
+        return []  # Empty list - caller doesn't know query failed
+
+# ❌ Silent None return
+def load_config():
+    try:
+        with open("config.json") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None  # Caller can't distinguish "no config" from "load failed"
+
+# ✅ Correct (rethrow - let caller handle)
+def get_citizen_list():
+    try:
+        return await db.query("MATCH (c:Citizen) RETURN c")
+    except Exception as e:
+        logger.error("Citizen query failed", exc_info=True)
+        raise  # Propagate
+
+# ✅ Correct (emit failure.emit before default return)
+def get_citizen_list():
+    try:
+        return await db.query("MATCH (c:Citizen) RETURN c")
+    except Exception as e:
+        await broadcaster.broadcast(
+            "failure.emit",
+            {
+                "code_location": "adapters/db.py:123",
+                "exception": str(e),
+                "severity": "error",
+                "suggestion": "Check FalkorDB connection"
+            }
+        )
+        return []  # Explicit default after emitting failure
+
+# ✅ Correct (with pragma)
+# lint: allow-fallback(reason="Degraded mode during outage", until="2025-11-05", ticket="OPS-567")
+def get_citizen_list():
+    try:
+        return await db.query("MATCH (c:Citizen) RETURN c")
+    except Exception:
+        return []  # Graceful degradation with suppression
+```
+
+**Why This Matters:** Silent defaults mask failures. Callers proceed with empty/null data, leading to downstream errors that are hard to trace back to the original failure.
+
+---
+
+### R-302: FAKE_AVAILABILITY
+
+**Severity:** Error
+**Category:** Fallback Antipattern
+
+**Description:** Availability/health check functions must not unconditionally return `True`. They must perform actual checks.
+
+**Check:**
+```python
+if is_health_check_function(node) and is_unconditional_return_true(node):
+    if not allow_pragma_present(node, "allow-fallback"):
+        return error("R-302", "Unconditional 'return True' in availability check (fake availability)")
+```
+
+**Example Violation:**
+```python
+# ❌ Fake availability (always returns True)
+def is_available():
+    return True  # Claim ready without checking anything
+
+# ❌ Fake health check
+async def health_check():
+    # TODO: Implement actual check
+    return True
+
+# ✅ Correct (actual check)
+def is_available():
+    try:
+        # Check if websocket has connected clients
+        return len(ws_clients) > 0 and ws_server_running
+    except Exception:
+        return False
+
+# ✅ Correct (check with timeout)
+async def health_check():
+    try:
+        response = await db.execute_command("PING", timeout=1.0)
+        return response == b"PONG"
+    except Exception:
+        return False
+
+# ✅ Correct (with pragma if stubbing temporarily)
+# lint: allow-fallback(reason="Stub during service migration", until="2025-11-02", ticket="SVC-890")
+def is_available():
+    # Stub: Always available during migration
+    return True
+```
+
+**Why This Matters:** Fake availability breaks load balancers, retry logic, and circuit breakers. Services report "ready" when they're not, causing cascading failures.
+
+---
+
+### R-303: INFINITE_LOOP_NO_SLEEP
+
+**Severity:** Warning
+**Category:** Fallback Antipattern
+
+**Description:** `while True` loops must include `sleep`, `await`, `break`, or `return` to prevent CPU spinning.
+
+**Check:**
+```python
+if is_infinite_loop(node):
+    if not has_sleep_or_exit(node) and not allow_pragma_present(node, "allow-fallback"):
+        return warn("R-303", "Infinite loop without sleep/backoff/break (CPU spin)")
+```
+
+**Example Violation:**
+```python
+# ❌ CPU spin (no sleep)
+while True:
+    event = queue.get_nowait()  # Busy-wait if queue empty
+    if event:
+        process(event)
+
+# ❌ Polling without backoff
+while True:
+    if condition_check():
+        do_work()
+    # No sleep - spins at 100% CPU
+
+# ✅ Correct (with sleep)
+while True:
+    event = queue.get_nowait()
+    if event:
+        process(event)
+    time.sleep(0.1)  # Yield CPU
+
+# ✅ Correct (async with await)
+while True:
+    event = await queue.get()  # Blocks until event available
+    process(event)
+
+# ✅ Correct (with break condition)
+while True:
+    if should_stop:
+        break  # Exit loop
+    do_work()
+    time.sleep(1)
+
+# ✅ Correct (event-driven, no polling)
+async def event_loop():
+    async for event in event_stream():  # No busy-wait
+        await process(event)
+```
+
+**Why This Matters:** Busy-wait loops consume 100% CPU, starve other processes, and drain battery on laptops. Always yield or block properly.
+
+---
+
+## R-400 Series: Fail-Loud Contract Enforcement
+
+### R-400: FAIL_LOUD_REQUIRED
+
+**Severity:** Error (CRITICAL - No pragma allowed)
+**Category:** Fail-Loud Contract
+
+**Description:** Every `except` block that chooses a non-exception path (return/continue without raise) **MUST** emit `failure.emit`. Silent catches are **FORBIDDEN**.
+
+**This is the core Fail-Loud contract:** Exceptions are either propagated (rethrow) or made visible (`failure.emit`). No third option.
+
+**Check:**
+```python
+if is_except_block(node):
+    if has_non_exception_path(node):  # return/continue without raise
+        if not has_failure_emit_call(node) and not has_raise(node):
+            return error("R-400", "Catch without failure.emit or rethrow FORBIDDEN (Fail-Loud contract violation)")
+```
+
+**Example Violation:**
+```python
+# ❌ FORBIDDEN (silent catch with return)
+try:
+    result = await api.call()
+except Exception:
+    return None  # Silent failure - no one knows call failed
+
+# ❌ FORBIDDEN (silent catch with continue)
+for item in items:
+    try:
+        process(item)
+    except Exception:
+        continue  # Skip item silently - no visibility into failures
+
+# ❌ FORBIDDEN (log but no failure.emit)
+try:
+    result = await api.call()
+except Exception as e:
+    logger.error(f"API failed: {e}")  # Logged but not emitted
+    return None  # Still silent from membrane perspective
+
+# ✅ Correct (rethrow)
+try:
+    result = await api.call()
+except Exception as e:
+    logger.error("API call failed", exc_info=True)
+    raise  # Propagate - caller handles
+
+# ✅ Correct (emit failure.emit then return)
+try:
+    result = await api.call()
+except Exception as e:
+    await broadcaster.broadcast(
+        "failure.emit",
+        {
+            "code_location": "services/api_client.py:89",
+            "exception": str(e),
+            "severity": "error",
+            "suggestion": "Check API endpoint health",
+            "trace_id": get_trace_id()
+        }
+    )
+    return None  # Explicit default AFTER emitting failure
+
+# ✅ Correct (emit failure.emit then continue)
+for item in items:
+    try:
+        process(item)
+    except Exception as e:
+        await emit_failure({
+            "code_location": "batch_processor.py:234",
+            "exception": str(e),
+            "severity": "warn",
+            "suggestion": f"Skipped item {item['id']}"
+        })
+        continue  # Skip AFTER emitting failure
+```
+
+**Why This Matters:** This is the **core runtime contract** that makes the membrane observable. Every failure becomes a first-class event that can be monitored, alerted on, and debugged. Silent failures are **architectural violations** that break observability.
+
+**NO PRAGMA ALLOWED:** R-400 violations must be fixed immediately. No suppression, no grace period.
+
+---
+
+### R-401: MISSING_FAILURE_CONTEXT
+
+**Severity:** Error
+**Category:** Fail-Loud Contract
+
+**Description:** `failure.emit` events must include required context fields: `code_location`, `exception`, `severity`. Optional but recommended: `change_id`, `suggestion`, `trace_id`.
+
+**Check:**
+```python
+if is_failure_emit_call(node):
+    payload = extract_payload(node)
+    required = ["code_location", "exception", "severity"]
+    missing = [f for f in required if f not in payload]
+    if missing:
+        return error("R-401", f"failure.emit missing required context: {missing}")
+
+    if payload.get("severity") not in ["warn", "error", "fatal"]:
+        return error("R-401", f"Invalid severity: {payload['severity']} (must be warn/error/fatal)")
+```
+
+**Example Violation:**
+```python
+# ❌ Missing code_location
+await broadcaster.broadcast(
+    "failure.emit",
+    {
+        "exception": str(e),
+        "severity": "error"
+        # Missing: code_location
+    }
+)
+
+# ❌ Missing exception
+await broadcaster.broadcast(
+    "failure.emit",
+    {
+        "code_location": "adapter.py:123",
+        "severity": "error"
+        # Missing: exception
+    }
+)
+
+# ❌ Invalid severity
+await broadcaster.broadcast(
+    "failure.emit",
+    {
+        "code_location": "adapter.py:123",
+        "exception": str(e),
+        "severity": "high"  # Invalid - must be warn/error/fatal
+    }
+)
+
+# ✅ Correct (minimal)
+await broadcaster.broadcast(
+    "failure.emit",
+    {
+        "code_location": "adapters/db_client.py:456",
+        "exception": str(e),
+        "severity": "error"
+    }
+)
+
+# ✅ Correct (complete with optional fields)
+await broadcaster.broadcast(
+    "failure.emit",
+    {
+        "code_location": "adapters/db_client.py:456",
+        "exception": str(e),
+        "severity": "error",
+        "suggestion": "Check FalkorDB connection and retry",
+        "trace_id": request.trace_id,
+        "change_id": f"local:{int(time.time())}"
+    }
+)
+```
+
+**Why This Matters:** Failure events without context are useless for debugging. `code_location` enables immediate source lookup, `exception` shows what failed, `severity` enables proper alerting.
+
+---
+
+## Pragma System
+
+mp-lint supports **temporary suppression** of certain rules via inline pragmas. **R-400 (Fail-Loud) has NO pragma support** - violations must be fixed immediately.
+
+### allow-degrade (R-200 series)
+
+**Format:**
+```python
+# lint: allow-degrade(reason="...", until="YYYY-MM-DD", ticket="ORG-123")
+```
+
+**Constraints:**
+- `reason`: Required, non-empty string explaining why degradation is needed
+- `until`: Required, ISO date format (YYYY-MM-DD), max 14 days from today
+- `ticket`: Required, ticket reference (e.g., "ORG-123", "MIG-456")
+
+**Example:**
+```python
+# lint: allow-degrade(reason="Migration to v2 API in progress", until="2025-11-07", ticket="API-789")
+# TODO: Complete v2 API migration
+result = await legacy_api.get_data(validate=False)
+```
+
+---
+
+### allow-fallback (R-300 series)
+
+**Format:**
+```python
+# lint: allow-fallback(reason="...", until="YYYY-MM-DD", ticket="ORG-123")
+```
+
+**Constraints:**
+- `reason`: Required, non-empty string explaining why fallback is needed
+- `until`: Required, ISO date format (YYYY-MM-DD), max 7 days from today (shorter than allow-degrade)
+- `ticket`: Required, ticket reference
+
+**Example:**
+```python
+# lint: allow-fallback(reason="Degraded mode during DB migration", until="2025-11-03", ticket="OPS-567")
+try:
+    return await db.query("...")
+except Exception:
+    return []  # Graceful degradation during migration
+```
+
+---
+
+### NO PRAGMA for R-400 (Fail-Loud)
+
+**R-400 violations cannot be suppressed.** The Fail-Loud contract is **non-negotiable** - every exception must either rethrow or emit `failure.emit`.
+
+If you encounter R-400 violations during migration:
+1. **Phase 1:** Temporarily change R-400 severity to `warning` in `.mp-lint.yaml`
+2. **Phase 2:** Fix all violations (add `failure.emit` or rethrow)
+3. **Phase 3:** Restore R-400 severity to `error`
+
+**Timeline:** 3-5 days max for Phase 1/2 before enforcement.
 
 ---
 

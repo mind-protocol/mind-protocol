@@ -1,10 +1,27 @@
 # scripts/backfill_entity_activations.py
-# Usage:  python scripts/backfill_entity_activations.py citizen_luca
+# Usage:  python scripts/backfill_entity_activations.py [graph_name]
 import sys, json
 import redis
+from pathlib import Path
 
-graph = sys.argv[1] if len(sys.argv) > 1 else "citizen_luca"
+# Add orchestration to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from orchestration.adapters.ws.websocket_server import discover_graphs
+
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+# Get graph from args or use first discovered N1 graph
+if len(sys.argv) > 1:
+    graph = sys.argv[1]
+else:
+    graphs_dict = discover_graphs(host='localhost', port=6379)
+    citizen_graphs = graphs_dict.get('n1_graphs', [])
+    if not citizen_graphs:
+        print("No citizen graphs found in FalkorDB")
+        sys.exit(1)
+    graph = citizen_graphs[0]
+    print(f"No graph specified, using first discovered: {graph}")
 
 # 1) Pull MEMBER_OF edges to build activations per node (energy * weight)
 q_links = """

@@ -223,25 +223,56 @@ def rebuild_all_caches(graph_id: str, k: int = 10):
 
 
 if __name__ == "__main__":
+    from orchestration.adapters.ws.websocket_server import discover_graphs
+
     # Parse command line arguments
-    graph_id = "citizen_felix"  # default
     dry_run = False
+    specific_graph = None
 
     for arg in sys.argv[1:]:
         if arg == "--dry-run":
             dry_run = True
         elif not arg.startswith("--"):
-            graph_id = arg
+            specific_graph = arg
 
     try:
-        migrated = migrate_entity_activations_to_edges(graph_id, dry_run=dry_run)
+        # Use discovery service to find all citizen graphs
+        graphs = discover_graphs(host='localhost', port=6379)
+        citizens = graphs.get('n1_graphs', [])
 
-        if dry_run:
-            logger.info(f"\n[DRY RUN] Preview complete. Run without --dry-run to execute migration.")
-            sys.exit(0)
+        # If specific graph provided, migrate only that one
+        if specific_graph:
+            citizens = [specific_graph]
+            logger.info(f"Migrating specific graph: {specific_graph}")
         else:
-            logger.info(f"\n✅ Migration complete: {migrated} subentity activations migrated to edges")
+            logger.info(f"Found {len(citizens)} citizen graphs: {citizens}")
+
+        if not citizens:
+            logger.warning("No citizen graphs found in FalkorDB")
             sys.exit(0)
+
+        total_migrated = 0
+        failed_graphs = []
+
+        for graph_id in citizens:
+            try:
+                migrated = migrate_entity_activations_to_edges(graph_id, dry_run=dry_run)
+                total_migrated += migrated
+            except Exception as e:
+                logger.error(f"Failed to migrate {graph_id}: {e}")
+                failed_graphs.append(graph_id)
+
+        logger.info("")
+        logger.info("=" * 70)
+        if dry_run:
+            logger.info(f"[DRY RUN] Preview complete. Run without --dry-run to execute migration.")
+        else:
+            logger.info(f"✅ Migration complete: {total_migrated} total subentity activations migrated")
+            if failed_graphs:
+                logger.warning(f"⚠️  Failed graphs: {failed_graphs}")
+        logger.info("=" * 70)
+
+        sys.exit(0 if not failed_graphs else 1)
 
     except redis.exceptions.ConnectionError:
         logger.error("Cannot connect to FalkorDB (port 6379). Ensure service is running.")

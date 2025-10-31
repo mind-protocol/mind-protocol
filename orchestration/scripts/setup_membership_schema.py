@@ -122,15 +122,48 @@ def setup_membership_schema(graph_id: str = "citizen_felix") -> int:
 
 
 if __name__ == "__main__":
-    # Allow graph_id override from command line
-    graph_id = sys.argv[1] if len(sys.argv) > 1 else "citizen_felix"
+    # Add orchestration to path for imports
+    import os
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+    from orchestration.adapters.ws.websocket_server import discover_graphs
 
     try:
-        setup_membership_schema(graph_id)
-        sys.exit(0)
+        # Use discovery service to find all citizen graphs
+        graphs = discover_graphs(host='localhost', port=6379)
+        citizens = graphs.get('n1_graphs', [])
+
+        if not citizens:
+            logger.warning("No citizen graphs found in FalkorDB")
+            sys.exit(0)
+
+        logger.info(f"Found {len(citizens)} citizen graphs: {citizens}")
+        logger.info("")
+
+        successful_count = 0
+        failed_count = 0
+
+        for graph_id in citizens:
+            try:
+                setup_membership_schema(graph_id)
+                successful_count += 1
+            except Exception as e:
+                logger.error(f"Failed to setup schema for {graph_id}: {e}")
+                failed_count += 1
+
+        logger.info("")
+        logger.info("=" * 70)
+        logger.info(f"Schema setup complete: {successful_count} succeeded, {failed_count} failed")
+        logger.info("=" * 70)
+
+        sys.exit(0 if failed_count == 0 else 1)
+
     except redis.exceptions.ConnectionError:
         logger.error("Cannot connect to FalkorDB (port 6379). Ensure service is running.")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Schema setup failed: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)

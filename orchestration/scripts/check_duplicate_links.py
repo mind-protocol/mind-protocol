@@ -132,19 +132,22 @@ def remove_duplicate_links(graph_name: str, src: str, dst: str, rel_type: str, h
 
 
 if __name__ == "__main__":
-    # Check all known graphs
-    graphs_to_check = [
-        "citizen_victor",
-        "citizen_felix",
-        "citizen_ada",
-        "citizen_iris",
-        "citizen_luca",
-        "org_mind_protocol"
-    ]
+    import sys
+    from pathlib import Path
+
+    # Add orchestration to path for imports
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+    from orchestration.adapters.ws.websocket_server import discover_graphs
+
+    # Use discovery service to find all graphs
+    graphs_dict = discover_graphs(host='localhost', port=6379)
+    graphs_to_check = graphs_dict.get('n1_graphs', []) + graphs_dict.get('n2_graphs', [])
 
     print("\n" + "="*70)
     print("FALKORDB DUPLICATE LINK CHECKER")
     print("="*70)
+    print(f"Found {len(graphs_to_check)} graphs: {graphs_to_check}\n")
 
     all_duplicates = {}
 

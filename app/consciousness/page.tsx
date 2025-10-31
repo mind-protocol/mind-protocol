@@ -20,15 +20,15 @@ import type {
   GraphOption
 } from './hooks/useGraphData';
 import { WebSocketState } from './hooks/websocket-types';
-import { useGraph } from '@/app/state/graphStore';
-import GraphDebugBadge from '@/app/components/GraphDebugBadge';
+import GraphDebugBadge from './components/GraphDebugBadge';
 import { membraneInject } from '@/app/lib/membrane';
 
-const GraphCanvas = dynamic(() => import('@/app/consciousness/components/PixiCanvas'), { ssr: false });
-const SubEntityGraphView = dynamic(() => import('@/app/consciousness/components/SubEntityGraphView'), { ssr: false });
-const SubEntityClusterOverlay = dynamic(() => import('@/app/consciousness/components/SubEntityClusterOverlay'), { ssr: false });
-const EnergyFlowParticles = dynamic(() => import('@/app/consciousness/components/EnergyFlowParticles'), { ssr: false });
-const ActivationBubbles = dynamic(() => import('@/app/consciousness/components/ActivationBubbles'), { ssr: false });
+const GraphPixi = dynamic(() => import('./components/GraphPixi'), { ssr: false });
+const LintPanel = dynamic(() => import('./components/LintPanel'), { ssr: false });
+const SubEntityGraphView = dynamic(() => import('@/app/consciousness/components/SubEntityGraphView').then(mod => ({ default: mod.SubEntityGraphView })), { ssr: false });
+const SubEntityClusterOverlay = dynamic(() => import('@/app/consciousness/components/SubEntityClusterOverlay').then(mod => ({ default: mod.SubEntityClusterOverlay })), { ssr: false });
+const EnergyFlowParticles = dynamic(() => import('@/app/consciousness/components/EnergyFlowParticles').then(mod => ({ default: mod.EnergyFlowParticles })), { ssr: false });
+const ActivationBubbles = dynamic(() => import('@/app/consciousness/components/ActivationBubbles').then(mod => ({ default: mod.ActivationBubbles })), { ssr: false });
 
 
 const MAX_OPERATIONS = 50;
@@ -52,16 +52,12 @@ export default function ConsciousnessPage() {
     forgedIdentityMetrics,
     connectionState,
     error: wsError,
-    graphNodes,
-    graphLinks,
-    graphSubentities,
     hierarchySnapshot,
     economyOverlays
   } = useWebSocket();
 
   // Membrane-first graph stream: derives currentGraphId from event provenance
   const graphStream = useGraphStream();
-  const { nodes: nodeMap, links: linkMap, version } = useGraph();
 
   const [nodeOverlays, setNodeOverlays] = useState<Record<string, Partial<Node>>>({});
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -76,46 +72,50 @@ export default function ConsciousnessPage() {
   const [lastProcessedThreshold, setLastProcessedThreshold] = useState<number>(-1);
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
-  const nodes = useMemo<Node[]>(() => Array.from(nodeMap.values()), [nodeMap]);
-  const links = useMemo<Link[]>(() => Array.from(linkMap.values()), [linkMap]);
+  const currentGraph = useMemo(() => {
+    if (!currentGraphId) return null;
+    return graphStream.graphs.get(currentGraphId) || null;
+  }, [graphStream.graphs, currentGraphId]);
+
+  const nodes = useMemo<Node[]>(() => {
+    if (!currentGraph) return [];
+    return Object.values(currentGraph.nodes).map(node => ({
+      id: node.id,
+      node_id: node.id,
+      name: node.name,
+      type: node.type,
+      // Add other properties as needed, potentially from nodeOverlays
+    }));
+  }, [currentGraph]);
+
+  const links = useMemo<Link[]>(() => {
+    if (!currentGraph) return [];
+    return Object.values(currentGraph.links).map(link => ({
+      id: link.id,
+      source: link.source,
+      target: link.target,
+      type: link.type,
+      weight: link.weight,
+      properties: link.properties,
+    }));
+  }, [currentGraph]);
 
   const subentities = useMemo<Subentity[]>(() => {
-    // PRIORITY: Use graphStream (membrane events) for emergence data
-    const currentGraph = graphStream.currentGraphId
-      ? graphStream.graphs.get(graphStream.currentGraphId)
-      : null;
-
-    if (currentGraph && Object.keys(currentGraph.subentities).length > 0) {
-      // Use membrane event stream data (has emerged SubEntities)
-      return Object.values(currentGraph.subentities).map((sub) => ({
-        subentity_id: sub.id,
-        name: sub.name ?? sub.slug ?? sub.id,
-        kind: 'SubEntity',
-        energy: 0,
-        threshold: 0,
-        activation_level: sub.active ? '1.0' : '0.0', // PATCH 3 FIX: Convert to string to match interface
-        member_count: sub.members.size,
-        members: Array.from(sub.members), // Convert Set to Array for SubEntityGraphView
-        quality: 0,
-        stability: '0', // PATCH 3 FIX: Convert to string to match interface
-        properties: {}
-      }));
-    }
-
-    // FALLBACK: Use legacy graphSubentities if membrane stream has no data yet
-    return graphSubentities.map((sub) => ({
+    if (!currentGraph) return [];
+    return Object.values(currentGraph.subentities).map((sub) => ({
       subentity_id: sub.id,
-      name: sub.name ?? sub.id,
-      kind: sub.kind,
-      energy: sub.energy,
-      threshold: sub.threshold,
-      activation_level: sub.activation_level,
-      member_count: sub.member_count,
-      quality: sub.quality,
-      stability: sub.stability,
-      properties: sub.properties
+      name: sub.name ?? sub.slug ?? sub.id,
+      kind: 'SubEntity',
+      energy: 0,
+      threshold: 0,
+      activation_level: sub.active ? '1.0' : '0.0',
+      member_count: sub.members.size,
+      members: Array.from(sub.members),
+      quality: 0,
+      stability: '0',
+      properties: {}
     }));
-  }, [graphStream.graphs, graphStream.currentGraphId, graphSubentities]);
+  }, [currentGraph]);
 
   const strideEvents = emotionState.recentStrides;
 
@@ -273,12 +273,7 @@ export default function ConsciousnessPage() {
 
       if (!sourceNode || !targetNode) return;
 
-      const sourceEntities = sourceNode.entity_activations ? Object.keys(sourceNode.entity_activations) : [];
-      const targetEntities = targetNode.entity_activations ? Object.keys(targetNode.entity_activations) : [];
-
-      if (sourceEntities.length === 0 || targetEntities.length === 0) return;
-
-      updateEntityToEntityFlow(sourceEntities[0], targetEntities[0], flowCount);
+      updateEntityToEntityFlow(sourceNode.id, targetNode.id, flowCount);
     });
   }, [v2State.linkFlows, links, nodes, updateEntityToEntityFlow]);
 
@@ -381,16 +376,7 @@ export default function ConsciousnessPage() {
         subentityFlows={entityToEntity}
       />
 
-      <GraphCanvas
-        nodes={nodes}
-        links={links}
-        operations={operations}
-        subentities={subentities}
-        workingMemory={v2State.workingMemory}
-        linkFlows={v2State.linkFlows}
-        recentFlips={v2State.recentFlips}
-        key={version}
-      />
+      <GraphPixi />
 
       <SubEntityClusterOverlay
         nodes={nodes}
@@ -416,6 +402,7 @@ export default function ConsciousnessPage() {
         />
       )}
       <GraphDebugBadge />
+      <LintPanel />
     </div>
   );
 }

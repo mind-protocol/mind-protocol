@@ -75,7 +75,7 @@ services:
       UBC_CRON_OFFSET_SECONDS: "${UBC_CRON_OFFSET_SECONDS}"
     requires: ["falkordb"]
     readiness:
-      http_get: { url: "http://127.0.0.1:${WS_PORT}/healthz?selftest=1", timeout_s: 10 }
+      http_get: { url: "http://127.0.0.1:${WS_PORT}/healthz?selftest=1", timeout_s: 15 }
     # TEMPORARY: Liveness check disabled due to WebSocket connection bug causing crash loops
     # TODO: Re-enable after fixing WebSocket ".accept()" bug in control_api.py
     # liveness:

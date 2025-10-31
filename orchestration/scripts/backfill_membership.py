@@ -34,11 +34,13 @@ logger = logging.getLogger(__name__)
 
 
 def get_all_citizen_graphs(r: redis.Redis) -> List[str]:
-    """Get list of all citizen consciousness graphs."""
+    """Get list of all citizen consciousness graphs using discovery service."""
     try:
-        graphs = r.execute_command("GRAPH.LIST")
-        # Filter for citizen graphs only
-        citizen_graphs = [g for g in graphs if g.startswith('citizen_')]
+        from orchestration.adapters.ws.websocket_server import discover_graphs
+
+        # Use discovery service to find N1 (citizen) graphs
+        graphs_dict = discover_graphs(host='localhost', port=6379)
+        citizen_graphs = graphs_dict.get('n1_graphs', [])
         return citizen_graphs
     except Exception as e:
         logger.error(f"Failed to list graphs: {e}")
@@ -85,14 +87,14 @@ def get_default_subentity_id(graph_name: str) -> str:
     Defaults to 'translator' as the most common consciousness work entity.
 
     Args:
-        graph_name: e.g., 'citizen_felix'
+        graph_name: e.g., 'consciousness-infrastructure_mind-protocol_felix'
 
     Returns:
-        Full entity ID: 'subentity_citizen_felix_translator'
+        Full entity ID: 'SubEntity:translator'
     """
-    # Extract citizen name from graph_name
-    citizen_id = graph_name.replace('citizen_', '')
-    return f'subentity_citizen_{citizen_id}_translator'
+    # The SubEntity ID format is 'SubEntity:{name}' not tied to citizen
+    # We default to 'translator' as the most common entity
+    return 'SubEntity:translator'
 
 
 def assign_membership(

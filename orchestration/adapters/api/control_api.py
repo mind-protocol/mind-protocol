@@ -53,6 +53,7 @@ from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 from orchestration.services.economy.runtime import get_runtime as get_economy_runtime
 from orchestration.libs.stimuli import emit_ui_action
 from orchestration.schemas.membrane_envelopes import Scope, StimulusFeatures
+from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
 
 try:  # Wallet custody service is optional until configured
     from orchestration.services.wallet_custody.config import WalletCustodySettings
@@ -159,6 +160,10 @@ class WebSocketManager:
     @property
     def active_connections(self) -> List[WebSocket]:
         return [meta["ws"] for meta in self._connections.values()]
+
+    def client_count(self) -> int:
+        """Returns the number of active WebSocket connections."""
+        return len(self._connections)
 
     def iter(self) -> List[tuple[str, Dict[str, Any]]]:
         return list(self._connections.items())
@@ -2725,15 +2730,30 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close(code=1008, reason="Unauthorized origin")
         return
 
-    # Check connection limit AFTER accepting (so we can close properly if at capacity)
+    # EMERGENCY KILL SWITCH - Check connection limit and memory usage
+    import psutil
+
     current_connections = len(websocket_manager._connections)
+    memory_percent = psutil.virtual_memory().percent
+
+    MAX_MEMORY_PERCENT = 85  # Kill switch threshold
+
     if current_connections >= MAX_WEBSOCKET_CONNECTIONS:
         logger.warning(
-            "[WebSocket] Connection limit reached (%d/%d), rejecting new connection",
+            "[KILL SWITCH] Connection limit reached (%d/%d), rejecting new connection",
             current_connections,
             MAX_WEBSOCKET_CONNECTIONS
         )
-        await websocket.close(code=1008, reason="Server at capacity")
+        await websocket.close(code=1013, reason="Server at capacity")
+        return
+
+    if memory_percent > MAX_MEMORY_PERCENT:
+        logger.warning(
+            "[KILL SWITCH] Memory overload (%.1f%% > %d%%), rejecting new connection",
+            memory_percent,
+            MAX_MEMORY_PERCENT
+        )
+        await websocket.close(code=1013, reason="Server overloaded")
         return
 
     conn_id = uuid4().hex
@@ -2790,30 +2810,64 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket_manager.register_connection(conn_id, websocket, topics, cursor)
     websocket_manager.touch(websocket)
 
-    # Optional snapshot hydration (noop if snapshot generator yields nothing)
-    try:
-        for chunk in iter_snapshot_chunks(cursor=cursor, citizen_id=citizen_seed):
-            envelope = {
-                "type": "snapshot.chunk@1.0",
-                "id": f"snap_{conn_id}_{chunk.get('idx', 0)}",
+    # Replay snapshot from cache for all citizens
+    from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+    cache = get_snapshot_cache()
+    all_citizen_ids = cache.get_all_citizen_ids()
+    logger.info(f"[WebSocket] Replaying snapshots for {len(all_citizen_ids)} citizens on new connection {conn_id}")
+
+    for cid in all_citizen_ids:
+        try:
+            snapshot = cache.build_snapshot(cid)
+            if not snapshot.get("nodes") and not snapshot.get("links"):
+                logger.info(f"[WebSocket] Skipping empty snapshot for citizen {cid}")
+                continue
+
+            # Send snapshot.begin
+            await websocket.send_json({
+                "type": "snapshot.begin@1.0",
+                "id": f"snap_begin_{conn_id}_{cid}",
                 "ts": datetime.now(timezone.utc).isoformat(),
-                "provenance": {
-                    "scope": "personal",
-                    "citizen_id": citizen_seed
-                },
+                "provenance": {"scope": "personal", "citizen_id": cid},
                 "payload": {
-                    "nodes": chunk.get("nodes", []),
-                    "links": chunk.get("links", []),
-                    "subentities": chunk.get("subentities", []),
-                    "cursor": chunk.get("cursor"),
-                    "eof": chunk.get("eof", True)
+                    "citizen_id": cid,
+                    "node_count": len(snapshot.get("nodes", [])),
+                    "link_count": len(snapshot.get("links", [])),
                 }
-            }
-            await websocket.send_json(envelope)
-            if chunk.get("eof", True):
-                break
-    except Exception as exc:
-        logger.debug("[WebSocket] Snapshot hydration skipped: %s", exc)
+            })
+
+            # Send chunks
+            for chunk in iter_snapshot_chunks(cursor=cursor, citizen_id=cid):
+                envelope = {
+                    "type": "snapshot.chunk@1.0",
+                    "id": f"snap_chunk_{conn_id}_{cid}_{chunk.get('idx', 0)}",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "provenance": {"scope": "personal", "citizen_id": cid},
+                    "payload": {
+                        "citizen_id": cid,
+                        "nodes": chunk.get("nodes", []),
+                        "links": chunk.get("links", []),
+                        "subentities": chunk.get("subentities", []),
+                        "cursor": chunk.get("cursor"),
+                        "eof": chunk.get("eof", True)
+                    }
+                }
+                await websocket.send_json(envelope)
+                if chunk.get("eof", True):
+                    break
+            
+            # Send snapshot.end
+            await websocket.send_json({
+                "type": "snapshot.end@1.0",
+                "id": f"snap_end_{conn_id}_{cid}",
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "provenance": {"scope": "personal", "citizen_id": cid},
+                "payload": {"citizen_id": cid}
+            })
+            logger.info(f"[WebSocket] Finished replaying snapshot for citizen {cid}")
+
+        except Exception as exc:
+            logger.error(f"[WebSocket] Error replaying snapshot for citizen {cid}: {exc}")
 
     try:
         # Process any queued messages that arrived during handshake (rare)

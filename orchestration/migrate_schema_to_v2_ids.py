@@ -177,22 +177,28 @@ def migrate_citizen_graph(graph_id: str):
 
 
 def main():
-    """Migrate all 7 citizen graphs."""
+    """Migrate all citizen graphs using discovery service."""
 
-    citizens = [
-        'citizen_ada',
-        'citizen_atlas',
-        'citizen_felix',
-        'citizen_iris',
-        'citizen_luca',
-        'citizen_nicolas',
-        'citizen_victor'
-    ]
+    # Add orchestration to path for imports
+    import os
+    sys.path.insert(0, str(Path(__file__).parent))
+
+    from orchestration.adapters.ws.websocket_server import discover_graphs
+
+    # Use discovery service to find all citizen graphs
+    graphs = discover_graphs(host='localhost', port=6379)
+    citizens = graphs.get('n1_graphs', [])
 
     print("=" * 60)
     print("Schema Migration: V1 → V2 (Proper ID Fields)")
     print("=" * 60)
-    print(f"\nMigrating {len(citizens)} citizen graphs...")
+
+    if not citizens:
+        print("\n⚠️  No citizen graphs found in FalkorDB")
+        return True
+
+    print(f"\nFound {len(citizens)} citizen graphs: {citizens}")
+    print(f"Migrating {len(citizens)} citizen graphs...\n")
 
     results = {}
 

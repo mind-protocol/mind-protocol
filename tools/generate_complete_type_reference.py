@@ -109,7 +109,7 @@ def get_node_type_schemas(r):
     """Query all node type schemas from schema_registry."""
     result = r.execute_command('GRAPH.QUERY', 'schema_registry',
         '''MATCH (nt:NodeTypeSchema)
-           RETURN nt.type_name, nt.level, nt.category, nt.description
+           RETURN nt.type_name, nt.universality, nt.description
            ORDER BY nt.type_name'''
     )
 
@@ -118,9 +118,8 @@ def get_node_type_schemas(r):
         type_name = row[0]
         schemas[type_name] = {
             'type_name': type_name,
-            'level': row[1] if len(row) > 1 else 'unknown',
-            'category': row[2] if len(row) > 2 else 'N/A',
-            'description': row[3] if len(row) > 3 else 'No description',
+            'universality': row[1] if len(row) > 1 else 'unknown',
+            'description': row[2] if len(row) > 2 else 'No description',
             'required_fields': [],
             'optional_fields': []
         }
@@ -167,7 +166,7 @@ def get_link_type_schemas(r):
     """Query all link type schemas from schema_registry."""
     result = r.execute_command('GRAPH.QUERY', 'schema_registry',
         '''MATCH (lt:LinkTypeSchema)
-           RETURN lt.type_name, lt.level, lt.category, lt.description
+           RETURN lt.type_name, lt.universality, lt.description
            ORDER BY lt.type_name'''
     )
 
@@ -176,9 +175,8 @@ def get_link_type_schemas(r):
         type_name = row[0]
         schemas[type_name] = {
             'type_name': type_name,
-            'level': row[1] if len(row) > 1 else 'unknown',
-            'category': row[2] if len(row) > 2 else 'N/A',
-            'description': row[3] if len(row) > 3 else 'No description',
+            'universality': row[1] if len(row) > 1 else 'unknown',
+            'description': row[2] if len(row) > 2 else 'No description',
             'required_fields': [],
             'optional_fields': []
         }
@@ -332,18 +330,16 @@ Every link in the consciousness graph has these base attributes in addition to i
 
 """
 
-    # Group node types by level
-    n1_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n1'}
-    n2_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n2'}
-    n3_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'n3'}
-    l4_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'l4'}
-    shared_nodes = {k: v for k, v in node_schemas.items() if v['level'] == 'shared'}
+    # Group node types by universality (U3_, U4_, L4_)
+    u3_nodes = {k: v for k, v in node_schemas.items() if v.get('universality', '').startswith('U3')}
+    u4_nodes = {k: v for k, v in node_schemas.items() if v.get('universality', '').startswith('U4')}
+    l4_nodes = {k: v for k, v in node_schemas.items() if v.get('universality', '').startswith('L4')}
 
-    if n1_nodes:
-        md += f"### Level 1 (Personal) - {len(n1_nodes)} Types\n\n"
-        for type_name, schema in sorted(n1_nodes.items()):
+    if u3_nodes:
+        md += f"### U3_ Types (Universal L1-L3) - {len(u3_nodes)} Types\n\n"
+        for type_name, schema in sorted(u3_nodes.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:
@@ -358,49 +354,11 @@ Every link in the consciousness graph has these base attributes in addition to i
 
             md += "\n"
 
-    if n2_nodes:
-        md += f"### Level 2 (Organizational) - {len(n2_nodes)} Types\n\n"
-        for type_name, schema in sorted(n2_nodes.items()):
+    if u4_nodes:
+        md += f"### U4_ Types (Universal L1-L4) - {len(u4_nodes)} Types\n\n"
+        for type_name, schema in sorted(u4_nodes.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
-            md += f"- **Description:** {schema['description']}\n"
-
-            if schema['required_fields']:
-                md += "\n**Type-Specific Required Fields:**\n"
-                for field in schema['required_fields']:
-                    md += render_field(field)
-
-            if schema['optional_fields']:
-                md += "\n**Type-Specific Optional Fields:**\n"
-                for field in schema['optional_fields']:
-                    md += render_field(field)
-
-            md += "\n"
-
-    if shared_nodes:
-        md += f"### Shared (Knowledge) - {len(shared_nodes)} Types\n\n"
-        for type_name, schema in sorted(shared_nodes.items()):
-            md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
-            md += f"- **Description:** {schema['description']}\n"
-
-            if schema['required_fields']:
-                md += "\n**Type-Specific Required Fields:**\n"
-                for field in schema['required_fields']:
-                    md += render_field(field)
-
-            if schema['optional_fields']:
-                md += "\n**Type-Specific Optional Fields:**\n"
-                for field in schema['optional_fields']:
-                    md += render_field(field)
-
-            md += "\n"
-
-    if n3_nodes:
-        md += f"### Level 3 (Ecosystem) - {len(n3_nodes)} Types\n\n"
-        for type_name, schema in sorted(n3_nodes.items()):
-            md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:
@@ -416,10 +374,10 @@ Every link in the consciousness graph has these base attributes in addition to i
             md += "\n"
 
     if l4_nodes:
-        md += f"### Level 4 (Protocol) - {len(l4_nodes)} Types\n\n"
+        md += f"### L4_ Types (Protocol Law) - {len(l4_nodes)} Types\n\n"
         for type_name, schema in sorted(l4_nodes.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:
@@ -442,18 +400,16 @@ Every link in the consciousness graph has these base attributes in addition to i
 
 """
 
-    # Group link types by level
-    shared_links = {k: v for k, v in link_schemas.items() if v['level'] == 'shared'}
-    n1_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n1'}
-    n2_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n2'}
-    n3_links = {k: v for k, v in link_schemas.items() if v['level'] == 'n3'}
-    l4_links = {k: v for k, v in link_schemas.items() if v['level'] == 'l4'}
+    # Group link types by universality
+    u3_links = {k: v for k, v in link_schemas.items() if v.get('universality', '').startswith('U3')}
+    u4_links = {k: v for k, v in link_schemas.items() if v.get('universality', '').startswith('U4')}
+    l4_links = {k: v for k, v in link_schemas.items() if v.get('universality', '').startswith('L4')}
 
-    if shared_links:
-        md += f"### Shared Link Types - {len(shared_links)} Types\n\n"
-        for type_name, schema in sorted(shared_links.items()):
+    if u3_links:
+        md += f"### U3_ Link Types (Universal L1-L3) - {len(u3_links)} Types\n\n"
+        for type_name, schema in sorted(u3_links.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:
@@ -468,49 +424,11 @@ Every link in the consciousness graph has these base attributes in addition to i
 
             md += "\n"
 
-    if n1_links:
-        md += f"### Level 1 (Personal) Link Types - {len(n1_links)} Types\n\n"
-        for type_name, schema in sorted(n1_links.items()):
+    if u4_links:
+        md += f"### U4_ Link Types (Universal L1-L4) - {len(u4_links)} Types\n\n"
+        for type_name, schema in sorted(u4_links.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
-            md += f"- **Description:** {schema['description']}\n"
-
-            if schema['required_fields']:
-                md += "\n**Type-Specific Required Fields:**\n"
-                for field in schema['required_fields']:
-                    md += render_field(field)
-
-            if schema['optional_fields']:
-                md += "\n**Type-Specific Optional Fields:**\n"
-                for field in schema['optional_fields']:
-                    md += render_field(field)
-
-            md += "\n"
-
-    if n2_links:
-        md += f"### Level 2 (Organizational) Link Types - {len(n2_links)} Types\n\n"
-        for type_name, schema in sorted(n2_links.items()):
-            md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
-            md += f"- **Description:** {schema['description']}\n"
-
-            if schema['required_fields']:
-                md += "\n**Type-Specific Required Fields:**\n"
-                for field in schema['required_fields']:
-                    md += render_field(field)
-
-            if schema['optional_fields']:
-                md += "\n**Type-Specific Optional Fields:**\n"
-                for field in schema['optional_fields']:
-                    md += render_field(field)
-
-            md += "\n"
-
-    if n3_links:
-        md += f"### Level 3 (Ecosystem) Link Types - {len(n3_links)} Types\n\n"
-        for type_name, schema in sorted(n3_links.items()):
-            md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:
@@ -526,10 +444,10 @@ Every link in the consciousness graph has these base attributes in addition to i
             md += "\n"
 
     if l4_links:
-        md += f"### Level 4 (Protocol) Link Types - {len(l4_links)} Types\n\n"
+        md += f"### L4_ Link Types (Protocol Law) - {len(l4_links)} Types\n\n"
         for type_name, schema in sorted(l4_links.items()):
             md += f"**{type_name}**\n\n"
-            md += f"- **Category:** {schema['category']}\n"
+            md += f"- **Universality:** {schema.get('universality', 'N/A')}\n"
             md += f"- **Description:** {schema['description']}\n"
 
             if schema['required_fields']:

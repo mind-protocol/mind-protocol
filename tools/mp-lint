@@ -31,7 +31,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tools.mp_lint.scanner_py import scan_directory, scan_file
-from tools.mp_lint.rules import RulesEngine
+from tools.mp_lint.scanner_hardcoded import scan_directory_for_hardcoded, scan_file_for_hardcoded
+from tools.mp_lint.scanner_quality import scan_directory_for_quality, scan_file_for_quality
+from tools.mp_lint.scanner_fallback import scan_directory_for_fallback, scan_file_for_fallback
+from tools.mp_lint.rules import (
+    RulesEngine,
+    convert_hardcoded_violation,
+    convert_quality_violation,
+    convert_fallback_violation
+)
 from tools.mp_lint.report import ReportGenerator
 
 
@@ -46,10 +54,31 @@ Examples:
   mp-lint --format json orchestration/          # JSON output
   mp-lint --summary orchestration/              # Brief summary
 
-Rules:
+Rules (L4 Protocol):
   R-001: SCHEMA_EXISTS_ACTIVE - Event schema must exist in L4 registry
   R-002: TOPIC_MAPPED - Event schema must have topic mapping
   R-005: SEA_ATTESTATION - High-stakes events require attestation
+
+Rules (Hardcoded Values, use --check-hardcoded):
+  R-100: MAGIC_NUMBER - Magic numbers should be named constants
+  R-101: HARDCODED_STRING - URLs/IDs/secrets should be in settings
+  R-102: CITIZEN_ARRAY - Citizen arrays should use graph queries
+
+Rules (Quality Degradation, use --check-quality):
+  R-200: TODO_OR_HACK - TODO/HACK/FIXME in code logic
+  R-201: QUALITY_DEGRADE - Disabled validation/timeouts/retries
+  R-202: OBSERVABILITY_CUT - print() instead of logger
+
+Rules (Fallback Antipatterns, use --check-fallback):
+  R-300: BARE_EXCEPT_PASS - Silent except with pass
+  R-301: SILENT_DEFAULT_RETURN - Except returns default value
+  R-302: FAKE_AVAILABILITY - is_available() without checks
+  R-303: INFINITE_LOOP_NO_SLEEP - while True without sleep
+
+Pragmas:
+  # lint: allow-hardcoded(reason="...")
+  # lint: allow-degrade(reason="...")
+  # lint: allow-fallback(reason="...")
         """
     )
 
@@ -78,6 +107,36 @@ Rules:
         help="Patterns to exclude (e.g., **/test_*.py)"
     )
 
+    parser.add_argument(
+        "--check-hardcoded",
+        action="store_true",
+        help="Enable hardcoded value detection (R-100 series rules)"
+    )
+
+    parser.add_argument(
+        "--check-quality",
+        action="store_true",
+        help="Enable quality degradation detection (R-200 series rules)"
+    )
+
+    parser.add_argument(
+        "--check-fallback",
+        action="store_true",
+        help="Enable fallback antipattern detection (R-300 series rules)"
+    )
+
+    parser.add_argument(
+        "--check-all",
+        action="store_true",
+        help="Enable all checks (L4 + hardcoded + quality + fallback)"
+    )
+
+    parser.add_argument(
+        "--l4-only",
+        action="store_true",
+        help="Only check L4 protocol compliance (skip other checks)"
+    )
+
     args = parser.parse_args()
 
     # Initialize rules engine
@@ -100,42 +159,148 @@ Rules:
         print(f"Error: Failed to initialize rules engine: {exc}")
         return 2
 
-    # Scan for event emissions
+    # Determine which checks to run
+    if args.check_all:
+        check_l4 = True
+        check_hardcoded = True
+        check_quality = True
+        check_fallback = True
+    elif args.l4_only:
+        check_l4 = True
+        check_hardcoded = False
+        check_quality = False
+        check_fallback = False
+    else:
+        check_l4 = not (args.check_hardcoded or args.check_quality or args.check_fallback)  # Default: check L4
+        check_hardcoded = args.check_hardcoded
+        check_quality = args.check_quality
+        check_fallback = args.check_fallback
+
+    # Scan for event emissions (L4 checks)
     all_emissions = []
-
-    for path_str in args.paths:
-        path = Path(path_str)
-
-        if not path.exists():
-            print(f"Warning: Path not found: {path}")
-            continue
-
-        if path.is_file():
-            # Scan single file
-            emissions = scan_file(path)
-            all_emissions.extend(emissions)
-        elif path.is_dir():
-            # Scan directory
-            emissions = scan_directory(path, exclude_patterns=args.exclude)
-            all_emissions.extend(emissions)
-        else:
-            print(f"Warning: Not a file or directory: {path}")
-
-    if args.format != "json":
-        print(f"[Scan] Found {len(all_emissions)} event emissions")
-        print()
-
-    # Validate emissions against rules
     all_violations = []
 
-    for emission in all_emissions:
-        violations = rules.validate_event(
-            event_type=emission.event_type,
-            file_path=emission.file_path,
-            line_number=emission.line_number,
-            context=emission.code_snippet
-        )
-        all_violations.extend(violations)
+    if check_l4:
+        for path_str in args.paths:
+            path = Path(path_str)
+
+            if not path.exists():
+                print(f"Warning: Path not found: {path}")
+                continue
+
+            if path.is_file():
+                # Scan single file
+                emissions = scan_file(path)
+                all_emissions.extend(emissions)
+            elif path.is_dir():
+                # Scan directory
+                emissions = scan_directory(path, exclude_patterns=args.exclude)
+                all_emissions.extend(emissions)
+            else:
+                print(f"Warning: Not a file or directory: {path}")
+
+        if args.format != "json":
+            print(f"[Scan] Found {len(all_emissions)} event emissions")
+
+        # Validate emissions against rules
+        for emission in all_emissions:
+            violations = rules.validate_event(
+                event_type=emission.event_type,
+                file_path=emission.file_path,
+                line_number=emission.line_number,
+                context=emission.code_snippet
+            )
+            all_violations.extend(violations)
+
+    # Scan for hardcoded values (R-100 series)
+    if check_hardcoded:
+        if args.format != "json":
+            print(f"[Scan] Checking for hardcoded values...")
+
+        hardcoded_violations = []
+
+        for path_str in args.paths:
+            path = Path(path_str)
+
+            if not path.exists():
+                continue
+
+            if path.is_file():
+                # Scan single file
+                hv = scan_file_for_hardcoded(path)
+                hardcoded_violations.extend(hv)
+            elif path.is_dir():
+                # Scan directory
+                hv = scan_directory_for_hardcoded(path, exclude_patterns=args.exclude)
+                hardcoded_violations.extend(hv)
+
+        if args.format != "json":
+            print(f"[Scan] Found {len(hardcoded_violations)} hardcoded value violations")
+
+        # Convert to standard Violation format
+        for hv in hardcoded_violations:
+            all_violations.append(convert_hardcoded_violation(hv))
+
+    # Scan for quality degradation (R-200 series)
+    if check_quality:
+        if args.format != "json":
+            print(f"[Scan] Checking for quality degradation...")
+
+        quality_violations = []
+
+        for path_str in args.paths:
+            path = Path(path_str)
+
+            if not path.exists():
+                continue
+
+            if path.is_file():
+                # Scan single file
+                qv = scan_file_for_quality(path)
+                quality_violations.extend(qv)
+            elif path.is_dir():
+                # Scan directory
+                qv = scan_directory_for_quality(path, exclude_patterns=args.exclude)
+                quality_violations.extend(qv)
+
+        if args.format != "json":
+            print(f"[Scan] Found {len(quality_violations)} quality degradation violations")
+
+        # Convert to standard Violation format
+        for qv in quality_violations:
+            all_violations.append(convert_quality_violation(qv))
+
+    # Scan for fallback antipatterns (R-300 series)
+    if check_fallback:
+        if args.format != "json":
+            print(f"[Scan] Checking for fallback antipatterns...")
+
+        fallback_violations = []
+
+        for path_str in args.paths:
+            path = Path(path_str)
+
+            if not path.exists():
+                continue
+
+            if path.is_file():
+                # Scan single file
+                fv = scan_file_for_fallback(path)
+                fallback_violations.extend(fv)
+            elif path.is_dir():
+                # Scan directory
+                fv = scan_directory_for_fallback(path, exclude_patterns=args.exclude)
+                fallback_violations.extend(fv)
+
+        if args.format != "json":
+            print(f"[Scan] Found {len(fallback_violations)} fallback antipattern violations")
+
+        # Convert to standard Violation format
+        for fv in fallback_violations:
+            all_violations.append(convert_fallback_violation(fv))
+
+    if args.format != "json":
+        print()
 
     # Generate report
     report_gen = ReportGenerator(all_violations)

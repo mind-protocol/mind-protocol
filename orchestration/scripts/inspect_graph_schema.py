@@ -87,5 +87,25 @@ def inspect_graph_schema(graph_name: str, host: str = "localhost", port: int = 6
 
 
 if __name__ == "__main__":
-    # Inspect one graph in detail
-    inspect_graph_schema("citizen_victor")
+    import sys
+    from pathlib import Path
+
+    # Add orchestration to path for imports
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+    from orchestration.adapters.ws.websocket_server import discover_graphs
+
+    # Get graph from args or use first discovered N1 graph
+    if len(sys.argv) > 1:
+        graph = sys.argv[1]
+    else:
+        graphs_dict = discover_graphs(host='localhost', port=6379)
+        citizen_graphs = graphs_dict.get('n1_graphs', [])
+        if not citizen_graphs:
+            print("No citizen graphs found in FalkorDB")
+            sys.exit(1)
+        graph = citizen_graphs[0]
+        print(f"No graph specified, using first discovered: {graph}\n")
+
+    # Inspect the selected graph
+    inspect_graph_schema(graph)

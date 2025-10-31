@@ -116,6 +116,34 @@ class SafeBroadcaster:
             ...     "availability": "active"
             ... })
         """
+        # Update snapshot cache for graph deltas
+        if event_type == "graph.delta.node.upsert":
+            try:
+                from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+                cache = get_snapshot_cache()
+                citizen_id = data.get("citizen_id", self.citizen_id)
+                node_data_for_cache = {
+                    "id": data.get("node_id"),
+                    "type": data.get("node_type"),
+                    "name": data.get("properties", {}).get("role_or_topic"), # Best effort for name
+                    "properties": data.get("properties", {})
+                }
+                if node_data_for_cache["id"]:
+                    cache.upsert_node(citizen_id, node_data_for_cache)
+            except Exception as e:
+                logger.error(f"[SafeBroadcaster] Failed to cache node upsert: {e}")
+
+        elif event_type == "graph.delta.link.upsert":
+            try:
+                from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+                cache = get_snapshot_cache()
+                citizen_id = data.get("citizen_id", self.citizen_id)
+                link_data_for_cache = data.copy()
+                if link_data_for_cache.get("source") and link_data_for_cache.get("target"):
+                    cache.upsert_link(citizen_id, link_data_for_cache)
+            except Exception as e:
+                logger.error(f"[SafeBroadcaster] Failed to cache link upsert: {e}")
+
         # STEP 1: Schema validation (mp-lint R-001, R-002)
         if self.schema_validation_enabled:
             validation = self.schema_registry.validate_event_basic(event_type)

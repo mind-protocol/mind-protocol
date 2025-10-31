@@ -73,10 +73,10 @@ def fetch_event_schemas(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (es:ProtocolNode)
-    WHERE es.type_name = 'Event_Schema'
-    OPTIONAL MATCH (es)-[:MAPS_TO_TOPIC]->(ns:ProtocolNode)
+    WHERE es.type_name IN ['Event_Schema', 'L4_Event_Schema']
+    OPTIONAL MATCH (es)-[:MAPS_TO_TOPIC|U4_MAPS_TO_TOPIC]->(ns:ProtocolNode)
     OPTIONAL MATCH (es)-[:REQUIRES_ENVELOPE]->(env:ProtocolNode)
-    OPTIONAL MATCH (es)-[:REQUIRES_SIG]->(sig:ProtocolNode)
+    OPTIONAL MATCH (es)-[:REQUIRES_SIG|U4_REQUIRES_SIG]->(sig:ProtocolNode)
     RETURN
         es.id as id,
         es.name as name,

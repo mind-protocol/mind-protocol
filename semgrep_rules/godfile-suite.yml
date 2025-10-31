@@ -1,0 +1,69 @@
+# Semgrep Rulepack — "GODFILE-1.0"
+# Focus: God-File traits, adapter leaks, long methods, mega-params, utils grab-bags
+# All rules emit JSON the tool agent forwards as StimulusEnvelope (org scope).
+
+rules:
+  # --- A. Monolithic files & engines (path heuristics, adapter leaks) ---
+  - id: godfile.engine.monolith
+    languages: [python]
+    severity: WARNING
+    message: "God-File candidate: engine/mechanism file likely too large / too many responsibilities."
+    metadata: { suite: GODFILE-1.0, case: A1 }
+    paths:
+      include:
+        - "**/orchestration/mechanisms/**.py"
+    pattern-regex: '(?s).*'
+    # Rationale: we rely on radon for LOC/complexity; this flags target folders for triage.
+
+  - id: godfile.adapter.leak.into.domain
+    languages: [python]
+    severity: ERROR
+    message: "Adapter leak: storage/transport used in domain/service layer. Route via ports."
+    metadata: { suite: GODFILE-1.0, case: A2 }
+    pattern-not-regex: '(?s)^\\s*#\\s*layer:adapter'
+    patterns:
+      - pattern-either:
+          - pattern: "from orchestration.libs.utils.falkordb_adapter import $X"
+          - pattern: "import orchestration.libs.utils.falkordb_adapter as $X"
+          - pattern: "from orchestration.adapters.api.control_api import $X"
+    paths:
+      exclude:
+        - "**/adapters/**"
+        - "**/ports/**"
+        - "**/repositories/**"
+
+  # --- B. Long methods (cognitive hotspots) ---
+  - id: godfile.long-method
+    languages: [python]
+    severity: WARNING
+    message: "Long method: consider extracting steps; push I/O to ports."
+    metadata: { suite: GODFILE-1.0, case: B1 }
+    pattern-regex: '(?s)def\s+[A-Za-z_][A-Za-z0-9_]*\(.*\):\n(?:\s{4}.*\n){60,}'
+
+  # --- C. Mega-parameter functions (unstable API surfaces) ---
+  - id: godfile.mega-params
+    languages: [python]
+    severity: WARNING
+    message: "Function with >10 parameters; split object or introduce DTO."
+    metadata: { suite: GODFILE-1.0, case: C1 }
+    pattern-regex: 'def\s+[A-Za-z_][A-Za-z0-9_]*\([^)]*(,[^)]*){10,}\):'
+
+  # --- D. Utils grab-bag (code smell) ---
+  - id: godfile.utils-grabbag
+    languages: [python]
+    severity: INFO
+    message: "Likely 'grab-bag' utils module. Consider splitting by capability."
+    metadata: { suite: GODFILE-1.0, case: D1 }
+    paths:
+      include:
+        - "**/libs/utils/**.py"
+        - "**/utils/**.py"
+    pattern-regex: '(?s).*'
+
+  # --- E. Wildcard imports (fragile coupling) ---
+  - id: godfile.wildcard-import
+    languages: [python]
+    severity: WARNING
+    message: "Wildcard import; harms readability & static analysis. Replace with explicit symbols."
+    metadata: { suite: GODFILE-1.0, case: E1 }
+    pattern: "from $PKG import *"

@@ -14,73 +14,12 @@
    33748 .claude/output-styles/citizen_consciousness_stream.md
     1632 .claude/settings.json
      211 .codexignore
-  122880 .doc_ingestion_state.db
      222 .gemini/settings.json
    12723 .github/PR_CHECKLIST.md
     5983 .github/PULL_REQUEST_TEMPLATE.md
      604 .github/scripts/lint_u4_naming.sh
-     968 .gitignore
-       7 .locks/conversation_watcher.pid
-       7 .locks/websocket_server.pid
+    1038 .gitignore
    10298 .mp-lint.yaml
-  147456 .parallel_ingest/.doc_ingestion_state_agent0.db
-   77824 .parallel_ingest/.doc_ingestion_state_agent1.db
-   16763 .resurrection_checkpoints/ada_processed.txt
-   11255 .resurrection_checkpoints/atlas_processed.txt
-  107237 .resurrection_checkpoints/felix_processed.txt
-   18681 .resurrection_checkpoints/iris_processed.txt
-   16469 .resurrection_checkpoints/luca_processed.txt
-   17283 .resurrection_checkpoints/victor_processed.txt
-     236 .signals/backlog/stim_1761481223809_1761481226.json
-     236 .signals/backlog/stim_1761481281671_1761481283.json
-     236 .signals/backlog/stim_1761481341479_1761481343.json
-     236 .signals/backlog/stim_1761481401776_1761481402.json
-     236 .signals/backlog/stim_1761481418089_1761481423.json
-     236 .signals/backlog/stim_1761481447525_1761481450.json
-     236 .signals/backlog/stim_1761481478504_1761481479.json
-     236 .signals/backlog/stim_1761481508454_1761481509.json
-     236 .signals/backlog/stim_1761481539216_1761481540.json
-     236 .signals/backlog/stim_1761481568477_1761481569.json
-     236 .signals/backlog/stim_1761481598619_1761481599.json
-     236 .signals/backlog/stim_1761481626038_1761481630.json
-     236 .signals/backlog/stim_1761481648920_1761481652.json
-     236 .signals/backlog/stim_1761481679533_1761481680.json
-     236 .signals/backlog/stim_1761481709369_1761481710.json
-     236 .signals/backlog/stim_1761481739479_1761481741.json
-     236 .signals/backlog/stim_1761481769837_1761481770.json
-     236 .signals/backlog/stim_1761481799933_1761481801.json
-     236 .signals/backlog/stim_1761481829729_1761481831.json
-     236 .signals/backlog/stim_1761481881769_1761481882.json
-     236 .signals/backlog/stim_1761482001780_1761482003.json
-     236 .signals/backlog/stim_1761485427925_1761485428.json
-     236 .signals/backlog/stim_1761485481748_1761485484.json
-     236 .signals/backlog/stim_1761485541553_1761485542.json
-     236 .signals/backlog/stim_1761485601823_1761485602.json
-     236 .signals/backlog/stim_1761485661534_1761485662.json
-     236 .signals/backlog/stim_1761485721860_1761485723.json
-     236 .signals/backlog/stim_1761485781524_1761485783.json
-     236 .signals/backlog/stim_1761485841576_1761485842.json
-     236 .signals/backlog/stim_1761485901520_1761485902.json
-     236 .signals/backlog/stim_1761485961841_1761485962.json
-     236 .signals/backlog/stim_1761486021482_1761486022.json
-     236 .signals/backlog/stim_1761486081847_1761486083.json
-     236 .signals/backlog/stim_1761486141803_1761486143.json
-     198 .signals/backlog/stim_1761541260644_1761541261.json
-     198 .signals/backlog/stim_1761541502371_1761541502.json
-     236 .signals/backlog/stim_1761550401466_1761550406.json
-     236 .signals/backlog/stim_1761553047843_1761553058.json
-     236 .signals/backlog/stim_1761553120054_1761553120.json
-     236 .signals/backlog/stim_1761553120054_1761553121.json
-     236 .signals/backlog/stim_1761553257970_1761553258.json
-     236 .signals/backlog/stim_1761553374454_1761553375.json
-     236 .signals/backlog/stim_1761553631545_1761553631.json
-     236 .signals/backlog/stim_1761553631545_1761553632.json
-     236 .signals/backlog/stim_1761553845781_1761553847.json
-     236 .signals/backlog/stim_1761553996886_1761553997.json
-     236 .signals/backlog/stim_1761553996886_1761553998.json
-     236 .signals/backlog/stim_1761554097798_1761554098.json
-     236 .signals/backlog/stim_1761554097798_1761554099.json
-     200 .signals/backlog/test_live_1761447051.json
     1002 CLAUDE.md
     2701 KILL_PORT_3000.ps1
     2475 MPSv3_CUTOVER.ps1
@@ -367,14 +306,6 @@
    16505 consciousness/personas/solana-degen-investor/entities/memory_keeper/memory_keeper.md
     2895 consciousness/personas/solana-degen-investor/entities/pattern_retriever/claude.md
      342 consciousness/personas/solana-degen-investor/entities/wasted_potential/claude.md
-    2165 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_210826_session_summary.json
-    1938 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_210826_turn_0001.json
-    4818 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_211041_session_summary.json
- 1356161 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_211041_turn_0001.json
-    2924 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_211206_session_summary.json
-    2645 consciousness/personas/solana-degen-investor/traversal_logs/Jake_Martinez_20251006_211206_turn_0001.json
-  171700 consciousness/personas/solana-degen-investor/traversal_logs/cynic/turn_0001.json
- 1108311 consciousness/personas/solana-degen-investor/traversal_logs/philosopher/turn_0001.json
     7055 consciousness/personas/solana-degen-investor/update_consciousness.py
    20560 consciousness/personas/typical_token_founder/PERSONA_SEED.md
     7525 dashboard_health_monitor.py
@@ -580,7 +511,7 @@
    17975 docs/team/FIELD_GUIDE_ENTITIES_TRAVERSAL.md
     7793 docs/team/MIGRATION_0_ENTITIES_BUG.md
     6286 entity_baseline_t1.json
-   33744 file_tree.txt
+   29263 file_tree.txt
    34995 homepage.html
     1023 jest.config.js
     1660 jest.setup.js
@@ -1026,7 +957,6 @@
    22497 tools/convert_node_types_to_markdown.py
     5119 tools/convert_svg_to_png.py
     8337 tools/create_vector_indices.py
-   61440 tools/doc_ingestion/.doc_ingestion_state.db
     3136 tools/doc_ingestion/ARM_README.md
    16771 tools/doc_ingestion/INTEGRATION_COMPLETE.md
     9798 tools/doc_ingestion/ORPHANED_EDGE_FIX.md
@@ -1034,7 +964,6 @@
    19070 tools/doc_ingestion/ask.py
     7546 tools/doc_ingestion/cli/mp.sh
    14448 tools/doc_ingestion/config.py
-   45056 tools/doc_ingestion/corpus.db
    15126 tools/doc_ingestion/docs_only_manifest.json
      113 tools/doc_ingestion/failing_file_manifest.json
      372 tools/doc_ingestion/first_5_docs.json
@@ -1043,11 +972,6 @@
    16185 tools/doc_ingestion/ingest_docs.py
     9795 tools/doc_ingestion/launch_parallel_ingest.py
    14751 tools/doc_ingestion/lint_graph.py
-   65536 tools/doc_ingestion/manifests/.doc_ingestion_state_agent0.db
-   77824 tools/doc_ingestion/manifests/.doc_ingestion_state_agent1.db
-   69632 tools/doc_ingestion/manifests/.doc_ingestion_state_agent2.db
-   45056 tools/doc_ingestion/manifests/.doc_ingestion_state_agent3.db
-   65536 tools/doc_ingestion/manifests/.doc_ingestion_state_agent4.db
     4983 tools/doc_ingestion/manifests/manifest_agent_0.json
     5114 tools/doc_ingestion/manifests/manifest_agent_1.json
     4350 tools/doc_ingestion/manifests/manifest_agent_2.json
@@ -1130,4 +1054,4 @@
     3926 tools/test_schema_registry.py
      637 tsconfig.json
     6061 update_status.py
-41020110 total
+37387407 total

@@ -152,7 +152,7 @@ class ConsciousnessIngestionEngine:
 
         Args:
             text: Raw text to ingest (e.g., conversation, stimulus, observation)
-            graph_name: Target FalkorDB graph (e.g., "citizen_Luca", "collective_n2")
+            graph_name: Target FalkorDB graph (e.g., "consciousness-infrastructure_mind-protocol_luca")
             metadata: Optional metadata to attach to extraction
 
         Returns:
@@ -367,7 +367,7 @@ def ingest_text(
 
         result = ingest_text(
             text="Nicolas asked us to start V2 implementation",
-            graph_name="citizen_Luca"
+            graph_name="consciousness-infrastructure_mind-protocol_luca"
         )
 
         if result["status"] == "success":

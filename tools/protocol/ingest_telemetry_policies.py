@@ -174,16 +174,21 @@ def ingest_telemetry_policies():
     ON CREATE SET
         sig.suite_id = 'SIG_ED25519_V1',
         sig.algo = 'ed25519',
-        sig.type_name = 'Signature_Suite'
+        sig.type_name = 'Signature_Suite',
+        sig.level = 'L4',
+        sig.scope_ref = 'protocol',
+        sig.name = 'ED25519 Signature Suite'
 
     MERGE (env:ProtocolNode {{id: '{env_id}'}})
     ON CREATE SET
         env.schema_uri = 'l4://schemas/envelopes/ENV_STANDARD_V1.json',
         env.version = '1.0.0',
         env.name = 'ENV_STANDARD_V1',
-        env.type_name = 'Envelope_Schema'
+        env.type_name = 'Envelope_Schema',
+        env.level = 'L4',
+        env.scope_ref = 'protocol'
     WITH env, sig
-    MERGE (env)-[:REQUIRES_SIG]->(sig)
+    MERGE (env)-[:U4_REQUIRES_SIG]->(sig)
     """
     r.execute_command("GRAPH.QUERY", graph_name, query)
     print(f"  ✓ SIG_ED25519_V1 (ed25519)")
@@ -197,9 +202,11 @@ def ingest_telemetry_policies():
         query = f"""
         MERGE (ns:ProtocolNode {{id: '{namespace_id}'}})
         ON CREATE SET
-            ns.pattern = '{ns["pattern"]}',
+            ns.name = '{ns["pattern"]}',
             ns.type_name = 'Topic_Namespace',
-            ns.description = '{ns["description"]}'
+            ns.description = '{ns["description"]}',
+            ns.level = 'L4',
+            ns.scope_ref = 'protocol'
         RETURN ns.id
         """
         r.execute_command("GRAPH.QUERY", graph_name, query)
@@ -216,16 +223,25 @@ def ingest_telemetry_policies():
     MERGE (reg:ProtocolNode {{id: '{reg_id}'}})
     ON CREATE SET
         reg.subsystem_id = 'schema-registry',
-        reg.type_name = 'Subentity'
+        reg.type_name = 'Subentity',
+        reg.level = 'L4',
+        reg.scope_ref = 'protocol',
+        reg.name = 'Schema Registry',
+        reg.kind = 'protocol-subsystem',
+        reg.role_or_topic = 'schema-registry'
 
     MERGE (b:ProtocolNode {{id: '{bundle_id}'}})
     ON CREATE SET
         b.bundle_id = 'BUNDLE_TELEMETRY_1_0_0',
+        b.name = 'Telemetry Schemas Bundle v1.0.0',
         b.semver = '1.0.0',
         b.status = 'active',
-        b.type_name = 'Schema_Bundle'
+        b.type_name = 'Schema_Bundle',
+        b.level = 'L4',
+        b.scope_ref = 'protocol',
+        b.hash = 'sha256:telemetry_1_0_0_placeholder'
     WITH reg, b
-    MERGE (reg)-[:GOVERNS]->(b)
+    MERGE (reg)-[:U4_GOVERNS]->(b)
     """
     r.execute_command("GRAPH.QUERY", graph_name, query)
     print(f"  ✓ BUNDLE_TELEMETRY_1_0_0 (active)")
@@ -254,11 +270,13 @@ def ingest_telemetry_policies():
             es.requires_sig_suite = 'SIG_ED25519_V1',
             es.sea_required = {str(schema["sea_required"]).lower()},
             es.cps = {str(schema["cps"]).lower()},
-            es.schema_hash = 'sha256:placeholder'
+            es.schema_hash = 'sha256:placeholder',
+            es.level = 'L4',
+            es.scope_ref = 'protocol'
         WITH es, b, ns, sig
-        MERGE (b)-[:PUBLISHES_SCHEMA]->(es)
-        MERGE (es)-[:MAPS_TO_TOPIC]->(ns)
-        MERGE (es)-[:REQUIRES_SIG]->(sig)
+        MERGE (b)-[:U4_PUBLISHES_SCHEMA]->(es)
+        MERGE (es)-[:U4_MAPS_TO_TOPIC]->(ns)
+        MERGE (es)-[:U4_REQUIRES_SIG]->(sig)
         RETURN es.id
         """
         r.execute_command("GRAPH.QUERY", graph_name, query)
@@ -273,6 +291,8 @@ def ingest_telemetry_policies():
     print("4️⃣  Creating Governance Policies...")
     for policy in GOVERNANCE_POLICIES:
         policy_id = f"protocol/Governance_Policy/{policy['policy_id']}"
+        policy_uri = f"l4://law/{policy['policy_id']}.md"
+        policy_hash = f"sha256:{policy['policy_id'].lower()}_placeholder"
 
         # Create policy node
         query = f"""
@@ -281,7 +301,13 @@ def ingest_telemetry_policies():
             gp.policy_id = '{policy["policy_id"]}',
             gp.name = '{policy["name"]}',
             gp.type_name = 'Governance_Policy',
-            gp.description = '{policy["description"]}'
+            gp.description = '{policy["description"]}',
+            gp.uri = '{policy_uri}',
+            gp.hash = '{policy_hash}',
+            gp.status = 'active',
+            gp.summary = '{policy["description"]}',
+            gp.level = 'L4',
+            gp.scope_ref = 'protocol'
         RETURN gp.id
         """
         r.execute_command("GRAPH.QUERY", graph_name, query)
@@ -292,7 +318,7 @@ def ingest_telemetry_policies():
             query = f"""
             MATCH (gp:ProtocolNode {{id: '{policy_id}'}})
             MATCH (ns:ProtocolNode {{id: '{namespace_id}'}})
-            MERGE (gp)-[:GOVERNS]->(ns)
+            MERGE (gp)-[:U4_GOVERNS]->(ns)
             """
             r.execute_command("GRAPH.QUERY", graph_name, query)
 

@@ -13,8 +13,37 @@ from typing import Optional
 from pathlib import Path
 
 
+from pydantic import BaseModel
+
+class EngineConfig(BaseModel):
+    """
+    Configuration for consciousness engine.
+
+    Args:
+        tick_interval_ms: Base tick interval in milliseconds. Default 100ms (10 Hz).
+        entity_id: Primary subentity identifier. Default "consciousness_engine".
+        network_id: Network identifier (N1/N2/N3). Default "N1".
+        enable_diffusion: Enable energy diffusion. Default True.
+        enable_decay: Enable energy decay. Default True.
+        enable_strengthening: Enable link strengthening. Default True.
+        enable_websocket: Enable WebSocket broadcasting. Default True.
+        compute_budget: Max cost units per tick. Default 100.0.
+        max_nodes_per_tick: Max node updates per tick. Default 50000.
+    """
+    tick_interval_ms: float = 10000.0  # 0.1 Hz (1 tick per 10 seconds) - EMERGENCY THROTTLE to reduce event storm from 65/sec to ~6.5/sec
+    entity_id: str = "consciousness_engine"
+    network_id: str = "N1"
+    enable_diffusion: bool = True
+    enable_decay: bool = True
+    enable_strengthening: bool = True
+    enable_websocket: bool = True
+    compute_budget: float = 100.0
+    max_nodes_per_tick: int = 50000
+
 class Settings:
     """Central configuration for all Mind Protocol services."""
+
+    DEFAULT_TIMEOUT_SEC: float = 10.0
 
     # === Service Ports ===
     WS_HOST: str = os.getenv("WS_HOST", "localhost")
@@ -27,10 +56,10 @@ class Settings:
     FALKORDB_HOST: str = os.getenv("FALKORDB_HOST", "localhost")
     FALKORDB_PORT: int = int(os.getenv("FALKORDB_PORT", "6379"))
 
-    # Graph names
-    N1_GRAPH_PREFIX: str = "citizen_"  # citizen_luca, citizen_felix, etc
-    N2_GRAPH_NAME: str = "mind_protocol_collective_graph"
-    N3_GRAPH_NAME: str = "ecosystem_public_graph"
+    # Graph names - DEPRECATED: Use full citizen IDs like consciousness-infrastructure_mind-protocol_felix
+    # N1_GRAPH_PREFIX is removed - do not use short-form names
+    N2_GRAPH_NAME: str = "consciousness-infrastructure_mind-protocol"  # N2 organizational graph
+    N3_GRAPH_NAME: str = "consciousness-infrastructure"  # N3 ecosystem graph
 
     # === Embeddings & Search ===
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
@@ -355,8 +384,13 @@ class Settings:
 
     @classmethod
     def get_citizen_graph_name(cls, citizen_name: str) -> str:
-        """Get N1 graph name for a citizen."""
-        return f"{cls.N1_GRAPH_PREFIX}{citizen_name.lower()}"
+        """
+        Get N1 graph name for a citizen.
+
+        CORRECT FORMAT: consciousness-infrastructure_mind-protocol_{citizen_name}
+        WRONG FORMAT: citizen_{citizen_name}
+        """
+        return f"consciousness-infrastructure_mind-protocol_{citizen_name.lower()}"
 
 
 # Singleton instance

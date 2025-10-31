@@ -134,22 +134,35 @@ def verify_epsilon_policy(graph_store: FalkorDBGraphStore, graph_name: str) -> d
 
 def main():
     """Run all P1.3 verification checks across all citizen graphs."""
-    # Create FalkorDB connection
-    falkordb_url = "redis://localhost:6379"
-    graph_store = FalkorDBGraphStore(graph_name="citizen_felix", url=falkordb_url)
+    from orchestration.config.settings import settings
+    from orchestration.runtime.citizen_registry import get_all_citizen_ids
+    from orchestration.config.graph_names import graph_name_for_citizen
 
-    # Citizen graphs to check
-    citizens = ['felix', 'ada', 'atlas', 'iris', 'luca', 'victor']
+    # Create FalkorDB connection
+    falkordb_url = settings.FALKORDB_URL
+
+    # Use citizen registry to find all citizen graphs
+    citizen_ids = get_all_citizen_ids()
+    citizen_graph_names = [graph_name_for_citizen(cid) for cid in citizen_ids]
+
+
+    if not citizen_graph_names:
+        print("⚠️  No citizen graphs found in FalkorDB")
+        return 0
+
+    # Use first citizen to initialize graph_store
+    first_graph = citizen_graph_names[0]
+    graph_store = FalkorDBGraphStore(graph_name=first_graph, url=falkordb_url)
 
     print("=" * 70)
     print("P1.3 MEMBERSHIP HARDENING VERIFICATION")
     print("=" * 70)
+    print(f"Found {len(citizen_graph_names)} citizen graphs: {citizen_graph_names}")
     print()
 
     all_passed = True
 
-    for citizen in citizens:
-        graph_name = f'citizen_{citizen}'
+    for graph_name in citizen_graph_names:
         print(f"Checking {graph_name}...")
         print("-" * 70)
 

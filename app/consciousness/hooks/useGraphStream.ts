@@ -38,8 +38,8 @@ export interface SubEntityInfo {
 
 export interface HierarchySnapshot {
   subentities: Record<string, SubEntityInfo>;
-  nodes: Record<string, { id: string; name?: string; type?: string }>;
-  links: Record<string, { id: string; source: string; target: string; type: string; weight?: number; properties?: any }>; // PATCH 3: Added missing links property
+  nodes: Map<string, { id: string; name?: string; type?: string }>;
+  links: Map<string, { id: string; source: string; target: string; type: string; weight?: number; properties?: any }>; // PATCH 3: Added missing links property
   lastUpdate: number;
 }
 
@@ -191,8 +191,8 @@ export function useGraphStream(
     if (!graphsMap.has(graphId)) {
       graphsMap.set(graphId, {
         subentities: {},
-        nodes: {},
-        links: {},
+        nodes: new Map(),
+        links: new Map(),
         lastUpdate: Date.now()
       });
     }
@@ -204,9 +204,9 @@ export function useGraphStream(
       setCurrentGraphId(graphId);
     } else {
       const current = graphsMap.get(currentGraphIdRef.current);
-      const currentNodeCount = current ? Object.keys(current.nodes || {}).length : 0;
+      const currentNodeCount = current ? current.nodes.size : 0;
       if (current && currentNodeCount === 0) {
-        const incomingNodeCount = Object.keys(graphsMap.get(graphId)?.nodes || {}).length;
+        const incomingNodeCount = graphsMap.get(graphId)?.nodes.size ?? 0;
         if (incomingNodeCount > 0) {
           console.log('[useGraphStream] 🎯 Auto-switching from empty graph to active graph:', {
             from: currentGraphIdRef.current,
@@ -224,8 +224,11 @@ export function useGraphStream(
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isCleaningUp = false;
 
     const connect = () => {
+      if (isCleaningUp) return; // Prevent reconnect during cleanup
+
       try {
         ws = new WebSocket(MEMBRANE_BUS_URL);
 
@@ -282,15 +285,12 @@ export function useGraphStream(
                 topics: ackTopics
               });
 
-              // CRITICAL FIX: Set currentGraphId immediately so delta events can be processed
-              // Even without snapshot.chunk@1.0, we need a graph ID for deltas to land
-              if (citizenId && !currentGraphId) {
-                console.log('[useGraphStream] 🔧 Setting currentGraphId from subscribe.ack:', citizenId);
-                setCurrentGraphId(citizenId);
-                // PATCH 3: Ensure graph exists in ref (no state update)
-                ensureGraph(citizenId);
-                scheduleFlush(); // Schedule ONE re-render
-              }
+              return;
+            }
+
+            if (eventType === 'snapshot.end@1.0') {
+              console.log('[useGraphStream] 📦 snapshot.end@1.0 received', { graphId: msg.provenance?.citizen_id });
+              scheduleFlush(); // Ensure a flush after the full snapshot is received
               return;
             }
 
@@ -365,6 +365,40 @@ export function useGraphStream(
 
             // Handle event types (normative vocabulary: 'type' not 'topic')
             switch (eventType) {
+                case 'snapshot.begin@1.0': {
+                  const graphId = msg.provenance?.citizen_id;
+                  if (!graphId) break;
+
+                  console.log(`[useGraphStream] 🎬 snapshot.begin@1.0 received for ${graphId}`);
+                  const snap = ensureGraph(graphId);
+                  // Clear existing data for a fresh snapshot
+                  snap.nodes = new Map();
+                  snap.links = new Map();
+                  snap.subentities = {}; // Subentities remain a Record for now
+                  snap.lastUpdate = Date.now();
+
+                  // Auto-select this graph if nothing is selected
+                  if (!currentGraphId) {
+                    setCurrentGraphId(graphId);
+                  }
+                  scheduleFlush();
+                  break;
+                }
+                case 'snapshot.begin@1.0': {
+                  const payload = msg.payload ?? {};
+                  const citizenId = payload.citizen_id;
+                  if (citizenId) {
+                    console.log(`[useGraphStream] 📦 snapshot.begin@1.0 received for ${citizenId}. Clearing existing graph data.`);
+                    graphsRef.current.set(citizenId, {
+                      subentities: {},
+                      nodes: {},
+                      links: {},
+                      lastUpdate: Date.now()
+                    });
+                    scheduleFlush();
+                  }
+                  break;
+                }
                 case 'mode.snapshot':  // Backend sends mode.snapshot events (treat as snapshot)
                 case 'snapshot.chunk@1.0': {
                   const payload = msg.payload ?? {};
@@ -391,11 +425,11 @@ export function useGraphStream(
                     const nodeId = node.id ?? node.node_id;
                     if (!nodeId) return;
                     const properties = node.properties ?? {};
-                    snap.nodes[nodeId] = {
+                    snap.nodes.set(nodeId, {
                       id: nodeId,
                       name: node.name ?? properties.name,
                       type: node.type ?? node.node_type ?? properties.node_type
-                    };
+                    });
                   });
 
                   links.forEach((link: any) => {
@@ -407,14 +441,14 @@ export function useGraphStream(
                     const linkId = link.id ?? `${source}->${target}:${linkType}`;
 
                     // Store ALL links in snap.links (not just MEMBER_OF)
-                    snap.links[linkId] = {
+                    snap.links.set(linkId, {
                       id: linkId,
                       source,
                       target,
                       type: linkType,
                       weight: link.weight,
                       properties: link.properties ?? {}
-                    };
+                    });
 
                     // ALSO handle MEMBER_OF for subentity membership
                     if (linkType === 'MEMBER_OF') {
@@ -466,6 +500,24 @@ export function useGraphStream(
                   scheduleFlush(); // CRITICAL: Flush snapshot to React (no global flush for snapshots)
                   break;
                 }
+                case 'snapshot.end@1.0': {
+                  const payload = msg.payload ?? {};
+                  const citizenId = payload.citizen_id;
+                  if (citizenId) {
+                    console.log(`[useGraphStream] 📦 snapshot.end@1.0 received for ${citizenId}. Snapshot complete.`);
+                    scheduleFlush();
+                  }
+                  break;
+                }
+
+                case 'snapshot.end@1.0': {
+                  const graphId = msg.provenance?.citizen_id;
+                  if (!graphId) break;
+                  console.log(`[useGraphStream] ✅ snapshot.end@1.0 received for ${graphId}`);
+                  // No specific action needed here other than logging, as chunks have already updated the graph.
+                  // The scheduleFlush() from the last chunk or begin event will handle the render.
+                  break;
+                }
 
                 case 'graph.delta.node.upsert': {
                   // Felix's emergence.v1 format: msg.payload.node_id, msg.payload.properties
@@ -494,11 +546,11 @@ export function useGraphStream(
                     snap.subentities[nodeId].name = properties.name ?? snap.subentities[nodeId].name;
                   } else {
                     // Regular content node
-                    snap.nodes[nodeId] = {
+                    snap.nodes.set(nodeId, {
                       id: nodeId,
                       name: properties.name,
                       type: nodeType
-                    };
+                    });
                   }
                   snap.lastUpdate = Date.now();
                   scheduleFlush(); // Flush when graph data changes
@@ -520,8 +572,8 @@ export function useGraphStream(
                     console.warn('[useGraphStream] graph.delta.node.delete missing payload.node_id', payload);
                     break;
                   }
-                  if (snap.nodes[nodeId]) {
-                    delete snap.nodes[nodeId];
+                  if (snap.nodes.has(nodeId)) {
+                    snap.nodes.delete(nodeId);
                   }
                   Object.values(snap.subentities).forEach(sub => sub.members.delete(nodeId));
                   snap.lastUpdate = Date.now();
@@ -553,31 +605,31 @@ export function useGraphStream(
                     snap.subentities[target].members.add(source);
                   } else {
                     // Create placeholder nodes if they don't exist yet (Patch 4)
-                    if (!snap.nodes[source]) {
-                      snap.nodes[source] = {
+                    if (!snap.nodes.has(source)) {
+                      snap.nodes.set(source, {
                         id: source,
                         name: source, // Use ID as placeholder name
                         type: 'placeholder' // Mark as placeholder
-                      };
+                      });
                     }
-                    if (!snap.nodes[target]) {
-                      snap.nodes[target] = {
+                    if (!snap.nodes.has(target)) {
+                      snap.nodes.set(target, {
                         id: target,
                         name: target, // Use ID as placeholder name
                         type: 'placeholder' // Mark as placeholder
-                      };
+                      });
                     }
 
                     // Store regular links (ENABLES, RELATES_TO, etc.)
                     const linkId = payload.id || `${source}-${target}`;
-                    snap.links[linkId] = {
+                    snap.links.set(linkId, {
                       id: linkId,
                       source,
                       target,
                       type: linkType,
                       weight: payload.weight,
                       properties: payload.properties
-                    };
+                    });
                   }
                   snap.lastUpdate = Date.now();
                   scheduleFlush(); // Flush when graph data changes
@@ -623,6 +675,32 @@ export function useGraphStream(
                       snap.subentities[target] = createPlaceholderSubEntity(target);
                     }
                     snap.subentities[target].members.add(source);
+                  } else {
+                    // Create placeholder nodes if they don't exist yet
+                    if (!snap.nodes.has(source)) {
+                      snap.nodes.set(source, {
+                        id: source,
+                        name: source,
+                        type: 'placeholder'
+                      });
+                    }
+                    if (!snap.nodes.has(target)) {
+                      snap.nodes.set(target, {
+                        id: target,
+                        name: target,
+                        type: 'placeholder'
+                      });
+                    }
+                    // Store regular links (ENABLES, RELATES_TO, etc.)
+                    const linkId = msg.id || `${source}-${target}`;
+                    snap.links.set(linkId, {
+                      id: linkId,
+                      source,
+                      target,
+                      type: linkType,
+                      weight: msg.weight,
+                      properties: msg.properties
+                    });
                   }
                   snap.lastUpdate = Date.now();
                   scheduleFlush(); // Flush when graph data changes
@@ -693,11 +771,7 @@ export function useGraphStream(
 
                   snap.lastUpdate = Date.now();
 
-                  // First wm.emit sets currentGraphId
-                  if (!currentGraphId) {
-                    setCurrentGraphId(graphId);
-                    if (onGraphIdChange) onGraphIdChange(graphId);
-                  }
+
                   break;
                 }
 
@@ -725,11 +799,7 @@ export function useGraphStream(
 
                   snap.lastUpdate = Date.now();
 
-                  // First percept.frame also sets currentGraphId
-                  if (!currentGraphId) {
-                    setCurrentGraphId(graphId);
-                    if (onGraphIdChange) onGraphIdChange(graphId);
-                  }
+
                   break;
                 }
 
@@ -914,9 +984,12 @@ export function useGraphStream(
           setConnected(false);
 
           // Graceful reconnect after 5 seconds (don't spam logs)
-          reconnectTimeout = setTimeout(() => {
-            connect();
-          }, 5000);
+          // But don't reconnect if we're cleaning up
+          if (!isCleaningUp) {
+            reconnectTimeout = setTimeout(() => {
+              connect();
+            }, 5000);
+          }
         };
       } catch (err) {
         // Connection failures are expected when backend is down
@@ -928,13 +1001,14 @@ export function useGraphStream(
     connect();
 
     return () => {
+      isCleaningUp = true;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (ws) {
         ws.close();
         ws = null;
       }
     };
-  }, [ensureGraph, onGraphIdChange]); // Removed currentGraphId - using ref instead to prevent WS reconnections
+  }, [ensureGraph]); // ANTI-RECONNECT: Removed onGraphIdChange - not used in WebSocket code, only in ensureGraph
 
   // PATCH 3: Convert ref to state for rendering (only rebuilds on rAF flush)
   // This useMemo runs once per animation frame when `frame` changes

@@ -183,7 +183,9 @@ SCREENSHOTS_DIR.mkdir(exist_ok=True)
 # Import it so engines started here are tracked globally
 
 
-def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
+from orchestration.config.settings import settings
+
+def discover_graphs() -> dict:
     """
     Discover all consciousness graphs from FalkorDB.
 
@@ -196,7 +198,7 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
     """
     logger.info("[Discovery] Connecting to FalkorDB to discover graphs...")
 
-    r = redis.Redis(host=host, port=port, decode_responses=True)
+    r = redis.Redis(host=settings.FALKORDB_HOST, port=settings.FALKORDB_PORT, decode_responses=True)
 
     try:
         # Get list of all graphs
@@ -290,9 +292,7 @@ def discover_entities(graph_store: FalkorDBGraphStore) -> list:
 
 async def start_citizen_consciousness(
     graph_name: str,
-    citizen_id: str,
-    host: str = "localhost",
-    port: int = 6379
+    citizen_id: str
 ) -> ConsciousnessEngineV2:
     """
     Start consciousness for one citizen (N1).
@@ -305,7 +305,7 @@ async def start_citizen_consciousness(
     # Create FalkorDB graph store and adapter
     graph_store = FalkorDBGraphStore(
         database=graph_name,  # FIXED: use 'database' not 'graph_name'
-        url=f"redis://{host}:{port}"
+        url=settings.FALKORDB_URL
     )
     # Set name attribute for WriteGate namespace enforcement
     graph_store.name = graph_name
@@ -363,7 +363,7 @@ async def start_citizen_consciousness(
 
     # Create engine configuration
     config = EngineConfig(
-        tick_interval_ms=100,
+        tick_interval_ms=10000,  # EMERGENCY THROTTLE: 10s tick interval (was 100ms)
         entity_id=citizen_id,
         network_id="N1",
         enable_diffusion=True,
@@ -450,9 +450,7 @@ async def start_citizen_consciousness(
 
 async def start_organizational_consciousness(
     graph_name: str,
-    org_id: str,
-    host: str = "localhost",
-    port: int = 6379
+    org_id: str
 ) -> ConsciousnessEngineV2:
     """
     Start consciousness for organization (N2).
@@ -465,7 +463,7 @@ async def start_organizational_consciousness(
     # Create FalkorDB graph store and adapter
     graph_store = FalkorDBGraphStore(
         database=graph_name,  # FIXED: use 'database' not 'graph_name'
-        url=f"redis://{host}:{port}"
+        url=settings.FALKORDB_URL
     )
     # Set name attribute for WriteGate namespace enforcement
     graph_store.name = graph_name
@@ -501,7 +499,7 @@ async def start_organizational_consciousness(
 
     # Create engine configuration
     config = EngineConfig(
-        tick_interval_ms=100,
+        tick_interval_ms=10000,  # EMERGENCY THROTTLE: 10s tick interval (was 100ms)
         entity_id=org_id,
         network_id="N2",
         enable_diffusion=True,
@@ -1139,6 +1137,11 @@ async def startup_event():
 
     # Start heartbeat writer (fast)
     heartbeat_writer.start()
+
+    # Start WebSocket stale connection monitor
+    from orchestration.adapters.api.control_api import websocket_manager
+    websocket_manager.start_heartbeat_check()
+    logger.info("✅ WebSocket stale connection monitor started (20s interval)")
 
     # Initialize forged identity integration (Phase 3A: observe-only)
     from orchestration.mechanisms.forged_identity_integration import initialize_forged_identity_integration

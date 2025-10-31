@@ -72,19 +72,22 @@ def setup_indexes(graph_name: str) -> None:
 
 
 if __name__ == "__main__":
-    # Set up indexes for all citizen graphs
-    citizens = [
-        "citizen_felix",
-        "citizen_ada",
-        "citizen_atlas",
-        "citizen_iris",
-        "citizen_luca",
-        "citizen_victor"
-    ]
+    from orchestration.adapters.ws.websocket_server import discover_graphs
 
     logger.info("=" * 60)
     logger.info("FalkorDB Index Setup - COACTIVATES_WITH Tracking")
     logger.info("=" * 60)
+
+    # Use discovery service to find all citizen graphs (N1 level)
+    graphs = discover_graphs(host='localhost', port=6379)
+    citizens = graphs.get('n1_graphs', [])
+
+    if not citizens:
+        logger.warning("No citizen graphs found in FalkorDB")
+        import sys
+        sys.exit(0)
+
+    logger.info(f"Found {len(citizens)} citizen graphs: {citizens}")
 
     for citizen in citizens:
         try:

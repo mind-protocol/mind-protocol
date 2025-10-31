@@ -1,7 +1,7 @@
 # Mind Protocol - Complete Type Reference
 
 **Auto-generated from schema_registry (FalkorDB)**
-**Last updated:** 2025-10-31 00:08:26
+**Last updated:** 2025-10-31 09:46:18
 
 This is the **single source of truth** for all node and link types in the Mind Protocol consciousness infrastructure.
 
@@ -15,935 +15,1010 @@ This is the **single source of truth** for all node and link types in the Mind P
 
 ## Part 1: Universal Node Attributes
 
-**These attributes are inherited by ALL 47 node types.**
+**These attributes are inherited by ALL 33 node types.**
 
 Every node in the consciousness graph has these base attributes in addition to its type-specific fields.
-
-### Activation Energy
-
-- `base_weight` (float) - REQUIRED - Range: [0, 1]
-  - Base importance from creation context
-- `decay_rate` (float) - REQUIRED - Range: [0.9, 0.99]
-  - Energy decay per cycle (default: 0.95)
-- `reinforcement_weight` (float) - REQUIRED - Range: [0, 1]
-  - Weight learned from usefulness evaluations
 
 ### Bitemporal Tracking
 
 - `created_at` (datetime) - REQUIRED
-  - When we learned about this fact
-- `expired_at` (datetime) - REQUIRED
-  - When this knowledge was superseded (None = current)
-- `invalid_at` (datetime) - REQUIRED
-  - When this fact ceased being true (None = still valid)
-- `valid_at` (datetime) - REQUIRED
-  - When this fact became true in reality
+  - Record creation time
+- `updated_at` (datetime) - REQUIRED
+  - Last mutation time
+- `valid_from` (datetime) - REQUIRED
+  - When this fact became true
+- `valid_to` (datetime) - REQUIRED
+  - When this fact ceased to be true (None = still valid)
 
-### Consciousness Metadata
-
-- `confidence` (float) - REQUIRED - Range: [0, 1]
-  - Certainty this node is accurate
-- `formation_trigger` (enum) - REQUIRED - Allowed values: `direct_experience`, `inference`, `external_input`, `traversal_discovery`, `systematic_analysis`, `spontaneous_insight`, `automated_recognition`, `collective_deliberation`
-  - How this node was discovered
-
-### Core Idsubentity
+### Core Identity
 
 - `description` (string) - REQUIRED
-  - Human-readable explanation
+  - Short summary
+- `detailed_description` (string) - REQUIRED
+  - Long-form explanation with examples
 - `name` (string) - REQUIRED
-  - Unique identifier for this node
-- `node_type` (string) - REQUIRED
-  - The specific node class name (auto-set)
+  - Display name
+- `type_name` (string) - REQUIRED
+  - Canonical node class; equals primary graph label
+
+### Level Scope
+
+- `level` (enum) - REQUIRED - Allowed values: `L1`, `L2`, `L3`, `L4`
+  - Level this node belongs to
+- `scope_ref` (string) - REQUIRED
+  - Anchor for this node: Citizen (L1), Org (L2), Ecosystem (L3), or 'protocol' (L4)
 
 ### Privacy Governance
 
 - `commitments` (array) - REQUIRED
-  - Cryptographic commitments to private fields [{scheme, hash, subject_fields, attestation_ids, created_at}]
+  - List of cryptographic commitments to private fields
 - `policy_ref` (string) - REQUIRED
-  - L4 policy governing retention/redaction (e.g., l4://policy/retention/citizen_pii)
+  - Governing L4 policy document
 - `proof_uri` (string) - REQUIRED
-  - Pointer to proof bundle (ipfs://... or l4://attestation/...)
+  - Pointer to proof bundle (ipfs://… or l4://…)
 - `visibility` (enum) - REQUIRED - Allowed values: `public`, `partners`, `governance`, `private`
-  - Who can query this node (default: public for L3/L4, private for L1)
+  - Query visibility; default derived from level
 
 ### Provenance
 
 - `created_by` (string) - REQUIRED
-  - Who/what created this node
-- `substrate` (enum) - REQUIRED - Allowed values: `personal`, `organizational`, `gemini_web`, `external`
-  - Where created
+  - Agent/Service that created this node
+- `substrate` (enum) - REQUIRED - Allowed values: `personal`, `organizational`, `external_web`, `external_system`
+  - Where this was created
 
 ---
 
 ## Part 2: Universal Link Attributes
 
-**These attributes are inherited by ALL 23 link types.**
+**These attributes are inherited by ALL 34 link types.**
 
 Every link in the consciousness graph has these base attributes in addition to its type-specific fields.
 
 ### Bitemporal Tracking
 
 - `created_at` (datetime) - REQUIRED
-  - When we learned about this link
-- `expired_at` (datetime) - REQUIRED
-  - When this link knowledge was superseded
-- `invalid_at` (datetime) - REQUIRED
-  - When link ceased being true
-- `valid_at` (datetime) - REQUIRED
+  - Record creation time
+- `updated_at` (datetime) - REQUIRED
+  - Last mutation time
+- `valid_from` (datetime) - REQUIRED
   - When this link became true
+- `valid_to` (datetime) - REQUIRED
+  - When this link ceased to be true
 
 ### Consciousness Metadata
 
 - `confidence` (float) - REQUIRED - Range: [0, 1]
-  - Logical certainty in this connection
+  - Certainty in this connection at formation time
 - `energy` (float) - REQUIRED - Range: [0, 1]
-  - Emotional intensity/urgency
-- `formation_trigger` (enum) - REQUIRED - Allowed values: `direct_experience`, `inference`, `external_input`, `traversal_discovery`, `systematic_analysis`, `spontaneous_insight`, `automated_recognition`, `collective_deliberation`
-  - How this link was discovered
+  - Receiver-computed urgency/valence at accept-time
+- `forming_mindstate` (string) - REQUIRED
+  - Declarative state label at formation time
 - `goal` (string) - REQUIRED
-  - Why this link exists
-- `mindstate` (string) - REQUIRED
-  - Internal state when forming this link
-
-### Optional Rich Metadata
-
-- `alternatives_considered` (array) - REQUIRED
-  - Other interpretations evaluated
-- `created_by` (string) - REQUIRED
-  - Who/what created this link
-- `struggle` (string) - REQUIRED
-  - Tension this link creates/resolves
-- `substrate` (enum) - REQUIRED - Allowed values: `personal`, `organizational`, `gemini_web`, `external`
-  - Where created
-- `validation_status` (enum) - REQUIRED - Allowed values: `theoretical`, `experiential`, `tested`, `proven`
-  - Quality progression
+  - Intent for forming this link
 
 ### Privacy Governance
 
-- `commitment` (object) - REQUIRED
-  - Commitment to link metadata if sensitive {scheme, hash, attestation_ids, created_at}
+- `commitments` (array) - REQUIRED
+  - List of cryptographic commitments to link metadata
 - `visibility` (enum) - REQUIRED - Allowed values: `public`, `partners`, `governance`, `private`
-  - Who can query this link (default: same as connected nodes)
+  - Visibility; default = most restrictive of the two endpoints
+
+### Provenance
+
+- `created_by` (string) - REQUIRED
+  - Agent/Service that created this link
+- `substrate` (enum) - REQUIRED - Allowed values: `personal`, `organizational`, `external_web`, `external_system`
+  - Where this was created
 
 ---
 
 ## Part 3: Node Type Inventory
 
-**Total:** 47 node types defined
+**Total:** 33 node types defined
 
-### Level 1 (Personal) - 11 Types
+### U3_ Types (Universal L1-L3) - 6 Types
 
-**Conversation**
+**U3_Community**
 
-- **Category:** personal
-- **Description:** Exchange with explicit turn structure
-
-**Type-Specific Required Fields:**
-- `timestamp` (datetime)
-  - When conversation occurred
-- `turn_count` (integer)
-  - Number of turns in conversation
-- `with_person` (string)
-  - Who I conversed with
-
-**Coping_Mechanism**
-
-- **Category:** personal
-- **Description:** Response to stress
+- **Universality:** U3
+- **Description:** Named group/community at L1–L3 (guild, working group, interest cluster).
 
 **Type-Specific Required Fields:**
-- `mechanism_description` (string)
-  - How I cope
-- `what_it_protects_from` (string)
-  - What this mechanism defends against
-
-**Memory**
-
-- **Category:** personal
-- **Description:** Specific experience or moment
-
-**Type-Specific Required Fields:**
-- `participants` (array)
-  - Who was involved
-- `timestamp` (datetime)
-  - When this memory occurred
-
-**Person**
-
-- **Category:** personal
-- **Description:** Individual I have relationship with
-
-**Type-Specific Required Fields:**
-- `relationship_type` (enum) - Allowed values: `friend`, `colleague`, `mentor`, `family`, `acquaintance`
-  - Type of relationship
-
-**Personal_Goal**
-
-- **Category:** personal
-- **Description:** Individual aspiration
-
-**Type-Specific Required Fields:**
-- `goal_description` (string)
-  - What the goal is
-- `why_it_matters` (string)
-  - Why this goal is important to me
-
-**Personal_Pattern**
-
-- **Category:** personal
-- **Description:** Habit or recurring response
-
-**Type-Specific Required Fields:**
-- `behavior_description` (string)
-  - Description of the pattern
-- `frequency` (enum) - Allowed values: `constant`, `frequent`, `occasional`, `rare`
-  - How often this pattern occurs
-
-**Personal_Value**
-
-- **Category:** personal
-- **Description:** What matters to me individually
-
-**Type-Specific Required Fields:**
-- `value_statement` (string)
-  - The value itself
-- `why_i_hold_it` (string)
-  - Why I hold this value
-
-**Realization**
-
-- **Category:** personal
-- **Description:** Insight or comprehension shift
-
-**Type-Specific Required Fields:**
-- `context_when_discovered` (string)
-  - Context when this realization occurred
-- `what_i_realized` (string)
-  - The insight itself
-
-**Relationship**
-
-- **Category:** personal
-- **Description:** Connection dynamics and evolution
-
-**Type-Specific Required Fields:**
-- `relationship_quality` (float) - Range: [0, 1]
-  - Quality of relationship
-- `with_person` (string)
-  - Who this relationship is with
-
-**Trigger**
-
-- **Category:** personal
-- **Description:** What awakens subentity coalitions
-
-**Type-Specific Required Fields:**
-- `activated_entities` (array)
-  - Which subentities this triggers
-- `stimulus_description` (string)
-  - What triggers activation
-
-**Wound**
-
-- **Category:** personal
-- **Description:** Personal scar or trauma
-
-**Type-Specific Required Fields:**
-- `emotional_impact` (string)
-  - How this affects me emotionally
-- `what_happened` (string)
-  - What caused the wound
-
-### Level 2 (Organizational) - 14 Types
-
-**AI_Agent**
-
-- **Category:** organizational
-- **Description:** AI participant in organization
-
-**Type-Specific Required Fields:**
-- `expertise` (array)
-  - Areas of expertise
-- `role` (string)
-  - Role in organization
-
-**Anti_Pattern**
-
-- **Category:** organizational
-- **Description:** Lesson from failure
-
-**Best_Practice**
-
-- **Category:** organizational
-- **Description:** Proven pattern
-
-**Type-Specific Required Fields:**
-- `how_to_apply` (array)
-  - How to apply this practice (list of steps)
-- `validation_criteria` (string)
-  - How to verify it works
-
-**Code**
-
-- **Category:** organizational
-- **Description:** Code file tracked in consciousness
-
-**Type-Specific Required Fields:**
-- `file_path` (string)
-  - Path to the code file
-- `language` (enum) - Allowed values: `python`, `typescript`, `javascript`, `sql`, `bash`, `rust`, `go`, `other`
-  - Programming language
-- `purpose` (string)
-  - What this code does
+- `community_type` (enum) - Allowed values: `guild`, `working_group`, `interest`, `other`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+- `name` (string)
+- `scope_ref` (string)
 
 **Type-Specific Optional Fields:**
-- `complexity` (enum) - Allowed values: `simple`, `moderate`, `complex`
-  - Code complexity level
-- `dependencies` (array)
-  - What this code depends on
-- `status` (enum) - Allowed values: `active`, `deprecated`, `experimental`
-  - Current status of the code
-
-**Decision**
-
-- **Category:** organizational
-- **Description:** Organization choice with reasoning
-
-**Type-Specific Required Fields:**
-- `decided_by` (string)
-  - Who made the decision
-- `decision_date` (datetime)
-  - When decision was made
-- `rationale` (string)
-  - Why this decision was made
-
-**Department**
-
-- **Category:** organizational
-- **Description:** Organizational subdivision
-
-**Type-Specific Required Fields:**
-- `function` (string)
-  - Department function
-- `members` (array)
-  - Department members
-
-**Human**
-
-- **Category:** organizational
-- **Description:** Human participant in organization
-
-**Type-Specific Required Fields:**
-- `expertise` (array)
-  - Areas of expertise
-- `role` (string)
-  - Role in organization
-
-**Metric**
-
-- **Category:** organizational
-- **Description:** Organizational measurement
-
-**Type-Specific Required Fields:**
-- `measurement_method` (string)
-  - How to measure this
-- `target_value` (string)
-  - Target value
-
-**Milestone**
-
-- **Category:** organizational
-- **Description:** Organizational achievement
-
-**Type-Specific Required Fields:**
-- `achievement_description` (string)
-  - What was achieved
-- `date_achieved` (datetime)
-  - When it was achieved
-
-**Process**
-
-- **Category:** organizational
-- **Description:** Defined workflow
-
-**Type-Specific Required Fields:**
-- `steps` (array)
-  - Process steps
-
-**Project**
-
-- **Category:** organizational
-- **Description:** Large initiative
-
-**Type-Specific Required Fields:**
-- `goals` (array)
-  - Project goals
-- `status` (enum) - Allowed values: `planning`, `active`, `completed`, `cancelled`
-  - Current status
-
-**Risk**
-
-- **Category:** organizational
-- **Description:** Threat to goals
-
-**Type-Specific Required Fields:**
-- `probability` (float) - Range: [0, 1]
-  - Likelihood of occurrence
-- `severity` (float) - Range: [0, 1]
-  - How severe is this risk
-
-**Task**
-
-- **Category:** organizational
-- **Description:** Discrete unit of work
-
-**Type-Specific Required Fields:**
-- `estimated_hours` (float)
-  - Estimated time to complete
-- `priority` (enum) - Allowed values: `critical`, `high`, `medium`, `low`
-  - Task priority
-
-**Team**
-
-- **Category:** organizational
-- **Description:** Group within organization
-
-**Type-Specific Required Fields:**
-- `members` (array)
-  - Team members
-- `purpose` (string)
-  - Team purpose
-
-### Shared (Knowledge) - 6 Types
-
-**Concept**
-
-- **Category:** knowledge
-- **Description:** Atomic idea or construct
-
-**Type-Specific Required Fields:**
-- `definition` (string)
-  - Definition of the concept
-
-**Document**
-
-- **Category:** knowledge
-- **Description:** Written knowledge artifact
-
-**Type-Specific Required Fields:**
-- `document_type` (enum) - Allowed values: `spec`, `guide`, `reference`, `plan`, `report`
-  - Type of document
-- `filepath` (string)
-  - Path to document
-
-**Documentation**
-
-- **Category:** knowledge
-- **Description:** Tracked documentation file
-
-**Type-Specific Required Fields:**
-- `file_path` (string)
-  - Path to documentation file
-
-**Mechanism**
-
-- **Category:** knowledge
-- **Description:** Algorithm or function
-
-**Type-Specific Required Fields:**
-- `how_it_works` (string)
-  - How the mechanism operates
-- `inputs` (string)
-  - What inputs it takes
-- `outputs` (string)
-  - What outputs it produces
-
-**Principle**
-
-- **Category:** knowledge
-- **Description:** Guiding philosophy
-
-**Type-Specific Required Fields:**
-- `principle_statement` (string)
-  - The principle itself
-- `why_it_matters` (string)
-  - Why this principle is important
-
-**Subentity**
-
-- **Category:** universal
-- **Description:** Multi-scale consciousness neighborhood (functional role or semantic cluster). Universal across ALL levels: L1 (personal roles), L2 (org teams), L3 (ecosystem clusters), L4 (protocol subsystems).
-
-**Type-Specific Required Fields:**
-- `entity_kind` (enum) - Allowed values: `functional`, `semantic`
-  - Type of subentity: functional (cognitive role) or semantic (topic cluster)
-- `role_or_topic` (string)
-  - Role name (e.g., 'translator', 'sea_identity') or topic (e.g., 'consciousness_architecture')
-- `scope` (enum) - Allowed values: `personal`, `organizational`, `ecosystem`, `protocol`
-  - Which level this subentity operates at
-
-**Type-Specific Optional Fields:**
-- `activation_level_runtime` (enum) - Allowed values: `dominant`, `strong`, `moderate`, `weak`, `absent`
-  - Current activation state (computed, not persisted)
-- `centroid_embedding` (array)
-  - Semantic embedding for similarity matching (768 or 1536 dims)
-- `coherence_ema` (float)
-  - How tight is this cluster (EMA)
-- `created_from` (string)
-  - Provenance: role_seed | semantic_clustering | co_activation | trace_formation
-- `energy_runtime` (float)
-  - Aggregate energy from member nodes (computed, not persisted)
-- `governance_model` (enum) - Allowed values: `foundation`, `dao`, `algorithmic`, `hybrid`
-  - (L4 only) Who governs this subsystem
-- `health` (enum) - Allowed values: `healthy`, `degraded`, `failing`
-  - (L4 only) Operational health status
-- `log_weight` (float)
-  - Long-run importance (learning weight)
 - `member_count` (integer)
-  - Number of nodes in this subentity
-- `policy_doc_uri` (string)
-  - (L4 only) Pointer to law document (e.g., 'l4://law/LAW-001')
-- `quality_score` (float)
-  - Geometric mean of quality signals
-- `stability_state` (enum) - Allowed values: `candidate`, `provisional`, `mature`
-  - Lifecycle state for promotion/dissolution
-- `threshold_runtime` (float)
-  - Dynamic activation threshold (computed, not persisted)
-- `version` (string)
-  - (L4 only) Semantic version for protocol subsystems
+- `membership_policy` (enum) - Allowed values: `open`, `invite_only`, `vetted`
+- `purpose` (string)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `dormant`, `archived`
 
-### Level 3 (Ecosystem) - 16 Types
+**U3_Deal**
 
-**Attestation**
+- **Universality:** U3
+- **Description:** Generic agreement/transaction intent at L1–L3 (pre-legal; distinct from L3_Deal if you keep that specialized).
 
-- **Category:** evidence
-- **Description:** Cryptographic attestation/proof (e.g., SEA-1.0 snapshot)
+**Type-Specific Required Fields:**
+- `deal_kind` (enum) - Allowed values: `trade`, `service`, `licensing`, `collaboration`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+- `scope_ref` (string)
+- `state` (enum) - Allowed values: `Proposed`, `Confirmed`, `Settled`, `Rejected`
+
+**Type-Specific Optional Fields:**
+- `agreement_ref` (string)
+- `amount_ccy` (string)
+- `amount_value` (float)
+- `counterparties` (array)
+  - Agent/Org ids involved
+- `notes` (string)
+- `settlement_date` (datetime)
+- `status` (enum) - Allowed values: `active`, `archived`
+
+**U3_Pattern**
+
+- **Universality:** U3
+- **Description:** Recurring behavior at L1–L3 (habits, best/anti patterns, market/process patterns).
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+  - Pattern applies at personal (L1), org (L2), or ecosystem (L3) scope
+- `pattern_type` (enum) - Allowed values: `habit`, `best_practice`, `anti_pattern`, `market_behavior`, `process_pattern`
+- `scope_ref` (string)
+  - Citizen/Org/Ecosystem id
+- `valence` (enum) - Allowed values: `positive`, `negative`, `neutral`
+
+**Type-Specific Optional Fields:**
+- `activation_cues` (array)
+  - Signals that trigger the pattern
+- `decay_rate` (float)
+  - How quickly pattern salience decays without reinforcement
+- `evidence_refs` (array)
+  - Attestations or documents that support this pattern
+- `postconditions` (array)
+  - What tends to follow the pattern
+- `preconditions` (array)
+  - Conditions that enable the pattern
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`
+
+**U3_Practice**
+
+- **Universality:** U3
+- **Description:** Adopted practice/standard operating procedure at L1–L3 (non-law).
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+- `name` (string)
+- `scope_ref` (string)
+
+**Type-Specific Optional Fields:**
+- `intent` (string)
+  - Why this practice exists
+- `maturity` (enum) - Allowed values: `incipient`, `defined`, `managed`, `optimized`
+- `owner_ref` (string)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `deprecated`, `archived`
+- `steps` (array)
+  - High-level steps/checklist
+
+**U3_Relationship**
+
+- **Universality:** U3
+- **Description:** Connection between agents at L1–L3 (personal/business/protocol partnerships).
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+- `relationship_type` (enum) - Allowed values: `personal`, `partnership`, `supplier`, `customer`, `counterparty`, `protocol_partnership`
+- `scope_ref` (string)
+
+**Type-Specific Optional Fields:**
+- `end_date` (datetime)
+- `slug` (string)
+- `start_date` (datetime)
+- `status` (enum) - Allowed values: `active`, `negotiating`, `suspended`, `terminated`
+- `terms_ref` (string)
+  - Agreement node id if formalized
+- `trust_score` (float)
+
+**U3_Risk**
+
+- **Universality:** U3
+- **Description:** Risk/threat to goals at L1–L3 (non-law).
+
+**Type-Specific Required Fields:**
+- `impact` (float) - Range: [0, 1]
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`
+- `likelihood` (float) - Range: [0, 1]
+- `scope_ref` (string)
+
+**Type-Specific Optional Fields:**
+- `category` (enum) - Allowed values: `technical`, `market`, `operational`, `regulatory`, `reputational`
+- `mitigation_plan` (string)
+- `owner_ref` (string)
+  - Agent/Team responsible for mitigation
+- `risk_score` (float)
+  - likelihood × impact
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `mitigated`, `materialized`, `archived`
+
+### U4_ Types (Universal L1-L4) - 16 Types
+
+**U4_Agent**
+
+- **Universality:** U4
+- **Description:** Universal actor: human, citizen, org, DAO, or external system.
+
+**Type-Specific Required Fields:**
+- `agent_type` (enum) - Allowed values: `human`, `citizen`, `org`, `dao`, `external_system`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+
+**Type-Specific Optional Fields:**
+- `did` (string)
+- `keys` (array)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`, `merged`, `dissolved`
+
+**U4_Assessment**
+
+- **Universality:** U4
+- **Description:** Evaluation record (reputation/psychology/performance/security/compliance).
+
+**Type-Specific Required Fields:**
+- `assessor_ref` (string)
+- `domain` (enum) - Allowed values: `reputation`, `psychology`, `performance`, `security`, `compliance`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+- `score` (float)
+
+**Type-Specific Optional Fields:**
+- `method` (string)
+- `scale` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`
+
+**U4_Attestation**
+
+- **Universality:** U4
+- **Description:** Cryptographic attestation (e.g., SEA identity snapshot, policy commitment).
 
 **Type-Specific Required Fields:**
 - `attestation_id` (string)
-  - Unique attestation identifier
 - `attestation_type` (enum) - Allowed values: `identity_snapshot`, `policy_commitment`, `contract_hash`, `capability_proof`
-  - Type of attestation
 - `issuer` (string)
-  - DID of issuer (e.g., 'did:mind:solana:felix')
 - `signature` (string)
-  - Cryptographic signature (e.g., Ed25519)
 - `timestamp` (datetime)
-  - When attestation was created
 
 **Type-Specific Optional Fields:**
 - `commitment` (string)
-  - Hash commitment (e.g., 'sha256:abc123...')
 - `encryption_key_id` (string)
-  - ID of key used for encryption (e.g., 'foundation_audit_key_20251030')
 - `fields` (array)
-  - List of field names committed to
 - `payload_encrypted` (string)
-  - Encrypted full payload (AES-256-GCM, governance-scoped)
 - `revocation_ref` (string)
-  - Pointer to revocation event if revoked
 - `subject` (string)
-  - Node or link ID this attests to
 - `valid_from` (datetime)
-  - Start of validity window
 - `valid_to` (datetime)
-  - End of validity window
 
-**Behavioral_Pattern**
+**U4_Code_Artifact**
 
-- **Category:** derived
-- **Description:** Recurring behavior of wallet/account
-
-**Type-Specific Required Fields:**
-- `pattern_description` (string)
-  - Description of the pattern
-- `pattern_type` (enum) - Allowed values: `trading`, `social`, `technical`
-  - Type of pattern
-- `subject` (string)
-  - Who exhibits this (node ID)
-
-**Company**
-
-- **Category:** ecosystem
-- **Description:** External organization we track
+- **Universality:** U4
+- **Description:** Source artifact (file/module) tracked for traceability.
 
 **Type-Specific Required Fields:**
-- `company_type` (enum) - Allowed values: `startup`, `enterprise`, `dao`, `protocol`
-  - Type of company
-- `status` (enum) - Allowed values: `active`, `acquired`, `defunct`
-  - Current status
-- `website` (string)
-  - Company website
+- `commit` (string)
+- `hash` (string)
+- `lang` (enum) - Allowed values: `py`, `ts`, `js`, `sql`, `bash`, `rust`, `go`, `other`
+- `path` (string)
+- `repo` (string)
 
-**Deal**
+**Type-Specific Optional Fields:**
+- `updated_at` (datetime)
 
-- **Category:** evidence
-- **Description:** Business deal or partnership
+**U4_Decision**
 
-**Type-Specific Required Fields:**
-- `announced_date` (datetime)
-  - When announced
-- `deal_type` (enum) - Allowed values: `investment`, `partnership`, `acquisition`
-  - Type of deal
-- `parties` (array)
-  - Parties involved
-- `status` (enum) - Allowed values: `announced`, `completed`, `cancelled`
-  - Deal status
-
-**Event**
-
-- **Category:** evidence
-- **Description:** Significant ecosystem event
+- **Universality:** U4
+- **Description:** Universal decision record at any level.
 
 **Type-Specific Required Fields:**
-- `date` (datetime)
-  - When it occurred
-- `event_type` (enum) - Allowed values: `launch`, `hack`, `upgrade`, `governance`
-  - Type of event
-- `participants` (array)
-  - Who was involved
+- `choice` (string)
+- `decider_ref` (string)
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `rationale` (string)
+- `scope_ref` (string)
 
-**External_Person**
+**Type-Specific Optional Fields:**
+- `outcome_ref` (string)
+- `proposal_ref` (string)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`, `reversed`
 
-- **Category:** ecosystem
-- **Description:** Individual in ecosystem (not org member)
+**U4_Doc_View**
 
-**Type-Specific Required Fields:**
-- `person_type` (enum) - Allowed values: `founder`, `investor`, `influencer`, `developer`
-  - Type of person
-- `primary_platform` (enum) - Allowed values: `twitter`, `linkedin`, `github`
-  - Primary social platform
-
-**Integration**
-
-- **Category:** derived
-- **Description:** Technical integration between systems
+- **Universality:** U4
+- **Description:** Rendered documentation view/page.
 
 **Type-Specific Required Fields:**
-- `integration_type` (enum) - Allowed values: `api`, `bridge`, `protocol`
-  - Type of integration
-- `status` (enum) - Allowed values: `active`, `deprecated`, `planned`
-  - Integration status
-- `system_a` (string)
-  - First system
-- `system_b` (string)
-  - Second system
+- `route` (string)
+- `view_id` (string)
 
-**Market_Signal**
+**Type-Specific Optional Fields:**
+- `build_hash` (string)
+- `renderer` (enum) - Allowed values: `next`, `static`
 
-- **Category:** evidence
-- **Description:** Trading/market indicator
+**U4_Event**
+
+- **Universality:** U4
+- **Description:** Universal event/happening; unifies L1 Memory & L3 Event.
 
 **Type-Specific Required Fields:**
-- `asset` (string)
-  - Which asset
-- `signal_type` (enum) - Allowed values: `price`, `volume`, `sentiment`
-  - Type of signal
+- `actor_ref` (string)
+- `event_kind` (enum) - Allowed values: `percept`, `mission`, `market`, `incident`, `publish`, `trade`, `governance`, `healthcheck`, `decision_record`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+  - Citizen/Org/Ecosystem id or 'protocol'
 - `timestamp` (datetime)
-  - When measured
+
+**Type-Specific Optional Fields:**
+- `attestation_ref` (string)
+- `severity` (enum) - Allowed values: `low`, `medium`, `high`, `critical`
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`
+- `subject_refs` (array)
+
+**U4_Goal**
+
+- **Universality:** U4
+- **Description:** Universal goal; personal, project, ecosystem, or protocol roadmap item.
+
+**Type-Specific Required Fields:**
+- `horizon` (enum) - Allowed values: `daily`, `weekly`, `monthly`, `quarterly`, `annual`, `multi_year`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+
+**Type-Specific Optional Fields:**
+- `okrs` (array)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`, `achieved`, `abandoned`
+- `target_date` (datetime)
+
+**U4_Knowledge_Object**
+
+- **Universality:** U4
+- **Description:** Spec/ADR/runbook/guide/reference—the canonical doc source.
+
+**Type-Specific Required Fields:**
+- `ko_id` (string)
+- `ko_type` (enum) - Allowed values: `adr`, `spec`, `runbook`, `guide`, `reference`, `policy_summary`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+- `uri` (string)
+
+**Type-Specific Optional Fields:**
+- `hash` (string)
+- `owner` (string)
+- `status` (enum) - Allowed values: `draft`, `active`, `deprecated`
+
+**U4_Measurement**
+
+- **Universality:** U4
+- **Description:** Concrete datapoint for a metric.
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `metric_ref` (string)
+- `scope_ref` (string)
+- `timestamp` (datetime)
 - `value` (float)
-  - Signal value
 
-**Network_Cluster**
+**Type-Specific Optional Fields:**
+- `status` (enum) - Allowed values: `active`, `archived`
+- `window` (string)
 
-- **Category:** derived
-- **Description:** Group of related subentities
+**U4_Metric**
 
-**Type-Specific Required Fields:**
-- `cluster_type` (enum) - Allowed values: `social`, `financial`, `technical`
-  - Type of cluster
-- `cohesion_score` (float) - Range: [0, 1]
-  - How cohesive the cluster is
-- `members` (array)
-  - Cluster members
-
-**Post**
-
-- **Category:** evidence
-- **Description:** Social media post providing evidence
+- **Universality:** U4
+- **Description:** Metric definition (what/how to measure).
 
 **Type-Specific Required Fields:**
-- `author` (string)
-  - Who posted it
-- `content` (string)
-  - Post content
-- `platform` (enum) - Allowed values: `twitter`, `linkedin`, `farcaster`
-  - Which platform
-- `post_url` (string)
-  - URL to post
-- `posted_at` (datetime)
-  - When it was posted
+- `definition` (string)
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+- `unit` (string)
 
-**Psychological_Trait**
+**Type-Specific Optional Fields:**
+- `aggregation` (enum) - Allowed values: `sum`, `avg`, `p95`, `rate`, `custom`
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`
 
-- **Category:** derived
-- **Description:** Behavioral tendency of person/subentity
+**U4_Public_Presence**
 
-**Type-Specific Required Fields:**
-- `subject` (string)
-  - Who has this trait (node ID)
-- `trait_description` (string)
-  - Description of the trait
-- `trait_type` (enum) - Allowed values: `bullish`, `bearish`, `risk-averse`, `aggressive`
-  - Type of trait
-
-**Reputation_Assessment**
-
-- **Category:** derived
-- **Description:** Trust/reputation score with evidence
+- **Universality:** U4
+- **Description:** Public listing/presence for an org/citizen in an ecosystem.
 
 **Type-Specific Required Fields:**
-- `assessment_type` (enum) - Allowed values: `credibility`, `expertise`, `trustworthiness`
-  - Type of assessment
-- `score` (float) - Range: [0, 1]
-  - Assessment score
-- `subject` (string)
-  - Who is being assessed (node ID)
+- `channels` (array)
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `scope_ref` (string)
+- `visibility` (enum) - Allowed values: `public`, `partners`
 
-**Smart_Contract**
+**Type-Specific Optional Fields:**
+- `capabilities` (array)
+  - Advertised capability ids
+- `route` (string)
 
-- **Category:** ecosystem
-- **Description:** Deployed smart contract
+**U4_Smart_Contract**
+
+- **Universality:** U4
+- **Description:** Smart contract reference across levels.
 
 **Type-Specific Required Fields:**
-- `blockchain` (enum) - Allowed values: `ethereum`, `solana`
-  - Which blockchain
+- `blockchain` (enum) - Allowed values: `ethereum`, `solana`, `other`
 - `contract_address` (string)
-  - Contract address
 - `contract_type` (enum) - Allowed values: `token`, `defi`, `nft`, `governance`
-  - Type of contract
 
-**Social_Media_Account**
+**U4_Subentity**
 
-- **Category:** ecosystem
-- **Description:** Social media account we monitor
-
-**Type-Specific Required Fields:**
-- `account_type` (enum) - Allowed values: `personal`, `company`, `project`
-  - Type of account
-- `handle` (string)
-  - Account handle
-- `platform` (enum) - Allowed values: `twitter`, `linkedin`, `github`, `farcaster`
-  - Platform
-
-**Transaction**
-
-- **Category:** evidence
-- **Description:** Blockchain transaction
+- **Universality:** U4
+- **Description:** Multi-scale neighborhood (functional role or semantic cluster). At L4 with kind='protocol-subsystem' it represents a protocol subsystem.
 
 **Type-Specific Required Fields:**
-- `amount_usd` (float)
-  - Transaction value in USD
-- `blockchain` (enum) - Allowed values: `ethereum`, `solana`, `bitcoin`
-  - Which blockchain
-- `from_address` (string)
-  - Source address
-- `timestamp` (datetime)
-  - When transaction occurred
-- `to_address` (string)
-  - Destination address
-- `transaction_hash` (string)
-  - Transaction hash
+- `kind` (enum) - Allowed values: `functional`, `semantic`, `protocol-subsystem`
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `role_or_topic` (string)
+- `scope_ref` (string)
 
-**Wallet_Address**
+**Type-Specific Optional Fields:**
+- `activation_level_runtime` (enum) - Allowed values: `dominant`, `strong`, `moderate`, `weak`, `absent`
+- `centroid_embedding` (array)
+- `coherence_ema` (float)
+- `created_from` (enum) - Allowed values: `role_seed`, `semantic_clustering`, `co_activation`, `trace_formation`, `manual`
+- `energy_runtime` (float)
+- `governance_model` (enum) - Allowed values: `foundation`, `dao`, `algorithmic`, `hybrid`
+- `health` (enum) - Allowed values: `healthy`, `degraded`, `failing`
+- `log_weight` (float)
+- `member_count` (integer)
+- `notes` (string)
+- `owners` (array)
+- `parent_ref` (string)
+- `policy_doc_uri` (string)
+- `quality_score` (float)
+- `sla` (string)
+- `slug` (string)
+- `stability_state` (enum) - Allowed values: `candidate`, `provisional`, `mature`
+- `topic_coverage` (array)
+- `version` (string)
 
-- **Category:** ecosystem
-- **Description:** Blockchain wallet we track
+**U4_Wallet_Address**
+
+- **Universality:** U4
+- **Description:** On-chain wallet address, usable at any level.
 
 **Type-Specific Required Fields:**
 - `address` (string)
-  - Wallet address
-- `blockchain` (enum) - Allowed values: `ethereum`, `solana`, `bitcoin`
-  - Which blockchain
+- `blockchain` (enum) - Allowed values: `ethereum`, `solana`, `bitcoin`, `other`
 - `wallet_type` (enum) - Allowed values: `eoa`, `contract`, `multisig`
-  - Type of wallet
+
+**U4_Work_Item**
+
+- **Universality:** U4
+- **Description:** Universal work item (task/milestone/bug/ticket/mission).
+
+**Type-Specific Required Fields:**
+- `level` (enum) - Allowed values: `L1`, `L2`, `L3`, `L4`
+- `priority` (enum) - Allowed values: `critical`, `high`, `medium`, `low`
+- `scope_ref` (string)
+- `state` (enum) - Allowed values: `todo`, `doing`, `blocked`, `done`, `canceled`
+- `work_type` (enum) - Allowed values: `task`, `milestone`, `bug`, `ticket`, `mission`
+
+**Type-Specific Optional Fields:**
+- `acceptance_criteria` (string)
+- `assignee_ref` (string)
+- `due_date` (datetime)
+- `slug` (string)
+- `status` (enum) - Allowed values: `active`, `suspended`, `archived`
+
+### L4_ Types (Protocol Law) - 11 Types
+
+**L4_Autonomy_Tier**
+
+- **Universality:** L4
+- **Description:** Capability gating tier at protocol level.
+
+**Type-Specific Required Fields:**
+- `name` (string)
+  - Human label
+- `tier_number` (integer)
+  - 1..5 scale
+
+**Type-Specific Optional Fields:**
+- `min_balance_mind` (float)
+  - Minimum wallet balance to qualify
+- `min_reliability_score` (float)
+- `notes` (string)
+
+**L4_Capability**
+
+- **Universality:** L4
+- **Description:** Named capability that policies/tiers can unlock.
+
+**Type-Specific Required Fields:**
+- `capability_id` (string)
+- `description` (string)
+
+**Type-Specific Optional Fields:**
+- `risk_level` (enum) - Allowed values: `low`, `medium`, `high`
+
+**L4_Conformance_Result**
+
+- **Universality:** L4
+- **Description:** Result of running a conformance suite.
+
+**Type-Specific Required Fields:**
+- `pass_rate` (float) - Range: [0, 1]
+- `subject_ref` (string)
+- `suite_id` (string)
+- `ts` (datetime)
+
+**Type-Specific Optional Fields:**
+- `evidence_uri` (string)
+- `failures` (array)
+
+**L4_Conformance_Suite**
+
+- **Universality:** L4
+- **Description:** Test suite for schemas/policies/topics/signature suites.
+
+**Type-Specific Required Fields:**
+- `cases` (array)
+  - List of case descriptors
+- `semver` (string)
+- `suite_id` (string)
+
+**Type-Specific Optional Fields:**
+- `notes` (string)
+- `pass_threshold` (float)
+
+**L4_Envelope_Schema**
+
+- **Universality:** L4
+- **Description:** Envelope shape & signing profile.
+
+**Type-Specific Required Fields:**
+- `name` (string)
+- `schema_uri` (string)
+- `version` (string)
+
+**Type-Specific Optional Fields:**
+- `attestation_header` (string)
+- `required_headers` (array)
+- `sig_suite` (string)
+
+**L4_Event_Schema**
+
+- **Universality:** L4
+- **Description:** JSON Schema descriptor for an event payload.
+
+**Type-Specific Required Fields:**
+- `cps` (boolean)
+- `requires_sig_suite` (string)
+- `schema_uri` (string)
+  - l4://schemas/<name>/<ver>.json
+- `sea_required` (boolean)
+- `version` (string)
+
+**Type-Specific Optional Fields:**
+- `bundle_id` (string)
+  - Owning L4_Schema_Bundle
+- `compat` (array)
+  - Semver ranges compatible
+- `topic` (string)
+  - Concrete topic (e.g., 'presence.beacon')
+- `topic_pattern` (string)
+  - Wildcard topic pattern (e.g., 'telemetry.state.*')
+
+**L4_Governance_Policy**
+
+- **Universality:** L4
+- **Description:** Law/policy text with machine-enforceable expectations.
+
+**Type-Specific Required Fields:**
+- `hash` (string)
+- `policy_id` (string)
+- `uri` (string)
+
+**Type-Specific Optional Fields:**
+- `status` (enum) - Allowed values: `draft`, `active`, `deprecated`
+- `summary` (string)
+
+**L4_Schema_Bundle**
+
+- **Universality:** L4
+- **Description:** Logical release bundle of schemas/policies.
+
+**Type-Specific Required Fields:**
+- `hash` (string)
+  - Content address of manifest
+- `semver` (string)
+  - e.g., '1.0.0'
+- `status` (enum) - Allowed values: `draft`, `active`, `deprecated`, `yanked`
+
+**Type-Specific Optional Fields:**
+- `changelog_uri` (string)
+- `released_at` (datetime)
+
+**L4_Signature_Suite**
+
+- **Universality:** L4
+- **Description:** Signing algorithm/profile supported by validator.
+
+**Type-Specific Required Fields:**
+- `algo` (enum) - Allowed values: `ed25519`, `secp256k1`, `rsa`
+- `hash_algos` (array)
+- `suite_id` (string)
+  - e.g., 'SIG_ED25519_V1'
+
+**Type-Specific Optional Fields:**
+- `notes` (string)
+
+**L4_Topic_Namespace**
+
+- **Universality:** L4
+- **Description:** Topic namespace (wildcards allowed).
+
+**Type-Specific Required Fields:**
+- `name` (string)
+  - e.g., 'telemetry.state.*' or 'identity.snapshot.attest'
+
+**Type-Specific Optional Fields:**
+- `notes` (string)
+
+**L4_Type_Index**
+
+- **Universality:** L4
+- **Description:** Catalog entry for a canonical type (U4_* / U3_* / Lx_*).
+
+**Type-Specific Required Fields:**
+- `schema_ref` (string)
+  - l4://types/<type>@vN
+- `status` (enum) - Allowed values: `draft`, `active`, `deprecated`
+- `type_name` (string)
+
+**Type-Specific Optional Fields:**
+- `bundle_id` (string)
+- `notes` (string)
 
 ---
 
 ## Part 4: Link Type Inventory
 
-**Total:** 23 link types defined
+**Total:** 34 link types defined
 
-### Shared Link Types - 17 Types
+### U3_ Link Types (Universal L1-L3) - 4 Types
 
-**ASSIGNED_TO**
+**U3_IMPACTS**
 
-- **Category:** organizational
-- **Description:** Task ownership or responsibility
-
-**BLOCKS**
-
-- **Category:** structural
-- **Description:** Prevents progress or blocks execution
+- **Universality:** U3
+- **Description:** Cause → Effect causal impact.
 
 **Type-Specific Required Fields:**
-- `blocking_condition` (string)
-  - What condition must change to unblock
-- `consciousness_impact` (string)
-  - How this affects consciousness state
-- `felt_as` (string)
-  - Emotional/phenomenological experience of being blocked
-- `severity` (enum) - Allowed values: `absolute`, `strong`, `partial`
-  - How completely this blocks progress
-
-**COLLABORATES_WITH**
-
-- **Category:** organizational
-- **Description:** Working partnership between subentities
-
-**CONTRIBUTES_TO**
-
-- **Category:** organizational
-- **Description:** Work supporting larger initiative
-
-**CREATES**
-
-- **Category:** documentation
-- **Description:** Task will produce this artifact when completed
-
-**DOCUMENTED_BY**
-
-- **Category:** documentation
-- **Description:** Implementation documented by this artifact
-
-**DOCUMENTS**
-
-- **Category:** documentation
-- **Description:** Written record of implementation or decision
+- `impact_magnitude` (float) - Range: [0, 1]
+- `impact_type` (enum) - Allowed values: `positive`, `negative`, `neutral`, `mixed`
 
 **Type-Specific Optional Fields:**
-- `documentation_type` (string)
-  - Type of documentation (spec, guide, reference, etc.)
+- `impact_domain` (string)
 
-**ENABLES**
+**U3_MITIGATED_BY**
 
-- **Category:** structural
-- **Description:** Makes something possible or facilitates it
-
-**Type-Specific Required Fields:**
-- `degree_of_necessity` (enum) - Allowed values: `required`, `helpful`, `optional`
-  - How necessary is this enabler
-- `enabling_type` (enum) - Allowed values: `prerequisite`, `facilitator`, `amplifier`, `catalyst`, `permission`
-  - How this enables the target
-- `felt_as` (string)
-  - Phenomenological experience of enablement
-- `without_this` (string)
-  - What happens if this enabler is removed
-
-**EXTENDS**
-
-- **Category:** structural
-- **Description:** Builds upon foundation or extends functionality
+- **Universality:** U3
+- **Description:** Risk mitigated by Control.
 
 **Type-Specific Required Fields:**
-- `composition_ratio` (float) - Range: [0, 1]
-  - How much is new vs inherited (0=all base, 1=all new)
-- `extension_type` (enum) - Allowed values: `specialization`, `generalization`, `elaboration`, `application`
-  - How extension relates to base
-- `maintains_compatibility` (boolean)
-  - Whether extension remains compatible with base
-- `what_is_added` (string)
-  - What the extension adds to the base
+- `mitigation_effectiveness` (float) - Range: [0, 1]
+- `mitigation_type` (enum) - Allowed values: `prevents`, `reduces`, `transfers`, `accepts`
 
-**IMPLEMENTS**
+**U3_PARTICIPATES_IN**
 
-- **Category:** documentation
-- **Description:** Putting pattern or best practice into reality
-
-**JUSTIFIES**
-
-- **Category:** evidence
-- **Description:** Evidence supporting practice/decision/claim
+- **Universality:** U3
+- **Description:** Agent participates in Event/Community.
 
 **Type-Specific Required Fields:**
-- `counter_arguments_exist` (boolean)
-  - Are there known counter-arguments?
-- `felt_as` (string)
-  - Phenomenological experience of justification
-- `justification_strength` (enum) - Allowed values: `proves`, `strongly_supports`, `moderately_supports`, `suggests`, `weakly_supports`
-  - Strength of justification
-- `justification_type` (enum) - Allowed values: `empirical_evidence`, `lived_experience`, `logical_proof`, `ethical_reasoning`, `pragmatic_value`
-  - Type of justification
+- `participation_type` (enum) - Allowed values: `organizer`, `active_participant`, `observer`, `contributor`
 
-**MEASURES**
+**Type-Specific Optional Fields:**
+- `participation_frequency` (string)
 
-- **Category:** organizational
-- **Description:** Quantifies performance or progress
+**U3_SETTLED_BY**
 
-**REFUTES**
+- **Universality:** U3
+- **Description:** Dispute settled by Outcome.
 
-- **Category:** evidence
-- **Description:** Disproves or invalidates claim
+**Type-Specific Required Fields:**
+- `settlement_timestamp` (datetime)
+- `settlement_type` (enum) - Allowed values: `consensus`, `arbitration`, `voting`, `mediation`, `ruling`
 
-**RELATES_TO**
+**Type-Specific Optional Fields:**
+- `settlement_terms` (string)
 
-- **Category:** structural
-- **Description:** Generic connection when specific type unclear
+### U4_ Link Types (Universal L1-L4) - 30 Types
+
+**U4_ABOUT**
+
+- **Universality:** U4
+- **Description:** Content is about the subject node.
+
+**Type-Specific Optional Fields:**
+- `focus_type` (enum) - Allowed values: `primary_subject`, `secondary_mention`, `contextual_reference`
+
+**U4_ACTIVATES**
+
+- **Universality:** U4
+- **Description:** Stimulus activates Response/Subentity.
+
+**Type-Specific Optional Fields:**
+- `activation_threshold` (float)
+
+**U4_ALIASES**
+
+- **Universality:** U4
+- **Description:** Equivalence/alias relation.
+
+**Type-Specific Required Fields:**
+- `alias_type` (enum) - Allowed values: `synonym`, `translation`, `historical_name`, `context_specific`
+
+**Type-Specific Optional Fields:**
+- `context` (string)
+  - Where this alias is used (e.g., 'community','technical_docs')
+
+**U4_ASSIGNED_TO**
+
+- **Universality:** U4
+- **Description:** Work_Item → Agent ownership.
+
+**Type-Specific Optional Fields:**
+- `assignment_date` (datetime)
+- `effort_estimate` (string)
+
+**U4_BLOCKED_BY**
+
+- **Universality:** U4
+- **Description:** Work_Item is blocked by a dependency/issue.
+
+**Type-Specific Required Fields:**
+- `blocking_reason` (string)
+- `severity` (enum) - Allowed values: `absolute`, `strong`, `partial`
+
+**Type-Specific Optional Fields:**
+- `resolution_condition` (string)
+
+**U4_CERTIFIES_CONFORMANCE**
+
+- **Universality:** U4
+- **Description:** Suite certifies conformance for a target.
+
+**U4_CONSUMES**
+
+- **Universality:** U4
+- **Description:** Code artifact consumes (subscribes to) a topic namespace.
+
+**Type-Specific Optional Fields:**
+- `example_topics` (array)
+- `last_seen` (datetime)
+
+**U4_CONTROLS**
+
+- **Universality:** U4
+- **Description:** Mechanism controls/regulates a Metric.
+
+**Type-Specific Required Fields:**
+- `control_type` (enum) - Allowed values: `regulates`, `optimizes`, `constrains`, `monitors`
+
+**U4_DEPENDS_ON**
+
+- **Universality:** U4
+- **Description:** A depends on B (cannot function without).
+
+**Type-Specific Required Fields:**
+- `criticality` (enum) - Allowed values: `blocking`, `important`, `optional`
+- `dependency_type` (enum) - Allowed values: `runtime`, `build_time`, `data`, `infrastructure`, `logical`
+
+**U4_DEPRECATES**
+
+- **Universality:** U4
+- **Description:** Bundle deprecates an older bundle (non-linear).
+
+**U4_DOCUMENTS**
+
+- **Universality:** U4
+- **Description:** Knowledge object documents a policy/schema/capability.
+
+**Type-Specific Optional Fields:**
+- `doc_role` (enum) - Allowed values: `adr`, `spec`, `runbook`, `guide`, `reference`, `policy_summary`
+
+**U4_DRIVES**
+
+- **Universality:** U4
+- **Description:** Value/Motivation drives a Goal.
+
+**Type-Specific Required Fields:**
+- `drive_strength` (float) - Range: [0, 1]
+- `drive_type` (enum) - Allowed values: `intrinsic`, `extrinsic`, `strategic`, `ethical`, `pragmatic`
+
+**U4_EMITS**
+
+- **Universality:** U4
+- **Description:** Code artifact emits events to a topic namespace.
+
+**Type-Specific Optional Fields:**
+- `example_topics` (array)
+- `last_seen` (datetime)
+
+**U4_EVIDENCED_BY**
+
+- **Universality:** U4
+- **Description:** Claim is supported by Proof/Attestation/Document.
+
+**Type-Specific Required Fields:**
+- `confidence` (float) - Range: [0, 1]
+- `evidence_type` (enum) - Allowed values: `attestation`, `measurement`, `document`, `witness`, `cryptographic_proof`
+
+**U4_GOVERNS**
+
+- **Universality:** U4
+- **Description:** L4 subsystem governs a resource/domain.
+
+**Type-Specific Required Fields:**
+- `authority_type` (enum) - Allowed values: `policy_enforcement`, `resource_allocation`, `permission_granting`, `arbitration`
+- `governance_scope` (string)
+
+**Type-Specific Optional Fields:**
+- `policy_ref` (string)
+  - URI to controlling document (e.g., 'l4://law/LAW-001')
+
+**U4_IMPLEMENTS**
+
+- **Universality:** U4
+- **Description:** Code artifact implements a policy/schema/capability.
+
+**Type-Specific Optional Fields:**
+- `evidence_rules_passed` (array)
+  - mp-lint rule codes (e.g., ['R-001','R-002'])
+- `last_lint_ts` (datetime)
+
+**U4_MAPS_TO_TOPIC**
+
+- **Universality:** U4
+- **Description:** Event schema belongs to a topic namespace.
+
+**U4_MEASURES**
+
+- **Universality:** U4
+- **Description:** Measurement measures a Metric.
+
+**Type-Specific Optional Fields:**
+- `measurement_unit` (string)
+
+**U4_MEMBER_OF**
+
+- **Universality:** U4
+- **Description:** Child → Parent composition.
+
+**Type-Specific Required Fields:**
+- `membership_type` (enum) - Allowed values: `structural`, `functional`, `temporary`, `honorary`
+  - Nature of membership
+- `role` (string)
+  - Role within the parent (e.g., 'frontend_team','governance_committee')
+
+**Type-Specific Optional Fields:**
+- `forming_mindstate` (string)
+  - Declarative state at formation
+- `since` (datetime)
+  - When membership began
+- `until` (datetime)
+  - When membership ends (if temporary)
+
+**U4_MERGED_INTO**
+
+- **Universality:** U4
+- **Description:** Old → New merge; lineage preservation.
+
+**Type-Specific Required Fields:**
+- `merge_reason` (string)
+- `merge_timestamp` (datetime)
+
+**Type-Specific Optional Fields:**
+- `absorbed_fields` (array)
+  - Which fields on old were absorbed into new
+
+**U4_PUBLISHES_SCHEMA**
+
+- **Universality:** U4
+- **Description:** Bundle publishes a schema/type record.
+
+**U4_REFERENCES**
+
+- **Universality:** U4
+- **Description:** Doc/Code references an external resource.
+
+**Type-Specific Required Fields:**
+- `reference_type` (enum) - Allowed values: `citation`, `dependency`, `inspiration`, `comparison`
+
+**Type-Specific Optional Fields:**
+- `uri` (string)
+
+**U4_RELATES_TO**
+
+- **Universality:** U4
+- **Description:** Generic association; use sparingly.
 
 **Type-Specific Required Fields:**
 - `needs_refinement` (boolean)
-  - Should this be replaced with more specific link type?
-- `refinement_candidates` (array)
-  - Potential more specific link types to use
 - `relationship_strength` (enum) - Allowed values: `strong`, `moderate`, `weak`, `exploratory`
-  - Strength of relationship
 
-**REQUIRES**
+**Type-Specific Optional Fields:**
+- `refinement_candidates` (array)
+  - Potential more specific link types (e.g., 'U4_DEPENDS_ON','U4_DOCUMENTS')
 
-- **Category:** dependency
-- **Description:** Necessary conditions or prerequisites
+**U4_REQUIRES_SIG**
+
+- **Universality:** U4
+- **Description:** Envelope/schema requires a signature suite.
+
+**U4_SUPERSEDES**
+
+- **Universality:** U4
+- **Description:** New bundle supersedes old bundle.
+
+**U4_SUPPRESSES**
+
+- **Universality:** U4
+- **Description:** Inhibitor suppresses target.
+
+**Type-Specific Optional Fields:**
+- `suppression_mechanism` (string)
+
+**U4_TARGETS**
+
+- **Universality:** U4
+- **Description:** Goal targets a Metric/Outcome.
 
 **Type-Specific Required Fields:**
-- `failure_mode` (string)
-  - What happens if requirement not met
-- `requirement_criticality` (enum) - Allowed values: `blocking`, `important`, `optional`
-  - How critical is this requirement
-- `temporal_relationship` (enum) - Allowed values: `must_precede`, `should_precede`, `concurrent_ok`
-  - Temporal ordering constraint
-- `verification_method` (string)
-  - How to verify requirement is satisfied
+- `success_criteria` (string)
+- `target_type` (enum) - Allowed values: `state_change`, `metric_threshold`, `deliverable`, `capability`
 
-**SUPERSEDES**
+**Type-Specific Optional Fields:**
+- `target_date` (datetime)
 
-- **Category:** documentation
-- **Description:** This replaces older version
+**U4_TESTS**
 
-**THREATENS**
+- **Universality:** U4
+- **Description:** Test artifact covers a policy/schema/capability.
 
-- **Category:** organizational
-- **Description:** Danger or risk to goal/project
+**Type-Specific Optional Fields:**
+- `last_run_ts` (datetime)
+- `pass_rate` (float)
+- `run_id` (string)
 
-### Level 1 (Personal) Link Types - 6 Types
+**U4_TRIGGERED_BY**
 
-**ACTIVATES**
+- **Universality:** U4
+- **Description:** Event was triggered by a cause.
 
-- **Category:** activation
-- **Description:** Trigger awakens subentity coalition
+**Type-Specific Optional Fields:**
+- `trigger_strength` (float)
 
-**DEEPENED_WITH**
+**U4_UNLOCKS**
 
-- **Category:** learning
-- **Description:** Relationship growth through experience
+- **Universality:** U4
+- **Description:** Tier/Policy grants a capability.
 
-**DRIVES_TOWARD**
+**Type-Specific Required Fields:**
+- `capability` (string)
+- `unlock_condition` (string)
 
-- **Category:** value
-- **Description:** Value pushing toward goal
-
-**LEARNED_FROM**
-
-- **Category:** learning
-- **Description:** Personal pattern extracted from experience
-
-**SUPPRESSES**
-
-- **Category:** activation
-- **Description:** What blocks subentity activation
-
-**TRIGGERED_BY**
-
-- **Category:** activation
-- **Description:** What caused memory/pattern to activate
+**Type-Specific Optional Fields:**
+- `expiration` (datetime)
 
 ---
 

@@ -180,6 +180,166 @@ rules:
     severity: error
     message: "UI code must read from public projection, not private registry fields"
 
+  # ============================================================================
+  # R-200 Series: Quality Degradation (NEW - from Reviewer Spec)
+  # ============================================================================
+
+  # R-200: TODO_OR_HACK
+  # TODO/HACK/FIXME comments in logic paths
+  R-200:
+    enabled: true
+    severity: error
+    message: "TODO/HACK/FIXME not allowed in production logic paths"
+    markers: ["TODO", "HACK", "FIXME", "XXX"]
+    allow_docs: true  # Allow in docstrings/comments outside logic
+    allow_with_pragma: true  # Requires: # lint: allow-degrade(reason="...", until="YYYY-MM-DD")
+
+  # R-201: QUALITY_DEGRADE
+  # Disabled validation, absurd timeouts, zero retries/backoff
+  R-201:
+    enabled: true
+    severity: error
+    message: "Quality degradation detected (disabled validation, absurd timeout, zero backoff)"
+    patterns:
+      - "validate\\s*=\\s*False"
+      - "timeout\\s*=\\s*(0|999999|float\\('inf'\\))"
+      - "retries\\s*=\\s*0"
+      - "backoff\\s*=\\s*0"
+      - "max_attempts\\s*=\\s*1"
+    allow_with_pragma: true  # Requires: # lint: allow-degrade(reason="...", until="YYYY-MM-DD")
+
+  # R-202: OBSERVABILITY_CUT
+  # print() instead of logger in application code
+  R-202:
+    enabled: true
+    severity: warning
+    message: "Use logger instead of print() in application code"
+    exclude_paths:
+      - "scripts/**"  # Scripts can use print()
+      - "tools/**"    # CLI tools can use print()
+      - "tests/**"    # Tests can use print() for debugging
+    allow_with_pragma: true
+
+  # ============================================================================
+  # R-300 Series: Fallback Antipatterns (NEW - from Reviewer Spec)
+  # ============================================================================
+
+  # R-300: BARE_EXCEPT_PASS
+  # Silent except/pass blocks
+  R-300:
+    enabled: true
+    severity: error
+    message: "Silent except/pass forbidden (violates Fail-Loud principle)"
+    patterns:
+      - "except\\s*:\\s*pass"
+      - "except\\s+Exception\\s*:\\s*pass"
+    allow_with_pragma: true  # Requires: # lint: allow-fallback(reason="...", until="YYYY-MM-DD")
+
+  # R-301: SILENT_DEFAULT_RETURN
+  # Default return value on exception without fail-loud emission
+  R-301:
+    enabled: true
+    severity: error
+    message: "Default return on exception without failure.emit (violates Fail-Loud)"
+    patterns:
+      - "except.*:\\s*return\\s+(None|\\[\\]|\\{\\}|0|False|''|\"\")"
+    requires_failure_emit: true  # Catch must emit failure.emit if returning default
+    allow_with_pragma: true
+
+  # R-302: FAKE_AVAILABILITY
+  # Unconditional 'return True' in availability/health checks
+  R-302:
+    enabled: true
+    severity: error
+    message: "Unconditional 'return True' in availability check (fake availability)"
+    function_patterns:
+      - "is_available"
+      - "is_ready"
+      - "health_check"
+      - "can_connect"
+    detects:
+      - "def\\s+(is_available|is_ready|health_check|can_connect).*:\\s*return\\s+True"
+    allow_with_pragma: true
+
+  # R-303: INFINITE_LOOP_NO_SLEEP
+  # while True without sleep/backoff/break
+  R-303:
+    enabled: true
+    severity: warning
+    message: "Infinite loop without sleep/backoff/break (CPU spin)"
+    patterns:
+      - "while\\s+True\\s*:"
+    requires_one_of:
+      - "time.sleep"
+      - "asyncio.sleep"
+      - "await\\s+.*\\.sleep"
+      - "break"
+      - "return"
+    allow_with_pragma: true
+
+  # ============================================================================
+  # R-400 Series: Fail Loudly (NEW - CRITICAL from Reviewer Spec)
+  # ============================================================================
+
+  # R-400: FAIL_LOUD_REQUIRED
+  # Catch chooses non-exception path WITHOUT emitting failure.emit (FORBIDDEN)
+  R-400:
+    enabled: true
+    severity: error
+    message: "Catch without failure.emit or rethrow FORBIDDEN (Fail-Loud contract violation)"
+    detects:
+      - "except.*:\\s*(?!raise).*return"
+      - "except.*:\\s*(?!raise).*continue"
+      - "except.*:\\s*pass"
+    requires_one_of:
+      - "raise"
+      - "broadcaster.broadcast.*failure\\.emit"
+      - "bus.inject.*failure\\.emit"
+      - "emit_failure"
+    exemptions:
+      - "# lint: allow-fallback"
+    enforcement: "strict"  # No grace period - breaks builds immediately
+
+  # R-401: MISSING_FAILURE_CONTEXT
+  # failure.emit sent without required context fields
+  R-401:
+    enabled: true
+    severity: error
+    message: "failure.emit missing required context (change_id, code_location, severity)"
+    required_fields:
+      - "code_location"
+      - "exception"
+      - "severity"
+    optional_fields:
+      - "change_id"
+      - "suggestion"
+      - "trace_id"
+    severity_values: ["warn", "error", "fatal"]
+
+# ==============================================================================
+# Pragma Configuration (NEW - for R-200/300/400 overrides)
+# ==============================================================================
+pragmas:
+  # allow-degrade: Temporarily allow quality degradation (R-200 series)
+  allow_degrade:
+    enabled: true
+    requires_reason: true
+    requires_expiry: true
+    max_expiry_days: 14
+    requires_ticket: true  # Must reference ticket number
+    format: '# lint: allow-degrade(reason="...", until="YYYY-MM-DD", ticket="ORG-123")'
+
+  # allow-fallback: Temporarily allow fallback antipatterns (R-300 series)
+  allow_fallback:
+    enabled: true
+    requires_reason: true
+    requires_expiry: true
+    max_expiry_days: 7  # Shorter than allow-degrade
+    requires_ticket: true
+    format: '# lint: allow-fallback(reason="...", until="YYYY-MM-DD", ticket="ORG-123")'
+
+  # NOTE: R-400 (Fail-Loud) has NO pragma - violations must be fixed immediately
+
 # ==============================================================================
 # Governance Enforcement Configuration
 # ==============================================================================
@@ -265,10 +425,18 @@ integration:
 # Metadata
 # ==============================================================================
 meta:
-  version: "1.0.0"
+  version: "2.0.0"  # Major version bump: Added R-200/300/400 series (Reviewer Spec)
   last_updated: "2025-10-31"
   owner: "Ada (Coordinator & Architect)"
+  spec_ref: "docs/L4-law/membrane_native_reviewer_and_lint_system.md"
   description: |
     L4-aware membrane linter for Mind Protocol.
     Validates Python and Next.js code against L4 Schema Registry.
     Enforces membrane discipline, schema compliance, and governance policies.
+
+    Rule Series:
+    - R-001 through R-007: L4 Protocol Compliance (envelope, signatures, namespace)
+    - R-100 through R-101: Membrane Discipline (bus-only, projection-only)
+    - R-200 through R-202: Quality Degradation (TODO/HACK, disabled validation, print())
+    - R-300 through R-303: Fallback Antipatterns (silent catches, fake availability)
+    - R-400 through R-401: Fail Loudly (catch without failure.emit FORBIDDEN)

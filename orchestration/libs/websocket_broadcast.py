@@ -398,8 +398,8 @@ class ConsciousnessStateBroadcaster:
         # Only return True if there are active clients connected
         # This prevents "successful" broadcasts to audience of zero
         try:
-            client_count = len(getattr(self.websocket_manager, '_connections', {}))
-            return client_count > 0
+            # Use the new client_count() method from WebSocketManager
+            return self.websocket_manager.client_count() > 0
         except Exception:
             # If we can't determine client count, assume unavailable
             return False

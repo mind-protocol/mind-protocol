@@ -25,12 +25,12 @@ class Violation:
     Represents a rule violation found during linting.
 
     Attributes:
-        rule_code: Rule identifier (e.g., "R-001", "R-002")
+        rule_code: Rule identifier (e.g., "R-001", "R-002", "R-100")
         severity: "error" or "warning"
         message: Human-readable error message
         file_path: Path to file containing violation
         line_number: Line number where violation occurs
-        event_type: Event name that violated the rule
+        event_type: Event name or value that violated the rule
         context: Additional context (e.g., code snippet)
     """
     rule_code: str
@@ -38,8 +38,100 @@ class Violation:
     message: str
     file_path: str
     line_number: int
-    event_type: str
+    event_type: str  # Event name for L4 violations, hardcoded value for R-100 violations
     context: Optional[str] = None
+
+
+# Rule code mapping for hardcoded violations
+HARDCODED_RULE_CODES = {
+    "MAGIC_NUMBER": "R-100",
+    "HARDCODED_STRING": "R-101",
+    "CITIZEN_ARRAY": "R-102",
+}
+
+# Rule code mapping for quality degradation violations
+QUALITY_RULE_CODES = {
+    "TODO_OR_HACK": "R-200",
+    "QUALITY_DEGRADE": "R-201",
+    "OBSERVABILITY_CUT": "R-202",
+}
+
+# Rule code mapping for fallback antipattern violations
+FALLBACK_RULE_CODES = {
+    "BARE_EXCEPT_PASS": "R-300",
+    "SILENT_DEFAULT_RETURN": "R-301",
+    "FAKE_AVAILABILITY": "R-302",
+    "INFINITE_LOOP_NO_SLEEP": "R-303",
+}
+
+
+def convert_hardcoded_violation(hv) -> Violation:
+    """
+    Convert HardcodedViolation to standard Violation format.
+
+    Args:
+        hv: HardcodedViolation from scanner_hardcoded
+
+    Returns:
+        Violation object
+    """
+    rule_code = HARDCODED_RULE_CODES.get(hv.violation_type, "R-100")
+
+    return Violation(
+        rule_code=rule_code,
+        severity="error",
+        message=hv.message,
+        file_path=hv.file_path,
+        line_number=hv.line_number,
+        event_type=hv.value,
+        context=hv.code_snippet
+    )
+
+
+def convert_quality_violation(qv) -> Violation:
+    """
+    Convert QualityViolation to standard Violation format.
+
+    Args:
+        qv: QualityViolation from scanner_quality
+
+    Returns:
+        Violation object
+    """
+    rule_code = QUALITY_RULE_CODES.get(qv.violation_type, "R-200")
+
+    return Violation(
+        rule_code=rule_code,
+        severity="error",
+        message=qv.message,
+        file_path=qv.file_path,
+        line_number=qv.line_number,
+        event_type=qv.pattern,
+        context=qv.code_snippet
+    )
+
+
+def convert_fallback_violation(fv) -> Violation:
+    """
+    Convert FallbackViolation to standard Violation format.
+
+    Args:
+        fv: FallbackViolation from scanner_fallback
+
+    Returns:
+        Violation object
+    """
+    rule_code = FALLBACK_RULE_CODES.get(fv.violation_type, "R-300")
+
+    return Violation(
+        rule_code=rule_code,
+        severity="error",
+        message=fv.message,
+        file_path=fv.file_path,
+        line_number=fv.line_number,
+        event_type=fv.pattern,
+        context=fv.code_snippet
+    )
 
 
 class RulesEngine:
