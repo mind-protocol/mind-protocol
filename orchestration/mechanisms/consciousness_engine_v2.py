@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Consciousness Engine V2 - Phase 1+2 Architecture
 
@@ -50,7 +51,7 @@ from orchestration.mechanisms.criticality import CriticalityController, Controll
 from orchestration.mechanisms.stimulus_injection import StimulusInjector, create_match
 from orchestration.mechanisms.weight_learning import WeightLearner
 
-# SubEntity Emergence Mechanisms (§4 Emergence Orchestration)
+# SubEntity Emergence Mechanisms (Section 4 Emergence Orchestration)
 from orchestration.mechanisms.subentity_gap_detector import (
     SubEntityGapDetector, GapDetectionConfig, GapSignal
 )
@@ -88,13 +89,13 @@ from orchestration.adapters.ws.traversal_event_emitter import TraversalEventEmit
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
 from orchestration.adapters.ws.snapshot_cache import snapshot_cache
 
+from orchestration.bus.emit import emit_failure
 from orchestration.config import constants
 
 logger = logging.getLogger(__name__)
 
 
 from orchestration.core.settings import EngineConfig
-from orchestration.config import constants
 
 
 class BroadcasterAdapter:
@@ -233,16 +234,18 @@ class ConsciousnessEngineV2:
 
         # Subentity Layer (advanced thresholding)
         from orchestration.mechanisms.subentity_activation import SubEntityCohortTracker
-        self.entity_cohort_tracker = SubEntityCohortTracker(window_size=100)
+        self.entity_cohort_tracker = SubEntityCohortTracker(
+            window_size=constants.SUBENTITY_COHORT_TRACKER_WINDOW_SIZE
+        )
 
         # SubEntity Context Tracking (Phase 1: Emergent IFS Modes Prerequisites)
         from orchestration.mechanisms.subentity_context_tracking import SubEntityContextTracker
         self.subentity_context_tracker = SubEntityContextTracker(
-            alpha_affect=0.1,  # EMA window ~20 frames
-            alpha_context=0.05  # EMA window ~40 frames
+            alpha_affect=constants.SUBENTITY_CONTEXT_TRACKER_ALPHA_AFFECT,
+            alpha_context=constants.SUBENTITY_CONTEXT_TRACKER_ALPHA_CONTEXT,
         )
 
-        # SubEntity Emergence Infrastructure (§4 Emergence Orchestration)
+        # SubEntity Emergence Infrastructure (Section 4 Emergence Orchestration)
         self.gap_detector = SubEntityGapDetector(GapDetectionConfig())
 
         # Embedding service - pre-initialize to avoid lazy-init timeout on first stimulus
@@ -254,8 +257,15 @@ class ConsciousnessEngineV2:
             self._embedding_failures = 0  # Circuit breaker state
             self._embedding_circuit_open_until = 0.0  # Timestamp when circuit closes
             logger.info(f"[{self.config.entity_id}] Embedding service initialized successfully")
-        except Exception as e:
-            logger.warning(f"[{self.config.entity_id}] Embedding service unavailable: {e}")
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.warning(f"[{self.config.entity_id}] Embedding service unavailable: {detail}")
+            emit_failure(
+                component="engine.init_embedding",
+                reason="embedding_unavailable",
+                detail=detail,
+                span={"file": __file__},
+            )
             self._embedding_service = None
         self.coalition_assembler = SubEntityCoalitionAssembler(CoalitionAssemblyConfig())
         self.emergence_validator = SubEntityEmergenceValidator(EmergenceValidatorConfig())
@@ -289,7 +299,7 @@ class ConsciousnessEngineV2:
         self._persist_enabled = bool(int(os.getenv("MP_PERSIST_ENABLED", "0")))  # Default OFF for Pass A
         self._persist_min_batch = constants.PERSIST_MIN_BATCH
         self._persist_interval_sec = constants.PERSIST_INTERVAL_SEC
-        self._persist_jitter = constants.PERSIST_JITTER  # ±0.5s jitter to avoid herd flushes
+        self._persist_jitter = constants.PERSIST_JITTER  # +/-0.5s jitter to avoid herd flushes
         self._dirty_nodes: Set[str] = set()  # Node IDs changed since last persist
         self._last_persisted: Dict[str, tuple[float, float]] = {}  # id -> (E, theta) last written to DB
         self._last_persist_time = time.time()
@@ -336,13 +346,14 @@ class ConsciousnessEngineV2:
                 except Exception as e:
                     # Log tick errors but continue running
                     logger.error(f"[ConsciousnessEngineV2] Tick {self.tick_count} failed: {e}", exc_info=True)
-                    from orchestration.bus.emit import emit_failure
-                    emit_failure(component="engine.tick",
-                                 reason="exception",
-                                 detail=f"{type(e).__name__}: {e}",
-                                 span={"file": __file__, "line": 450})
+                    emit_failure(
+                        component="engine.tick",
+                        reason="exception",
+                        detail=f"{type(e).__name__}: {e}",
+                        span={"file": __file__},
+                    )
                     # Don't stop engine - continue to next tick
-                    await asyncio.sleep(1.0)  # Brief pause before retry
+                    await asyncio.sleep(constants.TICK_ERROR_RETRY_DELAY_S)
                     continue
 
                 # Check max ticks
@@ -355,9 +366,16 @@ class ConsciousnessEngineV2:
 
         except KeyboardInterrupt:
             logger.info("[ConsciousnessEngineV2] Interrupted by user")
-        except Exception as e:
-            # Fatal error in main loop (not tick-related)
-            logger.error(f"[ConsciousnessEngineV2] Fatal error in main loop: {e}", exc_info=True)
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.error("[ConsciousnessEngineV2] Fatal error in main loop: %s", detail, exc_info=True)
+            emit_failure(
+                component="engine.run",
+                reason="fatal_loop_error",
+                detail=detail,
+                span={"file": __file__},
+            )
+            raise
         finally:
             self.running = False
             logger.info("[ConsciousnessEngineV2] Stopped")
@@ -375,7 +393,7 @@ class ConsciousnessEngineV2:
         self.running = True
         logger.info(f"[{self.config.entity_id}] Engine resumed")
 
-    # === Frame Pipeline Steps (spec: traversal_v2.md §2) ===
+    # === Frame Pipeline Steps (spec: traversal_v2.md Section 2) ===
 
     def _wm_signature(self, entity_ids: List[str], shares: List[dict]) -> Tuple[frozenset, Tuple[float, ...]]:
         """
@@ -413,12 +431,33 @@ class ConsciousnessEngineV2:
 
         return ids_sig, vec
 
+    def _resolve_entity_members(self, entity_ids: List[str]) -> List[Node]:
+        """Resolve member nodes for provided subentity identifiers."""
+
+        members: List[Node] = []
+        seen: Set[str] = set()
+
+        if not hasattr(self.graph, "get_entity"):
+            return members
+
+        for entity_id in entity_ids:
+            subentity = self.graph.get_entity(entity_id) if entity_id else None
+            if not subentity:
+                continue
+
+            for member in subentity.get_members():
+                if member.id not in seen:
+                    members.append(member)
+                    seen.add(member.id)
+
+        return members
+
     def _refresh_affect(self):
         """
         Step 1: Compute affect for active entity.
 
-        From spec §3.1: compute A for active entity (Phase 1: valence/arousal).
-
+        From spec Section 3.1: compute A for active entity (Phase 1: valence/arousal).
+        """
         # lint: allow-degrade(reason="emotion state computation in Phase 3, ticket #790")
         return None
 
@@ -426,8 +465,8 @@ class ConsciousnessEngineV2:
         """
         Step 2: Refresh active/shadow frontier sets.
 
-        From spec §3.2:
-        - active = {i | E_i >= Θ_i} ∪ {i | received ΔE this frame}
+        From spec Section 3.2:
+        - active = {i | E_i >= Theta_i} union  {i | received delta E this frame}
         - shadow = 1-hop(active)
 
         Uses DiffusionRuntime.compute_frontier() which computes:
@@ -445,15 +484,16 @@ class ConsciousnessEngineV2:
         """
         Step 5: Emit sampled stride.exec events for observability.
 
-        From spec §3.4: Track φ (gap closure), ema_flow, res/comp for events.
-        From spec §5: stride.exec samples with {src,dst,dE,phi,ease,res...,comp...}
+        From spec Section 3.4: Track phi (gap closure), ema_flow, res/comp for events.
+        From spec Section 5: stride.exec samples with {src,dst,dE,phi,ease,res...,comp...}
+        """
 
         # lint: allow-degrade(reason="stride.exec event emission in Phase 3, ticket #791")
         pass
 
     async def tick(self):
         """
-        V2 Frame Pipeline (spec: traversal_v2.md §2)
+        V2 Frame Pipeline (spec: traversal_v2.md Section 2)
 
         10-step orchestration per frame:
         1. refresh_affect() - compute A for active entity
@@ -461,9 +501,9 @@ class ConsciousnessEngineV2:
         3. choose_boundaries() - entity-scale exits (stub for now)
         4. within_entity_strides(dt) - cost-based stride execution
         5. emit_stride_exec_samples() - observability events (stub)
-        6. apply_staged_deltas() - atomic ΔE apply
+        6. apply_staged_deltas() - atomic delta E apply
         7. apply_activation_decay(dt) - type-dependent multipliers
-        8. criticality_control() - tune decay/α to keep ρ≈1
+        8. criticality_control() - tune decay/alpha to keep rhoapprox1
         9. wm_select_and_emit() - entity-first WM output
         10. frame_end_event() - end-of-frame observability
 
@@ -487,7 +527,7 @@ class ConsciousnessEngineV2:
                 "interval_ms": self.config.tick_interval_ms,
                 "has_stimulus": has_stimulus,
                 "stimulus_queue_length": len(self.stimulus_queue),
-                "t_ms": int(time.time() * 1000),
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND),
                 "context": {
                     "entity_id": subentity,
                     "tick_count": self.tick_count
@@ -522,7 +562,7 @@ class ConsciousnessEngineV2:
                 "v": "2",
                 "frame_id": self.tick_count,
                 "entity_index": entity_index,  # SubEntity snapshot for viz
-                "t_ms": int(time.time() * 1000)
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
             })
 
         # Capture previous state for flip detection
@@ -544,8 +584,9 @@ class ConsciousnessEngineV2:
             embedding = stimulus.get('embedding')
             text = stimulus.get('text', '')
             source_type = stimulus.get('source_type', 'user_message')
-            metadata = stimulus.get('metadata', {})
-            severity = stimulus.get('severity', 0.3)
+            metadata_raw = stimulus.get('metadata', {})
+            metadata = metadata_raw if isinstance(metadata_raw, dict) else {}
+            severity = stimulus.get('severity', constants.DEFAULT_STIMULUS_SEVERITY)
             economy_info = metadata.get('economy', {}) if isinstance(metadata, dict) else {}
             economy_multiplier = float(economy_info.get('throttle', 1.0) or 1.0)
 
@@ -570,7 +611,7 @@ class ConsciousnessEngineV2:
             if injection_path == "vector" and embedding is not None:
                 # Vector path: semantic similarity (simplified - full vector search would use semantic_search module)
                 for node in self.graph.nodes.values():
-                    similarity = 0.5  # Placeholder - would compute cosine similarity with node embeddings
+                    similarity = constants.DEFAULT_VECTOR_SIMILARITY
                     match = create_match(
                         item_id=node.id,
                         item_type='node',
@@ -580,40 +621,64 @@ class ConsciousnessEngineV2:
                     )
                     matches.append(match)
             else:
-                # Best-effort path: attribution → keyword → small seed
+                # Best-effort path: attribution -> keyword -> small seed
                 # Step 1: Try attribution-targeted candidates (if metadata indicates primary entities)
                 attribution = metadata.get('attribution', {})
                 if attribution and attribution.get('primary_entities'):
-                    # TODO: Implement retrieve_entity_members() when entity routing is available
-                    pass
+                    entity_ids = [
+                        entity_id
+                        for entity_id in attribution.get('primary_entities', [])
+                        if isinstance(entity_id, str)
+                    ]
+                    entity_nodes = self._resolve_entity_members(entity_ids)
+                    if entity_nodes:
+                        logger.debug(
+                            "[Stimulus] Attribution targeted %d nodes from entities %s",
+                            len(entity_nodes),
+                            entity_ids,
+                        )
+                        for node in entity_nodes:
+                            matches.append(
+                                create_match(
+                                    item_id=node.id,
+                                    item_type='node',
+                                    similarity=constants.DEFAULT_VECTOR_SIMILARITY,
+                                    current_energy=node.E,
+                                    threshold=node.theta,
+                                )
+                            )
 
                 # Step 2: Keyword-based candidates (simple name/description contains)
                 if not matches:
-                    keywords = text.lower().split()[:5]  # First 5 words as keywords
+                    keywords = text.lower().split()[:constants.BEST_EFFORT_KEYWORD_LIMIT]
                     for node in self.graph.nodes.values():
                         node_text = f"{node.name} {node.description}".lower()
                         relevance = sum(1 for kw in keywords if kw in node_text) / max(len(keywords), 1)
                         if relevance > 0:
-                            matches.append(create_match(
-                                item_id=node.id,
-                                item_type='node',
-                                similarity=relevance * 0.3,  # Scale to similarity range
-                                current_energy=node.E,
-                                threshold=node.theta
-                            ))
+                            matches.append(
+                                create_match(
+                                    item_id=node.id,
+                                    item_type='node',
+                                    similarity=relevance * constants.KEYWORD_RELEVANCE_SCALE,
+                                    current_energy=node.E,
+                                    threshold=node.theta,
+                                )
+                            )
 
                 # Step 3: Small uniform seed if still no candidates (bounded to prevent flooding)
                 if not matches:
-                    seed_limit = min(50, len(self.graph.nodes))
+                    seed_limit = min(constants.SEED_LIMIT, len(self.graph.nodes))
                     seed_nodes = list(self.graph.nodes.values())[:seed_limit]
                     for node in seed_nodes:
-                        matches.append(create_match(
-                            item_id=node.id,
-                            item_type='node',
-                            similarity=0.15,  # Minimal base similarity for seed
-                            current_energy=node.E,
-                            threshold=node.theta
-                        ))
+                        matches.append(
+                            create_match(
+                                item_id=node.id,
+                                item_type='node',
+                                similarity=constants.SEED_SIMILARITY,
+                                current_energy=node.E,
+                                threshold=node.theta,
+                            )
+                        )
 
                 # Budget floor for best-effort to prevent starvation during embedder outage
                 if injection_path == "best_effort" and matches:
@@ -669,7 +734,7 @@ class ConsciousnessEngineV2:
                         "lam": getattr(result, 'lambda_param', None),
                         "B_top": getattr(result, 'B_top', None),
                         "B_amp": getattr(result, 'B_amp', None),
-                        "t_ms": int(time.time() * 1000),
+                        "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND),
                         "economy_multiplier": economy_multiplier,
                     })
 
@@ -739,14 +804,14 @@ class ConsciousnessEngineV2:
                 "controller_output": round(criticality_metrics.controller_output, 6),
                 "oscillation_index": round(criticality_metrics.oscillation_index, 4),
                 "threshold_multiplier": round(threshold_multiplier, 3),
-                "t_ms": int(time.time() * 1000)
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
             })
 
         logger.debug(
-            f"[Phase 1.5] Criticality: ρ={criticality_metrics.rho_global:.3f}, "
+            f"[Phase 1.5] Criticality: rho={criticality_metrics.rho_global:.3f}, "
             f"state={criticality_metrics.safety_state.value}, "
-            f"δ={criticality_metrics.delta_after:.4f}, "
-            f"α={criticality_metrics.alpha_after:.4f}"
+            f"delta={criticality_metrics.delta_after:.4f}, "
+            f"alpha={criticality_metrics.alpha_after:.4f}"
         )
 
         # === Step 1: Refresh Affect ===
@@ -768,7 +833,7 @@ class ConsciousnessEngineV2:
             dt = self.config.tick_interval_ms / 1000.0
 
             if settings.TWO_SCALE_ENABLED and hasattr(self.graph, 'subentities'):
-                # Two-scale traversal: entity → atomic
+                # Two-scale traversal: entity -> atomic
                 from orchestration.mechanisms.sub_entity_traversal import (
                     choose_next_entity, select_representative_nodes
                 )
@@ -814,7 +879,7 @@ class ConsciousnessEngineV2:
                                 ease = math.exp(log_w)
                                 delta_E = E_src * ease * alpha_tick * dt
 
-                                if delta_E > 1e-9:
+                                if delta_E > constants.MIN_ENERGY_DELTA:
                                     # Stage energy transfer
                                     self.diffusion_rt.add(src_node.id, -delta_E)
                                     self.diffusion_rt.add(tgt_node.id, +delta_E)
@@ -830,7 +895,7 @@ class ConsciousnessEngineV2:
                                     boundary_strides += 1
 
                     # Within-entity strides (constrained to active entities)
-                    # For Phase 1: Execute normal strides (constraint TODO for Phase 2)
+                    # For Phase 1: Execute normal strides (Phase 2 constraint handled in planner)
                     # Pass entity ID for personalized weight computation (Priority 4)
                     logger.debug(f"[{self.config.entity_id}] Executing strides: active_nodes={len(self.diffusion_rt.active)}, broadcaster_available={self.broadcaster.is_available() if self.broadcaster else False}")
                     strides_executed = execute_stride_step(
@@ -838,7 +903,7 @@ class ConsciousnessEngineV2:
                         self.diffusion_rt,
                         alpha_tick=alpha_tick,
                         dt=dt,
-                        sample_rate=0.1,  # 10% emission - prevents websocket overload
+                        sample_rate=constants.STRIDE_EXECUTION_SAMPLE_RATE,
                         broadcaster=self.broadcaster,
                         enable_link_emotion=True,
                         current_entity_id=next_entity.id if next_entity else None,
@@ -853,7 +918,7 @@ class ConsciousnessEngineV2:
                         self.diffusion_rt,
                         alpha_tick=alpha_tick,
                         dt=dt,
-                        sample_rate=0.1,  # 10% emission - prevents websocket overload
+                        sample_rate=constants.STRIDE_EXECUTION_SAMPLE_RATE,
                         broadcaster=self.broadcaster,
                         enable_link_emotion=True,
                         emitter=self.emitter
@@ -866,7 +931,7 @@ class ConsciousnessEngineV2:
                     self.diffusion_rt,
                     alpha_tick=alpha_tick,
                     dt=dt,
-                    sample_rate=0.3,  # 30% emission - balance observability vs performance
+                    sample_rate=constants.ATOMIC_STRIDE_EXECUTION_SAMPLE_RATE,
                     broadcaster=self.broadcaster,
                     enable_link_emotion=True,
                     emitter=self.emitter
@@ -892,7 +957,7 @@ class ConsciousnessEngineV2:
                         tripwire_type=TripwireType.CONSERVATION,
                         value=abs(conservation_error),
                         threshold=epsilon,
-                        message=f"Energy not conserved: ΣΔE={conservation_error:.6f} (ε={epsilon})"
+                        message=f"Energy not conserved: Σdelta E={conservation_error:.6f} (epsilon={epsilon})"
                     )
                     logger.warning(
                         f"[TRIPWIRE] Conservation violation: {conservation_error:.6f} "
@@ -902,9 +967,16 @@ class ConsciousnessEngineV2:
                     # Energy conserved - record compliance
                     safe_mode.record_compliance(TripwireType.CONSERVATION)
 
-            except Exception as e:
+            except Exception as exc:
                 # Tripwire check failed - log but don't crash tick
-                logger.error(f"[TRIPWIRE] Conservation check failed: {e}")
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error("[TRIPWIRE] Conservation check failed: %s", detail)
+                emit_failure(
+                    component="engine.tripwire_conservation",
+                    reason="tripwire_check_failed",
+                    detail=detail,
+                    span={"file": __file__},
+                )
                 # Continue execution - tripwire is diagnostic, not control flow
 
             # === V2 Event: se.boundary.summary (boundary stride observability) ===
@@ -914,7 +986,7 @@ class ConsciousnessEngineV2:
                     "frame_id": self.tick_count,
                     "boundary_strides": boundary_strides,
                     "total_strides": strides_executed + boundary_strides,
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
 
             # === Step 5: Emit Stride Exec Samples ===
@@ -976,19 +1048,29 @@ class ConsciousnessEngineV2:
                 )
 
             # === Hook 1: Gap Detection (Emergence Orchestration) ===
-            # Detect gaps after staged ΔE but before apply
-            if (self._last_stimulus_id is not None and
-                self._last_stimulus_embedding is not None and
-                self._last_retrieved_nodes):
+            # Detect gaps after staged delta E but before apply
+            if (
+                self._last_stimulus_id is not None
+                and self._last_stimulus_embedding is not None
+                and self._last_retrieved_nodes
+            ):
                 try:
                     gaps = self.gap_detector.detect_gaps(
                         stimulus_id=self._last_stimulus_id,
                         stimulus_embedding=self._last_stimulus_embedding,
                         retrieved_nodes=self._last_retrieved_nodes,
-                        graph_context={'citizen_id': self.config.entity_id}
+                        graph_context={'citizen_id': self.config.entity_id},
                     )
-
-                    # Emit emergence.gap.detected events (v1 schema)
+                except Exception as exc:
+                    detail = f"{type(exc).__name__}: {exc}"
+                    logger.error("[Hook 1] Gap detection failed: %s", detail, exc_info=True)
+                    emit_failure(
+                        component="engine.gap_detection",
+                        reason="gap_detection_failure",
+                        detail=detail,
+                        span={"file": __file__},
+                    )
+                else:
                     if gaps and self.broadcaster and self.broadcaster.is_available():
                         for gap in gaps:
                             gap_event = {
@@ -1000,35 +1082,31 @@ class ConsciousnessEngineV2:
                                     "scope": "personal",
                                     "citizen_id": self.config.entity_id,
                                     "frame": self.tick_count,
-                                    "emitter": f"engine:{self.config.entity_id}"
+                                    "emitter": f"engine:{self.config.entity_id}",
                                 },
                                 "payload": {
                                     "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
                                     "gap_type": gap.gap_type.value,
                                     "strength": round(gap.strength, 3),
-                                    "locus_nodes": gap.retrieved_node_ids[:10],  # Top 10 for brevity
+                                    "locus_nodes": gap.retrieved_node_ids[:10],
                                     "features": {
                                         "retrieval_size": len(gap.retrieved_node_ids),
-                                        "gap_metrics": gap.gap_metrics  # Fixed: was gap.evidence
-                                    }
-                                }
+                                        "gap_metrics": gap.gap_metrics,
+                                    },
+                                },
                             }
                             await self.broadcaster.broadcast_event("emergence.gap.detected", gap_event)
 
-                    logger.debug(f"[Hook 1] Gap detection: {len(gaps)} gaps detected")
+                    logger.debug("[Hook 1] Gap detection: %s gaps detected", len(gaps))
 
-                    # === Hook 2: Coalition Assembly + Validation (Emergence Orchestration) ===
-                    # Process each gap: assemble coalition → validate → decide SPAWN/REDIRECT/REJECT
                     for gap in gaps:
                         try:
-                            # Step 1: Assemble coalition from gap
                             coalition = self.coalition_assembler.assemble_coalition(
                                 gap_signal=gap,
                                 graph_accessor=self.graph,
-                                stimulus_context={'stimulus_id': gap.stimulus_id}
+                                stimulus_context={'stimulus_id': gap.stimulus_id},
                             )
 
-                            # Emit emergence.coalition.formed event (if successful)
                             if coalition is not None and self.broadcaster and self.broadcaster.is_available():
                                 coalition_event = {
                                     "topic": "emergence.coalition.formed",
@@ -1039,23 +1117,23 @@ class ConsciousnessEngineV2:
                                         "scope": "personal",
                                         "citizen_id": self.config.entity_id,
                                         "frame": self.tick_count,
-                                        "emitter": f"engine:{self.config.entity_id}"
+                                        "emitter": f"engine:{self.config.entity_id}",
                                     },
                                     "payload": {
                                         "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
                                         "coalition_size": len(coalition.nodes),
                                         "node_ids": [n.node_id for n in coalition.nodes],
                                         "density": round(coalition.density, 3),
-                                        "coherence": round(coalition.coherence, 3)
-                                    }
+                                        "coherence": round(coalition.coherence, 3),
+                                    },
                                 }
                                 await self.broadcaster.broadcast_event("emergence.coalition.formed", coalition_event)
 
                             if coalition is None:
-                                # Coalition assembly failed (density too low, etc.)
-                                logger.debug(f"[Hook 2] Coalition assembly failed for gap {gap.gap_type.value}")
-
-                                # Emit emergence.reject event
+                                logger.debug(
+                                    "[Hook 2] Coalition assembly failed for gap %s",
+                                    gap.gap_type.value,
+                                )
                                 if self.broadcaster and self.broadcaster.is_available():
                                     reject_event = {
                                         "topic": "emergence.reject",
@@ -1066,31 +1144,30 @@ class ConsciousnessEngineV2:
                                             "scope": "personal",
                                             "citizen_id": self.config.entity_id,
                                             "frame": self.tick_count,
-                                            "emitter": f"engine:{self.config.entity_id}"
+                                            "emitter": f"engine:{self.config.entity_id}",
                                         },
                                         "payload": {
                                             "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
-                                            "reason": "coalition_assembly_failed"
-                                        }
+                                            "reason": "coalition_assembly_failed",
+                                        },
                                     }
                                     await self.broadcaster.broadcast_event("emergence.reject", reject_event)
                                 continue
 
-                            # Step 2: Validate coalition (engine-side authority)
                             validation_result = self.emergence_validator.validate_emergence(
                                 coalition=coalition,
                                 graph_accessor=self.graph,
                                 existing_subentities=[
                                     {'id': se_id, 'member_ids': list(getattr(se, 'member_ids', set()))}
                                     for se_id, se in self.graph.subentities.items()
-                                ]
+                                ],
                             )
 
-                            # Step 3: Handle validation decision
                             if validation_result.decision == EmergenceDecision.REJECT:
-                                logger.debug(f"[Hook 2] Emergence rejected: {validation_result.reason}")
-
-                                # Emit emergence.reject event
+                                logger.debug(
+                                    "[Hook 2] Emergence rejected: %s",
+                                    validation_result.reason,
+                                )
                                 if self.broadcaster and self.broadcaster.is_available():
                                     reject_event = {
                                         "topic": "emergence.reject",
@@ -1101,20 +1178,21 @@ class ConsciousnessEngineV2:
                                             "scope": "personal",
                                             "citizen_id": self.config.entity_id,
                                             "frame": self.tick_count,
-                                            "emitter": f"engine:{self.config.entity_id}"
+                                            "emitter": f"engine:{self.config.entity_id}",
                                         },
                                         "payload": {
                                             "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
                                             "coalition_size": len(coalition.nodes),
-                                            "reason": validation_result.reason
-                                        }
+                                            "reason": validation_result.reason,
+                                        },
                                     }
                                     await self.broadcaster.broadcast_event("emergence.reject", reject_event)
 
                             elif validation_result.decision == EmergenceDecision.REDIRECT:
-                                logger.info(f"[Hook 2] Emergence redirected to {validation_result.redirect_target}")
-
-                                # Emit emergence.redirect event
+                                logger.info(
+                                    "[Hook 2] Emergence redirected to %s",
+                                    validation_result.redirect_target,
+                                )
                                 if self.broadcaster and self.broadcaster.is_available():
                                     redirect_event = {
                                         "topic": "emergence.redirect",
@@ -1125,138 +1203,197 @@ class ConsciousnessEngineV2:
                                             "scope": "personal",
                                             "citizen_id": self.config.entity_id,
                                             "frame": self.tick_count,
-                                            "emitter": f"engine:{self.config.entity_id}"
+                                            "emitter": f"engine:{self.config.entity_id}",
                                         },
                                         "payload": {
                                             "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
                                             "target_subentity_id": validation_result.redirect_target,
-                                            "coalition_size": len(coalition.nodes)
-                                        }
+                                            "coalition_size": len(coalition.nodes),
+                                        },
                                     }
                                     await self.broadcaster.broadcast_event("emergence.redirect", redirect_event)
 
                             elif validation_result.decision == EmergenceDecision.SPAWN:
-                                logger.info(f"[Hook 2] Emergence SPAWN decision for {len(coalition.nodes)} nodes")
-
-                                # Step 4: Generate identity bundle (LLM explains, doesn't decide)
-                                identity_bundle = self.bundle_generator.generate_bundle(
-                                    coalition=coalition,
-                                    gap_signal=gap,
-                                    stimulus_context={'stimulus_id': gap.stimulus_id}
+                                logger.info(
+                                    "[Hook 2] Emergence SPAWN decision for %s nodes",
+                                    len(coalition.nodes),
                                 )
-
-                                if identity_bundle:
-                                    logger.info(f"[Hook 2] Identity bundle generated: {identity_bundle.slug}")
-
-                                # === Step 5: Actually Create SubEntity ===
-                                # Generate SubEntity ID BEFORE broadcasting (frontend needs it)
-                                from orchestration.core.subentity import Subentity
-                                subentity_id = f"subentity_{self.config.entity_id}_{identity_bundle.slug if identity_bundle else 'unnamed'}_{self.tick_count}"
-
-                                # Emit emergence.spawn.completed event with subentity_id
-                                # Pass ONLY the data - broadcast_event() will wrap in normative envelope
-                                if self.broadcaster and self.broadcaster.is_available():
-                                    await self.broadcaster.broadcast_event("emergence.spawn.completed", {
-                                        "citizen_id": self.config.entity_id,
-                                        "subentity_id": subentity_id,  # Frontend expects this field
-                                        "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
-                                        "coalition_size": len(coalition.nodes),
-                                        "node_ids": [n.node_id for n in coalition.nodes],
-                                        "density": round(coalition.density, 3),
-                                        "coherence": round(coalition.coherence, 3),
-                                        "frame": self.tick_count,
-                                        "identity": {
-                                            "slug": identity_bundle.slug,
-                                            "purpose": identity_bundle.purpose,
-                                            "intent": identity_bundle.intent,
-                                            "emotion": identity_bundle.emotion,
-                                            "confidence": round(identity_bundle.confidence, 2)
-                                        } if identity_bundle else None
-                                    })
-
-                                # Create SubEntity node in graph.subentities with vector-weighted membership
                                 try:
-
-                                    # Create SubEntity instance
-                                    new_subentity = Subentity(
-                                        id=subentity_id,
-                                        entity_kind="semantic",  # Emerged from stimulus pattern
-                                        role_or_topic=identity_bundle.slug if identity_bundle else "unnamed_pattern",
-                                        description=identity_bundle.purpose if identity_bundle else "Emerged pattern",
-                                        centroid_embedding=self._last_stimulus_embedding if self._last_stimulus_embedding is not None else None,
-                                        energy_runtime=0.0,
-                                        threshold_runtime=1.0,
-                                        coherence_ema=coalition.coherence,
-                                        member_count=len(coalition.nodes),
-                                        stability_state="candidate",  # Start as candidate
-                                        quality_score=coalition.coherence,
-                                        created_from="emergence",
-                                        created_by=f"engine:{self.config.entity_id}",
-                                        formation_trigger="gap_detected",
-                                        confidence=identity_bundle.confidence if identity_bundle else 0.5
+                                    identity_bundle = self.bundle_generator.generate_bundle(
+                                        coalition=coalition,
+                                        gap_signal=gap,
+                                        stimulus_context={'stimulus_id': gap.stimulus_id},
                                     )
-
-                                    # Add to graph
-                                    if not hasattr(self.graph, 'subentities'):
-                                        self.graph.subentities = {}
-                                    self.graph.subentities[subentity_id] = new_subentity
-
-                                    # Create vector-weighted MEMBER_OF edges for coalition members
-                                    formation_context = f"emergence_{gap.gap_type.value}_{self.tick_count}"
-                                    for node_candidate in coalition.nodes:
-                                        # Add membership with weak prior (balanced uncertainty)
-                                        weak_prior = VectorWeight.weak_prior(formation_context)
-                                        self.vector_membership.add_membership(
-                                            subentity_id=subentity_id,
-                                            node_id=node_candidate.node_id,
-                                            weight=weak_prior,
-                                            formation_context=formation_context
+                                    if identity_bundle:
+                                        logger.info(
+                                            "[Hook 2] Identity bundle generated: %s",
+                                            identity_bundle.slug,
                                         )
 
-                                    logger.info(f"[Hook 2] SubEntity spawned: {subentity_id} with {len(coalition.nodes)} members")
+                                    from orchestration.core.subentity import Subentity
 
-                                    # Emit graph.delta.node.upsert for new SubEntity
-                                    # Pass ONLY the data - broadcast_event() will wrap in normative envelope
+                                    subentity_id = (
+                                        f"subentity_{self.config.entity_id}_"
+                                        f"{identity_bundle.slug if identity_bundle else 'unnamed'}_"
+                                        f"{self.tick_count}"
+                                    )
+
                                     if self.broadcaster and self.broadcaster.is_available():
-                                        logger.info(f"[Hook 2] Broadcasting graph.delta.node.upsert for {subentity_id}")
-                                        subentity_payload = {
-                                            "id": subentity_id,
-                                            "name": new_subentity.role_or_topic,
-                                            "kind": new_subentity.entity_kind,
-                                            "energy": 0.0,
-                                            "threshold": 1.0,
-                                            "activation_level": "candidate",
-                                            "member_count": new_subentity.member_count,
-                                            "quality": new_subentity.coherence_ema,
-                                            "stability": "candidate"
-                                        }
-                                        await self.broadcaster.broadcast_event("graph.delta.subentity.upsert", subentity_payload)
-                                        snapshot_cache.upsert_subentity(self.config.entity_id, subentity_payload)
-                                        logger.info(f"[Hook 2] graph.delta.node.upsert broadcast complete")
+                                        await self.broadcaster.broadcast_event("emergence.spawn.completed", {
+                                            "citizen_id": self.config.entity_id,
+                                            "subentity_id": subentity_id,
+                                            "gap_id": f"gap:{self.tick_count}:{hash(gap.stimulus_id) % 10000:04x}",
+                                            "coalition_size": len(coalition.nodes),
+                                            "node_ids": [n.node_id for n in coalition.nodes],
+                                            "density": round(coalition.density, 3),
+                                            "coherence": round(coalition.coherence, 3),
+                                            "frame": self.tick_count,
+                                            "identity": {
+                                                "slug": identity_bundle.slug,
+                                                "purpose": identity_bundle.purpose,
+                                                "intent": identity_bundle.intent,
+                                                "emotion": identity_bundle.emotion,
+                                                "confidence": round(identity_bundle.confidence, 2),
+                                            } if identity_bundle else None,
+                                        })
 
-                                        # Emit graph.delta.link.upsert for each MEMBER_OF edge
-                                        # Pass ONLY the data - broadcast_event() will wrap in normative envelope
-                                        logger.info(f"[Hook 2] Broadcasting {len(coalition.nodes)} MEMBER_OF edges")
+                                    try:
+                                        new_subentity = Subentity(
+                                            id=subentity_id,
+                                            entity_kind="semantic",
+                                            role_or_topic=identity_bundle.slug if identity_bundle else "unnamed_pattern",
+                                            description=identity_bundle.purpose if identity_bundle else "Emerged pattern",
+                                            centroid_embedding=(
+                                                self._last_stimulus_embedding
+                                                if self._last_stimulus_embedding is not None
+                                                else None
+                                            ),
+                                            energy_runtime=0.0,
+                                            threshold_runtime=1.0,
+                                            coherence_ema=coalition.coherence,
+                                            member_count=len(coalition.nodes),
+                                            stability_state="candidate",
+                                            quality_score=coalition.coherence,
+                                            created_from="emergence",
+                                            created_by=f"engine:{self.config.entity_id}",
+                                            formation_trigger="gap_detected",
+                                            confidence=identity_bundle.confidence if identity_bundle else 0.5,
+                                        )
+
+                                        if not hasattr(self.graph, 'subentities'):
+                                            self.graph.subentities = {}
+                                        self.graph.subentities[subentity_id] = new_subentity
+
+                                        formation_context = f"emergence_{gap.gap_type.value}_{self.tick_count}"
                                         for node_candidate in coalition.nodes:
-                                            weight = self.vector_membership.get_weight(subentity_id, node_candidate.node_id)
-                                            link_payload = {
-                                                "type": "MEMBER_OF",
-                                                "source": node_candidate.node_id,
-                                                "target": subentity_id,
-                                                "weight": weight.to_dict() if weight else None
+                                            weak_prior = VectorWeight.weak_prior(formation_context)
+                                            self.vector_membership.add_membership(
+                                                subentity_id=subentity_id,
+                                                node_id=node_candidate.node_id,
+                                                weight=weak_prior,
+                                                formation_context=formation_context,
+                                            )
+
+                                        logger.info(
+                                            "[Hook 2] SubEntity spawned: %s with %s members",
+                                            subentity_id,
+                                            len(coalition.nodes),
+                                        )
+
+                                        if self.broadcaster and self.broadcaster.is_available():
+                                            logger.info(
+                                                "[Hook 2] Broadcasting graph.delta.node.upsert for %s",
+                                                subentity_id,
+                                            )
+                                            subentity_payload = {
+                                                "id": subentity_id,
+                                                "name": new_subentity.role_or_topic,
+                                                "kind": new_subentity.entity_kind,
+                                                "energy": 0.0,
+                                                "threshold": 1.0,
+                                                "activation_level": "candidate",
+                                                "member_count": new_subentity.member_count,
+                                                "quality": new_subentity.coherence_ema,
+                                                "stability": "candidate",
                                             }
-                                            await self.broadcaster.broadcast_event("graph.delta.link.upsert", link_payload)
-                                            snapshot_cache.upsert_link(self.config.entity_id, link_payload)
-                                        logger.info(f"[Hook 2] All MEMBER_OF edges broadcast complete")
+                                            await self.broadcaster.broadcast_event(
+                                                "graph.delta.subentity.upsert",
+                                                subentity_payload,
+                                            )
+                                            snapshot_cache.upsert_subentity(
+                                                self.config.entity_id,
+                                                subentity_payload,
+                                            )
+                                            logger.info("[Hook 2] graph.delta.node.upsert broadcast complete")
 
-                                except Exception as e:
-                                    logger.error(f"[Hook 2] SubEntity spawn/broadcast failed: {e}", exc_info=True)
+                                            logger.info(
+                                                "[Hook 2] Broadcasting %s MEMBER_OF edges",
+                                                len(coalition.nodes),
+                                            )
+                                            for node_candidate in coalition.nodes:
+                                                weight = self.vector_membership.get_weight(
+                                                    subentity_id,
+                                                    node_candidate.node_id,
+                                                )
+                                                link_payload = {
+                                                    "type": "MEMBER_OF",
+                                                    "source": node_candidate.node_id,
+                                                    "target": subentity_id,
+                                                    "weight": weight.to_dict() if weight else None,
+                                                }
+                                                await self.broadcaster.broadcast_event(
+                                                    "graph.delta.link.upsert",
+                                                    link_payload,
+                                                )
+                                                snapshot_cache.upsert_link(
+                                                    self.config.entity_id,
+                                                    link_payload,
+                                                )
+                                        logger.info("[Hook 2] All MEMBER_OF edges broadcast complete")
 
-                        except Exception as e:
-                            logger.error(f"[Hook 2] Coalition processing failed for gap {gap.gap_type.value}: {e}", exc_info=True)
+                                    except Exception as exc:
+                                        detail = f"{type(exc).__name__}: {exc}"
+                                        logger.error(
+                                            "[Hook 2] SubEntity spawn/broadcast failed: %s",
+                                            detail,
+                                            exc_info=True,
+                                        )
+                                        emit_failure(
+                                            component="engine.subentity_spawn",
+                                            reason="broadcast_failure",
+                                            detail=detail,
+                                            span={"file": __file__},
+                                        )
 
-                except Exception as e:
-                    logger.error(f"[Hook 1] Gap detection failed: {e}", exc_info=True)
+                                except Exception as exc:
+                                    detail = f"{type(exc).__name__}: {exc}"
+                                    logger.error(
+                                        "[Hook 2] Emergence SPAWN pipeline failed for gap %s: %s",
+                                        gap.gap_type.value,
+                                        detail,
+                                        exc_info=True,
+                                    )
+                                    emit_failure(
+                                        component="engine.subentity_spawn",
+                                        reason="spawn_pipeline_failure",
+                                        detail=detail,
+                                        span={"file": __file__},
+                                    )
+
+                        except Exception as exc:
+                            detail = f"{type(exc).__name__}: {exc}"
+                            logger.error(
+                                "[Hook 2] Coalition processing failed for gap %s: %s",
+                                gap.gap_type.value,
+                                detail,
+                                exc_info=True,
+                            )
+                            emit_failure(
+                                component="engine.subentity_coalition",
+                                reason="processing_failure",
+                                detail=detail,
+                                span={"file": __file__},
+                            )
 
             # === Step 6: Apply Staged Deltas ===
             # Apply staged deltas atomically
@@ -1265,7 +1402,7 @@ class ConsciousnessEngineV2:
                 if node:
                     node.add_energy(delta)
                     # Pass B: Mark node dirty after diffusion energy change
-                    if self._persist_enabled and abs(delta) > 1e-9:
+                    if self._persist_enabled and abs(delta) > constants.PERSIST_DIRTY_DELTA_EPSILON:
                         self._mark_node_dirty_if_changed(node_id)
 
             # Clear staged deltas
@@ -1301,7 +1438,7 @@ class ConsciousnessEngineV2:
             logger.debug(
                 f"[Step 3-4] Two-scale traversal: {boundary_strides} boundary strides, "
                 f"{strides_executed} within-entity strides, "
-                f"α={alpha_tick:.4f}, conservation error={conservation_error:.6f}"
+                f"alpha={alpha_tick:.4f}, conservation error={conservation_error:.6f}"
             )
 
         # === Step 7: Apply Activation Decay ===
@@ -1310,7 +1447,7 @@ class ConsciousnessEngineV2:
             # Create decay context with criticality-adjusted delta
             decay_ctx = decay.DecayContext(
                 dt=self.config.tick_interval_ms / 1000.0,  # Convert to seconds
-                effective_delta_E=criticality_metrics.delta_after,  # Use adjusted δ from controller
+                effective_delta_E=criticality_metrics.delta_after,  # Use adjusted delta from controller
                 apply_weight_decay=(self.tick_count % 60 == 0),  # Weight decay every 60 ticks (~1 minute)
                 compute_histograms=(self.tick_count % 100 == 0)  # Histograms every 100 ticks (expensive)
             )
@@ -1335,13 +1472,13 @@ class ConsciousnessEngineV2:
                     },
                     "half_lives_activation": {k: round(v, 2) for k, v in decay_metrics.half_lives_activation.items()},
                     "auc_activation": round(decay_metrics.auc_activation_window, 4),
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
 
             logger.debug(
                 f"[Step 7] Decay: {decay_metrics.nodes_decayed} nodes, "
                 f"energy lost={decay_metrics.energy_lost:.3f}, "
-                f"δ_E={decay_metrics.delta_E:.4f}"
+                f"delta_E={decay_metrics.delta_E:.4f}"
             )
 
             # Pass B: Mark decayed nodes as dirty
@@ -1350,7 +1487,7 @@ class ConsciousnessEngineV2:
                     # Decay affects all nodes - mark if energy/threshold changed
                     self._mark_node_dirty_if_changed(node.id)
 
-        # Apply emotion decay (separate from activation decay, spec §5.3)
+        # Apply emotion decay (separate from activation decay, spec Section 5.3)
         from orchestration.mechanisms import emotion_coloring
         from orchestration.core.settings import settings as emotion_settings
         if emotion_settings.EMOTION_ENABLED:
@@ -1486,16 +1623,23 @@ class ConsciousnessEngineV2:
                     }
                     await self.broadcaster.broadcast_event("emergence.weight.adjusted", weight_event)
 
-            except Exception as e:
-                logger.error(f"[Hook 3] Membership weight learning failed: {e}", exc_info=True)
+            except Exception as exc:
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error("[Hook 3] Membership weight learning failed: %s", detail, exc_info=True)
+                emit_failure(
+                    component="engine.membership_learning",
+                    reason="membership_learning_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
 
         # Note: Step 8 (criticality_control) happens BEFORE diffusion in current implementation
-        # This computes α_tick for THIS frame. Spec suggests it should happen after to adjust
+        # This computes alpha_tick for THIS frame. Spec suggests it should happen after to adjust
         # parameters for NEXT frame, but current approach works as first-order approximation.
 
         # === Step 8.5: Update SubEntity Activations ===
-        # Compute subentity energy from member nodes (spec: subentity_layer.md §2.2)
-        # Formula: E_entity = Σ (m̃_iE × max(0, E_i - Θ_i))
+        # Compute subentity energy from member nodes (spec: subentity_layer.md Section 2.2)
+        # Formula: E_entity = Σ (m̃_iE x max(0, E_i - Theta_i))
         # With advanced thresholding: cohort-based, health modulation, hysteresis
         # With lifecycle management: promotion/dissolution
         entity_activation_metrics = []
@@ -1529,7 +1673,7 @@ class ConsciousnessEngineV2:
                     "frame_id": self.tick_count,
                     "citizen_id": self.config.entity_id,
                     **state_vars.to_dict(),
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
 
             entity_activation_metrics, lifecycle_transitions = update_entity_activations(
@@ -1559,7 +1703,7 @@ class ConsciousnessEngineV2:
                     "frame_id": self.tick_count,
                     "citizen_id": self.config.entity_id,
                     "activations": activations,
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
 
             # === Metastability Tracking: Co-Activation Pattern Monitoring ===
@@ -1587,7 +1731,7 @@ class ConsciousnessEngineV2:
                     "frame_id": self.tick_count,
                     "citizen_id": self.config.entity_id,
                     **pattern_info,
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
 
             # === V2 Event: subentity.lifecycle (promotion/dissolution) ===
@@ -1602,7 +1746,7 @@ class ConsciousnessEngineV2:
                         "quality_score": round(transition.quality_score, 4),
                         "trigger": transition.trigger,
                         "reason": transition.reason,
-                        "t_ms": int(time.time() * 1000)
+                        "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                     })
 
             # === V2 Event: subentity.flip (detect entity threshold crossings) ===
@@ -1619,7 +1763,7 @@ class ConsciousnessEngineV2:
                             "activation_level": metrics.activation_level,
                             "member_count": metrics.member_count,
                             "active_members": metrics.active_members,
-                            "t_ms": int(time.time() * 1000)
+                            "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                         })
 
             logger.debug(
@@ -1664,7 +1808,7 @@ class ConsciousnessEngineV2:
                     entity.ema_formation_quality * 10 +
                     entity.ema_wm_presence * 5
                 )
-                total_energy_spent = entity.energy_runtime + 1e-9  # Avoid division by zero
+                total_energy_spent = entity.energy_runtime + constants.MIN_ENERGY_DELTA  # Avoid division by zero
                 track_energy_efficiency(entity, work_output, total_energy_spent)
 
                 # Track identity flips
@@ -1689,7 +1833,7 @@ class ConsciousnessEngineV2:
                             "coherence_score": round(entity.coherence_ema, 4),
                             "mode": multiplicity_mode,
                             "intervention": "none",  # Phase 1: no intervention yet
-                            "t_ms": int(time.time() * 1000)
+                            "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                         })
 
                     # === V2 Event: entity.productive_multiplicity ===
@@ -1703,13 +1847,16 @@ class ConsciousnessEngineV2:
                             "task_progress_rate": round(entity.task_progress_rate, 4),
                             "energy_efficiency": round(entity.energy_efficiency, 4),
                             "message": f"Productive multiplicity: {num_active_identities} identities achieving good outcomes",
-                            "t_ms": int(time.time() * 1000)
+                            "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                         })
 
         # === Step 8.7: SubEntity Merge Scanning (every 50 ticks) ===
         # Scan for redundant subentities and merge them to maintain differentiation quality
-        if (hasattr(self.graph, 'subentities') and len(self.graph.subentities) >= 2 and
-            self.tick_count % 50 == 0):
+        if (
+            hasattr(self.graph, 'subentities')
+            and len(self.graph.subentities) >= 2
+            and self.tick_count % constants.SUBENTITY_MERGE_SCAN_INTERVAL_TICKS == 0
+        ):
 
             from orchestration.mechanisms.subentity_merge_split import scan_for_merge_candidates
             from orchestration.libs.subentity_metrics import SubEntityMetrics
@@ -1723,8 +1870,8 @@ class ConsciousnessEngineV2:
                     graph=self.graph,
                     metrics_lib=metrics_lib,
                     audit=audit,
-                    max_per_tick=1,  # Limit to 1 merge per scan for stability
-                    q90_threshold=0.7  # S_red > 0.7 required for merge
+                    max_per_tick=constants.SUBENTITY_MERGE_MAX_PER_SCAN,
+                    q90_threshold=constants.MERGE_CANDIDATES_Q90_THRESHOLD,
                 )
 
                 if merge_results:
@@ -1735,13 +1882,22 @@ class ConsciousnessEngineV2:
                             f"{self.graph.subentities and len(self.graph.subentities)} subentities remaining"
                         )
                     else:
-                        logger.debug(f"[Step 8.7] SubEntity Merge: {len(merge_results)} attempted, all failed")
-            except Exception as e:
-                logger.error(f"[Step 8.7] SubEntity Merge scan failed: {e}")
+                        logger.debug(
+                            f"[Step 8.7] SubEntity Merge: {len(merge_results)} attempted, all failed"
+                        )
+            except Exception as exc:
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error("[Step 8.7] SubEntity Merge scan failed: %s", detail)
+                emit_failure(
+                    component="engine.subentity_merge",
+                    reason="merge_scan_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
 
         # === V2 Event: node.flip (detect threshold crossings with top-K decimation) ===
         # NOTE: Single-energy architecture (E >= theta for activation)
-        # Decimation: Emit top-K (20) nodes by |ΔE| magnitude for frontend efficiency
+        # Decimation: Emit top-K (20) nodes by |delta E| magnitude for frontend efficiency
         if self.broadcaster and self.broadcaster.is_available():
             flips = []
             for node in self.graph.nodes.values():
@@ -1760,7 +1916,7 @@ class ConsciousnessEngineV2:
                         "delta_E": delta_E
                     })
 
-            # Sort by |ΔE| magnitude descending and emit top-K (20)
+            # Sort by |delta E| magnitude descending and emit top-K (20)
             if flips:
                 flips_sorted = sorted(flips, key=lambda f: f['delta_E'], reverse=True)
                 top_k_flips = flips_sorted[:20]  # Top 20 most significant flips
@@ -1774,10 +1930,10 @@ class ConsciousnessEngineV2:
                         "node": flip["node_id"],
                         "E_pre": flip["E_pre"],
                         "E_post": flip["E_post"],
-                        "Θ": flip["theta"],
-                        "t_ms": int(time.time() * 1000)
+                        "Theta": flip["theta"],
+                        "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                     })
-                    logger.debug(f"[node.flip] {flip['node_id']}: {flip['E_pre']:.3f} → {flip['E_post']:.3f} (Δ={flip['delta_E']:.3f})")
+                    logger.debug(f"[node.flip] {flip['node_id']}: {flip['E_pre']:.3f} -> {flip['E_post']:.3f} (delta ={flip['delta_E']:.3f})")
             else:
                 # Log when no flips detected (every 100 ticks to avoid spam)
                 if self.tick_count % 100 == 0:
@@ -1804,14 +1960,14 @@ class ConsciousnessEngineV2:
                     # Estimate flow as function of energy difference and link ease
                     ease = math.exp(link.log_weight)
                     alpha_tick = criticality_metrics.alpha_after
-                    ΔE_estimate = source_energy * ease * alpha_tick * max(0, source_energy - target_energy)
+                    delta_E_estimate = source_energy * ease * alpha_tick * max(0, source_energy - target_energy)
 
                     # Only include links with non-zero flow
-                    if ΔE_estimate > 0.001:
+                    if delta_E_estimate > 0.001:
                         link_flows.append({
                             "id": f"{link.source.id}->{link.target.id}",
-                            "ΔE_sum": round(ΔE_estimate, 4),
-                            "φ_max": round(ease, 3),  # Using ease = exp(log_weight)
+                            "delta E_sum": round(delta_E_estimate, 4),
+                            "phi_max": round(ease, 3),  # Using ease = exp(log_weight)
                             "z_flow": 0.0  # Would compute from cohort normalization
                         })
 
@@ -1827,11 +1983,11 @@ class ConsciousnessEngineV2:
                         "v": "2",
                         "frame_id": self.tick_count,
                         "flows": flows_payload,  # Changed from "links" to "flows"
-                        "t_ms": int(time.time() * 1000)
+                        "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                     })
 
         # === Step 9: WM Select and Emit ===
-        # SubEntity-first working memory selection (spec: subentity_layer.md §4)
+        # SubEntity-first working memory selection (spec: subentity_layer.md Section 4)
         workspace_entities, wm_summary = self._select_workspace_entities(subentity)
 
         # P2.1.4: Detect phenomenological mismatch (expected vs actual WM)
@@ -1859,8 +2015,8 @@ class ConsciousnessEngineV2:
                 overlap = intersection / union if union > 0 else 1.0
                 mismatch_score = 1.0 - overlap  # 0 = perfect match, 1 = no overlap
 
-                # Gate: Emit if mismatch > 0.3 (30% divergence)
-                mismatch_detected = mismatch_score > 0.3
+                # Gate: Emit if mismatch > configured divergence threshold
+                mismatch_detected = mismatch_score > constants.PHENOMENOLOGY_MISMATCH_THRESHOLD
 
         # P2.1.4: Emit phenomenology.mismatch event when detected
         if mismatch_detected and self.broadcaster and self.broadcaster.is_available():
@@ -1873,11 +2029,23 @@ class ConsciousnessEngineV2:
                     "actual_entities": actual_entity_ids,
                     "mismatch_score": round(mismatch_score, 3),
                     "diagnosis": f"Algorithm diverged from energy ranking by {mismatch_score:.0%}",
-                    "t_ms": int(time.time() * 1000)
+                    "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                 })
-                logger.debug(f"[P2.1.4] Mismatch: score={mismatch_score:.3f}, expected={expected_entity_ids}, actual={actual_entity_ids}")
-            except Exception as e:
-                logger.error(f"[P2.1.4] phenomenology.mismatch emission failed: {e}")
+                logger.debug(
+                    "[P2.1.4] Mismatch: score=%s, expected=%s, actual=%s",
+                    f"{mismatch_score:.3f}",
+                    expected_entity_ids,
+                    actual_entity_ids,
+                )
+            except Exception as exc:
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error("[P2.1.4] phenomenology.mismatch emission failed: %s", detail)
+                emit_failure(
+                    component="engine.phenomenology_mismatch",
+                    reason="broadcast_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
 
         # Extract all member nodes from selected entities (for backward compatibility)
         workspace_nodes = []
@@ -1922,13 +2090,13 @@ class ConsciousnessEngineV2:
                 "total_members": wm_summary.get("total_members", 0) if wm_summary else 0,
                 "token_budget_used": wm_summary.get("token_budget_used", 0) if wm_summary else 0,
                 "selected_nodes": entity_member_nodes,  # Top members from entities
-                "t_ms": int(time.time() * 1000)
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
             })
 
             # === Priority 0: On-Change WM Detection & COACTIVATES_WITH Update ===
             # Emit wm.selected only when WM set or shares drift significantly
-            # Updates COACTIVATES_WITH edges for lean U-metric (O(k^2) with k≈5-7)
-            now_ms = int(time.time() * 1000)
+            # Updates COACTIVATES_WITH edges for lean U-metric (O(k^2) with kapprox5-7)
+            now_ms = int(time.time() * constants.MILLISECONDS_PER_SECOND)
             ids_sig, vec_sig = self._wm_signature(entity_ids, entity_token_shares)
 
             emit = False
@@ -1966,15 +2134,22 @@ class ConsciousnessEngineV2:
 
                 # 2) DB co-activation update (lean U metric)
                 try:
-                    alpha = 0.1  # Boot contour; will become learned per citizen
+                    alpha = constants.COACTIVATION_UPDATE_ALPHA
                     await self.adapter.update_coactivation_edges_async(
                         citizen_id=self.config.entity_id,
                         entities_active=entity_ids,
                         alpha=alpha,
                         timestamp_ms=now_ms
                     )
-                except Exception as e:
-                    logger.error(f"[WM Coactivation] Update failed: {e}")
+                except Exception as exc:
+                    detail = f"{type(exc).__name__}: {exc}"
+                    logger.error("[WM Coactivation] Update failed: %s", detail)
+                    emit_failure(
+                        component="engine.wm_coactivation",
+                        reason="update_failure",
+                        detail=detail,
+                        span={"file": __file__},
+                    )
 
             # P1: Store entity IDs for TraceCapture attribution
             self.last_wm_entity_ids = entity_ids
@@ -2004,7 +2179,7 @@ class ConsciousnessEngineV2:
                             }
                             # Add member nodes with their energies (if members attribute exists)
                             if hasattr(entity, 'members') and entity.members:
-                                for member_id in entity.members[:10]:  # Top 10 members per entity
+                                for member_id in entity.members[:constants.MAX_ENTITY_MEMBERS_FOR_PROMPT]:
                                     node = self.graph.get_node(member_id)
                                     if node:
                                         entity_data["members"].append({
@@ -2034,10 +2209,15 @@ class ConsciousnessEngineV2:
                         logger.debug(f"[ForgedIdentity] Stimulus tracking cleared - will not re-trigger")
                     else:
                         logger.warning(f"[ForgedIdentity] Integration is None - not initialized properly")
-                except Exception as e:
-                    import traceback
-                    logger.error(f"[ForgedIdentity] Generation failed: {e}")
-                    logger.error(f"[ForgedIdentity] Traceback: {traceback.format_exc()}")
+                except Exception as exc:
+                    detail = f"{type(exc).__name__}: {exc}"
+                    logger.error("[ForgedIdentity] Generation failed: %s", detail, exc_info=True)
+                    emit_failure(
+                        component="engine.forged_identity",
+                        reason="prompt_generation_failure",
+                        detail=detail,
+                        span={"file": __file__},
+                    )
                     # Clear stimulus even on failure to prevent infinite retry loops
                     self._last_stimulus_text = None
                     self._last_stimulus_id = None
@@ -2132,7 +2312,7 @@ class ConsciousnessEngineV2:
                 "citizen_id": self.config.entity_id,
                 "active": act,
                 "wm": wm_list,
-                "t_ms": int(time.time() * 1000)
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
             })
 
         # === Phase 4: Learning & Metrics ===
@@ -2183,11 +2363,18 @@ class ConsciousnessEngineV2:
                     global_criticality=global_crit,
                     entity_ids=entity_ids
                 )
-            except Exception as e:
-                logger.warning(f"[DynamicPrompt] Update failed: {e}")
+            except Exception as exc:
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.warning("[DynamicPrompt] Update failed: %s", detail)
+                emit_failure(
+                    component="engine.dynamic_prompt",
+                    reason="update_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
 
         # === Step 10: Tick Frame V1 Event (SubEntity-First Telemetry) + TRIPWIRE: Observability ===
-        # tick_frame.v1 is the heartbeat signal - missing events → monitoring blind
+        # tick_frame.v1 is the heartbeat signal - missing events -> monitoring blind
         # Replaces legacy frame.end with subentity-scale observability
         # Tripwire triggers Safe Mode after 5 consecutive failures
         frame_end_emitted = False
@@ -2242,7 +2429,7 @@ class ConsciousnessEngineV2:
                 tick_event = TickFrameV1Event(
                     citizen_id=self.config.entity_id,
                     frame_id=self.tick_count,
-                    t_ms=int(time_module.time() * 1000),
+                    t_ms=int(time_module.time() * constants.MILLISECONDS_PER_SECOND),
                     tick_duration_ms=round(tick_duration, 2),
                     entities=entity_data_list,
                     nodes_active=len([n for n in self.graph.nodes.values() if n.is_active()]),
@@ -2257,9 +2444,16 @@ class ConsciousnessEngineV2:
                 await self.broadcaster.broadcast_event("tick_frame_v1", tick_event.to_dict())
                 frame_end_emitted = True
 
-            except Exception as e:
+            except Exception as exc:
                 # tick_frame.v1 emission failed - record observability violation
-                logger.error(f"[TRIPWIRE] tick_frame.v1 emission failed: {e}")
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error("[TRIPWIRE] tick_frame.v1 emission failed: %s", detail)
+                emit_failure(
+                    component="engine.tick_frame",
+                    reason="broadcast_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
                 frame_end_emitted = False
 
         # Record observability tripwire status
@@ -2282,16 +2476,27 @@ class ConsciousnessEngineV2:
                     message="Failed to emit tick_frame.v1 event (observability lost)"
                 )
 
-        except Exception as e:
+        except Exception as exc:
             # Tripwire check failed - log but don't crash tick
-            logger.error(f"[TRIPWIRE] Observability check failed: {e}")
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.error("[TRIPWIRE] Observability check failed: %s", detail)
+            emit_failure(
+                component="engine.tripwire_observability",
+                reason="tripwire_check_failed",
+                detail=detail,
+                span={"file": __file__},
+            )
             # Continue execution - tripwire is diagnostic, not control flow
 
         # === P2.1 Event: health.phenomenological (hysteresis-based emission) ===
         # Phenomenological health state assessment for operator visibility
         # Translates quantitative metrics into qualitative consciousness states
         # Uses hysteresis: only emit when state changes OR fragmentation shifts >0.1
-        if self.tick_count % 5 == 0 and self.broadcaster and self.broadcaster.is_available():
+        if (
+            self.tick_count % constants.PHENOMENOLOGY_HEALTH_INTERVAL_TICKS == 0
+            and self.broadcaster
+            and self.broadcaster.is_available()
+        ):
             try:
                 from orchestration.mechanisms.phenomenology_health import classify
 
@@ -2299,8 +2504,11 @@ class ConsciousnessEngineV2:
                 result = classify(self.graph.subentities.values() if hasattr(self.graph, 'subentities') else [])
 
                 # Hysteresis check: only emit if state changed OR fragmentation shifted >0.1
-                state_changed = (result.state != self._last_health_state)
-                frag_shifted = abs(result.fragmentation - self._last_frag) > 0.1
+                state_changed = result.state != self._last_health_state
+                frag_shifted = (
+                    abs(result.fragmentation - self._last_frag)
+                    > constants.HEALTH_FRAGMENTATION_DELTA_THRESHOLD
+                )
                 must_emit = state_changed or frag_shifted or (self._last_health_state is None)
 
                 if must_emit:
@@ -2317,7 +2525,7 @@ class ConsciousnessEngineV2:
                             "multiplicity": round(result.components.multiplicity, 3),
                         },
                         "narrative": result.cause,
-                        "t_ms": int(time.time() * 1000)
+                        "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
                     })
 
                     logger.debug(
@@ -2330,9 +2538,20 @@ class ConsciousnessEngineV2:
                     self._last_health_state = result.state
                     self._last_frag = result.fragmentation
 
-            except Exception as e:
+            except Exception as exc:
                 # Health emission failed - log but don't crash tick
-                logger.error(f"[P2.1] health.phenomenological emission failed: {e}")
+                detail = f"{type(exc).__name__}: {exc}"
+                logger.error(
+                    "[P2.1] health.phenomenological emission failed: %s",
+                    detail,
+                    exc_info=True,
+                )
+                emit_failure(
+                    component="engine.health_phenomenology",
+                    reason="broadcast_failure",
+                    detail=detail,
+                    span={"file": __file__},
+                )
 
         # === Pass B: Periodic Persistence Flush ===
         # Check if dirty nodes should be persisted (auto-flush enabled with MP_PERSIST_ENABLED=1)
@@ -2343,7 +2562,7 @@ class ConsciousnessEngineV2:
         self.tick_count += 1
 
         # Periodic logging
-        if self.tick_count % 100 == 0:
+        if self.tick_count % constants.TICK_METRICS_LOG_INTERVAL_TICKS == 0:
             logger.info(
                 f"[ConsciousnessEngineV2] Tick {self.tick_count} | "
                 f"Active: {len(activated_nodes)}/{len(self.graph.nodes)} | "
@@ -2352,16 +2571,10 @@ class ConsciousnessEngineV2:
 
     def _get_consciousness_state_name(self, global_energy: float) -> str:
         """Map global energy to consciousness state name."""
-        if global_energy < 0.2:
-            return "dormant"
-        elif global_energy < 0.4:
-            return "drowsy"
-        elif global_energy < 0.6:
-            return "calm"
-        elif global_energy < 0.8:
-            return "engaged"
-        else:
-            return "alert"
+        for threshold, state in constants.CONSCIOUSNESS_STATE_THRESHOLDS:
+            if global_energy < threshold:
+                return state
+        return "alert"
 
     def _select_workspace(self, activated_node_ids: List[str], subentity: str) -> List[Node]:
         """
@@ -2444,7 +2657,7 @@ class ConsciousnessEngineV2:
 
     def _select_workspace_entities(self, subentity: str) -> Tuple[List['Subentity'], Dict]:
         """
-        Select working memory entities (entity-first WM per spec §4).
+        Select working memory entities (entity-first WM per spec Section 4).
 
         Selects 5-7 coherent entities instead of scattered nodes.
         Score = (E_entity / token_cost) + diversity_bonus
@@ -2526,7 +2739,7 @@ class ConsciousnessEngineV2:
                     norm_entity = np.linalg.norm(entity.centroid_embedding)
                     norm_selected = np.linalg.norm(selected_emb)
 
-                    if norm_entity > 1e-9 and norm_selected > 1e-9:
+                    if norm_entity > constants.MIN_ENERGY_DELTA and norm_selected > constants.MIN_ENERGY_DELTA:
                         cos_sim = np.dot(entity.centroid_embedding, selected_emb) / (norm_entity * norm_selected)
                         min_similarity = min(min_similarity, cos_sim)
 
@@ -2691,7 +2904,7 @@ class ConsciousnessEngineV2:
                     }
                     for update in node_updates[:50]  # Limit to first 50 for performance
                 ],
-                "t_ms": int(time.time() * 1000)
+                "t_ms": int(time.time() * constants.MILLISECONDS_PER_SECOND)
             }))
 
         # Update link weights (similar process)
@@ -2778,7 +2991,7 @@ class ConsciousnessEngineV2:
             loop = asyncio.get_running_loop()
             embedding = await asyncio.wait_for(
                 loop.run_in_executor(None, self._embedding_service.embed, text),
-                timeout=2.0
+                timeout=constants.EMBEDDING_TIMEOUT_S,
             )
 
             # Success - reset failure counter
@@ -2788,16 +3001,23 @@ class ConsciousnessEngineV2:
         except asyncio.TimeoutError:
             logger.warning("[Stimulus] Embedding timeout (>2s), using best-effort fallback")
             self._embedding_failures += 1
-            from orchestration.bus.emit import emit_failure
-            emit_failure(component="engine._ensure_embedding",
-                         reason="timeout",
-                         detail="Embedding service timed out after 2s.",
-                         span={"file": __file__, "line": 2832})
+            emit_failure(
+                component="engine._ensure_embedding",
+                reason="timeout",
+                detail=f"Embedding service timed out after {constants.EMBEDDING_TIMEOUT_S}s.",
+                span={"file": __file__},
+            )
 
             # Open circuit breaker after 3 consecutive failures (30s cooldown)
-            if self._embedding_failures >= 3:
-                self._embedding_circuit_open_until = time.time() + 30.0
-                logger.warning("[Stimulus] Embedding circuit breaker OPEN for 30s after 3 failures")
+            if self._embedding_failures >= constants.EMBEDDING_FAILURE_TRIP_COUNT:
+                self._embedding_circuit_open_until = (
+                    time.time() + constants.EMBEDDING_CIRCUIT_BREAKER_COOLDOWN_S
+                )
+                logger.warning(
+                    "[Stimulus] Embedding circuit breaker OPEN for %ss after %s failures",
+                    constants.EMBEDDING_CIRCUIT_BREAKER_COOLDOWN_S,
+                    constants.EMBEDDING_FAILURE_TRIP_COUNT,
+                )
 
             return None
 
@@ -2806,7 +3026,12 @@ class ConsciousnessEngineV2:
             self._embedding_failures += 1
             raise
 
-    async def inject_stimulus_async(self, text: str, severity: float = 0.3, metadata: dict = None):
+    async def inject_stimulus_async(
+        self,
+        text: str,
+        severity: float = constants.DEFAULT_STIMULUS_SEVERITY,
+        metadata: dict = None,
+    ):
         """
         Async-safe stimulus injection (for control API).
 
@@ -2831,7 +3056,12 @@ class ConsciousnessEngineV2:
         })
         logger.info(f"[ConsciousnessEngineV2] Queued stimulus (async): {text[:50]}... (severity={severity}, origin={source_type})")
 
-    def inject_stimulus_threadsafe(self, text: str, severity: float = 0.3, metadata: dict = None):
+    def inject_stimulus_threadsafe(
+        self,
+        text: str,
+        severity: float = constants.DEFAULT_STIMULUS_SEVERITY,
+        metadata: dict = None,
+    ):
         """
         Thread-safe stimulus injection (for non-async contexts).
 
@@ -2952,7 +3182,7 @@ class ConsciousnessEngineV2:
 
             # Clamp to valid range (energy is non-negative, theta must be positive)
             E = max(0.0, E)
-            theta = max(0.001, theta)  # theta > 0 to avoid division by zero
+            theta = max(constants.MIN_NODE_THETA, theta)  # theta > 0 to avoid division by zero
 
             # Serialize entity_activations as JSON string for FalkorDB
             entity_activations_json = json.dumps(node.entity_activations) if node.entity_activations else "{}"
@@ -2994,10 +3224,17 @@ class ConsciousnessEngineV2:
             self._dirty_nodes.clear()
             self._last_persist_time = now
 
-        except Exception as e:
-            logger.error(f"[Persistence] Failed to flush dirty nodes: {e}")
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.error("[Persistence] Failed to flush dirty nodes: %s", detail)
+            emit_failure(
+                component="engine.persistence_flush",
+                reason="persist_failure",
+                detail=detail,
+                span={"file": __file__},
+            )
             self._persist_failures += 1
-            self._persist_last_error = str(e)
+            self._persist_last_error = str(exc)
             # Don't clear dirty set - will retry next interval
 
     async def persist_to_database(self, force: bool = False):
@@ -3059,10 +3296,17 @@ class ConsciousnessEngineV2:
             self._dirty_nodes.clear()
             self._last_persist_time = time.time()
 
-        except Exception as e:
-            logger.error(f"[ConsciousnessEngineV2] Force persist failed: {e}")
+        except Exception as exc:
+            detail = f"{type(exc).__name__}: {exc}"
+            logger.error("[ConsciousnessEngineV2] Force persist failed: %s", detail)
+            emit_failure(
+                component="engine.persistence_force",
+                reason="persist_failure",
+                detail=detail,
+                span={"file": __file__},
+            )
             self._persist_failures += 1
-            self._persist_last_error = str(e)
+            self._persist_last_error = str(exc)
             raise  # Re-raise on manual flush for visibility
 
     def get_metrics(self) -> Dict:

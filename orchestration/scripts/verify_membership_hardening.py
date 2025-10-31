@@ -11,6 +11,7 @@ Owner: Felix "Ironhand"
 Created: 2025-10-25
 """
 
+import logging
 import sys
 from pathlib import Path
 
@@ -18,9 +19,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
-import logging
 
-logging.basicConfig(level=logging.INFO)
+from orchestration.config import constants
+from orchestration.bus.emit import emit_failure
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -51,7 +54,11 @@ def verify_no_orphan_links(graph_store: FalkorDBGraphStore, graph_name: str) -> 
         return False
 
 
-def verify_primary_entity_consistency(graph_store: FalkorDBGraphStore, graph_name: str, threshold: float = 0.95) -> bool:
+def verify_primary_entity_consistency(
+    graph_store: FalkorDBGraphStore,
+    graph_name: str,
+    threshold: float = constants.PRIMARY_ENTITY_COVERAGE_THRESHOLD,
+) -> bool:
     """
     Verify ≥95% of nodes with MEMBER_OF links have primary_entity set.
 
@@ -83,16 +90,28 @@ def verify_primary_entity_consistency(graph_store: FalkorDBGraphStore, graph_nam
             nodes_with_primary += node_count
 
     if total_nodes == 0:
-        logger.warning(f"⚠️  No nodes with MEMBER_OF links found in {graph_name}")
+        logger.warning("No nodes with MEMBER_OF links found in %s", graph_name)
         return True  # Vacuously true
 
     coverage = nodes_with_primary / total_nodes
 
     if coverage >= threshold:
-        logger.info(f"✅ Primary entity coverage: {coverage:.1%} ({nodes_with_primary}/{total_nodes}) in {graph_name}")
+        logger.info(
+            "Primary entity coverage: %.1f%% (%d/%d) in %s",
+            coverage * 100,
+            nodes_with_primary,
+            total_nodes,
+            graph_name,
+        )
         return True
     else:
-        logger.error(f"❌ Primary entity coverage: {coverage:.1%} ({nodes_with_primary}/{total_nodes}) - below {threshold:.0%} threshold")
+        logger.error(
+            "Primary entity coverage: %.1f%% (%d/%d) - below %.0f%% threshold",
+            coverage * 100,
+            nodes_with_primary,
+            total_nodes,
+            threshold * 100,
+        )
         return False
 
 
@@ -119,17 +138,32 @@ def verify_epsilon_policy(graph_store: FalkorDBGraphStore, graph_name: str) -> d
         min_weight, max_weight, avg_weight, primary_links = result[0]
 
         # Handle None values (no primary links found)
-        if min_weight is None or max_weight is None or avg_weight is None or primary_links == 0:
-            logger.warning(f"⚠️  No primary membership links found in {graph_name}")
+        if (
+            min_weight is None
+            or max_weight is None
+            or avg_weight is None
+            or primary_links == 0
+        ):
+            logger.warning("No primary membership links found in %s", graph_name)
             return {}
 
-        logger.info(f"📊 Primary membership weights in {graph_name}:")
-        logger.info(f"   Min: {min_weight:.3f}, Max: {max_weight:.3f}, Avg: {avg_weight:.3f}")
-        logger.info(f"   Total primary links: {primary_links}")
-        return {'min_weight': min_weight, 'max_weight': max_weight, 'avg_weight': avg_weight, 'primary_links': primary_links}
-    else:
-        logger.warning(f"⚠️  No primary membership links found in {graph_name}")
-        return {}
+        logger.info(
+            "Primary membership weights in %s | min=%.3f max=%.3f avg=%.3f total=%d",
+            graph_name,
+            min_weight,
+            max_weight,
+            avg_weight,
+            primary_links,
+        )
+        return {
+            'min_weight': min_weight,
+            'max_weight': max_weight,
+            'avg_weight': avg_weight,
+            'primary_links': primary_links,
+        }
+
+    logger.warning("No primary membership links found in %s", graph_name)
+    return {}
 
 
 def main():
@@ -145,26 +179,34 @@ def main():
     citizen_ids = get_all_citizen_ids()
     citizen_graph_names = [graph_name_for_citizen(cid) for cid in citizen_ids]
 
-
     if not citizen_graph_names:
-        print("⚠️  No citizen graphs found in FalkorDB")
-        return 0
+        detail = "Citizen registry returned no graph identifiers"
+        emit_failure(
+            component="scripts.verify_membership_hardening",
+            reason="no_citizen_graphs",
+            detail=detail,
+            span={"file": __file__},
+        )
+        raise RuntimeError(detail)
 
     # Use first citizen to initialize graph_store
     first_graph = citizen_graph_names[0]
     graph_store = FalkorDBGraphStore(graph_name=first_graph, url=falkordb_url)
 
-    print("=" * 70)
-    print("P1.3 MEMBERSHIP HARDENING VERIFICATION")
-    print("=" * 70)
-    print(f"Found {len(citizen_graph_names)} citizen graphs: {citizen_graph_names}")
-    print()
+    logger.info("%s", "=" * 70)
+    logger.info("P1.3 MEMBERSHIP HARDENING VERIFICATION")
+    logger.info("%s", "=" * 70)
+    logger.info(
+        "Found %d citizen graphs: %s",
+        len(citizen_graph_names),
+        citizen_graph_names,
+    )
 
     all_passed = True
 
     for graph_name in citizen_graph_names:
-        print(f"Checking {graph_name}...")
-        print("-" * 70)
+        logger.info("Checking %s", graph_name)
+        logger.info("%s", "-" * 70)
 
         # Check 1: No orphan links
         passed_orphan = verify_no_orphan_links(graph_store, graph_name)
@@ -179,29 +221,25 @@ def main():
         all_passed = all_passed and graph_passed
 
         if graph_passed:
-            print(f"✅ {graph_name} PASSED")
+            logger.info("%s PASSED", graph_name)
         else:
-            print(f"❌ {graph_name} FAILED")
+            logger.error("%s FAILED", graph_name)
 
-        print()
-
-    print("=" * 70)
+    logger.info("%s", "=" * 70)
     if all_passed:
-        print("✅ ALL VERIFICATION CHECKS PASSED")
-        print()
-        print("P1.3 Acceptance Criteria Met:")
-        print("  ✅ No orphan MEMBER_OF links")
-        print("  ✅ ≥95% of linked nodes have primary_entity")
+        logger.info("ALL VERIFICATION CHECKS PASSED")
+        logger.info("P1.3 Acceptance Criteria Met:")
+        logger.info("  - No orphan MEMBER_OF links")
+        logger.info("  - ≥95%% of linked nodes have primary_entity")
         return 0
-    else:
-        print("❌ SOME VERIFICATION CHECKS FAILED")
-        print()
-        print("Review failures above and check:")
-        print("  - persist_membership() implementation")
-        print("  - ε-policy logic (0.1 threshold)")
-        print("  - Subentity node creation")
-        return 1
+
+    logger.error("SOME VERIFICATION CHECKS FAILED")
+    logger.error("Review failures above and check:")
+    logger.error("  - persist_membership() implementation")
+    logger.error("  - ε-policy logic (0.1 threshold)")
+    logger.error("  - Subentity node creation")
+    return 1
 
 
-if __name__ == '__main__':
-    sys.exit(main())
+if __name__ == "__main__":
+    raise SystemExit(main())
