@@ -1,0 +1,6 @@
+semgrep==1.67.0
+radon==6.0.1
+xenon==0.9.1
+vulture==2.7
+coverage==7.4.4
+hypothesis==6.100.2
