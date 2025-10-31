@@ -56,6 +56,10 @@ guardian.log
 /data/
 orchestration/test_results/
 *.rdb
+traversal_logs/
+.resurrection_checkpoints/
+*.locks/
+.signals/
 
 # Claude Code artifacts
 claude-logs/
@@ -84,3 +88,7 @@ consciousness/citizens/*/contexts/
 
 conversation_watcher.log*
 blockchain/mind-transfer-hook/target/
+
+*.db
+
+
