@@ -2,7 +2,12 @@
 """
 Pydantic settings for orchestration. All config comes from env (or .env).
 """
-from pydantic import BaseSettings, Field, validator
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    from pydantic import BaseSettings  # Fallback for pydantic v1
+
+from pydantic import Field, validator
 
 class Settings(BaseSettings):
     REDIS_URL: str = Field("redis://localhost:6379", env="REDIS_URL")

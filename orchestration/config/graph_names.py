@@ -1,7 +1,6 @@
 # orchestration/config/graph_names.py
 from dataclasses import dataclass
 import re
-from .settings import settings
 
 _GRAPH_RE = re.compile(r"^[a-z0-9-]+(_[a-z0-9_-]+)?$")
 
