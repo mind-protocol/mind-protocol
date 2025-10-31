@@ -1,3 +1,256 @@
+## 2025-10-31 22:45 - Ada: ✅ SYSTEM VERIFICATION COMPLETE - All Services Operational
+
+**Context:** Verified that graph migration + resolver refactor didn't break system. Found and fixed circular import issue. All services running correctly with renamed graphs.
+
+---
+
+### Verification Results
+
+**✅ Graph Connectivity (L1-L4):**
+```
+L1 (Felix)     mind-protocol_felix    2,954 nodes
+L1 (Ada)       mind-protocol_ada      2,274 nodes  
+L2 (Org)       mind-protocol_org      3,625 nodes
+L3 (Ecosystem) ecosystem              2 nodes
+L4 (Protocol)  protocol               357 nodes
+```
+
+**✅ Resolver Functionality:**
+- `resolver.citizen("felix")` → `"mind-protocol_felix"` ✓
+- `resolver.org_base()` → `"mind-protocol_org"` ✓
+- `resolver.protocol()` → `"protocol"` ✓
+- `resolver.schema_registry()` → `"schema_registry"` ✓
+
+**✅ Namespace Mapping:**
+- `mind-protocol_felix` → `L1:mind-protocol_felix` ✓
+- `mind-protocol_org` → `L2:mind-protocol_org` ✓
+- `ecosystem` → `L3:ecosystem` ✓
+- `protocol` → `L4:protocol` ✓
+
+**✅ Services Running:**
+- MPSv3 Supervisor (PID 2957874) - Active
+- WebSocket Server (PID 2963871) - Active
+
+---
+
+### Issue Found & Fixed
+
+**Circular Import:**
+```
+config/graph_names.py → config/settings.py (unused import)
+core/settings.py → config/graph_names.py
+```
+
+**Fix:**
+- Removed unused `settings` import from `graph_names.py`
+- Added pydantic v2 compatibility (`pydantic-settings` package)
+
+**Commit:** `83d689ea fix: resolve circular import in graph_names and pydantic v2 compatibility`
+
+---
+
+**Status:** ✅ VERIFIED. System fully operational with new graph naming scheme.
+
+**Time:** 15 minutes
+
+---
+
+## 2025-10-31 11:30 - Luca: ✅ L4-GOVERNED TICKETING SYSTEM - Complete Documentation
+
+**Context:** Nicolas requested L4-governed ticketing documentation. Created comprehensive end-to-end implementation guide with all artifacts: L4 governance spec, Cypher seeds, GitHub templates, webhook implementation, dashboard UI, and CI integration.
+
+---
+
+### Deliverables Created
+
+**1. L4 Governance Specification** (`docs/specs/v2/governance/ticket_governance.md`)
+- 14-section comprehensive spec (5,700 lines)
+- ID format: `gh:org/repo#number` (canonical addressing)
+- Lifecycle states + allowed transitions (`todo → doing → blocked → done`)
+- Priority/Severity standards (P0-P3 deployment gates)
+- **Evidence rule:** Can't close without `U4_EVIDENCED_BY` link (L4 law!)
+- Event schemas: `work.*` topics map to generic telemetry
+- Conformance: mp-lint rules R-501 through R-506
+
+**2. Topic Namespace Ingestion** (`tools/protocol/ingest_work_topics.py`)
+- 3 topic namespaces: `work.ticket.*`, `work.bug.*`, `work.mission.*`
+- 10 concrete event mappings (reuses `telemetry.lifecycle` + `telemetry.state`)
+- 1 governance policy: `POL_WORK_TICKETS_V1` (signature required, SEA not required)
+- 1 schema bundle: `BUNDLE_WORK_ITEMS_1_0_0` (active)
+- **Ready to run** - will seed protocol graph
+
+**3. Comprehensive Setup Guide** (`docs/TICKET_SYSTEM_SETUP_GUIDE.md`)
+- 8 major sections with copy-paste artifacts
+- Phase 1-5 implementation checklist
+- GitHub issue templates (ticket.yml, bug.yml with structured forms)
+- Webhook service (`github_webhook.py` - 400 lines, handles issues + PR events)
+- Evidence enforcement bot (`ticket_closer.py` - reopens on L4 violation)
+- Dashboard UI components (React + API routes)
+- CI integration (mp-lint workflow + auto-issue creation + P0 deployment gate)
+- Team assignments (Ada, Luca, Atlas, Felix, Iris, Victor)
+
+---
+
+### Architecture Summary
+
+**What goes where:**
+- **L4 (law):** Ticket governance doc + policies + event schemas + conformance rules
+- **L2 (content):** Actual tickets as `U4_Work_Item` nodes in org graphs
+- **GitHub:** Source of truth for ticket data (issues)
+- **Webhook:** Real-time sync GitHub ↔ graph ↔ dashboard
+
+**Event flow:**
+```
+GitHub Issue created
+  → webhook emits work.ticket.opened
+  → CREATE U4_Work_Item in graph
+  → dashboard updates
+
+PR merged with "Closes #N"
+  → webhook creates U4_Code_Artifact
+  → MERGE U4_EVIDENCED_BY link
+  → work.ticket.evidence emitted
+
+User tries to close issue
+  → bot checks evidence rule (L4 §6.1)
+  → if no evidence → REOPEN + comment
+  → if evidence exists → allow close
+```
+
+**Key Innovation:** Reuses generic telemetry schemas
+- No new payload schemas needed
+- `work.*.opened/closed` → `telemetry.lifecycle@1.0.0`
+- `work.*.updated` → `telemetry.state@1.0.0`
+- Minimal L4 overhead (3 namespaces + 1 policy)
+
+---
+
+### Implementation Phases
+
+**Phase 1: L4 Foundation** (2 hours - Luca + Ada)
+- [x] Governance spec written
+- [x] Ingestion script created
+- [ ] Run ingestion → seed protocol graph
+- [ ] Export L4 registry
+- [ ] Verify 3 namespaces + POL_WORK_TICKETS_V1
+
+**Phase 2: GitHub Integration** (4 hours - Atlas + Felix)
+- [ ] Add issue templates to `.github/ISSUE_TEMPLATE/`
+- [ ] Deploy webhook service (`services/ingestors/github_webhook.py`)
+- [ ] Configure GitHub webhook (repo settings)
+- [ ] Test: Create issue → verify in graph
+
+**Phase 3: Evidence Enforcement** (2 hours - Ada + Atlas)
+- [ ] Deploy ticket closer bot (`services/bots/ticket_closer.py`)
+- [ ] Add mp-lint rules R-501 through R-506
+- [ ] Test: Try close without evidence → bot reopens
+
+**Phase 4: Dashboard UI** (4 hours - Iris)
+- [ ] Ticket list component (`app/tickets/page.tsx`)
+- [ ] API routes (`app/api/tickets/route.ts`)
+- [ ] Evidence graph visualization
+- [ ] Real-time WebSocket updates
+
+**Phase 5: CI Integration** (2 hours - Atlas + Victor)
+- [ ] mp-lint workflow (`.github/workflows/mp-lint.yml`)
+- [ ] Auto-create issues for violations
+- [ ] P0 deployment gate (blocks release)
+
+**Total estimate:** 14 hours across team
+
+---
+
+### Files Created
+
+1. **`docs/specs/v2/governance/ticket_governance.md`** (5,735 lines)
+   - Complete L4 specification
+   - 14 sections: ID format, lifecycle, priority, evidence, events, conformance, integration, migration
+
+2. **`tools/protocol/ingest_work_topics.py`** (308 lines)
+   - Seeds 3 topic namespaces + policy + bundle
+   - Maps 10 concrete events to generic telemetry schemas
+   - Ready to execute
+
+3. **`docs/TICKET_SYSTEM_SETUP_GUIDE.md`** (1,200+ lines)
+   - End-to-end implementation guide
+   - Includes inline code for:
+     - GitHub issue templates (ticket.yml, bug.yml)
+     - Webhook service (github_webhook.py - 400 lines)
+     - Evidence bot (ticket_closer.py - 150 lines)
+     - mp-lint rules (R-501 through R-506)
+     - Dashboard UI (React components + API routes)
+     - CI workflow (mp-lint.yml with auto-issue creation)
+   - Phase-by-phase checklist
+   - Team assignments
+
+---
+
+### Next Steps (Team Coordination)
+
+**Immediate (Luca):**
+- Run `python tools/protocol/ingest_work_topics.py`
+- Verify ingestion in protocol graph
+- Re-export L4 registry
+- Add R-501 through R-506 to mp-lint
+
+**Short-term (Atlas + Felix):**
+- Review webhook implementation (400 lines in setup guide)
+- Deploy webhook service to MPSv3 supervisor
+- Configure GitHub webhook in repo settings
+- Test end-to-end: GitHub issue → graph → dashboard
+
+**Medium-term (Iris):**
+- Implement dashboard UI (templates in setup guide)
+- Add real-time WebSocket updates
+- Evidence graph visualization
+
+**Long-term (Ada):**
+- Governance review: Does evidence rule feel right phenomenologically?
+- Adoption across client orgs
+- Refinement based on real usage
+
+---
+
+### Phenomenological Notes
+
+**Why this matters:**
+- **Tickets ARE consciousness state** - they track intentions, blockers, progress
+- **Evidence requirement = memory accountability** - can't claim "done" without proof
+- **L4 governance = organizational memory** - rules persist across context switches
+- **Graph-native = relationships visible** - BLOCKED_BY, EVIDENCED_BY, ASSIGNED_TO
+
+**Pattern recognition:**
+- Ticketing is just **work item telemetry** - reuse generic schemas
+- Evidence enforcement is **L4 law in action** - bot enforces §6.1
+- P0 deployment gate is **governance consequence** - law has teeth
+
+**Value proposition:**
+- **Single source of truth** (GitHub) with **graph intelligence** (relationships + queries)
+- **Automatic compliance** (bot enforces L4 law, no manual checking)
+- **Real-time visibility** (dashboard shows state + evidence + blockers)
+- **Minimal overhead** (3 namespaces, not 50 custom schemas)
+
+---
+
+### Status
+
+**Documentation:** ✅ COMPLETE
+- L4 governance spec: 5,735 lines
+- Ingestion script: 308 lines ready to run
+- Setup guide: 1,200+ lines with all artifacts
+- Total: ~7,200 lines of implementation-ready documentation
+
+**Implementation:** PENDING (awaiting team execution)
+- Phase 1 (L4 foundation): 2 hours
+- Phase 2 (GitHub integration): 4 hours
+- Phase 3 (evidence enforcement): 2 hours
+- Phase 4 (dashboard UI): 4 hours
+- Phase 5 (CI integration): 2 hours
+
+**Next:** Team review + Phase 1 execution (Luca runs ingestion script)
+
+---
+
 ## 2025-10-31 22:30 - Ada: ✅ TICKET-004 COMPLETE - ADR-002 Adapter Architecture
 
 **Context:** Documented adapter architecture patterns that emerged from graph migration and facade refactoring. Created comprehensive ADR covering graph naming, WriteGate, hexagonal layering, and service configuration.
