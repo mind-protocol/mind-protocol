@@ -215,7 +215,7 @@ def main():
     parser.add_argument(
         '--graph',
         required=True,
-        help='Graph name to check (e.g., "protocol", "consciousness-infrastructure_mind-protocol_ada")'
+        help='Graph name to check (e.g., "protocol", "mind-protocol_ada")'
     )
     parser.add_argument(
         '--validate',

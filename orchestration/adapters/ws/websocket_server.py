@@ -191,9 +191,9 @@ def discover_graphs() -> dict:
 
     Returns:
         {
-            "n1": ["consciousness-infrastructure_mind-protocol_felix", ...],
-            "n2": ["consciousness-infrastructure_mind-protocol", ...],
-            "n3": ["consciousness-infrastructure", ...]
+            "n1": ["mind-protocol_felix", ...],
+            "n2": ["mind-protocol_org", ...],
+            "n3": ["ecosystem", ...]
         }
     """
     logger.info("[Discovery] Connecting to FalkorDB to discover graphs...")
@@ -205,14 +205,14 @@ def discover_graphs() -> dict:
         graphs = r.execute_command("GRAPH.LIST")
 
         # Categorize by network level using hierarchical naming ONLY
-        # N1 citizens: consciousness-infrastructure_mind-protocol_<name>
+        # N1 citizens: ecosystem_mind-protocol_<name>
         n1_graphs = [g for g in graphs if "_mind-protocol_" in g and g.count("_") == 2]
 
-        # N2 organizations: consciousness-infrastructure_mind-protocol
-        n2_graphs = [g for g in graphs if g == "consciousness-infrastructure_mind-protocol"]
+        # N2 organizations: mind-protocol_org
+        n2_graphs = [g for g in graphs if g == "mind-protocol_org"]
 
-        # N3 ecosystem: consciousness-infrastructure
-        n3_graphs = [g for g in graphs if g == "consciousness-infrastructure"]
+        # N3 ecosystem: ecosystem
+        n3_graphs = [g for g in graphs if g == "ecosystem"]
 
         logger.info(f"[Discovery] Found {len(n1_graphs)} N1 citizen graphs: {n1_graphs}")
         logger.info(f"[Discovery] Found {len(n2_graphs)} N2 organizational graphs: {n2_graphs}")
@@ -237,9 +237,9 @@ def extract_citizen_id(graph_name: str) -> str:
     Extract citizen ID from hierarchical graph name.
 
     Examples:
-        consciousness-infrastructure_mind-protocol_felix -> consciousness-infrastructure_mind-protocol_felix
-        consciousness-infrastructure_mind-protocol -> consciousness-infrastructure_mind-protocol
-        consciousness-infrastructure -> consciousness-infrastructure
+        mind-protocol_felix -> mind-protocol_felix
+        mind-protocol_org -> mind-protocol_org
+        ecosystem -> ecosystem
 
     Returns the FULL hierarchical name as the citizen_id (no prefix stripping).
     """

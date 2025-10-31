@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-labelledby="title desc" preserveAspectRatio="xMidYMid meet">
+  <title id="title">Membrane Events — inject → validate@L4 → broadcast</title>
+  <desc id="desc">Three-step pipeline with callouts for mp-lint, runtime validator, and U4_EMITS/IMPLEMENTS.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E1622"/>
+      <stop offset="1" stop-color="#0A101A"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="16" markerHeight="16" refX="12" refY="8" orient="auto">
+      <path d="M0,0 L16,8 L0,16 z" fill="#9CF6E0"/>
+    </marker>
+    <style>
+      .title { font: 600 44px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill:#E8F1FC; }
+      .h { font: 600 28px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill:#E8F1FC; }
+      .p { font: 400 20px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill:#C7D2E5; }
+      .box { fill:#121A26; stroke:#1E2A3B; stroke-width:2; rx:16; }
+      .accent { fill:#00D1B2; }
+      .stroke { stroke:#9CF6E0; stroke-width:4; }
+      .chip { fill:#0F1A26; stroke:#27445C; stroke-width:2; rx:10; }
+      .chipText { font: 500 18px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; fill:#9CF6E0; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1600" height="900" fill="url(#bg)"/>
+
+  <text x="800" y="110" text-anchor="middle" class="title">Membrane Events</text>
+
+  <!-- Step boxes -->
+  <g transform="translate(120,260)">
+    <!-- Inject -->
+    <rect class="box" x="0" y="0" width="400" height="180"/>
+    <circle class="accent" cx="70" cy="90" r="10"/>
+    <circle class="accent" cx="98" cy="70" r="8"/>
+    <circle class="accent" cx="120" cy="105" r="8"/>
+    <text class="h" x="160" y="82">inject</text>
+    <text class="p" x="160" y="116">events enter the membrane</text>
+
+    <!-- Arrow to validate -->
+    <line class="stroke" x1="400" y1="90" x2="520" y2="90" marker-end="url(#arrow)"/>
+
+    <!-- Validate @ L4 -->
+    <rect class="box" x="520" y="0" width="440" height="180"/>
+    <text class="h" x="740" y="82" text-anchor="middle">validate @ L4</text>
+    <text class="p" x="740" y="116" text-anchor="middle">schema + policy checks at accept-time</text>
+
+    <!-- Validator chips -->
+    <rect class="chip" x="560" y="200" width="160" height="40"/>
+    <text class="chipText" x="640" y="226" text-anchor="middle">mp-lint</text>
+    <rect class="chip" x="740" y="200" width="210" height="40"/>
+    <text class="chipText" x="845" y="226" text-anchor="middle">runtime validator</text>
+
+    <!-- Arrow to broadcast -->
+    <line class="stroke" x1="960" y1="90" x2="1080" y2="90" marker-end="url(#arrow)"/>
+
+    <!-- Broadcast -->
+    <rect class="box" x="1080" y="0" width="400" height="180"/>
+    <text class="h" x="1280" y="82" text-anchor="middle">broadcast</text>
+    <text class="p" x="1280" y="116" text-anchor="middle">normalized events to all subscribers</text>
+
+    <!-- Emits/Implements chip -->
+    <rect class="chip" x="1185" y="200" width="190" height="40"/>
+    <text class="chipText" x="1280" y="226" text-anchor="middle">U4_EMITS / IMPLEMENTS</text>
+  </g>
+</svg>

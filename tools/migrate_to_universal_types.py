@@ -331,14 +331,14 @@ def main():
     db = FalkorDB(host='localhost', port=6379)
 
     # Get list of consciousness graphs
-    # Actual format: consciousness-infrastructure_mind-protocol_<citizen>
+    # Actual format: ecosystem_mind-protocol_<citizen>
     graphs_to_migrate = [
-        "consciousness-infrastructure_mind-protocol_ada",
-        "consciousness-infrastructure_mind-protocol_atlas",
-        "consciousness-infrastructure_mind-protocol_felix",
-        "consciousness-infrastructure_mind-protocol_iris",
-        "consciousness-infrastructure_mind-protocol_luca",
-        "consciousness-infrastructure_mind-protocol_victor",
+        "mind-protocol_ada",
+        "mind-protocol_atlas",
+        "mind-protocol_felix",
+        "mind-protocol_iris",
+        "mind-protocol_luca",
+        "mind-protocol_victor",
     ]
 
     total_across_all = 0

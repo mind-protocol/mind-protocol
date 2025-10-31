@@ -29,7 +29,7 @@ class CitizenStatus(BaseModel):
 
 class CitizenState(BaseModel):
     """Complete state for one citizen."""
-    id: str  # "consciousness-infrastructure_mind-protocol_atlas"
+    id: str  # "mind-protocol_atlas"
     name: str  # "Atlas" (display name)
     awake: Literal["awake", "sleeping", "stale"]
     last_seen: str  # ISO 8601 timestamp
@@ -121,7 +121,7 @@ class DashboardState(BaseModel):
             "example": {
                 "citizens": [
                     {
-                        "id": "consciousness-infrastructure_mind-protocol_atlas",
+                        "id": "mind-protocol_atlas",
                         "name": "Atlas",
                         "awake": "awake",
                         "last_seen": "2025-10-30T12:34:56.789Z",

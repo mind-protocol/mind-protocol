@@ -96,6 +96,16 @@ def generate_diff(
 
 def _generate_creation_diff(path: str, sha_after: str, content: bytes) -> FileDiff:
     """Generate diff for newly created file (all additions)."""
+    # Handle None content (file disappeared during processing)
+    if content is None:
+        return FileDiff(
+            path=path,
+            event_type="created",
+            sha_before=None,
+            sha_after=None,
+            hunks=[]
+        )
+
     try:
         text = content.decode('utf-8')
         lines = text.splitlines()
@@ -132,6 +142,16 @@ def _generate_creation_diff(path: str, sha_after: str, content: bytes) -> FileDi
 
 def _generate_deletion_diff(path: str, sha_before: str, content: bytes) -> FileDiff:
     """Generate diff for deleted file (all deletions)."""
+    # Handle None content (no backup/git history available)
+    if content is None:
+        return FileDiff(
+            path=path,
+            event_type="deleted",
+            sha_before=None,
+            sha_after=None,
+            hunks=[]
+        )
+
     try:
         text = content.decode('utf-8')
         lines = text.splitlines()

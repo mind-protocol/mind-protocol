@@ -60,7 +60,7 @@ class CodeSubstrateHandler(FileSystemEventHandler):
     def __init__(self):
         self.processing = set()  # Track files being processed
         self.db = redis.Redis(host='localhost', port=6379, decode_responses=True)
-        self.n2_graph = "collective_n2"
+        self.n2_graph = "ecosystem"  # L3 ecosystem graph (was collective_n2)
 
     def on_created(self, event):
         """Called when a file is created."""
@@ -328,7 +328,7 @@ async def main():
     logger.info("  - *.tsx  → Code nodes (TypeScript)")
     logger.info("  - *.md   → Documentation nodes")
     logger.info("")
-    logger.info("Target graph: collective_n2")
+    logger.info("Target graph: ecosystem (L3)")
     logger.info("")
     logger.info("Waiting for file changes...")
     logger.info("=" * 70)

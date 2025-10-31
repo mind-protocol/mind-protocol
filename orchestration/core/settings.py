@@ -56,10 +56,10 @@ class Settings:
     FALKORDB_HOST: str = os.getenv("FALKORDB_HOST", "localhost")
     FALKORDB_PORT: int = int(os.getenv("FALKORDB_PORT", "6379"))
 
-    # Graph names - DEPRECATED: Use full citizen IDs like consciousness-infrastructure_mind-protocol_felix
+    # Graph names - DEPRECATED: Use full citizen IDs like mind-protocol_felix
     # N1_GRAPH_PREFIX is removed - do not use short-form names
-    N2_GRAPH_NAME: str = "consciousness-infrastructure_mind-protocol"  # N2 organizational graph
-    N3_GRAPH_NAME: str = "consciousness-infrastructure"  # N3 ecosystem graph
+    N2_GRAPH_NAME: str = "mind-protocol_org"  # N2 organizational graph
+    N3_GRAPH_NAME: str = "ecosystem"  # N3 ecosystem graph
 
     # === Embeddings & Search ===
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
@@ -387,10 +387,10 @@ class Settings:
         """
         Get N1 graph name for a citizen.
 
-        CORRECT FORMAT: consciousness-infrastructure_mind-protocol_{citizen_name}
+        CORRECT FORMAT: ecosystem_mind-protocol_{citizen_name}
         WRONG FORMAT: citizen_{citizen_name}
         """
-        return f"consciousness-infrastructure_mind-protocol_{citizen_name.lower()}"
+        return f"ecosystem_mind-protocol_{citizen_name.lower()}"
 
 
 # Singleton instance

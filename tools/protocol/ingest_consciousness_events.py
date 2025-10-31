@@ -5,6 +5,7 @@ L4 Protocol Ingestion: Consciousness Events
 Adds Event_Schema for consciousness infrastructure:
 - graph.delta.node.upsert - Graph node mutations
 - graph.delta.link.upsert - Graph edge mutations
+- graph.delta.subentity.upsert - SubEntity node mutations
 - subentity.snapshot - SubEntity state snapshots (SEA required)
 - presence.beacon - Liveness/status heartbeats
 
@@ -99,6 +100,30 @@ CONSCIOUSNESS_EVENTS = [
                 "from_id": {"type": "string"},
                 "to_id": {"type": "string"},
                 "rel_type": {"type": "string"},
+                "props": {"type": "object"},
+                "merge_keys": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": False
+        }
+    },
+    {
+        "schema_uri": "l4://schemas/graph.delta.subentity.upsert/1.0.0.json",
+        "name": "graph.delta.subentity.upsert",
+        "version": "1.0.0",
+        "direction": "broadcast",
+        "topic": "graph.delta.subentity.upsert",
+        "topic_namespace": "graph.delta",
+        "summary": "SubEntity graph node mutation (create/update SubEntity nodes)",
+        "requires_sig_suite": "SIG_ED25519_V1",
+        "sea_required": False,
+        "cps": False,
+        "json_schema": {
+            "type": "object",
+            "required": ["subentity_id", "citizen_id", "props"],
+            "properties": {
+                "subentity_id": {"type": "string"},
+                "citizen_id": {"type": "string"},
+                "labels": {"type": "array", "items": {"type": "string"}},
                 "props": {"type": "object"},
                 "merge_keys": {"type": "array", "items": {"type": "string"}}
             },

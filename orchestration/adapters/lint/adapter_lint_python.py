@@ -12,15 +12,22 @@ Events emitted:
   - failure.emit (broadcast) - Internal adapter errors (fail-loud)
 
 Design:
-  - Runs mp-lint scanners (hardcoded, quality, fallback) on changed files
+  - Runs mp-lint scanners (hardcoded, quality, fallback, fail-loud) on changed files
   - Converts violations to L4 event format
   - Emits findings as structured events
   - Fail-loud: All exceptions emit failure.emit and rethrow
 
+Rules enforced:
+  - R-100 series: Hardcoded values (magic numbers, strings, citizen arrays)
+  - R-200 series: Quality degradation (TODO/HACK, disabled validation, print instead of logger)
+  - R-300 series: Fallback antipatterns (silent except, silent defaults, fake availability)
+  - R-400 series: Fail-loud contract (missing failure.emit, missing context fields)
+
 Author: Felix "Core Consciousness Engineer"
 Created: 2025-10-31
+Updated: 2025-10-31 (added R-400/401 fail-loud scanning)
 Spec: docs/L4-law/membrane_native_reviewer_and_lint_system.md § 5.2
-Milestone: A (task #2)
+Milestone: A (task #2 complete, TICKET-001 complete)
 """
 
 import asyncio
@@ -39,10 +46,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from tools.mp_lint.scanner_hardcoded import scan_file_for_hardcoded, HardcodedViolation
 from tools.mp_lint.scanner_quality import scan_file_for_quality, QualityViolation
 from tools.mp_lint.scanner_fallback import scan_file_for_fallback, FallbackViolation
+from tools.mp_lint.scanner_fail_loud import scan_file_for_fail_loud, FailLoudViolation
 from tools.mp_lint.rules import (
     convert_hardcoded_violation,
     convert_quality_violation,
     convert_fallback_violation,
+    convert_fail_loud_violation,
     Violation
 )
 
@@ -64,6 +73,8 @@ SEVERITY_MAP = {
     "R-301": "high",      # SILENT_DEFAULT_RETURN
     "R-302": "critical",  # FAKE_AVAILABILITY
     "R-303": "medium",    # INFINITE_LOOP_NO_SLEEP
+    "R-400": "critical",  # FAIL_LOUD_REQUIRED
+    "R-401": "critical",  # MISSING_FAILURE_CONTEXT
 }
 
 # Policy mapping (rule → policy category)
@@ -78,6 +89,8 @@ POLICY_MAP = {
     "R-301": "fallback_antipattern",
     "R-302": "fallback_antipattern",
     "R-303": "fallback_antipattern",
+    "R-400": "fail_loud_contract",
+    "R-401": "fail_loud_contract",
 }
 
 
@@ -204,6 +217,11 @@ class PythonLintAdapter:
         fallback_violations = scan_file_for_fallback(file_path)
         for fv in fallback_violations:
             violations.append(convert_fallback_violation(fv))
+
+        # R-400 series: Fail-loud contract
+        fail_loud_violations = scan_file_for_fail_loud(file_path)
+        for flv in fail_loud_violations:
+            violations.append(convert_fail_loud_violation(flv))
 
         return violations
 

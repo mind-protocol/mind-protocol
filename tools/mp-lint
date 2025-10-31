@@ -34,11 +34,13 @@ from tools.mp_lint.scanner_py import scan_directory, scan_file
 from tools.mp_lint.scanner_hardcoded import scan_directory_for_hardcoded, scan_file_for_hardcoded
 from tools.mp_lint.scanner_quality import scan_directory_for_quality, scan_file_for_quality
 from tools.mp_lint.scanner_fallback import scan_directory_for_fallback, scan_file_for_fallback
+from tools.mp_lint.scanner_fail_loud import scan_directory_for_fail_loud, scan_file_for_fail_loud
 from tools.mp_lint.rules import (
     RulesEngine,
     convert_hardcoded_violation,
     convert_quality_violation,
-    convert_fallback_violation
+    convert_fallback_violation,
+    convert_fail_loud_violation
 )
 from tools.mp_lint.report import ReportGenerator
 
@@ -75,10 +77,15 @@ Rules (Fallback Antipatterns, use --check-fallback):
   R-302: FAKE_AVAILABILITY - is_available() without checks
   R-303: INFINITE_LOOP_NO_SLEEP - while True without sleep
 
+Rules (Fail-Loud Contract, use --check-fail-loud):
+  R-400: FAIL_LOUD_REQUIRED - Exception handler must rethrow or emit failure
+  R-401: MISSING_FAILURE_CONTEXT - failure.emit must include required context
+
 Pragmas:
   # lint: allow-hardcoded(reason="...")
   # lint: allow-degrade(reason="...")
   # lint: allow-fallback(reason="...")
+  # pragma: no cover - Defensive guard (skips R-400)
         """
     )
 
@@ -126,9 +133,15 @@ Pragmas:
     )
 
     parser.add_argument(
+        "--check-fail-loud",
+        action="store_true",
+        help="Enable fail-loud contract detection (R-400 series rules)"
+    )
+
+    parser.add_argument(
         "--check-all",
         action="store_true",
-        help="Enable all checks (L4 + hardcoded + quality + fallback)"
+        help="Enable all checks (L4 + hardcoded + quality + fallback + fail-loud)"
     )
 
     parser.add_argument(
@@ -165,16 +178,19 @@ Pragmas:
         check_hardcoded = True
         check_quality = True
         check_fallback = True
+        check_fail_loud = True
     elif args.l4_only:
         check_l4 = True
         check_hardcoded = False
         check_quality = False
         check_fallback = False
+        check_fail_loud = False
     else:
-        check_l4 = not (args.check_hardcoded or args.check_quality or args.check_fallback)  # Default: check L4
+        check_l4 = not (args.check_hardcoded or args.check_quality or args.check_fallback or args.check_fail_loud)  # Default: check L4
         check_hardcoded = args.check_hardcoded
         check_quality = args.check_quality
         check_fallback = args.check_fallback
+        check_fail_loud = args.check_fail_loud
 
     # Scan for event emissions (L4 checks)
     all_emissions = []
@@ -298,6 +314,35 @@ Pragmas:
         # Convert to standard Violation format
         for fv in fallback_violations:
             all_violations.append(convert_fallback_violation(fv))
+
+    # Scan for fail-loud contract violations (R-400 series)
+    if check_fail_loud:
+        if args.format != "json":
+            print(f"[Scan] Checking for fail-loud contract violations...")
+
+        fail_loud_violations = []
+
+        for path_str in args.paths:
+            path = Path(path_str)
+
+            if not path.exists():
+                continue
+
+            if path.is_file():
+                # Scan single file
+                flv = scan_file_for_fail_loud(path)
+                fail_loud_violations.extend(flv)
+            elif path.is_dir():
+                # Scan directory
+                flv = scan_directory_for_fail_loud(path)
+                fail_loud_violations.extend(flv)
+
+        if args.format != "json":
+            print(f"[Scan] Found {len(fail_loud_violations)} fail-loud contract violations")
+
+        # Convert to standard Violation format
+        for flv in fail_loud_violations:
+            all_violations.append(convert_fail_loud_violation(flv))
 
     if args.format != "json":
         print()

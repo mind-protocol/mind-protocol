@@ -78,9 +78,9 @@ class TraceCapture:
 
         # Determine available graphs to select canonical routing
         primary_graphs = {
-            "personal": f"consciousness-infrastructure_mind-protocol_{citizen_id}",
-            "organizational": "consciousness-infrastructure_mind-protocol",
-            "ecosystem": "consciousness-infrastructure"
+            "personal": f"ecosystem_mind-protocol_{citizen_id}",
+            "organizational": "mind-protocol_org",
+            "ecosystem": "ecosystem"
         }
         fallback_graphs = {
             "personal": f"citizen_{citizen_id}",

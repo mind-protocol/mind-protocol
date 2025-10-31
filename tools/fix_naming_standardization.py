@@ -187,12 +187,12 @@ def main():
     db = FalkorDB(host='localhost', port=6379)
 
     graphs_to_fix = [
-        "consciousness-infrastructure_mind-protocol_ada",
-        "consciousness-infrastructure_mind-protocol_atlas",
-        "consciousness-infrastructure_mind-protocol_felix",
-        "consciousness-infrastructure_mind-protocol_iris",
-        "consciousness-infrastructure_mind-protocol_luca",
-        "consciousness-infrastructure_mind-protocol_victor",
+        "mind-protocol_ada",
+        "mind-protocol_atlas",
+        "mind-protocol_felix",
+        "mind-protocol_iris",
+        "mind-protocol_luca",
+        "mind-protocol_victor",
     ]
 
     total_across_all = 0

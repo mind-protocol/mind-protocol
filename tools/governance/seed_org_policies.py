@@ -249,7 +249,7 @@ def create_org_policy_node(org: Dict, r: redis.Redis, graph_name: str) -> str:
         hard_fail_min_errors: {verdict_thresholds['hard_fail_min_errors']},
 
         // Metadata
-        created_at: datetime(),
+        created_at: timestamp(),
         version: '1.0.0',
         status: 'active'
     }})
@@ -268,7 +268,7 @@ def create_org_policy_node(org: Dict, r: redis.Redis, graph_name: str) -> str:
 def seed_org_policies():
     """Seed Org_Policy nodes for all organizations."""
     r = redis.Redis(host='localhost', port=6379, decode_responses=False)
-    graph_name = "collective_n2"  # Organizational graph (L2)
+    graph_name = "ecosystem"  # L3 ecosystem graph (was collective_n2)
 
     print("🏛️  Org_Policy Seed Script - Membrane-Native Reviewer System")
     print("=" * 70)

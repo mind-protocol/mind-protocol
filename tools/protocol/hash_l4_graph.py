@@ -52,7 +52,7 @@ def fetch_event_schema_hashes(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (es:ProtocolNode)
-    WHERE es.type_name = 'Event_Schema'
+    WHERE es.type_name IN ['Event_Schema', 'L4_Event_Schema']
     RETURN
         es.name as name,
         es.direction as direction,
@@ -82,7 +82,7 @@ def fetch_topic_namespace_hashes(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (ns:ProtocolNode)
-    WHERE ns.type_name = 'Topic_Namespace'
+    WHERE ns.type_name IN ['Topic_Namespace', 'L4_Topic_Namespace']
     RETURN
         ns.pattern as pattern,
         ns.description as description
@@ -108,7 +108,7 @@ def fetch_governance_policy_hashes(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (gp:ProtocolNode)
-    WHERE gp.type_name = 'Governance_Policy'
+    WHERE gp.type_name IN ['Governance_Policy', 'L4_Governance_Policy']
     RETURN
         gp.name as name,
         gp.defaults as defaults

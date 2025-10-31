@@ -77,6 +77,7 @@ def fetch_event_schemas(graph_obj) -> List[Dict[str, Any]]:
     OPTIONAL MATCH (es)-[:MAPS_TO_TOPIC|U4_MAPS_TO_TOPIC]->(ns:ProtocolNode)
     OPTIONAL MATCH (es)-[:REQUIRES_ENVELOPE]->(env:ProtocolNode)
     OPTIONAL MATCH (es)-[:REQUIRES_SIG|U4_REQUIRES_SIG]->(sig:ProtocolNode)
+    WITH es, collect(DISTINCT ns.id) as topic_ids, collect(DISTINCT env.id) as env_ids, collect(DISTINCT sig.id) as sig_ids
     RETURN
         es.id as id,
         es.name as name,
@@ -86,9 +87,9 @@ def fetch_event_schemas(graph_obj) -> List[Dict[str, Any]]:
         es.summary as summary,
         es.schema_hash as schema_hash,
         es.version as version,
-        ns.id as maps_to_topic,
-        env.id as requires_envelope,
-        sig.id as requires_sig
+        topic_ids[0] as maps_to_topic,
+        env_ids[0] as requires_envelope,
+        sig_ids[0] as requires_sig
     ORDER BY es.name
     """
 
@@ -128,7 +129,7 @@ def fetch_topic_namespaces(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (ns:ProtocolNode)
-    WHERE ns.type_name = 'Topic_Namespace'
+    WHERE ns.type_name IN ['Topic_Namespace', 'L4_Topic_Namespace']
     RETURN
         ns.id as id,
         ns.pattern as pattern,
@@ -167,8 +168,8 @@ def fetch_governance_policies(graph_obj) -> List[Dict[str, Any]]:
     """
     query = """
     MATCH (gp:ProtocolNode)
-    WHERE gp.type_name = 'Governance_Policy'
-    OPTIONAL MATCH (gp)-[:GOVERNS]->(ns:ProtocolNode)
+    WHERE gp.type_name IN ['Governance_Policy', 'L4_Governance_Policy']
+    OPTIONAL MATCH (gp)-[:GOVERNS|U4_GOVERNS]->(ns:ProtocolNode)
     RETURN
         gp.id as id,
         gp.name as name,

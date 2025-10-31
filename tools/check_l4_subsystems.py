@@ -46,12 +46,12 @@ def check_l4_subsystems():
 
     graphs_to_check = [
         "schema_registry",
-        "consciousness-infrastructure_mind-protocol_ada",
-        "consciousness-infrastructure_mind-protocol_atlas",
-        "consciousness-infrastructure_mind-protocol_felix",
-        "consciousness-infrastructure_mind-protocol_iris",
-        "consciousness-infrastructure_mind-protocol_luca",
-        "consciousness-infrastructure_mind-protocol_victor",
+        "mind-protocol_ada",
+        "mind-protocol_atlas",
+        "mind-protocol_felix",
+        "mind-protocol_iris",
+        "mind-protocol_luca",
+        "mind-protocol_victor",
     ]
 
     found_subsystems = {}

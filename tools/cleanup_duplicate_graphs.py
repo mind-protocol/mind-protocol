@@ -21,13 +21,13 @@ def cleanup_duplicate_graphs(dry_run: bool = True):
     Delete empty duplicate graphs from FalkorDB.
 
     Keeps only the primary graphs with data:
-    - consciousness-infrastructure_mind-protocol_felix
-    - consciousness-infrastructure_mind-protocol_atlas
+    - mind-protocol_felix
+    - mind-protocol_atlas
     - etc.
 
     Deletes:
     - citizen_lucia, citizen_luca, citizen_victor (legacy empty)
-    - citizen_consciousness-infrastructure_mind-protocol_* (duplicate empty)
+    - citizen_ecosystem_mind-protocol_* (duplicate empty)
 
     Args:
         dry_run: If True, only show what would be deleted (don't actually delete)
@@ -46,9 +46,9 @@ def cleanup_duplicate_graphs(dry_run: bool = True):
     logger.info("")
 
     # Categorize graphs
-    primary_graphs = []  # consciousness-infrastructure_mind-protocol_*
+    primary_graphs = []  # ecosystem_mind-protocol_*
     legacy_empty = []    # citizen_lucia, citizen_luca, etc. (old format)
-    duplicate_empty = [] # citizen_consciousness-infrastructure_mind-protocol_* (wrongly prefixed)
+    duplicate_empty = [] # citizen_ecosystem_mind-protocol_* (wrongly prefixed)
     other_graphs = []
 
     for graph_name in all_graphs:
@@ -62,9 +62,9 @@ def cleanup_duplicate_graphs(dry_run: bool = True):
             node_count = -1
 
         # Categorize
-        if graph_name.startswith("consciousness-infrastructure_mind-protocol_"):
+        if graph_name.startswith("ecosystem_mind-protocol_"):
             primary_graphs.append((graph_name, node_count))
-        elif graph_name.startswith("citizen_consciousness-infrastructure_mind-protocol_"):
+        elif graph_name.startswith("citizen_ecosystem_mind-protocol_"):
             duplicate_empty.append((graph_name, node_count))
         elif graph_name in ["citizen_lucia", "citizen_luca", "citizen_victor", "citizen_felix",
                             "citizen_ada", "citizen_atlas", "citizen_iris"]:

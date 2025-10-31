@@ -92,11 +92,11 @@ HARDCODED_PATTERNS = [
     # File paths (Unix and Windows)
     (re.compile(r"(?:^|['\"\\s])(?:/(?:home|Users|var|etc|tmp|opt|srv|mnt|app|data|usr)/[^\s'\"]+|[A-Z]:\\[^\s'\"]+)", re.I), "Hardcoded file path"),
 
-    # Graph/resource names (consciousness-infrastructure pattern)
-    (re.compile(r"\b(?:consciousness-infrastructure|mind-protocol)_[a-z0-9_-]+\b"), "Hardcoded graph/resource name"),
+    # Graph/resource names (ecosystem pattern)
+    (re.compile(r"\b(?:ecosystem|mind-protocol)_[a-z0-9_-]+\b"), "Hardcoded graph/resource name"),
 
     # FalkorDB graph names
-    (re.compile(r"\bconsciousness-infrastructure_mind-protocol_[a-z]+\b"), "Hardcoded FalkorDB graph name"),
+    (re.compile(r"\becosystem_mind-protocol_[a-z]+\b"), "Hardcoded FalkorDB graph name"),
 ]
 
 # Pattern for citizen arrays

@@ -67,7 +67,7 @@ FINGERPRINT_JITTER_PERCENT = 0.1  # ±10% jitter to prevent thundering herd
 
 # Membrane WebSocket endpoint
 WS_ENDPOINT = "ws://127.0.0.1:8000/api/ws"
-DEFAULT_CITIZEN_ID = os.getenv("SIGNALS_DEFAULT_CITIZEN", "consciousness-infrastructure_mind-protocol_felix")
+DEFAULT_CITIZEN_ID = os.getenv("SIGNALS_DEFAULT_CITIZEN", "mind-protocol_felix")
 
 app = FastAPI(title="Signals Collector", version="1.0")
 

@@ -29,8 +29,8 @@ def _parse_json_env(name: str, default: Dict[str, str]) -> Dict[str, str]:
 class EconomySettings:
     """Runtime settings for economy services."""
 
-    org_id: str = field(default_factory=lambda: os.getenv("ECONOMY_ORG_ID", "consciousness-infrastructure_mind-protocol"))
-    l2_graph: str = field(default_factory=lambda: os.getenv("ECONOMY_L2_GRAPH", "consciousness-infrastructure_mind-protocol"))
+    org_id: str = field(default_factory=lambda: os.getenv("ECONOMY_ORG_ID", "mind-protocol_org"))
+    l2_graph: str = field(default_factory=lambda: os.getenv("ECONOMY_L2_GRAPH", "mind-protocol_org"))
     redis_url: str = field(default_factory=lambda: os.getenv("ECONOMY_REDIS_URL", "redis://localhost:6379/0"))
     throttle_interval_seconds: int = field(default_factory=lambda: int(os.getenv("ECONOMY_THROTTLE_INTERVAL", "60")))
     policy_refresh_seconds: int = field(default_factory=lambda: int(os.getenv("ECONOMY_POLICY_REFRESH", "300")))

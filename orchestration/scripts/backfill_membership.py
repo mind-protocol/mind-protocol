@@ -87,7 +87,7 @@ def get_default_subentity_id(graph_name: str) -> str:
     Defaults to 'translator' as the most common consciousness work entity.
 
     Args:
-        graph_name: e.g., 'consciousness-infrastructure_mind-protocol_felix'
+        graph_name: e.g., 'mind-protocol_felix'
 
     Returns:
         Full entity ID: 'SubEntity:translator'

@@ -498,7 +498,7 @@ def ask(question: str) -> Dict[str, Any]:
     # Initialize services
     embedding_service = EmbeddingService()
     db = FalkorDB(host='localhost', port=6379)
-    graph = db.select_graph('consciousness-infrastructure_mind-protocol')
+    graph = db.select_graph('mind-protocol_org')
 
     # 0. Build contextual query embedding
     query_vector, context_used = build_contextual_query(question, embedding_service)

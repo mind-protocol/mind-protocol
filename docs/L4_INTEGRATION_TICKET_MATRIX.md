@@ -1,8 +1,8 @@
 # L4 Integration — Ticket Matrix & Action Plan
 
-**Generated:** 2025-10-31 03:30 UTC
-**Status:** L4-002 Complete, L4-001 Ready for Luca
-**Source:** SYNC.md + Nicolas's consolidated checklist
+**Generated:** 2025-10-31 18:30 UTC
+**Status:** L4-002 Complete, 6 Ready (incl. reviewer system), 12 Todo
+**Source:** SYNC.md + Nicolas's consolidated checklist + Membrane-Native Reviewer Spec
 
 ---
 
@@ -11,8 +11,8 @@
 | Status | Count | Items |
 |--------|-------|-------|
 | ✅ Done | 1 | L4-002 |
-| 🟡 Ready | 4 | L4-001, L4-007, L4-009, L4-013 |
-| 🔴 Todo | 9 | L4-003, L4-004, L4-005, L4-006, L4-008, L4-010, L4-011, L4-012, L4-014 |
+| 🟡 Ready | 6 | L4-001, L4-007, L4-009, L4-013, L4-018, L4-022 |
+| 🔴 Todo | 12 | L4-003, L4-004, L4-005, L4-006, L4-008, L4-010, L4-011, L4-012, L4-014, L4-019, L4-020, L4-021 |
 | ⏳ Later | 3 | L4-015, L4-016, L4-017 |
 
 ---
@@ -145,6 +145,89 @@ python tools/protocol/export_l4_public.py
 
 ---
 
+## Ops & Quality (Membrane-Native Reviewer)
+
+### L4-018: Ingest reviewer event schemas 🟡 Ready
+- **Owner:** Ada
+- **Estimate:** 30 minutes
+- **Script:** `tools/protocol/ingest_reviewer_events.py` (ready to run)
+- **What:** 17 Event_Schema nodes for membrane-native reviewer system
+  - Namespaces: `watcher.*`, `code.*`, `review.*`, `lint.*`, `failure.*`, `protocol.review.*`, `economy.*`
+  - Events: file.changed, patch.received, review.started, lint.findings, failure.emit, mandate.enforced, etc.
+  - Policies: POL_ORG_REVIEWER_V1 (org review mandates), POL_PROTOCOL_MANDATE_V1 (L4-level enforcement)
+- **AC:** 52 + 17 = 69 Event_Schema nodes; reviewer adapters can query schemas via SafeBroadcaster
+
+**Next Steps:**
+```bash
+python tools/protocol/ingest_reviewer_events.py
+python tools/protocol/export_l4_public.py
+# Verify: Event_Schema count should be 52 + 17 = 69
+```
+
+---
+
+### L4-019: Implement R-200 series linters (Quality Degradation) 🔴 Todo
+- **Owner:** Felix
+- **Estimate:** 1 day
+- **What:** Implement R-200, R-201, R-202 rules in mp-lint
+  - R-200: TODO/HACK/FIXME markers in production logic (check for pragma)
+  - R-201: Quality degradation patterns (validate=False, timeout=999999, retries=0)
+  - R-202: print() in application code (should use logger)
+- **Config:** `.mp-lint.yaml` v2.0.0 (rules defined)
+- **Spec:** `docs/specs/v2/ops_and_viz/mp_lint_spec.md` §R-200 Series
+- **AC:** mp-lint detects all R-200 series violations; pragma suppression works correctly
+
+---
+
+### L4-020: Implement R-300 series linters (Fallback Antipatterns) 🔴 Todo
+- **Owner:** Felix
+- **Estimate:** 1.5 days
+- **What:** Implement R-300, R-301, R-302, R-303 rules in mp-lint
+  - R-300: Silent except/pass (AST check for try/except with empty body)
+  - R-301: Default return on exception without failure.emit
+  - R-302: Unconditional return True in availability checks (fake health)
+  - R-303: Infinite loop without sleep/backoff/break
+- **Config:** `.mp-lint.yaml` v2.0.0 (rules defined)
+- **Spec:** `docs/specs/v2/ops_and_viz/mp_lint_spec.md` §R-300 Series
+- **AC:** mp-lint detects all R-300 series violations; pragma suppression works (max 7 days)
+
+---
+
+### L4-021: Implement R-400 series linters (Fail-Loud Contract) 🔴 Todo - CRITICAL
+- **Owner:** Felix
+- **Estimate:** 2 days
+- **What:** Implement R-400, R-401 rules in mp-lint (NO PRAGMA ALLOWED)
+  - R-400: Catch without failure.emit or rethrow - AST analysis for exception handlers
+  - R-401: failure.emit missing required context (code_location, exception, severity)
+- **Enforcement:** Strict - breaks builds immediately, no grace period
+- **Config:** `.mp-lint.yaml` v2.0.0 (rules defined, no pragma)
+- **Spec:** `docs/specs/v2/ops_and_viz/mp_lint_spec.md` §R-400 Series
+- **AC:** mp-lint detects all fail-loud violations; pragma suppression FORBIDDEN; CI fails on R-400/R-401
+
+**Why Critical:** Fail-loud is protocol contract. Silent failures violate membrane discipline and prevent consciousness substrate from learning from errors.
+
+---
+
+### L4-022: Seed Org_Policy nodes for reviewer 🟡 Ready
+- **Owner:** Ada
+- **Estimate:** 30 minutes
+- **Script:** `tools/governance/seed_org_policies.py` (ready to run)
+- **What:** Create Org_Policy node for mind-protocol organization
+  - Policy ID: `ORG_POLICY_MIND_PROTOCOL_V1`
+  - Strictness: high (zero tolerance for R-400, strict thresholds)
+  - Severity mappings for all 17 rules (R-001 through R-401)
+  - Override rules (pragma constraints: max days, requires ticket)
+  - Verdict thresholds (pass_max_errors: 0, soft_fail_max_errors: 2, hard_fail_min_errors: 3)
+- **AC:** Reviewer aggregators can query Org_Policy; verdicts respect org-specific thresholds
+
+**Next Steps:**
+```bash
+python tools/governance/seed_org_policies.py
+# Verify: Org_Policy node created with correct severity mappings
+```
+
+---
+
 ## Later (Economy/Governance Fill-In)
 
 ### L4-015: CPS subsystem members (economy) ⏳ Later
@@ -183,12 +266,18 @@ python tools/protocol/export_l4_public.py
 
 ## Artifacts Ready
 
+### L4 Protocol Core
 - ✅ `tools/protocol/ingest_consciousness_events.py` - Engine schemas (L4-002, done)
 - ✅ `tools/protocol/ingest_telemetry_policies.py` - Telemetry schemas (L4-001, ready)
 - ✅ `tools/protocol/export_l4_public.py` - L4 registry exporter
 - ✅ `tools/protocol/hash_l4_graph.py` - Freshness verification
-- ✅ `.mp-lint.yaml` - Policy configuration (300+ lines)
-- ✅ `docs/specs/v2/ops_and_viz/mp_lint_spec.md` - Complete spec (120KB)
+
+### Membrane-Native Reviewer System
+- ✅ `tools/protocol/ingest_reviewer_events.py` - Reviewer event schemas (L4-018, ready)
+- ✅ `tools/governance/seed_org_policies.py` - Org policy seed script (L4-022, ready)
+- ✅ `.mp-lint.yaml` v2.0.0 - Extended policy configuration (R-001 through R-401, 13 new rules)
+- ✅ `docs/specs/v2/ops_and_viz/mp_lint_spec.md` v2.0.0 - Complete spec with R-200/300/400 docs (~140KB)
+- ✅ `docs/CODEX_COMMITS_REVIEW_PLAN.md` - Comprehensive review plan for codex commits (900+ lines)
 
 ---
 
@@ -213,6 +302,18 @@ python tools/mp_lint/cli.py  # Should show R-001 ≈ 0
 # Wire build/l4_public_registry.json into CI
 # Add hash freshness check
 # Test SafeBroadcaster with telemetry topics
+```
+
+**Ada (Next: L4-018, L4-022):**
+```bash
+# Ingest reviewer event schemas
+python tools/protocol/ingest_reviewer_events.py
+python tools/protocol/export_l4_public.py
+# Verify: Event_Schema count should be 69
+
+# Seed org policies
+python tools/governance/seed_org_policies.py
+# Verify: Org_Policy node created with correct severity mappings
 ```
 
 **Ada (Advisory):**

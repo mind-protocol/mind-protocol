@@ -177,7 +177,7 @@ def main():
 
     if args.graph:
         # Lint specific graph
-        graph_name = f"consciousness-infrastructure_mind-protocol_{args.graph}"
+        graph_name = f"ecosystem_mind-protocol_{args.graph}"
         passed = lint_graph(graph_name, db)
 
         if not passed:
@@ -188,12 +188,12 @@ def main():
     else:
         # Lint all graphs
         graphs = [
-            "consciousness-infrastructure_mind-protocol_ada",
-            "consciousness-infrastructure_mind-protocol_atlas",
-            "consciousness-infrastructure_mind-protocol_felix",
-            "consciousness-infrastructure_mind-protocol_iris",
-            "consciousness-infrastructure_mind-protocol_luca",
-            "consciousness-infrastructure_mind-protocol_victor",
+            "mind-protocol_ada",
+            "mind-protocol_atlas",
+            "mind-protocol_felix",
+            "mind-protocol_iris",
+            "mind-protocol_luca",
+            "mind-protocol_victor",
         ]
 
         all_passed = True

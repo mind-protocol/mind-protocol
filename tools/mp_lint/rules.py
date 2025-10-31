@@ -64,6 +64,12 @@ FALLBACK_RULE_CODES = {
     "INFINITE_LOOP_NO_SLEEP": "R-303",
 }
 
+# Rule code mapping for fail-loud contract violations
+FAIL_LOUD_RULE_CODES = {
+    "FAIL_LOUD_REQUIRED": "R-400",
+    "MISSING_FAILURE_CONTEXT": "R-401",
+}
+
 
 def convert_hardcoded_violation(hv) -> Violation:
     """
@@ -131,6 +137,29 @@ def convert_fallback_violation(fv) -> Violation:
         line_number=fv.line_number,
         event_type=fv.pattern,
         context=fv.code_snippet
+    )
+
+
+def convert_fail_loud_violation(flv) -> Violation:
+    """
+    Convert FailLoudViolation to standard Violation format.
+
+    Args:
+        flv: FailLoudViolation from scanner_fail_loud
+
+    Returns:
+        Violation object
+    """
+    rule_code = FAIL_LOUD_RULE_CODES.get(flv.violation_type, "R-400")
+
+    return Violation(
+        rule_code=rule_code,
+        severity="error",
+        message=flv.message,
+        file_path=flv.file_path,
+        line_number=flv.line_number,
+        event_type=flv.pattern,
+        context=flv.code_snippet
     )
 
 

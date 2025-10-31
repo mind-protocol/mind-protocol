@@ -44,9 +44,9 @@ CITIZENS = ['felix', 'ada', 'victor', 'luca', 'atlas', 'iris']
 
 # Hierarchical graph naming (L4 → L3 → L2 → L1)
 PROTOCOL_GRAPH = 'protocol'                                      # L4: Cross-protocol
-ECOSYSTEM_GRAPH = 'consciousness-infrastructure'                 # L3: Ecosystem
-ORG_GRAPH = 'consciousness-infrastructure_mind-protocol'        # L2: Organization
-CITIZEN_GRAPH_PREFIX = 'consciousness-infrastructure_mind-protocol'  # L1: citizen_prefix_citizen
+ECOSYSTEM_GRAPH = 'ecosystem'                 # L3: Ecosystem
+ORG_GRAPH = 'mind-protocol_org'        # L2: Organization
+CITIZEN_GRAPH_PREFIX = 'mind-protocol_org'  # L1: citizen_prefix_citizen
 
 def get_citizen_graph_name(citizen: str) -> str:
     """Get hierarchical graph name for a citizen."""

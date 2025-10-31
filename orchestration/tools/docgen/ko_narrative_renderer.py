@@ -38,7 +38,7 @@ class KONarrativeRenderer:
     """
 
     def __init__(self, l2_graph_host: str = "localhost", l2_graph_port: int = 6379,
-                 l2_graph_name: str = "consciousness-infrastructure"):
+                 l2_graph_name: str = "ecosystem"):
         self.l2_db = redis.Redis(host=l2_graph_host, port=l2_graph_port, decode_responses=False)
         self.l2_graph = l2_graph_name
         self.tool_id = "tool.docgen.ko_narrative"

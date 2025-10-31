@@ -255,7 +255,7 @@ def generate_temporal_filter(
 
 async def vector_search(
     query_embedding: List[float],
-    graph_name: str,  # "citizen_Luca" (N1) or "collective_n2" or "ecosystem_n3"
+    graph_name: str,  # "citizen_Luca" (N1) or "ecosystem" or "ecosystem_n3"
     level_name: str,  # "N1", "N2", or "N3"
     intention: RetrievalIntention,
     falkordb_host: str = "localhost",
@@ -903,8 +903,8 @@ async def retrieve_consciousness_context(
 
     # Prepare graph names (using hierarchical naming)
     n1_graph = intention.citizen_id  # Should be full hierarchical name
-    n2_graph = "consciousness-infrastructure_mind-protocol"  # N2 collective
-    n3_graph = "consciousness-infrastructure"  # N3 ecosystem
+    n2_graph = "mind-protocol_org"  # N2 collective
+    n3_graph = "ecosystem"  # N3 ecosystem
 
     # Execute 6 parallel queries (ARCHITECTURAL DECISION #1)
     print(f"[Retrieval] Executing 6 parallel queries...")

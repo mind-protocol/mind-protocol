@@ -179,10 +179,10 @@ def main():
     db = FalkorDB(host=os.getenv('FALKOR_HOST', 'localhost'), port=6379)
     all_graphs = db.list_graphs()
 
-    # Target graphs: consciousness_, citizen_, consciousness-infrastructure
+    # Target graphs: consciousness_, citizen_, ecosystem
     target_graphs = [
         g for g in all_graphs
-        if 'consciousness_' in g or 'citizen_' in g or 'consciousness-infrastructure' in g
+        if 'consciousness_' in g or 'citizen_' in g or 'ecosystem' in g
     ]
 
     # Always include schema_registry

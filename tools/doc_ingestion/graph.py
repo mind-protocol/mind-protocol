@@ -36,7 +36,7 @@ class GraphWrapper:
 
     MAX_RETRIES = 2  # Read-back retry attempts
 
-    def __init__(self, graph_name: str = "consciousness-infrastructure_mind-protocol", host: str = "localhost", port: int = 6379):
+    def __init__(self, graph_name: str = "mind-protocol_org", host: str = "localhost", port: int = 6379):
         """
         Initialize graph wrapper.
 
