@@ -1,17 +1,12 @@
-"""
-Autonomy Orchestrator Service - FastAPI server for Phase-A autonomy infrastructure
+"""Autonomy Orchestrator Service - FastAPI server for Phase-A autonomy infrastructure."""
 
-Minimal service stub for Phase 0 unblock. Provides:
-- Health endpoint for guardian monitoring
-- Heartbeat file for dashboard System Status
-- /intent endpoint for stimulus-to-intent conversion (stub)
+import os
 
-Created: 2025-10-24 by Victor "The Resurrector"
-Purpose: Unblock Phase-A dashboard stabilization
-"""
+if not os.environ.get("ALLOW_QUARANTINED_MODULES"):
+    raise ImportError("Module quarantined pending deletion")
 
 from fastapi import FastAPI, Body
-import uvicorn, time, os, threading
+import uvicorn, time, threading
 
 APP_NAME = "autonomy_orchestrator"
 HEARTBEAT = f".heartbeats/{APP_NAME}.heartbeat"

@@ -92,3 +92,6 @@ blockchain/mind-transfer-hook/target/
 *.db
 
 
+
+# QA artifacts
+.artifacts/
