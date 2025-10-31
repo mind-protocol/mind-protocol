@@ -91,7 +91,8 @@ blockchain/mind-transfer-hook/target/
 
 *.db
 
-
+# cc-prune artifacts
+.cc_prune_bundle/
 
 # QA artifacts
 .artifacts/
