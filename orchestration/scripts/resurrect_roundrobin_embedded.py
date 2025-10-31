@@ -43,14 +43,16 @@ logger = logging.getLogger(__name__)
 CITIZENS = ['felix', 'ada', 'victor', 'luca', 'atlas', 'iris']
 
 # Hierarchical graph naming (L4 → L3 → L2 → L1)
+from orchestration.config.graph_names import resolver
+
 PROTOCOL_GRAPH = 'protocol'                                      # L4: Cross-protocol
 ECOSYSTEM_GRAPH = 'ecosystem'                 # L3: Ecosystem
-ORG_GRAPH = 'mind-protocol_org'        # L2: Organization
-CITIZEN_GRAPH_PREFIX = 'mind-protocol_org'  # L1: citizen_prefix_citizen
+ORG_GRAPH = resolver.org_base()        # L2: Organization
+CITIZEN_GRAPH_PREFIX = resolver.org  # Base org name for citizen graphs
 
 def get_citizen_graph_name(citizen: str) -> str:
     """Get hierarchical graph name for a citizen."""
-    return f'{CITIZEN_GRAPH_PREFIX}_{citizen}'
+    return resolver.citizen(citizen)
 
 # Schema fixes
 SCHEMA_FIXES = {

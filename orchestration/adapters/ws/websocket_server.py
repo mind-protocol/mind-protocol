@@ -184,6 +184,7 @@ SCREENSHOTS_DIR.mkdir(exist_ok=True)
 
 
 from orchestration.config.settings import settings
+from orchestration.config.graph_names import resolver
 
 def discover_graphs() -> dict:
     """
@@ -204,12 +205,12 @@ def discover_graphs() -> dict:
         # Get list of all graphs
         graphs = r.execute_command("GRAPH.LIST")
 
-        # Categorize by network level using hierarchical naming ONLY
-        # N1 citizens: ecosystem_mind-protocol_<name>
-        n1_graphs = [g for g in graphs if "_mind-protocol_" in g and g.count("_") == 2]
+        # Categorize by network level using new naming convention
+        # N1 citizens: mind-protocol_<name> (not org/ecosystem)
+        n1_graphs = [g for g in graphs if g.startswith("mind-protocol_") and g != resolver.org_base()]
 
         # N2 organizations: mind-protocol_org
-        n2_graphs = [g for g in graphs if g == "mind-protocol_org"]
+        n2_graphs = [g for g in graphs if g == resolver.org_base()]
 
         # N3 ecosystem: ecosystem
         n3_graphs = [g for g in graphs if g == "ecosystem"]

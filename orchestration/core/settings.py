@@ -11,9 +11,8 @@ Created: 2025-10-22
 import os
 from typing import Optional
 from pathlib import Path
-
-
 from pydantic import BaseModel
+from orchestration.config.graph_names import resolver
 
 class EngineConfig(BaseModel):
     """
@@ -56,10 +55,9 @@ class Settings:
     FALKORDB_HOST: str = os.getenv("FALKORDB_HOST", "localhost")
     FALKORDB_PORT: int = int(os.getenv("FALKORDB_PORT", "6379"))
 
-    # Graph names - DEPRECATED: Use full citizen IDs like mind-protocol_felix
-    # N1_GRAPH_PREFIX is removed - do not use short-form names
-    N2_GRAPH_NAME: str = "mind-protocol_org"  # N2 organizational graph
-    N3_GRAPH_NAME: str = "ecosystem"  # N3 ecosystem graph
+    # Graph names - Use resolver from orchestration.config.graph_names
+    N2_GRAPH_NAME: str = resolver.org_base()  # N2 organizational graph
+    N3_GRAPH_NAME: str = "ecosystem"  # N3 ecosystem graph (L3)
 
     # === Embeddings & Search ===
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")

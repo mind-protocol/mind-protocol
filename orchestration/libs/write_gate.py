@@ -7,7 +7,9 @@ When a mismatch is detected we emit a ``telemetry.write.denied`` event and
 raise ``PermissionError``.
 
 Usage:
-    @write_gate("L2:mind-protocol_org")
+    from orchestration.config.graph_names import resolver
+
+    @write_gate(f"L2:{resolver.org_base()}")
     def upsert_org_node(..., ctx=None):
         ...
 
@@ -147,8 +149,10 @@ def namespace_for_graph(graph_name: Optional[str]) -> str:
     graph_lower = graph_name.lower()
 
     # L1 (citizen / personal)
+    # New convention: mind-protocol_{citizen} (not org/ecosystem)
     if (
-        graph_lower.startswith("ecosystem_mind-protocol_")
+        graph_lower.startswith("mind-protocol_")
+        and graph_lower != "mind-protocol_org"
         or graph_lower.startswith("citizen_")
     ):
         return f"L1:{graph_name}"

@@ -29,7 +29,7 @@ class CitizenStatus(BaseModel):
 
 class CitizenState(BaseModel):
     """Complete state for one citizen."""
-    id: str  # "mind-protocol_atlas"
+    id: str  # e.g., "mind-protocol_atlas" from resolver.citizen("atlas")
     name: str  # "Atlas" (display name)
     awake: Literal["awake", "sleeping", "stale"]
     last_seen: str  # ISO 8601 timestamp

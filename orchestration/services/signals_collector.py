@@ -66,8 +66,10 @@ FINGERPRINT_RATE_LIMIT_SEC = 10.0  # Max 1 inject per 10s per unique fingerprint
 FINGERPRINT_JITTER_PERCENT = 0.1  # ±10% jitter to prevent thundering herd
 
 # Membrane WebSocket endpoint
+from orchestration.config.graph_names import resolver
+
 WS_ENDPOINT = "ws://127.0.0.1:8000/api/ws"
-DEFAULT_CITIZEN_ID = os.getenv("SIGNALS_DEFAULT_CITIZEN", "mind-protocol_felix")
+DEFAULT_CITIZEN_ID = os.getenv("SIGNALS_DEFAULT_CITIZEN", resolver.citizen("felix"))
 
 app = FastAPI(title="Signals Collector", version="1.0")
 

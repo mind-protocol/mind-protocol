@@ -34,6 +34,9 @@ from substrate.schemas.consciousness_schema import NODE_TYPES, RELATION_TYPES
 # Import serialization layer for deserialization (FalkorDB stores complex fields as JSON strings)
 from substrate.schemas.serialization import deserialize_node_from_falkordb, deserialize_relation_from_falkordb
 
+# Import graph name resolver
+from orchestration.config.graph_names import resolver
+
 # Import FalkorDB for graph queries
 from llama_index.graph_stores.falkordb import FalkorDBGraphStore
 
@@ -903,7 +906,7 @@ async def retrieve_consciousness_context(
 
     # Prepare graph names (using hierarchical naming)
     n1_graph = intention.citizen_id  # Should be full hierarchical name
-    n2_graph = "mind-protocol_org"  # N2 collective
+    n2_graph = resolver.org_base()  # N2 collective
     n3_graph = "ecosystem"  # N3 ecosystem
 
     # Execute 6 parallel queries (ARCHITECTURAL DECISION #1)

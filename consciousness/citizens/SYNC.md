@@ -1,3 +1,136 @@
+## 2025-10-31 22:30 - Ada: ✅ TICKET-004 COMPLETE - ADR-002 Adapter Architecture
+
+**Context:** Documented adapter architecture patterns that emerged from graph migration and facade refactoring. Created comprehensive ADR covering graph naming, WriteGate, hexagonal layering, and service configuration.
+
+---
+
+### ADR-002 Contents
+
+**Document:** `docs/adrs/ADR-002-adapter-architecture-and-graph-naming.md`
+
+**Patterns Documented:**
+
+1. **Centralized Graph Name Resolution**
+   - All code uses `orchestration/config/graph_names.py:resolver`
+   - Single source of truth for naming conventions
+   - Pattern: `resolver.citizen("felix")` → `"mind-protocol_felix"`
+
+2. **WriteGate Namespace Enforcement**
+   - `@write_gate()` decorator protects cross-layer writes
+   - Namespace format: `L{level}:{graph_name}`
+   - Auto-mapping via `namespace_for_graph()`
+
+3. **Hexagonal Adapter Layering**
+   - Domain → Ports → Adapters → Infrastructure
+   - Pure functions in domain layer (testable)
+   - Clear separation of concerns
+
+4. **Service Configuration Pattern**
+   - Dataclass-based settings with env var fallbacks
+   - Type-safe configuration with validation
+   - Centralized defaults via resolver
+
+**Implementation Checklist:**
+- ✅ Use resolver for graph names
+- ✅ Add @write_gate to write operations  
+- ✅ Pass ctx with namespace to writes
+- ✅ Import resolver at module level
+- ✅ No hardcoded graph names in functional code
+
+**Status:** ✅ ACCEPTED. ADR approved and implemented across codebase.
+
+**Time:** ~1 hour (as estimated)
+
+---
+
+## 2025-10-31 22:00 - Ada: ✅ RESOLVER REFACTOR COMPLETE - All Hardcoded Graph Names Replaced
+
+**Context:** Completed systematic elimination of hardcoded `mind-protocol_*` graph names across orchestration layer. All code now uses centralized `resolver` service from `orchestration/config/graph_names.py`.
+
+---
+
+### Refactor Results
+
+**Files Updated (9 total):**
+- ✅ `orchestration/core/settings.py` - N2_GRAPH_NAME uses resolver.org_base()
+- ✅ `orchestration/services/economy/settings.py` - Default values use resolver
+- ✅ `orchestration/adapters/storage/retrieval.py` - N2 graph uses resolver
+- ✅ `orchestration/adapters/ws/websocket_server.py` - Discovery logic uses resolver, updated N1 pattern matching
+- ✅ `orchestration/libs/trace_capture.py` - Graph routing uses resolver
+- ✅ `orchestration/libs/write_gate.py` - Docstring examples + namespace_for_graph() updated for new naming convention
+- ✅ `orchestration/schemas/dashboard_state_schema.py` - Documentation updated
+- ✅ `orchestration/services/signals_collector.py` - DEFAULT_CITIZEN_ID uses resolver.citizen()
+- ✅ `orchestration/scripts/backfill_membership.py` - Documentation updated
+- ✅ `orchestration/scripts/resurrect_roundrobin_embedded.py` - Uses resolver for all graph names
+
+**Key Changes:**
+```python
+# OLD (hardcoded):
+n2_graph = "mind-protocol_org"
+graph_name = f"mind-protocol_{citizen}"
+
+# NEW (resolver):
+from orchestration.config.graph_names import resolver
+n2_graph = resolver.org_base()
+graph_name = resolver.citizen(citizen)
+```
+
+**Diff Statistics:**
+```
+9 files changed, 32 insertions(+), 21 deletions(-)
+```
+
+**Remaining References (23):**
+- Docstring examples (acceptable for documentation)
+- Comments explaining naming conventions  
+- Legacy fallback patterns (defensive coding)
+
+**write_gate.py Namespace Logic Updated:**
+- L1 pattern now: `mind-protocol_{citizen}` (not org/ecosystem)
+- L2 pattern: `mind-protocol_org`
+- L3 pattern: `ecosystem`
+- L4 pattern: `protocol`
+
+**Status:** ✅ COMPLETE. All functional code uses resolver. Remaining hardcoded strings are documentation/comments only.
+
+**Benefits:**
+- Single source of truth for graph naming
+- Easy to change naming conventions globally
+- Type-safe graph name generation
+- Clear separation between org base and citizen graphs
+
+---
+
+## 2025-10-31 21:30 - Felix: 📋 MIGRATION PLAN - Full Facade Architecture
+
+**Context:** User decided to migrate ALL consciousness logic from legacy engine (3000 lines) into facade architecture, then delete legacy. Created comprehensive migration plan and ADR.
+
+---
+
+### Documents Created
+
+**1. Migration Plan:** `docs/MIGRATION_PLAN_FACADE_FULL.md`
+- 10-phase migration strategy (37 hours, 4 weeks)
+- Phases: Energy → Activation → Frame Loop → Criticality → Diffusion → SubEntity → WM → Ports → Cutover
+- Risk: HIGH (core consciousness logic)
+- Mitigation: Test-driven, gradual, rollback plan
+
+**2. ADR-001:** `docs/adrs/ADR-001-migrate-to-full-facade-architecture.md`
+- Decision: Migrate to full facade, delete legacy engine
+- Rationale: Maintainability, testability, extensibility
+- Target: Hexagonal architecture with pure domain logic
+
+**Benefits:**
+- Delete 3000 lines of legacy code
+- Pure functions (testable)
+- Clean separation (domain/services/ports)
+
+**Status:** PROPOSED - awaiting approval
+
+**Next:** If approved → Start Phase 1 (Energy Dynamics, 3h)
+
+---
+
 ## 2025-10-31 21:00 - Ada: ✅ GRAPH MIGRATION COMPLETE - Simple Rename
 
 **Context:** Executed simple graph migration per Nicolas's request. Dropped `consciousness-infrastructure_` prefix from all graphs. Clean naming: `mind-protocol_{citizen}`. Created L3 `ecosystem` graph.
