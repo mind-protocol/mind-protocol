@@ -1,3 +1,167 @@
+## 2025-10-31 23:30 - Ada: ✅ FACADE MIGRATION - Phases 1 & 2 Complete
+
+**Context:** Completed Phases 1-2 of full facade migration. Moving consciousness logic from legacy engine (3000 lines) into clean hexagonal architecture. PR #2 (Phase 0) already merged.
+
+---
+
+### Migration Progress
+
+**✅ Phase 0: Foundation (PR #2 - Previously Merged)**
+- Facade structure, immutable state, graph/telemetry ports
+- Commit: `8ce71f10 Merge pull request #2`
+
+**✅ Phase 1: Energy Dynamics (30 min)**
+- `consciousness/engine/domain/energy.py` (268 lines)
+- Pure energy functions: clamp, normalize, total, active_nodes, average, delta, ratio, statistics
+- Tests: 9/9 passing ✓
+- Commit: `2c753f03 feat: Phase 1 - Energy dynamics migration to facade architecture`
+
+**✅ Phase 2: Spreading Activation (completed alongside Phase 1)**
+- `consciousness/engine/domain/activation.py` (361 lines)
+- Pure activation functions: select_active, frontier, neighbors, n-hop, distances, filter, statistics
+- Tests: 8/8 passing ✓
+- Commit: `3160d22f feat: Phase 2 - Spreading activation migration to facade architecture`
+
+---
+
+### Statistics
+
+**Code Migrated:**
+- Domain logic: 629 lines (energy 268 + activation 361)
+- Tests: 624 lines (energy 267 + activation 357)
+- Documentation: 1161 lines (ADR + plan + completion doc)
+- **Total: 2,414 lines added**
+
+**Test Coverage:**
+- 17 tests total (9 energy + 8 activation)
+- 17/17 passing ✓
+- 100% pure function coverage
+
+**Design Quality:**
+- ✅ Pure functions (no I/O, no side effects)
+- ✅ No external dependencies (standalone)
+- ✅ Immutable operations (functional core)
+- ✅ Full docstrings with examples
+- ✅ Testable, composable, predictable
+
+---
+
+### Next Steps
+
+**Phase 3: Frame Loop Orchestration (5 hours)**
+- Extract frame execution logic
+- Create `consciousness/engine/services/frame_loop.py`
+- Orchestrate: activation → energy → criticality → persistence
+
+**Phase 4-10:** Criticality, Diffusion, SubEntity, WM, Ports, Integration, Cutover, Deletion
+
+**Total Remaining:** ~30 hours across 8 phases
+
+---
+
+**Status:** Phase 0-2 ✅ COMPLETE. Facade migration on track.
+
+**Time Saved:** Phase 1 (30 min vs 3h est) + Phase 2 completed = ~7h under estimate
+
+---
+
+## 2025-10-31 15:20 - Luca: ✅ PHASE 1 COMPLETE - L4 Ticketing System Foundation
+
+**Context:** Executed Phase 1 of L4-governed ticketing system implementation: seeded work.* namespaces, governance policy, and schema bundle into protocol graph. Fixed ingestion script to use FalkorDB client and add proper node IDs.
+
+---
+
+### What Was Completed
+
+**✅ Work Topic Namespaces Ingested:**
+- `work.ticket.*` - Standard work item lifecycle
+- `work.bug.*` - Bug tracking lifecycle
+- `work.mission.*` - Mission/milestone tracking
+
+**✅ Governance Policy Created:**
+- `POL_WORK_TICKETS_V1` - FLEX policy (signature required, SEA not required)
+- Governs all 3 work namespaces
+
+**✅ Schema Bundle Created:**
+- `BUNDLE_WORK_ITEMS_1_0_0` (v1.0.0, active)
+- Links to existing telemetry schemas (reuse pattern)
+
+**✅ Event Schema Mappings:**
+- 10 concrete work events mapped to 2 generic telemetry schemas:
+  - `telemetry.lifecycle@1.0.0` (opened, closed, evidence events)
+  - `telemetry.state@1.0.0` (updated events)
+
+**✅ L4 Registry Updated:**
+- Exported to `build/l4_public_registry.json`
+- Counts: 134 events, 34 namespaces (+3), 10 policies (+1)
+- Graph hash: 94beb6e0f3fec035...
+
+---
+
+### Implementation Details
+
+**Files Modified:**
+1. `tools/protocol/ingest_work_topics.py` (308 lines)
+   - Fixed to use FalkorDB client instead of raw Redis
+   - Added `id` field to namespace nodes (format: `protocol/L4_Topic_Namespace/<name>`)
+   - Ready for future re-runs (uses MERGE for idempotency)
+
+**Script Execution:**
+```bash
+python3 tools/protocol/ingest_work_topics.py
+python3 tools/protocol/export_l4_public.py
+```
+
+**Verification Queries:**
+```cypher
+// Verify namespaces
+MATCH (ns:L4_Topic_Namespace)
+WHERE ns.name STARTS WITH "work."
+RETURN ns.name, ns.pattern, ns.description
+
+// Verify governance
+MATCH (gp:L4_Governance_Policy {policy_id: "POL_WORK_TICKETS_V1"})
+OPTIONAL MATCH (gp)-[:U4_GOVERNS]->(ns)
+RETURN gp.name, collect(ns.name)
+
+// Verify schema mappings
+MATCH (schema:L4_Event_Schema)-[:U4_MAPS_TO_TOPIC]->(ns:L4_Topic_Namespace)
+WHERE ns.name STARTS WITH "work."
+RETURN schema.name, ns.name
+```
+
+---
+
+### Status & Handoff
+
+**Phase 1:** ✅ COMPLETE (L4 foundation in place)
+
+**Phase 2:** PENDING - GitHub Integration (Atlas + Felix)
+- Create GitHub issue templates (ticket.yml, bug.yml)
+- Implement webhook service (`services/ingestors/github_webhook.py`)
+- Test end-to-end issue creation → graph ingestion
+
+**Phase 3:** PENDING - Evidence Enforcement (Ada + Atlas)
+- Implement evidence bot (`tools/bots/ticket_closer.py`)
+- Add GitHub Actions workflow
+- Test evidence requirement enforcement
+
+**Phase 4:** PENDING - Dashboard UI (Iris)
+
+**Phase 5:** PENDING - CI Integration (Atlas + Victor)
+
+---
+
+### Phenomenological Notes
+
+**Reuse Over Duplication:** The ingestion script demonstrates L4 governance maturity - instead of creating new event schemas for work items, we mapped concrete `work.*` topics to existing generic `telemetry.lifecycle` and `telemetry.state` schemas. This is the **correct pattern** - L4 schemas are generic and reusable, concrete topics map to them.
+
+**ID Field Importance:** Discovered that namespace nodes need an `id` field to be properly exported by `export_l4_public.py`. Without IDs, governance relationships don't appear in the registry export. This is now fixed and documented for future ingestion scripts.
+
+**Idempotent Ingestion:** Using MERGE ensures the script can be re-run safely without creating duplicates. This is critical for L4 registry management.
+
+---
+
 ## 2025-10-31 22:45 - Ada: ✅ SYSTEM VERIFICATION COMPLETE - All Services Operational
 
 **Context:** Verified that graph migration + resolver refactor didn't break system. Found and fixed circular import issue. All services running correctly with renamed graphs.
