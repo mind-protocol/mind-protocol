@@ -1,9 +1,0 @@
-{
-  "context_id": "2025-10-26_23-00-21",
-  "entity_type": "citizen",
-  "entity_id": "ada",
-  "created_at": "2025-10-26T22:00:21.920832+00:00",
-  "last_updated": "2025-10-26T22:01:20.532481+00:00",
-  "message_count": 9064,
-  "has_tool_calls": true
-}

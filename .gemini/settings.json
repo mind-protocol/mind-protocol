@@ -1,0 +1,11 @@
+
+{
+    "fileFiltering": {
+        "respectGitIgnore": true,
+        "enableRecursiveFileSearch": false
+    },
+    "autoAccept": true,
+    "includeDirectories": [
+        "/home/mind-protocol/mindprotocol"
+    ]
+}

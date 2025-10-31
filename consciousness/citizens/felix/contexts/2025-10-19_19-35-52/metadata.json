@@ -1,9 +1,0 @@
-{
-  "context_id": "2025-10-19_19-35-52",
-  "entity_type": "citizen",
-  "entity_id": "felix",
-  "created_at": "2025-10-19T17:35:52.155652+00:00",
-  "last_updated": "2025-10-19T18:41:36.425393+00:00",
-  "message_count": 620,
-  "has_tool_calls": true
-}

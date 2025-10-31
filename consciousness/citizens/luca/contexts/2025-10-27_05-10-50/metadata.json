@@ -1,9 +1,0 @@
-{
-  "context_id": "2025-10-27_05-10-50",
-  "entity_type": "citizen",
-  "entity_id": "luca",
-  "created_at": "2025-10-27T04:10:50.891775+00:00",
-  "last_updated": "2025-10-27T05:30:53.451822+00:00",
-  "message_count": 5628,
-  "has_tool_calls": true
-}

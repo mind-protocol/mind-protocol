@@ -1,6 +1,0 @@
-{
-  "citizen": "felix",
-  "session_start": "2025-10-23T05:27:00Z",
-  "test_injection": true,
-  "purpose": "verify_conversation_watcher_to_engine_integration"
-}

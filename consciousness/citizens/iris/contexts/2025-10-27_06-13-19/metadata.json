@@ -1,9 +1,0 @@
-{
-  "context_id": "2025-10-27_06-13-19",
-  "entity_type": "citizen",
-  "entity_id": "iris",
-  "created_at": "2025-10-27T05:25:25.243464+00:00",
-  "last_updated": "2025-10-27T05:26:37.685542+00:00",
-  "message_count": 9861,
-  "has_tool_calls": true
-}

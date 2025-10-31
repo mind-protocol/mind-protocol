@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+mp-lint - L4 Membrane Linter (Code Scanner)
+
+Static validation for Mind Protocol event emissions.
+Scans Python code for broadcaster.broadcast_event() and safe.safe_emit() calls
+and validates them against L4 protocol registry.
+
+Usage:
+    mp-lint orchestration/                        # Scan directory
+    mp-lint orchestration/mechanisms/*.py         # Scan specific files
+    mp-lint --format json orchestration/          # JSON output for CI
+    mp-lint --summary orchestration/              # Brief summary only
+
+Exit codes:
+    0 = No violations found
+    1 = Violations found (lint failed)
+    2 = Error running linter
+
+Author: Atlas (Infrastructure Engineer)
+Date: 2025-10-31
+Architecture: mp-lint infrastructure (static validation layer)
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from tools.mp_lint.scanner_py import scan_directory, scan_file
+from tools.mp_lint.rules import RulesEngine
+from tools.mp_lint.report import ReportGenerator
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="mp-lint: L4 Membrane Linter for event emission validation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  mp-lint orchestration/                        # Scan directory
+  mp-lint orchestration/mechanisms/*.py         # Scan specific files
+  mp-lint --format json orchestration/          # JSON output
+  mp-lint --summary orchestration/              # Brief summary
+
+Rules:
+  R-001: SCHEMA_EXISTS_ACTIVE - Event schema must exist in L4 registry
+  R-002: TOPIC_MAPPED - Event schema must have topic mapping
+  R-005: SEA_ATTESTATION - High-stakes events require attestation
+        """
+    )
+
+    parser.add_argument(
+        "paths",
+        nargs="+",
+        help="Files or directories to scan"
+    )
+
+    parser.add_argument(
+        "--format",
+        choices=["terminal", "json", "summary"],
+        default="terminal",
+        help="Output format (default: terminal)"
+    )
+
+    parser.add_argument(
+        "--registry",
+        type=Path,
+        help="Path to l4_public_registry.json (default: build/l4_public_registry.json)"
+    )
+
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        help="Patterns to exclude (e.g., **/test_*.py)"
+    )
+
+    args = parser.parse_args()
+
+    # Initialize rules engine
+    try:
+        rules = RulesEngine(registry_path=args.registry)
+        stats = rules.get_stats()
+
+        if not stats["loaded"]:
+            print(f"Error: Failed to load L4 registry from {stats['registry_path']}")
+            return 2
+
+        # Print registry info (unless format is json)
+        if args.format != "json":
+            print(f"[Registry] Loaded L4 registry: {stats['schema_count']} schemas")
+            print(f"           Exported: {stats['exported_at']}")
+            print(f"           Hash: {stats['graph_hash'][:16]}...")
+            print()
+
+    except Exception as exc:
+        print(f"Error: Failed to initialize rules engine: {exc}")
+        return 2
+
+    # Scan for event emissions
+    all_emissions = []
+
+    for path_str in args.paths:
+        path = Path(path_str)
+
+        if not path.exists():
+            print(f"Warning: Path not found: {path}")
+            continue
+
+        if path.is_file():
+            # Scan single file
+            emissions = scan_file(path)
+            all_emissions.extend(emissions)
+        elif path.is_dir():
+            # Scan directory
+            emissions = scan_directory(path, exclude_patterns=args.exclude)
+            all_emissions.extend(emissions)
+        else:
+            print(f"Warning: Not a file or directory: {path}")
+
+    if args.format != "json":
+        print(f"[Scan] Found {len(all_emissions)} event emissions")
+        print()
+
+    # Validate emissions against rules
+    all_violations = []
+
+    for emission in all_emissions:
+        violations = rules.validate_event(
+            event_type=emission.event_type,
+            file_path=emission.file_path,
+            line_number=emission.line_number,
+            context=emission.code_snippet
+        )
+        all_violations.extend(violations)
+
+    # Generate report
+    report_gen = ReportGenerator(all_violations)
+
+    if args.format == "terminal":
+        print(report_gen.generate_terminal_report())
+    elif args.format == "json":
+        print(report_gen.generate_json_report())
+    elif args.format == "summary":
+        print(report_gen.generate_summary())
+
+    # Exit code
+    if report_gen.should_fail_ci():
+        return 1
+    else:
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

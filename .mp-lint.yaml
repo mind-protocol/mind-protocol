@@ -1,0 +1,274 @@
+# mp-lint: L4-aware membrane linter configuration
+# Validates Python and Next.js code against L4 Schema Registry
+
+# ==============================================================================
+# L4 Schema Registry Source
+# ==============================================================================
+l4_registry:
+  # Local JSON export (preferred for speed and determinism)
+  path: ./build/l4_public_registry.json
+
+  # Optional: Live endpoint (if exposed)
+  # url: https://registry.mind-protocol.org/public.json
+
+  # Freshness check: Fail if export hash doesn't match protocol graph
+  verify_freshness: true
+
+# ==============================================================================
+# Code Scanning Configuration
+# ==============================================================================
+code:
+  # Directories to scan
+  roots:
+    - app                    # Next.js dashboard (React/TypeScript)
+    - orchestration          # Python services (engines, adapters, mechanisms)
+
+  # Exclude patterns (glob)
+  exclude:
+    - "**/node_modules/**"
+    - "**/.next/**"
+    - "**/build/**"
+    - "**/__pycache__/**"
+    - "**/*.test.py"
+    - "**/*.test.ts"
+    - "**/*.test.tsx"
+
+  # Python emit call signatures to detect
+  python_emit_calls:
+    - "broadcaster.broadcast"    # Main broadcast pattern (WebSocket)
+    - "ws.broadcast"             # Direct WebSocket broadcast
+    - "_transport.emit"          # Transport layer emit
+    - "bus.emit"                 # Event bus emit (if implemented)
+    - "membrane.inject"          # Membrane injection (if implemented)
+    - "stimulus_injector.inject" # Stimulus injection
+
+  # JavaScript/TypeScript emit patterns
+  js_emit_calls:
+    - "publishEvent"             # Planned membrane SDK
+    - "membraneInject"           # Planned membrane SDK
+    - "ws.send"                  # WebSocket send (for now)
+    - "socket.send"              # WebSocket send (alternate pattern)
+
+# ==============================================================================
+# Policy Configuration
+# ==============================================================================
+policies:
+  # CPS-1: Compute Payment Settlement policy
+  # Enforces $MIND settlement or conversion path for compute-intensive topics
+  cps_policy_id: "CPS-1"
+
+  # Topics governed by CPS-1 (compute payment required)
+  cps_governed_topics:
+    - "ecosystem.*/org.*/docs/generate"    # Doc generation (LLM-intensive)
+    - "ecosystem.*/org.*/ko/proposed"      # KO extraction (LLM-intensive)
+    - "ecosystem.*/org.*/inference/*"      # Any inference requests
+
+  # High-stakes topics requiring SEA attestation
+  # R-005 enforces attestation_ref in envelope for these
+  high_stakes_topics:
+    - "subentity.snapshot"      # SubEntity state snapshots (consciousness integrity)
+    - "identity.*"              # Identity snapshots, updates
+    - "registry.*"              # L4 registry updates (schema changes)
+    - "economy.trade.*"         # Economic transactions
+    - "legal.*"                 # Legal agreements, contracts
+    - "governance.keys.*"       # Key management events
+
+  # Topics requiring signature verification (beyond attestation)
+  # R-003 enforces signature suite requirements
+  signature_required_topics:
+    - "governance.*"
+    - "registry.*"
+    - "economy.*"
+    - "identity.*"
+
+  # Lane capacity policies (from default-lane-policy)
+  lane_policies:
+    default_lane_capacity: 3
+    ack_policy: "human_required"  # For org-inject namespace
+
+# ==============================================================================
+# Output Configuration
+# ==============================================================================
+output:
+  # JSON report (machine-parsable, for CI integration)
+  report_json: ./build/mp-lint-report.json
+
+  # Human-readable report (printed to stdout)
+  report_pretty: true
+
+  # Graph edges export (optional, for code→policy lineage)
+  # Emits U4_Code_Artifact nodes and U4_EMITS/U4_CONSUMES edges
+  graph_edges_ndjson: ./build/mp-lint-edges.ndjson
+
+  # Emit git blob hashes for precise code versioning
+  include_git_hashes: true
+
+  # CI behavior: fail if any findings match this severity
+  fail_on: error  # Options: error, warn, never
+
+  # Show context lines around violations in report
+  context_lines: 3
+
+# ==============================================================================
+# Rule Configuration
+# ==============================================================================
+rules:
+  # R-001: SCHEMA_EXISTS_ACTIVE
+  # Every emitted event must reference an active Event_Schema
+  R-001:
+    enabled: true
+    severity: error
+    message: "Event schema not found or inactive in L4 registry"
+
+  # R-002: TOPIC_MAPPED
+  # Event schema must have U4_MAPS_TO_TOPIC relationship
+  R-002:
+    enabled: true
+    severity: error
+    message: "Event schema missing topic mapping"
+
+  # R-003: SIGNATURE_PROFILE
+  # If envelope requires signature suite, code must provide signature fields
+  R-003:
+    enabled: true
+    severity: error
+    message: "Signature suite required but signature fields missing in envelope"
+
+  # R-004: CPS_COMPUTE_SETTLEMENT
+  # Compute topics must include $MIND settlement or conversion path
+  R-004:
+    enabled: true
+    severity: error
+    message: "CPS-1 policy: settlement must be in MIND or provide conversion_path"
+
+  # R-005: SEA_ATTESTATION
+  # High-stakes topics must include attestation_ref in envelope
+  R-005:
+    enabled: true
+    severity: error
+    message: "High-stakes topic requires attestation_ref in envelope"
+
+  # R-006: NO_YANKED_VERSION
+  # Code may not reference yanked/deprecated schemas
+  R-006:
+    enabled: true
+    severity: error
+    message: "Schema version is yanked or deprecated"
+    allow_replay: false  # Set true to allow yanked schemas with replay=true flag
+
+  # R-007: U3/U4_MATCH_LEVEL
+  # U3_ types target L1-L3 only, U4_ types may target L1-L4
+  R-007:
+    enabled: true
+    severity: warn  # Warn initially, escalate to error after cleanup
+    message: "Type prefix doesn't match target level (U3_ for L1-L3, U4_ for L1-L4)"
+
+  # R-100: BUS_ONLY
+  # Emissions must go through bus/inject APIs (no shadow REST endpoints)
+  R-100:
+    enabled: true
+    severity: error
+    message: "Governed topics must emit via membrane bus, not direct REST"
+    exempt_namespaces:
+      - "internal.*"   # Internal/debug topics exempt
+      - "dev.*"        # Development topics exempt
+
+  # R-101: PROJECTION_ONLY_UI
+  # Next.js UI must read from public projection only
+  R-101:
+    enabled: true
+    severity: error
+    message: "UI code must read from public projection, not private registry fields"
+
+# ==============================================================================
+# Governance Enforcement Configuration
+# ==============================================================================
+governance:
+  # Enforce payload size caps from Governance_Policy nodes
+  enforce_payload_caps: true
+
+  # Enforce rate limits (requires runtime telemetry integration)
+  enforce_rate_limits: false  # Static linter can't enforce runtime rates
+
+  # Enforce allowed_emitters lists (requires component identity)
+  enforce_emitter_allowlists: false  # Future: when component identity implemented
+
+  # Warn on missing governance policy for namespace
+  warn_ungoverned_namespaces: true
+
+# ==============================================================================
+# Scanner Configuration
+# ==============================================================================
+scanner:
+  # Python AST scanner settings
+  python:
+    # Analyze dynamic topic construction (best-effort)
+    analyze_dynamic_topics: true
+
+    # Max depth for payload dict literal extraction
+    max_literal_depth: 3
+
+  # JavaScript/TypeScript scanner settings
+  javascript:
+    # Use AST parser (requires Node.js + Babel/Acorn)
+    use_ast_parser: false  # Set true if Node.js available
+
+    # Fallback to regex-based scanner (naive but fast)
+    regex_fallback: true
+
+    # Regex patterns for emit detection (if regex_fallback=true)
+    emit_regex_patterns:
+      - "\\b(publishEvent|membraneInject)\\s*\\(\\s*['\"`](?P<topic>[^'\"`]+)['\"`]\\s*,\\s*(?P<payload>\\{.*?\\})"
+      - "\\b(ws|socket)\\.send\\s*\\(\\s*JSON\\.stringify\\s*\\(\\s*\\{[^}]*[\"']type[\"']\\s*:\\s*[\"'](?P<topic>[^\"']+)[\"']"
+
+# ==============================================================================
+# Whitelist/Override Configuration
+# ==============================================================================
+whitelist:
+  # Allow specific files to bypass certain rules
+  # Format: file_pattern: [rule_codes]
+  file_exemptions:
+    "orchestration/examples/**": ["R-001", "R-002"]  # Examples don't need to be production-compliant
+    "orchestration/tests/**": ["R-004", "R-005"]     # Tests can use mock events
+
+  # Allow inline overrides via comments
+  # Python: # mp-lint: ignore R-001
+  # JS/TS:  // mp-lint: ignore R-001
+  allow_inline_overrides: true
+
+  # Dynamic topics that can't be statically analyzed
+  # Format: function_name or pattern to whitelist
+  dynamic_topic_whitelist:
+    - "build_topic_from_context"   # Function that constructs topics dynamically
+    - "_format_topic"              # Internal topic formatter
+
+# ==============================================================================
+# Integration Configuration
+# ==============================================================================
+integration:
+  # Pre-commit hook integration
+  pre_commit:
+    enabled: true
+    fail_fast: true  # Stop on first error (faster feedback)
+
+  # GitHub Actions integration
+  ci:
+    enabled: true
+    annotate_files: true  # Add file annotations on PR (if supported)
+
+  # Local development (IDE integration)
+  ide:
+    # Generate IDE-compatible output (e.g., VS Code problem matcher)
+    vscode_problem_matcher: true
+
+# ==============================================================================
+# Metadata
+# ==============================================================================
+meta:
+  version: "1.0.0"
+  last_updated: "2025-10-31"
+  owner: "Ada (Coordinator & Architect)"
+  description: |
+    L4-aware membrane linter for Mind Protocol.
+    Validates Python and Next.js code against L4 Schema Registry.
+    Enforces membrane discipline, schema compliance, and governance policies.
