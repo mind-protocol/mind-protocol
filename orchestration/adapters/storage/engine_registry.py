@@ -44,14 +44,29 @@ def register_engine(citizen_id: str, engine: 'ConsciousnessEngineV2') -> None:
         engine: ConsciousnessEngineV2 instance
 
     Note:
-        Overwrites existing registration for the same citizen_id.
-        This is intentional for hot-reload scenarios.
+        Overwrites existing registration for the same citizen_id ONLY if new engine has more nodes.
+        This prevents triple-initialization bug where empty engines overwrite good ones.
     """
     if citizen_id in _ENGINES:
-        logger.warning(f"[EngineRegistry] Overwriting existing engine for {citizen_id}")
+        existing_engine = _ENGINES[citizen_id]
+        existing_nodes = len(existing_engine.graph.nodes) if existing_engine and hasattr(existing_engine, 'graph') else 0
+        new_nodes = len(engine.graph.nodes) if engine and hasattr(engine, 'graph') else 0
+
+        if new_nodes < existing_nodes:
+            logger.warning(
+                f"[EngineRegistry] REJECTED overwrite for {citizen_id}: "
+                f"new engine has {new_nodes} nodes vs existing {existing_nodes} nodes. "
+                f"Keeping existing engine with more data."
+            )
+            return
+
+        logger.warning(
+            f"[EngineRegistry] Overwriting existing engine for {citizen_id} "
+            f"(new: {new_nodes} nodes, old: {existing_nodes} nodes)"
+        )
 
     _ENGINES[citizen_id] = engine
-    logger.info(f"[EngineRegistry] Registered engine: {citizen_id}")
+    logger.info(f"[EngineRegistry] Registered engine: {citizen_id} ({len(engine.graph.nodes)} nodes)")
 
 
 def get_engine(citizen_id: str) -> Optional['ConsciousnessEngineV2']:

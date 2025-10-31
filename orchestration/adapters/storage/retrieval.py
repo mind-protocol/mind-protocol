@@ -901,10 +901,10 @@ async def retrieve_consciousness_context(
     # Generate query embedding
     query_embedding = await generate_embedding(intention.query_text)
 
-    # Prepare graph names
-    n1_graph = f"citizen_{intention.citizen_id}"
-    n2_graph = "collective_n2"
-    n3_graph = "ecosystem_n3"
+    # Prepare graph names (using hierarchical naming)
+    n1_graph = intention.citizen_id  # Should be full hierarchical name
+    n2_graph = "consciousness-infrastructure_mind-protocol"  # N2 collective
+    n3_graph = "consciousness-infrastructure"  # N3 ecosystem
 
     # Execute 6 parallel queries (ARCHITECTURAL DECISION #1)
     print(f"[Retrieval] Executing 6 parallel queries...")

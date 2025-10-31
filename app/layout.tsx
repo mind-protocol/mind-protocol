@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Cinzel, Crimson_Text } from 'next/font/google';
 import "./globals.css";
-import { BrowserSignalsCollector } from "./consciousness/components/BrowserSignalsCollector";
+// REMOVED: BrowserSignalsCollector - no API calls allowed
+// import { BrowserSignalsCollector } from "./consciousness/components/BrowserSignalsCollector";
 import { WalletProvider } from "./components/WalletProvider";
 
 // Venice/Serenissima Typography (from VENICE_DESIGN_SYSTEM_EXTRACT.md)
@@ -63,7 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${cinzel.variable} ${crimsonText.variable}`}>
       <body className="bg-parchment-base text-venice-brown antialiased font-crimson">
-        <BrowserSignalsCollector />
+        {/* REMOVED: BrowserSignalsCollector - no API calls allowed */}
         <WalletProvider>
           {children}
         </WalletProvider>

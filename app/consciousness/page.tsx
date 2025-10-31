@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { PixiCanvas } from './components/PixiCanvas';
-import { SubEntityGraphView } from './components/SubEntityGraphView';
-import { SubEntityClusterOverlay } from './components/SubEntityClusterOverlay';
-import { EnergyFlowParticles } from './components/EnergyFlowParticles';
-import { ActivationBubbles } from './components/ActivationBubbles';
+import dynamic from 'next/dynamic';
 import { Tooltip } from './components/Tooltip';
 import { DetailPanel } from './components/DetailPanel';
 import { Legend } from './components/Legend';
@@ -24,6 +20,16 @@ import type {
   GraphOption
 } from './hooks/useGraphData';
 import { WebSocketState } from './hooks/websocket-types';
+import { useGraph } from '@/app/state/graphStore';
+import GraphDebugBadge from '@/app/components/GraphDebugBadge';
+import { membraneInject } from '@/app/lib/membrane';
+
+const GraphCanvas = dynamic(() => import('@/app/consciousness/components/PixiCanvas'), { ssr: false });
+const SubEntityGraphView = dynamic(() => import('@/app/consciousness/components/SubEntityGraphView'), { ssr: false });
+const SubEntityClusterOverlay = dynamic(() => import('@/app/consciousness/components/SubEntityClusterOverlay'), { ssr: false });
+const EnergyFlowParticles = dynamic(() => import('@/app/consciousness/components/EnergyFlowParticles'), { ssr: false });
+const ActivationBubbles = dynamic(() => import('@/app/consciousness/components/ActivationBubbles'), { ssr: false });
+
 
 const MAX_OPERATIONS = 50;
 
@@ -55,6 +61,7 @@ export default function ConsciousnessPage() {
 
   // Membrane-first graph stream: derives currentGraphId from event provenance
   const graphStream = useGraphStream();
+  const { nodes: nodeMap, links: linkMap, version } = useGraph();
 
   const [nodeOverlays, setNodeOverlays] = useState<Record<string, Partial<Node>>>({});
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -69,72 +76,8 @@ export default function ConsciousnessPage() {
   const [lastProcessedThreshold, setLastProcessedThreshold] = useState<number>(-1);
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
-  const baseNodes = useMemo<Node[]>(() => {
-    // PRIORITY: Use graphStream (membrane events) for emergence data
-    const currentGraph = graphStream.currentGraphId
-      ? graphStream.graphs.get(graphStream.currentGraphId)
-      : null;
-
-    if (currentGraph && Object.keys(currentGraph.nodes).length > 0) {
-      // Use membrane event stream data (has emergence nodes)
-      return Object.values(currentGraph.nodes).map((node) => ({
-        id: node.id,
-        node_id: node.id,
-        name: node.name ?? node.id,
-        node_type: node.type ?? 'Unknown',
-        energy: 0,
-        energy_runtime: 0,
-        theta: 0,
-        log_weight: 0,
-        weight: 0,
-        scope: 'personal',
-        properties: {},
-        text: node.name ?? node.id
-      }));
-    }
-
-    // FALLBACK: Use legacy graphNodes if membrane stream has no data yet
-    return graphNodes.map((node) => ({
-      id: node.id,
-      node_id: node.id,
-      name: node.name ?? node.id,
-      node_type: node.type ?? 'Unknown',
-      energy: node.energy,
-      energy_runtime: node.energy_runtime,
-      theta: node.theta,
-      log_weight: node.log_weight,
-      weight: node.log_weight,
-      scope: node.scope,
-      properties: node.properties,
-      text: node.properties?.text ?? node.name ?? node.id
-    }));
-  }, [graphStream.graphs, graphStream.currentGraphId, graphNodes]);
-
-  const nodes = useMemo<Node[]>(() => {
-    return baseNodes.map((node) => {
-      const overlay = nodeOverlays[node.id] ?? {};
-      const econ = economyOverlays[node.id];
-      return {
-        ...node,
-        ...overlay,
-        economyOverlay: econ
-      };
-    });
-  }, [baseNodes, nodeOverlays, economyOverlays]);
-
-  const links = useMemo<Link[]>(() => {
-    return graphLinks.map((link) => ({
-      id: link.id,
-      source: link.source,
-      target: link.target,
-      type: link.type ?? 'RELATES_TO',
-      weight: link.weight,
-      energy: link.energy,
-      confidence: link.confidence,
-      scope: link.scope,
-      properties: link.properties
-    }));
-  }, [graphLinks]);
+  const nodes = useMemo<Node[]>(() => Array.from(nodeMap.values()), [nodeMap]);
+  const links = useMemo<Link[]>(() => Array.from(linkMap.values()), [linkMap]);
 
   const subentities = useMemo<Subentity[]>(() => {
     // PRIORITY: Use graphStream (membrane events) for emergence data
@@ -150,10 +93,11 @@ export default function ConsciousnessPage() {
         kind: 'SubEntity',
         energy: 0,
         threshold: 0,
-        activation_level: sub.active ? 1.0 : 0.0,
+        activation_level: sub.active ? '1.0' : '0.0', // PATCH 3 FIX: Convert to string to match interface
         member_count: sub.members.size,
+        members: Array.from(sub.members), // Convert Set to Array for SubEntityGraphView
         quality: 0,
-        stability: 0,
+        stability: '0', // PATCH 3 FIX: Convert to string to match interface
         properties: {}
       }));
     }
@@ -172,24 +116,6 @@ export default function ConsciousnessPage() {
       properties: sub.properties
     }));
   }, [graphStream.graphs, graphStream.currentGraphId, graphSubentities]);
-
-  // Compute link count from graphStream SubEntity memberships
-  const linkCount = useMemo(() => {
-    const currentGraph = graphStream.currentGraphId
-      ? graphStream.graphs.get(graphStream.currentGraphId)
-      : null;
-
-    if (currentGraph && Object.keys(currentGraph.subentities).length > 0) {
-      // Count MEMBER_OF links (each subentity.members represents links)
-      return Object.values(currentGraph.subentities).reduce(
-        (total, sub) => total + sub.members.size,
-        0
-      );
-    }
-
-    // FALLBACK: Use legacy graphLinks count
-    return graphLinks.length;
-  }, [graphStream.graphs, graphStream.currentGraphId, graphLinks]);
 
   const strideEvents = emotionState.recentStrides;
 
@@ -360,14 +286,9 @@ export default function ConsciousnessPage() {
     window.dispatchEvent(new CustomEvent('node:focus', { detail: { nodeId } }));
   }, []);
 
-  // TODO: Membrane-first refactoring
-  // User selection should emit ui.action.focus_entity stimulus to the bus
-  // Engine reacts → emits events with that entity's provenance → useGraphStream picks it up
-  // For now, keeping this as a no-op to maintain ChatPanel compatibility
-  const handleSelectCitizen = useCallback((_identifier: string) => {
-    console.warn('[ConsciousnessPage] handleSelectCitizen called - needs membrane-first stimulus injection');
-    // TODO: Emit ui.action.focus_entity stimulus instead of direct state mutation
-  }, []);
+  const handleSelectCitizen = useCallback((citizenId:string)=>{
+    membraneInject("ui.select.citizen",{ citizen_id: citizenId }, { ts: Date.now() });
+  },[]);
 
   const currentGraphLabel = useMemo(() => {
     if (!currentGraphId) return '';
@@ -414,7 +335,7 @@ export default function ConsciousnessPage() {
         currentGraphId={currentGraphId}
         currentGraphLabel={currentGraphLabel}
         nodeCount={nodes.length}
-        linkCount={linkCount}
+        linkCount={links.length}
         nodes={nodes}
         onToggleForgedIdentity={() => setShowForgedIdentityViewer(!showForgedIdentityViewer)}
         showForgedIdentityViewer={showForgedIdentityViewer}
@@ -460,7 +381,7 @@ export default function ConsciousnessPage() {
         subentityFlows={entityToEntity}
       />
 
-      <PixiCanvas
+      <GraphCanvas
         nodes={nodes}
         links={links}
         operations={operations}
@@ -468,6 +389,7 @@ export default function ConsciousnessPage() {
         workingMemory={v2State.workingMemory}
         linkFlows={v2State.linkFlows}
         recentFlips={v2State.recentFlips}
+        key={version}
       />
 
       <SubEntityClusterOverlay
@@ -493,6 +415,7 @@ export default function ConsciousnessPage() {
           metrics={forgedIdentityMetrics}
         />
       )}
+      <GraphDebugBadge />
     </div>
   );
 }

@@ -18,7 +18,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
 export type GraphId = string; // e.g. "citizen_felix" | "org_mind_protocol"
 
@@ -39,6 +39,7 @@ export interface SubEntityInfo {
 export interface HierarchySnapshot {
   subentities: Record<string, SubEntityInfo>;
   nodes: Record<string, { id: string; name?: string; type?: string }>;
+  links: Record<string, { id: string; source: string; target: string; type: string; weight?: number; properties?: any }>; // PATCH 3: Added missing links property
   lastUpdate: number;
 }
 
@@ -116,7 +117,25 @@ const MEMBRANE_BUS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/
 export function useGraphStream(
   onGraphIdChange?: (graphId: GraphId) => void
 ): GraphStreamState {
-  const [graphs, setGraphs] = useState<Map<GraphId, HierarchySnapshot>>(new Map());
+  // PATCH 3: Map store + rAF throttle (foundational refactor)
+  // Store graphs in ref (doesn't trigger re-renders on every message)
+  const graphsRef = useRef<Map<GraphId, HierarchySnapshot>>(new Map());
+
+  // Frame counter for controlled re-renders (only updates on rAF flush)
+  const [frame, setFrame] = useState(0);
+
+  // rAF request ID for throttling
+  const rafRef = useRef<number | null>(null);
+
+  // Schedule a single re-render on next animation frame (prevents 60+ renders/sec)
+  const scheduleFlush = useCallback(() => {
+    if (rafRef.current !== null) return; // Already scheduled
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      setFrame(f => f + 1); // Trigger ONE re-render per frame
+    });
+  }, []);
+
   const [currentGraphId, setCurrentGraphId] = useState<GraphId | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,17 +160,66 @@ export function useGraphStream(
     lastStateUpdate: 0
   });
 
-  // Helper to get or create graph snapshot
-  const ensureGraph = useCallback((graphId: GraphId, graphsMap: Map<GraphId, HierarchySnapshot>) => {
+  // Use ref for currentGraphId to avoid recreating ensureGraph on every change
+  const currentGraphIdRef = useRef<GraphId | null>(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    currentGraphIdRef.current = currentGraphId;
+  }, [currentGraphId]);
+
+  // PATCH 3 FIX: Helper to create placeholder subentity with all optional fields
+  const createPlaceholderSubEntity = useCallback((id: string): SubEntityInfo => ({
+    id,
+    members: new Set<string>(),
+    slug: undefined,
+    name: undefined,
+    active: undefined,
+    anchorsTop: undefined,
+    anchorsPeripheral: undefined,
+    affect: undefined,
+    novelty: undefined,
+    uncertainty: undefined,
+    goalFit: undefined
+  }), []);
+
+  // PATCH 3: Helper to get or create graph snapshot (uses ref directly)
+  // Also auto-selects this graph if current selection is empty or null
+  const ensureGraph = useCallback((graphId: GraphId) => {
+    const graphsMap = graphsRef.current;
+
     if (!graphsMap.has(graphId)) {
       graphsMap.set(graphId, {
         subentities: {},
         nodes: {},
+        links: {},
         lastUpdate: Date.now()
       });
     }
+
+    // Auto-switch to active graph if nothing selected OR current graph is empty
+    // Use ref to avoid dependency on currentGraphId
+    if (currentGraphIdRef.current === null) {
+      console.log('[useGraphStream] 🎯 Auto-selecting first active graph:', graphId);
+      setCurrentGraphId(graphId);
+    } else {
+      const current = graphsMap.get(currentGraphIdRef.current);
+      const currentNodeCount = current ? Object.keys(current.nodes || {}).length : 0;
+      if (current && currentNodeCount === 0) {
+        const incomingNodeCount = Object.keys(graphsMap.get(graphId)?.nodes || {}).length;
+        if (incomingNodeCount > 0) {
+          console.log('[useGraphStream] 🎯 Auto-switching from empty graph to active graph:', {
+            from: currentGraphIdRef.current,
+            to: graphId,
+            incomingNodeCount
+          });
+          setCurrentGraphId(graphId);
+        }
+      }
+    }
+
     return graphsMap.get(graphId)!;
-  }, []);
+  }, []); // No dependencies - uses ref instead
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -173,6 +241,7 @@ export function useGraphStream(
               'graph.delta.node.*',
               'graph.delta.link.*',
               'graph.delta.subentity.*',
+              'subentity.*',  // Added: Includes subentity.snapshot events
               'wm.emit',
               'percept.frame',
               'emergence.*',
@@ -194,8 +263,34 @@ export function useGraphStream(
               return;
             }
 
+            // Log ALL messages (temporary diagnostic)
+            if (eventType !== 'ping' && eventType !== 'pong') {
+              console.log('[useGraphStream] 📨 Message received:', {
+                type: eventType,
+                hasCitizenId: !!msg.provenance?.citizen_id,
+                citizenId: msg.provenance?.citizen_id,
+                hasPayload: !!msg.payload
+              });
+            }
+
             if (eventType === 'subscribe.ack@1.0' || eventType === 'subscribe.ack') {
-              console.log('[useGraphStream] Subscribe ACK received:', msg.topics ?? msg.spec);
+              const ackTopics = msg.payload?.topics ?? msg.topics ?? [];
+              const citizenId = msg.provenance?.citizen_id;
+              console.log('[useGraphStream] Subscribe ACK received:', {
+                connectionId: msg.payload?.connection_id ?? msg.connection_id,
+                citizenId,
+                topics: ackTopics
+              });
+
+              // CRITICAL FIX: Set currentGraphId immediately so delta events can be processed
+              // Even without snapshot.chunk@1.0, we need a graph ID for deltas to land
+              if (citizenId && !currentGraphId) {
+                console.log('[useGraphStream] 🔧 Setting currentGraphId from subscribe.ack:', citizenId);
+                setCurrentGraphId(citizenId);
+                // PATCH 3: Ensure graph exists in ref (no state update)
+                ensureGraph(citizenId);
+                scheduleFlush(); // Schedule ONE re-render
+              }
               return;
             }
 
@@ -203,46 +298,175 @@ export function useGraphStream(
               return;
             }
 
-            // Validate normative event envelope (unified spec)
-            // Required fields: type, id, spec, provenance
-            if (!msg.id || !msg.spec || !msg.provenance) {
-              console.warn('[useGraphStream] Invalid event envelope - missing required fields (id, spec, provenance):', msg);
-              return;
+            // Special case: snapshot.chunk@1.0 doesn't follow normative envelope format
+            // Also allow raw link events (MEMBER_OF, ACTIVATES, INHIBITS) - backward compatibility
+            if (eventType === 'snapshot.chunk@1.0') {
+              console.log('[useGraphStream] 📦 snapshot.chunk@1.0 received', {
+                hasPayload: !!msg.payload,
+                payloadKeys: msg.payload ? Object.keys(msg.payload) : [],
+                nodeCount: msg.payload?.nodes?.length ?? 0,
+                linkCount: msg.payload?.links?.length ?? 0,
+                subentityCount: msg.payload?.subentities?.length ?? 0,
+                sampleNode: msg.payload?.nodes?.[0],
+                sampleLink: msg.payload?.links?.[0],
+                sampleSubentity: msg.payload?.subentities?.[0]
+              });
+              // Continue to switch statement for processing
+            } else if (eventType === 'MEMBER_OF' || eventType === 'ACTIVATES' || eventType === 'INHIBITS') {
+              // Raw link events - skip normative validation (backward compatibility)
+              // Continue to switch statement for processing
+            } else {
+              // Validate normative event envelope (unified spec)
+              // Required fields: type, id, spec, provenance
+              if (!msg.id || !msg.spec || !msg.provenance) {
+                console.warn('[useGraphStream] Invalid event envelope - missing required fields (id, spec, provenance):', msg);
+                return;
+              }
+
+              // Validate spec structure
+              if (!msg.spec.name || !msg.spec.rev) {
+                console.warn('[useGraphStream] Invalid spec - missing name or rev:', msg.spec);
+                return;
+              }
+
+              // Validate provenance structure (frozen shape)
+              // provenance: { scope, citizen_id?, org_id?, component?, mission_id? }
+              if (!msg.provenance.scope ||
+                  (msg.provenance.scope === 'personal' && !msg.provenance.citizen_id) ||
+                  (msg.provenance.scope === 'organizational' && !msg.provenance.org_id)) {
+                console.warn('[useGraphStream] Invalid provenance - missing required scope fields:', msg.provenance);
+                return;
+              }
             }
 
-            // Validate spec structure
-            if (!msg.spec.name || !msg.spec.rev) {
-              console.warn('[useGraphStream] Invalid spec - missing name or rev:', msg.spec);
-              return;
+            // Derive graphId from provenance (canonical format for normative events)
+            // Backend sends full citizen_id (e.g., "consciousness-infrastructure_mind-protocol_felix")
+            // Don't add prefixes - use citizen_id/org_id directly
+            let graphId: GraphId;
+            if (eventType === 'snapshot.chunk@1.0') {
+              graphId = msg.provenance?.citizen_id
+                ? msg.provenance.citizen_id
+                : msg.payload?.graph_id ?? 'default';
+            } else {
+              graphId = msg.provenance.scope === 'personal' && msg.provenance.citizen_id
+                ? msg.provenance.citizen_id
+                : msg.provenance.scope === 'organizational' && msg.provenance.org_id
+                  ? msg.provenance.org_id
+                  : 'unknown';
             }
-
-            // Validate provenance structure (frozen shape)
-            // provenance: { scope, citizen_id?, org_id?, component?, mission_id? }
-            if (!msg.provenance.scope ||
-                (msg.provenance.scope === 'personal' && !msg.provenance.citizen_id) ||
-                (msg.provenance.scope === 'organizational' && !msg.provenance.org_id)) {
-              console.warn('[useGraphStream] Invalid provenance - missing required scope fields:', msg.provenance);
-              return;
-            }
-
-            // Derive graphId from provenance (canonical format)
-            const graphId: GraphId = msg.provenance.scope === 'personal' && msg.provenance.citizen_id
-              ? `citizen_${msg.provenance.citizen_id}`
-              : msg.provenance.scope === 'organizational' && msg.provenance.org_id
-                ? `org_${msg.provenance.org_id}`
-                : 'unknown';
 
             if (graphId === 'unknown') {
               console.warn('[useGraphStream] No valid scope in provenance:', msg.provenance);
               return;
             }
 
-            setGraphs(prev => {
-              const next = new Map(prev);
-              const snap = ensureGraph(graphId, next);
+            // PATCH 3: Direct ref mutation instead of state update
+            const snap = ensureGraph(graphId);
 
-              // Handle event types (normative vocabulary: 'type' not 'topic')
-              switch (eventType) {
+            // Handle event types (normative vocabulary: 'type' not 'topic')
+            switch (eventType) {
+                case 'mode.snapshot':  // Backend sends mode.snapshot events (treat as snapshot)
+                case 'snapshot.chunk@1.0': {
+                  const payload = msg.payload ?? {};
+                  const nodes = Array.isArray(payload.nodes) ? payload.nodes : [];
+                  const links = Array.isArray(payload.links) ? payload.links : [];
+                  const subentities = Array.isArray(payload.subentities) ? payload.subentities : [];
+
+                  console.log(`[useGraphStream] 📥 ${eventType} received:`, {
+                    graphId,
+                    nodeCount: nodes.length,
+                    linkCount: links.length,
+                    subentityCount: subentities.length,
+                    payloadKeys: Object.keys(payload),
+                    rawPayload: payload
+                  });
+
+                  // Set currentGraphId if not already set (allows snapshot to establish base graph)
+                  if (!currentGraphId) {
+                    setCurrentGraphId(graphId);
+                  }
+
+                  nodes.forEach((node: any) => {
+                    if (!node) return;
+                    const nodeId = node.id ?? node.node_id;
+                    if (!nodeId) return;
+                    const properties = node.properties ?? {};
+                    snap.nodes[nodeId] = {
+                      id: nodeId,
+                      name: node.name ?? properties.name,
+                      type: node.type ?? node.node_type ?? properties.node_type
+                    };
+                  });
+
+                  links.forEach((link: any) => {
+                    if (!link) return;
+                    const source = link.source ?? link.source_id;
+                    const target = link.target ?? link.target_id;
+                    if (!source || !target) return;
+                    const linkType = link.type ?? link.link_type;
+                    const linkId = link.id ?? `${source}->${target}:${linkType}`;
+
+                    // Store ALL links in snap.links (not just MEMBER_OF)
+                    snap.links[linkId] = {
+                      id: linkId,
+                      source,
+                      target,
+                      type: linkType,
+                      weight: link.weight,
+                      properties: link.properties ?? {}
+                    };
+
+                    // ALSO handle MEMBER_OF for subentity membership
+                    if (linkType === 'MEMBER_OF') {
+                      if (!snap.subentities[target]) {
+                        snap.subentities[target] = createPlaceholderSubEntity(target);
+                      }
+                      snap.subentities[target].members.add(source);
+                    }
+                  });
+
+                  subentities.forEach((se: any) => {
+                    if (!se) return;
+                    const subId = se.id ?? se.subentity_id;
+                    if (!subId) return;
+                    const members = Array.isArray(se.members)
+                      ? se.members
+                      : Array.isArray(se.member_ids)
+                        ? se.member_ids
+                        : [];
+                    const existing = snap.subentities[subId] ?? createPlaceholderSubEntity(subId);
+                    const nextMembers = new Set(existing.members);
+                    members.forEach((member: any) => {
+                      if (typeof member === 'string') {
+                        nextMembers.add(member);
+                      } else if (member?.id) {
+                        nextMembers.add(member.id);
+                      }
+                    });
+                    snap.subentities[subId] = {
+                      id: subId,
+                      slug: se.slug ?? se.role_or_topic ?? existing.slug,
+                      name: se.name ?? existing.name ?? se.display_name,
+                      members: nextMembers
+                    };
+                  });
+
+                  snap.lastUpdate = Date.now();
+
+                  // DEBUG: Verify snapshot was stored
+                  console.log('[useGraphStream] 🔍 After snapshot processing:', {
+                    graphId,
+                    snapNodeCount: Object.keys(snap.nodes).length,
+                    snapLinkCount: Object.keys(snap.links).length,
+                    graphsMapSize: graphsRef.current.size,
+                    graphsMapKeys: Array.from(graphsRef.current.keys()),
+                    currentGraphId
+                  });
+
+                  scheduleFlush(); // CRITICAL: Flush snapshot to React (no global flush for snapshots)
+                  break;
+                }
+
                 case 'graph.delta.node.upsert': {
                   // Felix's emergence.v1 format: msg.payload.node_id, msg.payload.properties
                   console.log('[useGraphStream] 🔵 graph.delta.node.upsert received', {
@@ -277,6 +501,31 @@ export function useGraphStream(
                     };
                   }
                   snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'subentity.activation': {
+                  // Activation telemetry is consumed by other rendering layers.
+                  // Touch lastUpdate so subscribers know we processed the event.
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'graph.delta.node.delete': {
+                  const payload = msg.payload ?? {};
+                  const nodeId = payload.node_id ?? payload.id;
+                  if (!nodeId) {
+                    console.warn('[useGraphStream] graph.delta.node.delete missing payload.node_id', payload);
+                    break;
+                  }
+                  if (snap.nodes[nodeId]) {
+                    delete snap.nodes[nodeId];
+                  }
+                  Object.values(snap.subentities).forEach(sub => sub.members.delete(nodeId));
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
                   break;
                 }
 
@@ -299,14 +548,131 @@ export function useGraphStream(
                   if (linkType === 'MEMBER_OF') {
                     // Ensure target SubEntity exists
                     if (!snap.subentities[target]) {
-                      snap.subentities[target] = {
-                        id: target,
-                        members: new Set()
+                      snap.subentities[target] = createPlaceholderSubEntity(target);
+                    }
+                    snap.subentities[target].members.add(source);
+                  } else {
+                    // Create placeholder nodes if they don't exist yet (Patch 4)
+                    if (!snap.nodes[source]) {
+                      snap.nodes[source] = {
+                        id: source,
+                        name: source, // Use ID as placeholder name
+                        type: 'placeholder' // Mark as placeholder
                       };
+                    }
+                    if (!snap.nodes[target]) {
+                      snap.nodes[target] = {
+                        id: target,
+                        name: target, // Use ID as placeholder name
+                        type: 'placeholder' // Mark as placeholder
+                      };
+                    }
+
+                    // Store regular links (ENABLES, RELATES_TO, etc.)
+                    const linkId = payload.id || `${source}-${target}`;
+                    snap.links[linkId] = {
+                      id: linkId,
+                      source,
+                      target,
+                      type: linkType,
+                      weight: payload.weight,
+                      properties: payload.properties
+                    };
+                  }
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'graph.delta.link.delete': {
+                  const payload = msg.payload ?? {};
+                  const linkType = payload.type ?? payload.link_type;
+                  const source = payload.source ?? payload.source_id;
+                  const target = payload.target ?? payload.target_id;
+                  if (linkType === 'MEMBER_OF' && source && target) {
+                    const subentity = snap.subentities[target];
+                    if (subentity) {
+                      subentity.members.delete(source);
+                    }
+                  }
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'MEMBER_OF':
+                case 'ACTIVATES':
+                case 'INHIBITS': {
+                  // Handle raw link events (backward compatibility format)
+                  // These arrive with type = link type (MEMBER_OF, ACTIVATES, etc.)
+                  // Extract link data from root-level fields or payload
+                  const source = msg.source ?? msg.payload?.source;
+                  const target = msg.target ?? msg.payload?.target;
+                  const linkType = eventType; // MEMBER_OF, ACTIVATES, INHIBITS
+
+                  if (!source || !target) {
+                    console.warn(`[useGraphStream] ${linkType} event missing source or target:`, msg);
+                    break;
+                  }
+
+                  console.log(`[useGraphStream] 🔗 ${linkType} link received:`, { source, target });
+
+                  if (linkType === 'MEMBER_OF') {
+                    // Ensure target SubEntity exists
+                    if (!snap.subentities[target]) {
+                      snap.subentities[target] = createPlaceholderSubEntity(target);
                     }
                     snap.subentities[target].members.add(source);
                   }
                   snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'graph.delta.subentity.upsert': {
+                  const payload = msg.payload ?? {};
+                  const subentity = payload.subentity ?? payload;
+                  const subId = subentity?.id ?? payload.subentity_id;
+                  if (!subId) {
+                    console.warn('[useGraphStream] graph.delta.subentity.upsert missing id', payload);
+                    break;
+                  }
+                  const existing = snap.subentities[subId] ?? { id: subId, members: new Set<string>() };
+                  const members = Array.isArray(subentity.members)
+                    ? subentity.members
+                    : Array.isArray(subentity.member_ids)
+                      ? subentity.member_ids
+                      : [];
+                  const nextMembers = new Set(existing.members);
+                  members.forEach((member: any) => {
+                    if (typeof member === 'string') {
+                      nextMembers.add(member);
+                    } else if (member?.id) {
+                      nextMembers.add(member.id);
+                    }
+                  });
+                  snap.subentities[subId] = {
+                    id: subId,
+                    slug: subentity.slug ?? subentity.role_or_topic ?? existing.slug,
+                    name: subentity.name ?? subentity.display_name ?? existing.name,
+                    members: nextMembers,
+                    active: subentity.active ?? existing.active
+                  };
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
+                  break;
+                }
+
+                case 'graph.delta.subentity.delete': {
+                  const payload = msg.payload ?? {};
+                  const subId = payload.subentity_id ?? payload.id;
+                  if (!subId) {
+                    console.warn('[useGraphStream] graph.delta.subentity.delete missing id', payload);
+                    break;
+                  }
+                  delete snap.subentities[subId];
+                  snap.lastUpdate = Date.now();
+                  scheduleFlush(); // Flush when graph data changes
                   break;
                 }
 
@@ -320,10 +686,7 @@ export function useGraphStream(
                   const subentities = msg.subentities || [];
                   subentities.forEach((seId: string) => {
                     if (!snap.subentities[seId]) {
-                      snap.subentities[seId] = {
-                        id: seId,
-                        members: new Set()
-                      };
+                      snap.subentities[seId] = createPlaceholderSubEntity(seId);
                     }
                     snap.subentities[seId].active = true;
                   });
@@ -533,9 +896,8 @@ export function useGraphStream(
                   console.debug('[useGraphStream] Unhandled topic:', msg.topic);
               }
 
-              next.set(graphId, snap);
-              return next;
-            });
+            // REMOVED: scheduleFlush() on every message causes 60fps flicker
+            // Now only called when graph data actually changes
           } catch (err) {
             // Malformed messages are expected - skip gracefully
             console.warn('[useGraphStream] Skipping malformed message:', err instanceof Error ? err.message : 'unknown');
@@ -572,7 +934,25 @@ export function useGraphStream(
         ws = null;
       }
     };
-  }, [ensureGraph, onGraphIdChange, currentGraphId]);
+  }, [ensureGraph, onGraphIdChange]); // Removed currentGraphId - using ref instead to prevent WS reconnections
+
+  // PATCH 3: Convert ref to state for rendering (only rebuilds on rAF flush)
+  // This useMemo runs once per animation frame when `frame` changes
+  const graphs = useMemo(() => {
+    const snapshot = new Map(graphsRef.current);
+
+    // DEBUG: Log what React is seeing
+    console.log('[useGraphStream] 📊 useMemo rebuilding graphs:', {
+      frame,
+      graphCount: snapshot.size,
+      graphKeys: Array.from(snapshot.keys()),
+      nodeCountPerGraph: Array.from(snapshot.entries()).map(([key, g]) =>
+        [key, Object.keys(g.nodes || {}).length]
+      )
+    });
+
+    return snapshot; // Return snapshot of current graphs
+  }, [frame]); // Only re-compute when frame changes (triggered by scheduleFlush)
 
   return {
     graphs,

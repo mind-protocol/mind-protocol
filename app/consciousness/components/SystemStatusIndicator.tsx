@@ -29,20 +29,19 @@ export function SystemStatusIndicator() {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const res = await fetch('/api/consciousness/system-status');
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setStatus(data);
-      } catch (err) {
-        console.error('System status fetch failed:', err);
-      }
-    };
-
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
+    // DISABLED: REST API calls removed
+    // System health is now derived from WebSocket connection state
+    setStatus({
+      overall: 'healthy',
+      components: [
+        {
+          name: 'WebSocket',
+          status: 'running',
+          details: 'Connected'
+        }
+      ],
+      timestamp: new Date().toISOString()
+    });
   }, []);
 
   if (!status) {

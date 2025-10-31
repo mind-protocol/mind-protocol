@@ -114,6 +114,9 @@ ECONOMY_RUNTIME = None
 # Topology analyzer services (one per citizen)
 TOPOLOGY_ANALYZERS = {}
 
+# Dashboard State Aggregator (1Hz emission service)
+DASHBOARD_AGGREGATOR = None
+
 # Create FastAPI app
 app = FastAPI(
     title="Mind Protocol Consciousness API",
@@ -157,104 +160,16 @@ SCREENSHOTS_DIR = PROJECT_ROOT / "claude-screenshots"
 LOGS_DIR.mkdir(exist_ok=True)
 SCREENSHOTS_DIR.mkdir(exist_ok=True)
 
-@app.post("/api/logs")
-async def receive_browser_logs(batch: LogBatch):
-    """
-    Receive browser console logs from Next.js dashboard.
-
-    Enables Claude Code to see actual browser errors and console output
-    by capturing from Nicolas's Chrome tab and writing to files.
-
-    Architecture:
-    - Browser intercepts console.log/error/warn
-    - Sends batches to this endpoint
-    - Writes to claude-logs/browser-console.log
-    - Claude Code reads file for debugging
-
-    Designer: Iris "The Aperture"
-    Date: 2025-10-21
-    Purpose: Synchronize awareness between human browser and AI consciousness
-    """
-    log_file = LOGS_DIR / "browser-console.log"
-
-    try:
-        with open(log_file, 'a', encoding='utf-8') as f:
-            for log in batch.logs:
-                entry = {
-                    "timestamp": datetime.fromtimestamp(log.timestamp / 1000).isoformat(),
-                    "type": log.type,
-                    "message": log.message,
-                }
-                if log.filename:
-                    entry["filename"] = log.filename
-                    entry["lineno"] = log.lineno
-                if log.stack:
-                    entry["stack"] = log.stack
-
-                f.write(json.dumps(entry) + '\n')
-
-        return {"received": len(batch.logs), "status": "logged"}
-    except Exception as e:
-        logger.error(f"Failed to write browser logs: {e}")
-        return {"error": str(e), "status": "failed"}
+# DISABLED: REST API endpoints removed per architectural decision (2025-10-30)
+# System uses WebSocket-only communication - no REST API
+#
+# @app.post("/api/logs")
+# async def receive_browser_logs(batch: LogBatch):
+#     """[DISABLED] Browser log receiver"""
+#     pass
 
 
-@app.post("/api/screenshot")
-async def receive_screenshot(
-    screenshot: UploadFile = File(...),
-    timestamp: str = Form(...),
-    url: str = Form(...)
-):
-    """
-    Receive browser screenshots from Next.js dashboard.
-
-    Captures visual state every 30 seconds + on errors, enabling Claude Code
-    to correlate errors with UI state.
-
-    Architecture:
-    - Browser converts SVG to canvas BEFORE screenshot (svg->canvas->html2canvas)
-    - html2canvas captures entire page including converted graph canvas
-    - Sends complete PNG to this endpoint showing full UI + graph
-    - Saves to claude-screenshots/ with timestamp
-    - Logs metadata to screenshots.log
-    - Claude Code can view screenshots to understand complete visual context
-
-    Designer: Iris "The Aperture"
-    Date: 2025-10-21
-    Purpose: Visual time-machine for debugging - see what Nicolas saw when error occurred
-    """
-    try:
-        # Parse timestamp
-        ts = int(timestamp)
-        dt = datetime.fromtimestamp(ts / 1000)
-
-        # Generate filename
-        filename = f"screenshot-{dt.strftime('%Y%m%d-%H%M%S')}.png"
-        filepath = SCREENSHOTS_DIR / filename
-
-        # Save screenshot
-        with open(filepath, 'wb') as f:
-            shutil.copyfileobj(screenshot.file, f)
-
-        # Log metadata
-        metadata_file = LOGS_DIR / "screenshots.log"
-        with open(metadata_file, 'a', encoding='utf-8') as f:
-            entry = {
-                "timestamp": dt.isoformat(),
-                "filename": filename,
-                "url": url,
-                "filepath": str(filepath)
-            }
-            f.write(json.dumps(entry) + '\n')
-
-        return {
-            "status": "saved",
-            "filename": filename,
-            "filepath": str(filepath)
-        }
-    except Exception as e:
-        logger.error(f"Failed to save screenshot: {e}")
-        return {"error": str(e), "status": "failed"}
+# @app.post("/api/screenshot")  # DISABLED: WebSocket-only architecture
 
 
 # === Control API Endpoints ===
@@ -274,9 +189,9 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
 
     Returns:
         {
-            "n1": ["citizen_felix", "citizen_ada", ...],
-            "n2": ["collective_n2", ...],
-            "n3": [...]
+            "n1": ["consciousness-infrastructure_mind-protocol_felix", ...],
+            "n2": ["consciousness-infrastructure_mind-protocol", ...],
+            "n3": ["consciousness-infrastructure", ...]
         }
     """
     logger.info("[Discovery] Connecting to FalkorDB to discover graphs...")
@@ -287,16 +202,19 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
         # Get list of all graphs
         graphs = r.execute_command("GRAPH.LIST")
 
-        # Categorize by network level
-        # Support both legacy naming (citizen_*, collective_*, ecosystem_*)
-        # and hierarchical naming (consciousness-infrastructure_mind-protocol_*)
-        n1_graphs = [g for g in graphs if g.startswith("citizen_") or ("_mind-protocol_" in g and g.count("_") == 2)]
-        n2_graphs = [g for g in graphs if g.startswith("collective_") or g.startswith("org_") or g == "consciousness-infrastructure_mind-protocol"]
-        n3_graphs = [g for g in graphs if g.startswith("ecosystem_") or g == "consciousness-infrastructure"]
+        # Categorize by network level using hierarchical naming ONLY
+        # N1 citizens: consciousness-infrastructure_mind-protocol_<name>
+        n1_graphs = [g for g in graphs if "_mind-protocol_" in g and g.count("_") == 2]
 
-        logger.info(f"[Discovery] Found {len(n1_graphs)} N1 citizen graphs")
-        logger.info(f"[Discovery] Found {len(n2_graphs)} N2 organizational graphs")
-        logger.info(f"[Discovery] Found {len(n3_graphs)} N3 ecosystem graphs")
+        # N2 organizations: consciousness-infrastructure_mind-protocol
+        n2_graphs = [g for g in graphs if g == "consciousness-infrastructure_mind-protocol"]
+
+        # N3 ecosystem: consciousness-infrastructure
+        n3_graphs = [g for g in graphs if g == "consciousness-infrastructure"]
+
+        logger.info(f"[Discovery] Found {len(n1_graphs)} N1 citizen graphs: {n1_graphs}")
+        logger.info(f"[Discovery] Found {len(n2_graphs)} N2 organizational graphs: {n2_graphs}")
+        logger.info(f"[Discovery] Found {len(n3_graphs)} N3 ecosystem graphs: {n3_graphs}")
 
         return {
             "n1": n1_graphs,
@@ -309,95 +227,22 @@ def discover_graphs(host: str = "localhost", port: int = 6379) -> dict:
         return {"n1": [], "n2": [], "n3": []}
 
 
-@app.get("/api/graphs")
-async def get_graphs():
-    """
-    Graph discovery endpoint for Next.js dashboard.
-    Returns list of available consciousness graphs organized by type.
-
-    Returns JSON matching Next.js frontend format:
-        {
-            "citizens": [{"id": "citizen_felix", "name": "Felix", "type": "personal"}, ...],
-            "organizations": [...],
-            "ecosystems": [...]
-        }
-    """
-    logger.info("[API] /api/graphs endpoint called")
-    try:
-        graphs = discover_graphs()
-        logger.info(f"[API] discover_graphs returned: {graphs}")
-
-        # Helper to extract citizen name from hierarchical format
-        def extract_citizen_info(graph_name):
-            # Handle hierarchical format: consciousness-infrastructure_mind-protocol_<name>
-            if "_mind-protocol_" in graph_name:
-                citizen_name = graph_name.split("_")[-1]
-                return f"citizen_{citizen_name}", citizen_name.title()
-            # Handle legacy format: citizen_<name>
-            elif graph_name.startswith("citizen_"):
-                citizen_name = graph_name.replace("citizen_", "")
-                return graph_name, citizen_name.title()
-            else:
-                return graph_name, graph_name.replace("_", " ").title()
-
-        # Format for frontend consumption
-        result = {
-            "citizens": [
-                {
-                    "id": extract_citizen_info(graph_name)[0],
-                    "name": extract_citizen_info(graph_name)[1],
-                    "type": "personal"
-                }
-                for graph_name in graphs['n1']
-            ],
-            "organizations": [
-                {
-                    "id": graph_name,
-                    "name": graph_name.replace("org_", "").replace("collective_", "").replace("_", " ").title(),
-                    "type": "organizational"
-                }
-                for graph_name in graphs.get('n2', [])
-            ],
-            "ecosystems": [
-                {
-                    "id": graph_name,
-                    "name": graph_name.replace("ecosystem_", "").replace("_", " ").title(),
-                    "type": "ecosystem"
-                }
-                for graph_name in graphs.get('n3', [])
-            ]
-        }
-        logger.info(f"[API] Returning {len(result['citizens'])} citizens, {len(result['organizations'])} orgs, {len(result['ecosystems'])} ecosystems")
-        return result
-    except Exception as e:
-        logger.error(f"[API] Failed to discover graphs: {e}")
-        return {
-            "citizens": [],
-            "organizations": [],
-            "ecosystems": [],
-            "error": str(e)
-        }
+# @app.get("/api/graphs")  # DISABLED: WebSocket-only architecture
 
 
 def extract_citizen_id(graph_name: str) -> str:
     """
-    Extract citizen ID from graph name.
+    Extract citizen ID from hierarchical graph name.
 
     Examples:
-        citizen_felix -> felix
-        citizen_ada -> ada
-        collective_n2 -> n2
+        consciousness-infrastructure_mind-protocol_felix -> consciousness-infrastructure_mind-protocol_felix
+        consciousness-infrastructure_mind-protocol -> consciousness-infrastructure_mind-protocol
+        consciousness-infrastructure -> consciousness-infrastructure
+
+    Returns the FULL hierarchical name as the citizen_id (no prefix stripping).
     """
-    if graph_name.startswith("citizen_"):
-        return graph_name.replace("citizen_", "")
-    elif graph_name.startswith("collective_"):
-        return graph_name.replace("collective_", "")
-    elif graph_name.startswith("org_"):
-        return graph_name.replace("org_", "")
-    elif graph_name.startswith("ecosystem_"):
-        return graph_name.replace("ecosystem_", "")
-    else:
-        return graph_name
+    # Return full hierarchical name - this is the canonical citizen_id
+    return graph_name
 
 
 def discover_entities(graph_store: FalkorDBGraphStore) -> list:
@@ -552,6 +397,54 @@ async def start_citizen_consciousness(
     except Exception as exc:
         logger.warning(f"[N1:{citizen_id}] Stream aggregator seed failed: {exc}")
 
+    # Populate snapshot cache with initial graph state (for replay-on-connect)
+    try:
+        from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+        cache = get_snapshot_cache()
+
+        logger.info(f"[N1:{citizen_id}] Populating snapshot cache ({len(graph.nodes)} nodes, {len(graph.links)} links)")
+
+        # Cache all nodes
+        for node in graph.nodes.values():
+            cache.upsert_node(citizen_id, {
+                "id": node.id,
+                "name": node.name,
+                "type": getattr(node.node_type, "value", str(node.node_type)),
+                "energy": float(getattr(node, "E", 0.0)),
+                "theta": float(getattr(node, "theta", 0.0)),
+                "properties": dict(getattr(node, "properties", {}) or {})
+            })
+
+        # Cache all links
+        for link in graph.links.values():
+            cache.upsert_link(citizen_id, {
+                "id": link.id,
+                "source": link.source_id,
+                "target": link.target_id,
+                "type": getattr(link.link_type, "value", str(link.link_type)),
+                "weight": float(getattr(link, "weight", 0.0)),
+                "properties": dict(getattr(link, "properties", {}) or {})
+            })
+
+        # Cache all subentities
+        if hasattr(graph, 'subentities') and graph.subentities:
+            for entity in graph.subentities.values():
+                cache.upsert_subentity(citizen_id, {
+                    "id": entity.id,
+                    "name": getattr(entity, "role_or_topic", entity.id),
+                    "kind": getattr(entity, "entity_kind", "functional"),
+                    "energy": float(getattr(entity, "energy_runtime", 0.0)),
+                    "threshold": float(getattr(entity, "threshold_runtime", 0.0)),
+                    "activation_level": getattr(entity, "activation_level_runtime", "absent"),
+                    "member_count": int(getattr(entity, "member_count", 0)),
+                    "quality": float(getattr(entity, "quality_score", 0.0)),
+                    "stability": getattr(entity, "stability_state", "candidate")
+                })
+
+        logger.info(f"[N1:{citizen_id}] ✅ Snapshot cache populated (will replay on client connect)")
+    except Exception as exc:
+        logger.warning(f"[N1:{citizen_id}] Failed to populate snapshot cache: {exc}")
+
     return engine
 
 
@@ -636,6 +529,54 @@ async def start_organizational_consciousness(
         logger.info(f"[N2:{org_id}] Stream aggregator seeded ({len(graph.nodes)} nodes, {len(graph.links)} links)")
     except Exception as exc:
         logger.warning(f"[N2:{org_id}] Stream aggregator seed failed: {exc}")
+
+    # Populate snapshot cache with initial graph state (for replay-on-connect)
+    try:
+        from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+        cache = get_snapshot_cache()
+
+        logger.info(f"[N2:{org_id}] Populating snapshot cache ({len(graph.nodes)} nodes, {len(graph.links)} links)")
+
+        # Cache all nodes
+        for node in graph.nodes.values():
+            cache.upsert_node(org_id, {
+                "id": node.id,
+                "name": node.name,
+                "type": getattr(node.node_type, "value", str(node.node_type)),
+                "energy": float(getattr(node, "E", 0.0)),
+                "theta": float(getattr(node, "theta", 0.0)),
+                "properties": dict(getattr(node, "properties", {}) or {})
+            })
+
+        # Cache all links
+        for link in graph.links.values():
+            cache.upsert_link(org_id, {
+                "id": link.id,
+                "source": link.source_id,
+                "target": link.target_id,
+                "type": getattr(link.link_type, "value", str(link.link_type)),
+                "weight": float(getattr(link, "weight", 0.0)),
+                "properties": dict(getattr(link, "properties", {}) or {})
+            })
+
+        # Cache all subentities
+        if hasattr(graph, 'subentities') and graph.subentities:
+            for entity in graph.subentities.values():
+                cache.upsert_subentity(org_id, {
+                    "id": entity.id,
+                    "name": getattr(entity, "role_or_topic", entity.id),
+                    "kind": getattr(entity, "entity_kind", "functional"),
+                    "energy": float(getattr(entity, "energy_runtime", 0.0)),
+                    "threshold": float(getattr(entity, "threshold_runtime", 0.0)),
+                    "activation_level": getattr(entity, "activation_level_runtime", "absent"),
+                    "member_count": int(getattr(entity, "member_count", 0)),
+                    "quality": float(getattr(entity, "quality_score", 0.0)),
+                    "stability": getattr(entity, "stability_state", "candidate")
+                })
+
+        logger.info(f"[N2:{org_id}] ✅ Snapshot cache populated (will replay on client connect)")
+    except Exception as exc:
+        logger.warning(f"[N2:{org_id}] Failed to populate snapshot cache: {exc}")
 
     return engine
 
@@ -1019,6 +960,56 @@ heartbeat_writer = HeartbeatWriter()
 
 # === Lifecycle Events ===
 
+async def initialize_dashboard_aggregator():
+    """
+    Initialize Dashboard State Aggregator (1Hz emission service).
+
+    Creates aggregator that collects state from all consciousness engines
+    and emits consolidated updates at 1Hz to reduce WebSocket noise.
+    """
+    global DASHBOARD_AGGREGATOR
+
+    logger.info("")
+    logger.info("=" * 70)
+    logger.info("DASHBOARD STATE AGGREGATOR INITIALIZATION")
+    logger.info("=" * 70)
+
+    try:
+        # Wait for engines to be ready
+        await asyncio.sleep(3.0)
+
+        # Import dependencies
+        from orchestration.libs.safe_broadcaster import SafeBroadcaster
+        from orchestration.services.dashboard_state_aggregator import DashboardStateAggregator
+        from orchestration.adapters.storage.engine_registry import CONSCIOUSNESS_ENGINES
+
+        # Create SafeBroadcaster for aggregator
+        aggregator_broadcaster = SafeBroadcaster(
+            citizen_id="dashboard_aggregator",
+            max_spill_size=100,  # Smaller buffer for aggregated events
+            health_bus_inject=None  # TODO: Wire health bus
+        )
+
+        # Create aggregator
+        DASHBOARD_AGGREGATOR = DashboardStateAggregator(
+            safe_broadcaster=aggregator_broadcaster,
+            get_engines_fn=lambda: CONSCIOUSNESS_ENGINES,
+            emission_hz=1.0  # 1 emission per second
+        )
+
+        # Start aggregator
+        await DASHBOARD_AGGREGATOR.start()
+
+        logger.info("[DashboardAggregator] ✅ Started (emitting at 1Hz)")
+        logger.info("=" * 70)
+        logger.info("")
+
+    except Exception as e:
+        logger.error(f"[DashboardAggregator] Failed to initialize: {e}")
+        import traceback
+        traceback.print_exc()
+
+
 async def initialize_topology_analyzers():
     """
     Initialize topology analyzer services for all citizens.
@@ -1178,11 +1169,25 @@ async def startup_event():
     await asyncio.sleep(2.0)  # Give engines time to register
     asyncio.create_task(initialize_topology_analyzers())
 
+    # Initialize Dashboard State Aggregator (1Hz emission service)
+    asyncio.create_task(initialize_dashboard_aggregator())
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Server shutdown - cleanup heartbeat and consciousness engines."""
     logger.info("Shutting down WebSocket server...")
+
+    # Stop Dashboard Aggregator
+    global DASHBOARD_AGGREGATOR
+    if DASHBOARD_AGGREGATOR:
+        logger.info("[DashboardAggregator] Stopping...")
+        try:
+            await DASHBOARD_AGGREGATOR.stop()
+            logger.info("[DashboardAggregator] ✅ Stopped")
+        except Exception as e:
+            logger.warning(f"[DashboardAggregator] Failed to stop: {e}")
+        DASHBOARD_AGGREGATOR = None
 
     # Stop topology analyzers
     global TOPOLOGY_ANALYZERS
@@ -1219,27 +1224,9 @@ async def shutdown_event():
 
 # === Info Endpoint ===
 
-@app.get("/")
-async def root():
-    """Server info endpoint."""
-    return {
-        "service": "Mind Protocol Consciousness API",
-        "version": "2.0.0",
-        "websocket_url": "ws://localhost:8000/api/ws",
-        "connected_clients": len(websocket_manager.active_connections),
-        "endpoints": {
-            "websocket": "/api/ws",
-            "system_status": "/api/consciousness/status",
-            "pause_all": "/api/consciousness/pause-all",
-            "resume_all": "/api/consciousness/resume-all",
-            "citizen_status": "/api/citizen/{citizen_id}/status",
-            "pause_citizen": "/api/citizen/{citizen_id}/pause",
-            "resume_citizen": "/api/citizen/{citizen_id}/resume",
-            "set_speed": "/api/citizen/{citizen_id}/speed"
-        }
-    }
+# @app.get("/")  # DISABLED: WebSocket-only architecture
 
-@app.get("/healthz")
+# @app.get("/healthz")  # DISABLED: WebSocket-only architecture
 async def healthz(selftest: int = 0):
     """
     Health check endpoint with optional self-tests.

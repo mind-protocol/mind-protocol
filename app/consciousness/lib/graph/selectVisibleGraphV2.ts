@@ -142,13 +142,20 @@ export function selectVisibleGraphV2(
     const cx = entity.x ?? 0;
     const cy = entity.y ?? 0;
 
-    // Find member nodes for this entity
-    // A node "belongs" to an entity if that entity has activated it recently
+    // Find member nodes for this SubEntity
+    // Check MEMBER_OF membership from SubEntity.members array (priority)
+    // or fall back to entity_activations (legacy)
+    const subEntityMembers = (entity as any).members || [];
     const memberNodes = nodes.filter(node => {
       const nodeId = node.id || node.node_id;
       if (!nodeId) return false;
 
-      // Check if this entity has activated this node (entity_activations field)
+      // Priority: Check MEMBER_OF membership from SubEntity.members
+      if (subEntityMembers.length > 0 && subEntityMembers.includes(nodeId)) {
+        return true;
+      }
+
+      // Fallback: Check entity_activations field (legacy)
       if (node.entity_activations && typeof node.entity_activations === 'object') {
         return entityId in node.entity_activations;
       }
@@ -162,13 +169,15 @@ export function selectVisibleGraphV2(
     memberNodes.forEach((node, idx) => {
       const nodeId = node.id || node.node_id!;
 
-      // Determine primary entity (entity that "owns" this node for canonical placement)
-      // For now, use first entity in entity_activations (TODO: should be highest activation)
-      const primaryEntityId = node.entity_activations
+      // Determine primary SubEntity (SubEntity that "owns" this node for canonical placement)
+      // Priority: use SubEntity.members, fallback to first entity in entity_activations
+      const primaryEntityId = subEntityMembers.includes(nodeId)
+        ? entityId
+        : node.entity_activations
         ? Object.keys(node.entity_activations)[0]
         : entityId;
 
-      // Canonical node only in primary entity
+      // Canonical node only in primary SubEntity
       if (primaryEntityId === entityId) {
         const offset = layoutLocal(entityId, nodeId, idx, memberCount);
 
@@ -183,8 +192,8 @@ export function selectVisibleGraphV2(
           label: node.text || (node as any).name,
         });
       } else {
-        // This is a multi-membership case: node's primary entity is elsewhere,
-        // but this entity also activates it → create proxy
+        // This is a multi-membership case: node's primary SubEntity is elsewhere,
+        // but this SubEntity also activates it → create proxy
         const offset = layoutLocal(entityId, `${nodeId}::proxy::${entityId}`, idx, memberCount);
 
         rNodes.push({
@@ -201,6 +210,54 @@ export function selectVisibleGraphV2(
       }
     });
   }
+
+  // 2.5) ORPHAN NODES (nodes not belonging to any SubEntity)
+  // Build set of all node IDs that are members of SubEntities
+  const memberNodeIds = new Set<string>();
+  for (const entity of entities) {
+    const subEntityMembers = (entity as any).members || [];
+    subEntityMembers.forEach((nodeId: string) => memberNodeIds.add(nodeId));
+
+    // Also check entity_activations for legacy membership
+    nodes.forEach(node => {
+      const nodeId = node.id || node.node_id;
+      if (!nodeId) return;
+      if (node.entity_activations && typeof node.entity_activations === 'object') {
+        if (entity.id in node.entity_activations) {
+          memberNodeIds.add(nodeId);
+        }
+      }
+    });
+  }
+
+  // Find orphan nodes (not in any SubEntity)
+  const orphanNodes = nodes.filter(node => {
+    const nodeId = node.id || node.node_id;
+    return nodeId && !memberNodeIds.has(nodeId);
+  }).slice(0, 100); // Limit to max 100 orphans to prevent performance issues
+
+  // Position orphan nodes in a simple grid layout (bottom-left area, spread out)
+  const orphanGridSize = Math.ceil(Math.sqrt(orphanNodes.length));
+  const orphanSpacing = 150; // pixels between orphan nodes (increased for clarity)
+  const orphanOffsetX = -400; // Start position X (negative for left side)
+  const orphanOffsetY = 400; // Start position Y (bottom area)
+
+  orphanNodes.forEach((node, idx) => {
+    const nodeId = node.id || node.node_id!;
+    const row = Math.floor(idx / orphanGridSize);
+    const col = idx % orphanGridSize;
+
+    rNodes.push({
+      id: nodeId,
+      x: orphanOffsetX + (col * orphanSpacing),
+      y: orphanOffsetY + (row * orphanSpacing),
+      r: nodeRadius(node),
+      energy: node.energy || 0,
+      kind: 'node',
+      entityId: undefined, // No entity owner
+      label: node.text || (node as any).name,
+    });
+  });
 
   // 3) EDGES
   // 3.a Node-level edges: drawn only if BOTH endpoints' entities are expanded
@@ -245,11 +302,43 @@ export function selectVisibleGraphV2(
     }
   }
 
-  // 3.b Entity-level edges: aggregated flows between entities
+  // 3.a.2) Edges involving orphan nodes (at least one endpoint is an orphan)
+  for (const link of links) {
+    const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+    const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+
+    const sourceNode = nodeMap.get(sourceId);
+    const targetNode = nodeMap.get(targetId);
+
+    if (!sourceNode || !targetNode) continue;
+
+    // Check if either endpoint is an orphan
+    const sourceIsOrphan = !memberNodeIds.has(sourceId);
+    const targetIsOrphan = !memberNodeIds.has(targetId);
+
+    if (sourceIsOrphan || targetIsOrphan) {
+      // At least one endpoint is an orphan - draw the edge
+      const linkId = link.id || `${sourceId}-${targetId}`;
+      const flow = linkFlows.get(linkId) || 0;
+
+      // Show orphan edges even with flow = 0 (structural connections)
+      if (flow >= 0) {
+        rEdges.push({
+          id: linkId,
+          from: sourceId,
+          to: targetId,
+          w: Math.max(0.1, flow), // Minimum weight for visibility
+          kind: 'inter', // Always crosses boundaries (orphans have no entity)
+        });
+      }
+    }
+  }
+
+  // 3.b SubEntity-level edges: aggregated flows between SubEntities
   // Draw only if NOT both expanded (prefer node edges when both expanded)
   const entityToEntity = new Map<string, number>();
 
-  // Aggregate link flows by entity pairs
+  // Aggregate link flows by SubEntity pairs
   for (const link of links) {
     const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
     const targetId = typeof link.target === 'string' ? link.target : link.target.id;

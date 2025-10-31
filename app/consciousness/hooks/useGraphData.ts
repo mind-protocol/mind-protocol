@@ -63,6 +63,7 @@ export interface Subentity {
   threshold?: number;
   activation_level?: string;
   member_count?: number;
+  members?: string[]; // Array of node IDs that are MEMBER_OF this SubEntity
   quality?: number;
   stability?: string;
   properties?: Record<string, any>;

@@ -468,7 +468,20 @@ export function useWebSocket(): WebSocketStreams {
 
     // Process all updates in single pass
     updates.forEach((data) => {
-      const eventType = (data as any).type;
+      const rawType =
+        (data as any)?.type ??
+        (data as any)?.topic ??
+        (data as any)?.kind;
+
+      if (rawType && !(data as any)?.type) {
+        (data as any).type = rawType;
+      }
+
+      const eventType = rawType as string | undefined;
+      if (!eventType) {
+        console.warn('[WebSocket] Dropping event without type/topic:', data);
+        return;
+      }
 
       switch (eventType) {
         // V1 events (legacy)
@@ -498,7 +511,7 @@ export function useWebSocket(): WebSocketStreams {
         case 'graph.delta.subentity.delete': {
           const event = data as GraphDeltaEvent & { payload?: any };
           const payload = event?.payload ?? {};
-          const normalizedEvent = { ...payload, ...event };
+          const normalizedEvent = { ...payload, ...event, type: eventType };
 
           graphDeltaQueueRef.current.push(event);
           if (graphDeltaQueueRef.current.length > MAX_GRAPH_DELTA_EVENTS) {
@@ -1037,6 +1050,7 @@ export function useWebSocket(): WebSocketStreams {
         case 'rich_club.hub_at_risk':
         case 'integration_metrics.node':
         case 'integration_metrics.population':
+        case 'subentity.activation':
           // These events feed membrane-first graph streams handled elsewhere; ignore to avoid duplicate state.
           break;
 
@@ -1157,6 +1171,19 @@ export function useWebSocket(): WebSocketStreams {
         case 'tick.update':
           break;
 
+        // Raw link events - pass through to useGraphStream (backward compatibility)
+        case 'MEMBER_OF':
+        case 'ACTIVATES':
+        case 'INHIBITS':
+          // These are handled by useGraphStream.ts, not useWebSocket.ts
+          // No processing needed here, just acknowledge receipt
+          break;
+
+        // Snapshot chunks - pass through to useGraphStream (control messages)
+        case 'snapshot.chunk@1.0':
+          // Handled by useGraphStream.ts for initial graph state loading
+          break;
+
         default:
           // 🎯 Catch unknown events to prevent silent drops
           console.warn('[WebSocket] Unknown event type:', eventType, data);
@@ -1228,6 +1255,16 @@ export function useWebSocket(): WebSocketStreams {
 
       // 🎯 PART B: Normalize events (handle backend evolution)
       const data = normalizeEvent(rawData);
+      if (data && typeof data === 'object') {
+        const typedData = data as Record<string, any>;
+        typedData.type =
+          typedData.type ??
+          typedData.topic ??
+          typedData.kind ??
+          typedData.event_type ??
+          typedData.eventType ??
+          typedData.event;
+      }
 
       // Buffer event for batch processing
       // flushPendingUpdates will process at 10Hz
@@ -1239,6 +1276,27 @@ export function useWebSocket(): WebSocketStreams {
       // Don't set error state - this is not a critical failure
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const debugDispatch = (evt: any) => {
+      try {
+        handleMessage({ data: JSON.stringify(evt) } as MessageEvent);
+      } catch (err) {
+        console.error('[WebSocket] Failed to dispatch debug event:', err);
+      }
+    };
+
+    (window as any).__debugDispatch = debugDispatch;
+    return () => {
+      if ((window as any).__debugDispatch === debugDispatch) {
+        delete (window as any).__debugDispatch;
+      }
+    };
+  }, [handleMessage]);
 
   /**
    * Connect to WebSocket (singleton pattern)
@@ -1377,11 +1435,12 @@ export function useWebSocket(): WebSocketStreams {
     isIntentionalCloseRef.current = false;
     connect();
 
-    // Don't disconnect on unmount - keep singleton alive across route changes
+    // 🔴 CONNECTION LEAK FIX: Close WebSocket on unmount to prevent hot-reload leaks
+    // Singleton pattern kept connections alive during hot-reload, causing 47+ connections
     return () => {
-      // Socket stays open
+      disconnect();
     };
-  }, [connect]);
+  }, [connect, disconnect]);
 
   /**
    * 🎯 PHASE 4: Start 10Hz flush interval

@@ -1,29 +1,38 @@
 """
 Consciousness Control API
 
-REST endpoints for controlling consciousness engines via dashboard.
-Implements "ICE" solution - freeze/slow/resume via tick_multiplier.
+⚠️  ALL REST ENDPOINTS DISABLED (2025-10-30)
+
+Architectural Decision: WebSocket-Only Communication
+    - All data flow via WebSocket events
+    - No REST API endpoints
+    - Frontend subscribes to event streams
+
+Active Endpoints:
+    WS   /api/ws    - Live consciousness event stream (ONLY endpoint)
+
+Disabled Endpoints (Reference Only):
+    - All /api/consciousness/* endpoints (disabled)
+    - All /api/citizen/* endpoints (disabled)
+    - All /api/ecosystem/* endpoints (disabled)
+    - All /api/graph/* endpoints (disabled)
+    - All /api/telemetry/* endpoints (disabled)
+    - All /api/search/* endpoints (disabled)
 
 Integration:
     from orchestration.adapters.api.control_api import router, websocket_manager
-    app.include_router(router)  # Add to FastAPI app
-
-Endpoints:
-    GET  /api/consciousness/status                 - All engines status
-    POST /api/consciousness/pause-all              - Emergency freeze all
-    POST /api/consciousness/resume-all             - Resume all
-    POST /api/citizen/{citizen_id}/pause           - Freeze one citizen
-    POST /api/citizen/{citizen_id}/resume          - Resume one citizen
-    POST /api/citizen/{citizen_id}/speed           - Set speed (slow/turbo)
-    GET  /api/citizen/{citizen_id}/status          - Get citizen status
-    WS   /ws                                       - Live operations stream
+    app.include_router(router)  # Includes WebSocket endpoint only
 """
 
+import asyncio
+import hashlib
 import json
 import logging
 from datetime import datetime, timezone
 from dataclasses import asdict, is_dataclass
-from typing import Optional, List, Dict, Any, Literal
+from fnmatch import fnmatch
+from typing import Optional, List, Dict, Any, Literal, Set
+from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
@@ -35,7 +44,8 @@ from orchestration.adapters.storage.engine_registry import (
     pause_all,
     resume_all,
     get_system_status,
-    get_engine
+    get_engine,
+    get_all_engines
 )
 from orchestration.mechanisms.affective_telemetry_buffer import get_affective_buffer
 from orchestration.libs.utils.falkordb_adapter import get_falkordb_graph
@@ -87,6 +97,27 @@ TELEMETRY_EVENT_TYPES = {
 
 # === WebSocket Manager (Singleton) ===
 
+DEFAULT_TOPICS: Set[str] = {
+    "graph.delta.node.*",
+    "graph.delta.link.*",
+    "graph.delta.subentity.*",
+    "wm.emit",
+    "percept.frame",
+    "emergence.*",
+    "mode.*",
+    "state_modulation.frame",
+    "rich_club.*",
+    "integration_metrics.*",
+}
+
+SUBSCRIBE_MESSAGE_TYPES = {"subscribe", "subscribe@1.0"}
+SUBSCRIBE_ACK_TYPE = "subscribe.ack@1.0"
+INITIAL_SUBSCRIBE_TIMEOUT_SECONDS = 1.0
+HEARTBEAT_INTERVAL_SECONDS = 20
+MAX_WEBSOCKET_CONNECTIONS = 50  # Prevent connection leak overload
+HEARTBEAT_TIMEOUT_SECONDS = 60
+
+
 class WebSocketManager:
     """
     Manages WebSocket connections for live consciousness operations stream.
@@ -96,50 +127,106 @@ class WebSocketManager:
     """
 
     def __init__(self):
-        """Initialize WebSocket manager with empty connections list."""
-        self.active_connections: List[WebSocket] = []
+        """Initialize WebSocket manager with empty connection registry."""
+        self._connections: Dict[str, Dict[str, Any]] = {}
+        self._ws_to_conn: Dict[WebSocket, str] = {}
+        self._heartbeat_task: Optional[asyncio.Task] = None
         logger.info("[WebSocketManager] Initialized")
 
-    async def connect(self, websocket: WebSocket):
-        """
-        Accept new WebSocket connection with Origin validation.
+    def start_heartbeat_check(self):
+        if self._heartbeat_task is None:
+            self._heartbeat_task = asyncio.create_task(self._periodic_check())
 
-        Args:
-            websocket: WebSocket connection to add
+    async def _periodic_check(self):
+        while True:
+            await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
+            now = datetime.now(timezone.utc)
+            stale_connections = []
+            for conn_id, meta in list(self._connections.items()):
+                if (now - meta["last_heartbeat"]).total_seconds() > HEARTBEAT_TIMEOUT_SECONDS:
+                    stale_connections.append(conn_id)
+                elif (now - meta["last_heartbeat"]).total_seconds() > HEARTBEAT_INTERVAL_SECONDS:
+                    try:
+                        await meta["ws"].send_json({"type": "ping", "ts": now.isoformat()})
+                    except Exception:
+                        stale_connections.append(conn_id)
+            
+            for conn_id in stale_connections:
+                logger.warning(f"[WebSocketManager] Closing stale connection {conn_id}")
+                await self.unregister_connection(conn_id=conn_id)
 
-        Security:
-            Validates Origin header to prevent unauthorized cross-origin WebSocket connections.
-            Browsers send Origin during upgrade handshake - must be validated before accept().
-        """
-        # Validate Origin header (browsers send this, Python clients may not)
-        origin = websocket.headers.get("origin")
-        allowed_origins = [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:3002"
-        ]
 
-        # If Origin present, must be in allowed list
-        if origin is not None and origin not in allowed_origins:
-            logger.warning(f"[WebSocketManager] Rejected connection from unauthorized origin: {origin}")
-            await websocket.close(code=1008)  # Policy violation
+    @property
+    def active_connections(self) -> List[WebSocket]:
+        return [meta["ws"] for meta in self._connections.values()]
+
+    def iter(self) -> List[tuple[str, Dict[str, Any]]]:
+        return list(self._connections.items())
+
+    async def register_connection(
+        self,
+        conn_id: str,
+        websocket: WebSocket,
+        topics: Set[str],
+        cursor: Optional[str] = None,
+    ):
+        self._connections[conn_id] = {
+            "ws": websocket,
+            "topics": set(topics),
+            "cursor": cursor,
+            "last_heartbeat": datetime.now(timezone.utc),
+        }
+        self._ws_to_conn[websocket] = conn_id
+        logger.info(
+            "[WebSocketManager] Client registered conn=%s topics=%d total=%d",
+            conn_id,
+            len(topics),
+            len(self._connections),
+        )
+
+    async def unregister_connection(
+        self,
+        conn_id: Optional[str] = None,
+        websocket: Optional[WebSocket] = None,
+    ):
+        if conn_id is None and websocket is not None:
+            conn_id = self._ws_to_conn.get(websocket)
+
+        if not conn_id:
             return
 
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        origin_str = f"from {origin}" if origin else "(no origin header)"
-        logger.info(f"[WebSocketManager] Client connected {origin_str} (total: {len(self.active_connections)})")
+        meta = self._connections.pop(conn_id, None)
+        if meta:
+            self._ws_to_conn.pop(meta["ws"], None)
+            try:
+                await meta["ws"].close()
+            except Exception:
+                pass
+            logger.info(
+                "[WebSocketManager] Client disconnected conn=%s total=%d",
+                conn_id,
+                len(self._connections),
+            )
 
-    async def disconnect(self, websocket: WebSocket):
-        """
-        Remove WebSocket connection.
+    def update_topics(self, websocket: WebSocket, topics: Set[str]) -> None:
+        conn_id = self._ws_to_conn.get(websocket)
+        if not conn_id:
+            return
+        self._connections[conn_id]["topics"] = set(topics)
+        logger.debug(
+            "[WebSocketManager] Updated topics conn=%s topics=%s",
+            conn_id,
+            topics,
+        )
 
-        Args:
-            websocket: WebSocket connection to remove
-        """
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-            logger.info(f"[WebSocketManager] Client disconnected (total: {len(self.active_connections)})")
+    def touch(self, websocket: WebSocket) -> None:
+        conn_id = self._ws_to_conn.get(websocket)
+        if not conn_id:
+            return
+        self._connections[conn_id]["last_heartbeat"] = datetime.now(timezone.utc)
+
+    def get_connection_id(self, websocket: WebSocket) -> Optional[str]:
+        return self._ws_to_conn.get(websocket)
 
     async def broadcast(self, event: Dict[str, Any]):
         """
@@ -147,52 +234,230 @@ class WebSocketManager:
 
         Args:
             event: Event dict with 'type' and event-specific data
-
-        Event types:
-            - entity_activity: SubEntity exploration updates
-            - threshold_crossing: Node activation changes
-            - consciousness_state: Global system state updates
-            - node_activation: Individual node activity changes
-            - link_traversal: Link traversal events
         """
-        # CRITICAL FIX: Buffer for telemetry FIRST, before checking connections
-        # This ensures telemetry works even when no dashboard watching
-        event_type = event.get("type", "")
+        event_type = event.get("type")
+        if not event_type:
+            logger.warning("[WebSocketManager] Broadcast skipping malformed event with no type: %s", event)
+            return
+
+        # Buffer for affective telemetry before any network IO
         if event_type in TELEMETRY_EVENT_TYPES:
             try:
-                from orchestration.mechanisms.affective_telemetry_buffer import get_affective_buffer
                 buffer = get_affective_buffer()
                 buffer.add_event(event_type, event)
-                logger.debug(f"[WebSocketManager] Buffered {event_type} for telemetry")
-            except Exception as e:
-                logger.error(f"[WebSocketManager] Failed to buffer telemetry: {e}")
+                logger.debug("[WebSocketManager] Buffered %s for telemetry", event_type)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.error("[WebSocketManager] Failed to buffer telemetry: %s", exc)
 
-        # THEN check WebSocket connections
-        if not self.active_connections:
-            logger.debug(f"[WebSocketManager] Broadcast attempted but no clients connected (event: {event_type}) - buffered anyway")
-            return  # No clients connected, skip WebSocket broadcast
+        if not self._connections:
+            logger.debug(
+                "[WebSocketManager] Broadcast attempted but no clients connected (event=%s)",
+                event_type,
+            )
+            return
 
-        logger.debug(f"[WebSocketManager] Broadcasting {event_type} to {len(self.active_connections)} clients")
+        envelope = dict(event)
+        envelope.setdefault("ts", datetime.now(timezone.utc).isoformat())
+        if "spec" not in envelope:
+            envelope["spec"] = {"name": "consciousness.v2", "rev": "2.0.0"}
+        if "provenance" not in envelope:
+            logger.warning("[WebSocketManager] Broadcast missing provenance; dropping event type=%s", event_type)
+            return
+        envelope.setdefault("payload", {})
+        envelope.setdefault("id", stable_event_id(event_type, envelope))
 
-        # Add timestamp if not present
-        if "timestamp" not in event:
-            event["timestamp"] = datetime.now(timezone.utc).isoformat()
+        safe_envelope = _ensure_json_serializable(envelope)
+        preview = json.dumps(safe_envelope, ensure_ascii=False)[:160]
 
-        safe_event = _ensure_json_serializable(event)
-        message = json.dumps(safe_event)
+        disconnected: List[str] = []
+        delivered = 0
 
-        # Broadcast to all connections (handle disconnects gracefully)
-        disconnected = []
-        for connection in self.active_connections:
+        for conn_id, meta in list(self._connections.items()):
+            topics: Set[str] = meta.get("topics", set())
+            websocket = meta.get("ws")
+            if websocket is None:
+                disconnected.append(conn_id)
+                continue
+
+            if not _match_topic(event_type, topics):
+                continue
+
             try:
-                await connection.send_text(message)
-            except Exception as e:
-                logger.exception(f"[WebSocketManager] Failed to send to client ({type(e).__name__}): {e}")
-                disconnected.append(connection)
+                await websocket.send_json(safe_envelope)
+                delivered += 1
+            except Exception as exc:
+                logger.warning("[WebSocketManager] Send failed conn=%s: %s", conn_id, exc)
+                disconnected.append(conn_id)
 
-        # Remove failed connections
-        for connection in disconnected:
-            await self.disconnect(connection)
+        for conn_id in disconnected:
+            await self.unregister_connection(conn_id=conn_id)
+
+        logger.info(
+            "[Bus] send %s to %d clients: %s…",
+            event_type,
+            delivered,
+            preview,
+        )
+
+
+def _match_topic(topic: str, patterns: Set[str]) -> bool:
+    if not patterns:
+        return True
+    return any(fnmatch(topic, pattern) for pattern in patterns)
+
+
+def stable_event_id(event_type: str, event: Dict[str, Any]) -> str:
+    """
+    Generate deterministic-ish IDs for events that arrive without an explicit id.
+    Uses payload + provenance to reduce duplication risk.
+    """
+    try:
+        to_hash = json.dumps(
+            {
+                "type": event_type,
+                "provenance": event.get("provenance"),
+                "payload": event.get("payload"),
+            },
+            sort_keys=True,
+            default=str,
+        )
+    except Exception:
+        to_hash = f"{event_type}:{datetime.now(timezone.utc).timestamp()}"
+
+    digest = hashlib.sha256(to_hash.encode("utf-8")).hexdigest()
+    return f"evt_{digest[:16]}"
+
+
+def current_citizen_id() -> str:
+    """Best-effort citizen id used for provenance during handshake."""
+    try:
+        from orchestration.adapters.storage.engine_registry import get_all_engines  # pylint: disable=import-outside-toplevel
+
+        engines = get_all_engines()  # Returns Dict[str, ConsciousnessEngineV2]
+        if engines:
+            # Return first registered citizen_id (dict keys are citizen_ids)
+            return next(iter(engines.keys()))
+    except Exception:
+        pass
+    return "websocket-server"  # System-level fallback (not citizen-specific)
+
+
+def get_last_frame_id() -> Optional[str]:
+    """Optional cursor the client can request for snapshot hydration."""
+    try:
+        aggregator = get_stream_aggregator()
+        # Aggregator may expose citizen-level cursors; use first citizen if available.
+        citizen_id = current_citizen_id()
+        if citizen_id == "unknown":
+            return None
+        state = aggregator._states.get(citizen_id)  # type: ignore[attr-defined]  # pragma: no cover - diagnostic path
+        if state is not None:
+            return str(getattr(state, "cursor", None))
+    except Exception:
+        pass
+    return None
+
+
+def iter_snapshot_chunks(
+    cursor: Optional[str] = None,
+    *,
+    citizen_id: Optional[str] = None,
+    page_size: int = 512
+):
+    """
+    Yield snapshot chunk dictionaries for WebSocket hydration.
+
+    UPDATED 2025-10-31: Source from SnapshotCache (replay-on-connect pattern).
+    This decouples engine initialization timing from client connection timing.
+
+    Problem Solved:
+    - Engines initialize at 01:42, frontend connects at 01:47
+    - Without cache: Frontend receives 0 nodes (broadcasts already sent to nobody)
+    - With cache: Frontend receives full snapshot regardless of timing
+    """
+    from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+
+    cache = get_snapshot_cache()
+    citizen = citizen_id or current_citizen_id()
+
+    if citizen == "unknown" or citizen == "websocket-server":
+        # No specific citizen: try all cached citizens
+        all_citizens = cache.get_all_citizen_ids()
+        if not all_citizens:
+            # No data in cache yet (engines still initializing?)
+            yield {
+                "idx": 0,
+                "nodes": [],
+                "links": [],
+                "subentities": [],
+                "cursor": cursor,
+                "eof": True
+            }
+            return
+        # Use first available citizen
+        citizen = all_citizens[0]
+        logger.info(f"[iter_snapshot_chunks] Auto-selected citizen: {citizen}")
+
+    # Get snapshot from cache
+    try:
+        snapshot = cache.build_snapshot(citizen)
+        nodes = snapshot.get("nodes", [])
+        links = snapshot.get("links", [])
+        subentities = snapshot.get("subentities", [])
+
+        logger.info(
+            f"[iter_snapshot_chunks] Loaded from cache: {citizen} "
+            f"({len(nodes)} nodes, {len(links)} links, {len(subentities)} subentities)"
+        )
+
+    except Exception as exc:
+        logger.error(f"[iter_snapshot_chunks] Error loading from cache for {citizen}: {exc}")
+        yield {
+            "idx": 0,
+            "nodes": [],
+            "links": [],
+            "subentities": [],
+            "cursor": cursor,
+            "eof": True
+        }
+        return
+
+    cursor_value = cursor or ""
+
+    total_nodes = len(nodes)
+    if total_nodes == 0:
+        yield {
+            "idx": 0,
+            "nodes": _ensure_json_serializable(nodes),
+            "links": _ensure_json_serializable(links),
+            "subentities": _ensure_json_serializable(subentities),
+            "cursor": cursor_value,
+            "eof": True
+        }
+        return
+
+    for idx, start in enumerate(range(0, total_nodes, page_size)):
+        chunk_nodes = nodes[start:start + page_size]
+        node_ids = {node.get("id") for node in chunk_nodes if node.get("id")}
+
+        chunk_links = [
+            link for link in links
+            if link.get("source") in node_ids or link.get("target") in node_ids
+        ] if node_ids else links
+
+        eof = (start + page_size) >= total_nodes
+
+        yield {
+            "idx": idx,
+            "nodes": _ensure_json_serializable(chunk_nodes),
+            "links": _ensure_json_serializable(chunk_links),
+            "subentities": _ensure_json_serializable(subentities),
+            "cursor": cursor_value,
+            "eof": eof
+        }
+
+        if eof:
+            break
 
 
 def _ensure_json_serializable(value: Any) -> Any:
@@ -255,8 +520,18 @@ def _get_wallet_service() -> Optional[WalletCustodyService]:
 # Create router
 router = APIRouter(prefix="/api", tags=["consciousness-control"])
 
+# ============================================================================
+# ALL REST ENDPOINTS DISABLED - WebSocket-Only Architecture (2025-10-30)
+# ============================================================================
+# The following endpoints are disabled per architectural decision.
+# System uses WebSocket-only communication - no REST API.
+# Decorators are commented out to prevent route registration.
+# Function code preserved for reference only.
+# ============================================================================
 
-@router.get("/ping")
+# === DISABLED REST ENDPOINTS (Reference Only) ===
+
+# @router.get("/ping")  # DISABLED: REST API removed
 async def ping():
     """Health check endpoint to verify Control API router is mounted."""
     return {"ok": True}
@@ -270,7 +545,7 @@ class SpeedRequest(BaseModel):
 # === System-Wide Endpoints ===
 
 
-@router.get("/consciousness/status")
+# @router.get("/consciousness/status")  # DISABLED: REST API removed
 async def get_system_status_endpoint():
     """
     Get status of all consciousness engines.
@@ -290,7 +565,7 @@ async def get_system_status_endpoint():
     return get_system_status()
 
 
-@router.get("/consciousness/constant-debt")
+# @router.get("/consciousness/constant-debt")  # DISABLED: REST API removed
 async def get_constant_debt():
     """
     Get constant debt metrics (Tier 1 Amendment 4).
@@ -392,7 +667,7 @@ async def get_constant_debt():
         raise HTTPException(status_code=500, detail=f"Failed to fetch constant debt: {str(e)}")
 
 
-@router.post("/consciousness/pause-all")
+# @router.post("/consciousness/pause-all")  # DISABLED: REST API removed
 async def pause_all_endpoint():
     """
     EMERGENCY FREEZE ALL - Pause all consciousness engines.
@@ -410,7 +685,7 @@ async def pause_all_endpoint():
     return pause_all()
 
 
-@router.post("/consciousness/resume-all")
+# @router.post("/consciousness/resume-all")  # DISABLED: REST API removed
 async def resume_all_endpoint():
     """
     Resume all consciousness engines.
@@ -427,7 +702,7 @@ async def resume_all_endpoint():
     return resume_all()
 
 
-@router.get("/graphs")
+# @router.get("/graphs")  # DISABLED: REST API removed
 async def get_available_graphs():
     """
     List all consciousness graphs in FalkorDB.
@@ -492,7 +767,7 @@ async def get_available_graphs():
         raise HTTPException(status_code=500, detail=f"Failed to query FalkorDB: {str(e)}")
 
 
-@router.get("/search/semantic")
+# @router.get("/search/semantic")  # DISABLED: REST API removed
 async def semantic_search(
     query: str,
     graph_id: str,
@@ -696,7 +971,7 @@ def _resolve_actual_graph_id(r, graph_type: str, requested_id: str) -> str:
     raise HTTPException(status_code=404, detail=f"Graph not found: {requested_id}")
 
 
-@router.get("/ecosystems")
+# @router.get("/ecosystems")  # DISABLED: REST API removed
 async def list_ecosystems():
     import redis
 
@@ -736,7 +1011,7 @@ async def list_ecosystems():
         raise HTTPException(status_code=500, detail=f"Failed to enumerate ecosystems: {str(e)}")
 
 
-@router.get("/ecosystem/{ecosystem_slug}/graphs")
+# @router.get("/ecosystem/{ecosystem_slug}/graphs")  # DISABLED: REST API removed
 async def get_ecosystem_graphs(ecosystem_slug: str):
     import redis
 
@@ -773,7 +1048,7 @@ async def get_ecosystem_graphs(ecosystem_slug: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch ecosystem graphs: {str(e)}")
 
 
-@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/graphs")
+# @router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/graphs")  # DISABLED: REST API removed
 async def get_organization_graphs(ecosystem_slug: str, organization_slug: str):
     import redis
 
@@ -820,28 +1095,28 @@ async def get_organization_graphs(ecosystem_slug: str, organization_slug: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch organization graphs: {str(e)}")
 
 
-@router.get("/ecosystem/{ecosystem_slug}")
+# @router.get("/ecosystem/{ecosystem_slug}")  # DISABLED: REST API removed
 async def get_ecosystem_graph_hierarchy(ecosystem_slug: str):
     """Hierarchical Niveau route for ecosystem-level graph snapshots."""
     graph_id = _build_graph_name(ecosystem_slug)
     return await get_graph_data(graph_type='ecosystem', graph_id=graph_id)
 
 
-@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}")
+# @router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}")  # DISABLED: REST API removed
 async def get_organization_graph_hierarchy(ecosystem_slug: str, organization_slug: str):
     """Hierarchical Niveau route for organization graphs nested under an ecosystem."""
     graph_id = _build_graph_name(ecosystem_slug, organization_slug)
     return await get_graph_data(graph_type='organization', graph_id=graph_id)
 
 
-@router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/citizen/{citizen_slug}")
+# @router.get("/ecosystem/{ecosystem_slug}/organization/{organization_slug}/citizen/{citizen_slug}")  # DISABLED: REST API removed
 async def get_citizen_graph_hierarchy(ecosystem_slug: str, organization_slug: str, citizen_slug: str):
     """Hierarchical Niveau route for citizen graphs nested under org + ecosystem."""
     graph_id = _build_graph_name(ecosystem_slug, organization_slug, citizen_slug)
     return await get_graph_data(graph_type='citizen', graph_id=graph_id)
 
 
-@router.get("/graph/{graph_type}/{graph_id}")
+# @router.get("/graph/{graph_type}/{graph_id}")  # DISABLED: REST API removed
 async def get_graph_data(graph_type: str, graph_id: str):
     """
     Fetch initial graph snapshot from FalkorDB for dashboard visualization.
@@ -1113,7 +1388,7 @@ async def get_graph_data(graph_type: str, graph_id: str):
 # TODO (Iris): Implement snapshot by querying FalkorDB from running engine
 
 
-@router.get("/viz/snapshot")
+# @router.get("/viz/snapshot")  # DISABLED: REST API removed
 async def get_viz_snapshot(graph_id: str):
     """
     Get consciousness graph snapshot from running engine.
@@ -1250,7 +1525,7 @@ async def get_viz_snapshot(graph_id: str):
 # === Per-Citizen Endpoints ===
 
 
-@router.get("/citizen/{citizen_id}/status")
+# @router.get("/citizen/{citizen_id}/status")  # DISABLED: REST API removed
 async def get_citizen_status(citizen_id: str):
     """
     Get status of specific citizen's consciousness engine.
@@ -1279,7 +1554,7 @@ async def get_citizen_status(citizen_id: str):
     return engine.get_status()
 
 
-@router.post("/citizen/{citizen_id}/pause")
+# @router.post("/citizen/{citizen_id}/pause")  # DISABLED: REST API removed
 async def pause_citizen_endpoint(citizen_id: str):
     """
     Freeze specific citizen's consciousness.
@@ -1305,7 +1580,7 @@ async def pause_citizen_endpoint(citizen_id: str):
     return result
 
 
-@router.post("/citizen/{citizen_id}/resume")
+# @router.post("/citizen/{citizen_id}/resume")  # DISABLED: REST API removed
 async def resume_citizen_endpoint(citizen_id: str):
     """
     Resume specific citizen's consciousness.
@@ -1330,7 +1605,7 @@ async def resume_citizen_endpoint(citizen_id: str):
     return result
 
 
-@router.post("/citizen/{citizen_id}/speed")
+# @router.post("/citizen/{citizen_id}/speed")  # DISABLED: REST API removed
 async def set_citizen_speed_endpoint(citizen_id: str, request: SpeedRequest):
     """
     Set consciousness speed for debugging/observation.
@@ -1363,7 +1638,7 @@ async def set_citizen_speed_endpoint(citizen_id: str, request: SpeedRequest):
     return result
 
 
-@router.post("/citizen/{citizen_id}/persist")
+# @router.post("/citizen/{citizen_id}/persist")  # DISABLED: REST API removed
 async def persist_citizen_endpoint(citizen_id: str):
     """
     Force persist citizen's consciousness state to FalkorDB (Pass A testing).
@@ -1418,7 +1693,7 @@ async def persist_citizen_endpoint(citizen_id: str):
 # === Telemetry Endpoints ===
 
 
-@router.get("/telemetry/counters")
+# @router.get("/telemetry/counters")  # DISABLED: REST API removed
 async def get_telemetry_counters():
     """
     Get event telemetry counters for dashboard integration verification.
@@ -1495,7 +1770,7 @@ async def get_telemetry_counters():
 # === SubEntity Membership Endpoints ===
 
 
-@router.get("/subentity/{subentity_id}/members")
+# @router.get("/subentity/{subentity_id}/members")  # DISABLED: REST API removed
 async def get_subentity_members(
     subentity_id: str,
     limit: int = Query(100, ge=1, le=1000),
@@ -1608,7 +1883,7 @@ class CreateConversationRequest(BaseModel):
     session_id: Optional[str] = None
 
 
-@router.post("/conversation/create")
+# @router.post("/conversation/create")  # DISABLED: REST API removed
 async def create_conversation(request: CreateConversationRequest):
     """
     Create a Conversation node in the graph from dashboard chat.
@@ -1706,7 +1981,7 @@ async def create_conversation(request: CreateConversationRequest):
 # === Affective Telemetry Endpoints (PR-A, PR-B) ===
 
 
-@router.get("/affective-telemetry/metrics")
+# @router.get("/affective-telemetry/metrics")  # DISABLED: REST API removed
 async def get_affective_telemetry_metrics():
     """
     Get affective telemetry metrics for PR-A dashboard.
@@ -1740,7 +2015,7 @@ async def get_affective_telemetry_metrics():
     }
 
 
-@router.get("/affective-telemetry/validate-schemas")
+# @router.get("/affective-telemetry/validate-schemas")  # DISABLED: REST API removed
 async def validate_affective_schemas():
     """
     Validate affective event schemas (PR-A dashboard feature).
@@ -1766,7 +2041,7 @@ async def validate_affective_schemas():
     }
 
 
-@router.get("/affective-coupling/recent-events")
+# @router.get("/affective-coupling/recent-events")  # DISABLED: REST API removed
 async def get_affective_coupling_recent_events():
     """
     Get recent PR-B affective coupling events for dashboard visualization.
@@ -1835,7 +2110,7 @@ async def get_affective_coupling_recent_events():
     }
 
 
-@router.get("/multi-pattern/recent-events")
+# @router.get("/multi-pattern/recent-events")  # DISABLED: REST API removed
 async def get_multi_pattern_recent_events():
     """
     Get recent PR-C multi-pattern response events for dashboard visualization.
@@ -1926,7 +2201,7 @@ async def get_multi_pattern_recent_events():
     }
 
 
-@router.get("/identity-multiplicity/status")
+# @router.get("/identity-multiplicity/status")  # DISABLED: REST API removed
 async def get_identity_multiplicity_status():
     """
     Get identity multiplicity detection status for PR-D dashboard.
@@ -1996,7 +2271,7 @@ async def get_identity_multiplicity_status():
     }
 
 
-@router.get("/foundations/status")
+# @router.get("/foundations/status")  # DISABLED: REST API removed
 async def get_foundations_status():
     """
     Get status for all six PR-E foundation mechanisms.
@@ -2153,7 +2428,7 @@ async def get_foundations_status():
 # === Stimulus Injection Endpoint (P0: Queue Poller → Engine Bridge) ===
 
 
-@router.post("/engines/{citizen_id}/inject")
+# @router.post("/engines/{citizen_id}/inject")  # DISABLED: REST API removed
 async def inject_stimulus_deprecated(citizen_id: str, payload: Dict[str, Any]):
     """Deprecated legacy route."""
     logger.warning(
@@ -2166,11 +2441,36 @@ async def inject_stimulus_deprecated(citizen_id: str, payload: Dict[str, Any]):
         detail="Stimulus injection API has been retired. Publish `membrane.inject` over ws://localhost:8000/api/ws."
     )
 
+# === END OF DISABLED REST ENDPOINTS ===
 
-# === WebSocket Endpoint ===
+# ============================================================================
+# ACTIVE: WebSocket Endpoint and Supporting Functions
+# ============================================================================
+# The following code is ACTIVE and provides the WebSocket-only interface.
+# All REST endpoints above are disabled (decorators commented out).
+# ============================================================================
 
 
-async def _handle_ws_message(message: Any):
+async def _handle_ws_payload(message: Any, websocket: WebSocket, conn_id: str) -> None:
+    """Fan-in helper to normalize payloads before delegating to handler."""
+    if not isinstance(message, dict):
+        logger.warning("[WebSocket] Ignoring non-object message: %s", message)
+        return
+
+    msg_type = message.get("type")
+    if msg_type in SUBSCRIBE_MESSAGE_TYPES:
+        requested_topics = message.get("topics") or message.get("filters") or []
+        websocket_manager.update_topics(websocket, set(requested_topics))
+
+    await _handle_ws_message(message, websocket=websocket, conn_id=conn_id)
+
+
+async def _handle_ws_message(
+    message: Any,
+    websocket: Optional[WebSocket] = None,
+    *,
+    conn_id: Optional[str] = None
+) -> None:
     """Process inbound WebSocket messages (membrane injections, etc.)."""
     if not isinstance(message, dict):
         logger.warning(f"[WebSocket] Ignoring non-object message: {message}")
@@ -2178,6 +2478,50 @@ async def _handle_ws_message(message: Any):
 
     msg_type = message.get("type")
     org_id = message.get("org")
+
+    if msg_type in SUBSCRIBE_MESSAGE_TYPES:
+        # Dashboard subscription handshake - optional filters
+        topics = message.get("topics") or message.get("filters") or []
+        org_filter = message.get("org") or message.get("org_id")
+        logger.debug(
+            "[WebSocket] Subscription received topics=%s org=%s",
+            topics,
+            org_filter
+        )
+
+        if websocket is not None:
+            connection_id = conn_id or websocket_manager.get_connection_id(websocket)
+            try:
+                await websocket.send_json({
+                    "type": SUBSCRIBE_ACK_TYPE,
+                    "id": f"ack_{connection_id or 'unknown'}",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "provenance": {
+                        "scope": "personal",
+                        "citizen_id": current_citizen_id()
+                    },
+                    "payload": {
+                        "connection_id": connection_id,
+                        "topics": sorted(topics),
+                        "heartbeat_ms": HEARTBEAT_INTERVAL_SECONDS * 1000,
+                        "cursor": get_last_frame_id(),
+                        "org": org_filter
+                    }
+                })
+            except Exception as exc:
+                logger.warning("[WebSocket] Failed to send subscribe ack: %s", exc)
+        return
+
+    if msg_type == "ping":
+        if websocket is not None:
+            try:
+                await websocket.send_json({
+                    "type": "pong",
+                    "ts": datetime.now(timezone.utc).isoformat()
+                })
+            except Exception as exc:
+                logger.debug("[WebSocket] Failed to reply to ping: %s", exc)
+        return
 
     if msg_type in {"wallet.ensure@1.0", "wallet.transfer@1.0", "wallet.sign.request@1.0"}:
         service = _get_wallet_service()
@@ -2350,50 +2694,164 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for live consciousness operations stream.
 
-    Dashboard connects here to receive real-time events:
-    - entity_activity: SubEntity exploration updates
-    - threshold_crossing: Node activation changes
-    - consciousness_state: Global system state updates
-    - node_activation: Individual node activity changes
-    - link_traversal: Link traversal events
-
-    Example client (JavaScript):
-        const ws = new WebSocket('ws://localhost:8000/api/ws');
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log(data.type, data);
-        };
-
-    Event format:
-        {
-            "type": "entity_activity",
-            "timestamp": "2025-10-18T21:30:45.123Z",
-            "data": {...}
-        }
+    Implements canonical handshake:
+    1. accept()
+    2. await optional subscribe message
+    3. send subscribe ack
+    4. register connection
+    5. (optional) send snapshot chunks
+    6. stream live events with topic filtering
     """
-    await websocket_manager.connect(websocket)
+    # BUGFIX: Accept connection FIRST, then validate
+    # WebSocket lifecycle requires accept() before close()
+    # Trying to close() before accept() causes "Need to call 'accept' first" error
+    try:
+        await websocket.accept()
+    except RuntimeError as e:
+        if "websocket.accept" in str(e):
+            logger.warning("[WebSocket] Connection already accepted/rejected, skipping: %s", e)
+            return
+        raise
+
+    # Validate Origin header AFTER accepting (so we can close properly if validation fails)
+    origin = websocket.headers.get("origin")
+    allowed_origins = {
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+    }
+    if origin is not None and origin not in allowed_origins:
+        logger.warning("[WebSocket] Rejected connection from unauthorized origin: %s", origin)
+        await websocket.close(code=1008, reason="Unauthorized origin")
+        return
+
+    # Check connection limit AFTER accepting (so we can close properly if at capacity)
+    current_connections = len(websocket_manager._connections)
+    if current_connections >= MAX_WEBSOCKET_CONNECTIONS:
+        logger.warning(
+            "[WebSocket] Connection limit reached (%d/%d), rejecting new connection",
+            current_connections,
+            MAX_WEBSOCKET_CONNECTIONS
+        )
+        await websocket.close(code=1008, reason="Server at capacity")
+        return
+
+    conn_id = uuid4().hex
+    topics: Set[str] = set(DEFAULT_TOPICS)
+    cursor = get_last_frame_id()
+    citizen_seed = current_citizen_id()
+
+    # Optional client subscribe message (set filters before ACK)
+    initial_message: Optional[Dict[str, Any]] = None
+    pending_messages: List[Any] = []
+    try:
+        initial_message = await asyncio.wait_for(
+            websocket.receive_json(),
+            timeout=INITIAL_SUBSCRIBE_TIMEOUT_SECONDS
+        )
+    except asyncio.TimeoutError:
+        pass
+    except WebSocketDisconnect:
+        logger.info("[WebSocket] Client disconnected during handshake")
+        await websocket_manager.unregister_connection(conn_id=conn_id)
+        return
+    except Exception as exc:
+        logger.debug("[WebSocket] Initial receive failed (tolerated): %s", exc)
+
+    if isinstance(initial_message, dict):
+        msg_type = initial_message.get("type")
+        if msg_type in SUBSCRIBE_MESSAGE_TYPES:
+            requested_topics = initial_message.get("topics") or initial_message.get("filters") or []
+            if requested_topics:
+                topics = set(requested_topics)
+        else:
+            await _handle_ws_message(initial_message, websocket, conn_id=conn_id)
+    elif isinstance(initial_message, list):
+        pending_messages.extend(initial_message)
+
+    # Send ACK before snapshot / events
+    ack_envelope = {
+        "type": SUBSCRIBE_ACK_TYPE,
+        "id": f"ack_{conn_id}",
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "provenance": {
+            "scope": "personal",
+            "citizen_id": citizen_seed
+        },
+        "payload": {
+            "connection_id": conn_id,
+            "topics": sorted(list(topics)),
+            "heartbeat_ms": HEARTBEAT_INTERVAL_SECONDS * 1000,
+            "cursor": cursor
+        }
+    }
+    await websocket.send_json(ack_envelope)
+
+    await websocket_manager.register_connection(conn_id, websocket, topics, cursor)
+    websocket_manager.touch(websocket)
+
+    # Optional snapshot hydration (noop if snapshot generator yields nothing)
+    try:
+        for chunk in iter_snapshot_chunks(cursor=cursor, citizen_id=citizen_seed):
+            envelope = {
+                "type": "snapshot.chunk@1.0",
+                "id": f"snap_{conn_id}_{chunk.get('idx', 0)}",
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "provenance": {
+                    "scope": "personal",
+                    "citizen_id": citizen_seed
+                },
+                "payload": {
+                    "nodes": chunk.get("nodes", []),
+                    "links": chunk.get("links", []),
+                    "subentities": chunk.get("subentities", []),
+                    "cursor": chunk.get("cursor"),
+                    "eof": chunk.get("eof", True)
+                }
+            }
+            await websocket.send_json(envelope)
+            if chunk.get("eof", True):
+                break
+    except Exception as exc:
+        logger.debug("[WebSocket] Snapshot hydration skipped: %s", exc)
 
     try:
-        # Keep connection alive - wait for client messages (if any)
+        # Process any queued messages that arrived during handshake (rare)
+        for initial_payload in pending_messages:
+            await _handle_ws_payload(initial_payload, websocket, conn_id)
+
+        # 🔥 ERROR STORM FIX: Debounce error logging to prevent CPU spike
+        last_error_log = 0.0
+        error_count_since_log = 0
+
         while True:
-            raw = await websocket.receive_text()
             try:
-                parsed = json.loads(raw)
-            except json.JSONDecodeError:
-                logger.warning(f"[WebSocket] Received non-JSON payload: {raw}")
+                message = await websocket.receive_json()
+            except WebSocketDisconnect:
+                break
+            except Exception as exc:
+                # Debounce: only log once per 5 seconds to prevent error flooding
+                import time
+                now = time.monotonic()
+                error_count_since_log += 1
+                if now - last_error_log > 5.0:
+                    logger.warning(
+                        "[WebSocket] Failed to parse inbound message (%d errors in last %.1fs): %s",
+                        error_count_since_log,
+                        now - last_error_log if last_error_log > 0 else 0.0,
+                        exc
+                    )
+                    last_error_log = now
+                    error_count_since_log = 0
                 continue
 
-            # Allow batching (array of events) or single object
-            if isinstance(parsed, list):
-                for item in parsed:
-                    await _handle_ws_message(item)
+            if isinstance(message, list):
+                for item in message:
+                    await _handle_ws_payload(item, websocket, conn_id)
             else:
-                await _handle_ws_message(parsed)
+                await _handle_ws_payload(message, websocket, conn_id)
 
-    except WebSocketDisconnect:
-        await websocket_manager.disconnect(websocket)
-        logger.info("[WebSocket] Client disconnected normally")
+            websocket_manager.touch(websocket)
 
-    except Exception as e:
-        logger.error(f"[WebSocket] Connection error: {e}")
-        await websocket_manager.disconnect(websocket)
+    finally:
+        await websocket_manager.unregister_connection(conn_id=conn_id)

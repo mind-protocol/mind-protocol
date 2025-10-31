@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 from orchestration.core import Graph, Subentity
 from orchestration.libs.subentity_metrics import SubEntityMetrics, PairMetrics, PairScores
-from orchestration.libs.subentity_lifecycle_audit import EntityLifecycleAudit, MergeDecision, SplitDecision
+from orchestration.libs.subentity_lifecycle_audit import SubEntityLifecycleAudit, MergeDecision, SplitDecision
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ def propose_merge(
 def execute_merge(
     candidate: MergeCandidate,
     graph: Graph,
-    audit: EntityLifecycleAudit
+    audit: SubEntityLifecycleAudit
 ) -> MergeResult:
     """
     Execute merge of two subentities.
@@ -342,7 +342,7 @@ def execute_merge(
 def scan_for_merge_candidates(
     graph: Graph,
     metrics_lib: SubEntityMetrics,
-    audit: EntityLifecycleAudit,
+    audit: SubEntityLifecycleAudit,
     max_per_tick: int = 1,
     q90_threshold: float = 0.7
 ) -> List[MergeResult]:

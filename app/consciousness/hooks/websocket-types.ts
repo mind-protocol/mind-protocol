@@ -219,6 +219,30 @@ export interface SubentityMembershipPrunedEvent {
   ts_ms?: number;
 }
 
+export interface SubentityActivationEvent {
+  type: 'subentity.activation';
+  citizen_id: string;
+  frame_id?: number;
+  subentity_id?: string;
+  activation?: number;
+  energy?: number;
+  activations?: Array<{
+    subentity_id: string;
+    activation: number;
+    energy?: number;
+  }>;
+  payload?: {
+    subentity_id?: string;
+    activation?: number;
+    energy?: number;
+    activations?: Array<{
+      subentity_id: string;
+      activation: number;
+      energy?: number;
+    }>;
+  };
+}
+
 export interface BoundarySummaryEvent {
   type: 'se.boundary.summary';
   v: '2';
@@ -984,6 +1008,7 @@ export type WebSocketEvent =
   | PhenomenologicalHealthEvent
   | SubentityWeightsUpdatedEvent
   | SubentityMembershipPrunedEvent
+  | SubentityActivationEvent
   | BoundarySummaryEvent
   | PerceptFrameEvent
   | GraphNodeUpsertEvent

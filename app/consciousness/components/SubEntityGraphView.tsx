@@ -99,12 +99,17 @@ export function SubEntityGraphView({
 
     return subentities.map(subentity => {
       // Get member nodes for this subentity
-      // Nodes "belong" to subentities that have activated them recently
+      // Use MEMBER_OF links from graphStream (new format) or entity_activations (legacy)
       const memberNodes = nodes.filter(node => {
         const nodeId = node.id || node.node_id;
         if (!nodeId) return false;
 
-        // Check if this subentity has activated this node (entity_activations field)
+        // Priority: Check MEMBER_OF membership from graphStream
+        if (subentity.members && Array.isArray(subentity.members)) {
+          return subentity.members.includes(nodeId);
+        }
+
+        // Fallback: Check entity_activations field (legacy format)
         if (node.entity_activations && typeof node.entity_activations === 'object') {
           // Extract short subentity name from full subentity_id
           // Format: 'entity_citizen_{citizen}_{short_name}' → extract '{short_name}'
@@ -167,6 +172,7 @@ export function SubEntityGraphView({
   }, [subentities, nodes, emotionState.nodeEmotions]);
 
   // NEW: Compute two-layer visible graph using V2 selector
+  // Note: useMemo already prevents re-computation unless deps change
   const renderGraph = useMemo(() => {
     return selectVisibleGraphV2(subentityData, nodes, links, expandedSubEntities, linkFlows);
   }, [subentityData, nodes, links, expandedSubEntities, linkFlows]);

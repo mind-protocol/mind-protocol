@@ -66,8 +66,6 @@ claude-screenshots/
 tsconfig.tsbuildinfo
 
 # Test outputs
-test_*.py
-*_test.txt
 query
 resurrection_log.txt
 system_test_results.json
@@ -82,3 +80,7 @@ task_*.xml
 backups/
 
 orchestration/economy/node_modules/
+
+consciousness/citizens/*/contexts/
+
+conversation_watcher.log*

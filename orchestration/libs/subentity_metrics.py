@@ -102,15 +102,19 @@ class SubEntityMetrics:
             WITH a, b, A_nodes, B_nodes, ease, flow,
                  COALESCE(coact.u_jaccard, 0.0) AS u_jaccard
 
-            // Compute Jaccard
+            // Compute Jaccard using native Cypher (no APOC needed)
             WITH
-              apoc.coll.toSet(A_nodes) AS Aset,
-              apoc.coll.toSet(B_nodes) AS Bset,
+              A_nodes, B_nodes, ease, flow, u_jaccard
+
+            // Intersection: nodes in both A and B
+            WITH
+              [x IN A_nodes WHERE x IN B_nodes] AS inter_list,
+              A_nodes + [x IN B_nodes WHERE NOT x IN A_nodes] AS union_list,
               ease, flow, u_jaccard
 
             RETURN
-              size(apoc.coll.intersection(Aset, Bset)) AS inter,
-              size(apoc.coll.union(Aset, Bset)) AS union,
+              size(inter_list) AS inter,
+              size(union_list) AS union,
               u_jaccard,
               ease * flow AS highway_utility
             """
@@ -203,13 +207,14 @@ class SubEntityMetrics:
 
             WITH
               other.id AS other_id,
-              apoc.coll.toSet(E_nodes) AS Eset,
-              apoc.coll.toSet(Other_nodes) AS Oset
+              E_nodes,
+              Other_nodes
 
+            // Native Cypher set operations (no APOC)
             WITH
               other_id,
-              size(apoc.coll.intersection(Eset, Oset)) AS inter,
-              size(apoc.coll.union(Eset, Oset)) AS union
+              size([x IN E_nodes WHERE x IN Other_nodes]) AS inter,
+              size(E_nodes + [x IN Other_nodes WHERE NOT x IN E_nodes]) AS union
 
             WHERE union > 0
 

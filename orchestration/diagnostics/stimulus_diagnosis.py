@@ -31,7 +31,8 @@ def diagnose_stimulus_injection(citizen_id: str = "felix"):
     print("P0 DIAGNOSTIC: Stimulus Injection Failure")
     print("=" * 60)
 
-    graph_name = f"citizen_{citizen_id}"
+    # Use hierarchical graph name (citizen_id should be full hierarchical name)
+    graph_name = citizen_id
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
     # Test 1: Encoder Health

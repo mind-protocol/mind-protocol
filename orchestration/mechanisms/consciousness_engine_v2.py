@@ -81,7 +81,7 @@ from orchestration.adapters.search.embedding_service import EmbeddingService
 
 # Observability
 from orchestration.libs.metrics import BranchingRatioTracker
-from orchestration.libs.websocket_broadcast import ConsciousnessStateBroadcaster
+# Note: SafeBroadcaster imported locally in __init__ (replaces ConsciousnessStateBroadcaster)
 from orchestration.adapters.ws.traversal_event_emitter import TraversalEventEmitter, EmotionDelta
 
 # FalkorDB integration
@@ -197,8 +197,15 @@ class ConsciousnessEngineV2:
 
         # Observability (must initialize before learning mechanisms that need broadcaster)
         self.branching_tracker = BranchingRatioTracker(window_size=10)
+
+        # SafeBroadcaster: Reliability layer with spill buffer and health reporting
+        from orchestration.libs.safe_broadcaster import SafeBroadcaster
         self.broadcaster = (
-            ConsciousnessStateBroadcaster(default_citizen_id=self.config.entity_id)
+            SafeBroadcaster(
+                citizen_id=self.config.entity_id,
+                max_spill_size=1000,  # Buffer up to 1000 events during cold-start
+                health_bus_inject=None  # TODO: Wire health bus for self-reporting
+            )
             if self.config.enable_websocket
             else None
         )
@@ -1731,11 +1738,11 @@ class ConsciousnessEngineV2:
 
             from orchestration.mechanisms.subentity_merge_split import scan_for_merge_candidates
             from orchestration.libs.subentity_metrics import SubEntityMetrics
-            from orchestration.libs.subentity_lifecycle_audit import EntityLifecycleAudit
+            from orchestration.libs.subentity_lifecycle_audit import SubEntityLifecycleAudit
 
             try:
                 metrics_lib = SubEntityMetrics(self.adapter)
-                audit = EntityLifecycleAudit(citizen_id=self.config.entity_id)
+                audit = SubEntityLifecycleAudit(citizen_id=self.config.entity_id)
 
                 merge_results = scan_for_merge_candidates(
                     graph=self.graph,
@@ -2020,16 +2027,17 @@ class ConsciousnessEngineV2:
                                 "energy": entity.energy_runtime,
                                 "members": []
                             }
-                            # Add member nodes with their energies
-                            for member_id in entity.members[:10]:  # Top 10 members per entity
-                                node = self.graph.get_node(member_id)
-                                if node:
-                                    entity_data["members"].append({
-                                        "node_id": node.id,
-                                        "name": node.name,
-                                        "description": node.description,
-                                        "energy": node.E
-                                    })
+                            # Add member nodes with their energies (if members attribute exists)
+                            if hasattr(entity, 'members') and entity.members:
+                                for member_id in entity.members[:10]:  # Top 10 members per entity
+                                    node = self.graph.get_node(member_id)
+                                    if node:
+                                        entity_data["members"].append({
+                                            "node_id": node.id,
+                                            "name": node.name,
+                                            "description": node.description,
+                                            "energy": node.E
+                                        })
                             wm_nodes.append(entity_data)
 
                         logger.info(f"[ForgedIdentity] Extracted {len(wm_nodes)} WM entities")

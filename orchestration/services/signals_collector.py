@@ -86,16 +86,28 @@ class ScreenshotSignal(BaseModel):
 def heartbeat_loop():
     import threading
     def _loop():
+        consecutive_failures = 0
         while True:
             try:
                 HEARTBEAT.write_text(str(int(time.time())))
             except Exception:
                 pass
             try:
+                # flush_backlog() returns None, check if backlog exists
                 flush_backlog()
+                consecutive_failures = 0  # Reset on success
             except Exception as exc:
                 logger.debug(f"[SignalsCollector] Backlog flush skipped: {exc}")
-            time.sleep(5)
+                consecutive_failures += 1
+
+            # Exponential backoff on failures (max 60s)
+            backlog_exists = len(list(BACKLOG_DIR.glob("stimulus_*.json"))) > 0
+            if backlog_exists and consecutive_failures > 0:
+                backoff = min(60, 5 * (2 ** consecutive_failures))
+                logger.warning(f"[SignalsCollector] Backlog retry backoff: {backoff}s (failures: {consecutive_failures})")
+                time.sleep(backoff)
+            else:
+                time.sleep(5)
     thread = threading.Thread(target=_loop, daemon=True)
     thread.start()
 
@@ -274,6 +286,7 @@ def send_envelope_over_ws(envelope: dict) -> bool:
         return True
     except Exception as exc:
         logger.warning(f"[SignalsCollector] WebSocket publish failed: {exc}")
+        time.sleep(1.0)  # Backoff to prevent tight loop on connection failures
         return False
 
 

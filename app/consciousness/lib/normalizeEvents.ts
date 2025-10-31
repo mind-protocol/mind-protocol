@@ -297,6 +297,11 @@ export function normalizeEvent(e: any): any {
       };
     }
 
+    // Control messages - pass through without normalization
+    case 'subscribe.ack@1.0':
+    case 'snapshot.chunk@1.0':
+      return e;
+
     default:
       // Unknown event type - log warning but don't drop
       console.warn('[normalizeEvent] Unknown event type:', e.type, e);

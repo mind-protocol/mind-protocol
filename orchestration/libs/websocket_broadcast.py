@@ -373,17 +373,36 @@ class ConsciousnessStateBroadcaster:
 
     def is_available(self) -> bool:
         """
-        Check if WebSocket broadcasting is available.
+        Check if WebSocket broadcasting is available WITH ACTIVE CLIENTS.
+
+        ARCHITECTURAL FIX (2025-10-31): Prevent "tree falls in forest" problem.
+        Engines should NOT broadcast if no clients are listening.
+
+        Before: is_available() returned True if server exists (even with 0 clients)
+        After: is_available() requires client_count() > 0
+
+        This solves timing issue where engines initialize at 01:42 and broadcast
+        to 0 clients, then frontend connects at 01:47 and receives 0 nodes.
 
         Returns:
-            True if WebSocket manager is available, False otherwise
+            True if WebSocket manager is available AND has active clients
 
         Example:
             >>> broadcaster = ConsciousnessStateBroadcaster()
             >>> broadcaster.is_available()
-            True
+            True  # Only if clients are connected
         """
-        return self.available and self.websocket_manager is not None
+        if not self.available or self.websocket_manager is None:
+            return False
+
+        # Only return True if there are active clients connected
+        # This prevents "successful" broadcasts to audience of zero
+        try:
+            client_count = len(getattr(self.websocket_manager, '_connections', {}))
+            return client_count > 0
+        except Exception:
+            # If we can't determine client count, assume unavailable
+            return False
 
     def get_counter_stats(self) -> Dict[str, Any]:
         """
