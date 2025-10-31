@@ -60,7 +60,6 @@ orchestration/test_results/
 # Claude Code artifacts
 claude-logs/
 claude-screenshots/
-.claude/hooks/
 
 # TypeScript build cache
 tsconfig.tsbuildinfo
