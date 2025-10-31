@@ -87,10 +87,13 @@ from orchestration.adapters.ws.traversal_event_emitter import TraversalEventEmit
 
 # FalkorDB integration
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
+from adapters.falkor import FalkorGraph
 from orchestration.adapters.ws.snapshot_cache import snapshot_cache
 
 from orchestration.bus.emit import emit_failure
 from orchestration.config import constants
+from consciousness.engine import Engine as EngineFacade, EngineConfig as FacadeEngineConfig
+from consciousness.engine.domain.state import build_engine_state
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +160,25 @@ class ConsciousnessEngineV2:
         self.diffusion_rt = DiffusionRuntime()
         # Initialize frontier from graph state
         self.diffusion_rt.compute_frontier(graph)
+
+        self._last_scheduler_decision = None
+        self._graph_port = None
+        try:
+            self._graph_port = FalkorGraph(self.adapter)
+        except Exception:  # pragma: no cover - defensive guard
+            logger.exception("Failed to initialize Falkor graph port", exc_info=True)
+
+        try:
+            self._facade_config = FacadeEngineConfig.from_legacy(self.config)
+            self._engine_facade = EngineFacade(
+                self,
+                config=self._facade_config,
+                graph_port=self._graph_port,
+            )
+        except Exception:  # pragma: no cover - defensive guard
+            logger.exception("Failed to initialize Engine facade", exc_info=True)
+            self._facade_config = FacadeEngineConfig.from_legacy(None)
+            self._engine_facade = None
 
         # Mechanism contexts (Phase 1+2)
         # NOTE: DecayContext is now created per-tick with criticality-adjusted parameters
@@ -3201,15 +3223,30 @@ class ConsciousnessEngineV2:
             self._dirty_nodes.clear()
             return
 
+        namespace = f"L1:{self.config.entity_id}"  # Citizen graphs are L1
+        intent = {
+            "type": "graph.upsert",
+            "payload": {
+                "entity_id": self.config.entity_id,
+                "rows": rows,
+                "namespace": namespace,
+            },
+        }
+
         try:
             # Execute in thread pool to avoid blocking tick loop
             # Pass WriteGate context for L1/L2/L3/L4 namespace enforcement
-            namespace = f"L1:{self.config.entity_id}"  # Citizen graphs are L1
             loop = asyncio.get_running_loop()
-            updated = await loop.run_in_executor(
-                None,
-                lambda: self.adapter.persist_node_scalars_bulk(rows, ctx={"ns": namespace})
-            )
+
+            def _persist_rows():
+                if getattr(self, "_engine_facade", None) is not None and self._graph_port is not None:
+                    self._engine_facade.dispatch_intents((intent,))
+                    return len(rows)
+                return self.adapter.persist_node_scalars_bulk(rows, ctx={"ns": namespace})
+
+            updated = await loop.run_in_executor(None, _persist_rows)
+            if updated is None:
+                updated = len(rows)
 
             logger.info(f"[Persistence] Flushed {updated}/{len(rows)} dirty nodes to FalkorDB")
 
@@ -3278,13 +3315,29 @@ class ConsciousnessEngineV2:
             logger.warning("[ConsciousnessEngineV2] No nodes to persist")
             return
 
+        namespace = f"L1:{self.config.entity_id}"
+        intent = {
+            "type": "graph.upsert",
+            "payload": {
+                "entity_id": self.config.entity_id,
+                "rows": rows,
+                "namespace": namespace,
+            },
+        }
+
         try:
             # Execute in thread pool
             loop = asyncio.get_running_loop()
-            updated = await loop.run_in_executor(
-                None,
-                lambda: self.adapter.persist_node_scalars_bulk(rows)
-            )
+
+            def _persist_rows():
+                if getattr(self, "_engine_facade", None) is not None and self._graph_port is not None:
+                    self._engine_facade.dispatch_intents((intent,))
+                    return len(rows)
+                return self.adapter.persist_node_scalars_bulk(rows, ctx={"ns": namespace})
+
+            updated = await loop.run_in_executor(None, _persist_rows)
+            if updated is None:
+                updated = len(rows)
 
             logger.info(f"[ConsciousnessEngineV2] Persisted {updated}/{len(rows)} nodes")
 
@@ -3317,28 +3370,44 @@ class ConsciousnessEngineV2:
             Metrics dict with tick count, duration, active nodes, etc.
         """
         subentity = self.config.entity_id
-
-        # Count active nodes (subentities = nodes with total_energy >= threshold)
-        active_count = sum(
-            1 for node in self.graph.nodes.values()
-            if node.is_active()
-        )
-
-        # Get branching ratio state
         branching_state = (
             self.branching_tracker.measure_cycle([], [])
             if self.tick_count > 0
             else None
         )
 
+        state = None
+        if getattr(self, "_engine_facade", None) is not None:
+            try:
+                decision = self._engine_facade.plan_tick(branching_state=branching_state)
+                self._last_scheduler_decision = decision
+                state = decision.state
+            except Exception:  # pragma: no cover - defensive guard
+                logger.exception("Engine façade planning failed", exc_info=True)
+                self._last_scheduler_decision = None
+
+        if state is None:
+            state = build_engine_state(
+                graph=self.graph,
+                tick_count=self.tick_count,
+                last_tick_time=self.last_tick_time,
+                observed_at=datetime.now(),
+                config=getattr(self, "_facade_config", FacadeEngineConfig.from_legacy(self.config)),
+                branching_state=branching_state,
+            )
+
+        branching_ratio = state.branching_ratio
+        if branching_ratio is None and branching_state:
+            branching_ratio = float(branching_state.get("branching_ratio", 0.0))
+
         return {
             "tick_count": self.tick_count,
             "tick_duration_ms": self.tick_duration_ms,
             "nodes_total": len(self.graph.nodes),
             "links_total": len(self.graph.links),
-            "nodes_active": active_count,
-            "global_energy": branching_state['global_energy'] if branching_state else 0.0,
-            "branching_ratio": branching_state['branching_ratio'] if branching_state else 0.0,
+            "nodes_active": state.active_nodes,
+            "global_energy": state.global_energy,
+            "branching_ratio": branching_ratio or 0.0,
             "last_tick": self.last_tick_time.isoformat()
         }
 
@@ -3351,11 +3420,24 @@ class ConsciousnessEngineV2:
         """
         subentity = self.config.entity_id
 
+        snapshot_state = None
+        if getattr(self, "_engine_facade", None) is not None:
+            try:
+                snapshot_state = self._engine_facade.snapshot()
+            except Exception:  # pragma: no cover - defensive guard
+                logger.exception("Engine façade snapshot failed", exc_info=True)
+
+        if snapshot_state is None:
+            snapshot_state = build_engine_state(
+                graph=self.graph,
+                tick_count=self.tick_count,
+                last_tick_time=self.last_tick_time,
+                observed_at=datetime.now(),
+                config=getattr(self, "_facade_config", FacadeEngineConfig.from_legacy(self.config)),
+            )
+
         # Calculate global energy (average energy across all nodes)
-        global_energy = sum(
-            node.E
-            for node in self.graph.nodes.values()
-        ) / max(len(self.graph.nodes), 1)
+        global_energy = snapshot_state.global_energy
 
         # Get consciousness state from energy level
         consciousness_state = self._get_consciousness_state_name(global_energy)

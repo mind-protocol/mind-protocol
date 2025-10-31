@@ -28,17 +28,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from orchestration.core import configure_logging, settings
 from orchestration.adapters.api.control_api import router as control_router
 from orchestration.services.api.proof_router import router as proof_router
-from fastapi import FastAPI
+from adapters.api.app import create_app
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 
 # Create FastAPI app
-app = FastAPI(
-    title="Mind Protocol Control API",
-    version="2.0.0",
-    description="REST API for consciousness system control"
-)
+app = create_app()
 
 # Add CORS
 app.add_middleware(
@@ -49,7 +45,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Include legacy routers for backward compatibility
 app.include_router(control_router)
 app.include_router(proof_router)
 
@@ -59,7 +55,7 @@ async def root():
     """API info endpoint."""
     return {
         "service": "Mind Protocol Control API",
-        "version": "2.0.0",
+        "version": app.version,
         "docs": f"http://{settings.API_HOST}:{settings.API_PORT}/docs"
     }
 
