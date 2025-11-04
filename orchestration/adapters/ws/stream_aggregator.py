@@ -427,12 +427,18 @@ class GraphStreamAggregator:
 
         Emits `graph.delta.*` events for every node/link/subentity so downstream
         clients can rebuild state purely from the event stream.
+
+        Also populates SnapshotCache so newly connected clients receive full graph state.
         """
         lock = self._get_lock(citizen_id)
         async with lock:
             state = self._get_state(citizen_id)
             state.reset()
             ts = time.time()
+
+            # Also populate SnapshotCache for replay-on-connect
+            from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+            cache = get_snapshot_cache()
 
             for node in graph.nodes.values():
                 payload = {
@@ -441,6 +447,10 @@ class GraphStreamAggregator:
                     "cause": cause
                 }
                 state.record_event("graph.delta.node.upsert", payload, ts)
+
+                # Populate cache
+                node_data = payload["node"]
+                cache.upsert_node(citizen_id, node_data)
 
             if include_links:
                 for link in graph.links.values():
@@ -451,6 +461,10 @@ class GraphStreamAggregator:
                     }
                     state.record_event("graph.delta.link.upsert", payload, ts)
 
+                    # Populate cache
+                    link_data = payload["link"]
+                    cache.upsert_link(citizen_id, link_data)
+
             if include_subentities and graph.subentities:
                 for entity in graph.subentities.values():
                     payload = {
@@ -460,6 +474,10 @@ class GraphStreamAggregator:
                     }
                     state.record_event("graph.delta.subentity.upsert", payload, ts)
 
+                    # Populate cache
+                    subentity_data = payload["subentity"]
+                    cache.upsert_subentity(citizen_id, subentity_data)
+
             subentities = getattr(graph, "subentities", None)
             state.metadata["seed"] = {
                 "cause": cause,
@@ -468,6 +486,15 @@ class GraphStreamAggregator:
                 "link_count": len(graph.links),
                 "subentity_count": len(subentities) if subentities else 0
             }
+
+            # Log cache population for debugging
+            from orchestration.libs.logger_util import get_logger
+            logger = get_logger(__name__)
+            logger.info(
+                f"[seed_from_graph] Populated SnapshotCache for {citizen_id}: "
+                f"{len(graph.nodes)} nodes, {len(graph.links)} links, "
+                f"{len(subentities) if subentities else 0} subentities"
+            )
 
     async def ingest_event(
         self,
