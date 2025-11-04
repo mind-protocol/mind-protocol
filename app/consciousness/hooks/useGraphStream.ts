@@ -272,7 +272,11 @@ export function useGraphStream(
                 type: eventType,
                 hasCitizenId: !!msg.provenance?.citizen_id,
                 citizenId: msg.provenance?.citizen_id,
-                hasPayload: !!msg.payload
+                hasPayload: !!msg.payload,
+                // Show actual payload for snapshot events (debugging graph display issue)
+                payload: eventType === 'snapshot.chunk@1.0' || eventType === 'subentity.snapshot'
+                  ? msg.payload
+                  : undefined
               });
             }
 
