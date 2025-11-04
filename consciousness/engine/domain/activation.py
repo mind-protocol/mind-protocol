@@ -21,6 +21,8 @@ Phase: Migration Phase 2 - Spreading Activation
 from typing import Set, Dict, List, Tuple, Any
 import math
 
+from consciousness.engine.constants import DEFAULT_ACTIVATION_THRESHOLD, DEFAULT_MAX_DISTANCE
+
 __all__ = [
     "select_active_nodes",
     "compute_frontier",
@@ -36,7 +38,7 @@ __all__ = [
 
 def select_active_nodes(
     graph: Any,
-    threshold: float = 0.5
+    threshold: float = DEFAULT_ACTIVATION_THRESHOLD
 ) -> Set[str]:
     """
     Select nodes with energy above activation threshold.
@@ -208,7 +210,7 @@ def compute_n_hop_neighbors(
 def compute_activation_distances(
     graph: Any,
     active_nodes: Set[str],
-    max_distance: int = 3
+    max_distance: int = DEFAULT_MAX_DISTANCE
 ) -> Dict[str, int]:
     """
     Compute minimum distance from each node to nearest active node.
@@ -262,7 +264,7 @@ def compute_activation_distances(
 def filter_by_activation_strength(
     graph: Any,
     nodes: Set[str],
-    min_energy: float = 0.5,
+    min_energy: float = DEFAULT_ACTIVATION_THRESHOLD,
     max_distance_from_active: int = 2,
     active_nodes: Set[str] = None
 ) -> Set[str]:
@@ -318,7 +320,7 @@ def filter_by_activation_strength(
 
 def compute_activation_statistics(
     graph: Any,
-    threshold: float = 0.5
+    threshold: float = DEFAULT_ACTIVATION_THRESHOLD
 ) -> Dict[str, Any]:
     """
     Compute comprehensive activation statistics for graph.

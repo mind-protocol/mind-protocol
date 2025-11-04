@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import List, Tuple
+
+logger = logging.getLogger(__name__)
 
 IMPORT_RE = re.compile(
     r"import\s+(?:[^'\"]+\s+from\s+)?['\"](?P<path>[^'\"]+)['\"]",
@@ -30,7 +33,8 @@ def build_edges(repo: Path) -> List[Tuple[Path, Path]]:
 def _edges_for_file(file: Path, repo: Path) -> List[Tuple[Path, Path]]:
     try:
         text = file.read_text(encoding="utf-8")
-    except Exception:
+    except Exception as exc:
+        logger.error(f"Failed to read TS/JS file {file}: {exc}")
         return []
     rel_src = file.relative_to(repo)
     matches = []

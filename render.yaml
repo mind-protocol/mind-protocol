@@ -1,0 +1,124 @@
+# Render Blueprint for Mind Protocol Backend
+# Deploys: WebSocket API, Consciousness Engines, FalkorDB
+
+services:
+  # FalkorDB - Graph Database (runs as Docker container with persistent disk)
+  - type: pserv
+    name: mind-protocol-falkordb
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile.falkordb
+    dockerCommand: falkordb-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save 60 1
+    envVars:
+      - key: FALKORDB_CACHE_SIZE
+        value: "100"
+    disk:
+      name: falkordb-data
+      mountPath: /data
+      sizeGB: 10  # 10GB persistent disk for consciousness graphs
+
+  # WebSocket API + Consciousness Engines
+  - type: web
+    name: mind-protocol-backend
+    runtime: python
+    plan: starter  # Upgrade to standard for production (need 512MB+ RAM for embeddings)
+    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: python3 orchestration/mpsv3_supervisor.py --config orchestration/services/mpsv3/services.yaml
+    envVars:
+      # Redis/FalkorDB Connection (internal private network)
+      - key: ECONOMY_REDIS_URL
+        value: redis://mind-protocol-falkordb:6379/0
+
+      # WebSocket Server Configuration
+      - key: WS_PORT
+        value: 8000
+
+      # Dashboard Configuration
+      - key: DASHBOARD_PORT
+        value: 3000
+
+      # Hot Reload (disable in production)
+      - key: MP_HOT_RELOAD
+        value: 0
+
+      # Persistence Configuration
+      - key: MP_PERSIST_ENABLED
+        value: 1
+
+      - key: MP_PERSIST_MIN_BATCH
+        value: 5
+
+      - key: MP_PERSIST_INTERVAL_SEC
+        value: 5.0
+
+      # Economy Runtime Configuration
+      - key: ECONOMY_ORG_ID
+        value: consciousness-infrastructure_mind-protocol
+
+      - key: ECONOMY_L2_GRAPH
+        value: consciousness-infrastructure_mind-protocol
+
+      - key: ECONOMY_THROTTLE_INTERVAL
+        value: 60
+
+      - key: ECONOMY_POLICY_REFRESH
+        value: 300
+
+      - key: ECONOMY_SPEND_ALPHA
+        value: 0.2
+
+      - key: ECONOMY_ROI_ALPHA
+        value: 0.5
+
+      - key: ECONOMY_WALLET_FLOOR_MULT
+        value: 0.4
+
+      # Economy Lane Wallets (JSON string - set via Render dashboard)
+      - key: ECONOMY_LANE_WALLETS
+        value: "{}"
+
+      # Price Oracle Configuration (optional)
+      - key: MIND_MINT_ADDRESS
+        sync: false  # Set via Render dashboard if using Solana
+
+      - key: HELIUS_API_KEY
+        sync: false  # Set via Render dashboard if using Helius
+
+      - key: HELIUS_BASE_URL
+        value: https://api.helius.xyz
+
+      - key: MIND_USD_FALLBACK
+        value: 1.0
+
+      - key: ECONOMY_PRICE_TTL
+        value: 300
+
+      # UBC Distribution (optional)
+      - key: UBC_DAILY
+        value: 100.0
+
+      - key: UBC_TREASURY_WALLET
+        sync: false  # Set via Render dashboard if distributing UBC
+
+      - key: UBC_CITIZEN_WALLETS
+        value: "{}"
+
+      - key: UBC_CRON_OFFSET_SECONDS
+        value: 0
+
+    healthCheckPath: /healthz
+
+# Database Notes:
+# - FalkorDB runs as Redis module, so we use Render's Redis service
+# - For production, consider upgrading to Standard plan (1GB RAM minimum)
+# - Graph data persists automatically via Redis RDB snapshots
+# - Configure backup schedule in Render dashboard
+
+# Scaling Notes:
+# - Backend needs 512MB+ RAM for sentence-transformers embeddings
+# - Consider upgrading to Standard plan for production workloads
+# - Multiple web instances supported (stateless design)
+
+# CORS Notes:
+# - WebSocket server needs CORS configured for Vercel frontend
+# - Add ALLOWED_ORIGINS environment variable pointing to Vercel URL

@@ -10,6 +10,9 @@ from libs.law import implements
 
 logger = logging.getLogger(__name__)
 
+# Graph intent type constants
+GRAPH_UPSERT_TYPE = "graph.upsert"
+
 
 @implements("Mechanism:GRAPH_PORT", "Suite:GODFILE-1.0/A3")
 class FalkorGraph(GraphPort):
@@ -47,7 +50,7 @@ class FalkorGraph(GraphPort):
 
 def _iter_upsert_payloads(intents: Iterable[Mapping[str, Any]]) -> Iterable[Mapping[str, Any]]:
     for intent in intents:
-        if intent.get("type") != "graph.upsert":
+        if intent.get("type") != GRAPH_UPSERT_TYPE:
             continue
         payload = intent.get("payload")
         if isinstance(payload, Mapping):

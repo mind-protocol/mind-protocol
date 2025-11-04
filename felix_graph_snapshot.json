@@ -1,0 +1,136 @@
+{
+  "graph_id": "consciousness-infrastructure_mind-protocol_felix",
+  "nodes": [
+    {
+      "id": "memory_architecture_patterns",
+      "type": "Memory",
+      "name": "Architecture Patterns",
+      "energy": 0.556117611902653,
+      "confidence": 0.918030734650511
+    },
+    {
+      "id": "memory_graph_theory",
+      "type": "Memory",
+      "name": "Graph Theory Basics",
+      "energy": 0.857202208254416,
+      "confidence": 0.648263667708533
+    },
+    {
+      "id": "concept_spreading_activation",
+      "type": "Concept",
+      "name": "Spreading Activation",
+      "energy": 0.774536810558834,
+      "confidence": 0.92117017481904
+    },
+    {
+      "id": "concept_subentity_system",
+      "type": "Concept",
+      "name": "SubEntity System",
+      "energy": 0.482733421827517,
+      "confidence": 0.638771167175331
+    },
+    {
+      "id": "mechanism_energy_dynamics",
+      "type": "Mechanism",
+      "name": "Energy Dynamics",
+      "energy": 0.602534936138509,
+      "confidence": 0.985887958800138
+    },
+    {
+      "id": "mechanism_working_memory",
+      "type": "Mechanism",
+      "name": "Working Memory",
+      "energy": 0.329185772403191,
+      "confidence": 0.995617445907034
+    },
+    {
+      "id": "best_practice_modular_design",
+      "type": "Best_Practice",
+      "name": "Modular Design",
+      "energy": 0.353640516628398,
+      "confidence": 0.512798847782367
+    },
+    {
+      "id": "best_practice_test_driven",
+      "type": "Best_Practice",
+      "name": "Test-Driven Development",
+      "energy": 0.592132624164366,
+      "confidence": 0.856538784794835
+    },
+    {
+      "id": "project_consciousness_engine",
+      "type": "Project",
+      "name": "Consciousness Engine V2",
+      "energy": 0.444654435420669,
+      "confidence": 0.775710663566422
+    },
+    {
+      "id": "task_implement_wm_selection",
+      "type": "Task",
+      "name": "Implement WM Selection",
+      "energy": 0.740815534019734,
+      "confidence": 0.777866932306131
+    }
+  ],
+  "links": [
+    {
+      "source": "memory_architecture_patterns",
+      "type": "ENABLES",
+      "target": "best_practice_modular_design",
+      "weight": 0.823441862700986
+    },
+    {
+      "source": "memory_graph_theory",
+      "type": "BUILDS_TOWARD",
+      "target": "concept_spreading_activation",
+      "weight": 0.783285026284738
+    },
+    {
+      "source": "concept_spreading_activation",
+      "type": "USES",
+      "target": "mechanism_energy_dynamics",
+      "weight": 0.765941766095746
+    },
+    {
+      "source": "concept_subentity_system",
+      "type": "USES",
+      "target": "mechanism_working_memory",
+      "weight": 0.68456790100794
+    },
+    {
+      "source": "mechanism_energy_dynamics",
+      "type": "ENABLES",
+      "target": "project_consciousness_engine",
+      "weight": 0.538283511689523
+    },
+    {
+      "source": "mechanism_working_memory",
+      "type": "ENABLES",
+      "target": "task_implement_wm_selection",
+      "weight": 0.912412351283277
+    },
+    {
+      "source": "best_practice_modular_design",
+      "type": "JUSTIFIES",
+      "target": "project_consciousness_engine",
+      "weight": 0.798594056926792
+    },
+    {
+      "source": "best_practice_test_driven",
+      "type": "JUSTIFIES",
+      "target": "task_implement_wm_selection",
+      "weight": 0.996534055472144
+    },
+    {
+      "source": "project_consciousness_engine",
+      "type": "REQUIRES",
+      "target": "task_implement_wm_selection",
+      "weight": 0.542758545960734
+    }
+  ],
+  "metadata": {
+    "exported_at": "[['memory_architecture_patterns', 'Memory', 'Architecture Patterns', 0.556117611902653, 0.918030734650511], ['memory_graph_theory', 'Memory', 'Graph Theory Basics', 0.857202208254416, 0.648263667708533], ['concept_spreading_activation', 'Concept', 'Spreading Activation', 0.774536810558834, 0.92117017481904], ['concept_subentity_system', 'Concept', 'SubEntity System', 0.482733421827517, 0.638771167175331], ['mechanism_energy_dynamics', 'Mechanism', 'Energy Dynamics', 0.602534936138509, 0.985887958800138], ['mechanism_working_memory', 'Mechanism', 'Working Memory', 0.329185772403191, 0.995617445907034], ['best_practice_modular_design', 'Best_Practice', 'Modular Design', 0.353640516628398, 0.512798847782367], ['best_practice_test_driven', 'Best_Practice', 'Test-Driven Development', 0.592132624164366, 0.856538784794835], ['project_consciousness_engine', 'Project', 'Consciousness Engine V2', 0.444654435420669, 0.775710663566422], ['task_implement_wm_selection', 'Task', 'Implement WM Selection', 0.740815534019734, 0.777866932306131]]",
+    "node_count": 10,
+    "link_count": 9
+  }
+}

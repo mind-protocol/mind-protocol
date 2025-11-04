@@ -21,6 +21,7 @@ import os
 import json
 from dataclasses import dataclass, asdict, field
 from typing import Optional, Dict, Any
+from orchestration.config.graph_names import resolver
 
 
 @dataclass
@@ -51,7 +52,7 @@ class FalkorDBConfig:
     """FalkorDB connection configuration."""
     host: str = "localhost"
     port: int = 6379
-    graph_name: str = "mind-protocol_org"  # Target graph for ingestion
+    graph_name: str = resolver.org_base()  # Target graph for ingestion
 
     @property
     def connection_string(self) -> str:

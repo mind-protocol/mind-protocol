@@ -44,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from falkordb import FalkorDB
 from sentence_transformers import SentenceTransformer
+from orchestration.config.graph_names import resolver
 
 
 # ============================================================================
@@ -498,7 +499,7 @@ def ask(question: str) -> Dict[str, Any]:
     # Initialize services
     embedding_service = EmbeddingService()
     db = FalkorDB(host='localhost', port=6379)
-    graph = db.select_graph('mind-protocol_org')
+    graph = db.select_graph(resolver.org_base())
 
     # 0. Build contextual query embedding
     query_vector, context_used = build_contextual_query(question, embedding_service)

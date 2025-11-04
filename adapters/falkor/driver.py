@@ -4,13 +4,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+# FalkorDB connection constants
+DEFAULT_FALKORDB_PORT = 6379
+
 
 @dataclass(frozen=True)
 class FalkorSettings:
     """Minimal connection settings for FalkorDB clients."""
 
     host: str = "localhost"
-    port: int = 6379
+    port: int = DEFAULT_FALKORDB_PORT
     graph_name_factory: Callable[[str], str] | None = None
 
     def graph_name_for(self, entity_id: str) -> str:

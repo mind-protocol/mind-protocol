@@ -18,6 +18,7 @@ Expected subsystems (U4_Subentity with scope="protocol"):
 """
 
 from falkordb import FalkorDB
+from orchestration.config.graph_names import resolver
 
 # Expected L4 subsystem slugs
 EXPECTED_L4_SUBSYSTEMS = {
@@ -46,12 +47,12 @@ def check_l4_subsystems():
 
     graphs_to_check = [
         "schema_registry",
-        "mind-protocol_ada",
-        "mind-protocol_atlas",
-        "mind-protocol_felix",
-        "mind-protocol_iris",
-        "mind-protocol_luca",
-        "mind-protocol_victor",
+        resolver.citizen("ada"),
+        resolver.citizen("atlas"),
+        resolver.citizen("felix"),
+        resolver.citizen("iris"),
+        resolver.citizen("luca"),
+        resolver.citizen("victor"),
     ]
 
     found_subsystems = {}

@@ -22,7 +22,7 @@ import json
 import logging
 import re
 import redis
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 from falkordb import FalkorDB
 
@@ -495,9 +495,9 @@ def deserialize_entity(props: Dict[str, Any]) -> 'Subentity':
     return Subentity(
         # Identity
         id=props['id'],
-        entity_kind=props['entity_kind'],
-        role_or_topic=props['role_or_topic'],
-        description=props['description'],
+        entity_kind=props.get('entity_kind', 'emergent'),  # Default to 'emergent' for legacy data
+        role_or_topic=props.get('role_or_topic', 'unknown'),  # Default to 'unknown' for legacy data
+        description=props.get('description', ''),  # Default to empty string for legacy data
 
         # Semantic representation
         centroid_embedding=centroid,
@@ -544,14 +544,14 @@ def deserialize_entity(props: Dict[str, Any]) -> 'Subentity':
 
         # Provenance
         created_from=props.get('created_from', 'unknown'),
-        created_by=props['created_by'],
+        created_by=props.get('created_by', 'legacy_migration'),  # Default for legacy data
         substrate=props.get('substrate', 'organizational'),
         scope=props.get('scope', 'organizational'),
 
         # Bitemporal tracking (milliseconds → datetime)
-        valid_at=_millis_to_datetime(props['valid_at']),
+        valid_at=_millis_to_datetime(props['valid_at']) if props.get('valid_at') else datetime.now(timezone.utc),
         invalidated_at=_millis_to_datetime(props['invalidated_at']) if props.get('invalidated_at') else None,
-        created_at=_millis_to_datetime(props['created_at']),
+        created_at=_millis_to_datetime(props['created_at']) if props.get('created_at') else datetime.now(timezone.utc),
         expired_at=_millis_to_datetime(props['expired_at']) if props.get('expired_at') else None,
 
         # Consciousness metadata
@@ -1184,7 +1184,8 @@ class FalkorDBAdapter:
                 graph.add_node(node)
 
         # Load all subentities FIRST (before links) so MEMBER_OF links can reference them
-        query_subentities = "MATCH (e:Subentity) RETURN e"
+        # NOTE: Query both 'SubEntity' (capital E, current standard) and 'Subentity' (legacy)
+        query_subentities = "MATCH (e) WHERE 'SubEntity' IN labels(e) OR 'Subentity' IN labels(e) RETURN e"
         result_subentities = self.graph_store.query(query_subentities)
 
         # Handle both QueryResult and list return types
@@ -1222,8 +1223,12 @@ class FalkorDBAdapter:
                         if entity.stability_state == "candidate":
                             entity.stability_state = "mature"
 
-                    graph.add_entity(entity)
-                    logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
+                    # Skip duplicates gracefully (may exist from previous loads or FalkorDB duplicates)
+                    if entity.id in graph.subentities:
+                        logger.debug(f"  Skipping duplicate subentity: {entity.id}")
+                    else:
+                        graph.add_entity(entity)
+                        logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
                 except Exception as e:
                     logger.warning(f"  Failed to deserialize subentity {props.get('id', 'unknown')}: {e}")
 

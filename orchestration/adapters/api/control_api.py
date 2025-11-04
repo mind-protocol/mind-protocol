@@ -2736,7 +2736,7 @@ async def websocket_endpoint(websocket: WebSocket):
     current_connections = len(websocket_manager._connections)
     memory_percent = psutil.virtual_memory().percent
 
-    MAX_MEMORY_PERCENT = 85  # Kill switch threshold
+    MAX_MEMORY_PERCENT = 95  # Kill switch threshold (raised for large consciousness graphs)
 
     if current_connections >= MAX_WEBSOCKET_CONNECTIONS:
         logger.warning(

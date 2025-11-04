@@ -22,6 +22,7 @@ from datetime import datetime
 import redis
 
 from tools.logger import setup_logger
+from orchestration.config.graph_names import resolver
 
 logger = setup_logger(__name__)
 
@@ -36,7 +37,7 @@ class GraphWrapper:
 
     MAX_RETRIES = 2  # Read-back retry attempts
 
-    def __init__(self, graph_name: str = "mind-protocol_org", host: str = "localhost", port: int = 6379):
+    def __init__(self, graph_name: str = resolver.org_base(), host: str = "localhost", port: int = 6379):
         """
         Initialize graph wrapper.
 

@@ -6,8 +6,25 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Mapping, Optional, Protocol, Sequence
 
+from consciousness.engine.constants import (
+    DEFAULT_MAX_ENERGY,
+    DEFAULT_TICK_INTERVAL_MS,
+    ENGINE_TICK_EVENT,
+    GRAPH_UPSERT_TYPE,
+    TELEMETRY_EMIT_TYPE,
+)
 from consciousness.engine.domain.state import EngineState, build_engine_state
 from consciousness.engine.services.scheduler import SchedulerDecision, plan_next_tick
+
+# Phase 1: Energy dynamics
+from consciousness.engine.domain import energy
+
+# Phase 2: Spreading activation
+from consciousness.engine.domain import activation
+
+# Phase 3: Frame loop orchestration
+from consciousness.engine.services.frame_loop import FrameOrchestrator, FrameResult, Stimulus
+
 from libs.law import implements
 
 logger = logging.getLogger(__name__)
@@ -35,9 +52,9 @@ class EngineConfig:
     """Configuration for the façade layer."""
 
     entity_id: str = "consciousness_engine"
-    tick_interval_ms: float = 100.0
-    max_energy: float = 100.0
-    telemetry_event: str = "engine.tick"
+    tick_interval_ms: float = DEFAULT_TICK_INTERVAL_MS
+    max_energy: float = DEFAULT_MAX_ENERGY
+    telemetry_event: str = ENGINE_TICK_EVENT
 
     @classmethod
     def from_legacy(cls, legacy_config: Any | None) -> "EngineConfig":
@@ -113,7 +130,7 @@ class Engine:
         decision = plan_next_tick(state, stimuli)
         if self.telemetry is not None:
             for intent in decision.intents:
-                if intent.get("type") == "telemetry.emit":
+                if intent.get("type") == TELEMETRY_EMIT_TYPE:
                     payload = intent.get("payload", {})
                     event = payload.get("event", self.config.telemetry_event)
                     data = payload.get("data", {})
@@ -137,7 +154,7 @@ class Engine:
         if self.graph_port is None:
             return
 
-        graph_intents = [intent for intent in intents if intent.get("type") == "graph.upsert"]
+        graph_intents = [intent for intent in intents if intent.get("type") == GRAPH_UPSERT_TYPE]
         if not graph_intents:
             return
 
@@ -154,4 +171,8 @@ __all__ = [
     "GraphPort",
     "SchedulerDecision",
     "TelemetryPort",
+    # Phase 3: Frame orchestration
+    "FrameOrchestrator",
+    "FrameResult",
+    "Stimulus",
 ]

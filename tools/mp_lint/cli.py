@@ -29,6 +29,7 @@ from lint_rules import (
     lint_schema_code_drift,
 )
 from registry_export import export_registry
+from orchestration.config.graph_names import resolver
 
 
 def lint_graph(graph_name: str, db: FalkorDB) -> bool:
@@ -188,12 +189,12 @@ def main():
     else:
         # Lint all graphs
         graphs = [
-            "mind-protocol_ada",
-            "mind-protocol_atlas",
-            "mind-protocol_felix",
-            "mind-protocol_iris",
-            "mind-protocol_luca",
-            "mind-protocol_victor",
+            resolver.citizen("ada"),
+            resolver.citizen("atlas"),
+            resolver.citizen("felix"),
+            resolver.citizen("iris"),
+            resolver.citizen("luca"),
+            resolver.citizen("victor"),
         ]
 
         all_passed = True

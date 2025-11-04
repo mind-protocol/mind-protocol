@@ -24,6 +24,8 @@ Phase: Migration Phase 1 - Energy Dynamics
 from typing import Dict, Any
 import math
 
+from consciousness.engine.constants import DEFAULT_ACTIVATION_THRESHOLD, DEFAULT_MAX_ENERGY, DEFAULT_MIN_ENERGY
+
 # Re-export for facade API
 __all__ = [
     # Facade helpers
@@ -41,7 +43,7 @@ __all__ = [
 # === Facade Helper Functions ===
 
 
-def clamp_energy(energy: float, min_energy: float = 0.0, max_energy: float = 100.0) -> float:
+def clamp_energy(energy: float, min_energy: float = DEFAULT_MIN_ENERGY, max_energy: float = DEFAULT_MAX_ENERGY) -> float:
     """
     Clamp energy value to valid range.
 
@@ -64,7 +66,7 @@ def clamp_energy(energy: float, min_energy: float = 0.0, max_energy: float = 100
     return max(min_energy, min(max_energy, energy))
 
 
-def normalize_energy(energy: float, max_energy: float = 100.0) -> float:
+def normalize_energy(energy: float, max_energy: float = DEFAULT_MAX_ENERGY) -> float:
     """
     Normalize energy to [0, 1] range.
 
@@ -110,7 +112,7 @@ def compute_total_energy(graph: 'Graph') -> float:
     return sum(node.E for node in graph.nodes.values())
 
 
-def compute_active_nodes(graph: 'Graph', threshold: float = 0.5) -> int:
+def compute_active_nodes(graph: 'Graph', threshold: float = DEFAULT_ACTIVATION_THRESHOLD) -> int:
     """
     Count number of active nodes (E > threshold).
 
@@ -160,8 +162,8 @@ def compute_average_energy(graph: 'Graph') -> float:
 def apply_energy_delta(
     current_energy: float,
     delta: float,
-    min_energy: float = 0.0,
-    max_energy: float = 100.0
+    min_energy: float = DEFAULT_MIN_ENERGY,
+    max_energy: float = DEFAULT_MAX_ENERGY
 ) -> float:
     """
     Apply energy delta and clamp to valid range.
@@ -191,7 +193,7 @@ def apply_energy_delta(
 
 def compute_energy_ratio(
     current_energy: float,
-    max_energy: float = 100.0
+    max_energy: float = DEFAULT_MAX_ENERGY
 ) -> float:
     """
     Compute energy as ratio of maximum (normalized to [0, 1]).
@@ -213,7 +215,7 @@ def compute_energy_ratio(
 # === Energy State Snapshots ===
 
 
-def compute_energy_statistics(graph: 'Graph', max_energy: float = 100.0) -> Dict[str, float]:
+def compute_energy_statistics(graph: 'Graph', max_energy: float = DEFAULT_MAX_ENERGY) -> Dict[str, float]:
     """
     Compute comprehensive energy statistics for graph.
 
@@ -255,7 +257,7 @@ def compute_energy_statistics(graph: 'Graph', max_energy: float = 100.0) -> Dict
     total = sum(energies)
     average = total / len(energies)
     normalized = normalize_energy(average, max_energy)
-    active = compute_active_nodes(graph, threshold=0.5)
+    active = compute_active_nodes(graph, threshold=DEFAULT_ACTIVATION_THRESHOLD)
 
     return {
         "total_energy": total,

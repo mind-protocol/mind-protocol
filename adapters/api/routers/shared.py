@@ -8,11 +8,14 @@ from consciousness.engine.domain.state import EngineState, NodeActivation
 from adapters.api.schemas.state import EngineStateModel, NodeActivationModel
 from orchestration.adapters.storage.engine_registry import get_engine
 
+# HTTP status codes
+HTTP_NOT_FOUND = 404
+
 
 def resolve_engine_facade(citizen_id: str) -> Engine:
     legacy_engine = get_engine(citizen_id)
     if legacy_engine is None:
-        raise HTTPException(status_code=404, detail=f"Engine not found: {citizen_id}")
+        raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"Engine not found: {citizen_id}")
 
     graph_port = getattr(legacy_engine, "_graph_port", None)
     config = EngineConfig.from_legacy(getattr(legacy_engine, "config", None))

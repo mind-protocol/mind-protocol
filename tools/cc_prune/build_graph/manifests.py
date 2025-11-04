@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import List, Tuple
+
+logger = logging.getLogger(__name__)
 
 try:
     import yaml
@@ -27,14 +30,16 @@ def _edges_for_file(file: Path, repo: Path) -> List[Tuple[Path, Path]]:
         try:
             data = json.loads(file.read_text(encoding="utf-8"))
             targets.extend(_extract_paths(data, file))
-        except Exception:
+        except Exception as exc:
+            logger.error(f"Failed to parse JSON manifest {file}: {exc}")
             return []
     else:
         if yaml is None:
             return []
         try:
             data = yaml.safe_load(file.read_text(encoding="utf-8"))
-        except Exception:
+        except Exception as exc:
+            logger.error(f"Failed to parse YAML manifest {file}: {exc}")
             return []
         targets.extend(_extract_paths(data, file))
     edges: list[tuple[Path, Path]] = []

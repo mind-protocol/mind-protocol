@@ -33,66 +33,105 @@ export default function LintPanel() {
   const [connected, setConnected] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Connect to membrane WebSocket
+  // Connect to membrane WebSocket with graceful error handling
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
-    const socket = new WebSocket(wsUrl);
+    let socket: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isCleaningUp = false;
 
-    socket.onopen = () => {
-      console.log("[LintPanel] WebSocket connected");
-      setConnected(true);
+    const connect = () => {
+      if (isCleaningUp) return;
 
-      // Subscribe to lint and review events (following useGraphStream pattern)
-      socket.send(JSON.stringify({
-        type: "subscribe@1.0",
-        topics: [
-          "lint.findings.emit",
-          "review.verdict",
-          "failure.emit"  // Also listen for failure events
-        ]
-      }));
-    };
-
-    socket.onmessage = (event) => {
       try {
-        const msg = JSON.parse(event.data);
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/api/ws';
+        socket = new WebSocket(wsUrl);
 
-        if (msg.type === "lint.findings.emit") {
-          const data = msg.payload as LintFindings;
-          console.log("[LintPanel] Lint findings received:", data);
+        socket.onopen = () => {
+          console.log("[LintPanel] WebSocket connected");
+          setConnected(true);
 
-          // Group findings by file
-          const byFile = new Map<string, Finding[]>();
-          data.findings.forEach(finding => {
-            const existing = byFile.get(finding.file) || [];
-            byFile.set(finding.file, [...existing, finding]);
-          });
+          // Subscribe to lint and review events (following useGraphStream pattern)
+          try {
+            socket?.send(JSON.stringify({
+              type: "subscribe@1.0",
+              topics: [
+                "lint.findings.emit",
+                "review.verdict",
+                "failure.emit"  // Also listen for failure events
+              ]
+            }));
+          } catch (err) {
+            console.warn("[LintPanel] Failed to subscribe:", err instanceof Error ? err.message : 'Unknown error');
+          }
+        };
 
-          setFindings(byFile);
-        } else if (msg.type === "review.verdict") {
-          const data = msg.payload as ReviewVerdict;
-          console.log("[LintPanel] Review verdict received:", data);
-          setVerdict(data);
-        }
+        socket.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === "lint.findings.emit") {
+              const data = msg.payload as LintFindings;
+              console.log("[LintPanel] Lint findings received:", data);
+
+              // Group findings by file
+              const byFile = new Map<string, Finding[]>();
+              data.findings.forEach(finding => {
+                const existing = byFile.get(finding.file) || [];
+                byFile.set(finding.file, [...existing, finding]);
+              });
+
+              setFindings(byFile);
+            } else if (msg.type === "review.verdict") {
+              const data = msg.payload as ReviewVerdict;
+              console.log("[LintPanel] Review verdict received:", data);
+              setVerdict(data);
+            }
+          } catch (err) {
+            console.warn("[LintPanel] Error parsing message:", err instanceof Error ? err.message : 'Parse error');
+          }
+        };
+
+        socket.onerror = () => {
+          // WebSocket errors are typically empty objects - don't log them
+          // Just update connection state silently
+          setConnected(false);
+        };
+
+        socket.onclose = () => {
+          console.log("[LintPanel] WebSocket closed, will retry in 5s");
+          setConnected(false);
+
+          // Graceful reconnect after 5 seconds
+          if (!isCleaningUp) {
+            reconnectTimeout = setTimeout(() => {
+              connect();
+            }, 5000);
+          }
+        };
+
+        setWs(socket);
       } catch (err) {
-        console.error("[LintPanel] Error parsing message:", err);
+        console.warn("[LintPanel] WebSocket connection failed:", err instanceof Error ? err.message : 'Connection error');
+        setConnected(false);
+
+        // Retry connection after 5 seconds
+        if (!isCleaningUp) {
+          reconnectTimeout = setTimeout(() => {
+            connect();
+          }, 5000);
+        }
       }
     };
 
-    socket.onerror = (error) => {
-      console.error("[LintPanel] WebSocket error:", error);
-      setConnected(false);
-    };
-
-    socket.onclose = () => {
-      console.log("[LintPanel] WebSocket closed");
-      setConnected(false);
-    };
-
-    setWs(socket);
+    connect();
 
     return () => {
-      socket.close();
+      isCleaningUp = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (socket) {
+        socket.close();
+        socket = null;
+      }
     };
   }, []);
 

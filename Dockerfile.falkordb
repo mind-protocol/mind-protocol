@@ -1,0 +1,11 @@
+# FalkorDB with Persistent Storage for Render
+FROM falkordb/falkordb:latest
+
+# Expose Redis port
+EXPOSE 6379
+
+# Data directory for persistence
+VOLUME /data
+
+# FalkorDB will save snapshots every 60 seconds if at least 1 write occurred
+# This is configured via --save 60 1 in dockerCommand

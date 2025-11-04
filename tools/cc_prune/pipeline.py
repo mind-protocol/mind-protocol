@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import os
 import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
+
+logger = logging.getLogger(__name__)
 
 from .asset_index import AssetIndex
 from .graph import SimpleDiGraph
@@ -221,7 +224,8 @@ class Pipeline:
         try:
             with manifest_path.open("r", encoding="utf-8") as fh:
                 data = json.load(fh)
-        except Exception:
+        except Exception as exc:
+            logger.error(f"Failed to read/parse manifest at {manifest_path}: {exc}")
             return
         files = data.get("files")
         if not isinstance(files, list):
@@ -264,7 +268,8 @@ class Pipeline:
             return
         try:
             text = inventory_path.read_text(encoding="utf-8")
-        except Exception:
+        except Exception as exc:
+            logger.error(f"Failed to read inventory at {inventory_path}: {exc}")
             return
 
         archived_norm = {

@@ -1,0 +1,574 @@
+{
+  "timeline": [
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:26:57.098720",
+      "source_node": "daniel",
+      "target_node": "rafael",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.41100832968384526,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:27:02.098720",
+      "node": "sofia",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 1,
+      "energy": 0.7072243637219146
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:27:05.098720",
+      "source_node": "rafael",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.9584764449448743,
+      "energy_transferred": 0.47030738182885107,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:07.098720",
+      "source_node": "maya",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.3926769343784938,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:17.098720",
+      "source_node": "daniel",
+      "target_node": "maya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.14683063767191432,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:27:17.098720",
+      "node": "aicha",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 2,
+      "energy": 0.9838110050331661
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:27.098720",
+      "source_node": "emma",
+      "target_node": "daniel",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4416521266261392,
+      "duration_ms": 1500
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:27:30.098720",
+      "source_node": "org_serenissima",
+      "source_layer": "L2",
+      "target_node": "rafael",
+      "target_layer": "L1",
+      "direction": "down",
+      "permeability": 0.8360073754744538,
+      "energy_transferred": 0.8683158676563092,
+      "accepted": true
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:27:32.098720",
+      "node": "daniel",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 3,
+      "energy": 0.7013937345655329
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:37.098720",
+      "source_node": "daniel",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.37464262332857623,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:47.098720",
+      "source_node": "priya",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.29432875107722106,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:27:47.098720",
+      "node": "maya",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 4,
+      "energy": 0.9991313771679718
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:27:55.098720",
+      "source_node": "aicha",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.8508581342674566,
+      "energy_transferred": 0.7765100355176399,
+      "accepted": false
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:27:57.098720",
+      "source_node": "daniel",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4589354050118474,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:28:02.098720",
+      "node": "priya",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 5,
+      "energy": 0.9896578750519449
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:07.098720",
+      "source_node": "emma",
+      "target_node": "rafael",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.47519526404535173,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:17.098720",
+      "source_node": "rafael",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.45928954582771464,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:28:17.098720",
+      "node": "emma",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 6,
+      "energy": 0.8016705371650192
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:28:20.098720",
+      "source_node": "priya",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.828862032372867,
+      "energy_transferred": 0.7168931970993162,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:27.098720",
+      "source_node": "daniel",
+      "target_node": "priya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.3149092336653091,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:28:32.098720",
+      "node": "priya",
+      "layer": "L1",
+      "action": "exit",
+      "working_memory_position": null,
+      "energy": 0.9679902543211043
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:37.098720",
+      "source_node": "maya",
+      "target_node": "priya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.3441012559496379,
+      "duration_ms": 1500
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:28:45.098720",
+      "source_node": "maya",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.6326781255945446,
+      "energy_transferred": 0.8027930323993893,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:47.098720",
+      "source_node": "priya",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4418609762636331,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:28:47.098720",
+      "node": "aicha",
+      "layer": "L1",
+      "action": "exit",
+      "working_memory_position": null,
+      "energy": 0.710361050801912
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:28:57.098720",
+      "source_node": "rafael",
+      "target_node": "maya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.47953207054698066,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:29:02.098720",
+      "node": "aicha",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 5,
+      "energy": 0.9459514271349477
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:07.098720",
+      "source_node": "aicha",
+      "target_node": "maya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.19362456150046992,
+      "duration_ms": 1500
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:29:10.098720",
+      "source_node": "aicha",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.60703920866106,
+      "energy_transferred": 0.8932107442419162,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:17.098720",
+      "source_node": "maya",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.27410664514741845,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:29:17.098720",
+      "node": "rafael",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 6,
+      "energy": 0.7783797039722664
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:27.098720",
+      "source_node": "sofia",
+      "target_node": "priya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.10580560254761529,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:29:32.098720",
+      "node": "sofia",
+      "layer": "L1",
+      "action": "exit",
+      "working_memory_position": null,
+      "energy": 0.8817505653673898
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:29:35.098720",
+      "source_node": "org_serenissima",
+      "source_layer": "L2",
+      "target_node": "priya",
+      "target_layer": "L1",
+      "direction": "down",
+      "permeability": 0.6570139584614525,
+      "energy_transferred": 0.5628554328552813,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:37.098720",
+      "source_node": "priya",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4280246265433425,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:47.098720",
+      "source_node": "aicha",
+      "target_node": "daniel",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.12261045128877833,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:29:47.098720",
+      "node": "priya",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 6,
+      "energy": 0.8593803040091994
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:29:57.098720",
+      "source_node": "rafael",
+      "target_node": "sofia",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.2630070928704983,
+      "duration_ms": 1500
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:30:00.098720",
+      "source_node": "org_serenissima",
+      "source_layer": "L2",
+      "target_node": "emma",
+      "target_layer": "L1",
+      "direction": "down",
+      "permeability": 0.6843125292543614,
+      "energy_transferred": 0.5983990104669903,
+      "accepted": true
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:30:02.098720",
+      "node": "sofia",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 7,
+      "energy": 0.7409527209394333
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:07.098720",
+      "source_node": "emma",
+      "target_node": "daniel",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.2754317273655684,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:17.098720",
+      "source_node": "priya",
+      "target_node": "rafael",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.154918279534258,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:30:17.098720",
+      "node": "daniel",
+      "layer": "L1",
+      "action": "exit",
+      "working_memory_position": null,
+      "energy": 0.8728951720950638
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:30:25.098720",
+      "source_node": "rafael",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.8392619540105392,
+      "energy_transferred": 0.7891519232028708,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:27.098720",
+      "source_node": "aicha",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.23448003908779286,
+      "duration_ms": 1500
+    },
+    {
+      "type": "activation.switch",
+      "timestamp": "2025-11-04T05:30:32.098720",
+      "node": "daniel",
+      "layer": "L1",
+      "action": "enter",
+      "working_memory_position": 7,
+      "energy": 0.9693831526553499
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:37.098720",
+      "source_node": "priya",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.46646345761274266,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:47.098720",
+      "source_node": "daniel",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4749974072177232,
+      "duration_ms": 1500
+    },
+    {
+      "type": "membrane.crossing",
+      "timestamp": "2025-11-04T05:30:50.098720",
+      "source_node": "priya",
+      "source_layer": "L1",
+      "target_node": "org_serenissima",
+      "target_layer": "L2",
+      "direction": "up",
+      "permeability": 0.9742186442496893,
+      "energy_transferred": 0.40343952947895984,
+      "accepted": true
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:30:57.098720",
+      "source_node": "emma",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.2719828561321438,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:31:07.098720",
+      "source_node": "emma",
+      "target_node": "priya",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.291280694322802,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:31:17.098720",
+      "source_node": "emma",
+      "target_node": "daniel",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4801713600403076,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:31:27.098720",
+      "source_node": "emma",
+      "target_node": "rafael",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.4015535875006021,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:31:37.098720",
+      "source_node": "priya",
+      "target_node": "emma",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.15594191295315124,
+      "duration_ms": 1500
+    },
+    {
+      "type": "energy.diffusion",
+      "timestamp": "2025-11-04T05:31:47.098720",
+      "source_node": "emma",
+      "target_node": "aicha",
+      "source_layer": "L1",
+      "target_layer": "L1",
+      "energy_transferred": 0.26692464780096237,
+      "duration_ms": 1500
+    }
+  ],
+  "metadata": {
+    "total_events": 55,
+    "generated_at": "2025-11-04T05:31:57.100213",
+    "source": "synthetic",
+    "layer_convention": "L4=protocol (top), L3=ecosystem, L2=org, L1=citizen (bottom)",
+    "time_range": {
+      "start": "2025-11-04T05:26:57.098720",
+      "end": "2025-11-04T05:31:47.098720"
+    },
+    "event_types": {
+      "energy.diffusion": 30,
+      "activation.switch": 15,
+      "membrane.crossing": 10
+    }
+  }
+}

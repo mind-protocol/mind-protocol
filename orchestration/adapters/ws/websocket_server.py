@@ -1125,6 +1125,27 @@ async def initialize_consciousness_engines():
     logger.info("")
 
 
+async def initialize_engines_and_services():
+    """
+    Combined background task: Initialize engines, then analyzers, then aggregator.
+
+    This runs AFTER startup_event completes, allowing port to bind immediately.
+    Engines load in background (takes 3+ minutes for 6 citizens - that's fine).
+    """
+    # Step 1: Initialize all consciousness engines (slow - 34s per citizen)
+    await initialize_consciousness_engines()
+
+    # Step 2: Initialize topology analyzers (needs engines to exist first)
+    await initialize_topology_analyzers()
+
+    # Step 3: Initialize dashboard state aggregator
+    await initialize_dashboard_aggregator()
+
+    logger.info("=" * 70)
+    logger.info("ALL BACKGROUND SERVICES INITIALIZED")
+    logger.info("=" * 70)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Server startup - bind port quickly, then load engines in background."""
@@ -1166,15 +1187,11 @@ async def startup_event():
     logger.info("   (Server will bind to port 8000 while engines load)")
     logger.info("")
 
-    asyncio.create_task(initialize_consciousness_engines())
+    # Launch all background tasks WITHOUT BLOCKING startup
+    # This allows uvicorn to bind port 8000 immediately
+    asyncio.create_task(initialize_engines_and_services())
 
-    # Initialize topology analyzers after engines start
-    # (analyzers need graphs to exist)
-    await asyncio.sleep(2.0)  # Give engines time to register
-    asyncio.create_task(initialize_topology_analyzers())
-
-    # Initialize Dashboard State Aggregator (1Hz emission service)
-    asyncio.create_task(initialize_dashboard_aggregator())
+    # Startup completes immediately - port binds within seconds!
 
 
 @app.on_event("shutdown")

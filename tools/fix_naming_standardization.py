@@ -11,6 +11,7 @@ Date: 2025-10-31
 
 from falkordb import FalkorDB
 from datetime import datetime
+from orchestration.config.graph_names import resolver
 
 # All universal types that need fixing
 UNIVERSAL_TYPES = [
@@ -187,12 +188,12 @@ def main():
     db = FalkorDB(host='localhost', port=6379)
 
     graphs_to_fix = [
-        "mind-protocol_ada",
-        "mind-protocol_atlas",
-        "mind-protocol_felix",
-        "mind-protocol_iris",
-        "mind-protocol_luca",
-        "mind-protocol_victor",
+        resolver.citizen("ada"),
+        resolver.citizen("atlas"),
+        resolver.citizen("felix"),
+        resolver.citizen("iris"),
+        resolver.citizen("luca"),
+        resolver.citizen("victor"),
     ]
 
     total_across_all = 0

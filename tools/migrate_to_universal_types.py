@@ -24,6 +24,7 @@ Date: 2025-10-31
 from falkordb import FalkorDB
 from datetime import datetime
 import sys
+from orchestration.config.graph_names import resolver
 
 # Mapping: old_type → (new_type, level, type_specific_mappings)
 TYPE_MIGRATIONS = {
@@ -333,12 +334,12 @@ def main():
     # Get list of consciousness graphs
     # Actual format: ecosystem_mind-protocol_<citizen>
     graphs_to_migrate = [
-        "mind-protocol_ada",
-        "mind-protocol_atlas",
-        "mind-protocol_felix",
-        "mind-protocol_iris",
-        "mind-protocol_luca",
-        "mind-protocol_victor",
+        resolver.citizen("ada"),
+        resolver.citizen("atlas"),
+        resolver.citizen("felix"),
+        resolver.citizen("iris"),
+        resolver.citizen("luca"),
+        resolver.citizen("victor"),
     ]
 
     total_across_all = 0
