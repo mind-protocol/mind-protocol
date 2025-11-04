@@ -26,6 +26,9 @@ llama-index-graph-stores-falkordb
 # from the .env file.
 python-dotenv
 
+# Settings management for Pydantic v2 (BaseSettings moved to separate package)
+pydantic-settings
+
 # Secure secret storage via the system keyring (DPAPI/Keychain/libsecret)
 keyring
 
