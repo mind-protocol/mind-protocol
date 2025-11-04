@@ -1999,9 +1999,12 @@ class ConsciousnessEngineV2:
 
         # === Step 8.7: SubEntity Merge Scanning (every 50 ticks) ===
         # Scan for redundant subentities and merge them to maintain differentiation quality
+        # Skip tick 0 (initial) and disabled intervals (999999 = disabled)
         if (
             hasattr(self.graph, 'subentities')
             and len(self.graph.subentities) >= 2
+            and self.tick_count > 0
+            and constants.SUBENTITY_MERGE_SCAN_INTERVAL_TICKS < 999999
             and self.tick_count % constants.SUBENTITY_MERGE_SCAN_INTERVAL_TICKS == 0
         ):
 

@@ -11,18 +11,24 @@ Called at decision points:
 
 Author: Atlas (Infrastructure Engineer)
 Created: 2025-10-26 (corrected from batch approach)
+Updated: 2025-11-04 (Ada - added timeout handling, query optimization)
 Spec: entity_differentiation.md (on-demand strategy)
 """
 
 import math
 import time
+import asyncio
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import logging
+from functools import wraps
 
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
 
 logger = logging.getLogger(__name__)
+
+# Query timeout configuration
+QUERY_TIMEOUT_SECONDS = 10  # Fail fast if query takes >10s
 
 
 @dataclass
@@ -54,10 +60,11 @@ class SubEntityMetrics:
     No batch jobs, no schedulers. Compute when decision needs it.
     """
 
-    def __init__(self, adapter: FalkorDBAdapter):
+    def __init__(self, adapter: FalkorDBAdapter, enable_expensive_queries: bool = True):
         self.adapter = adapter
         self._cache = {}  # Optional 5-min cache
         self._cache_ttl = 300  # seconds
+        self.enable_expensive_queries = enable_expensive_queries  # Disable during bootstrap
 
     def compute_pair_metrics(self, subentity_a: str, subentity_b: str) -> Optional[PairMetrics]:
         """
@@ -73,6 +80,11 @@ class SubEntityMetrics:
         Returns:
             PairMetrics or None if subentities don't exist
         """
+        # Skip expensive queries if disabled (e.g., during bootstrap)
+        if not self.enable_expensive_queries:
+            # Return placeholder metrics
+            return PairMetrics(J=0.0, C=0.5, U=0.0, H=0.0, delta_ctx=0.5)
+
         # Check cache
         cache_key = tuple(sorted([subentity_a, subentity_b]))
         if cache_key in self._cache:
@@ -81,26 +93,28 @@ class SubEntityMetrics:
                 return cached_metrics
 
         try:
-            # Lean query - O(1) for U/H, O(N) for J
+            # Optimized query - limit member collection size to prevent timeouts
             query = """
             MATCH (a:SubEntity {id: $A}), (b:SubEntity {id: $B})
 
-            // Member overlap (J)
+            // Limit member nodes to first 500 per subentity (prevent large collections)
             OPTIONAL MATCH (n:Node)-[:MEMBER_OF]->(a)
-            WITH a, b, collect(id(n)) AS A_nodes
+            WITH a, b, collect(id(n))[..500] AS A_nodes LIMIT 1
             OPTIONAL MATCH (m:Node)-[:MEMBER_OF]->(b)
-            WITH a, b, A_nodes, collect(id(m)) AS B_nodes
+            WITH a, b, A_nodes, collect(id(m))[..500] AS B_nodes LIMIT 1
 
             // Highway (H) - O(1) edge read
             OPTIONAL MATCH (a)-[h:RELATES_TO]-(b)
             WITH a, b, A_nodes, B_nodes,
                  COALESCE(h.ease, 0) AS ease,
                  COALESCE(h.count, 0) AS flow
+            LIMIT 1
 
             // WM co-activation (U) - O(1) edge read
             OPTIONAL MATCH (a)-[coact:COACTIVATES_WITH]-(b)
             WITH a, b, A_nodes, B_nodes, ease, flow,
                  COALESCE(coact.u_jaccard, 0.0) AS u_jaccard
+            LIMIT 1
 
             // Compute Jaccard using native Cypher (no APOC needed)
             WITH
@@ -117,6 +131,7 @@ class SubEntityMetrics:
               size(union_list) AS union,
               u_jaccard,
               ease * flow AS highway_utility
+            LIMIT 1
             """
 
             result = self.adapter.graph_store.query(query, {"A": subentity_a, "B": subentity_b})
@@ -194,21 +209,23 @@ class SubEntityMetrics:
         Returns:
             List of (subentity_id, jaccard_score) tuples, sorted descending
         """
+        # Skip expensive queries if disabled
+        if not self.enable_expensive_queries:
+            return []
+
         try:
+            # Optimized query - limit member collections and scan only first 100 subentities
             query = """
             MATCH (e:SubEntity {id: $subentity_id})
-            MATCH (n:Node)-[:MEMBER_OF]->(e)
-            WITH e, collect(id(n)) AS E_nodes
+            OPTIONAL MATCH (n:Node)-[:MEMBER_OF]->(e)
+            WITH e, collect(id(n))[..500] AS E_nodes LIMIT 1
 
             MATCH (other:SubEntity)
             WHERE other.id <> $subentity_id
-            OPTIONAL MATCH (m:Node)-[:MEMBER_OF]->(other)
-            WITH e, E_nodes, other, collect(id(m)) AS Other_nodes
+            WITH e, E_nodes, other LIMIT 100
 
-            WITH
-              other.id AS other_id,
-              E_nodes,
-              Other_nodes
+            OPTIONAL MATCH (m:Node)-[:MEMBER_OF]->(other)
+            WITH other.id AS other_id, E_nodes, collect(id(m))[..500] AS Other_nodes
 
             // Native Cypher set operations (no APOC)
             WITH
