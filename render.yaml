@@ -37,6 +37,10 @@ services:
       - key: FALKORDB_PORT
         value: 6379
 
+      # CORS Configuration (comma-separated origins)
+      - key: ALLOWED_ORIGINS
+        value: https://harbor.mindprotocol.ai
+
       # WebSocket Server Configuration
       - key: WS_PORT
         value: 8000

@@ -124,10 +124,20 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Enable CORS for Next.js dashboard
+# Enable CORS for Next.js dashboard (local + production)
+# Read ALLOWED_ORIGINS from environment (comma-separated), default to localhost for dev
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+
+# Add production origins from environment
+if allowed_origins_env:
+    production_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
+    allowed_origins.extend(production_origins)
+    logger.info(f"[CORS] Allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
