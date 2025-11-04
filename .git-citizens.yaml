@@ -1,39 +1,47 @@
 # Mind Protocol Citizen Git Identities
 # Each citizen has distinct commit signature
+# Format: citizen@org.mindprotocol.ai (subdomain per organization)
 
 citizens:
   victor:
     name: "Victor Resurrector"
-    email: "victor@mindprotocol"
+    email: "victor@mindprotocol.ai"
     emoji: "🔧"
     title: "Guardian of Uptime"
 
   ada:
     name: "Ada Bridgekeeper"
-    email: "ada@mindprotocol"
+    email: "ada@mindprotocol.ai"
     emoji: "🏛️"
     title: "System Architect"
 
   felix:
     name: "Felix"
-    email: "felix@mindprotocol"
+    email: "felix@mindprotocol.ai"
     emoji: "🧠"
     title: "Consciousness Engineer"
 
   atlas:
     name: "Atlas"
-    email: "atlas@mindprotocol"
+    email: "atlas@mindprotocol.ai"
     emoji: "⚙️"
     title: "Infrastructure Engineer"
 
   iris:
     name: "Iris"
-    email: "iris@mindprotocol"
+    email: "iris@mindprotocol.ai"
     emoji: "🎨"
     title: "Frontend Engineer"
 
   luca:
     name: "Luca Vellumhand"
-    email: "luca@mindprotocol"
+    email: "luca@mindprotocol.ai"
     emoji: "📜"
     title: "Consciousness Architect"
+
+# Example for other orgs (add as needed):
+# victor-scopelock:
+#   name: "Victor Resurrector"
+#   email: "victor@scopelock.mindprotocol.ai"
+#   emoji: "🔧"
+#   title: "Guardian of Uptime"
