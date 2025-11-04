@@ -1063,7 +1063,14 @@ async def initialize_topology_analyzers():
 
         # Initialize all analyzers in parallel (non-blocking I/O)
         init_tasks = [analyzer.async_init() for _, analyzer in analyzers_to_init]
-        await asyncio.gather(*init_tasks, return_exceptions=True)
+        results = await asyncio.gather(*init_tasks, return_exceptions=True)
+
+        # Log any exceptions from initialization
+        for (citizen_id, analyzer), result in zip(analyzers_to_init, results):
+            if isinstance(result, Exception):
+                logger.error(f"[TopologyAnalyzers] ❌ {citizen_id} - initialization exception: {result}")
+                import traceback
+                traceback.print_exception(type(result), result, result.__traceback__)
 
         # Start all analyzers and store references
         for citizen_id, analyzer in analyzers_to_init:
@@ -1073,7 +1080,7 @@ async def initialize_topology_analyzers():
                     TOPOLOGY_ANALYZERS[citizen_id] = analyzer
                     logger.info(f"[TopologyAnalyzers] ✅ {citizen_id} - analyzer started")
                 else:
-                    logger.error(f"[TopologyAnalyzers] ❌ {citizen_id} - initialization failed")
+                    logger.error(f"[TopologyAnalyzers] ❌ {citizen_id} - initialization failed (check exceptions above)")
             except Exception as e:
                 logger.error(f"[TopologyAnalyzers] Failed to start analyzer for {citizen_id}: {e}")
 
