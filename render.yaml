@@ -24,6 +24,8 @@ services:
     plan: starter  # Upgrade to standard for production (need 512MB+ RAM for embeddings)
     buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
     startCommand: python3 orchestration/mpsv3_supervisor.py --config orchestration/services/mpsv3/services.yaml
+    dependsOn:
+      - name: mind-protocol-falkordb
     envVars:
       # Redis/FalkorDB Connection (internal private network)
       - key: ECONOMY_REDIS_URL
@@ -109,10 +111,11 @@ services:
     healthCheckPath: /healthz
 
 # Database Notes:
-# - FalkorDB runs as Redis module, so we use Render's Redis service
-# - For production, consider upgrading to Standard plan (1GB RAM minimum)
-# - Graph data persists automatically via Redis RDB snapshots
-# - Configure backup schedule in Render dashboard
+# - FalkorDB runs as Docker container with 10GB persistent disk mounted at /data
+# - Graph data persists via RDB snapshots (saves every 60s if ≥1 write)
+# - Disk survives service restarts and redeployments
+# - For production, consider upgrading disk size in Render dashboard
+# - Backup: Download /data volume snapshots from Render dashboard
 
 # Scaling Notes:
 # - Backend needs 512MB+ RAM for sentence-transformers embeddings

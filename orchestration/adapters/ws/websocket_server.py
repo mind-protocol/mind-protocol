@@ -312,13 +312,13 @@ async def start_citizen_consciousness(
     graph_store.name = graph_name
     adapter = FalkorDBAdapter(graph_store)
 
-    # Run blocking load_graph in thread with 30s timeout
-    logger.info(f"[N1:{citizen_id}] Loading graph from FalkorDB (30s timeout)...")
+    # Run blocking load_graph in thread with 60s timeout
+    logger.info(f"[N1:{citizen_id}] Loading graph from FalkorDB (60s timeout)...")
     loop = asyncio.get_event_loop()
     try:
         graph = await asyncio.wait_for(
             loop.run_in_executor(None, adapter.load_graph, graph_name),
-            timeout=30.0
+            timeout=60.0
         )
         logger.info(f"[N1:{citizen_id}] Graph loaded successfully")
         # DEBUG: Log what was actually loaded
@@ -331,7 +331,7 @@ async def start_citizen_consciousness(
         else:
             logger.warning(f"[N1:{citizen_id}] DEBUG: graph.subentities is EMPTY!")
     except asyncio.TimeoutError:
-        logger.error(f"[N1:{citizen_id}] Graph load timed out after 30s")
+        logger.error(f"[N1:{citizen_id}] Graph load timed out after 60s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
     # === EMERGENCE-ONLY ARCHITECTURE (NO BOOTSTRAP) ===
@@ -470,17 +470,17 @@ async def start_organizational_consciousness(
     graph_store.name = graph_name
     adapter = FalkorDBAdapter(graph_store)
 
-    # Run blocking load_graph in thread with 30s timeout
-    logger.info(f"[N2:{org_id}] Loading graph from FalkorDB (30s timeout)...")
+    # Run blocking load_graph in thread with 60s timeout
+    logger.info(f"[N2:{org_id}] Loading graph from FalkorDB (60s timeout)...")
     loop = asyncio.get_event_loop()
     try:
         graph = await asyncio.wait_for(
             loop.run_in_executor(None, adapter.load_graph, graph_name),
-            timeout=30.0
+            timeout=60.0
         )
         logger.info(f"[N2:{org_id}] Graph loaded successfully")
     except asyncio.TimeoutError:
-        logger.error(f"[N2:{org_id}] Graph load timed out after 30s")
+        logger.error(f"[N2:{org_id}] Graph load timed out after 60s")
         raise RuntimeError(f"Graph load timeout for {graph_name}")
 
     # === EMERGENCE-ONLY ARCHITECTURE (NO BOOTSTRAP) ===
