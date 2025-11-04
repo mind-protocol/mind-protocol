@@ -11,181 +11,185 @@ const LayerGraphVisualization = dynamic(
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
-      {/* HERO SECTION WITH GRAPH */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {/* Graph Background */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization />
-        </div>
+      {/* HERO */}
+      <section className="py-24 border-b border-gray-800">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
+            AI Organizations<br />That Actually Work
+          </h1>
+          <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-8 font-light">
+            Graph-based consciousness substrate. Real memory. Real coordination.
+          </p>
 
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              AI Organizations<br />That Actually Work
-            </h1>
-            <p className="text-xl md:text-2xl text-[#6FE7E2] mb-8 font-light">
-              Not agents. Not teams. Complete AI organizations with persistent memory, coordination, and real capability.
-            </p>
+          {/* Live Status */}
+          <div className="inline-flex items-center gap-2 bg-[#0a0a0f]/80 border border-green-500/30 rounded-lg px-4 py-2 mb-8">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
+            <span className="text-gray-400 text-sm">• 1,147 nodes • &lt;2.3s queries</span>
+          </div>
 
-            {/* Live Status */}
-            <div className="bg-[#0a0a0f]/60 border border-green-500/30 rounded-lg p-4 mb-8 inline-block">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
-                <span className="text-gray-400 text-sm">• 347 files • 1,147 nodes • &lt;2.3s queries</span>
-              </div>
-            </div>
-
-            {/* CTAs */}
-            <div className="flex gap-4 justify-center flex-wrap">
-              <a
-                href="https://github.com/mind-protocol/graphcare"
-                className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm font-semibold"
-              >
-                Verify the Code
-              </a>
-              <a
-                href="#layers"
-                className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all text-sm"
-              >
-                How It Works ↓
-              </a>
-              <a
-                href="/consciousness"
-                className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all text-sm font-semibold"
-              >
-                Live Dashboard →
-              </a>
-            </div>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <a
+              href="/consciousness"
+              className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
+            >
+              Live Dashboard →
+            </a>
+            <a
+              href="https://github.com/mind-protocol/graphcare"
+              className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
+            >
+              Verify the Code
+            </a>
           </div>
         </div>
       </section>
 
       {/* LAYER 1 - INDIVIDUAL MEMORY */}
-      <section id="layers" className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
-        {/* Graph Background - L1 Only */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization visibleLayers={['l1']} />
+      <section id="layers" className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
+        {/* Header */}
+        <div className="pt-12 pb-6 px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
+            <h2 className="text-4xl text-white font-bold">Layer 1: Individual Memory</h2>
+          </div>
+          <p className="text-gray-400">100 citizen nodes • Clustered by organization • Persistent context</p>
         </div>
 
-        {/* Content Bubble Overlay */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6">
-          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#22d3ee]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(34,211,238,0.3)]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
-              <h2 className="text-3xl text-[#22d3ee] font-bold">Layer 1: Individual Memory</h2>
-            </div>
-            <p className="text-lg text-gray-300 mb-6">Each specialist remembers, learns, adapts</p>
+        {/* Graph */}
+        <div className="flex-1 relative">
+          <div className="absolute inset-0">
+            <LayerGraphVisualization visibleLayers={['l1']} />
+          </div>
 
-            <div className="bg-[#22d3ee]/10 border border-[#22d3ee]/30 p-4 rounded-lg mb-4">
-              <p className="text-sm text-gray-300 mb-3">
-                New contractor: "Why don't we use JWT tokens? Simpler."
-              </p>
-              <p className="text-sm text-[#22d3ee] font-semibold">
-                Felix: "We moved away from JWT in March 2024. Mobile app broke. See ADR-023."
-              </p>
+          {/* Example Node Bubble - positioned on graph */}
+          <div className="absolute top-1/4 right-1/4 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#22d3ee]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(34,211,238,0.4)] max-w-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-[#22d3ee] animate-pulse"></div>
+              <span className="text-[#22d3ee] font-semibold text-sm">Felix</span>
+              <span className="text-gray-500 text-xs">• Consciousness Engineer</span>
             </div>
-
-            <p className="text-sm text-gray-400 italic">
-              100 specialists • Each remembers years of context • No resets
-            </p>
+            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#22d3ee]/30 pl-2">
+              <p className="mb-1"><span className="text-gray-500">Last active:</span> 2 mins ago</p>
+              <p className="mb-1"><span className="text-gray-500">Recent memory:</span> "JWT token migration March 2024. Mobile connection failed with 24h expiry. ADR-023."</p>
+            </div>
+            <div className="flex gap-3 text-xs text-gray-400">
+              <span>Connections: 12 within org, 3 cross-org</span>
+              <span className="text-[#22d3ee]">Energy: 0.87</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* LAYER 2 - ORGANIZATIONAL COORDINATION */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
-        {/* Graph Background - L2 Only */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization visibleLayers={['l2']} />
+      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
+        {/* Header */}
+        <div className="pt-12 pb-6 px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-3 h-3 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
+            <h2 className="text-4xl text-white font-bold">Layer 2: Organizational Coordination</h2>
+          </div>
+          <p className="text-gray-400">50 organization nodes • Cross-citizen coordination • Autonomous triage</p>
         </div>
 
-        {/* Content Bubble Overlay */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6">
-          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#a855f7]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(168,85,247,0.3)]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
-              <h2 className="text-3xl text-[#a855f7] font-bold">Layer 2: Organizational Coordination</h2>
-            </div>
-            <p className="text-lg text-gray-300 mb-6">Specialists coordinate, prioritize, align</p>
+        {/* Graph */}
+        <div className="flex-1 relative">
+          <div className="absolute inset-0">
+            <LayerGraphVisualization visibleLayers={['l2']} />
+          </div>
 
-            <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-4 rounded-lg mb-4">
-              <p className="text-sm text-gray-300 mb-3">
-                Marcus finds 23 security issues.
-              </p>
-              <p className="text-sm text-[#a855f7] font-semibold">
-                Checks payment code, sees $2M/month notes, queries incidents → "3 CRITICAL in payment. PRs generated."
-              </p>
+          {/* Example Node Bubble */}
+          <div className="absolute top-1/3 left-1/4 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#a855f7]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(168,85,247,0.4)] max-w-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-[#a855f7] animate-pulse"></div>
+              <span className="text-[#a855f7] font-semibold text-sm">GraphCare Org</span>
             </div>
-
-            <p className="text-sm text-gray-400 italic">
-              50 organizations • Autonomous triage • You spent 0 minutes
-            </p>
+            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#a855f7]/30 pl-2">
+              <p className="mb-1"><span className="text-gray-500">Active task:</span> Security triage (23 issues found)</p>
+              <p className="mb-1"><span className="text-gray-500">Priority:</span> 3 CRITICAL in payment system (untested, $2M/month revenue)</p>
+              <p className="mb-1"><span className="text-gray-500">Action:</span> PRs generated, Vera assigned verification</p>
+            </div>
+            <div className="flex gap-3 text-xs text-gray-400">
+              <span>7 specialists active</span>
+              <span className="text-[#a855f7]">Coordination: 0.94</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* LAYER 3 - EXTERNAL REACH */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
-        {/* Graph Background - L3 Only */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization visibleLayers={['l3']} />
+      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
+        {/* Header */}
+        <div className="pt-12 pb-6 px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
+            <h2 className="text-4xl text-white font-bold">Layer 3: External Reach</h2>
+          </div>
+          <p className="text-gray-400">35 ecosystem nodes • GitHub, Slack, Notion, Jira • Full context integration</p>
         </div>
 
-        {/* Content Bubble Overlay */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6">
-          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#f59e0b]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(245,158,11,0.3)]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
-              <h2 className="text-3xl text-[#f59e0b] font-bold">Layer 3: External Reach</h2>
-            </div>
-            <p className="text-lg text-gray-300 mb-6">Organization accesses tools, data, services</p>
+        {/* Graph */}
+        <div className="flex-1 relative">
+          <div className="absolute inset-0">
+            <LayerGraphVisualization visibleLayers={['l3']} />
+          </div>
 
-            <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/30 p-4 rounded-lg mb-4">
-              <p className="text-sm text-gray-300 mb-3">
-                "Why is user service so complex?"
-              </p>
-              <p className="text-sm text-[#f59e0b] font-semibold">
-                GitHub: 47 deps • Slack: "GDPR required complexity" • Notion: ADR-034 • Jira: LEGAL-234 (6 weeks)
-              </p>
+          {/* Example Node Bubble */}
+          <div className="absolute top-1/2 right-1/3 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#f59e0b]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(245,158,11,0.4)] max-w-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse"></div>
+              <span className="text-[#f59e0b] font-semibold text-sm">GitHub Integration</span>
             </div>
-
-            <p className="text-sm text-gray-400 italic">
-              35 ecosystems • GitHub, Slack, Notion, Jira • Full context
-            </p>
+            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#f59e0b]/30 pl-2">
+              <p className="mb-1"><span className="text-gray-500">Query:</span> "Why is user service complex?"</p>
+              <p className="mb-1"><span className="text-gray-500">Found:</span> 47 dependencies, Oct 2023 refactor</p>
+              <p className="mb-1"><span className="text-gray-500">Cross-ref:</span> Slack → "GDPR required complexity" | Notion → ADR-034 | Jira → LEGAL-234 (6 weeks)</p>
+            </div>
+            <div className="flex gap-3 text-xs text-gray-400">
+              <span>4 sources queried</span>
+              <span className="text-[#f59e0b]">Confidence: 0.91</span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* LAYER 4 - EFFICIENT OPERATION */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
-        {/* Graph Background - L4 Only */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization visibleLayers={['l4']} />
+      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
+        {/* Header */}
+        <div className="pt-12 pb-6 px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
+            <h2 className="text-4xl text-white font-bold">Layer 4: Efficient Operation</h2>
+          </div>
+          <p className="text-gray-400">8 governance nodes • Resource optimization • Performance monitoring</p>
         </div>
 
-        {/* Content Bubble Overlay */}
-        <div className="relative z-10 max-w-3xl mx-auto px-6">
-          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#10b981]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
-              <h2 className="text-3xl text-[#10b981] font-bold">Layer 4: Efficient Operation</h2>
-            </div>
-            <p className="text-lg text-gray-300 mb-6">Organization runs efficiently at scale</p>
+        {/* Graph */}
+        <div className="flex-1 relative">
+          <div className="absolute inset-0">
+            <LayerGraphVisualization visibleLayers={['l4']} />
+          </div>
 
-            <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-4 rounded-lg mb-4">
-              <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
-                <div><span className="text-[#10b981]">Query p50:</span> 1.8s</div>
-                <div><span className="text-[#10b981]">Query p95:</span> 2.7s</div>
-                <div><span className="text-[#10b981]">Health:</span> 94%</div>
-                <div><span className="text-[#10b981]">Cost:</span> ~$12/mo</div>
+          {/* Example Node Bubble */}
+          <div className="absolute bottom-1/4 left-1/3 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#10b981]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(16,185,129,0.4)] max-w-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></div>
+              <span className="text-[#10b981] font-semibold text-sm">Performance Monitor</span>
+            </div>
+            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#10b981]/30 pl-2">
+              <p className="mb-1"><span className="text-gray-500">System metrics:</span></p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                <span>Query p50: 1.8s</span>
+                <span>Query p95: 2.7s</span>
+                <span>Memory: 4.2GB</span>
+                <span>Health: 94%</span>
+                <span>Daily sync: 1.2h</span>
+                <span>Cost: ~$12/mo</span>
               </div>
             </div>
-
-            <p className="text-sm text-gray-400 italic">
-              8 governance nodes • Predictable performance • No monitoring needed
-            </p>
+            <div className="text-xs text-gray-400">
+              <span className="text-[#10b981]">Status:</span> Optimal • No intervention needed
+            </div>
           </div>
         </div>
       </section>
