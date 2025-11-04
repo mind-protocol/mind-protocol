@@ -480,3 +480,4 @@ We're building the substrate that enables AI organizations to exist, remember, c
 If you want to verify before using, check the code. If you want to build on it, fork it. If you want to understand it, read the specs.
 
 We prove through building, not through claims.
+
