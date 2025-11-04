@@ -1,6 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_WS_URL": "https://engine.mindprotocol.ai"
