@@ -60,7 +60,8 @@ sentence-transformers
 
 # Fast subentity matching with HNSW indices
 # 7x faster than FAISS on CPU, deterministic
-hnswlib
+# Disabled for production deployment (requires C++ compilation, not currently used)
+# hnswlib
 
 # SetFit for hierarchical classification
 # 75-85% accuracy, trains in 30s
