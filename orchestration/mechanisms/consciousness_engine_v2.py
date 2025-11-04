@@ -344,6 +344,127 @@ class ConsciousnessEngineV2:
         logger.info(f"  Nodes: {len(self.graph.nodes)}, Links: {len(self.graph.links)}")
         logger.info(f"  Tick interval: {self.config.tick_interval_ms}ms")
 
+    async def bootstrap_snapshot_cache(self):
+        """
+        Bootstrap SnapshotCache with existing graph data from FalkorDB.
+
+        This solves the "empty dashboard" problem where the cache was only
+        populated on new SubEntity spawns, but existing data from FalkorDB
+        was never loaded.
+
+        Called once at engine startup (before main loop).
+        """
+        from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+
+        logger.info("[Bootstrap] Loading existing graph data into SnapshotCache...")
+        snapshot_cache = get_snapshot_cache()
+        citizen_id = self.config.entity_id
+
+        try:
+            # Query all nodes (excluding SubEntities - they're handled separately)
+            nodes_query = "MATCH (n) WHERE NOT 'SubEntity' IN labels(n) AND NOT 'Subentity' IN labels(n) RETURN n"
+            nodes_result = self.adapter.graph_store.query(nodes_query)
+
+            node_count = 0
+            if nodes_result:
+                result_set = nodes_result if isinstance(nodes_result, list) else getattr(nodes_result, 'result_set', [])
+                for row in result_set:
+                    if row and len(row) > 0:
+                        node_data = row[0]
+                        if hasattr(node_data, 'properties'):
+                            props = node_data.properties
+                        else:
+                            props = node_data if isinstance(node_data, dict) else {}
+
+                        # Build node payload for cache
+                        node_payload = {
+                            "id": props.get("id", props.get("name")),
+                            "name": props.get("name"),
+                            "type": list(node_data.labels)[0] if hasattr(node_data, 'labels') and node_data.labels else "Node",
+                            "properties": props
+                        }
+                        snapshot_cache.upsert_node(citizen_id, node_payload)
+                        node_count += 1
+
+            # Query all SubEntities
+            subentities_query = "MATCH (e) WHERE 'SubEntity' IN labels(e) OR 'Subentity' IN labels(e) RETURN e"
+            subentities_result = self.adapter.graph_store.query(subentities_query)
+
+            subentity_count = 0
+            if subentities_result:
+                result_set = subentities_result if isinstance(subentities_result, list) else getattr(subentities_result, 'result_set', [])
+                for row in result_set:
+                    if row and len(row) > 0:
+                        subentity_data = row[0]
+                        if hasattr(subentity_data, 'properties'):
+                            props = subentity_data.properties
+                        else:
+                            props = subentity_data if isinstance(subentity_data, dict) else {}
+
+                        # Build subentity payload for cache
+                        subentity_payload = {
+                            "id": props.get("id"),
+                            "slug": props.get("role_or_topic"),
+                            "name": props.get("name"),
+                            "members": []  # Will be populated by MEMBER_OF links
+                        }
+                        snapshot_cache.upsert_subentity(citizen_id, subentity_payload)
+                        subentity_count += 1
+
+            # Query all links
+            links_query = "MATCH (a)-[r]->(b) RETURN r, a, b"
+            links_result = self.adapter.graph_store.query(links_query)
+
+            link_count = 0
+            if links_result:
+                result_set = links_result if isinstance(links_result, list) else getattr(links_result, 'result_set', [])
+                for row in result_set:
+                    if row and len(row) >= 3:
+                        link_data = row[0]
+                        source_node = row[1]
+                        target_node = row[2]
+
+                        if hasattr(link_data, 'properties'):
+                            link_props = link_data.properties
+                        else:
+                            link_props = link_data if isinstance(link_data, dict) else {}
+
+                        # Get source/target IDs
+                        if hasattr(source_node, 'properties'):
+                            source_id = source_node.properties.get("id", source_node.properties.get("name"))
+                        else:
+                            source_id = source_node.get("id", source_node.get("name")) if isinstance(source_node, dict) else None
+
+                        if hasattr(target_node, 'properties'):
+                            target_id = target_node.properties.get("id", target_node.properties.get("name"))
+                        else:
+                            target_id = target_node.get("id", target_node.get("name")) if isinstance(target_node, dict) else None
+
+                        # Get link type
+                        if hasattr(link_data, 'type'):
+                            link_type = link_data.type
+                        elif hasattr(link_data, 'label'):
+                            link_type = link_data.label
+                        else:
+                            link_type = link_props.get("type", "UNKNOWN")
+
+                        # Build link payload for cache
+                        link_payload = {
+                            "type": link_type,
+                            "source": source_id,
+                            "target": target_id,
+                            "weight": link_props.get("weight"),
+                            "properties": link_props
+                        }
+                        snapshot_cache.upsert_link(citizen_id, link_payload)
+                        link_count += 1
+
+            logger.info(f"[Bootstrap] ✅ SnapshotCache populated: {node_count} nodes, {subentity_count} subentities, {link_count} links")
+
+        except Exception as e:
+            logger.error(f"[Bootstrap] Failed to populate SnapshotCache: {e}", exc_info=True)
+            # Don't crash the engine - continue with empty cache
+
     async def run(self, max_ticks: Optional[int] = None):
         """
         Run consciousness engine (main loop).
@@ -359,6 +480,10 @@ class ConsciousnessEngineV2:
         self.running = True
         self.loop = asyncio.get_running_loop()  # Capture loop for async injection
         logger.info("[ConsciousnessEngineV2] Starting main loop...")
+
+        # Bootstrap SnapshotCache with existing FalkorDB data
+        # This ensures dashboard receives graph data even if engines started before frontend connected
+        await self.bootstrap_snapshot_cache()
 
         try:
             while self.running:
