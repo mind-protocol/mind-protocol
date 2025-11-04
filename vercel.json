@@ -33,11 +33,11 @@
   "rewrites": [
     {
       "source": "/api/ws",
-      "destination": "https://mind-protocol-backend.onrender.com/api/ws"
+      "destination": "https://engine.mindprotocol.ai/api/ws"
     },
     {
       "source": "/api/:path*",
-      "destination": "https://mind-protocol-backend.onrender.com/api/:path*"
+      "destination": "https://engine.mindprotocol.ai/api/:path*"
     }
   ]
 }
