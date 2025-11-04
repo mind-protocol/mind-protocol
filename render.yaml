@@ -41,6 +41,10 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://mindprotocol.ai,https://www.mindprotocol.ai
 
+      # Admin API Key (for /admin/* endpoints - set a secure key in production)
+      - key: ADMIN_API_KEY
+        sync: false  # Set via Render dashboard (keep secret)
+
       # WebSocket Server Configuration
       - key: WS_PORT
         value: 8000

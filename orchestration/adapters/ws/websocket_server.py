@@ -1253,6 +1253,135 @@ async def shutdown_event():
     await heartbeat_writer.stop()
 
 
+# ============================================================================
+# Admin API Endpoints (for FalkorDB access on Render)
+# ============================================================================
+#
+# These endpoints provide programmatic access to FalkorDB for:
+# - Verifying data migration
+# - Querying consciousness graphs
+# - Debugging production issues
+#
+# Authentication: ADMIN_API_KEY environment variable (optional - disabled if not set)
+# ============================================================================
+
+from fastapi import HTTPException, Header
+from typing import Dict, Any
+
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", None)
+
+def verify_admin_auth(x_api_key: Optional[str] = Header(None)):
+    """Verify admin API key if ADMIN_API_KEY is set."""
+    if ADMIN_API_KEY is None:
+        # No auth required if ADMIN_API_KEY not set (local dev)
+        return
+
+    if x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
+@app.get("/admin/graphs")
+async def admin_list_graphs(x_api_key: Optional[str] = Header(None)):
+    """
+    List all FalkorDB graphs with node/edge counts.
+
+    Headers:
+        X-API-Key: Admin API key (if ADMIN_API_KEY env var is set)
+
+    Returns:
+        {
+            "graphs": [
+                {"name": "mind-protocol_ada", "nodes": 2274, "edges": 4512},
+                ...
+            ],
+            "total_graphs": 9
+        }
+    """
+    verify_admin_auth(x_api_key)
+
+    try:
+        r = redis.Redis(host=settings.FALKORDB_HOST, port=settings.FALKORDB_PORT, decode_responses=True)
+        graph_names = r.execute_command("GRAPH.LIST")
+
+        graphs_with_stats = []
+        for graph_name in graph_names:
+            try:
+                # Get graph stats using GRAPH.QUERY
+                query = "MATCH (n) RETURN count(n) as node_count"
+                result = r.execute_command("GRAPH.QUERY", graph_name, query)
+                node_count = result[1][0][0] if result and len(result) > 1 and len(result[1]) > 0 else 0
+
+                query = "MATCH ()-[r]->() RETURN count(r) as edge_count"
+                result = r.execute_command("GRAPH.QUERY", graph_name, query)
+                edge_count = result[1][0][0] if result and len(result) > 1 and len(result[1]) > 0 else 0
+
+                graphs_with_stats.append({
+                    "name": graph_name,
+                    "nodes": node_count,
+                    "edges": edge_count
+                })
+            except Exception as e:
+                logger.error(f"[Admin API] Failed to get stats for {graph_name}: {e}")
+                graphs_with_stats.append({
+                    "name": graph_name,
+                    "nodes": "error",
+                    "edges": "error"
+                })
+
+        return {
+            "graphs": graphs_with_stats,
+            "total_graphs": len(graphs_with_stats)
+        }
+
+    except Exception as e:
+        logger.error(f"[Admin API] Failed to list graphs: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list graphs: {str(e)}")
+
+
+class CypherQuery(BaseModel):
+    graph_name: str
+    query: str
+
+@app.post("/admin/query")
+async def admin_execute_query(query_req: CypherQuery, x_api_key: Optional[str] = Header(None)):
+    """
+    Execute arbitrary Cypher query on a specific graph.
+
+    Headers:
+        X-API-Key: Admin API key (if ADMIN_API_KEY env var is set)
+
+    Body:
+        {
+            "graph_name": "mind-protocol_ada",
+            "query": "MATCH (n) RETURN n LIMIT 5"
+        }
+
+    Returns:
+        {
+            "result": [...],
+            "execution_time_ms": 45.2
+        }
+    """
+    verify_admin_auth(x_api_key)
+
+    try:
+        import time
+        start = time.time()
+
+        r = redis.Redis(host=settings.FALKORDB_HOST, port=settings.FALKORDB_PORT, decode_responses=True)
+        result = r.execute_command("GRAPH.QUERY", query_req.graph_name, query_req.query)
+
+        execution_time_ms = (time.time() - start) * 1000
+
+        return {
+            "result": result,
+            "execution_time_ms": round(execution_time_ms, 2)
+        }
+
+    except Exception as e:
+        logger.error(f"[Admin API] Query failed on {query_req.graph_name}: {e}")
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+
+
 # === Info Endpoint ===
 
 # @app.get("/")  # DISABLED: WebSocket-only architecture
