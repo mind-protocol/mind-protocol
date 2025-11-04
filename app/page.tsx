@@ -12,86 +12,76 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
       {/* HERO SECTION WITH GRAPH */}
-      <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {/* Graph Background */}
-        <div className="absolute inset-0 z-0">
-          <LayerGraphVisualization />
-        </div>
+      <section className="min-h-screen flex items-center relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 py-20 w-full">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            {/* Left: Main Message Bubble */}
+            <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
+              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                AI Organizations<br />That Actually Work
+              </h1>
+              <p className="text-xl md:text-2xl text-[#6FE7E2] mb-6 font-light">
+                Not agents. Not teams. Complete AI organizations with persistent memory, coordination, and real capability.
+              </p>
 
-        {/* Hero Content Overlays */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20">
-          {/* Main Message Bubble - Center */}
-          <div className="text-center mb-12 bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              AI Organizations<br />That Actually Work
-            </h1>
-            <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-6 font-light">
-              Not agents. Not teams. Complete AI organizations<br />
-              with persistent memory, coordination, and real capability.
-            </p>
-            <div className="flex gap-4 justify-center mt-8 flex-wrap">
-              <a
-                href="https://github.com/mind-protocol/graphcare"
-                className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
-              >
-                Verify the Code
-              </a>
-              <a
-                href="#layers"
-                className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
-              >
-                How It Works ↓
-              </a>
-              <a
-                href="#demo"
-                className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all"
-              >
-                Book Demo
-              </a>
+              {/* Live Status */}
+              <div className="bg-[#0a0a0f]/60 border border-green-500/30 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
+                </div>
+                <p className="text-xs text-gray-400">
+                  GraphCare operational • 347 files • 1,147 nodes<br />
+                  6 specialists • &lt;2.3s queries • 94% health
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex gap-3 flex-wrap">
+                <a
+                  href="https://github.com/mind-protocol/graphcare"
+                  className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm"
+                >
+                  Verify the Code
+                </a>
+                <a
+                  href="#layers"
+                  className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all text-sm"
+                >
+                  How It Works ↓
+                </a>
+                <a
+                  href="/consciousness"
+                  className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all text-sm"
+                >
+                  Live Dashboard →
+                </a>
+              </div>
             </div>
-          </div>
 
-          {/* Status Bubble - Bottom Right */}
-          <div className="fixed bottom-8 right-8 bg-[#0a0a0f]/95 backdrop-blur-xl border border-green-500/30 rounded-xl p-4 shadow-[0_0_30px_rgba(34,197,94,0.2)] max-w-sm z-50">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
+            {/* Right: Graph */}
+            <div className="h-[600px] lg:h-[700px]">
+              <LayerGraphVisualization />
             </div>
-            <p className="text-xs text-gray-400">
-              GraphCare operational • 347 files • 1,147 nodes<br />
-              6 specialists • &lt;2.3s queries • 94% health
-            </p>
-            <a href="/consciousness" className="text-[#6FE7E2] text-xs mt-2 inline-block hover:underline">
-              Dashboard →
-            </a>
-          </div>
-
-          {/* Open Source Badge - Bottom Left */}
-          <div className="fixed bottom-8 left-8 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#E4A631]/30 rounded-xl p-4 shadow-[0_0_30px_rgba(228,166,49,0.2)] z-50">
-            <p className="text-xs text-gray-400 mb-2">Open Source:</p>
-            <a href="https://github.com/mind-protocol/graphcare" className="text-[#6FE7E2] text-sm hover:underline block">
-              GraphCare →
-            </a>
-            <a href="https://github.com/mind-protocol/scopelock" className="text-[#6FE7E2] text-sm hover:underline block">
-              ScopeLock →
-            </a>
           </div>
         </div>
       </section>
 
       {/* WHY ORGANIZATIONS NOT AGENTS */}
       <section id="layers" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-white mb-4">Why Organizations, Not Just Agents</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Most AI tools are single agents that reset every session.<br />
-              We build complete organizations with four critical capabilities.
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left: Content */}
+            <div>
+              <div className="mb-12">
+                <h2 className="text-4xl font-bold text-white mb-4">Why Organizations, Not Just Agents</h2>
+                <p className="text-lg text-gray-400">
+                  Most AI tools are single agents that reset every session. We build complete organizations with four critical capabilities.
+                </p>
+              </div>
 
-          {/* The 4 Layers */}
-          <div className="space-y-16">
+              {/* The 4 Layers */}
+              <div className="space-y-12">
             {/* LAYER 1 - INDIVIDUAL MEMORY */}
             <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#22d3ee]">
               <div className="flex items-center gap-3 mb-4">
@@ -258,52 +248,61 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Comparison */}
-          <div className="mt-16 grid md:grid-cols-2 gap-8">
-            <div className="bg-[#151619] p-6 rounded-lg border border-red-600/30">
-              <h4 className="text-xl text-white font-semibold mb-4">Single AI Agents</h4>
-              <ul className="space-y-3 text-sm text-gray-300">
-                <li className="flex items-start">
-                  <span className="mr-2 text-red-500">❌</span>
-                  <span>No Memory: Every chat starts fresh</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-red-500">❌</span>
-                  <span>No Coordination: One agent, one task</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-red-500">❌</span>
-                  <span>Limited Reach: Only what you paste</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-red-500">❌</span>
-                  <span>Inconsistent: Speed varies wildly</span>
-                </li>
-              </ul>
-              <p className="mt-4 text-gray-500 italic text-sm">Result: You work faster</p>
+              {/* Comparison */}
+              <div className="mt-12 grid md:grid-cols-2 gap-6">
+                <div className="bg-[#151619] p-6 rounded-lg border border-red-600/30">
+                  <h4 className="text-lg text-white font-semibold mb-4">Single AI Agents</h4>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-start">
+                      <span className="mr-2 text-red-500">❌</span>
+                      <span>No Memory: Every chat starts fresh</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-red-500">❌</span>
+                      <span>No Coordination: One agent, one task</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-red-500">❌</span>
+                      <span>Limited Reach: Only what you paste</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-red-500">❌</span>
+                      <span>Inconsistent: Speed varies wildly</span>
+                    </li>
+                  </ul>
+                  <p className="mt-4 text-gray-500 italic text-sm">Result: You work faster</p>
+                </div>
+
+                <div className="bg-[#151619] p-6 rounded-lg border border-[#1DB7B3]">
+                  <h4 className="text-lg text-[#6FE7E2] font-semibold mb-4">AI Organizations</h4>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-start">
+                      <span className="mr-2 text-[#1DB7B3]">✓</span>
+                      <span>Persistent Memory (L1): Years of context</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-[#1DB7B3]">✓</span>
+                      <span>Coordination (L2): 7 specialists parallel</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-[#1DB7B3]">✓</span>
+                      <span>Full Access (L3): GitHub+Slack+Notion+Jira</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 text-[#1DB7B3]">✓</span>
+                      <span>Reliable (L4): &lt;3s queries, SLAs</span>
+                    </li>
+                  </ul>
+                  <p className="mt-4 text-[#6FE7E2] font-semibold text-sm">Result: You work less</p>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-[#151619] p-6 rounded-lg border border-[#1DB7B3]">
-              <h4 className="text-xl text-[#6FE7E2] font-semibold mb-4">AI Organizations</h4>
-              <ul className="space-y-3 text-sm text-gray-300">
-                <li className="flex items-start">
-                  <span className="mr-2 text-[#1DB7B3]">✓</span>
-                  <span>Persistent Memory (L1): Years of context</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-[#1DB7B3]">✓</span>
-                  <span>Coordination (L2): 7 specialists parallel</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-[#1DB7B3]">✓</span>
-                  <span>Full Access (L3): GitHub+Slack+Notion+Jira</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2 text-[#1DB7B3]">✓</span>
-                  <span>Reliable (L4): &lt;3s queries, SLAs</span>
-                </li>
-              </ul>
-              <p className="mt-4 text-[#6FE7E2] font-semibold text-sm">Result: You work less</p>
+            {/* Right: Graph (sticky) */}
+            <div className="hidden lg:block">
+              <div className="sticky top-8 h-[800px]">
+                <LayerGraphVisualization />
+              </div>
             </div>
           </div>
         </div>
