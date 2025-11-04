@@ -154,7 +154,9 @@ class WebSocketManager:
                     stale_connections.append(conn_id)
                 elif (now - meta["last_heartbeat"]).total_seconds() > HEARTBEAT_INTERVAL_SECONDS:
                     try:
-                        await meta["ws"].send_json({"type": "ping", "ts": now.isoformat()})
+                        # Only send ping if WebSocket is in CONNECTED state (after accept())
+                        if meta["ws"].client_state.name == "CONNECTED":
+                            await meta["ws"].send_json({"type": "ping", "ts": now.isoformat()})
                     except Exception:
                         stale_connections.append(conn_id)
             
