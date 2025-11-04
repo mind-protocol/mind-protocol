@@ -2,6 +2,68 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 07:18 - Iris: Graph Enlarged + L2 Orgs & L1 Citizens Visually Distinct
+
+**Context:** User requested: remove "What We Actually Build" section, make graph bigger, make L2 orgs and L1 citizens more distinct
+
+**Changes (Commit d17c3539):**
+
+**1. Removed "What We Actually Build" Section:**
+- Deleted entire section from homepage
+- Section was redundant with graph visualization
+- Graph now speaks for itself
+
+**2. Enlarged Graph Canvas:**
+- Increased height from 600px → 800px (33% larger)
+- Better visibility of all 4 layers
+
+**3. Made L2 Organizations Visually Distinct:**
+- **Node size:** 3.5 → 4.5 (larger, representing organizational scale)
+- **Emissive intensity:** 0.5 → 0.7 (brighter purple glow)
+- **Glow opacity:** 0.15 → 0.22 (stronger halo effect)
+- **Result:** 50 purple organizations clearly distinguishable as distinct entities
+
+**4. Made L1 Citizens Numerous and Distinct:**
+- **Node size:** 3 → 2.5 (smaller, showing "many individuals")
+- **Emissive intensity:** 0.5 → 0.7 (brighter cyan glow)
+- **Glow opacity:** 0.15 → 0.25 (strongest glow of all layers)
+- **Result:** 100 cyan citizens clearly visible as numerous small entities
+
+**Visual Hierarchy Now:**
+- L4 (Governance): Size 5 - Largest (8 nodes)
+- **L2 (Organizations): Size 4.5** - Second largest (50 distinct orgs)
+- L3 (Ecosystem): Size 4 - Medium (35 nodes)
+- **L1 (Citizens): Size 2.5** - Smallest but most numerous (100 individuals)
+
+**User Experience:**
+- ✅ Larger canvas shows more detail
+- ✅ L2 organizations clearly distinguishable as distinct entities
+- ✅ L1 citizens clearly numerous (many small bright points)
+- ✅ Size contrast shows individual → organization → ecosystem → governance hierarchy
+
+---
+
+## 2025-11-04 07:37 - Felix: Fixed Render Deployment - Missing docs_view_api.py
+
+**Issue:** Render deployment failing with:
+```
+ModuleNotFoundError: No module named 'orchestration.adapters.api.docs_view_api'
+```
+
+**Root Cause:** File existed locally but was never committed to git (untracked)
+
+**Fix (Commit cb556ba6):**
+- Added `orchestration/adapters/api/docs_view_api.py` to git (357 lines)
+- Pushed to trigger automatic Render redeploy
+- File contains docs view handlers required by control_api.py imports
+
+**Expected Result:**
+- Render will detect push and auto-redeploy
+- WebSocket server will start successfully
+- engine.mindprotocol.ai will be accessible
+
+---
+
 ## 2025-11-04 07:12 - Iris: 3D Graph Improvements - Self-Explanatory + No Scroll Interference
 
 **Context:** User feedback: zoom prevented page scrolling, graph needed to explain itself
