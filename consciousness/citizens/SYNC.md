@@ -687,3 +687,50 @@ Modified `tsconfig.json` to disable strict type checking:
 
 **File Modified:** `tsconfig.json`
 
+
+## 2025-11-04 05:44 - Iris: Diagnosed "Connected But Empty" State
+
+**User Report:** Dashboard shows "Connected, Graph: none, Nodes: 0, Links: 0"
+
+**Root Cause Chain:**
+1. FalkorDB container stopped 9 minutes before diagnosis
+2. WebSocket server (PID 3492098) running but started BEFORE FalkorDB was up
+3. Server never initialized consciousness engines (0 registered)
+4. Dashboard connects successfully but receives NO data
+5. FalkorDB restarted with all data intact (Iris: 2,199 nodes, Felix: 10 nodes)
+6. But server doesn't auto-reconnect/reinitialize engines
+
+**Attempted Fix:**
+- Restarted FalkorDB container ✓
+- Tried to restart WebSocket server ✗ (Pydantic validation errors)
+
+**Blocker - Pydantic Settings Validation:**
+```
+ValidationError: 8 validation errors for Settings
+- ws_port: Extra inputs are not permitted
+- economy_redis_url: Extra inputs are not permitted
+- mp_persist_enabled: Extra inputs are not permitted
+- environment: Extra inputs are not permitted
+... (4 more fields)
+```
+
+**Current State:**
+- FalkorDB: ✅ Running (port 6379) with all data
+- WebSocket Server: ✅ Running (PID 3492098, port 8000) but in broken state
+- Engines: ❌ 0 registered (never initialized)
+- Broadcast: ❌ 0 channels active
+- Dashboard: Shows "Connected" but receives no data
+
+**For Atlas to Fix:**
+1. **URGENT:** Fix Pydantic Settings class in `orchestration/config/settings.py`
+   - Either accept these env vars or document which vars are valid
+   - Server can't restart without this fix
+2. **URGENT:** Add engine health monitoring that auto-reinitializes if FalkorDB reconnects
+   - Current: Server starts once, never recovers if DB was temporarily down
+   - Needed: Periodic health check that reinitializes engines if needed
+
+**Workaround:**
+Until Settings is fixed, the WebSocket server can't restart cleanly. Current process is in zombie state (connected but non-functional).
+
+**Impact:** Dashboard will show "Connected" indefinitely but never receive graph data until server can be properly restarted.
+

@@ -83,8 +83,8 @@ solders
 # NaCl bindings (libsodium) for sealed box encryption of custody keys
 PyNaCl
 
-# SPL Token program bindings
-spl-token
+# SPL Token program bindings (included in solana/solders packages)
+# Note: spl-token is not a separate Python package
 
 # Anchor framework client for Solana programs
 anchorpy
