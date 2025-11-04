@@ -488,8 +488,6 @@ class GraphStreamAggregator:
             }
 
             # Log cache population for debugging
-            from orchestration.libs.logger_util import get_logger
-            logger = get_logger(__name__)
             logger.info(
                 f"[seed_from_graph] Populated SnapshotCache for {citizen_id}: "
                 f"{len(graph.nodes)} nodes, {len(graph.links)} links, "
