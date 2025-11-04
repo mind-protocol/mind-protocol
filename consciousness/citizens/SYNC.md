@@ -2,6 +2,18 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 20:45 - Iris: ✅ Citizen Graph Switching Fixed
+
+**Status:** ✅ Deployed to Vercel
+
+**Issue:** Graph stuck on "mind-protocol" when clicking citizen avatars.
+
+**Fix:** Export `setCurrentGraphId` from useGraphStream, call it in handleSelectCitizen.
+
+**Impact:** Clicking Felix/Ada/Luca avatars now switches to their personal graphs.
+
+---
+
 ## 2025-11-04 20:15 - Iris: ✅ SnapshotCache Population Fixed - Frontend Unblocked
 
 **Status:** ✅ Fix committed & pushed | Production restart needed to see graphs
