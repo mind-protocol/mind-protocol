@@ -1337,12 +1337,13 @@ if __name__ == "__main__":
         observer.start()
         logger.info("✅ File watcher started")
 
-    # Run server on port 8000
+    # Run server on port from environment (Render sets PORT dynamically)
+    port = int(os.getenv("PORT", "8000"))  # Default to 8000 for local dev
     try:
         uvicorn.run(
             app,
             host="0.0.0.0",
-            port=8000,
+            port=port,
             log_level="info"
         )
     except SystemExit as e:
