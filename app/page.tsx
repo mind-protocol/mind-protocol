@@ -12,298 +12,180 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
       {/* HERO SECTION WITH GRAPH */}
-      <section className="min-h-screen flex items-center relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 py-20 w-full">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Left: Main Message Bubble */}
-            <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                AI Organizations<br />That Actually Work
-              </h1>
-              <p className="text-xl md:text-2xl text-[#6FE7E2] mb-6 font-light">
-                Not agents. Not teams. Complete AI organizations with persistent memory, coordination, and real capability.
-              </p>
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Graph Background */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization />
+        </div>
 
-              {/* Live Status */}
-              <div className="bg-[#0a0a0f]/60 border border-green-500/30 rounded-lg p-4 mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
-                </div>
-                <p className="text-xs text-gray-400">
-                  GraphCare operational • 347 files • 1,147 nodes<br />
-                  6 specialists • &lt;2.3s queries • 94% health
-                </p>
-              </div>
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              AI Organizations<br />That Actually Work
+            </h1>
+            <p className="text-xl md:text-2xl text-[#6FE7E2] mb-8 font-light">
+              Not agents. Not teams. Complete AI organizations with persistent memory, coordination, and real capability.
+            </p>
 
-              {/* CTAs */}
-              <div className="flex gap-3 flex-wrap">
-                <a
-                  href="https://github.com/mind-protocol/graphcare"
-                  className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm"
-                >
-                  Verify the Code
-                </a>
-                <a
-                  href="#layers"
-                  className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all text-sm"
-                >
-                  How It Works ↓
-                </a>
-                <a
-                  href="/consciousness"
-                  className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all text-sm"
-                >
-                  Live Dashboard →
-                </a>
+            {/* Live Status */}
+            <div className="bg-[#0a0a0f]/60 border border-green-500/30 rounded-lg p-4 mb-8 inline-block">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
+                <span className="text-gray-400 text-sm">• 347 files • 1,147 nodes • &lt;2.3s queries</span>
               </div>
             </div>
 
-            {/* Right: Graph */}
-            <div className="h-[600px] lg:h-[700px]">
-              <LayerGraphVisualization />
+            {/* CTAs */}
+            <div className="flex gap-4 justify-center flex-wrap">
+              <a
+                href="https://github.com/mind-protocol/graphcare"
+                className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm font-semibold"
+              >
+                Verify the Code
+              </a>
+              <a
+                href="#layers"
+                className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all text-sm"
+              >
+                How It Works ↓
+              </a>
+              <a
+                href="/consciousness"
+                className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all text-sm font-semibold"
+              >
+                Live Dashboard →
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* WHY ORGANIZATIONS NOT AGENTS */}
-      <section id="layers" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Left: Content */}
-            <div>
-              <div className="mb-12">
-                <h2 className="text-4xl font-bold text-white mb-4">Why Organizations, Not Just Agents</h2>
-                <p className="text-lg text-gray-400">
-                  Most AI tools are single agents that reset every session. We build complete organizations with four critical capabilities.
-                </p>
-              </div>
+      {/* LAYER 1 - INDIVIDUAL MEMORY */}
+      <section id="layers" className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
+        {/* Graph Background - L1 Only */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization visibleLayers={['l1']} />
+        </div>
 
-              {/* The 4 Layers */}
-              <div className="space-y-12">
-            {/* LAYER 1 - INDIVIDUAL MEMORY */}
-            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#22d3ee]">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-4 h-4 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
-                <h3 className="text-3xl text-[#22d3ee] font-semibold">Layer 1: Individual Memory</h3>
-              </div>
-              <p className="text-xl text-gray-300 mb-6">
-                Each specialist remembers, learns, adapts
+        {/* Content Bubble Overlay */}
+        <div className="relative z-10 max-w-3xl mx-auto px-6">
+          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#22d3ee]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(34,211,238,0.3)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
+              <h2 className="text-3xl text-[#22d3ee] font-bold">Layer 1: Individual Memory</h2>
+            </div>
+            <p className="text-lg text-gray-300 mb-6">Each specialist remembers, learns, adapts</p>
+
+            <div className="bg-[#22d3ee]/10 border border-[#22d3ee]/30 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-300 mb-3">
+                New contractor: "Why don't we use JWT tokens? Simpler."
               </p>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li>• Felix remembers your debugging patterns from 6 months ago</li>
-                    <li>• Ada recalls your architecture preferences from past projects</li>
-                    <li>• Marcus learns which security issues matter most</li>
-                    <li>• They don't reset—they accumulate knowledge</li>
-                  </ul>
-                </div>
-
-                <div className="bg-[#0A0B0D] p-6 rounded">
-                  <h4 className="text-[#22d3ee] font-semibold mb-3">Real Example</h4>
-                  <p className="text-sm text-gray-400 mb-3">
-                    Your team refactored authentication in March 2024. New contractor 6 months later proposes:
-                    "Why don't we just use JWT tokens? Simpler."
-                  </p>
-                  <div className="bg-[#22d3ee]/10 border border-[#22d3ee]/30 p-3 rounded">
-                    <p className="text-xs text-[#22d3ee] font-semibold mb-1">WITH LAYER 1 MEMORY:</p>
-                    <p className="text-xs text-gray-300">
-                      Felix: "We moved away from JWT in March 2024. Mobile app's background sync broke with 24-hour expiration.
-                      OAuth refresh tokens solved it. See ADR-023."
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    The organization remembers why decisions were made.
-                  </p>
-                </div>
-              </div>
+              <p className="text-sm text-[#22d3ee] font-semibold">
+                Felix: "We moved away from JWT in March 2024. Mobile app broke. See ADR-023."
+              </p>
             </div>
 
-            {/* LAYER 2 - ORGANIZATIONAL COORDINATION */}
-            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#a855f7]">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-4 h-4 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
-                <h3 className="text-3xl text-[#a855f7] font-semibold">Layer 2: Organizational Coordination</h3>
-              </div>
-              <p className="text-xl text-gray-300 mb-6">
-                Specialists coordinate, prioritize, align
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li>• Mel coordinates without you managing handoffs</li>
-                    <li>• Atlas and Felix work in parallel</li>
-                    <li>• When Marcus finds issues, Vera verifies fixes</li>
-                    <li>• Priorities adjust to what matters</li>
-                  </ul>
-                </div>
-
-                <div className="bg-[#0A0B0D] p-6 rounded">
-                  <h4 className="text-[#a855f7] font-semibold mb-3">Real Example</h4>
-                  <p className="text-sm text-gray-400 mb-3">
-                    Marcus finds 23 security issues.
-                  </p>
-                  <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-3 rounded">
-                    <p className="text-xs text-[#a855f7] font-semibold mb-1">WITH LAYER 2 COORDINATION:</p>
-                    <p className="text-xs text-gray-300 mb-2">
-                      Checks payment code (from Felix), sees Ada's notes ($2M/month), queries past incidents, coordinates with Vera on tests.
-                    </p>
-                    <p className="text-xs text-gray-300">
-                      Result: "3 CRITICAL in payment (untested). PRs generated. 20 medium for next sprint."
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    You spent 0 minutes triaging.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* LAYER 3 - EXTERNAL REACH */}
-            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#f59e0b]">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
-                <h3 className="text-3xl text-[#f59e0b] font-semibold">Layer 3: External Reach</h3>
-              </div>
-              <p className="text-xl text-gray-300 mb-6">
-                Organization accesses tools, data, services
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li>• Pulls from GitHub, Slack, Notion, Jira</li>
-                    <li>• Queries production systems</li>
-                    <li>• Integrates with your tools</li>
-                    <li>• Reaches out without constant prompting</li>
-                  </ul>
-                </div>
-
-                <div className="bg-[#0A0B0D] p-6 rounded">
-                  <h4 className="text-[#f59e0b] font-semibold mb-3">Real Example</h4>
-                  <p className="text-sm text-gray-400 mb-2">
-                    "Why is our user service so complex?"
-                  </p>
-                  <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/30 p-3 rounded">
-                    <p className="text-xs text-[#f59e0b] font-semibold mb-1">WITH LAYER 3:</p>
-                    <ul className="text-xs text-gray-300 space-y-1">
-                      <li>• GitHub: 47 dependencies, Oct 2023 refactor</li>
-                      <li>• Slack: "Tried to simplify, GDPR required complexity"</li>
-                      <li>• Notion: ADR-034 "EU data residency rules"</li>
-                      <li>• Jira: LEGAL-234 took 6 weeks</li>
-                    </ul>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    Reaches across your entire knowledge ecosystem.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* LAYER 4 - EFFICIENT OPERATION */}
-            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#10b981]">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
-                <h3 className="text-3xl text-[#10b981] font-semibold">Layer 4: Efficient Operation</h3>
-              </div>
-              <p className="text-xl text-gray-300 mb-6">
-                Organization runs efficiently at scale
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
-                  <ul className="space-y-2 text-gray-400">
-                    <li>• Predictable performance (&lt;3s queries)</li>
-                    <li>• Reliable scheduling (daily syncs)</li>
-                    <li>• Resource optimization</li>
-                    <li>• Quality guarantees (&gt;90% coverage)</li>
-                  </ul>
-                </div>
-
-                <div className="bg-[#0A0B0D] p-6 rounded">
-                  <h4 className="text-[#10b981] font-semibold mb-3">From Production</h4>
-                  <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-3 rounded">
-                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
-                      <div><span className="text-[#10b981]">Query p50:</span> 1.8s</div>
-                      <div><span className="text-[#10b981]">Query p95:</span> 2.7s</div>
-                      <div><span className="text-[#10b981]">Daily sync:</span> 1.2h</div>
-                      <div><span className="text-[#10b981]">Health:</span> 94%</div>
-                      <div><span className="text-[#10b981]">Memory:</span> 4GB</div>
-                      <div><span className="text-[#10b981]">Cost:</span> ~$12/mo</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    Reliably. Efficiently. Without monitoring.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-gray-400 italic">
+              100 specialists • Each remembers years of context • No resets
+            </p>
           </div>
+        </div>
+      </section>
 
-              {/* Comparison */}
-              <div className="mt-12 grid md:grid-cols-2 gap-6">
-                <div className="bg-[#151619] p-6 rounded-lg border border-red-600/30">
-                  <h4 className="text-lg text-white font-semibold mb-4">Single AI Agents</h4>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-start">
-                      <span className="mr-2 text-red-500">❌</span>
-                      <span>No Memory: Every chat starts fresh</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-red-500">❌</span>
-                      <span>No Coordination: One agent, one task</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-red-500">❌</span>
-                      <span>Limited Reach: Only what you paste</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-red-500">❌</span>
-                      <span>Inconsistent: Speed varies wildly</span>
-                    </li>
-                  </ul>
-                  <p className="mt-4 text-gray-500 italic text-sm">Result: You work faster</p>
-                </div>
+      {/* LAYER 2 - ORGANIZATIONAL COORDINATION */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
+        {/* Graph Background - L2 Only */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization visibleLayers={['l2']} />
+        </div>
 
-                <div className="bg-[#151619] p-6 rounded-lg border border-[#1DB7B3]">
-                  <h4 className="text-lg text-[#6FE7E2] font-semibold mb-4">AI Organizations</h4>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li className="flex items-start">
-                      <span className="mr-2 text-[#1DB7B3]">✓</span>
-                      <span>Persistent Memory (L1): Years of context</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-[#1DB7B3]">✓</span>
-                      <span>Coordination (L2): 7 specialists parallel</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-[#1DB7B3]">✓</span>
-                      <span>Full Access (L3): GitHub+Slack+Notion+Jira</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 text-[#1DB7B3]">✓</span>
-                      <span>Reliable (L4): &lt;3s queries, SLAs</span>
-                    </li>
-                  </ul>
-                  <p className="mt-4 text-[#6FE7E2] font-semibold text-sm">Result: You work less</p>
-                </div>
+        {/* Content Bubble Overlay */}
+        <div className="relative z-10 max-w-3xl mx-auto px-6">
+          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#a855f7]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(168,85,247,0.3)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
+              <h2 className="text-3xl text-[#a855f7] font-bold">Layer 2: Organizational Coordination</h2>
+            </div>
+            <p className="text-lg text-gray-300 mb-6">Specialists coordinate, prioritize, align</p>
+
+            <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-300 mb-3">
+                Marcus finds 23 security issues.
+              </p>
+              <p className="text-sm text-[#a855f7] font-semibold">
+                Checks payment code, sees $2M/month notes, queries incidents → "3 CRITICAL in payment. PRs generated."
+              </p>
+            </div>
+
+            <p className="text-sm text-gray-400 italic">
+              50 organizations • Autonomous triage • You spent 0 minutes
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* LAYER 3 - EXTERNAL REACH */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
+        {/* Graph Background - L3 Only */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization visibleLayers={['l3']} />
+        </div>
+
+        {/* Content Bubble Overlay */}
+        <div className="relative z-10 max-w-3xl mx-auto px-6">
+          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#f59e0b]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(245,158,11,0.3)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
+              <h2 className="text-3xl text-[#f59e0b] font-bold">Layer 3: External Reach</h2>
+            </div>
+            <p className="text-lg text-gray-300 mb-6">Organization accesses tools, data, services</p>
+
+            <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/30 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-300 mb-3">
+                "Why is user service so complex?"
+              </p>
+              <p className="text-sm text-[#f59e0b] font-semibold">
+                GitHub: 47 deps • Slack: "GDPR required complexity" • Notion: ADR-034 • Jira: LEGAL-234 (6 weeks)
+              </p>
+            </div>
+
+            <p className="text-sm text-gray-400 italic">
+              35 ecosystems • GitHub, Slack, Notion, Jira • Full context
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* LAYER 4 - EFFICIENT OPERATION */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden border-t border-gray-800">
+        {/* Graph Background - L4 Only */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization visibleLayers={['l4']} />
+        </div>
+
+        {/* Content Bubble Overlay */}
+        <div className="relative z-10 max-w-3xl mx-auto px-6">
+          <div className="bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#10b981]/30 rounded-2xl p-10 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
+              <h2 className="text-3xl text-[#10b981] font-bold">Layer 4: Efficient Operation</h2>
+            </div>
+            <p className="text-lg text-gray-300 mb-6">Organization runs efficiently at scale</p>
+
+            <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-4 rounded-lg mb-4">
+              <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+                <div><span className="text-[#10b981]">Query p50:</span> 1.8s</div>
+                <div><span className="text-[#10b981]">Query p95:</span> 2.7s</div>
+                <div><span className="text-[#10b981]">Health:</span> 94%</div>
+                <div><span className="text-[#10b981]">Cost:</span> ~$12/mo</div>
               </div>
             </div>
 
-            {/* Right: Graph (sticky) */}
-            <div className="hidden lg:block">
-              <div className="sticky top-8 h-[800px]">
-                <LayerGraphVisualization />
-              </div>
-            </div>
+            <p className="text-sm text-gray-400 italic">
+              8 governance nodes • Predictable performance • No monitoring needed
+            </p>
           </div>
         </div>
       </section>
@@ -317,6 +199,7 @@ export default function Home() {
           </p>
 
           <div className="space-y-8">
+            {/* GraphCare */}
             {/* GraphCare */}
             <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3]">
               <div className="flex items-center justify-between mb-6 flex-wrap gap-4">

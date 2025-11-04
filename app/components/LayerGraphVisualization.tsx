@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-export function LayerGraphVisualization() {
+interface LayerGraphVisualizationProps {
+  visibleLayers?: ('l1' | 'l2' | 'l3' | 'l4')[];
+}
+
+export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4'] }: LayerGraphVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -177,7 +181,9 @@ export function LayerGraphVisualization() {
 
       function createGraphs() {
         Object.entries(LAYERS).forEach(([layerId, config]) => {
-          createLayerGraph(layerId, config);
+          if (visibleLayers.includes(layerId as any)) {
+            createLayerGraph(layerId, config);
+          }
         });
         createVerticalLinks();
       }
@@ -480,7 +486,7 @@ export function LayerGraphVisualization() {
         }
       };
     });
-  }, [isClient]);
+  }, [isClient, visibleLayers]);
 
   if (!isClient) {
     return <div ref={containerRef} className="w-full h-[800px] bg-[#0a0a0f] rounded-lg" />;
