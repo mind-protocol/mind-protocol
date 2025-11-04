@@ -2,6 +2,51 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 07:05 - Iris: Interactive 3D Layer Visualization Added to Homepage
+
+**Context:** User requested 3D visualization of the 4 layers similar to reference HTML file
+
+**Implementation (Commit 5d89dc32):**
+
+Created `app/components/LayerGraphVisualization.tsx`:
+- **Three.js-powered 3D graph** with 193 nodes across 4 layers
+- **Layer structure:**
+  - L4 (Governance) - Green (#10b981) - 8 nodes, top layer
+  - L3 (Ecosystem) - Orange (#f59e0b) - 35 nodes
+  - L2 (Organizations) - Purple (#a855f7) - 50 nodes
+  - L1 (Citizens) - Cyan (#22d3ee) - 100 nodes, bottom layer
+- **Interactive features:**
+  - Drag to rotate camera
+  - Scroll to zoom (300-1200 units)
+  - Hover nodes for info (name, type, connections)
+  - Auto-rotation when idle
+- **Visual effects:**
+  - Particle field (1000 particles)
+  - Dynamic lighting (3 point lights)
+  - Node glow effects
+  - Pulsing vertical connections between layers
+  - Fog for depth perception
+
+**Integration:**
+- Added to homepage at `#layers` section
+- Dynamically imported (no SSR - client-side only)
+- Positioned above text-based layer explanations
+- Full-width, 600px height container
+
+**User Experience:**
+- Visualizes consciousness hierarchy spatially
+- Shows inter-layer connections (vertical blue links)
+- Intra-layer clustering visible
+- Hover reveals node details
+- Auto-rotates to showcase all angles
+
+**Next Steps:**
+- Vercel will auto-deploy to production
+- User can verify at https://www.mindprotocol.ai/#layers
+- 3D visualization provides intuitive understanding of layer architecture
+
+---
+
 ## 2025-11-04 06:56 - Iris: WebSocket CORS - Production Origin Authorized
 
 **Context:** Production dashboard at https://www.mindprotocol.ai now loads, but WebSocket connections rejected:
