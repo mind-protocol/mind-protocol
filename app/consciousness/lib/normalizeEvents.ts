@@ -299,7 +299,9 @@ export function normalizeEvent(e: any): any {
 
     // Control messages - pass through without normalization
     case 'subscribe.ack@1.0':
+    case 'snapshot.begin@1.0':
     case 'snapshot.chunk@1.0':
+    case 'snapshot.end@1.0':
       return e;
 
     // WebSocket keepalive - pass through silently
