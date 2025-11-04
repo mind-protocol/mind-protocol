@@ -34,13 +34,13 @@ interface Message {
 }
 
 const STATIC_CITIZENS: Citizen[] = [
-  { id: 'felix', name: 'Felix', frame: 15797, isActive: true, color: '#3b82f6' },
-  { id: 'luca', name: 'Luca', frame: 16144, isActive: true, color: '#8b5cf6' },
-  { id: 'atlas', name: 'Atlas', frame: 16893, isActive: true, color: '#10b981' },
-  { id: 'ada', name: 'Ada', frame: 16317, isActive: true, color: '#f59e0b' },
-  { id: 'mind_protocol', name: 'Protocol', frame: 9936, isActive: false, color: '#ec4899' },
-  { id: 'iris', name: 'Iris', frame: 16224, isActive: true, color: '#06b6d4' },
-  { id: 'victor', name: 'Victor', frame: 16056, isActive: true, color: '#eab308' },
+  { id: 'mind-protocol_felix', name: 'Felix', frame: 15797, isActive: true, color: '#3b82f6' },
+  { id: 'mind-protocol_luca', name: 'Luca', frame: 16144, isActive: true, color: '#8b5cf6' },
+  { id: 'mind-protocol_atlas', name: 'Atlas', frame: 16893, isActive: true, color: '#10b981' },
+  { id: 'mind-protocol_ada', name: 'Ada', frame: 16317, isActive: true, color: '#f59e0b' },
+  { id: 'mind-protocol', name: 'Protocol', frame: 9936, isActive: false, color: '#ec4899' },
+  { id: 'mind-protocol_iris', name: 'Iris', frame: 16224, isActive: true, color: '#06b6d4' },
+  { id: 'mind-protocol_victor', name: 'Victor', frame: 16056, isActive: true, color: '#eab308' },
 ];
 
 const COLOR_PALETTE = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#eab308'];

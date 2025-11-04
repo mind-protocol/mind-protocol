@@ -284,19 +284,12 @@ export default function ConsciousnessPage() {
   }, []);
 
   const handleSelectCitizen = useCallback((citizenId: string) => {
-    // Try to switch to citizen's graph, but fall back to organization if it doesn't exist
-    // Production only has "mind-protocol" org graph, individual citizen graphs not yet seeded
-    const availableGraphs = Object.keys(graphStream.graphs);
-    const targetGraph = availableGraphs.includes(citizenId)
-      ? citizenId
-      : availableGraphs.includes(`mind-protocol_${citizenId}`)
-        ? `mind-protocol_${citizenId}`
-        : availableGraphs[0] || 'mind-protocol'; // Fallback to first available or org
-
-    setCurrentGraphId(targetGraph);
+    // Switch to the selected citizen's graph
+    // citizenId should be full hierarchical name (e.g., "mind-protocol_felix")
+    setCurrentGraphId(citizenId);
     // Also emit membrane event for telemetry
     membraneInject("ui.select.citizen", { citizen_id: citizenId }, { ts: Date.now() });
-  }, [setCurrentGraphId, graphStream.graphs]);
+  }, [setCurrentGraphId]);
 
   const currentGraphLabel = useMemo(() => {
     if (!currentGraphId) return '';
