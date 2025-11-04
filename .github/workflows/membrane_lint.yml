@@ -1,0 +1,38 @@
+name: Membrane Boundary Lint
+
+on:
+  pull_request:
+    paths:
+      - 'orchestration/adapters/api/**'
+      - 'orchestration/adapters/ws/**'
+  push:
+    branches: [main, develop]
+
+jobs:
+  lint-l3-purity:
+    runs-on: ubuntu-latest
+    name: Enforce L3 Membrane Purity
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run L3 Membrane Lint
+        run: python orchestration/tools/lint/membrane_lint.py
+
+      - name: Report Results
+        if: failure()
+        run: |
+          echo "❌ Membrane violation detected in L3 code"
+          echo "L3 (ecosystem layer) must NOT:"
+          echo "  - Import FalkorDB or execute Cypher"
+          echo "  - Access database credentials"
+          echo "  - Compute inside org boundary"
+          echo ""
+          echo "Use the L4 membrane bus (protocol/hub) to inject/observe events."
+          exit 1

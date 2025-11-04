@@ -302,6 +302,11 @@ export function normalizeEvent(e: any): any {
     case 'snapshot.chunk@1.0':
       return e;
 
+    // WebSocket keepalive - pass through silently
+    case 'ping':
+    case 'pong':
+      return e;
+
     default:
       // Unknown event type - log warning but don't drop
       console.warn('[normalizeEvent] Unknown event type:', e.type, e);

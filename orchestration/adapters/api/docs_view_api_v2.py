@@ -25,6 +25,8 @@ from typing import Dict, List, Any, Set, Optional
 from fastapi import APIRouter, WebSocket
 import asyncio
 
+from orchestration.adapters.bus.membrane_bus import publish_to_membrane_async
+
 logger = logging.getLogger(__name__)
 
 # ============================================================================
@@ -201,18 +203,20 @@ async def handle_docs_view_request(ws: WebSocket, msg: dict):
     quote_id = f"q-stub-{request_id}"
 
     # Inject event to membrane bus
-    # NOTE: This requires integration with the membrane bus
-    # For now, we'll simulate by storing pending request
     try:
-        # PLACEHOLDER: Replace with actual membrane bus injection
-        # await bus.inject("docs.view.request", {
-        #     "request_id": request_id,
-        #     "quote_id": quote_id,
-        #     "view_type": view_id,
-        #     "format": format,
-        #     "scope": {"org": org, "root": "repo://", "path": "/"},
-        #     "params": params
-        # })
+        # Inject to L2 resolvers via membrane bus
+        await publish_to_membrane_async(
+            channel="docs.view.request",
+            payload={
+                "request_id": request_id,
+                "quote_id": quote_id,
+                "view_type": view_id,
+                "format": format,
+                "scope": {"org": org, "root": "repo://", "path": params.get("path", "/")},
+                "params": params
+            },
+            origin="l3.docs"
+        )
 
         # Register pending request (will be resolved by observe handler)
         timeout_task = asyncio.create_task(
@@ -248,6 +252,51 @@ async def _wait_for_result(ws: WebSocket, request_id: str, timeout: float):
     except asyncio.CancelledError:
         # Result arrived before timeout
         pass
+
+
+async def observe_bus_and_fanout():
+    """
+    Background task: Observe membrane bus for results and fan out to waiting clients.
+
+    Subscribes to:
+    - docs.view.result: Computed views from L2 resolvers
+    - docs.view.invalidated: Cache invalidation events from L2
+    - failure.emit: Error events from L2
+
+    Routes results to pending WebSocket clients.
+    """
+    import websockets
+
+    try:
+        async with websockets.connect("ws://localhost:8765/observe") as ws:
+            # Subscribe to relevant channels
+            await ws.send(json.dumps({
+                "type": "subscribe",
+                "channels": ["docs.view.result", "docs.view.invalidated", "failure.emit"]
+            }))
+
+            # Wait for ack
+            ack = json.loads(await ws.recv())
+            logger.info(f"[L3 Bridge] Subscribed to bus channels: {ack.get('channels')}")
+
+            # Process events forever
+            while True:
+                env = json.loads(await ws.recv())
+                channel = env.get("channel")
+                payload = env.get("payload", {})
+
+                if channel == "docs.view.result":
+                    await handle_docs_view_result({"content": payload})
+
+                elif channel == "docs.view.invalidated":
+                    await handle_docs_view_invalidated({"content": payload})
+
+                elif channel == "failure.emit":
+                    logger.warning(f"[L3 Bridge] Received failure.emit: {payload}")
+
+    except Exception as e:
+        logger.error(f"[L3 Bridge] Bus observer crashed: {e}", exc_info=True)
+        # TODO: Restart with backoff in production
 
 
 async def handle_docs_view_result(result_envelope: dict):

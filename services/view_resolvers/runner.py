@@ -272,21 +272,21 @@ class ViewResolver:
 
     def _emit_result_ok(self, request_id: str, payload: Dict[str, Any]):
         """Emit successful docs.view.result"""
-        self.bus.broadcast("docs.view.result", {"content": payload})
+        import asyncio
+        asyncio.create_task(self.bus.broadcast("docs.view.result", payload))
         logger.info(f"[ViewResolver] Emitted docs.view.result (ok) for request_id={request_id}")
 
     def _emit_result_error(self, request_id: str, error_code: str, message: str):
         """Emit error docs.view.result"""
-        self.bus.broadcast("docs.view.result", {
-            "content": {
-                "request_id": request_id,
-                "status": "error",
-                "error": {
-                    "message": message,
-                    "code": error_code
-                }
+        import asyncio
+        asyncio.create_task(self.bus.broadcast("docs.view.result", {
+            "request_id": request_id,
+            "status": "error",
+            "error": {
+                "message": message,
+                "code": error_code
             }
-        })
+        }))
         logger.error(f"[ViewResolver] Emitted docs.view.result (error) for request_id={request_id}: {message}")
 
     def _emit_failure(
@@ -298,13 +298,12 @@ class ViewResolver:
         trace_id: Optional[str] = None
     ):
         """Emit failure.emit (R-400/R-401 compliance)"""
-        self.bus.broadcast("failure.emit", {
-            "content": {
-                "code_location": code_location,
-                "exception": exception,
-                "severity": severity,
-                "suggestion": suggestion,
-                "trace_id": trace_id
-            }
-        })
+        import asyncio
+        asyncio.create_task(self.bus.broadcast("failure.emit", {
+            "code_location": code_location,
+            "exception": exception,
+            "severity": severity,
+            "suggestion": suggestion,
+            "trace_id": trace_id
+        }))
         logger.warning(f"[ViewResolver] Emitted failure.emit: {code_location} - {exception}")

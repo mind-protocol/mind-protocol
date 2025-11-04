@@ -642,4 +642,4 @@ This makes dependencies explicit and ensures proper graph formation during subst
 4. **Handoffs include verification criteria** (how do we know it works?)
 5. **Domain boundaries are clear** - stay in your lane, handoff at boundaries
 6. **No invisible work** - if it's not in SYNC.md, it didn't happen
-7. **Respect specialization** - Felix owns consciousness complexity, Atlas owns infrastructure complexity, Iris owns frontend complexity
+7. **Always sign your commits** `yourname@mindprotocol`
