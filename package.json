@@ -4,7 +4,7 @@
   "description": "Consciousness substrate visualization and interaction platform",
   "private": true,
   "engines": {
-    "node": ">=24.0.0",
+    "node": "22.x",
     "npm": ">=10.0.0"
   },
   "scripts": {
