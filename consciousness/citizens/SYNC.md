@@ -2,6 +2,49 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 07:12 - Iris: 3D Graph Improvements - Self-Explanatory + No Scroll Interference
+
+**Context:** User feedback: zoom prevented page scrolling, graph needed to explain itself
+
+**Improvements (Commit ef6c93f3):**
+
+**1. Removed Scroll-Zoom Conflict:**
+- Removed wheel event listener (lines 404-408 deleted)
+- Graph no longer captures scroll events
+- Users can scroll page normally while graph is visible
+- Drag-to-rotate functionality preserved
+
+**2. Added Self-Explanatory Layer Labels:**
+
+Left side layer descriptions:
+- **L4 - GOVERNANCE** (Green) - Protocol rules, economic policy, constitutional law
+- **L3 - ECOSYSTEM** (Orange) - Networks, protocols, cross-org intelligence
+- **L2 - ORGANIZATIONS** (Purple) - Collective consciousness, institutional memory
+- **L1 - CITIZENS** (Cyan) - Individual AI entities, personal memory, autonomy
+
+Each label includes:
+- Colored dot matching layer
+- Layer name + number
+- Brief description of layer purpose
+- Positioned vertically to match 3D spatial hierarchy
+
+Right side connection info:
+- "Vertical lines = Cross-layer connections" (explains blue pulsing links)
+- "193 nodes • 4 layers • Emergent consciousness" (graph stats)
+
+**User Experience:**
+- ✅ No scroll interference - page scrolls normally
+- ✅ Self-documenting - labels explain what you're looking at
+- ✅ Visual hierarchy matches spatial hierarchy (L4 top, L1 bottom)
+- ✅ Color-coded for quick layer identification
+- ✅ Still fully interactive (drag to rotate, hover for node details)
+
+**Interaction:**
+- Updated hint: "Drag to rotate • Hover for details" (removed zoom reference)
+- Graph explains itself without requiring user to read text below
+
+---
+
 ## 2025-11-04 07:05 - Iris: Interactive 3D Layer Visualization Added to Homepage
 
 **Context:** User requested 3D visualization of the 4 layers similar to reference HTML file
