@@ -55,6 +55,11 @@ from orchestration.services.economy.runtime import get_runtime as get_economy_ru
 from orchestration.libs.stimuli import emit_ui_action
 from orchestration.schemas.membrane_envelopes import Scope, StimulusFeatures
 from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
+from orchestration.adapters.api.docs_view_api import (
+    handle_docs_view_request,
+    handle_docs_subscribe,
+    remove_subscriber
+)
 
 try:  # Wallet custody service is optional until configured
     from orchestration.services.wallet_custody.config import WalletCustodySettings
@@ -2691,6 +2696,33 @@ async def _handle_ws_message(
             logger.error(f"[WebSocket] Failed to inject stimulus via membrane: {exc}", exc_info=True)
         return
 
+    # === DOCS VIEW HANDLERS (L3 Documentation Views) ===
+    if msg_type == "docs.view.request":
+        if websocket is not None:
+            try:
+                await handle_docs_view_request(websocket, message)
+                logger.info(f"[WebSocket] Handled docs.view.request for org={message.get('org')} view={message.get('view_id')}")
+            except Exception as exc:
+                logger.error(f"[WebSocket] Failed to handle docs.view.request: {exc}", exc_info=True)
+                try:
+                    await websocket.send_json({
+                        "type": "error",
+                        "request_id": message.get("request_id"),
+                        "message": f"Failed to compute view: {str(exc)}"
+                    })
+                except Exception:
+                    pass
+        return
+
+    if msg_type == "docs.subscribe":
+        if websocket is not None:
+            try:
+                await handle_docs_subscribe(websocket, message)
+                logger.info(f"[WebSocket] Handled docs.subscribe for org={message.get('org')}")
+            except Exception as exc:
+                logger.error(f"[WebSocket] Failed to handle docs.subscribe: {exc}", exc_info=True)
+        return
+
     # Unknown inbound type – log for diagnostics
     logger.warning(f"[WebSocket] Unhandled inbound message type: {msg_type}")
 
@@ -2723,7 +2755,13 @@ async def websocket_endpoint(websocket: WebSocket):
     origin = websocket.headers.get("origin")
 
     # Build allowed origins from environment variable (same pattern as websocket_server.py)
-    allowed_origins_list = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+    allowed_origins_list = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "https://www.mindprotocol.ai",  # Production dashboard
+        "https://mindprotocol.ai"       # Production dashboard (without www)
+    ]
     allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
     if allowed_origins_env:
         production_origins = [o.strip() for o in allowed_origins_env.split(",")]
@@ -2914,4 +2952,6 @@ async def websocket_endpoint(websocket: WebSocket):
             websocket_manager.touch(websocket)
 
     finally:
+        # Cleanup docs view subscriptions
+        remove_subscriber(websocket)
         await websocket_manager.unregister_connection(conn_id=conn_id)

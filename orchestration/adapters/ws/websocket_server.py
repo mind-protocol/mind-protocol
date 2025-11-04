@@ -91,6 +91,7 @@ import shutil
 from orchestration.adapters.api.control_api import router, websocket_manager
 from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 from orchestration.adapters.api.citizen_snapshot import router as citizen_router
+from orchestration.adapters.api.docs_view_api import router as docs_router
 from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2, EngineConfig
 from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS, get_all_engines
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
@@ -127,13 +128,20 @@ app = FastAPI(
 # Enable CORS for Next.js dashboard (local + production)
 # Read ALLOWED_ORIGINS from environment (comma-separated), default to localhost for dev
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
-allowed_origins = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "https://www.mindprotocol.ai",  # Production dashboard
+    "https://mindprotocol.ai"       # Production dashboard (without www)
+]
 
 # Add production origins from environment
 if allowed_origins_env:
     production_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
     allowed_origins.extend(production_origins)
-    logger.info(f"[CORS] Allowed origins: {allowed_origins}")
+
+logger.info(f"[CORS] Allowed origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -146,6 +154,7 @@ app.add_middleware(
 # Include control API router (adds /api/* endpoints including /api/ws)
 app.include_router(router)
 app.include_router(citizen_router)  # Citizen snapshot endpoint (stops 404 flood)
+app.include_router(docs_router)  # Docs-as-views endpoints (L3)
 
 
 # ============================================================================
@@ -203,7 +212,7 @@ def discover_graphs() -> dict:
     Returns:
         {
             "n1": ["mind-protocol_felix", ...],
-            "n2": ["mind-protocol_org", ...],
+            "n2": ["mind-protocol", ...],
             "n3": ["ecosystem", ...]
         }
     """
@@ -219,7 +228,7 @@ def discover_graphs() -> dict:
         # N1 citizens: mind-protocol_<name> (not org/ecosystem)
         n1_graphs = [g for g in graphs if g.startswith("mind-protocol_") and g != resolver.org_base()]
 
-        # N2 organizations: mind-protocol_org
+        # N2 organizations: mind-protocol
         n2_graphs = [g for g in graphs if g == resolver.org_base()]
 
         # N3 ecosystem: ecosystem
@@ -249,7 +258,7 @@ def extract_citizen_id(graph_name: str) -> str:
 
     Examples:
         mind-protocol_felix -> mind-protocol_felix
-        mind-protocol_org -> mind-protocol_org
+        mind-protocol -> mind-protocol
         ecosystem -> ecosystem
 
     Returns the FULL hierarchical name as the citizen_id (no prefix stripping).
