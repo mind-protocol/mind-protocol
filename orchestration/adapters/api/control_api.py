@@ -55,7 +55,7 @@ from orchestration.services.economy.runtime import get_runtime as get_economy_ru
 from orchestration.libs.stimuli import emit_ui_action
 from orchestration.schemas.membrane_envelopes import Scope, StimulusFeatures
 from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
-from orchestration.adapters.api.docs_view_api import (
+from orchestration.adapters.api.docs_view_api_v2 import (
     handle_docs_view_request,
     handle_docs_subscribe,
     remove_subscriber
