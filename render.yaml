@@ -8,7 +8,7 @@ services:
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile.falkordb
-    dockerCommand: falkordb-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save ""
+    dockerCommand: falkordb-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save "900 1"
     envVars:
       - key: FALKORDB_CACHE_SIZE
         value: "100"
@@ -126,7 +126,7 @@ services:
 
 # Database Notes:
 # - FalkorDB runs as Docker container with 10GB persistent disk mounted at /data
-# - Graph data persists via RDB snapshots (saves every 60s if ≥1 write)
+# - Graph data persists via RDB snapshots (saves every 15min if ≥1 write)
 # - Disk survives service restarts and redeployments
 # - For production, consider upgrading disk size in Render dashboard
 # - Backup: Download /data volume snapshots from Render dashboard
