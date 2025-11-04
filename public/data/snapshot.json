@@ -10,8 +10,8 @@
         "L4_Event_Schema"
       ],
       "position": {
-        "x": 220.0,
-        "y": 300,
+        "x": 180.0,
+        "y": 150,
         "z": 0.0
       },
       "energy": 0.5,
@@ -28,9 +28,9 @@
         "L4_Event_Schema"
       ],
       "position": {
-        "x": 137.17,
-        "y": 300,
-        "z": 172.0
+        "x": 112.23,
+        "y": 150,
+        "z": 140.73
       },
       "energy": 0.5,
       "version": "1.0.0",
@@ -46,9 +46,9 @@
         "L4_Event_Schema"
       ],
       "position": {
-        "x": -48.95,
-        "y": 300,
-        "z": 214.48
+        "x": -40.05,
+        "y": 150,
+        "z": 175.49
       },
       "energy": 0.5,
       "version": "1.0.0",
@@ -64,9 +64,9 @@
         "L4_Governance_Policy"
       ],
       "position": {
-        "x": -198.21,
-        "y": 300,
-        "z": 95.45
+        "x": -162.17,
+        "y": 150,
+        "z": 78.1
       },
       "energy": 0.5,
       "policy_id": "POL-001",
@@ -82,9 +82,9 @@
         "L4_Governance_Policy"
       ],
       "position": {
-        "x": -198.21,
-        "y": 300,
-        "z": -95.45
+        "x": -162.17,
+        "y": 150,
+        "z": -78.1
       },
       "energy": 0.5,
       "policy_id": "POL-002",
@@ -100,9 +100,9 @@
         "L4_Topic_Namespace"
       ],
       "position": {
-        "x": -48.95,
-        "y": 300,
-        "z": -214.48
+        "x": -40.05,
+        "y": 150,
+        "z": -175.49
       },
       "energy": 0.5,
       "notes": "All telemetry events"
@@ -117,9 +117,9 @@
         "L4_Autonomy_Tier"
       ],
       "position": {
-        "x": 137.17,
-        "y": 300,
-        "z": -172.0
+        "x": 112.23,
+        "y": 150,
+        "z": -140.73
       },
       "energy": 0.5,
       "tier_number": 2,
@@ -137,7 +137,7 @@
       ],
       "position": {
         "x": 0,
-        "y": 100,
+        "y": 50,
         "z": 0
       },
       "energy": 0.9,
@@ -155,7 +155,7 @@
       ],
       "position": {
         "x": 0,
-        "y": -100,
+        "y": -50,
         "z": 0
       },
       "energy": 0.85,
@@ -173,46 +173,13 @@
         "scout"
       ],
       "position": {
-        "x": 160.0,
-        "y": -300,
+        "x": 120.0,
+        "y": -150,
         "z": 0.0
       },
-      "energy": 0.8862605822726631,
-      "status": "active"
-    },
-    {
-      "id": "emma_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Emma Knowledge 1",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": 151.41,
-        "y": -340,
-        "z": -19.54
-      },
-      "energy": 0.5792003529701719,
-      "status": "active"
-    },
-    {
-      "id": "emma_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Emma Knowledge 2",
-      "level": "L1",
-      "ko_type": "runbook",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": 141.25,
-        "y": -340,
-        "z": -23.16
-      },
-      "energy": 0.42124915049623973,
-      "status": "active"
+      "energy": 0.6650827424210811,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "rafael",
@@ -226,63 +193,13 @@
         "harbor"
       ],
       "position": {
-        "x": 99.76,
-        "y": -300,
-        "z": 125.09
+        "x": 74.82,
+        "y": -150,
+        "z": 93.82
       },
-      "energy": 0.6873646519061569,
-      "status": "active"
-    },
-    {
-      "id": "rafael_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Rafael Knowledge 1",
-      "level": "L1",
-      "ko_type": "runbook",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": 112.93,
-        "y": -340,
-        "z": 129.1
-      },
-      "energy": 0.6440120727450676,
-      "status": "active"
-    },
-    {
-      "id": "rafael_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Rafael Knowledge 2",
-      "level": "L1",
-      "ko_type": "runbook",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": 95.72,
-        "y": -340,
-        "z": 105.14
-      },
-      "energy": 0.45995629509896274,
-      "status": "active"
-    },
-    {
-      "id": "rafael_knowledge_2",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Rafael Knowledge 3",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": 102.24,
-        "y": -340,
-        "z": 100.81
-      },
-      "energy": 0.5802619904411375,
-      "status": "active"
+      "energy": 0.8084844385219515,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "aicha",
@@ -296,46 +213,13 @@
         "architect"
       ],
       "position": {
-        "x": -35.6,
-        "y": -300,
-        "z": 155.99
+        "x": -26.7,
+        "y": -150,
+        "z": 116.99
       },
-      "energy": 0.6913752199091509,
-      "status": "active"
-    },
-    {
-      "id": "aicha_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "A\u00efcha Knowledge 1",
-      "level": "L1",
-      "ko_type": "runbook",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -49.06,
-        "y": -340,
-        "z": 144.56
-      },
-      "energy": 0.33397444879262744,
-      "status": "active"
-    },
-    {
-      "id": "aicha_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "A\u00efcha Knowledge 2",
-      "level": "L1",
-      "ko_type": "reference",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -22.67,
-        "y": -340,
-        "z": 173.96
-      },
-      "energy": 0.5840841498795392,
-      "status": "active"
+      "energy": 0.9956867427441569,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "daniel",
@@ -349,63 +233,13 @@
         "forge"
       ],
       "position": {
-        "x": -144.16,
-        "y": -300,
-        "z": 69.42
+        "x": -108.12,
+        "y": -150,
+        "z": 52.07
       },
-      "energy": 0.7475863325221014,
-      "status": "active"
-    },
-    {
-      "id": "daniel_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Daniel Knowledge 1",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -164.02,
-        "y": -340,
-        "z": 79.84
-      },
-      "energy": 0.6331744334098302,
-      "status": "active"
-    },
-    {
-      "id": "daniel_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Daniel Knowledge 2",
-      "level": "L1",
-      "ko_type": "guide",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -126.51,
-        "y": -340,
-        "z": 65.88
-      },
-      "energy": 0.3620106554108553,
-      "status": "active"
-    },
-    {
-      "id": "daniel_knowledge_2",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Daniel Knowledge 3",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -135.43,
-        "y": -340,
-        "z": 67.66
-      },
-      "energy": 0.3045577372270312,
-      "status": "active"
+      "energy": 0.759856321566273,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "sofia",
@@ -419,63 +253,13 @@
         "gauge"
       ],
       "position": {
-        "x": -144.16,
-        "y": -300,
-        "z": -69.42
+        "x": -108.12,
+        "y": -150,
+        "z": -52.07
       },
-      "energy": 0.6399702086848652,
-      "status": "active"
-    },
-    {
-      "id": "sofia_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Sofia Knowledge 1",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -165.67,
-        "y": -340,
-        "z": -46.74
-      },
-      "energy": 0.6397758521629734,
-      "status": "active"
-    },
-    {
-      "id": "sofia_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Sofia Knowledge 2",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -155.45,
-        "y": -340,
-        "z": -59.97
-      },
-      "energy": 0.6462294348034,
-      "status": "active"
-    },
-    {
-      "id": "sofia_knowledge_2",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Sofia Knowledge 3",
-      "level": "L1",
-      "ko_type": "spec",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -163.0,
-        "y": -340,
-        "z": -46.75
-      },
-      "energy": 0.5920985172940593,
-      "status": "active"
+      "energy": 0.6854121585327553,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "maya",
@@ -489,46 +273,13 @@
         "facet"
       ],
       "position": {
-        "x": -35.6,
-        "y": -300,
-        "z": -155.99
+        "x": -26.7,
+        "y": -150,
+        "z": -116.99
       },
-      "energy": 0.7980117198811234,
-      "status": "active"
-    },
-    {
-      "id": "maya_knowledge_0",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Maya Knowledge 1",
-      "level": "L1",
-      "ko_type": "guide",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -26.47,
-        "y": -340,
-        "z": -135.63
-      },
-      "energy": 0.42147439044921287,
-      "status": "active"
-    },
-    {
-      "id": "maya_knowledge_1",
-      "type_name": "U4_Knowledge_Object",
-      "name": "Maya Knowledge 2",
-      "level": "L1",
-      "ko_type": "guide",
-      "labels": [
-        "knowledge"
-      ],
-      "position": {
-        "x": -60.16,
-        "y": -340,
-        "z": -161.34
-      },
-      "energy": 0.5958374351437199,
-      "status": "active"
+      "energy": 0.7232555975423873,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
       "id": "priya",
@@ -542,201 +293,429 @@
         "pulse"
       ],
       "position": {
-        "x": 99.76,
-        "y": -300,
-        "z": -125.09
+        "x": 74.82,
+        "y": -150,
+        "z": -93.82
       },
-      "energy": 0.9902140385965387,
-      "status": "active"
+      "energy": 0.8080275197678268,
+      "status": "active",
+      "cluster": "citizens"
     },
     {
-      "id": "priya_knowledge_0",
+      "id": "emma_knowledge_0",
       "type_name": "U4_Knowledge_Object",
-      "name": "Priya Knowledge 1",
+      "name": "Emma Doc 1",
       "level": "L1",
       "ko_type": "runbook",
       "labels": [
         "knowledge"
       ],
       "position": {
-        "x": 123.83,
-        "y": -340,
-        "z": -120.97
+        "x": 108.76,
+        "y": -150,
+        "z": -17.27
       },
-      "energy": 0.44939406005016574,
-      "status": "active"
+      "energy": 0.47441650425293125,
+      "status": "active",
+      "cluster": "citizen_emma"
     },
     {
-      "id": "priya_knowledge_1",
+      "id": "emma_knowledge_1",
       "type_name": "U4_Knowledge_Object",
-      "name": "Priya Knowledge 2",
+      "name": "Emma Doc 2",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": 104.7,
+        "y": -150,
+        "z": 12.4
+      },
+      "energy": 0.5442302352554347,
+      "status": "active",
+      "cluster": "citizen_emma"
+    },
+    {
+      "id": "rafael_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Rafael Doc 1",
+      "level": "L1",
+      "ko_type": "spec",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": 58.03,
+        "y": -150,
+        "z": 76.46
+      },
+      "energy": 0.7916620140430544,
+      "status": "active",
+      "cluster": "citizen_rafael"
+    },
+    {
+      "id": "rafael_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Rafael Doc 2",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": 80.46,
+        "y": -150,
+        "z": 76.95
+      },
+      "energy": 0.4212228865672654,
+      "status": "active",
+      "cluster": "citizen_rafael"
+    },
+    {
+      "id": "aicha_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "A\u00efcha Doc 1",
       "level": "L1",
       "ko_type": "guide",
       "labels": [
         "knowledge"
       ],
       "position": {
-        "x": 110.85,
-        "y": -340,
-        "z": -141.26
+        "x": -24.03,
+        "y": -150,
+        "z": 136.41
       },
-      "energy": 0.6478713376049388,
-      "status": "active"
+      "energy": 0.30964071996223486,
+      "status": "active",
+      "cluster": "citizen_aicha"
+    },
+    {
+      "id": "aicha_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "A\u00efcha Doc 2",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -21.76,
+        "y": -150,
+        "z": 98.34
+      },
+      "energy": 0.7285729546615989,
+      "status": "active",
+      "cluster": "citizen_aicha"
+    },
+    {
+      "id": "daniel_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Daniel Doc 1",
+      "level": "L1",
+      "ko_type": "guide",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -101.68,
+        "y": -150,
+        "z": 25.37
+      },
+      "energy": 0.6215038193122226,
+      "status": "active",
+      "cluster": "citizen_daniel"
+    },
+    {
+      "id": "daniel_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Daniel Doc 2",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -115.13,
+        "y": -150,
+        "z": 80.59
+      },
+      "energy": 0.5153782624597902,
+      "status": "active",
+      "cluster": "citizen_daniel"
+    },
+    {
+      "id": "sofia_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Sofia Doc 1",
+      "level": "L1",
+      "ko_type": "spec",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -103.95,
+        "y": -150,
+        "z": -28.32
+      },
+      "energy": 0.7062548250099551,
+      "status": "active",
+      "cluster": "citizen_sofia"
+    },
+    {
+      "id": "sofia_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Sofia Doc 2",
+      "level": "L1",
+      "ko_type": "guide",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -117.91,
+        "y": -150,
+        "z": -30.39
+      },
+      "energy": 0.6163923731380143,
+      "status": "active",
+      "cluster": "citizen_sofia"
+    },
+    {
+      "id": "maya_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Maya Doc 1",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -15.58,
+        "y": -150,
+        "z": -103.14
+      },
+      "energy": 0.7342996150484975,
+      "status": "active",
+      "cluster": "citizen_maya"
+    },
+    {
+      "id": "maya_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Maya Doc 2",
+      "level": "L1",
+      "ko_type": "runbook",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": -2.79,
+        "y": -150,
+        "z": -101.12
+      },
+      "energy": 0.7740431617312562,
+      "status": "active",
+      "cluster": "citizen_maya"
+    },
+    {
+      "id": "priya_knowledge_0",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Priya Doc 1",
+      "level": "L1",
+      "ko_type": "guide",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": 74.46,
+        "y": -150,
+        "z": -108.89
+      },
+      "energy": 0.6311167871859119,
+      "status": "active",
+      "cluster": "citizen_priya"
+    },
+    {
+      "id": "priya_knowledge_1",
+      "type_name": "U4_Knowledge_Object",
+      "name": "Priya Doc 2",
+      "level": "L1",
+      "ko_type": "spec",
+      "labels": [
+        "knowledge"
+      ],
+      "position": {
+        "x": 77.32,
+        "y": -150,
+        "z": -70.65
+      },
+      "energy": 0.7091795377681962,
+      "status": "active",
+      "cluster": "citizen_priya"
     },
     {
       "id": "goal_0",
       "type_name": "U4_Goal",
-      "name": "Q1 Goal 1",
+      "name": "Q1-1",
       "level": "L1",
       "horizon": "quarterly",
       "labels": [
         "goal"
       ],
       "position": {
-        "x": 79.46,
-        "y": -320,
-        "z": 9.3
+        "x": 40.0,
+        "y": -150,
+        "z": 0.0
       },
       "energy": 0.7,
-      "status": "active"
+      "status": "active",
+      "cluster": "goals"
     },
     {
       "id": "goal_1",
       "type_name": "U4_Goal",
-      "name": "Q1 Goal 2",
+      "name": "Q1-2",
       "level": "L1",
       "horizon": "quarterly",
       "labels": [
         "goal"
       ],
       "position": {
-        "x": -47.79,
-        "y": -320,
-        "z": 64.16
+        "x": -20.0,
+        "y": -150,
+        "z": 34.64
       },
       "energy": 0.7,
-      "status": "active"
+      "status": "active",
+      "cluster": "goals"
     },
     {
       "id": "goal_2",
       "type_name": "U4_Goal",
-      "name": "Q1 Goal 3",
+      "name": "Q1-3",
       "level": "L1",
       "horizon": "quarterly",
       "labels": [
         "goal"
       ],
       "position": {
-        "x": 53.64,
-        "y": -320,
-        "z": 59.35
+        "x": -20.0,
+        "y": -150,
+        "z": -34.64
       },
       "energy": 0.7,
-      "status": "active"
+      "status": "active",
+      "cluster": "goals"
     },
     {
       "id": "work_0",
       "type_name": "U4_Work_Item",
-      "name": "Task 1",
+      "name": "Task-1",
       "level": "L1",
       "work_type": "ticket",
-      "priority": "low",
-      "state": "doing",
-      "labels": [
-        "work"
-      ],
-      "position": {
-        "x": 43.07,
-        "y": -360,
-        "z": -25.39
-      },
-      "energy": 0.5,
-      "status": "active"
-    },
-    {
-      "id": "work_1",
-      "type_name": "U4_Work_Item",
-      "name": "Task 2",
-      "level": "L1",
-      "work_type": "task",
       "priority": "high",
       "state": "done",
       "labels": [
         "work"
       ],
       "position": {
-        "x": -38.88,
-        "y": -360,
-        "z": -31.43
+        "x": 73.93,
+        "y": -150,
+        "z": 23.51
       },
       "energy": 0.5,
-      "status": "active"
+      "status": "active",
+      "cluster": "work"
+    },
+    {
+      "id": "work_1",
+      "type_name": "U4_Work_Item",
+      "name": "Task-2",
+      "level": "L1",
+      "work_type": "ticket",
+      "priority": "medium",
+      "state": "doing",
+      "labels": [
+        "work"
+      ],
+      "position": {
+        "x": -94.45,
+        "y": -150,
+        "z": -8.28
+      },
+      "energy": 0.5,
+      "status": "active",
+      "cluster": "work"
     },
     {
       "id": "work_2",
       "type_name": "U4_Work_Item",
-      "name": "Task 3",
-      "level": "L1",
-      "work_type": "bug",
-      "priority": "medium",
-      "state": "done",
-      "labels": [
-        "work"
-      ],
-      "position": {
-        "x": -34.05,
-        "y": -360,
-        "z": 36.61
-      },
-      "energy": 0.5,
-      "status": "active"
-    },
-    {
-      "id": "work_3",
-      "type_name": "U4_Work_Item",
-      "name": "Task 4",
+      "name": "Task-3",
       "level": "L1",
       "work_type": "task",
-      "priority": "medium",
-      "state": "todo",
-      "labels": [
-        "work"
-      ],
-      "position": {
-        "x": -49.77,
-        "y": -360,
-        "z": -4.76
-      },
-      "energy": 0.5,
-      "status": "active"
-    },
-    {
-      "id": "work_4",
-      "type_name": "U4_Work_Item",
-      "name": "Task 5",
-      "level": "L1",
-      "work_type": "bug",
       "priority": "low",
       "state": "done",
       "labels": [
         "work"
       ],
       "position": {
-        "x": -49.88,
-        "y": -360,
-        "z": 3.42
+        "x": -63.08,
+        "y": -150,
+        "z": 26.7
       },
       "energy": 0.5,
-      "status": "active"
+      "status": "active",
+      "cluster": "work"
+    },
+    {
+      "id": "work_3",
+      "type_name": "U4_Work_Item",
+      "name": "Task-4",
+      "level": "L1",
+      "work_type": "bug",
+      "priority": "medium",
+      "state": "done",
+      "labels": [
+        "work"
+      ],
+      "position": {
+        "x": -31.95,
+        "y": -150,
+        "z": -94.2
+      },
+      "energy": 0.5,
+      "status": "active",
+      "cluster": "work"
+    },
+    {
+      "id": "work_4",
+      "type_name": "U4_Work_Item",
+      "name": "Task-5",
+      "level": "L1",
+      "work_type": "bug",
+      "priority": "medium",
+      "state": "done",
+      "labels": [
+        "work"
+      ],
+      "position": {
+        "x": -49.1,
+        "y": -150,
+        "z": -39.48
+      },
+      "energy": 0.5,
+      "status": "active",
+      "cluster": "work"
     }
   ],
   "metadata": {
-    "total_nodes": 41,
-    "generated_at": "2025-11-04T05:31:57.102347",
-    "layer_convention": "L4=protocol (top), L3=ecosystem, L2=org, L1=citizen (bottom)",
+    "total_nodes": 38,
+    "generated_at": "2025-11-04T07:45:51.663923",
+    "layout": "layered_network",
+    "description": "Horizontal planes at Y=150 (L4), Y=50 (L3), Y=-50 (L2), Y=-150 (L1)",
     "node_types": {
       "U4_Agent": 9,
-      "U4_Knowledge_Object": 17,
+      "U4_Knowledge_Object": 14,
       "U4_Goal": 3,
       "U4_Work_Item": 5,
       "L4_Event_Schema": 3,
@@ -748,7 +727,7 @@
       "L4_protocol": 7,
       "L3_ecosystem": 1,
       "L2_organization": 1,
-      "L1_citizen": 32
+      "L1_citizen": 29
     }
   }
 }

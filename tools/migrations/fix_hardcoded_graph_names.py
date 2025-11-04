@@ -4,7 +4,7 @@ Replace hardcoded mind-protocol_* graph names with resolver calls
 
 Replaces:
   "mind-protocol_felix" → graph_names.resolver.citizen("felix")
-  "mind-protocol_org" → graph_names.resolver.org_base()
+  "mind-protocol" → graph_names.resolver.org_base()
   "ecosystem" → graph_names.resolver.collective()  # or keep as-is
   "protocol" → graph_names.resolver.protocol()
 """
@@ -26,19 +26,19 @@ FILES_TO_UPDATE = {
     "tools/doc_ingestion/ask.py": {
         "import_add": "from orchestration.config.graph_names import resolver",
         "replacements": [
-            (r"'mind-protocol_org'", "resolver.org_base()"),
+            (r"'mind-protocol'", "resolver.org_base()"),
         ]
     },
     "tools/doc_ingestion/graph.py": {
         "import_add": "from orchestration.config.graph_names import resolver",
         "replacements": [
-            (r'"mind-protocol_org"', 'resolver.org_base()'),
+            (r'"mind-protocol"', 'resolver.org_base()'),
         ]
     },
     "tools/doc_ingestion/config.py": {
         "import_add": "from orchestration.config.graph_names import resolver",
         "replacements": [
-            (r'"mind-protocol_org"', 'resolver.org_base()'),
+            (r'"mind-protocol"', 'resolver.org_base()'),
         ]
     },
     "tools/fix_naming_standardization.py": {
@@ -142,7 +142,7 @@ def main():
     print()
     print("Replacements:")
     print('  "mind-protocol_felix" → resolver.citizen("felix")')
-    print('  "mind-protocol_org" → resolver.org_base()')
+    print('  "mind-protocol" → resolver.org_base()')
     print()
     print("Import added:")
     print('  from orchestration.config.graph_names import resolver')

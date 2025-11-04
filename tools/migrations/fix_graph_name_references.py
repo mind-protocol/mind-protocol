@@ -45,7 +45,7 @@ REPLACEMENTS = [
     # Citizen graphs
     (r'consciousness-infrastructure_mind-protocol_([a-z]+)', r'mind-protocol_\1'),
     # Base org graph
-    (r'consciousness-infrastructure_mind-protocol(?![_-])', r'mind-protocol_org'),
+    (r'consciousness-infrastructure_mind-protocol(?![_-])', r'mind-protocol'),
     # L2/L3 references
     (r'collective_n2', r'ecosystem'),
     # Generic consciousness-infrastructure

@@ -2,11 +2,10 @@
 """
 Generate synthetic Mind Protocol event data for visualizer
 
-Uses REAL node types from COMPLETE_TYPE_REFERENCE.md:
-- L4 (Protocol): L4_Governance_Policy, L4_Event_Schema, L4_Topic_Namespace, etc.
-- L3 (Ecosystem): U4_Agent (ecosystem org)
-- L2 (Organization): U4_Agent (La Serenissima org)
-- L1 (Citizen): U4_Agent (citizens), U4_Knowledge_Object, U4_Goal, U4_Work_Item
+Layered network layout:
+- Each level (L4, L3, L2, L1) is a horizontal 2D graph plane
+- Nodes within a level are arranged in force-directed or clustered layouts
+- Horizontal edges within levels, vertical edges between levels
 """
 
 import json
@@ -97,16 +96,39 @@ ORG_NODE = {
     "status": "active"
 }
 
+def circular_layout(count, radius, y):
+    """Generate circular layout on horizontal plane"""
+    positions = []
+    for i in range(count):
+        angle = (2 * math.pi / count) * i
+        positions.append({
+            "x": round(radius * math.cos(angle), 2),
+            "y": y,
+            "z": round(radius * math.sin(angle), 2)
+        })
+    return positions
+
+def grid_layout(count, spacing, y):
+    """Generate grid layout on horizontal plane"""
+    positions = []
+    cols = math.ceil(math.sqrt(count))
+    for i in range(count):
+        row = i // cols
+        col = i % cols
+        positions.append({
+            "x": round((col - cols/2) * spacing, 2),
+            "y": y,
+            "z": round((row - cols/2) * spacing, 2)
+        })
+    return positions
+
 def generate_energy_diffusion_events(start_time, count=30):
     """Generate energy diffusion events between L1 citizens"""
     events = []
-
     for i in range(count):
         timestamp = (start_time + timedelta(seconds=i * 10)).isoformat()
-
         source = random.choice(CITIZENS)
         target = random.choice([c for c in CITIZENS if c != source])
-
         energy_transferred = 0.1 + random.random() * 0.4
 
         events.append({
@@ -119,7 +141,6 @@ def generate_energy_diffusion_events(start_time, count=30):
             "energy_transferred": energy_transferred,
             "duration_ms": 1500
         })
-
     return events
 
 def generate_activation_switches(start_time, count=15):
@@ -129,7 +150,6 @@ def generate_activation_switches(start_time, count=15):
 
     for i in range(count):
         timestamp = (start_time + timedelta(seconds=i * 15 + 5)).isoformat()
-
         citizen = random.choice(CITIZENS)
 
         if citizen["id"] in in_working_memory:
@@ -138,7 +158,6 @@ def generate_activation_switches(start_time, count=15):
         else:
             action = "enter"
             in_working_memory.add(citizen["id"])
-
             if len(in_working_memory) > 12:
                 kicked_out = random.choice(list(in_working_memory))
                 in_working_memory.remove(kicked_out)
@@ -152,7 +171,6 @@ def generate_activation_switches(start_time, count=15):
             "working_memory_position": len(in_working_memory) if action == "enter" else None,
             "energy": 0.7 + random.random() * 0.3
         })
-
     return events
 
 def generate_membrane_crossings(start_time, count=10):
@@ -162,7 +180,6 @@ def generate_membrane_crossings(start_time, count=10):
     for i in range(count):
         timestamp = (start_time + timedelta(seconds=i * 25 + 8)).isoformat()
 
-        # 70% upward (L1 citizen → L2 org), 30% downward
         if random.random() < 0.7:
             source = random.choice(CITIZENS)
             events.append({
@@ -191,33 +208,27 @@ def generate_membrane_crossings(start_time, count=10):
                 "energy_transferred": 0.4 + random.random() * 0.5,
                 "accepted": True
             })
-
     return events
 
 def generate_snapshot():
-    """Generate static node positions with REAL Mind Protocol types"""
+    """Generate layered network with horizontal planes per level"""
     nodes = []
 
-    # L4 (Protocol): Top layer at Y=300 - L4_* types
-    radius = 220
+    # L4 (Protocol): Y=150, circular layout
+    l4_positions = circular_layout(len(PROTOCOL_NODES), 180, 150)
     for i, node in enumerate(PROTOCOL_NODES):
-        angle = (2 * math.pi / len(PROTOCOL_NODES)) * i
         nodes.append({
             "id": node["id"],
             "type_name": node["type_name"],
             "name": node["name"],
             "level": "L4",
             "labels": ["protocol", node["type_name"]],
-            "position": {
-                "x": round(radius * math.cos(angle), 2),
-                "y": 300,
-                "z": round(radius * math.sin(angle), 2)
-            },
+            "position": l4_positions[i],
             "energy": 0.5,
             **{k: v for k, v in node.items() if k not in ["id", "type_name", "name"]}
         })
 
-    # L3 (Ecosystem): Y=100 - U4_Agent (DAO)
+    # L3 (Ecosystem): Y=50, center position
     nodes.append({
         "id": ECOSYSTEM_NODE["id"],
         "type_name": ECOSYSTEM_NODE["type_name"],
@@ -225,12 +236,12 @@ def generate_snapshot():
         "level": "L3",
         "agent_type": ECOSYSTEM_NODE["agent_type"],
         "labels": ["ecosystem", "dao"],
-        "position": {"x": 0, "y": 100, "z": 0},
+        "position": {"x": 0, "y": 50, "z": 0},
         "energy": 0.9,
         "status": ECOSYSTEM_NODE["status"]
     })
 
-    # L2 (Organization): Y=-100 - U4_Agent (org)
+    # L2 (Organization): Y=-50, center position
     nodes.append({
         "id": ORG_NODE["id"],
         "type_name": ORG_NODE["type_name"],
@@ -238,18 +249,18 @@ def generate_snapshot():
         "level": "L2",
         "agent_type": ORG_NODE["agent_type"],
         "labels": ["organization", "org"],
-        "position": {"x": 0, "y": -100, "z": 0},
+        "position": {"x": 0, "y": -50, "z": 0},
         "energy": 0.85,
         "status": ORG_NODE["status"]
     })
 
-    # L1 (Citizen): Bottom layer at Y=-300 - U4_Agent (citizen) + knowledge/goals/work
-    citizen_radius = 160
-    for i, citizen in enumerate(CITIZENS):
-        angle = (2 * math.pi / len(CITIZENS)) * i
+    # L1 (Citizen + Knowledge/Goals/Work): Y=-150, grid layout for dense graph
+    l1_items = []
 
-        # Citizen agent
-        nodes.append({
+    # Citizens in inner circle
+    citizen_positions = circular_layout(len(CITIZENS), 120, -150)
+    for i, citizen in enumerate(CITIZENS):
+        l1_items.append({
             "id": citizen["id"],
             "type_name": "U4_Agent",
             "name": citizen["name"],
@@ -257,78 +268,79 @@ def generate_snapshot():
             "agent_type": "citizen",
             "role": citizen["role"],
             "labels": ["citizen", citizen["role"]],
-            "position": {
-                "x": round(citizen_radius * math.cos(angle), 2),
-                "y": -300,
-                "z": round(citizen_radius * math.sin(angle), 2)
-            },
+            "position": citizen_positions[i],
             "energy": 0.6 + random.random() * 0.4,
-            "status": "active"
+            "status": "active",
+            "cluster": "citizens"
         })
 
-        # Add 2-3 U4_Knowledge_Object nodes per citizen
-        base_x = citizen_radius * math.cos(angle)
-        base_z = citizen_radius * math.sin(angle)
-
-        for j in range(random.randint(2, 3)):
-            offset_x = random.uniform(-25, 25)
-            offset_z = random.uniform(-25, 25)
-            nodes.append({
+    # Knowledge objects clustered around each citizen
+    for i, citizen in enumerate(CITIZENS):
+        base_pos = citizen_positions[i]
+        for j in range(2):
+            angle = random.uniform(0, 2 * math.pi)
+            offset_r = random.uniform(15, 30)
+            l1_items.append({
                 "id": f"{citizen['id']}_knowledge_{j}",
                 "type_name": "U4_Knowledge_Object",
-                "name": f"{citizen['name']} Knowledge {j+1}",
+                "name": f"{citizen['name']} Doc {j+1}",
                 "level": "L1",
-                "ko_type": random.choice(["spec", "runbook", "guide", "reference"]),
+                "ko_type": random.choice(["spec", "runbook", "guide"]),
                 "labels": ["knowledge"],
                 "position": {
-                    "x": round(base_x + offset_x, 2),
-                    "y": -340,
-                    "z": round(base_z + offset_z, 2)
+                    "x": round(base_pos["x"] + offset_r * math.cos(angle), 2),
+                    "y": -150,
+                    "z": round(base_pos["z"] + offset_r * math.sin(angle), 2)
                 },
                 "energy": 0.3 + random.random() * 0.5,
-                "status": "active"
+                "status": "active",
+                "cluster": f"citizen_{citizen['id']}"
             })
 
-    # Add a few U4_Goal nodes at L1
+    # Goals in center cluster
     for i in range(3):
-        angle = random.uniform(0, 2 * math.pi)
-        nodes.append({
+        angle = (2 * math.pi / 3) * i
+        l1_items.append({
             "id": f"goal_{i}",
             "type_name": "U4_Goal",
-            "name": f"Q1 Goal {i+1}",
+            "name": f"Q1-{i+1}",
             "level": "L1",
             "horizon": "quarterly",
             "labels": ["goal"],
             "position": {
-                "x": round(80 * math.cos(angle), 2),
-                "y": -320,
-                "z": round(80 * math.sin(angle), 2)
+                "x": round(40 * math.cos(angle), 2),
+                "y": -150,
+                "z": round(40 * math.sin(angle), 2)
             },
             "energy": 0.7,
-            "status": "active"
+            "status": "active",
+            "cluster": "goals"
         })
 
-    # Add a few U4_Work_Item nodes at L1
+    # Work items scattered
     for i in range(5):
         angle = random.uniform(0, 2 * math.pi)
-        nodes.append({
+        radius = random.uniform(60, 100)
+        l1_items.append({
             "id": f"work_{i}",
             "type_name": "U4_Work_Item",
-            "name": f"Task {i+1}",
+            "name": f"Task-{i+1}",
             "level": "L1",
             "work_type": random.choice(["task", "bug", "ticket"]),
             "priority": random.choice(["high", "medium", "low"]),
             "state": random.choice(["todo", "doing", "done"]),
             "labels": ["work"],
             "position": {
-                "x": round(50 * math.cos(angle), 2),
-                "y": -360,
-                "z": round(50 * math.sin(angle), 2)
+                "x": round(radius * math.cos(angle), 2),
+                "y": -150,
+                "z": round(radius * math.sin(angle), 2)
             },
             "energy": 0.5,
-            "status": "active"
+            "status": "active",
+            "cluster": "work"
         })
 
+    nodes.extend(l1_items)
     return nodes
 
 def main():
@@ -339,8 +351,6 @@ def main():
     all_events.extend(generate_energy_diffusion_events(start_time, count=30))
     all_events.extend(generate_activation_switches(start_time, count=15))
     all_events.extend(generate_membrane_crossings(start_time, count=10))
-
-    # Sort by timestamp
     all_events.sort(key=lambda e: e["timestamp"])
 
     # Generate snapshot
@@ -353,7 +363,8 @@ def main():
             "total_events": len(all_events),
             "generated_at": datetime.now().isoformat(),
             "source": "synthetic",
-            "layer_convention": "L4=protocol (top), L3=ecosystem, L2=org, L1=citizen (bottom)",
+            "layout": "layered_network",
+            "description": "Each level is a horizontal 2D graph plane",
             "time_range": {
                 "start": all_events[0]["timestamp"],
                 "end": all_events[-1]["timestamp"]
@@ -375,7 +386,8 @@ def main():
         "metadata": {
             "total_nodes": len(snapshot_nodes),
             "generated_at": datetime.now().isoformat(),
-            "layer_convention": "L4=protocol (top), L3=ecosystem, L2=org, L1=citizen (bottom)",
+            "layout": "layered_network",
+            "description": "Horizontal planes at Y=150 (L4), Y=50 (L3), Y=-50 (L2), Y=-150 (L1)",
             "node_types": {
                 "U4_Agent": len([n for n in snapshot_nodes if n["type_name"] == "U4_Agent"]),
                 "U4_Knowledge_Object": len([n for n in snapshot_nodes if n["type_name"] == "U4_Knowledge_Object"]),
@@ -400,7 +412,7 @@ def main():
 
     print(f"✅ Generated {len(all_events)} events")
     print(f"✅ Generated {len(snapshot_nodes)} nodes")
-    print(f"✅ Files saved to public/data/")
+    print(f"✅ Layout: Layered network (horizontal planes)")
     print(f"\n📊 Node type breakdown:")
     for node_type, count in snapshot_output["metadata"]["node_types"].items():
         print(f"  - {node_type}: {count}")

@@ -11,7 +11,7 @@ Drop `consciousness-infrastructure_` prefix from all graph names.
 - `consciousness-infrastructure_mind-protocol_ada` → `mind-protocol_ada`
 - `consciousness-infrastructure_mind-protocol_iris` → `mind-protocol_iris`
 - `consciousness-infrastructure_mind-protocol_victor` → `mind-protocol_victor`
-- `consciousness-infrastructure_mind-protocol` → `mind-protocol_org`
+- `consciousness-infrastructure_mind-protocol` → `mind-protocol`
 - `collective_n2` → `mind-protocol_collective`
 
 **Stays same:**
@@ -57,7 +57,7 @@ redis-cli GRAPH.LIST
 # - mind-protocol_ada
 # - mind-protocol_iris
 # - mind-protocol_victor
-# - mind-protocol_org
+# - mind-protocol
 # - mind-protocol_collective
 # - protocol
 # - schema_registry

@@ -35,17 +35,17 @@ We standardize on the following architectural patterns:
 from orchestration.config.graph_names import resolver
 
 # ❌ BAD (hardcoded):
-n2_graph = "mind-protocol_org"
+n2_graph = "mind-protocol"
 graph_name = f"mind-protocol_{citizen}"
 
 # ✅ GOOD (resolver):
-n2_graph = resolver.org_base()  # → "mind-protocol_org"
+n2_graph = resolver.org_base()  # → "mind-protocol"
 graph_name = resolver.citizen("felix")  # → "mind-protocol_felix"
 ```
 
 **Graph Naming Convention:**
 - **L1 (Citizens):** `mind-protocol_{citizen_name}` via `resolver.citizen(name)`
-- **L2 (Organization):** `mind-protocol_org` via `resolver.org_base()`
+- **L2 (Organization):** `mind-protocol` via `resolver.org_base()`
 - **L3 (Ecosystem):** `ecosystem` (constant)
 - **L4 (Protocol):** `protocol` (constant)
 
@@ -65,7 +65,7 @@ from orchestration.libs.write_gate import write_gate, namespace_for_graph
 # Static namespace:
 @write_gate(f"L2:{resolver.org_base()}")
 def upsert_org_node(..., ctx=None):
-    # Requires ctx={"ns": "L2:mind-protocol_org"}
+    # Requires ctx={"ns": "L2:mind-protocol"}
     ...
 
 # Dynamic namespace via callable:
@@ -77,7 +77,7 @@ async def scoped_write(self, scope, ..., ctx=None):
 
 **Namespace Format:** `L{level}:{graph_name}`
 - `L1:mind-protocol_felix` (personal graph)
-- `L2:mind-protocol_org` (organizational graph)
+- `L2:mind-protocol` (organizational graph)
 - `L3:ecosystem` (ecosystem graph)
 - `L4:protocol` (protocol graph)
 
@@ -211,7 +211,7 @@ For new services/scripts:
 - [ ] Use `resolver.citizen(name)` / `resolver.org_base()` instead of hardcoded strings
 - [ ] Add `@write_gate()` to any function that modifies graph data
 - [ ] Pass `ctx={"ns": namespace_for_graph(graph_name)}` to all write operations
-- [ ] Use `settings.N2_GRAPH_NAME` instead of hardcoded "mind-protocol_org"
+- [ ] Use `settings.N2_GRAPH_NAME` instead of hardcoded "mind-protocol"
 - [ ] Import from `orchestration/config/graph_names import resolver` at module level
 - [ ] For multi-scope services, implement `_namespace_for_scope(scope)` helper
 

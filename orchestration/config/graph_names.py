@@ -19,8 +19,8 @@ class GraphNameResolver:
         return f"{self.org}_collective"
 
     def org_base(self) -> str:
-        """mind-protocol_org (org base graph)"""
-        return f"{self.org}_org"
+        """mind-protocol (org base graph)"""
+        return self.org
 
     @staticmethod
     def protocol() -> str:

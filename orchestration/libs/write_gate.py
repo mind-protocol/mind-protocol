@@ -2,7 +2,7 @@
 Write Gate enforcement for graph mutations.
 
 Guards graph writers against cross-layer access by requiring an explicit
-context namespace (e.g. ``L2:mind-protocol_org``).
+context namespace (e.g. ``L2:mind-protocol``).
 When a mismatch is detected we emit a ``telemetry.write.denied`` event and
 raise ``PermissionError``.
 
@@ -152,14 +152,14 @@ def namespace_for_graph(graph_name: Optional[str]) -> str:
     # New convention: mind-protocol_{citizen} (not org/ecosystem)
     if (
         graph_lower.startswith("mind-protocol_")
-        and graph_lower != "mind-protocol_org"
+        and graph_lower != "mind-protocol"
         or graph_lower.startswith("citizen_")
     ):
         return f"L1:{graph_name}"
 
     # L2 (organization)
     if graph_lower in {
-        "mind-protocol_org",
+        "mind-protocol",
         "org_mind_protocol",
         "mind_protocol_collective_graph",
     } or graph_lower.startswith(("org_", "collective_")):

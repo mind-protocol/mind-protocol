@@ -20,7 +20,7 @@ RENAMES = {
     "consciousness-infrastructure_mind-protocol_ada": "mind-protocol_ada",
     "consciousness-infrastructure_mind-protocol_iris": "mind-protocol_iris",
     "consciousness-infrastructure_mind-protocol_victor": "mind-protocol_victor",
-    "consciousness-infrastructure_mind-protocol": "mind-protocol_org",  # Org base graph
+    "consciousness-infrastructure_mind-protocol": "mind-protocol",  # Org base graph
     "consciousness-infrastructure": "ecosystem",  # L3 ecosystem graph
     # protocol and schema_registry stay as-is
 }
