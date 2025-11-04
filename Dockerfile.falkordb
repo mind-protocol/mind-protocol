@@ -7,5 +7,6 @@ EXPOSE 6379
 # Data directory for persistence
 VOLUME /data
 
-# FalkorDB will save snapshots every 60 seconds if at least 1 write occurred
-# This is configured via --save 60 1 in dockerCommand
+# Run FalkorDB with persistence configuration
+# Saves snapshot every 60 seconds if at least 1 write occurred
+CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "60", "1", "--bind", "0.0.0.0"]
