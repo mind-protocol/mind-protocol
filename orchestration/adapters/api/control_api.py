@@ -522,8 +522,8 @@ def _get_wallet_service() -> Optional[WalletCustodyService]:
 
 # Snapshot generation will be added by Iris (TODO)
 
-# Create router
-router = APIRouter(prefix="/api", tags=["consciousness-control"])
+# Create router (no prefix - WebSocket at /ws)
+router = APIRouter(tags=["consciousness-control"])
 
 # ============================================================================
 # ALL REST ENDPOINTS DISABLED - WebSocket-Only Architecture (2025-10-30)
