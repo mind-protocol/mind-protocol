@@ -1,5 +1,6 @@
 'use client';
 
+// Force rebuild: 2025-11-04 21:17 UTC
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Tooltip } from './components/Tooltip';
