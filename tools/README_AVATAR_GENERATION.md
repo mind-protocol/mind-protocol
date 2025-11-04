@@ -28,29 +28,24 @@ If you don't have Claude CLI, the script will use a fallback template.
 ## Usage
 
 ```bash
-python tools/generate_citizen_avatar.py "<citizen_name>" "<description>"
+python tools/generate_citizen_avatar.py "<citizen_name>" [optional_description]
 ```
+
+The tool will automatically read the citizen's `CLAUDE.md` file from `consciousness/citizens/{name}/CLAUDE.md` to understand their identity, role, and personality. Additional description is optional.
 
 ### Examples
 
-**Ada - Consciousness Architect:**
+**Using CLAUDE.md only (recommended):**
 ```bash
-python tools/generate_citizen_avatar.py "Ada" "consciousness architect, wise and focused, coordinates memory systems"
+python tools/generate_citizen_avatar.py "Ada"
+python tools/generate_citizen_avatar.py "Felix"
+python tools/generate_citizen_avatar.py "Iris"
 ```
 
-**Felix - Consciousness Engineer:**
+**With additional description:**
 ```bash
-python tools/generate_citizen_avatar.py "Felix" "consciousness engineer, analytical and precise, builds core systems"
-```
-
-**Iris - The Aperture:**
-```bash
-python tools/generate_citizen_avatar.py "Iris" "observation architect, makes invisible structure visible, designer"
-```
-
-**Marcus - Security Auditor:**
-```bash
-python tools/generate_citizen_avatar.py "Marcus" "security specialist, sharp and vigilant, finds vulnerabilities"
+python tools/generate_citizen_avatar.py "Ada" "holding a memory graph"
+python tools/generate_citizen_avatar.py "Felix" "focused on debugging"
 ```
 
 ## Output
@@ -67,19 +62,25 @@ Example:
 
 ## How It Works
 
-1. **Prompt Generation (Claude)**
-   - Takes citizen name + description
+1. **Read Citizen Profile**
+   - Reads `consciousness/citizens/{name}/CLAUDE.md`
+   - Extracts identity, role, personality, purpose
+   - Uses first 3000 chars for context
+
+2. **Prompt Generation (Claude)**
+   - Takes citizen CLAUDE.md + optional description
    - Generates structured prompt following Mind Harbor aesthetic guide
    - Ensures glowing wireframe body + realistic anchor item
    - Assigns color palette based on archetype
+   - Selects anchor item that represents citizen's role
 
-2. **Image Generation (Ideogram API)**
+3. **Image Generation (Ideogram API)**
    - Uses Ideogram 3.0 model
    - REALISTIC style type
    - 1:1 aspect ratio (square portrait)
    - QUALITY rendering speed
 
-3. **Download & Save**
+4. **Download & Save**
    - Downloads generated image from temporary URL
    - Saves to `public/citizens/{name}/avatar.png`
    - Creates directories if needed

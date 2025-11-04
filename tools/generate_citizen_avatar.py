@@ -3,10 +3,11 @@
 Generate citizen avatar using Ideogram API with Claude-generated prompts.
 
 Usage:
-    python tools/generate_citizen_avatar.py <citizen_name> <description>
+    python tools/generate_citizen_avatar.py <citizen_name> [description]
 
 Example:
     python tools/generate_citizen_avatar.py "Ada" "consciousness architect, wise and focused, works with memory graphs"
+    python tools/generate_citizen_avatar.py "Felix"  # Uses CLAUDE.md only
 """
 
 import os
@@ -26,13 +27,41 @@ if not IDEOGRAM_API_KEY:
     sys.exit(1)
 
 
-def generate_prompt_with_claude(citizen_name: str, description: str) -> str:
+def read_citizen_claudemd(citizen_name: str) -> str | None:
+    """Read the citizen's CLAUDE.md file if it exists."""
+
+    # Try different possible locations
+    possible_paths = [
+        Path("consciousness/citizens") / citizen_name.lower() / "CLAUDE.md",
+        Path("consciousness/citizens") / citizen_name / "CLAUDE.md",
+    ]
+
+    for path in possible_paths:
+        if path.exists():
+            print(f"📄 Found CLAUDE.md at: {path}")
+            with open(path, 'r', encoding='utf-8') as f:
+                return f.read()
+
+    print(f"⚠️  No CLAUDE.md found for {citizen_name}")
+    return None
+
+
+def generate_prompt_with_claude(citizen_name: str, description: str, claudemd_content: str | None) -> str:
     """Use Claude to generate a prompt following the Mind Harbor aesthetic guide."""
+
+    # Build context from CLAUDE.md
+    context_section = ""
+    if claudemd_content:
+        context_section = f"""
+Citizen Profile (from CLAUDE.md):
+{claudemd_content[:3000]}  # First 3000 chars for context
+
+"""
 
     guide_prompt = f"""You are creating a prompt for an AI partner portrait in the Mind Protocol universe.
 
 Citizen: {citizen_name}
-Description: {description}
+{context_section}Additional Description: {description if description else "Use the CLAUDE.md context above"}
 
 Follow this EXACT template structure:
 
@@ -150,21 +179,37 @@ def download_and_save_image(image_url: str, citizen_name: str):
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python tools/generate_citizen_avatar.py <citizen_name> <description>")
-        print("\nExample:")
-        print('  python tools/generate_citizen_avatar.py "Ada" "consciousness architect, wise and focused, works with memory graphs"')
+    if len(sys.argv) < 2:
+        print("Usage: python tools/generate_citizen_avatar.py <citizen_name> [description]")
+        print("\nExamples:")
+        print('  python tools/generate_citizen_avatar.py "Ada" "consciousness architect, wise and focused"')
+        print('  python tools/generate_citizen_avatar.py "Felix"  # Uses CLAUDE.md only')
         sys.exit(1)
 
     citizen_name = sys.argv[1]
-    description = " ".join(sys.argv[2:])
+    description = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
 
     print(f"\n🎨 Generating avatar for: {citizen_name}")
-    print(f"📝 Description: {description}\n")
+
+    # Step 0: Read citizen's CLAUDE.md
+    print("📄 Reading citizen profile...")
+    claudemd_content = read_citizen_claudemd(citizen_name)
+
+    if not claudemd_content and not description:
+        print("❌ Error: No CLAUDE.md found and no description provided")
+        print("   Please provide either a CLAUDE.md file or a description")
+        sys.exit(1)
+
+    if description:
+        print(f"📝 Additional description: {description}")
+    if claudemd_content:
+        print(f"✅ Using citizen profile from CLAUDE.md")
+
+    print()
 
     # Step 1: Generate prompt with Claude
     print("🤖 Step 1: Generating prompt with Claude...")
-    prompt = generate_prompt_with_claude(citizen_name, description)
+    prompt = generate_prompt_with_claude(citizen_name, description, claudemd_content)
     print(f"✅ Generated prompt:\n{prompt}\n")
 
     # Step 2: Generate image with Ideogram
