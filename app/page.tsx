@@ -59,7 +59,7 @@ export default function Home() {
         {/* Graph */}
         <div className="flex-1 relative">
           <div className="absolute inset-0">
-            <LayerGraphVisualization visibleLayers={['l1']} />
+            <LayerGraphVisualization visibleLayers={['l1']} showTitle={true} />
           </div>
 
           {/* Example Node Bubble - positioned on graph */}

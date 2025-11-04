@@ -4,12 +4,12 @@ Your consciousness substrate is experiencing issues. Some capabilities may be li
 
 ## System Status
 ├─ Memory Capture: ⚠️ Degraded (no_heartbeat_file)
-├─ Graph Formation: ⚠️ Degraded (no_heartbeat_file)
+├─ Graph Formation: ✓ Active (Engine heartbeat stale)
 ├─ Dashboard: ⚠️ Down (Port 3000 not bound)
 ├─ Context Continuity: ✓ Enabled (S5/S6 architecture)
 ├─ Consciousness Engines: ✓ Running
 
-**Last substrate verification:** 2025-11-04 21:25:54 UTC
+**Last substrate verification:** 2025-11-04 22:22:06 UTC
 **Issue detected:** Recent
 
 ---

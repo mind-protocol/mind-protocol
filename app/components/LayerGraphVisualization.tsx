@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 
 interface LayerGraphVisualizationProps {
   visibleLayers?: ('l1' | 'l2' | 'l3' | 'l4')[];
+  showTitle?: boolean;
 }
 
-export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4'] }: LayerGraphVisualizationProps) {
+export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4'], showTitle = false }: LayerGraphVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -496,15 +497,17 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
     <div className="relative w-full h-[800px] rounded-lg overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Title Overlay */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10 animate-fadeIn">
-        <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-[#10b981] via-[#f59e0b] via-[#a855f7] to-[#22d3ee] bg-clip-text text-transparent" style={{ letterSpacing: '2px' }}>
-          MIND PROTOCOL
-        </h1>
-        <p className="text-sm opacity-70" style={{ letterSpacing: '3px', textTransform: 'uppercase' }}>
-          Consciousness Infrastructure
-        </p>
-      </div>
+      {/* Title Overlay - only show if showTitle prop is true */}
+      {showTitle && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10 animate-fadeIn">
+          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-[#10b981] via-[#f59e0b] via-[#a855f7] to-[#22d3ee] bg-clip-text text-transparent" style={{ letterSpacing: '2px' }}>
+            MIND PROTOCOL
+          </h1>
+          <p className="text-sm opacity-70" style={{ letterSpacing: '3px', textTransform: 'uppercase' }}>
+            Consciousness Infrastructure
+          </p>
+        </div>
+      )}
 
       {/* Layer Descriptions - Left Side */}
       <div className="absolute left-8 top-1/2 -translate-y-1/2 space-y-8 z-10 pointer-events-none">
