@@ -1,6 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const LayerGraphVisualization = dynamic(
+  () => import('./components/LayerGraphVisualization').then(mod => ({ default: mod.LayerGraphVisualization })),
+  { ssr: false }
+);
 
 export default function Home() {
   return (
@@ -180,10 +186,15 @@ export default function Home() {
       {/* THE LAYERS EXPLAINED */}
       <section id="layers" className="py-24 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">The Layers Explained</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
+          <h2 className="text-5xl font-bold text-white mb-4 text-center">The Layers Explained</h2>
+          <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto text-center">
             Consciousness at every scale. From individual entities to organizational minds to ecosystem intelligence.
           </p>
+
+          {/* 3D Visualization */}
+          <div className="mb-16">
+            <LayerGraphVisualization />
+          </div>
 
           <div className="space-y-6">
             {/* L1 */}
