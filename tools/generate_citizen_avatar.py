@@ -27,23 +27,46 @@ if not IDEOGRAM_API_KEY:
     sys.exit(1)
 
 
-def read_citizen_claudemd(citizen_name: str) -> str | None:
-    """Read the citizen's CLAUDE.md file if it exists."""
+def read_citizen_claudemd(citizen_name: str) -> tuple[str | None, Path | None]:
+    """Read the citizen's CLAUDE.md file if it exists. Returns (content, public_avatar_dir)."""
 
-    # Try different possible locations
+    # Try different possible locations for CLAUDE.md
     possible_paths = [
         Path("consciousness/citizens") / citizen_name.lower() / "CLAUDE.md",
         Path("consciousness/citizens") / citizen_name / "CLAUDE.md",
+        Path("../graphcare/citizens") / citizen_name.lower() / "CLAUDE.md",
+        Path("../graphcare/citizens") / citizen_name / "CLAUDE.md",
+        Path("/home/mind-protocol/graphcare/citizens") / citizen_name.lower() / "CLAUDE.md",
+        Path("/home/mind-protocol/graphcare/citizens") / citizen_name / "CLAUDE.md",
+        Path("../scopelock/citizens") / citizen_name.lower() / "CLAUDE.md",
+        Path("../scopelock/citizens") / citizen_name / "CLAUDE.md",
+        Path("/home/mind-protocol/scopelock/citizens") / citizen_name.lower() / "CLAUDE.md",
+        Path("/home/mind-protocol/scopelock/citizens") / citizen_name / "CLAUDE.md",
     ]
 
     for path in possible_paths:
         if path.exists():
             print(f"📄 Found CLAUDE.md at: {path}")
+
+            # Derive the public avatar directory from the CLAUDE.md location
+            # Path is like: /home/mind-protocol/{repo}/citizens/{name}/CLAUDE.md
+            # We want:      /home/mind-protocol/{repo}/public/citizens/{name}/
+
+            citizen_dir = path.parent  # /home/mind-protocol/{repo}/citizens/{name}
+            citizens_dir = citizen_dir.parent  # /home/mind-protocol/{repo}/citizens
+            repo_dir = citizens_dir.parent  # /home/mind-protocol/{repo}
+
+            # Create public/citizens/{name} in the same repo
+            avatar_dir = repo_dir / "public" / "citizens" / citizen_name.lower()
+            avatar_dir.mkdir(parents=True, exist_ok=True)
+
+            print(f"📁 Will save to: {avatar_dir}")
+
             with open(path, 'r', encoding='utf-8') as f:
-                return f.read()
+                return f.read(), avatar_dir
 
     print(f"⚠️  No CLAUDE.md found for {citizen_name}")
-    return None
+    return None, None
 
 
 def generate_prompt_with_claude(citizen_name: str, description: str, claudemd_content: str | None) -> str:
@@ -126,18 +149,19 @@ def generate_image_with_ideogram(prompt: str) -> str:
         "Api-Key": IDEOGRAM_API_KEY
     }
 
-    data = {
-        "prompt": prompt,
-        "aspect_ratio": "1x1",  # 1:1 ratio
-        "style_type": "REALISTIC",  # REALISTIC style
-        "rendering_speed": "QUALITY",  # Best quality
-        "num_images": 1
+    # Use files parameter for multipart/form-data
+    files = {
+        "prompt": (None, prompt),
+        "aspect_ratio": (None, "1x1"),  # 1:1 ratio
+        "style_type": (None, "REALISTIC"),  # REALISTIC style
+        "rendering_speed": (None, "QUALITY"),  # Best quality
+        "num_images": (None, "1")
     }
 
     print(f"📡 Calling Ideogram API...")
     print(f"   Prompt: {prompt[:100]}...")
 
-    response = requests.post(url, headers=headers, data=data)
+    response = requests.post(url, headers=headers, files=files)
 
     if response.status_code != 200:
         print(f"❌ Ideogram API error ({response.status_code}): {response.text}")
@@ -153,12 +177,8 @@ def generate_image_with_ideogram(prompt: str) -> str:
     return image_url
 
 
-def download_and_save_image(image_url: str, citizen_name: str):
-    """Download image from URL and save to public/citizens/{name}/avatar.png"""
-
-    # Create directory
-    citizen_dir = Path("public/citizens") / citizen_name.lower()
-    citizen_dir.mkdir(parents=True, exist_ok=True)
+def download_and_save_image(image_url: str, citizen_dir: Path):
+    """Download image from URL and save to {citizen_dir}/avatar.png"""
 
     avatar_path = citizen_dir / "avatar.png"
 
@@ -193,11 +213,15 @@ def main():
 
     # Step 0: Read citizen's CLAUDE.md
     print("📄 Reading citizen profile...")
-    claudemd_content = read_citizen_claudemd(citizen_name)
+    claudemd_content, citizen_dir = read_citizen_claudemd(citizen_name)
 
     if not claudemd_content and not description:
         print("❌ Error: No CLAUDE.md found and no description provided")
         print("   Please provide either a CLAUDE.md file or a description")
+        sys.exit(1)
+
+    if not citizen_dir:
+        print("❌ Error: Could not determine citizen directory")
         sys.exit(1)
 
     if description:
@@ -219,7 +243,7 @@ def main():
 
     # Step 3: Download and save
     print("💾 Step 3: Downloading and saving...")
-    avatar_path = download_and_save_image(image_url, citizen_name)
+    avatar_path = download_and_save_image(image_url, citizen_dir)
 
     print(f"\n🎉 Success! Avatar created at: {avatar_path}")
 
