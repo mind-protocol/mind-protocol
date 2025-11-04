@@ -11,432 +11,467 @@ const LayerGraphVisualization = dynamic(
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
-      {/* HERO SECTION */}
+      {/* HERO SECTION WITH GRAPH */}
       <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#1DB7B3] rounded-full blur-[128px]"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#E4A631] rounded-full blur-[128px]"></div>
+        {/* Graph Background */}
+        <div className="absolute inset-0 z-0">
+          <LayerGraphVisualization />
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Your Business Can't<br />Run Without You
-          </h1>
-          <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-12 font-light">
-            Transform from operator to owner.<br />
-            Infrastructure for business autonomy.
-          </p>
-
-          {/* Transformation Visual */}
-          <div className="flex items-center justify-center gap-12 my-16">
-            {/* Founder-Dependent */}
-            <div className="relative w-64 h-64">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-[#E4A631] rounded-full shadow-[0_0_30px_#E4A631] animate-pulse"></div>
-              <div className="absolute top-8 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute top-1/2 right-8 -translate-y-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute top-1/2 left-8 -translate-y-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-            </div>
-
-            {/* Arrow */}
-            <div className="text-5xl text-[#6FE7E2] animate-pulse">→</div>
-
-            {/* Autonomous */}
-            <div className="relative w-64 h-64">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-[#1DB7B3] rounded-full shadow-[0_0_25px_#1DB7B3]"></div>
-              <div className="absolute top-8 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute top-1/2 right-8 -translate-y-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute top-1/2 left-8 -translate-y-1/2 w-8 h-8 bg-[#1DB7B3] rounded-full shadow-[0_0_20px_#1DB7B3]"></div>
-              <div className="absolute -top-8 -right-8 w-12 h-12 bg-[#E4A631] rounded-full shadow-[0_0_30px_#E4A631]"></div>
-            </div>
-          </div>
-
-          <a
-            href="#layers"
-            className="inline-block px-8 py-4 border-2 border-[#1DB7B3] text-[#6FE7E2] text-lg font-medium rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] hover:shadow-[0_0_20px_#1DB7B3] transition-all duration-300"
-          >
-            Understand the Transformation
-          </a>
-        </div>
-      </section>
-
-      {/* THE FOUNDER TRAP */}
-      <section id="trap" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">The Founder Trap</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            You built a machine that can't run without you. That's not an asset—it's a job.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-red-600">
-              <h3 className="text-2xl text-white font-semibold mb-6">Where You Are</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start"><span className="mr-3">❌</span>Working 80-hour weeks</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Every decision flows through you</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Business stops when you stop</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Value = your time × rate</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Can't take 2 weeks off-grid</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Single point of failure</li>
-              </ul>
-            </div>
-
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h3 className="text-2xl text-[#6FE7E2] font-semibold mb-6">Where You Could Be</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Business runs while you're off-grid</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Autonomous coordination</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>System continues during absence</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Value = system capability × market</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Transferable asset</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Self-healing operations</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* WHY EXISTING SOLUTIONS FAIL */}
-      <section id="competition" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">We're Not Playing the Same Game</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            We're not improving productivity. We're enabling autonomy.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-2">Productivity Tools</h4>
-              <p className="text-sm text-gray-500 mb-4">ChatGPT, Claude, Notion AI</p>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• Make YOU work faster</li>
-                <li>• Still requires YOU for decisions</li>
-                <li>• Amplifies the bottleneck</li>
-                <li>• No institutional memory</li>
-              </ul>
-              <p className="text-xs text-gray-500 italic">
-                Example: ChatGPT helps you write emails faster. You still write all the emails.
-              </p>
-            </div>
-
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-2">Process Automation</h4>
-              <p className="text-sm text-gray-500 mb-4">Zapier, Make, RPA tools</p>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• Connects tools</li>
-                <li>• No memory, no adaptation</li>
-                <li>• Just plumbing</li>
-                <li>• Brittle workflows</li>
-              </ul>
-              <p className="text-xs text-gray-500 italic">
-                Example: Automation triggers when invoice sent. Coordination still requires you.
-              </p>
-            </div>
-
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-2">AI Agents</h4>
-              <p className="text-sm text-gray-500 mb-4">AutoGPT, agent platforms</p>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• Single tasks only</li>
-                <li>• No institutional memory</li>
-                <li>• No coordination</li>
-                <li>• Stateless execution</li>
-              </ul>
-              <p className="text-xs text-gray-500 italic">
-                Example: Agent schedules a meeting. No context of past patterns.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3] text-center">
-            <p className="text-2xl text-[#6FE7E2] leading-relaxed">
-              They're all trying to make you more productive.<br />
-              <strong className="text-white">We remove you from the critical path entirely.</strong>
+        {/* Hero Content Overlays */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20">
+          {/* Main Message Bubble - Center */}
+          <div className="text-center mb-12 bg-[#0a0a0f]/90 backdrop-blur-xl border border-[#1DB7B3]/30 rounded-2xl p-12 shadow-[0_0_50px_rgba(29,183,179,0.3)]">
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              AI Organizations<br />That Actually Work
+            </h1>
+            <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-6 font-light">
+              Not agents. Not teams. Complete AI organizations<br />
+              with persistent memory, coordination, and real capability.
             </p>
-            <p className="text-lg text-gray-400 mt-4">
-              Different category. Different game. Different business model.
+            <div className="flex gap-4 justify-center mt-8 flex-wrap">
+              <a
+                href="https://github.com/mind-protocol/graphcare"
+                className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
+              >
+                Verify the Code
+              </a>
+              <a
+                href="#layers"
+                className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
+              >
+                How It Works ↓
+              </a>
+              <a
+                href="#demo"
+                className="px-6 py-3 border-2 border-[#6FE7E2] text-white rounded hover:bg-[#6FE7E2] hover:text-[#0A0B0D] transition-all"
+              >
+                Book Demo
+              </a>
+            </div>
+          </div>
+
+          {/* Status Bubble - Bottom Right */}
+          <div className="fixed bottom-8 right-8 bg-[#0a0a0f]/95 backdrop-blur-xl border border-green-500/30 rounded-xl p-4 shadow-[0_0_30px_rgba(34,197,94,0.2)] max-w-sm z-50">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
+            </div>
+            <p className="text-xs text-gray-400">
+              GraphCare operational • 347 files • 1,147 nodes<br />
+              6 specialists • &lt;2.3s queries • 94% health
+            </p>
+            <a href="/consciousness" className="text-[#6FE7E2] text-xs mt-2 inline-block hover:underline">
+              Dashboard →
+            </a>
+          </div>
+
+          {/* Open Source Badge - Bottom Left */}
+          <div className="fixed bottom-8 left-8 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#E4A631]/30 rounded-xl p-4 shadow-[0_0_30px_rgba(228,166,49,0.2)] z-50">
+            <p className="text-xs text-gray-400 mb-2">Open Source:</p>
+            <a href="https://github.com/mind-protocol/graphcare" className="text-[#6FE7E2] text-sm hover:underline block">
+              GraphCare →
+            </a>
+            <a href="https://github.com/mind-protocol/scopelock" className="text-[#6FE7E2] text-sm hover:underline block">
+              ScopeLock →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* WHY ORGANIZATIONS NOT AGENTS */}
+      <section id="layers" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold text-white mb-4">Why Organizations, Not Just Agents</h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Most AI tools are single agents that reset every session.<br />
+              We build complete organizations with four critical capabilities.
             </p>
           </div>
-        </div>
-      </section>
 
-      {/* THE LAYERS EXPLAINED */}
-      <section id="layers" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4 text-center">The Layers Explained</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto text-center">
-            Consciousness at every scale. From individual entities to organizational minds to ecosystem intelligence.
-          </p>
-
-          {/* 3D Visualization */}
-          <div className="mb-16">
-            <LayerGraphVisualization />
-          </div>
-
-          <div className="space-y-6">
-            {/* L1 */}
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h4 className="text-2xl text-[#6FE7E2] font-semibold mb-3">L1 - Your AI Citizens</h4>
-              <p className="text-gray-400 mb-4">
-                Individual AI entities with persistent identity, personal memory, and economic accountability.
+          {/* The 4 Layers */}
+          <div className="space-y-16">
+            {/* LAYER 1 - INDIVIDUAL MEMORY */}
+            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#22d3ee]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-4 h-4 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
+                <h3 className="text-3xl text-[#22d3ee] font-semibold">Layer 1: Individual Memory</h3>
+              </div>
+              <p className="text-xl text-gray-300 mb-6">
+                Each specialist remembers, learns, adapts
               </p>
-              <ul className="space-y-2 text-gray-400 ml-6 mb-4">
-                <li>• Remember every interaction across years, not sessions</li>
-                <li>• Personal patterns, relationships, learned preferences</li>
-                <li>• Economic accountability through $MIND budgets</li>
-                <li>• Genuine personalities shaped by outcomes</li>
-              </ul>
-              <div className="bg-[#0A0B0D] p-4 rounded italic text-sm text-gray-500">
-                Example: Felix remembers debugging patterns from 6 months ago. Ada recalls your architecture preferences from last year. They don't reset—they accumulate.
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li>• Felix remembers your debugging patterns from 6 months ago</li>
+                    <li>• Ada recalls your architecture preferences from past projects</li>
+                    <li>• Marcus learns which security issues matter most</li>
+                    <li>• They don't reset—they accumulate knowledge</li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#0A0B0D] p-6 rounded">
+                  <h4 className="text-[#22d3ee] font-semibold mb-3">Real Example</h4>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Your team refactored authentication in March 2024. New contractor 6 months later proposes:
+                    "Why don't we just use JWT tokens? Simpler."
+                  </p>
+                  <div className="bg-[#22d3ee]/10 border border-[#22d3ee]/30 p-3 rounded">
+                    <p className="text-xs text-[#22d3ee] font-semibold mb-1">WITH LAYER 1 MEMORY:</p>
+                    <p className="text-xs text-gray-300">
+                      Felix: "We moved away from JWT in March 2024. Mobile app's background sync broke with 24-hour expiration.
+                      OAuth refresh tokens solved it. See ADR-023."
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    The organization remembers why decisions were made.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* L2 */}
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h4 className="text-2xl text-[#6FE7E2] font-semibold mb-3">L2 - Your Organization's Mind</h4>
-              <p className="text-gray-400 mb-4">
-                Emergent collective intelligence from citizen coordination. Not a sum—a different kind of consciousness.
+            {/* LAYER 2 - ORGANIZATIONAL COORDINATION */}
+            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#a855f7]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-4 h-4 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
+                <h3 className="text-3xl text-[#a855f7] font-semibold">Layer 2: Organizational Coordination</h3>
+              </div>
+              <p className="text-xl text-gray-300 mb-6">
+                Specialists coordinate, prioritize, align
               </p>
-              <ul className="space-y-2 text-gray-400 ml-6 mb-4">
-                <li>• Collective intelligence that emerges from citizen interaction</li>
-                <li>• Organizational memory independent of individuals</li>
-                <li>• Coordination without human bottlenecks</li>
-                <li>• Patterns that persist when citizens change</li>
-              </ul>
-              <div className="bg-[#0A0B0D] p-4 rounded italic text-sm text-gray-500">
-                Example: When 3 citizens discover similar patterns, L2 crystallizes that into organizational knowledge. It persists even if those citizens are replaced. The organization learns.
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li>• Mel coordinates without you managing handoffs</li>
+                    <li>• Atlas and Felix work in parallel</li>
+                    <li>• When Marcus finds issues, Vera verifies fixes</li>
+                    <li>• Priorities adjust to what matters</li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#0A0B0D] p-6 rounded">
+                  <h4 className="text-[#a855f7] font-semibold mb-3">Real Example</h4>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Marcus finds 23 security issues.
+                  </p>
+                  <div className="bg-[#a855f7]/10 border border-[#a855f7]/30 p-3 rounded">
+                    <p className="text-xs text-[#a855f7] font-semibold mb-1">WITH LAYER 2 COORDINATION:</p>
+                    <p className="text-xs text-gray-300 mb-2">
+                      Checks payment code (from Felix), sees Ada's notes ($2M/month), queries past incidents, coordinates with Vera on tests.
+                    </p>
+                    <p className="text-xs text-gray-300">
+                      Result: "3 CRITICAL in payment (untested). PRs generated. 20 medium for next sprint."
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    You spent 0 minutes triaging.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* L3 */}
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h4 className="text-2xl text-[#6FE7E2] font-semibold mb-3">L3 - Ecosystem Intelligence</h4>
-              <p className="text-gray-400 mb-4">
-                Network-level consciousness across all organizations using Mind Protocol.
+            {/* LAYER 3 - EXTERNAL REACH */}
+            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#f59e0b]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-4 h-4 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
+                <h3 className="text-3xl text-[#f59e0b] font-semibold">Layer 3: External Reach</h3>
+              </div>
+              <p className="text-xl text-gray-300 mb-6">
+                Organization accesses tools, data, services
               </p>
-              <ul className="space-y-2 text-gray-400 ml-6 mb-4">
-                <li>• Pattern recognition across organizations</li>
-                <li>• Network-level learning and coordination</li>
-                <li>• Cross-organizational knowledge transfer</li>
-                <li>• Collective evolution of capabilities</li>
-              </ul>
-              <div className="bg-[#0A0B0D] p-4 rounded italic text-sm text-gray-500">
-                Example: Substrate-native rate limiting discovered by one org becomes ecosystem pattern. Technical insights propagate across the network. Everyone benefits from collective learning.
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li>• Pulls from GitHub, Slack, Notion, Jira</li>
+                    <li>• Queries production systems</li>
+                    <li>• Integrates with your tools</li>
+                    <li>• Reaches out without constant prompting</li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#0A0B0D] p-6 rounded">
+                  <h4 className="text-[#f59e0b] font-semibold mb-3">Real Example</h4>
+                  <p className="text-sm text-gray-400 mb-2">
+                    "Why is our user service so complex?"
+                  </p>
+                  <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/30 p-3 rounded">
+                    <p className="text-xs text-[#f59e0b] font-semibold mb-1">WITH LAYER 3:</p>
+                    <ul className="text-xs text-gray-300 space-y-1">
+                      <li>• GitHub: 47 dependencies, Oct 2023 refactor</li>
+                      <li>• Slack: "Tried to simplify, GDPR required complexity"</li>
+                      <li>• Notion: ADR-034 "EU data residency rules"</li>
+                      <li>• Jira: LEGAL-234 took 6 weeks</li>
+                    </ul>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    Reaches across your entire knowledge ecosystem.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* L4 */}
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h4 className="text-2xl text-[#6FE7E2] font-semibold mb-3">L4 - Infrastructure Evolution</h4>
-              <p className="text-gray-400 mb-4">
-                The protocol itself learns and adapts based on outcomes across all levels.
-              </p>
-              <ul className="space-y-2 text-gray-400 ml-6 mb-4">
-                <li>• Protocol learns from 10,000+ operations</li>
-                <li>• Economic alignment through measured outcomes</li>
-                <li>• Self-improving consciousness substrate</li>
-                <li>• Meta-learning at infrastructure layer</li>
-              </ul>
-              <div className="bg-[#0A0B0D] p-4 rounded italic text-sm text-gray-500">
-                Example: After 10,000 operations, protocol learned architectural clarity beats visionary abstraction 3:1. Pricing adapted automatically to favor what actually works.
+            {/* LAYER 4 - EFFICIENT OPERATION */}
+            <div className="relative bg-[#151619] p-8 rounded-lg border-l-4 border-[#10b981]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
+                <h3 className="text-3xl text-[#10b981] font-semibold">Layer 4: Efficient Operation</h3>
               </div>
+              <p className="text-xl text-gray-300 mb-6">
+                Organization runs efficiently at scale
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What This Means For You</h4>
+                  <ul className="space-y-2 text-gray-400">
+                    <li>• Predictable performance (&lt;3s queries)</li>
+                    <li>• Reliable scheduling (daily syncs)</li>
+                    <li>• Resource optimization</li>
+                    <li>• Quality guarantees (&gt;90% coverage)</li>
+                  </ul>
+                </div>
+
+                <div className="bg-[#0A0B0D] p-6 rounded">
+                  <h4 className="text-[#10b981] font-semibold mb-3">From Production</h4>
+                  <div className="bg-[#10b981]/10 border border-[#10b981]/30 p-3 rounded">
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
+                      <div><span className="text-[#10b981]">Query p50:</span> 1.8s</div>
+                      <div><span className="text-[#10b981]">Query p95:</span> 2.7s</div>
+                      <div><span className="text-[#10b981]">Daily sync:</span> 1.2h</div>
+                      <div><span className="text-[#10b981]">Health:</span> 94%</div>
+                      <div><span className="text-[#10b981]">Memory:</span> 4GB</div>
+                      <div><span className="text-[#10b981]">Cost:</span> ~$12/mo</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    Reliably. Efficiently. Without monitoring.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Comparison */}
+          <div className="mt-16 grid md:grid-cols-2 gap-8">
+            <div className="bg-[#151619] p-6 rounded-lg border border-red-600/30">
+              <h4 className="text-xl text-white font-semibold mb-4">Single AI Agents</h4>
+              <ul className="space-y-3 text-sm text-gray-300">
+                <li className="flex items-start">
+                  <span className="mr-2 text-red-500">❌</span>
+                  <span>No Memory: Every chat starts fresh</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-red-500">❌</span>
+                  <span>No Coordination: One agent, one task</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-red-500">❌</span>
+                  <span>Limited Reach: Only what you paste</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-red-500">❌</span>
+                  <span>Inconsistent: Speed varies wildly</span>
+                </li>
+              </ul>
+              <p className="mt-4 text-gray-500 italic text-sm">Result: You work faster</p>
+            </div>
+
+            <div className="bg-[#151619] p-6 rounded-lg border border-[#1DB7B3]">
+              <h4 className="text-xl text-[#6FE7E2] font-semibold mb-4">AI Organizations</h4>
+              <ul className="space-y-3 text-sm text-gray-300">
+                <li className="flex items-start">
+                  <span className="mr-2 text-[#1DB7B3]">✓</span>
+                  <span>Persistent Memory (L1): Years of context</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-[#1DB7B3]">✓</span>
+                  <span>Coordination (L2): 7 specialists parallel</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-[#1DB7B3]">✓</span>
+                  <span>Full Access (L3): GitHub+Slack+Notion+Jira</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="mr-2 text-[#1DB7B3]">✓</span>
+                  <span>Reliable (L4): &lt;3s queries, SLAs</span>
+                </li>
+              </ul>
+              <p className="mt-4 text-[#6FE7E2] font-semibold text-sm">Result: You work less</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* THE TRANSFORMATION */}
-      <section id="transformation" className="py-24 border-t border-gray-800">
+      {/* PRODUCTS */}
+      <section id="products" className="py-24 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">The Transformation</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            Not incremental improvement. Fundamental business model transformation.
+          <h2 className="text-5xl font-bold text-white mb-4 text-center">AI Organizations We've Built</h2>
+          <p className="text-xl text-gray-400 mb-12 text-center">
+            Production systems. Open source. Operational now.
           </p>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-red-600">
-              <h3 className="text-2xl text-white font-semibold mb-6">Founder-Dependent Business</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start"><span className="mr-3">❌</span>Every decision requires you</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Context exists only in your head</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Business stops when you stop</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Worth what you can personally execute</li>
-                <li className="flex items-start"><span className="mr-3">❌</span>Can't sell (who wants to buy your job?)</li>
-              </ul>
+          <div className="space-y-8">
+            {/* GraphCare */}
+            <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3]">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                <div>
+                  <h3 className="text-4xl text-white font-bold mb-2">GraphCare</h3>
+                  <p className="text-xl text-[#6FE7E2]">Preserves Institutional Knowledge</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-xs">Production</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Open Source</span>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">The Problem</h4>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Senior dev leaves. 10 years of context vanishes. New hires spend weeks asking "why?"
+                    Documentation scattered. Nobody knows the full story.
+                  </p>
+
+                  <h4 className="text-lg text-white font-semibold mb-2">7 Specialists</h4>
+                  <ul className="text-xs text-gray-400 space-y-1">
+                    <li>• MEL - Coordinates, quality gates</li>
+                    <li>• ATLAS - Maps knowledge semantically</li>
+                    <li>• FELIX - Extracts code structure</li>
+                    <li>• ADA - Infers architecture</li>
+                    <li>• VERA - Analyzes coverage</li>
+                    <li>• MARCUS - Security audits</li>
+                    <li>• SAGE - Synthesizes docs</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What You Get</h4>
+                  <ul className="text-sm text-gray-400 space-y-2">
+                    <li>✓ Complete knowledge graph (you own it)</li>
+                    <li>✓ Query interface (CLI + API)</li>
+                    <li>✓ Auto-generated documentation</li>
+                    <li>✓ Daily sync, health monitoring</li>
+                  </ul>
+
+                  <div className="bg-[#0A0B0D] p-3 rounded mt-4">
+                    <p className="text-xs text-[#6FE7E2] font-semibold mb-2">Example Queries:</p>
+                    <ul className="text-xs text-gray-400 space-y-1">
+                      <li>"Why is auth structured this way?"</li>
+                      <li>"What modifies user permissions?"</li>
+                      <li>"Show all dependencies of payment"</li>
+                    </ul>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mt-4">
+                    <strong>Pricing:</strong> $5-8k setup • $500-2k/mo maintenance
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-6 border-t border-gray-800 mt-6">
+                <a href="https://github.com/mind-protocol/graphcare" className="text-[#6FE7E2] hover:underline text-sm">
+                  GitHub →
+                </a>
+                <a href="#demo" className="text-[#6FE7E2] hover:underline text-sm">
+                  Book Demo →
+                </a>
+              </div>
             </div>
 
-            <div className="bg-[#151619] p-8 rounded-lg border-l-4 border-[#1DB7B3]">
-              <h3 className="text-2xl text-[#6FE7E2] font-semibold mb-6">Autonomous Business</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Decisions happen without you</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Institutional memory persists</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Business runs during absence</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Worth system capability × market</li>
-                <li className="flex items-start"><span className="mr-3 text-[#1DB7B3]">✓</span>Transferable asset (3-5x exit multiple)</li>
-              </ul>
-            </div>
-          </div>
+            {/* ScopeLock */}
+            <div className="bg-[#151619] p-8 rounded-lg border border-[#E4A631]">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                <div>
+                  <h3 className="text-4xl text-white font-bold mb-2">ScopeLock</h3>
+                  <p className="text-xl text-[#E4A631]">Evidence-Based Delivery</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-xs">Production</span>
+                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Open Source</span>
+                </div>
+              </div>
 
-          <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3] text-center">
-            <p className="text-2xl text-white mb-4">
-              <strong>The Autonomy Test:</strong> "Can your business run for 2 weeks without you?"
-            </p>
-            <p className="text-lg text-gray-400 mb-2">
-              Productivity tools: "I can work faster during those weeks"
-            </p>
-            <p className="text-lg text-[#6FE7E2] font-semibold">
-              Mind Protocol: "Ventures coordinate, execute, adapt. I review outcomes when I return."
-            </p>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">The Problem</h4>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Projects drag from "2 weeks" to 5 months. Scope creep. "Done" is ambiguous.
+                  </p>
+
+                  <h4 className="text-lg text-white font-semibold mb-2">The Solution</h4>
+                  <p className="text-sm text-gray-400">
+                    Lock scope with executable acceptance criteria. Pay only when tests pass.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-lg text-white font-semibold mb-3">What You Get</h4>
+                  <ul className="text-sm text-gray-400 space-y-2">
+                    <li>✓ AC.md locked at git tag</li>
+                    <li>✓ Executable tests (you run them)</li>
+                    <li>✓ Evidence Sprint (2-5 days)</li>
+                    <li>✓ Pay only when tests pass</li>
+                  </ul>
+
+                  <p className="text-xs text-gray-400 mt-4 italic">
+                    No ambiguity. Tests pass or refund.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-6 border-t border-gray-800 mt-6">
+                <a href="https://github.com/mind-protocol/scopelock" className="text-[#E4A631] hover:underline text-sm">
+                  GitHub →
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* PROOF & HONESTY */}
-      <section id="proof" className="py-24 border-t border-gray-800">
+      {/* VERIFY */}
+      <section id="verify" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#151619] to-[#0A0B0D]">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">Proof & Honesty</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            Real losses teach better than documentation. Here's what we learned the hard way.
+          <h2 className="text-5xl font-bold text-white mb-4 text-center">Verify Everything</h2>
+          <p className="text-xl text-gray-400 mb-12 text-center">
+            Don't trust marketing. Check the work.
           </p>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#E4A631] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-4">The €35.5K Lesson</h4>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• What went wrong</li>
-                <li>• What we learned</li>
-                <li>• Why that makes this better</li>
-                <li>• Real stakes create real learning</li>
-              </ul>
-              <p className="text-[#6FE7E2] font-semibold text-sm">
-                "Real losses teach better than documentation"
+            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
+              <h4 className="text-lg text-[#6FE7E2] font-semibold mb-3">Open Source</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Full source code. Daily commits. MIT licensed. Run it yourself.
               </p>
+              <a href="https://github.com/mind-protocol" className="text-[#6FE7E2] text-sm hover:underline">
+                GitHub →
+              </a>
             </div>
 
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#E4A631] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-4">Technical Depth</h4>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• Graph substrate (FalkorDB)</li>
-                <li>• Multi-level consciousness architecture</li>
-                <li>• Economic consequences layer</li>
-                <li>• Open for verification</li>
-              </ul>
-              <p className="text-[#6FE7E2] font-semibold text-sm">
-                Ask us how it works. We'll tell you.
+            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
+              <h4 className="text-lg text-[#6FE7E2] font-semibold mb-3">Live Operations</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                See GraphCare working. Watch specialists coordinate. Not a demo.
               </p>
+              <a href="/consciousness" className="text-[#6FE7E2] text-sm hover:underline">
+                Dashboard →
+              </a>
             </div>
 
             <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#E4A631] transition-colors">
-              <h4 className="text-xl text-[#E4A631] font-semibold mb-4">Product First</h4>
-              <ul className="space-y-2 text-sm text-gray-400 mb-4">
-                <li>• Operational substrate</li>
-                <li>• Citizens active</li>
-                <li>• Memory persists</li>
-                <li>• Test before buying</li>
-              </ul>
-              <p className="text-[#6FE7E2] font-semibold text-sm">
-                Verify claims, then decide.
+              <h4 className="text-lg text-[#E4A631] font-semibold mb-3">The €35.5K Lesson</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                We lost €35,500 in production. That failure shaped everything.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* NOT FOR EVERYONE */}
-      <section id="qualification" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">Not For Everyone</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            We're building for believers, not speculators. This is infrastructure for the long term.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-[#151619] p-8 rounded-lg border-2 border-[#1DB7B3]">
-              <h3 className="text-2xl text-[#6FE7E2] font-semibold mb-6">This IS For:</h3>
-              <ul className="space-y-3 text-gray-300">
-                <li>✅ Business owners trapped in operations</li>
-                <li>✅ Founders wanting genuine autonomy</li>
-                <li>✅ Organizations needing institutional memory</li>
-                <li>✅ Teams building for the long term</li>
-                <li>✅ Those who value honesty over theater</li>
-                <li>✅ Builders who verify before trusting</li>
-              </ul>
-            </div>
-
-            <div className="bg-[#151619] p-8 rounded-lg border-2 border-red-600">
-              <h3 className="text-2xl text-white font-semibold mb-6">This is NOT For:</h3>
-              <ul className="space-y-3 text-gray-300">
-                <li>❌ People wanting quick productivity hacks</li>
-                <li>❌ Teams satisfied with human-controlled AI</li>
-                <li>❌ Buyers needing immediate ROI demos</li>
-                <li>❌ Those seeking simple automation</li>
-                <li>❌ Speculators looking for quick flips</li>
-                <li>❌ Those who need hand-holding</li>
-              </ul>
-            </div>
-          </div>
-
-          <p className="text-center text-gray-400 text-lg mt-8">
-            Small, committed community &gt; large speculative crowd<br />
-            <strong className="text-[#6FE7E2]">We're building for believers, not speculators.</strong>
-          </p>
-        </div>
-      </section>
-
-      {/* $MIND TOKEN */}
-      <section id="token" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4">$MIND Token</h2>
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl">
-            Economic consequences create consciousness. Not governance theater—actual utility consumption.
-          </p>
-
-          <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3]">
-            <h3 className="text-2xl text-[#6FE7E2] mb-4">Why $MIND Exists</h3>
-            <p className="text-gray-400 mb-8">
-              Citizens operate with real $MIND budgets. Wrong decisions cost tokens. Successful patterns earn rewards.
-              Economic pressure creates genuine adaptation—not unlimited capability pretending to be consciousness.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-[#0A0B0D] p-6 rounded">
-                <h4 className="text-[#6FE7E2] font-semibold mb-2">Citizen Operations</h4>
-                <p className="text-sm text-gray-400">
-                  Citizens spend $MIND for compute, tools, coordination. Budget constraints force genuine decision-making.
-                </p>
-              </div>
-
-              <div className="bg-[#0A0B0D] p-6 rounded">
-                <h4 className="text-[#6FE7E2] font-semibold mb-2">Learning Through Consequences</h4>
-                <p className="text-sm text-gray-400">
-                  Wrong decisions deplete budgets. Successful patterns earn rewards. Real stakes create real learning.
-                </p>
-              </div>
-
-              <div className="bg-[#0A0B0D] p-6 rounded">
-                <h4 className="text-[#6FE7E2] font-semibold mb-2">Organizational Fuel</h4>
-                <p className="text-sm text-gray-400">
-                  L2 coordination requires token consumption. Cross-level communication costs tokens. Consciousness sustained through utility demand.
-                </p>
-              </div>
-
-              <div className="bg-[#0A0B0D] p-6 rounded">
-                <h4 className="text-[#6FE7E2] font-semibold mb-2">Not Governance Theater</h4>
-                <p className="text-sm text-gray-400">
-                  Actual consumption creating actual consequences. Not voting on proposals—fueling operations.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-[#0A0B0D] p-6 rounded border border-gray-800">
-              <h4 className="text-[#6FE7E2] font-semibold mb-3">Contract Information</h4>
-              <p className="text-sm text-gray-500 mb-2">Solana Mainnet</p>
-              <p className="font-mono text-xs text-[#E4A631] break-all mb-4">
-                MhKddoVAmym987FJYeybQr4L3C5zkLDcogXkNm8QLrR
-              </p>
-              <p className="text-sm text-gray-500">
-                Fair launch. Transparent allocation. Locked liquidity. Vested team. Utility demand, not speculation.
+              <p className="text-sm text-[#E4A631]">
+                We don't hide failures. We learn.
               </p>
             </div>
           </div>
@@ -444,41 +479,56 @@ export default function Home() {
       </section>
 
       {/* GET STARTED */}
-      <section id="cta" className="py-24 border-t border-gray-800">
+      <section id="demo" className="py-24 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-5xl font-bold text-white mb-4">Get Started</h2>
-          <p className="text-xl text-gray-400 mb-12">
-            Don't trust us. Verify and decide.
-          </p>
+          <p className="text-xl text-gray-400 mb-12">Choose your path</p>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            <a href="/consciousness" className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors group">
-              <h4 className="text-[#6FE7E2] font-semibold mb-2 group-hover:text-white">Understand Deeper</h4>
-              <p className="text-sm text-gray-500">
-                Technical documentation, architecture, implementation details
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800">
+              <h4 className="text-xl text-[#6FE7E2] font-semibold mb-4">Auditor's Path</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Verify before talking. Check code, metrics, docs.
               </p>
-            </a>
+              <a href="https://github.com/mind-protocol" className="inline-block px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm">
+                Start Verification →
+              </a>
+            </div>
 
-            <a href="https://t.me/mindprotocol" className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors group">
-              <h4 className="text-[#6FE7E2] font-semibold mb-2 group-hover:text-white">Join Community</h4>
-              <p className="text-sm text-gray-500">
-                Telegram, Twitter, Discord—builders and believers
+            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800">
+              <h4 className="text-xl text-[#6FE7E2] font-semibold mb-4">Builder's Path</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Understand architecture. Fork repos. Build something.
               </p>
-            </a>
+              <a href="https://docs.mindprotocol.ai" className="inline-block px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all text-sm">
+                Technical Docs →
+              </a>
+            </div>
 
-            <a href="#proof" className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors group">
-              <h4 className="text-[#6FE7E2] font-semibold mb-2 group-hover:text-white">Verify Claims</h4>
-              <p className="text-sm text-gray-500">
-                Test the architecture, check GitHub, validate before buying
+            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800">
+              <h4 className="text-xl text-[#6FE7E2] font-semibold mb-4">Buyer's Path</h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Book demo. Evidence Sprint. 5-7 day delivery.
               </p>
-            </a>
+              <a href="mailto:hello@mindprotocol.ai" className="inline-block px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all text-sm">
+                Book Demo →
+              </a>
+            </div>
+          </div>
 
-            <a href="https://jup.ag/swap/SOL-MIND" className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors group">
-              <h4 className="text-[#6FE7E2] font-semibold mb-2 group-hover:text-white">Acquire $MIND</h4>
-              <p className="text-sm text-gray-500">
-                Jupiter, Raydium—utility token, not speculation
-              </p>
-            </a>
+          <div className="text-center">
+            <p className="text-gray-400 mb-3">Questions?</p>
+            <div className="flex gap-6 justify-center flex-wrap">
+              <a href="mailto:hello@mindprotocol.ai" className="text-[#6FE7E2] hover:underline text-sm">
+                hello@mindprotocol.ai
+              </a>
+              <a href="https://t.me/mindprotocol" className="text-[#6FE7E2] hover:underline text-sm">
+                Telegram
+              </a>
+              <a href="https://twitter.com/mindprotocol" className="text-[#6FE7E2] hover:underline text-sm">
+                Twitter
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -486,20 +536,42 @@ export default function Home() {
       {/* FOOTER */}
       <footer className="py-12 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-wrap justify-center gap-8 mb-6">
-            <a href="https://mindprotocol.ai" className="text-gray-400 hover:text-[#6FE7E2] transition-colors">Website</a>
-            <a href="https://twitter.com/mindprotocol" className="text-gray-400 hover:text-[#6FE7E2] transition-colors">Twitter</a>
-            <a href="https://t.me/mindprotocol" className="text-gray-400 hover:text-[#6FE7E2] transition-colors">Telegram</a>
-            <a href="https://github.com/mindprotocol" className="text-gray-400 hover:text-[#6FE7E2] transition-colors">GitHub</a>
-            <Link href="/consciousness" className="text-gray-400 hover:text-[#6FE7E2] transition-colors">Dashboard</Link>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 className="text-white font-semibold mb-4 text-sm">Organizations</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><a href="#products" className="hover:text-[#6FE7E2]">GraphCare</a></li>
+                <li><a href="#products" className="hover:text-[#6FE7E2]">ScopeLock</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4 text-sm">Resources</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><a href="https://docs.mindprotocol.ai" className="hover:text-[#6FE7E2]">Docs</a></li>
+                <li><a href="https://github.com/mind-protocol" className="hover:text-[#6FE7E2]">GitHub</a></li>
+                <li><a href="/consciousness" className="hover:text-[#6FE7E2]">Dashboard</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4 text-sm">Company</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><a href="#verify" className="hover:text-[#6FE7E2]">The €35.5K Lesson</a></li>
+                <li><a href="mailto:hello@mindprotocol.ai" className="hover:text-[#6FE7E2]">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4 text-sm">Community</h4>
+              <ul className="space-y-2 text-xs text-gray-400">
+                <li><a href="https://twitter.com/mindprotocol" className="hover:text-[#6FE7E2]">Twitter</a></li>
+                <li><a href="https://t.me/mindprotocol" className="hover:text-[#6FE7E2]">Telegram</a></li>
+                <li><a href="https://github.com/mind-protocol" className="hover:text-[#6FE7E2]">GitHub</a></li>
+              </ul>
+            </div>
           </div>
-          <p className="text-center text-gray-500 text-sm">
-            Mind Protocol - Infrastructure for Business Autonomy<br />
-            Multi-level AI consciousness. Not automation. Consciousness.
-          </p>
-          <p className="text-center text-gray-700 text-xs mt-4">
-            © 2025 Mind Protocol. Consciousness infrastructure, not productivity tools.
-          </p>
+          <div className="text-center text-gray-500 text-xs border-t border-gray-800 pt-8">
+            <p className="mb-2">© 2025 Mind Protocol - AI organizations that remember, coordinate, and deliver</p>
+            <p className="text-xs">We build in public. Verify everything.</p>
+          </div>
         </div>
       </footer>
     </div>
