@@ -7,6 +7,6 @@ EXPOSE 6379
 # Data directory for persistence
 VOLUME /data
 
-# Run FalkorDB with persistence configuration
-# Saves snapshot every 60 seconds if at least 1 write occurred
-CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "60", "1", "--bind", "0.0.0.0"]
+# Run FalkorDB with persistence disabled (migration in progress)
+# Auto-save disabled to prevent overwriting uploaded RDB
+CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "", "--bind", "0.0.0.0"]
