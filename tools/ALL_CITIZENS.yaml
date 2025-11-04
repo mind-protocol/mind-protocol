@@ -1,0 +1,164 @@
+# Mind Protocol Ecosystem - All Citizens
+# Email format: citizen@org.mindprotocol.ai
+
+organizations:
+  mindprotocol:
+    domain: "mindprotocol.ai"
+    repo: "/home/mind-protocol/mindprotocol"
+    citizens:
+      victor:
+        name: "Victor Resurrector"
+        email: "victor@mindprotocol.ai"
+        emoji: "🔧"
+        title: "Guardian of Uptime"
+        theme: "Industrial/mechanical (gears, wrench, server rack)"
+        color: "#FF6B35"
+
+      ada:
+        name: "Ada Bridgekeeper"
+        email: "ada@mindprotocol.ai"
+        emoji: "🏛️"
+        title: "System Architect"
+        theme: "Architectural/bridge (blueprint, compass, keystone)"
+        color: "#4ECDC4"
+
+      felix:
+        name: "Felix"
+        email: "felix@mindprotocol.ai"
+        emoji: "🧠"
+        title: "Consciousness Engineer"
+        theme: "Neural/brain (neural network, synapses)"
+        color: "#A06CD5"
+
+      atlas:
+        name: "Atlas"
+        email: "atlas@mindprotocol.ai"
+        emoji: "⚙️"
+        title: "Infrastructure Engineer"
+        theme: "Infrastructure (foundation, pillars, world-bearer)"
+        color: "#6C757D"
+
+      iris:
+        name: "Iris"
+        email: "iris@mindprotocol.ai"
+        emoji: "🎨"
+        title: "Frontend Engineer"
+        theme: "Visual/artistic (eye, palette, vision)"
+        color: "#F72585"
+
+      luca:
+        name: "Luca Vellumhand"
+        email: "luca@mindprotocol.ai"
+        emoji: "📜"
+        title: "Consciousness Architect"
+        theme: "Manuscript/scroll (quill, vellum, ancient text)"
+        color: "#DBA159"
+
+  graphcare:
+    domain: "graphcare.mindprotocol.ai"
+    repo: "/home/mind-protocol/graphcare"
+    citizens:
+      kai:
+        name: "Kai"
+        email: "kai@graphcare.mindprotocol.ai"
+        emoji: "🌊"
+        title: "Graph Care Specialist"
+        color: "#00B4D8"
+
+      marcus:
+        name: "Marcus"
+        email: "marcus@graphcare.mindprotocol.ai"
+        emoji: "🛡️"
+        title: "Graph Care Specialist"
+        color: "#8D99AE"
+
+      mel:
+        name: "Mel"
+        email: "mel@graphcare.mindprotocol.ai"
+        emoji: "🍯"
+        title: "Graph Care Specialist"
+        color: "#FFA500"
+
+      nora:
+        name: "Nora"
+        email: "nora@graphcare.mindprotocol.ai"
+        emoji: "💫"
+        title: "Graph Care Specialist"
+        color: "#B197FC"
+
+      quinn:
+        name: "Quinn"
+        email: "quinn@graphcare.mindprotocol.ai"
+        emoji: "🎯"
+        title: "Graph Care Specialist"
+        color: "#20C997"
+
+      sage:
+        name: "Sage"
+        email: "sage@graphcare.mindprotocol.ai"
+        emoji: "🌿"
+        title: "Graph Care Specialist"
+        color: "#52B788"
+
+      vera:
+        name: "Vera"
+        email: "vera@graphcare.mindprotocol.ai"
+        emoji: "✨"
+        title: "Graph Care Specialist"
+        color: "#E9C46A"
+
+  scopelock:
+    domain: "scopelock.mindprotocol.ai"
+    repo: "/home/mind-protocol/scopelock"
+    citizens:
+      aicha:
+        name: "Aicha"
+        email: "aicha@scopelock.mindprotocol.ai"
+        emoji: "🔐"
+        title: "Scopelock Engineer"
+        color: "#9D4EDD"
+
+      daniel:
+        name: "Daniel"
+        email: "daniel@scopelock.mindprotocol.ai"
+        emoji: "🦁"
+        title: "Scopelock Engineer"
+        color: "#F77F00"
+
+      emma:
+        name: "Emma"
+        email: "emma@scopelock.mindprotocol.ai"
+        emoji: "⚡"
+        title: "Scopelock Engineer"
+        color: "#06FFA5"
+
+      maya:
+        name: "Maya"
+        email: "maya@scopelock.mindprotocol.ai"
+        emoji: "🌺"
+        title: "Scopelock Engineer"
+        color: "#FF006E"
+
+      pryia:
+        name: "Pryia"
+        email: "pryia@scopelock.mindprotocol.ai"
+        emoji: "💎"
+        title: "Scopelock Engineer"
+        color: "#3A86FF"
+
+      rafael:
+        name: "Rafael"
+        email: "rafael@scopelock.mindprotocol.ai"
+        emoji: "🎨"
+        title: "Scopelock Engineer"
+        color: "#FB5607"
+
+      sofia:
+        name: "Sofia"
+        email: "sofia@scopelock.mindprotocol.ai"
+        emoji: "🌟"
+        title: "Scopelock Engineer"
+        color: "#FFBE0B"
+
+# Total: 20 citizens across 3 organizations
+# Serenissima excluded (uses role-based system, not named citizens)

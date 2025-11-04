@@ -46,6 +46,20 @@ services:
     # - Graph storage for consciousness (via FalkorDB graph module)
     # - Key-value storage for economy runtime (via standard Redis commands)
 
+  - id: protocol_hub
+    cmd: ["python3", "-m", "orchestration.protocol.hub.membrane_hub"]
+    requires: ["falkordb"]
+    readiness:
+      tcp: { host: "127.0.0.1", port: 8765, timeout_s: 5 }
+    restart: { policy: "always", backoff: { base_ms: 1000, max_ms: 60000, jitter: true } }
+    watch:
+      paths: ["orchestration/protocol"]
+      on_change: "graceful-restart"
+    singleton: true
+    # L4 Protocol Hub - Membrane bus with enforcement
+    # Enforces: Schema validation, SEA-1.0 signatures, CPS-1 quotes, rate limits
+    # Provides: /inject (publishers) and /observe (subscribers) endpoints
+
   - id: ws_api
     cmd: ["python3", "-m", "orchestration.adapters.ws.websocket_server"]
     env:
@@ -73,7 +87,7 @@ services:
       UBC_TREASURY_WALLET: "${UBC_TREASURY_WALLET}"
       UBC_CITIZEN_WALLETS: "${UBC_CITIZEN_WALLETS}"
       UBC_CRON_OFFSET_SECONDS: "${UBC_CRON_OFFSET_SECONDS}"
-    requires: ["falkordb"]
+    requires: ["falkordb", "protocol_hub"]
     readiness:
       tcp: { host: "127.0.0.1", port: 8000, timeout_s: 15 }
     # TEMPORARY: Liveness check disabled due to WebSocket connection bug causing crash loops

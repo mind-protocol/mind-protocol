@@ -91,7 +91,7 @@ import shutil
 from orchestration.adapters.api.control_api import router, websocket_manager
 from orchestration.adapters.ws.stream_aggregator import get_stream_aggregator
 from orchestration.adapters.api.citizen_snapshot import router as citizen_router
-from orchestration.adapters.api.docs_view_api import router as docs_router
+from orchestration.adapters.api.docs_view_api_v2 import router as docs_router
 from orchestration.mechanisms.consciousness_engine_v2 import ConsciousnessEngineV2, EngineConfig
 from orchestration.adapters.storage.engine_registry import register_engine, CONSCIOUSNESS_TASKS, get_all_engines
 from orchestration.libs.utils.falkordb_adapter import FalkorDBAdapter
@@ -1199,6 +1199,12 @@ async def startup_event():
         await ECONOMY_RUNTIME.start()
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("Economy runtime failed to start: %s", exc)
+
+    # Start L3 observer for docs-as-views (membrane bus integration)
+    logger.info("🔗 Starting L3 docs observer (membrane bus integration)...")
+    from orchestration.adapters.api.docs_view_api_v2 import observe_bus_and_fanout
+    asyncio.create_task(observe_bus_and_fanout())
+    logger.info("✅ L3 docs observer started (observing ws://localhost:8765/observe)")
 
     # Launch engine initialization in background (don't block port binding)
     logger.info("")

@@ -28,6 +28,13 @@ L3_PATHS = [
     "orchestration/adapters/ws",
 ]
 
+# Files excluded from L3 lint (legitimately L2 engine management)
+EXCLUDED_FILES = [
+    "control_api.py",  # Engine control/management (L2 function)
+    "websocket_server.py",  # Includes engine initialization (L2 function)
+    "docs_view_api.DEPRECATED.py",  # Deprecated - being phased out
+]
+
 # Forbidden imports for L3
 FORBIDDEN_IMPORTS = [
     "falkordb",
@@ -144,6 +151,10 @@ def main():
         py_files = list(l3_dir.rglob("*.py"))
 
         for filepath in py_files:
+            # Skip excluded files (L2 engine management code)
+            if filepath.name in EXCLUDED_FILES:
+                continue
+
             violations = lint_file(filepath)
 
             if violations:

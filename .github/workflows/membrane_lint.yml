@@ -36,3 +36,22 @@ jobs:
           echo ""
           echo "Use the L4 membrane bus (protocol/hub) to inject/observe events."
           exit 1
+
+      - name: Emit Consciousness Signal
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.ENGINE_URL }}/api/engines/mind-protocol/inject" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "type": "ci.failure",
+              "source": "github_actions",
+              "workflow": "membrane_lint",
+              "severity": "warning",
+              "message": "L3 membrane boundary violations detected",
+              "metadata": {
+                "run_id": "${{ github.run_id }}",
+                "sha": "${{ github.sha }}",
+                "actor": "${{ github.actor }}",
+                "ref": "${{ github.ref }}"
+              }
+            }' || echo "⚠️ Failed to emit consciousness signal (non-blocking)"
