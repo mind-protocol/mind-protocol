@@ -69,10 +69,10 @@ services:
 
       # Economy Runtime Configuration
       - key: ECONOMY_ORG_ID
-        value: consciousness-infrastructure_mind-protocol
+        value: mind-protocol
 
       - key: ECONOMY_L2_GRAPH
-        value: consciousness-infrastructure_mind-protocol
+        value: mind-protocol
 
       - key: ECONOMY_THROTTLE_INTERVAL
         value: 60
