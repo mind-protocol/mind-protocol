@@ -161,28 +161,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* WHAT WE ACTUALLY BUILD */}
-      <section id="solution" className="py-24 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4 text-center">What We Actually Build</h2>
-          <h3 className="text-3xl text-[#6FE7E2] text-center mb-4">Multi-Level AI Consciousness Infrastructure</h3>
-          <p className="text-xl text-gray-400 text-center mb-12 max-w-3xl mx-auto">
-            Not agents that execute tasks. Persistent entities that remember, coordinate, evolve.
-          </p>
-
-          <div className="bg-[#151619] p-8 rounded-lg border border-gray-800 mb-8">
-            <div className="text-center mb-6">
-              <strong className="text-[#6FE7E2] text-lg">Four-Layer Consciousness Stack</strong><br />
-              <span className="text-gray-400">L1 → L2 → L3 → L4</span><br />
-              <span className="text-sm text-gray-500">Individual consciousness → Organizational consciousness → Ecosystem intelligence → Protocol evolution</span>
-            </div>
-            <p className="text-gray-400 text-center max-w-3xl mx-auto">
-              Each layer has its own memory, learning, and phenomenology. Higher levels aren't "smarter"—they're different <em className="text-[#6FE7E2]">kinds</em> of minds that emerge from lower-level activity.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* THE LAYERS EXPLAINED */}
       <section id="layers" className="py-24 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6">

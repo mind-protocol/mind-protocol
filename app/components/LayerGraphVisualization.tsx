@@ -221,12 +221,16 @@ export function LayerGraphVisualization() {
               position: position
             };
 
-            const nodeSize = layerId === 'l4' ? 5 : (layerId === 'l3' ? 4 : (layerId === 'l2' ? 3.5 : 3));
+            // Make L2 (orgs) and L1 (citizens) more visually distinct
+            const nodeSize = layerId === 'l4' ? 5 : (layerId === 'l3' ? 4 : (layerId === 'l2' ? 4.5 : 2.5));
+            const emissiveIntensity = layerId === 'l1' || layerId === 'l2' ? 0.7 : 0.5;
+            const glowOpacity = layerId === 'l1' ? 0.25 : (layerId === 'l2' ? 0.22 : 0.15);
+
             const geometry = new THREE.SphereGeometry(nodeSize, 20, 20);
             const material = new THREE.MeshStandardMaterial({
               color: config.color,
               emissive: config.color,
-              emissiveIntensity: 0.5,
+              emissiveIntensity: emissiveIntensity,
               metalness: 0.7,
               roughness: 0.3
             });
@@ -240,7 +244,7 @@ export function LayerGraphVisualization() {
             const glowMaterial = new THREE.MeshBasicMaterial({
               color: config.color,
               transparent: true,
-              opacity: 0.15,
+              opacity: glowOpacity,
               blending: THREE.AdditiveBlending
             });
             const glow = new THREE.Mesh(glowGeometry, glowMaterial);
@@ -479,11 +483,11 @@ export function LayerGraphVisualization() {
   }, [isClient]);
 
   if (!isClient) {
-    return <div ref={containerRef} className="w-full h-[600px] bg-[#0a0a0f] rounded-lg" />;
+    return <div ref={containerRef} className="w-full h-[800px] bg-[#0a0a0f] rounded-lg" />;
   }
 
   return (
-    <div className="relative w-full h-[600px] rounded-lg overflow-hidden">
+    <div className="relative w-full h-[800px] rounded-lg overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Title Overlay */}
