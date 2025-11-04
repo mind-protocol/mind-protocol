@@ -1,9 +1,11 @@
 # Vercel Ignore - Exclude from deployments
 
 # Python backend (not needed for frontend)
-orchestration/
-consciousness/
-venv/
+# IMPORTANT: This excludes the root-level consciousness/ (Python backend)
+# but NOT app/consciousness/ (Next.js dashboard pages)
+/orchestration/
+/consciousness/
+/venv/
 *.pyc
 __pycache__/
 
