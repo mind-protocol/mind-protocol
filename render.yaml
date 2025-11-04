@@ -23,7 +23,7 @@ services:
     runtime: python
     plan: starter  # Upgrade to standard for production (need 512MB+ RAM for embeddings)
     buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
-    startCommand: python3 orchestration/mpsv3_supervisor.py --config orchestration/services/mpsv3/services.yaml
+    startCommand: python3 -m orchestration.adapters.ws.websocket_server
     dependsOn:
       - name: mind-protocol-falkordb
     envVars:
@@ -108,7 +108,7 @@ services:
       - key: UBC_CRON_OFFSET_SECONDS
         value: 0
 
-    healthCheckPath: /healthz
+    # Note: No healthCheckPath - WebSocket-only architecture (no HTTP endpoints)
 
 # Database Notes:
 # - FalkorDB runs as Docker container with 10GB persistent disk mounted at /data
