@@ -1,0 +1,69 @@
+# MPSv3 Service Specifications - PRODUCTION
+# Excludes FalkorDB (separate Private Service) and Dashboard (Vercel)
+# Author: Ada / Claude Code
+# Date: 2025-11-04
+
+env:
+  WS_PORT: "${WS_PORT:-8000}"
+  MP_HOT_RELOAD: "${MP_HOT_RELOAD:-0}"
+  MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED:-1}"
+  MP_PERSIST_MIN_BATCH: "${MP_PERSIST_MIN_BATCH:-5}"
+  MP_PERSIST_INTERVAL_SEC: "${MP_PERSIST_INTERVAL_SEC:-5.0}"
+
+  # Economy Runtime Configuration
+  ECONOMY_REDIS_URL: "${ECONOMY_REDIS_URL}"
+  ECONOMY_ORG_ID: "${ECONOMY_ORG_ID:-consciousness-infrastructure_mind-protocol}"
+  ECONOMY_L2_GRAPH: "${ECONOMY_L2_GRAPH:-consciousness-infrastructure_mind-protocol}"
+  ECONOMY_THROTTLE_INTERVAL: "${ECONOMY_THROTTLE_INTERVAL:-60}"
+  ECONOMY_POLICY_REFRESH: "${ECONOMY_POLICY_REFRESH:-300}"
+  ECONOMY_SPEND_ALPHA: "${ECONOMY_SPEND_ALPHA:-0.2}"
+  ECONOMY_ROI_ALPHA: "${ECONOMY_ROI_ALPHA:-0.5}"
+  ECONOMY_WALLET_FLOOR_MULT: "${ECONOMY_WALLET_FLOOR_MULT:-0.4}"
+  ECONOMY_LANE_WALLETS: "${ECONOMY_LANE_WALLETS:-{}}"
+
+  # Price Oracle (optional)
+  MIND_MINT_ADDRESS: "${MIND_MINT_ADDRESS:-}"
+  HELIUS_API_KEY: "${HELIUS_API_KEY:-}"
+  HELIUS_BASE_URL: "${HELIUS_BASE_URL:-https://api.helius.xyz}"
+  MIND_USD_FALLBACK: "${MIND_USD_FALLBACK:-1.0}"
+  ECONOMY_PRICE_TTL: "${ECONOMY_PRICE_TTL:-300}"
+
+  # UBC Distribution (optional)
+  UBC_DAILY: "${UBC_DAILY:-100.0}"
+  UBC_TREASURY_WALLET: "${UBC_TREASURY_WALLET:-}"
+  UBC_CITIZEN_WALLETS: "${UBC_CITIZEN_WALLETS:-{}}"
+  UBC_CRON_OFFSET_SECONDS: "${UBC_CRON_OFFSET_SECONDS:-0}"
+
+services:
+  # WebSocket API + Consciousness Engines (main service)
+  - id: ws_api
+    cmd: ["python3", "-m", "orchestration.adapters.ws.websocket_server"]
+    env:
+      WS_PORT: "${WS_PORT}"
+      MP_HOT_RELOAD: "${MP_HOT_RELOAD}"
+      MP_PERSIST_ENABLED: "${MP_PERSIST_ENABLED}"
+      ECONOMY_REDIS_URL: "${ECONOMY_REDIS_URL}"
+      ECONOMY_ORG_ID: "${ECONOMY_ORG_ID}"
+      ECONOMY_L2_GRAPH: "${ECONOMY_L2_GRAPH}"
+      ECONOMY_THROTTLE_INTERVAL: "${ECONOMY_THROTTLE_INTERVAL}"
+      ECONOMY_POLICY_REFRESH: "${ECONOMY_POLICY_REFRESH}"
+      ECONOMY_SPEND_ALPHA: "${ECONOMY_SPEND_ALPHA}"
+      ECONOMY_ROI_ALPHA: "${ECONOMY_ROI_ALPHA}"
+      ECONOMY_WALLET_FLOOR_MULT: "${ECONOMY_WALLET_FLOOR_MULT}"
+      ECONOMY_LANE_WALLETS: "${ECONOMY_LANE_WALLETS}"
+      MIND_MINT_ADDRESS: "${MIND_MINT_ADDRESS}"
+      HELIUS_API_KEY: "${HELIUS_API_KEY}"
+      HELIUS_BASE_URL: "${HELIUS_BASE_URL}"
+      MIND_USD_FALLBACK: "${MIND_USD_FALLBACK}"
+      ECONOMY_PRICE_TTL: "${ECONOMY_PRICE_TTL}"
+      UBC_DAILY: "${UBC_DAILY}"
+      UBC_TREASURY_WALLET: "${UBC_TREASURY_WALLET}"
+      UBC_CITIZEN_WALLETS: "${UBC_CITIZEN_WALLETS}"
+      UBC_CRON_OFFSET_SECONDS: "${UBC_CRON_OFFSET_SECONDS}"
+    readiness:
+      tcp: { host: "0.0.0.0", port: 8000, timeout_s: 30 }
+    restart: { policy: "always", backoff: { base_ms: 500, max_ms: 60000, jitter: true } }
+    singleton: true
+
+  # Note: conversation_watcher, signals_collector, etc. disabled in production
+  # Re-enable after verifying core ws_api service works
