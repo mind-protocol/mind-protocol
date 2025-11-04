@@ -1344,6 +1344,7 @@ export function useWebSocket(): WebSocketStreams {
         const subscribePayload: Record<string, any> = {
           type: 'subscribe@1.0',
           topics: [
+            'snapshot.*',  // Subscribe to snapshot events (initial graph state)
             'graph.delta.node.*',
             'graph.delta.link.*',
             'wm.emit',
