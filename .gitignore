@@ -96,3 +96,4 @@ blockchain/mind-transfer-hook/target/
 
 # QA artifacts
 .artifacts/
+.env.github_accounts
