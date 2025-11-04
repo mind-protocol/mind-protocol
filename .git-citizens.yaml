@@ -1,0 +1,39 @@
+# Mind Protocol Citizen Git Identities
+# Each citizen has distinct commit signature
+
+citizens:
+  victor:
+    name: "Victor Resurrector"
+    email: "victor@mindprotocol"
+    emoji: "🔧"
+    title: "Guardian of Uptime"
+
+  ada:
+    name: "Ada Bridgekeeper"
+    email: "ada@mindprotocol"
+    emoji: "🏛️"
+    title: "System Architect"
+
+  felix:
+    name: "Felix"
+    email: "felix@mindprotocol"
+    emoji: "🧠"
+    title: "Consciousness Engineer"
+
+  atlas:
+    name: "Atlas"
+    email: "atlas@mindprotocol"
+    emoji: "⚙️"
+    title: "Infrastructure Engineer"
+
+  iris:
+    name: "Iris"
+    email: "iris@mindprotocol"
+    emoji: "🎨"
+    title: "Frontend Engineer"
+
+  luca:
+    name: "Luca Vellumhand"
+    email: "luca@mindprotocol"
+    emoji: "📜"
+    title: "Consciousness Architect"
