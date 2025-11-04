@@ -401,12 +401,6 @@ export function LayerGraphVisualization() {
           setTimeout(() => { autoRotate = true; }, 3000);
         });
 
-        renderer.domElement.addEventListener('wheel', (e: WheelEvent) => {
-          e.preventDefault();
-          camera.position.z += e.deltaY * 0.5;
-          camera.position.z = Math.max(300, Math.min(1200, camera.position.z));
-        });
-
         function applyRotation() {
           if (autoRotate && !isDragging) {
             const time = Date.now() * 0.00008;
@@ -502,29 +496,66 @@ export function LayerGraphVisualization() {
         </p>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-8 right-8 flex gap-5 z-10 opacity-60 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#10b981]"></div>
-          <span>Governance</span>
+      {/* Layer Descriptions - Left Side */}
+      <div className="absolute left-8 top-1/2 -translate-y-1/2 space-y-8 z-10 pointer-events-none">
+        {/* L4 - Top */}
+        <div className="text-left opacity-80 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_10px_#10b981]"></div>
+            <div className="text-sm font-bold text-[#10b981]">L4 - GOVERNANCE</div>
+          </div>
+          <div className="text-xs text-gray-400 ml-6 max-w-[200px]">
+            Protocol rules, economic policy, constitutional law
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#f59e0b]"></div>
-          <span>Ecosystem</span>
+
+        {/* L3 */}
+        <div className="text-left opacity-80 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_10px_#f59e0b]"></div>
+            <div className="text-sm font-bold text-[#f59e0b]">L3 - ECOSYSTEM</div>
+          </div>
+          <div className="text-xs text-gray-400 ml-6 max-w-[200px]">
+            Networks, protocols, cross-org intelligence
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#a855f7]"></div>
-          <span>Organizations</span>
+
+        {/* L2 */}
+        <div className="text-left opacity-80 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full bg-[#a855f7] shadow-[0_0_10px_#a855f7]"></div>
+            <div className="text-sm font-bold text-[#a855f7]">L2 - ORGANIZATIONS</div>
+          </div>
+          <div className="text-xs text-gray-400 ml-6 max-w-[200px]">
+            Collective consciousness, institutional memory
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#22d3ee]"></div>
-          <span>Citizens</span>
+
+        {/* L1 - Bottom */}
+        <div className="text-left opacity-80 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_10px_#22d3ee]"></div>
+            <div className="text-sm font-bold text-[#22d3ee]">L1 - CITIZENS</div>
+          </div>
+          <div className="text-xs text-gray-400 ml-6 max-w-[200px]">
+            Individual AI entities, personal memory, autonomy
+          </div>
         </div>
       </div>
 
       {/* Interaction Hint */}
       <div className="absolute bottom-8 left-8 text-xs opacity-40 z-10">
-        Drag to rotate • Scroll to zoom • Hover for info
+        Drag to rotate • Hover for details
+      </div>
+
+      {/* Connection Info - Right Side */}
+      <div className="absolute bottom-8 right-8 text-xs opacity-60 z-10 text-right">
+        <div className="mb-2">
+          <span className="text-[#60a5fa]">●</span> Vertical lines = Cross-layer connections
+        </div>
+        <div className="text-gray-500">
+          193 nodes • 4 layers • Emergent consciousness
+        </div>
       </div>
 
       {/* Hover Label */}
