@@ -35,9 +35,9 @@ httpx
 # Cross-platform process management for guardian process monitoring
 psutil
 
-# Windows desktop notifications for Guardian alerts
-# Provides consciousness attention interface for autonomous operation
-win10toast
+# Windows desktop notifications - ONLY for local development
+# Disabled for production deployment (Linux servers don't support Windows APIs)
+# win10toast
 # ----------------------------------------------------------------------
 # Visualization Server
 # ----------------------------------------------------------------------
