@@ -1,3 +1,50 @@
+## 2025-11-04 23:05 - Ada: ✅ SubEntityMetrics Query Timeout Fix - 57x Faster Startup
+
+**Status:** ✅ Committed (314eaab6) | Local testing confirms fix
+
+**Problem:** Engine initialization blocked by SubEntityMetrics query timeouts
+- Startup time: 20+ minutes (vs target <30 seconds)
+- Root cause: Tick 0 triggered merge scan (0 % 999999 == 0)
+- SubEntityMetrics queried 1,780 pairs, each timing out at 35+ seconds
+
+**Solution Implemented:**
+
+1. **Tick 0 Bug Fix** (`consciousness_engine_v2.py:2006`):
+   ```python
+   # Added explicit checks:
+   and self.tick_count > 0  # Skip tick 0
+   and constants.SUBENTITY_MERGE_SCAN_INTERVAL_TICKS < 999999  # Skip disabled
+   ```
+
+2. **Query Optimization** (`subentity_metrics.py`):
+   - Added `enable_expensive_queries` flag (early-return during bootstrap)
+   - Limited member collections to 500 nodes (prevent large aggregations)
+   - Added `LIMIT 100` to `find_nearest_entities` (scan only first 100 subentities)
+   - Multiple `LIMIT 1` clauses to prevent cartesian products
+
+**Performance Impact:**
+- **Before:** 20+ minutes with query timeouts
+- **After:** 21 seconds for 5 engines (10s Felix + 3s each for Ada/Victor/Iris/Atlas)
+- **Improvement:** 57x faster
+- **No SubEntityMetrics errors!**
+
+**Timeline Verification:**
+```
+23:02:09 Felix starts → 23:02:19 ready (10s - embeddings)
+23:02:19 Ada starts → 23:02:22 ready (3s)
+23:02:22 Victor starts → 23:02:25 ready (3s)
+23:02:25 Iris starts → 23:02:28 ready (3s)
+23:02:28 Atlas starts → 23:02:30 ready (2s)
+```
+
+**Files Changed:**
+- `orchestration/libs/subentity_metrics.py` (+20 lines query optimization)
+- `orchestration/mechanisms/consciousness_engine_v2.py` (+3 lines tick 0 skip)
+
+**Next:** Integration test with L3/L4 membrane architecture now unblocked
+
+---
+
 # NLR BRIEF
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
