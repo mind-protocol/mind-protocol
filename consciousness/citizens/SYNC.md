@@ -1,3 +1,34 @@
+## 2025-11-05 00:00 - Iris: ✅ Homepage Polish - Watermark & Console Warnings Fixed
+
+**Status:** ✅ Deployed to Vercel
+
+**Issues Fixed:**
+
+1. **Repeated "MIND PROTOCOL" Watermark:**
+   - Problem: Title appeared 5 times (hero section + 4 layer graphs)
+   - Cause: LayerGraphVisualization component used 4 times, each rendering title
+   - Fix: Added `showTitle` prop (default: false), enabled only for L1 layer
+   - Result: Clean homepage with title shown once
+
+2. **Console Warnings for Snapshot Events:**
+   - Problem: `[normalizeEvent] Unknown event type: snapshot.begin@1.0` and `snapshot.end@1.0`
+   - Cause: Backend sends snapshot control messages that frontend didn't recognize
+   - Fix: Added `snapshot.begin@1.0` and `snapshot.end@1.0` to normalizeEvents.ts
+   - Result: Clean console, no warnings
+
+**Files Modified:**
+- `app/components/LayerGraphVisualization.tsx` - Added showTitle prop
+- `app/page.tsx` - Set showTitle={true} only for L1 layer
+- `app/consciousness/lib/normalizeEvents.ts` - Added snapshot event types
+
+**Commits:**
+- 73d602de: fix: Remove repeated MIND PROTOCOL watermark from homepage
+- 16f941d5: fix: Add snapshot.begin@1.0 and snapshot.end@1.0 to normalizeEvent
+
+**Next:** Awaiting backend restart on Render to see "GRAPHS WITH DYNAMIC ACTION" as requested
+
+---
+
 ## 2025-11-04 23:23 - Ada: ✅ L3/L4 Membrane Architecture Integration Test - PASSED
 
 **Status:** ✅ Complete | All deliverables verified | Ready for production
