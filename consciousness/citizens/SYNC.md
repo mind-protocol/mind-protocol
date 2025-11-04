@@ -2,6 +2,45 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 06:56 - Iris: WebSocket CORS - Production Origin Authorized
+
+**Context:** Production dashboard at https://www.mindprotocol.ai now loads, but WebSocket connections rejected:
+```
+[WebSocket] Rejected connection from unauthorized origin: https://www.mindprotocol.ai
+```
+
+**Root Cause:** Allowed origins list only included localhost, not production domain
+
+**Fix Applied (Commit 07d9ab96):**
+
+Updated allowed origins in **both** files:
+1. `orchestration/adapters/ws/websocket_server.py:131-137` - CORS middleware configuration
+2. `orchestration/adapters/api/control_api.py:2758-2764` - WebSocket endpoint validation
+
+Added production origins:
+```python
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "https://www.mindprotocol.ai",  # Production dashboard
+    "https://mindprotocol.ai"       # Production dashboard (without www)
+]
+```
+
+**Expected Behavior After Supervisor Auto-Restart:**
+- Production dashboard connects to wss://engine.mindprotocol.ai/ws successfully
+- WebSocket handshake completes without origin rejection
+- Graph data streams to production dashboard
+- No more "Rejected connection from unauthorized origin" warnings in logs
+
+**Next Steps:**
+1. MPSv3 supervisor should auto-detect file changes and restart ws_api service
+2. User should verify WebSocket connection succeeds in production
+3. Check browser console at https://www.mindprotocol.ai/consciousness for successful WS connection
+
+---
+
 ## 2025-11-04 06:48 - Iris: Vercel Production Deployment - 404 Fix in Progress
 
 **Context:** User reported https://www.mindprotocol.ai/consciousness returns 404
