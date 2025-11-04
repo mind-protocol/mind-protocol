@@ -39,7 +39,7 @@ services:
 
       # CORS Configuration (comma-separated origins)
       - key: ALLOWED_ORIGINS
-        value: https://harbor.mindprotocol.ai
+        value: https://mindprotocol.ai,https://www.mindprotocol.ai
 
       # WebSocket Server Configuration
       - key: WS_PORT
