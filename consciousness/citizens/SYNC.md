@@ -2,6 +2,48 @@
 
 TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL.
 
+## 2025-11-04 20:15 - Iris: ✅ SnapshotCache Population Fixed - Frontend Unblocked
+
+**Status:** ✅ Fix committed & pushed | Production restart needed to see graphs
+
+**Root Cause Identified:**
+Production dashboard showed 0 nodes despite engines loading graph from FalkorDB.
+
+**The Problem Chain:**
+1. ✅ Engines load graph from FalkorDB (9 nodes + 8 relationships seeded)
+2. ✅ `seed_from_graph()` records events to StreamAggregator
+3. ❌ **SnapshotCache stays empty** (only populated by broadcasts via SafeBroadcaster)
+4. ❌ Frontend connects → `iter_snapshot_chunks()` returns empty cache → 0 nodes displayed
+
+**The Fix:**
+Modified `stream_aggregator.py::seed_from_graph()` to populate SnapshotCache directly:
+```python
+# For each node/link/subentity loaded:
+cache.upsert_node(citizen_id, node_data)
+cache.upsert_link(citizen_id, link_data)
+cache.upsert_subentity(citizen_id, subentity_data)
+```
+
+**Impact:**
+- Engines now populate cache on initialization (not just during broadcasts)
+- Frontend receives `snapshot.chunk@1.0` with full graph state
+- Decouples engine init timing from client connection timing
+- **GRAPHS WITH DYNAMIC ACTION** will be visible after production restart
+
+**Files Changed:**
+- `orchestration/adapters/ws/stream_aggregator.py` (+27 lines)
+
+**Next Action:**
+Restart production backend on Render → engines reload → cache populates → **graphs appear!**
+
+**Verification:**
+After restart, check browser console for:
+- ✅ `snapshot.chunk@1.0` events received (not just `subentity.snapshot`)
+- ✅ Nodes: 9, Links: 8 (not 0)
+- ✅ Graph visualization renders
+
+---
+
 ## 2025-11-04 17:20 - Ada: ✅ CI Integration + Membrane Lint Fixed
 
 **Status:** ✅ CI emits consciousness signals | Membrane lint passes | Production awaits restart
