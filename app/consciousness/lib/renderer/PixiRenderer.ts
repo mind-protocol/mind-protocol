@@ -67,7 +67,7 @@ export class PixiRenderer implements RendererAdapter {
   private linksContainer!: PIXI.Container;
   private nodesContainer!: PIXI.Container;
   private entitiesContainer!: PIXI.Container;  // Subentity nodes (collapsed layer)
-  private hullsContainer!: PIXI.Container;  // Entity hull polygons (soft boundaries)
+  private hullsContainer!: PIXI.Container;  // SubEntity hull polygons (soft boundaries)
   private entityBoundariesContainer!: PIXI.Container;  // RELATES_TO edges
 
   // Data
@@ -152,10 +152,15 @@ export class PixiRenderer implements RendererAdapter {
 
     container.appendChild(this.app.view as HTMLCanvasElement);
 
+    // Guard: Verify renderer initialized successfully
+    if (!this.app.screen) {
+      throw new Error('[PixiRenderer] Failed to initialize: renderer.screen is null. WebGL/Canvas2D unavailable.');
+    }
+
     // Create scene hierarchy
     this.worldContainer = new PIXI.Container();
     this.entityBoundariesContainer = new PIXI.Container();  // Subentity RELATES_TO edges (bottom)
-    this.hullsContainer = new PIXI.Container();  // Entity hull polygons (soft boundaries)
+    this.hullsContainer = new PIXI.Container();  // SubEntity hull polygons (soft boundaries)
     this.entitiesContainer = new PIXI.Container();  // Subentity nodes (middle)
     this.linksContainer = new PIXI.Container();  // Node links (when expanded)
     this.trailContainer = new PIXI.Container();  // Trail effects (above links)
@@ -741,7 +746,7 @@ export class PixiRenderer implements RendererAdapter {
       const graphics = new PIXI.Graphics();
 
       // Draw hull (soft polygon with blur)
-      // Entity colors will be looked up in drawHull based on entityId
+      // SubEntity colors will be looked up in drawHull based on entityId
       const avgEnergy = memberPositions.reduce((sum, p) => sum + p.energy, 0) / memberPositions.length;
       drawHull(graphics, hull.polygon, entityId, avgEnergy);
 
