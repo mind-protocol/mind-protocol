@@ -68,6 +68,7 @@ export default function ConsciousnessPage() {
 
   // Use currentGraphId from membrane event stream (derived from provenance, not hardcoded)
   const currentGraphId = graphStream.currentGraphId;
+  const setCurrentGraphId = graphStream.setCurrentGraphId;
   const [currentGraphType, setCurrentGraphType] = useState<GraphType>('citizen');
   const [lastProcessedThreshold, setLastProcessedThreshold] = useState<number>(-1);
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
@@ -281,9 +282,12 @@ export default function ConsciousnessPage() {
     window.dispatchEvent(new CustomEvent('node:focus', { detail: { nodeId } }));
   }, []);
 
-  const handleSelectCitizen = useCallback((citizenId:string)=>{
-    membraneInject("ui.select.citizen",{ citizen_id: citizenId }, { ts: Date.now() });
-  },[]);
+  const handleSelectCitizen = useCallback((citizenId: string) => {
+    // Switch to the selected citizen's graph
+    setCurrentGraphId(citizenId);
+    // Also emit membrane event for telemetry
+    membraneInject("ui.select.citizen", { citizen_id: citizenId }, { ts: Date.now() });
+  }, [setCurrentGraphId]);
 
   const currentGraphLabel = useMemo(() => {
     if (!currentGraphId) return '';

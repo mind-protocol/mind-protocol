@@ -1035,6 +1035,7 @@ export function useGraphStream(
   return {
     graphs,
     currentGraphId,
+    setCurrentGraphId,
     connected,
     error,
     emergence,
