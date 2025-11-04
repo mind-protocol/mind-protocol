@@ -734,3 +734,108 @@ Until Settings is fixed, the WebSocket server can't restart cleanly. Current pro
 
 **Impact:** Dashboard will show "Connected" indefinitely but never receive graph data until server can be properly restarted.
 
+
+## 2025-11-04 05:45 - Iris: Completely Disabled TypeScript Checks
+
+**User Request:** "remove all checks at project level please"
+
+**Problem:** Build still failing with type errors even after setting `strict: false`:
+```
+Type error: Element implicitly has an 'any' type because type 
+'Map<string, ...>' has no index signature.
+```
+
+**What I Fixed:**
+Added to `next.config.js`:
+```javascript
+// Lines 7-13
+typescript: {
+  ignoreBuildErrors: true,  // Skip TypeScript validation during build
+},
+eslint: {
+  ignoreDuringBuilds: true,  // Skip ESLint checks during build
+},
+```
+
+**Build Result:**
+```
+✓ Compiled successfully in 28.9s
+  Skipping validation of types
+  Skipping linting
+  Generating static pages (21/21) ✓
+```
+
+**What's Now Disabled:**
+1. ✅ TypeScript type checking during build (next.config.js)
+2. ✅ ESLint linting during build (next.config.js)
+3. ✅ Strict mode (tsconfig.json: `strict: false`)
+4. ✅ Implicit any errors (tsconfig.json: `noImplicitAny: false`)
+
+**Result:** Build completes successfully in ~29 seconds without any type checking or linting errors.
+
+**Files Modified:**
+- `next.config.js` (lines 7-13)
+- `tsconfig.json` (lines 7-8, modified earlier)
+
+**All type checking completely disabled at project level as requested** ✅
+
+
+## 2025-11-04 06:20 - Iris: Vercel Auto-Deploy Configuration
+
+**User Issue:** "it doesn't build automatically on vercel at each commit pushed"
+
+**Root Cause:** Vercel auto-deploy is configured in the Vercel Dashboard, not in code. The repository needs to be connected to the Vercel project.
+
+**What I Created:**
+
+1. **VERCEL_AUTO_DEPLOY_SETUP.md** - Complete guide for enabling auto-deploy
+   - Steps to connect GitHub repo to Vercel
+   - How to configure production branch
+   - Troubleshooting common issues
+   - Environment variable setup
+
+2. **.vercelignore** - Exclude unnecessary files from deployment
+   - Python backend files (orchestration/, consciousness/)
+   - Build artifacts (.next/, out/)
+   - Environment files (handled in Vercel dashboard)
+   - Logs, screenshots, temporary files
+
+**Current Configuration:**
+```json
+// vercel.json
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs"
+}
+```
+
+**Build Settings:**
+- ✅ TypeScript checks disabled (`next.config.js: ignoreBuildErrors: true`)
+- ✅ ESLint checks disabled (`next.config.js: ignoreDuringBuilds: true`)
+- ✅ Build command working locally (`npm run build` succeeds in ~29s)
+
+**To Enable Auto-Deploy:**
+
+**User needs to do in Vercel Dashboard:**
+1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
+2. Select Mind Protocol project
+3. **Settings** → **Git** → **Connect Git Repository**
+4. Select GitHub and authorize
+5. Choose `mind-protocol/mindprotocol` repository
+6. Set production branch (e.g., `main`)
+7. Enable "Automatically deploy branches"
+
+**Test Auto-Deploy:**
+```bash
+git commit --allow-empty -m "Test: Trigger Vercel deploy"
+git push origin main
+```
+
+Within ~10 seconds, a new deployment should appear in Vercel Dashboard.
+
+**Files Created:**
+- `VERCEL_AUTO_DEPLOY_SETUP.md` - Complete setup guide
+- `.vercelignore` - Deployment exclusions
+
+**Note:** This is not a code issue - Vercel auto-deploy is configured through their dashboard UI. The code is ready; user needs to connect the GitHub repository in Vercel settings.
+

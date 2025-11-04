@@ -1,0 +1,65 @@
+# Vercel Ignore - Exclude from deployments
+
+# Python backend (not needed for frontend)
+orchestration/
+consciousness/
+venv/
+*.pyc
+__pycache__/
+
+# Build artifacts
+.next/
+out/
+build/
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.local
+.env*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.cache/
+
+# Lock files
+.locks/
+
+# Screenshots and logs
+claude-screenshots/
+claude-logs/
+
+# Documentation (not needed for deployment)
+docs/
+SYNC.md
+*.md
+!README.md
+
+# Tools and scripts
+tools/
+scripts/
+blockchain/
+
+# Exports
+*_snapshot.json
