@@ -1,0 +1,1 @@
+This file ensures the /consciousness route is properly recognized by Vercel.

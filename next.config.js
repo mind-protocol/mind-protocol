@@ -11,6 +11,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Output configuration for Vercel
+  output: 'standalone',
+  // Trailing slash configuration
+  trailingSlash: false,
   // Optimize for consciousness visualization
   experimental: {
     optimizeCss: true,
