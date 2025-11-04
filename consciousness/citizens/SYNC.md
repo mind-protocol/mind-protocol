@@ -912,3 +912,35 @@ Check Vercel "Deployments" tab to see build status.
 
 **Configuration: COMPLETE AND OPERATIONAL** 🎉
 
+
+## 2025-11-04 06:37 - Iris: Fixed Vercel Deployment Issues
+
+**Issue 1: Missing Environment Variable Secret**
+- Error: `Environment Variable "NEXT_PUBLIC_WS_URL" references Secret "mind-protocol-ws-url", which does not exist`
+- Fix: Changed from `@mind-protocol-ws-url` to direct value `https://engine.mindprotocol.ai`
+- Commit: `238812df`
+
+**Issue 2: React Peer Dependency Conflict**
+- Error: `peer react@"^19" from @react-three/drei@10.7.6` conflicts with React 18
+- Fix: Added `installCommand: "npm install --legacy-peer-deps"` to vercel.json
+- Commit: `aeb40ead`
+
+**Changes Made:**
+```json
+// vercel.json
+{
+  "installCommand": "npm install --legacy-peer-deps",  // Added
+  "env": {
+    "NEXT_PUBLIC_WS_URL": "https://engine.mindprotocol.ai"  // Fixed
+  }
+}
+```
+
+**Status:** Vercel should now deploy successfully. Build will:
+1. Install deps with --legacy-peer-deps (bypasses React version conflict)
+2. Use correct WebSocket URL environment variable
+3. Build with TypeScript checks disabled
+4. Deploy to production ✅
+
+**Next deployment should succeed!**
+

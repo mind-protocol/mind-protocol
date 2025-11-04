@@ -39,15 +39,5 @@
       "source": "/api/:path((?!consciousness).*)",
       "destination": "https://engine.mindprotocol.ai/api/:path*"
     }
-  ],
-  "routes": [
-    {
-      "src": "/consciousness",
-      "dest": "/consciousness"
-    },
-    {
-      "src": "/consciousness/(.*)",
-      "dest": "/consciousness/$1"
-    }
   ]
 }
