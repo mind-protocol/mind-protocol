@@ -28,6 +28,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from dataclasses import asdict, is_dataclass
 from fnmatch import fnmatch
@@ -2720,11 +2721,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Validate Origin header AFTER accepting (so we can close properly if validation fails)
     origin = websocket.headers.get("origin")
-    allowed_origins = {
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-    }
+
+    # Build allowed origins from environment variable (same pattern as websocket_server.py)
+    allowed_origins_list = ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+    allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+    if allowed_origins_env:
+        production_origins = [o.strip() for o in allowed_origins_env.split(",")]
+        allowed_origins_list.extend(production_origins)
+
+    allowed_origins = set(allowed_origins_list)
+
     if origin is not None and origin not in allowed_origins:
         logger.warning("[WebSocket] Rejected connection from unauthorized origin: %s", origin)
         await websocket.close(code=1008, reason="Unauthorized origin")
