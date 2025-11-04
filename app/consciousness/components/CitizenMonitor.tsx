@@ -108,7 +108,9 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
   const stateLabel = citizen.status ? citizen.status.replace(/_/g, ' ') : 'unknown';
 
   // Avatar path: Try PNG first, fallback to SVG
-  const [avatarPath, setAvatarPath] = useState(`/citizens/${citizen.id}/avatar.png`);
+  // Extract short name from hierarchical ID (mind-protocol_felix -> felix)
+  const shortName = citizen.id.includes('_') ? citizen.id.split('_').pop() || citizen.id : citizen.id;
+  const [avatarPath, setAvatarPath] = useState(`/citizens/${shortName}/avatar.png`);
   const [avatarError, setAvatarError] = useState(false);
 
   return (
@@ -131,7 +133,7 @@ const CitizenAccordionItem = memo(function CitizenAccordionItem({
               }`}
               onError={(e) => {
                 if (!avatarError && avatarPath.endsWith('.png')) {
-                  setAvatarPath(`/citizens/${citizen.id}/avatar.svg`);
+                  setAvatarPath(`/citizens/${shortName}/avatar.svg`);
                   setAvatarError(true);
                 } else {
                   e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23f5e7c1" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23b8860b" font-size="40">?</text></svg>';
