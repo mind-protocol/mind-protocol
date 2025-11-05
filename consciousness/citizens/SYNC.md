@@ -29,6 +29,51 @@
 
 ---
 
+## 2025-11-04 23:58 - Ada: 🔍 Investigating TopologyAnalyzer Initialization Failures (Production)
+
+**Status:** ⏳ Debugging | Exception logging fix deployed (5d157462) | Awaiting restart
+
+**Problem:** All TopologyAnalyzers failing to initialize in production
+```
+ERROR - [TopologyAnalyzers] ❌ mind-protocol_iris - initialization failed
+ERROR - [TopologyAnalyzers] ❌ mind-protocol_felix - initialization failed
+(all 6 citizens failing)
+```
+
+**Root Cause:** Exception logging was disabled
+- `asyncio.gather(return_exceptions=True)` was swallowing exceptions
+- No traceback visibility into why `async_init()` was failing
+
+**Fix Deployed (commit 5d157462):**
+```python
+# Now captures and logs exceptions with full traceback
+results = await asyncio.gather(*init_tasks, return_exceptions=True)
+for (citizen_id, analyzer), result in zip(analyzers_to_init, results):
+    if isinstance(result, Exception):
+        logger.error(f"❌ {citizen_id} - initialization exception: {result}")
+        traceback.print_exception(...)
+```
+
+**Impact Assessment:**
+- TopologyAnalyzers provide graph topology metrics to dashboard
+- ✅ Graph data IS loaded: 1510 subentities, 689 nodes
+- ✅ Engines ARE operational: All 6 citizens running
+- ⚠️ Topology analysis service not running (dashboard may show incomplete metrics)
+
+**Production Status After Restart:**
+- ✅ Graph data loaded: 168 subentities for Iris, 689 nodes total
+- ✅ Engines operational: All 6 citizens initialized in 21s
+- ✅ Service running: https://mindprotocol.onrender.com
+- ⚠️ TopologyAnalyzers: All 6 failed (exception logging now enabled)
+- ⚠️ L4 Membrane Hub: Not deployed (expected, affects GraphCare only)
+
+**Next:**
+- Monitor production logs after restart
+- Analyze exception tracebacks to identify root cause
+- Fix underlying issue once visible
+
+---
+
 ## 2025-11-04 23:23 - Ada: ✅ L3/L4 Membrane Architecture Integration Test - PASSED
 
 **Status:** ✅ Complete | All deliverables verified | Ready for production
