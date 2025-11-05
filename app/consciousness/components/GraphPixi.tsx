@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
 import { useGraphStream } from "../hooks/useGraphStream";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 type G = PIXI.Graphics;
 
@@ -21,6 +22,7 @@ function hashPos(id: string, w: number, h: number) {
 
 export default function GraphPixi() {
   const { graphs, currentGraphId } = useGraphStream();
+  const { v2State } = useWebSocket();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const layerNodes = useRef<PIXI.Container | null>(null);
@@ -107,9 +109,25 @@ export default function GraphPixi() {
 
       // draw (mutate; don't recreate graphics)
       g.clear();
-      g.beginFill(0x4ea1ff, 1);
-      g.drawCircle(0, 0, 5);
-      g.endFill();
+
+      // Working Memory highlighting: bright gold with glow for WM nodes
+      const inWM = v2State.workingMemory.has(id);
+      if (inWM) {
+        // Glow effect (outer ring)
+        g.beginFill(0xFFD700, 0.3);
+        g.drawCircle(0, 0, 12);
+        g.endFill();
+        // Main node (bright gold, larger)
+        g.beginFill(0xFFD700, 1);
+        g.drawCircle(0, 0, 8);
+        g.endFill();
+      } else {
+        // Normal node (blue, standard size)
+        g.beginFill(0x4ea1ff, 1);
+        g.drawCircle(0, 0, 5);
+        g.endFill();
+      }
+
       g.x = x;
       g.y = y;
 
