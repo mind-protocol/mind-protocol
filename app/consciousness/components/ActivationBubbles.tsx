@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Node, Operation } from '../hooks/useGraphData';
-import type { ThresholdCrossingEvent } from '../hooks/websocket-types';
+import type { Node } from '../hooks/useGraphData';
+import type { NodeFlipRecord } from '../hooks/websocket-types';
 
 interface ActivationBubblesProps {
-  operations: Operation[];
+  recentFlips: NodeFlipRecord[]; // V2: node.flip events
   nodes: Node[];
-  thresholdCrossings?: ThresholdCrossingEvent[];
 }
 
 interface Bubble {
@@ -27,17 +26,19 @@ interface Bubble {
  *
  * Design: Small bubbles fade in, float up slightly, fade out after 3s.
  * Message explains what happened in human terms.
+ *
+ * V2: Uses node.flip events from v2State.recentFlips
  */
-export function ActivationBubbles({ operations, nodes, thresholdCrossings = [] }: ActivationBubblesProps) {
+export function ActivationBubbles({ recentFlips, nodes }: ActivationBubblesProps) {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
 
-  // Process operations (legacy support)
+  // Process node flip events (v2)
   useEffect(() => {
-    if (operations.length === 0) return;
+    if (recentFlips.length === 0) return;
 
-    // Process latest operation
-    const latestOp = operations[0];
-    const bubble = createBubbleFromOperation(latestOp, nodes);
+    // Process latest flip
+    const latestFlip = recentFlips[recentFlips.length - 1];
+    const bubble = createBubbleFromFlip(latestFlip, nodes);
 
     if (bubble) {
       setBubbles(prev => [bubble, ...prev.slice(0, 9)]); // Keep max 10 bubbles
@@ -47,25 +48,7 @@ export function ActivationBubbles({ operations, nodes, thresholdCrossings = [] }
         setBubbles(prev => prev.filter(b => b.id !== bubble.id));
       }, 3000);
     }
-  }, [operations, nodes]);
-
-  // Process threshold crossings (real-time WebSocket events)
-  useEffect(() => {
-    if (thresholdCrossings.length === 0) return;
-
-    // Process latest threshold crossing
-    const latestCrossing = thresholdCrossings[thresholdCrossings.length - 1];
-    const bubble = createBubbleFromThresholdCrossing(latestCrossing, nodes);
-
-    if (bubble) {
-      setBubbles(prev => [bubble, ...prev.slice(0, 9)]); // Keep max 10 bubbles
-
-      // Remove bubble after 3 seconds
-      setTimeout(() => {
-        setBubbles(prev => prev.filter(b => b.id !== bubble.id));
-      }, 3000);
-    }
-  }, [thresholdCrossings, nodes]);
+  }, [recentFlips, nodes]);
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -78,42 +61,48 @@ export function ActivationBubbles({ operations, nodes, thresholdCrossings = [] }
 
 function Bubble({ bubble }: { bubble: Bubble }) {
   const bgColor = {
-    traversal: 'bg-consciousness-green/90',
-    activation: 'bg-blue-500/90',
-    learning: 'bg-purple-500/90',
-    info: 'bg-gray-600/90'
+    traversal: 'bg-blue-500',
+    activation: 'bg-yellow-500',
+    learning: 'bg-purple-500',
+    info: 'bg-gray-500'
   }[bubble.type];
+
+  const textColor = 'text-white';
 
   return (
     <div
-      className={`absolute ${bgColor} text-white text-xs px-3 py-2 rounded-lg shadow-lg
-                  animate-[float_3s_ease-out_forwards] opacity-0`}
       style={{
+        position: 'absolute',
         left: bubble.x,
         top: bubble.y,
-        transform: 'translate(-50%, -50%)',
-        animation: 'float 3s ease-out forwards',
+        transform: 'translate(-50%, -100%)',
+        zIndex: 1000
       }}
+      className="animate-bubble"
     >
-      {bubble.message}
+      <div className={`${bgColor} ${textColor} px-3 py-1 rounded-full text-xs whitespace-nowrap shadow-lg`}>
+        {bubble.message}
+      </div>
 
       <style jsx>{`
-        @keyframes float {
+        @keyframes bubble-float {
           0% {
             opacity: 0;
-            transform: translate(-50%, -50%) translateY(0);
+            transform: translate(-50%, -100%) translateY(0px);
           }
-          20% {
+          10% {
             opacity: 1;
           }
-          80% {
+          90% {
             opacity: 1;
-            transform: translate(-50%, -50%) translateY(-20px);
           }
           100% {
             opacity: 0;
-            transform: translate(-50%, -50%) translateY(-30px);
+            transform: translate(-50%, -100%) translateY(-20px);
           }
+        }
+        .animate-bubble {
+          animation: bubble-float 3s ease-out forwards;
         }
       `}</style>
     </div>
@@ -121,91 +110,37 @@ function Bubble({ bubble }: { bubble: Bubble }) {
 }
 
 // ============================================================================
-// Bubble Creation from Operations
+// Bubble Creation from Node Flips (V2)
 // ============================================================================
 
-function createBubbleFromOperation(operation: Operation, nodes: Node[]): Bubble | null {
-  const { type, node_id, subentity_id, data } = operation;
-
+function createBubbleFromFlip(flip: NodeFlipRecord, nodes: Node[]): Bubble | null {
   // Find node position
-  let node: Node | undefined;
-  if (node_id) {
-    node = nodes.find(n => n.id === node_id);
-  }
+  const node = nodes.find(n => (n.id || n.node_id) === flip.node_id);
 
   if (!node || !node.x || !node.y) {
     return null;
   }
 
-  let message = '';
-  let bubbleType: Bubble['type'] = 'info';
-
-  switch (type) {
-    case 'entity_traversal':
-      message = `${subentity_id} traversed here`;
-      bubbleType = 'traversal';
-      break;
-
-    case 'activation_increase':
-      const energy = data?.energy?.toFixed(2) || '?';
-      message = `Energy increased to ${energy}`;
-      bubbleType = 'activation';
-      break;
-
-    case 'hebbian_learning':
-      message = `Link strengthened`;
-      bubbleType = 'learning';
-      break;
-
-    case 'node_created':
-      message = `New node created`;
-      bubbleType = 'info';
-      break;
-
-    default:
-      message = `${type}`;
-      bubbleType = 'info';
-  }
-
-  return {
-    id: `${operation.timestamp}-${Math.random()}`,
-    x: node.x,
-    y: node.y - 40, // Appear above node
-    message,
-    type: bubbleType,
-    timestamp: operation.timestamp
-  };
-}
-
-function createBubbleFromThresholdCrossing(
-  event: ThresholdCrossingEvent,
-  nodes: Node[]
-): Bubble | null {
-  // Find node position
-  const node = nodes.find(n => n.id === event.node_id);
-
-  if (!node || !node.x || !node.y) {
-    return null;
-  }
-
-  // Create message based on direction
+  // Create message based on flip direction
   let message = '';
   let bubbleType: Bubble['type'] = 'activation';
 
-  if (event.direction === 'on') {
-    message = `${event.subentity_id}: activated "${event.node_name}"`;
+  if (flip.direction === 'on') {
+    const nodeName = node.name || flip.node_id;
+    message = `Activated: ${nodeName} (+${flip.dE.toFixed(2)} E)`;
     bubbleType = 'activation';
   } else {
-    message = `${event.subentity_id}: deactivated "${event.node_name}"`;
+    const nodeName = node.name || flip.node_id;
+    message = `Deactivated: ${nodeName} (${flip.dE.toFixed(2)} E)`;
     bubbleType = 'info';
   }
 
   return {
-    id: `${event.timestamp}-${event.node_id}-${Math.random()}`,
+    id: `${flip.timestamp}-${flip.node_id}`,
     x: node.x,
     y: node.y - 40, // Appear above node
     message,
     type: bubbleType,
-    timestamp: new Date(event.timestamp).getTime()
+    timestamp: flip.timestamp
   };
 }

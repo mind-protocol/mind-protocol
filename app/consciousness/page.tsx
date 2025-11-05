@@ -394,10 +394,10 @@ export default function ConsciousnessPage() {
         subentityActivity={subentityActivity}
       />
 
-      <EnergyFlowParticles nodes={nodes} subentityActivity={subentityActivity} />
+      <EnergyFlowParticles nodes={nodes} recentStrides={emotionState.recentStrides} />
 
       <ActivationBubbles
-        operations={operations}
+        recentFlips={v2State.recentFlips}
         nodes={nodes}
       />
 
