@@ -534,6 +534,68 @@ def _get_wallet_service() -> Optional[WalletCustodyService]:
 router = APIRouter(tags=["consciousness-control"])
 
 # ============================================================================
+# ADMIN DEBUG ENDPOINTS (Active)
+# ============================================================================
+
+class FalkorQueryRequest(BaseModel):
+    """Request body for FalkorDB query."""
+    graph_name: str
+    query: str
+
+
+@router.post("/admin/falkor/query")
+async def admin_falkor_query(request: FalkorQueryRequest):
+    """
+    Admin endpoint for direct FalkorDB queries (debugging only).
+
+    Returns raw query results from FalkorDB.
+    """
+    try:
+        from falkordb import FalkorDB
+
+        # Connect to FalkorDB using internal hostname
+        redis_url = os.getenv('ECONOMY_REDIS_URL', 'redis://mind-protocol-falkordb:6379/0')
+
+        # Parse redis URL
+        import re
+        pattern = r'redis://(?:([^:]+):([^@]+)@)?([^:]+):(\d+)'
+        match = re.match(pattern, redis_url)
+
+        if match:
+            username = match.group(1)
+            password = match.group(2)
+            host = match.group(3)
+            port = int(match.group(4))
+            db = FalkorDB(host=host, port=port, username=username, password=password)
+        else:
+            db = FalkorDB(host='mind-protocol-falkordb', port=6379)
+
+        graph = db.select_graph(request.graph_name)
+        result = graph.query(request.query)
+
+        # Convert result to JSON-serializable format
+        result_data = []
+        if hasattr(result, 'result_set') and result.result_set:
+            for row in result.result_set:
+                result_data.append(list(row))
+
+        return {
+            "success": True,
+            "graph_name": request.graph_name,
+            "result": result_data,
+            "row_count": len(result_data),
+            "execution_time_ms": getattr(result, 'run_time_ms', 0)
+        }
+
+    except Exception as e:
+        logger.error(f"[Admin] FalkorDB query failed: {e}", exc_info=True)
+        return {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
+# ============================================================================
 # ALL REST ENDPOINTS DISABLED - WebSocket-Only Architecture (2025-10-30)
 # ============================================================================
 # The following endpoints are disabled per architectural decision.
