@@ -116,6 +116,7 @@ export default function GraphPixi() {
   const layerLinks = useRef<PIXI.Container | null>(null);
   const spritePool = useRef<Map<string, G>>(new Map());
   const linePool = useRef<Map<string, G>>(new Map());
+  const viewportRef = useRef<PIXI.Container | null>(null);
 
   // mount once
   useEffect(() => {
@@ -137,7 +138,12 @@ export default function GraphPixi() {
     const root = new PIXI.Container();
     root.sortableChildren = true;
     root.addChild(linksLayer, nodesLayer);
-    app.stage.addChild(root);
+
+    // Viewport container for camera control
+    const viewport = new PIXI.Container();
+    viewport.addChild(root);
+    app.stage.addChild(viewport);
+    viewportRef.current = viewport;
 
     hostRef.current.appendChild(app.view as any);
     appRef.current = app;
@@ -149,6 +155,7 @@ export default function GraphPixi() {
       appRef.current = null;
       layerNodes.current = null;
       layerLinks.current = null;
+      viewportRef.current = null;
       spritePool.current.clear();
       linePool.current.clear();
     };
@@ -267,6 +274,39 @@ export default function GraphPixi() {
         g.destroy();
         spritePool.current.delete(id);
       }
+    }
+
+    // Calculate bounds and fit to viewport
+    if (spritePool.current.size > 0 && viewportRef.current) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+      for (const [id, g] of spritePool.current) {
+        if (usedNodes.has(id)) {
+          minX = Math.min(minX, g.x);
+          minY = Math.min(minY, g.y);
+          maxX = Math.max(maxX, g.x);
+          maxY = Math.max(maxY, g.y);
+        }
+      }
+
+      // Add padding
+      const padding = 40;
+      const contentWidth = maxX - minX + padding * 2;
+      const contentHeight = maxY - minY + padding * 2;
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      // Calculate scale to fit in viewport
+      const scaleX = W / contentWidth;
+      const scaleY = H / contentHeight;
+      const scale = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 1x
+
+      // Center the viewport
+      viewportRef.current.scale.set(scale, scale);
+      viewportRef.current.position.set(
+        W / 2 - centerX * scale,
+        H / 2 - centerY * scale
+      );
     }
 
     // ---- links (lightweight) ----
