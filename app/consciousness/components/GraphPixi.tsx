@@ -11,24 +11,54 @@ const DPR = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
 // Node type to color mapping (hex colors)
 const NODE_TYPE_COLORS: Record<string, number> = {
+  // Generic
+  Node: 0x60a5fa,          // blue-400 (most common generic type)
+
+  // Consciousness types
   Citizen: 0x22d3ee,       // cyan-400
+  SubEntity: 0x06b6d4,     // cyan-500
+
+  // Knowledge types
   Mechanism: 0xa855f7,     // purple-500
   Principle: 0x3b82f6,     // blue-500
   Realization: 0xfbbf24,   // yellow-400
   Concept: 0x60a5fa,       // blue-400
+  Pattern: 0x8b5cf6,       // violet-500
+
+  // Quality/Process
   Best_Practice: 0x10b981, // emerald-500
   Anti_Pattern: 0xef4444,  // red-500
   Decision: 0x8b5cf6,      // violet-500
+  Process: 0xf59e0b,       // amber-500
+
+  // Artifacts
   Code: 0x6366f1,          // indigo-500
   Documentation: 0x14b8a6, // teal-500
-  Process: 0xf59e0b,       // amber-500
+  File: 0x64748b,          // slate-500
+
+  // People/Org
   Team: 0xec4899,          // pink-500
   Person: 0xf97316,        // orange-500
+  Role: 0xf472b6,          // pink-400
+
+  // Memory/Context
   Memory: 0xc084fc,        // purple-400
-  default: 0x64748b        // slate-500
+  Context: 0xa78bfa,       // purple-400
+  Experience: 0xfcd34d,    // yellow-300
+
+  default: 0x60a5fa        // blue-400 (changed from slate to blue for visibility)
 };
 
 function getNodeTypeColor(nodeType: string): number {
+  // Log unique node types we encounter (only in development)
+  if (typeof window !== 'undefined' && !window.hasOwnProperty('_seenNodeTypes')) {
+    (window as any)._seenNodeTypes = new Set();
+  }
+  if ((window as any)._seenNodeTypes && !((window as any)._seenNodeTypes as Set<string>).has(nodeType)) {
+    ((window as any)._seenNodeTypes as Set<string>).add(nodeType);
+    console.log('[GraphPixi] New node type:', nodeType);
+  }
+
   return NODE_TYPE_COLORS[nodeType] || NODE_TYPE_COLORS.default;
 }
 
