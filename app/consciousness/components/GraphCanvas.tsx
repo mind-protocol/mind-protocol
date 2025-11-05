@@ -244,7 +244,7 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
 
     // Zoom behavior with double-click to reset
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([3.0, 4]) // Limit zoom range to prevent extreme values
+      .scaleExtent([0.1, 8]) // Allow zoom out to see full graph, zoom in for details
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
@@ -371,6 +371,40 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     clusterNodes.forEach((cluster: any) => {
       clusterAnchors.current.set(cluster.id, { x: cluster.x, y: cluster.y });
     });
+
+    // Calculate bounds and fit graph to viewport
+    if (clusterNodes.length > 0) {
+      const padding = 100; // 100px padding around graph
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+      clusterNodes.forEach((cluster: any) => {
+        const radius = 30 + 4 * Math.sqrt(cluster.size);
+        minX = Math.min(minX, cluster.x - radius);
+        maxX = Math.max(maxX, cluster.x + radius);
+        minY = Math.min(minY, cluster.y - radius);
+        maxY = Math.max(maxY, cluster.y + radius);
+      });
+
+      const boundsWidth = maxX - minX;
+      const boundsHeight = maxY - minY;
+      const scale = Math.min(
+        (width - padding * 2) / boundsWidth,
+        (height - padding * 2) / boundsHeight,
+        1 // Don't zoom in beyond 1x
+      );
+
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const translateX = width / 2 - centerX * scale;
+      const translateY = height / 2 - centerY * scale;
+
+      // Apply initial transform to fit graph in viewport
+      const initialTransform = d3.zoomIdentity
+        .translate(translateX, translateY)
+        .scale(scale);
+
+      svg.call(zoom.transform as any, initialTransform);
+    }
 
     // ========================================================================
     // PHASE 3: Inner Simulation Generator (for expanded clusters)
