@@ -1404,6 +1404,53 @@ async def admin_execute_query(query_req: CypherQuery, x_api_key: Optional[str] =
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
 
+@app.post("/admin/reload")
+async def admin_reload_engines(x_api_key: Optional[str] = Header(None)):
+    """
+    Reload all consciousness engines from FalkorDB.
+
+    This reloads graph data and repopulates snapshot cache without full server restart.
+
+    Headers:
+        X-API-Key: Admin API key (if ADMIN_API_KEY env var is set)
+
+    Returns:
+        {
+            "status": "reloading",
+            "engines": ["mind-protocol_ada", ...]
+        }
+    """
+    verify_admin_auth(x_api_key)
+
+    try:
+        logger.info("[Admin API] Triggering engine reload")
+
+        # Trigger background reload
+        asyncio.create_task(reload_all_engines())
+
+        return {
+            "status": "reloading",
+            "message": "Engines are reloading in background, check logs for progress"
+        }
+
+    except Exception as e:
+        logger.error(f"[Admin API] Reload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Reload failed: {str(e)}")
+
+
+async def reload_all_engines():
+    """Background task to reload all engines"""
+    try:
+        logger.info("[Reload] Starting engine reload")
+
+        # Re-initialize consciousness engines
+        await initialize_consciousness_engines()
+
+        logger.info("[Reload] ✅ Engines reloaded successfully")
+    except Exception as e:
+        logger.error(f"[Reload] Failed to reload engines: {e}")
+
+
 # === Info Endpoint ===
 
 # @app.get("/")  # DISABLED: WebSocket-only architecture
