@@ -20,11 +20,14 @@ Architecture: Phase 1 Clean Break + Phase 7 Multi-Scale
 
 from typing import Dict, List, Optional, Set, Union
 from datetime import datetime
+import logging
 
 from .node import Node
 from .subentity import Subentity
 from .link import Link
 from .types import NodeID, EntityID, NodeType, LinkType
+
+logger = logging.getLogger(__name__)
 
 
 class Graph:
@@ -75,11 +78,12 @@ class Graph:
         Args:
             node: Node to add
 
-        Raises:
-            ValueError: If node.id already exists
+        Note:
+            If node.id already exists, logs warning and skips (idempotent)
         """
         if node.id in self.nodes:
-            raise ValueError(f"Node {node.id} already exists in graph {self.id}")
+            logger.warning(f"[Graph:{self.id}] Node {node.id} already exists, skipping duplicate")
+            return
 
         self.nodes[node.id] = node
 
@@ -136,11 +140,12 @@ class Graph:
         Args:
             subentity: Subentity to add
 
-        Raises:
-            ValueError: If subentity.id already exists
+        Note:
+            If subentity.id already exists, logs warning and skips (idempotent)
         """
         if subentity.id in self.subentities:
-            raise ValueError(f"Subentity {subentity.id} already exists in graph {self.id}")
+            logger.warning(f"[Graph:{self.id}] SubEntity {subentity.id} already exists, skipping duplicate")
+            return
 
         self.subentities[subentity.id] = subentity
 
@@ -212,10 +217,14 @@ class Graph:
             link: Link to add
 
         Raises:
-            ValueError: If link.id already exists or source/target not found
+            ValueError: If source/target not found
+
+        Note:
+            If link.id already exists, logs warning and skips (idempotent)
         """
         if link.id in self.links:
-            raise ValueError(f"Link {link.id} already exists in graph {self.id}")
+            logger.warning(f"[Graph:{self.id}] Link {link.id} already exists, skipping duplicate")
+            return
 
         # Try to find source in nodes, then subentities
         source: Union[Node, Subentity, None] = self.get_node(link.source_id)
