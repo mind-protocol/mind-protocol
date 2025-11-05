@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
@@ -10,43 +10,77 @@ type G = PIXI.Graphics;
 const DPR = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
 // Node type to color mapping (hex colors)
+// Based on COMPLETE_TYPE_REFERENCE.md - 33 canonical node types + legacy aliases
 const NODE_TYPE_COLORS: Record<string, number> = {
-  // Generic
-  Node: 0x60a5fa,          // blue-400 (most common generic type)
+  // ========== GENERIC ==========
+  Node: 0x60a5fa,          // blue-400 (fallback for unlabeled nodes)
 
-  // Consciousness types
-  Citizen: 0x22d3ee,       // cyan-400
-  SubEntity: 0x06b6d4,     // cyan-500
+  // ========== U3_ TYPES (Universal L1-L3) - 6 types ==========
+  U3_Community: 0xec4899,      // pink-500 (social groups)
+  U3_Deal: 0x10b981,           // emerald-500 (agreements/transactions)
+  U3_Pattern: 0x8b5cf6,        // violet-500 (recurring behaviors)
+  U3_Practice: 0x14b8a6,       // teal-500 (SOPs/standards)
+  U3_Relationship: 0xf97316,   // orange-500 (connections between agents)
+  U3_Risk: 0xef4444,           // red-500 (threats/risks)
 
-  // Knowledge types
-  Mechanism: 0xa855f7,     // purple-500
-  Principle: 0x3b82f6,     // blue-500
-  Realization: 0xfbbf24,   // yellow-400
-  Concept: 0x60a5fa,       // blue-400
-  Pattern: 0x8b5cf6,       // violet-500
+  // ========== U4_ TYPES (Universal L1-L4) - 16 types ==========
+  U4_Agent: 0x22d3ee,          // cyan-400 (actors: human/citizen/org)
+  U4_Assessment: 0xa78bfa,     // purple-400 (evaluations)
+  U4_Attestation: 0x6366f1,    // indigo-500 (cryptographic proofs)
+  U4_Code_Artifact: 0x64748b,  // slate-500 (source files)
+  U4_Decision: 0x8b5cf6,       // violet-500 (decision records)
+  U4_Doc_View: 0x94a3b8,       // slate-400 (rendered docs)
+  U4_Event: 0xfbbf24,          // yellow-400 (happenings/incidents)
+  U4_Goal: 0x3b82f6,           // blue-500 (objectives)
+  U4_Knowledge_Object: 0x14b8a6, // teal-500 (specs/ADRs/runbooks)
+  U4_Measurement: 0x06b6d4,    // cyan-500 (datapoints)
+  U4_Metric: 0x0891b2,         // cyan-600 (metric definitions)
+  U4_Public_Presence: 0xf472b6, // pink-400 (public listings)
+  U4_Smart_Contract: 0xa855f7,  // purple-500 (on-chain contracts)
+  U4_Subentity: 0x06b6d4,      // cyan-500 (functional/semantic clusters)
+  U4_Wallet_Address: 0x84cc16,  // lime-500 (blockchain addresses)
+  U4_Work_Item: 0xf59e0b,      // amber-500 (tasks/milestones/bugs)
 
-  // Quality/Process
-  Best_Practice: 0x10b981, // emerald-500
-  Anti_Pattern: 0xef4444,  // red-500
-  Decision: 0x8b5cf6,      // violet-500
-  Process: 0xf59e0b,       // amber-500
+  // ========== L4_ TYPES (Protocol Law) - 11 types ==========
+  L4_Autonomy_Tier: 0xc084fc,      // purple-400 (capability tiers)
+  L4_Capability: 0xa855f7,         // purple-500 (unlockable capabilities)
+  L4_Conformance_Result: 0x10b981, // emerald-500 (test results)
+  L4_Conformance_Suite: 0x14b8a6,  // teal-500 (test suites)
+  L4_Envelope_Schema: 0x6366f1,    // indigo-500 (envelope shapes)
+  L4_Event_Schema: 0x8b5cf6,       // violet-500 (event schemas)
+  L4_Governance_Policy: 0xef4444,  // red-500 (laws/policies)
+  L4_Schema_Bundle: 0x06b6d4,      // cyan-500 (schema releases)
+  L4_Signature_Suite: 0xa855f7,    // purple-500 (signing algorithms)
+  L4_Topic_Namespace: 0xfbbf24,    // yellow-400 (topic namespaces)
+  L4_Type_Index: 0x64748b,         // slate-500 (type catalog)
 
-  // Artifacts
-  Code: 0x6366f1,          // indigo-500
-  Documentation: 0x14b8a6, // teal-500
-  File: 0x64748b,          // slate-500
+  // ========== LEGACY/ALIASES (for backward compatibility) ==========
+  Citizen: 0x22d3ee,       // → U4_Agent
+  SubEntity: 0x06b6d4,     // → U4_Subentity
+  Mechanism: 0xa855f7,     // (no U4 equivalent, keep for legacy)
+  Principle: 0x3b82f6,     // (no U4 equivalent, keep for legacy)
+  Realization: 0xfbbf24,   // (no U4 equivalent, keep for legacy)
+  Concept: 0x60a5fa,       // (no U4 equivalent, keep for legacy)
+  Pattern: 0x8b5cf6,       // → U3_Pattern alias
+  Best_Practice: 0x10b981, // → U3_Pattern with valence=positive
+  Anti_Pattern: 0xef4444,  // → U3_Pattern with valence=negative
+  Decision: 0x8b5cf6,      // → U4_Decision alias
+  Process: 0xf59e0b,       // → U3_Practice alias
+  Code: 0x6366f1,          // → U4_Code_Artifact alias
+  Documentation: 0x14b8a6, // → U4_Knowledge_Object alias
+  File: 0x64748b,          // → U4_Code_Artifact alias
+  Team: 0xec4899,          // → U3_Community alias
+  Person: 0xf97316,        // → U4_Agent alias
+  Role: 0xf472b6,          // (no U4 equivalent, keep for legacy)
+  Memory: 0xc084fc,        // → U4_Event with event_kind=percept
+  Context: 0xa78bfa,       // (no U4 equivalent, keep for legacy)
+  Experience: 0xfcd34d,    // → U4_Event alias
+  Goal: 0x3b82f6,          // → U4_Goal alias
+  Work_Item: 0xf59e0b,     // → U4_Work_Item alias
+  Metric: 0x0891b2,        // → U4_Metric alias
 
-  // People/Org
-  Team: 0xec4899,          // pink-500
-  Person: 0xf97316,        // orange-500
-  Role: 0xf472b6,          // pink-400
-
-  // Memory/Context
-  Memory: 0xc084fc,        // purple-400
-  Context: 0xa78bfa,       // purple-400
-  Experience: 0xfcd34d,    // yellow-300
-
-  default: 0x60a5fa        // blue-400 (changed from slate to blue for visibility)
+  // ========== DEFAULT ==========
+  default: 0x60a5fa        // blue-400 for unmapped types
 };
 
 function getNodeTypeColor(nodeType: string): number {
@@ -82,8 +116,6 @@ export default function GraphPixi() {
   const layerLinks = useRef<PIXI.Container | null>(null);
   const spritePool = useRef<Map<string, G>>(new Map());
   const linePool = useRef<Map<string, G>>(new Map());
-  const rafIdRef = useRef<number | null>(null);
-  const lastRenderRef = useRef<number>(0);
 
   // mount once
   useEffect(() => {
@@ -122,55 +154,29 @@ export default function GraphPixi() {
     };
   }, []);
 
-  // apply data on graph changes (throttled via RAF to prevent flickering)
+  // apply data on graph changes (no full clear; pool/diff instead)
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
+    const W = app.renderer.width / DPR;
+    const H = app.renderer.height / DPR;
 
-    // Cancel any pending RAF
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
+    // Get current graph data
+    const currentGraph = currentGraphId ? graphs.get(currentGraphId) : null;
+    if (!currentGraph) {
+      console.log('[GraphPixi] No current graph');
+      return;
     }
 
-    // Schedule render on next frame
-    rafIdRef.current = requestAnimationFrame((timestamp) => {
-      // Throttle to max 60fps (16ms between renders)
-      if (timestamp - lastRenderRef.current < 16) {
-        // Schedule for next frame
-        rafIdRef.current = requestAnimationFrame(() => render(timestamp));
-        return;
-      }
-      lastRenderRef.current = timestamp;
-      render(timestamp);
+    const nodes = currentGraph.nodes || {};
+    const links = currentGraph.links || {};
+
+    console.log('[GraphPixi] Rendering:', {
+      graphId: currentGraphId,
+      nodeCount: Object.keys(nodes).length,
+      linkCount: Object.keys(links).length,
+      canvasSize: { W, H }
     });
-
-    function render(timestamp: number) {
-      const app = appRef.current;
-      if (!app) return;
-      const W = app.renderer.width / DPR;
-      const H = app.renderer.height / DPR;
-
-      // Get current graph data
-      const currentGraph = currentGraphId ? graphs.get(currentGraphId) : null;
-      if (!currentGraph) {
-        console.log('[GraphPixi] No current graph');
-        return;
-      }
-
-      // Convert Maps to objects for bracket notation access
-      const nodes = currentGraph.nodes instanceof Map
-        ? Object.fromEntries(currentGraph.nodes)
-        : (currentGraph.nodes || {});
-      const links = currentGraph.links instanceof Map
-        ? Object.fromEntries(currentGraph.links)
-        : (currentGraph.links || {});
-
-      console.log('[GraphPixi] Rendering:', {
-        graphId: currentGraphId,
-        nodeCount: Object.keys(nodes).length,
-        linkCount: Object.keys(links).length,
-        canvasSize: { W, H }
-      });
 
     // ---- nodes ----
     const usedNodes = new Set<string>();
@@ -266,7 +272,7 @@ export default function GraphPixi() {
     // ---- links (lightweight) ----
     const visibleTypes = new Set([
       "U4_MEMBER_OF",
-      "U4_RELATED_TO",
+      "U4_RELATES_TO",
       "U4_DEPENDS_ON",
       "U4_EVIDENCED_BY",
       "U4_GOVERNS",
@@ -296,28 +302,8 @@ export default function GraphPixi() {
         Number.isFinite(to.x) && Number.isFinite(to.y)
           ? to
           : hashPos(l.target, W, H);
-
-      // Dynamic link thickness based on weight and flow
-      const baseWeight = l.weight || 0.5; // 0-1 range from graph data
-      const flowAmount = v2State.linkFlows.get(id) || 0; // real-time flow count
-
-      // Thickness: 1-6px based on weight (0.5-1.0) + flow boost
-      let thickness = 1 + (baseWeight * 3); // 1-4px base
-      if (flowAmount > 0) {
-        thickness += Math.min(flowAmount / 5, 2); // +0-2px for active flow
-      }
-      thickness = Math.max(0.5, Math.min(thickness, 6)); // clamp to 0.5-6px
-
-      // Color: brighter when flowing
-      let color = 0x7aa7c7; // default blue-gray
-      let alpha = 0.6;
-      if (flowAmount > 0) {
-        color = 0x00D4FF; // bright cyan for active links
-        alpha = 0.8 + Math.min(flowAmount / 20, 0.2); // up to 100% opacity
-      }
-
       g.clear();
-      g.lineStyle(thickness, color, alpha);
+      g.lineStyle(1, 0x7aa7c7, 0.6);
       g.moveTo(x1, y1);
       g.lineTo(x2, y2);
 
@@ -330,15 +316,6 @@ export default function GraphPixi() {
         linePool.current.delete(id);
       }
     }
-    } // end render()
-
-    // Cleanup: cancel RAF on unmount or dependency change
-    return () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-    };
   }, [graphs, currentGraphId, v2State]);
 
   return (
