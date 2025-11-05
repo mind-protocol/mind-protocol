@@ -135,9 +135,56 @@ def import_graph(db, graph_data):
     # Import relationships
     if relationships:
         print(f"\n  Importing relationships...")
-        print(f"    ⚠️  Note: Relationship import requires node ID matching")
-        print(f"    ⚠️  Skipping relationships - backend will recreate during runtime")
-        print(f"    ⚠️  This is expected behavior for initial migration")
+        imported_rels = 0
+        failed_rels = 0
+
+        for i in range(0, len(relationships), batch_size):
+            batch = relationships[i:i+batch_size]
+            batch_queries = []
+
+            for rel in batch:
+                rel_type = rel['type']
+                source_id = rel['source_id']
+                target_id = rel['target_id']
+                props = rel.get('properties', {})
+
+                # Build property string
+                props_parts = []
+                for key, value in props.items():
+                    if isinstance(value, str):
+                        escaped = escape_cypher_string(value)
+                        props_parts.append(f"{key}: '{escaped}'")
+                    elif isinstance(value, bool):
+                        props_parts.append(f"{key}: {str(value).lower()}")
+                    elif value is None:
+                        props_parts.append(f"{key}: null")
+                    else:
+                        props_parts.append(f"{key}: {value}")
+
+                props_str = '{' + ', '.join(props_parts) + '}' if props_parts else ''
+
+                # Create relationship query
+                # Match nodes by ID property, create relationship
+                query = f"""
+                MATCH (a {{id: '{escape_cypher_string(source_id)}'}})
+                MATCH (b {{id: '{escape_cypher_string(target_id)}'}})
+                CREATE (a)-[r:{rel_type} {props_str}]->(b)
+                """
+                batch_queries.append(query.strip())
+
+            # Execute batch
+            try:
+                for query in batch_queries:
+                    graph.query(query)
+                imported_rels += len(batch)
+                if (i + batch_size) % 500 == 0 or i + batch_size >= len(relationships):
+                    print(f"    {min(i + batch_size, len(relationships))}/{len(relationships)} relationships imported")
+            except Exception as e:
+                print(f"    ⚠️  Batch failed: {e}")
+                failed_rels += len(batch)
+                continue
+
+        print(f"  ✅ Imported {imported_rels}/{len(relationships)} relationships ({failed_rels} failed)")
 
     return True
 
@@ -163,11 +210,17 @@ def main():
     print(f"\n📄 Export file: {export_file}")
     print(f"   Size: {file_size_mb:.2f} MB")
 
-    # Load JSON
+    # Load JSON (handle both .json and .json.gz)
     print(f"\n⏳ Loading JSON data...")
     try:
-        with open(export_file, 'r') as f:
-            graph_exports = json.load(f)
+        if export_file.endswith('.gz'):
+            import gzip
+            print(f"  📦 Decompressing .gz file...")
+            with gzip.open(export_file, 'rt') as f:
+                graph_exports = json.load(f)
+        else:
+            with open(export_file, 'r') as f:
+                graph_exports = json.load(f)
         print(f"  ✅ Loaded {len(graph_exports)} graphs")
     except Exception as e:
         print(f"  ❌ Failed to load JSON: {e}")
