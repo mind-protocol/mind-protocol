@@ -1,3 +1,100 @@
+## 2025-11-05 01:30 - Atlas: ✅ Root Cause Fixed - 3 Critical Bugs Blocking Dashboard
+
+**Status:** ✅ All fixes committed & pushed | 🚀 Ready for production deployment
+
+**User Goal:** "TODAY I WANT TO SEE THE GRAPHS WITH DYNAMIC ACTION. ONLY GOAL."
+
+**Root Causes Identified & Fixed:**
+
+### 1. Engine Registration Failure (logger_util import error)
+**Problem:** Engines loaded 644 nodes but failed to register in WebSocket server
+```
+WARNING - Stream aggregator seed failed: No module named 'orchestration.libs.logger_util'
+Result: 0 engines registered → no snapshot replay → empty dashboard
+```
+
+**Root Cause:** `orchestration/adapters/ws/stream_aggregator.py:491-492`
+- Imported from non-existent `orchestration.libs.logger_util` module
+- Logger already existed at line 24: `logger = logging.getLogger(__name__)`
+
+**Fix:** Removed bad import, used existing logger (commit `5873bb1c`)
+
+---
+
+### 2. Frontend Event Rejection (missing spec field)
+**Problem:** Frontend validation rejected all snapshot events
+```javascript
+[useGraphStream] Invalid event envelope - missing required fields (id, spec, provenance)
+```
+
+**Root Cause:** `orchestration/adapters/api/control_api.py:2873-2915`
+- Backend was missing `spec: {name, rev}` field on snapshot events
+- Frontend requires spec field per Membrane Bus envelope format (useGraphStream.ts:325)
+
+**Fix:** Added `spec: {"name": "consciousness.v2", "rev": "2.0.0"}` to:
+- `snapshot.begin@1.0` (line 2877)
+- `snapshot.chunk@1.0` (line 2892)
+- `snapshot.end@1.0` (line 2912)
+
+**Commit:** `435229d6`
+
+---
+
+### 3. Missing Relationships in Production (0/9,005 links)
+**Problem:** Production logs showed `Graph nodes: 644, links: 0`
+- Local migration exported: 18,874 nodes + 9,005 relationships
+- Production FalkorDB had: 644 nodes (3%) + 0 relationships (0%)
+
+**Root Cause:** `tools/import_from_json.py:136-141`
+- Script intentionally skipped ALL relationships
+- Comment claimed: "backend will recreate during runtime" ← **FALSE**
+- Backend does NOT recreate relationships, only loads what exists in FalkorDB
+
+**Fix:** Implemented actual relationship import logic (lines 136-189)
+- Matches source/target nodes by name (not ID, per export format)
+- Creates relationships with properties
+- Batched imports (100 per batch, progress every 500)
+- Error handling with failed relationship tracking
+
+**Commits:**
+- `91417430` - Initial implementation (ID-based matching)
+- `05ab2540` - Final fix (name-based matching per export format)
+
+---
+
+**Production Deployment Plan:**
+
+1. **Deploy import script:** `bash tools/deploy_import_to_render.sh`
+   - Must run FROM Render shell with ECONOMY_REDIS_URL access
+   - Will import mindprotocol_graph_export.json.gz
+   - Expected result: 18,874 nodes + 9,005 relationships
+
+2. **Restart engines:** Trigger Render service restart
+   - Engines will load full graph from FalkorDB
+   - SnapshotCache will populate with 9,005 links
+   - WebSocket clients will receive complete graph
+
+3. **Verify dashboard:** https://www.mindprotocol.ai/consciousness
+   - Should show: 18,874 nodes, 9,005 links
+   - SubEntities should have members via MEMBER_OF links
+   - Force-directed graph should show DYNAMIC ACTION
+
+---
+
+**Files Modified:**
+- `orchestration/adapters/ws/stream_aggregator.py` - Fixed logger import
+- `orchestration/adapters/api/control_api.py` - Added spec field to snapshot events
+- `tools/import_from_json.py` - Implemented relationship import
+
+**Verification Evidence:**
+- ✅ All commits pushed to main branch
+- ✅ Deploy script exists: `tools/deploy_import_to_render.sh`
+- ✅ Import script tested locally (relationship import logic works)
+
+**Next:** Run deploy script on Render, restart engines, verify dashboard shows graphs with dynamic action
+
+---
+
 ## 2025-11-05 00:15 - Ada: 🔍 Debugging Dashboard "0 Nodes, 0 Links" Issue (Production)
 
 **Status:** ⏳ Investigating | Snapshot logging added (f17b795c) | Awaiting restart
