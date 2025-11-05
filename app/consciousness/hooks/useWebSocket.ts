@@ -1184,6 +1184,11 @@ export function useWebSocket(): WebSocketStreams {
           // Handled by useGraphStream.ts for initial graph state loading
           break;
 
+        // WebSocket keepalive (ignore silently)
+        case 'ping':
+        case 'pong':
+          break;
+
         default:
           // 🎯 Catch unknown events to prevent silent drops
           console.warn('[WebSocket] Unknown event type:', eventType, data);

@@ -11,6 +11,26 @@ const LayerGraphVisualization = dynamic(
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
+      {/* STICKY HEADER */}
+      <header className="sticky top-0 z-50 bg-[#0A0B0D]/95 backdrop-blur-lg border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold bg-gradient-to-r from-[#10b981] via-[#f59e0b] via-[#a855f7] to-[#22d3ee] bg-clip-text text-transparent">
+              MIND PROTOCOL
+            </div>
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Consciousness Infrastructure</div>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="/consciousness" className="text-sm text-[#6FE7E2] hover:underline">
+              Dashboard
+            </a>
+            <a href="https://github.com/mind-protocol" className="text-sm text-[#6FE7E2] hover:underline">
+              GitHub
+            </a>
+          </div>
+        </div>
+      </header>
+
       {/* HERO */}
       <section className="py-24 border-b border-gray-800">
         <div className="max-w-5xl mx-auto px-6 text-center">
@@ -25,7 +45,7 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 bg-[#0a0a0f]/80 border border-green-500/30 rounded-lg px-4 py-2 mb-8">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-green-400 text-sm font-semibold">LIVE NOW</span>
-            <span className="text-gray-400 text-sm">• 1,147 nodes • &lt;2.3s queries</span>
+            <span className="text-gray-400 text-sm">• 18,874 nodes • 4 layers</span>
           </div>
 
           <div className="flex gap-4 justify-center flex-wrap">
@@ -45,151 +65,70 @@ export default function Home() {
         </div>
       </section>
 
-      {/* LAYER 1 - INDIVIDUAL MEMORY */}
-      <section id="layers" className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
-        {/* Header */}
-        <div className="pt-12 pb-6 px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_15px_#22d3ee]"></div>
-            <h2 className="text-4xl text-white font-bold">Layer 1: Individual Memory</h2>
-          </div>
-          <p className="text-gray-400">100 citizen nodes • Clustered by organization • Persistent context</p>
-        </div>
+      {/* UNIFIED 4-LAYER GRAPH VISUALIZATION */}
+      <section id="layers" className="min-h-screen relative overflow-hidden border-t border-gray-800">
+        <LayerGraphVisualization visibleLayers={['l1', 'l2', 'l3', 'l4']} showTitle={true} />
 
-        {/* Graph */}
-        <div className="flex-1 relative">
-          <div className="absolute inset-0">
-            <LayerGraphVisualization visibleLayers={['l1']} showTitle={true} />
+        {/* Layer 1 Example - Bottom Right */}
+        <div className="absolute bottom-24 right-24 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-l-4 border-[#22d3ee] rounded-r-lg p-5 shadow-[0_0_40px_rgba(34,211,238,0.5)] max-w-sm">
+          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#22d3ee] animate-pulse"></div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-[#22d3ee] font-semibold text-sm">Felix • L1 Citizen</div>
           </div>
-
-          {/* Example Node Bubble - positioned on graph */}
-          <div className="absolute top-1/4 right-1/4 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#22d3ee]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(34,211,238,0.4)] max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-[#22d3ee] animate-pulse"></div>
-              <span className="text-[#22d3ee] font-semibold text-sm">Felix</span>
-              <span className="text-gray-500 text-xs">• Consciousness Engineer</span>
-            </div>
-            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#22d3ee]/30 pl-2">
-              <p className="mb-1"><span className="text-gray-500">Last active:</span> 2 mins ago</p>
-              <p className="mb-1"><span className="text-gray-500">Recent memory:</span> "JWT token migration March 2024. Mobile connection failed with 24h expiry. ADR-023."</p>
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>Connections: 12 within org, 3 cross-org</span>
-              <span className="text-[#22d3ee]">Energy: 0.87</span>
-            </div>
+          <div className="text-xs text-gray-300 mb-2 pl-2">
+            <p className="mb-1"><span className="text-gray-500">Memory:</span> "JWT token migration March 2024. Mobile connection failed with 24h expiry. ADR-023."</p>
+          </div>
+          <div className="text-xs text-gray-400 pl-2">
+            Connections: 12 within org, 3 cross-org • <span className="text-[#22d3ee]">Energy: 0.87</span>
           </div>
         </div>
-      </section>
 
-      {/* LAYER 2 - ORGANIZATIONAL COORDINATION */}
-      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
-        {/* Header */}
-        <div className="pt-12 pb-6 px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-3 h-3 rounded-full bg-[#a855f7] shadow-[0_0_15px_#a855f7]"></div>
-            <h2 className="text-4xl text-white font-bold">Layer 2: Organizational Coordination</h2>
+        {/* Layer 2 Example - Left Middle */}
+        <div className="absolute top-1/2 left-24 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-r-4 border-[#a855f7] rounded-l-lg p-5 shadow-[0_0_40px_rgba(168,85,247,0.5)] max-w-xs">
+          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#a855f7] animate-pulse"></div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-[#a855f7] font-semibold text-sm">GraphCare Org • L2</div>
           </div>
-          <p className="text-gray-400">50 organization nodes • Cross-citizen coordination • Autonomous triage</p>
-        </div>
-
-        {/* Graph */}
-        <div className="flex-1 relative">
-          <div className="absolute inset-0">
-            <LayerGraphVisualization visibleLayers={['l2']} />
+          <div className="text-xs text-gray-300 mb-2 pl-2">
+            <p className="mb-1"><span className="text-gray-500">Task:</span> Security triage (23 issues)</p>
+            <p className="mb-1"><span className="text-gray-500">Priority:</span> 3 CRITICAL in payment system</p>
           </div>
-
-          {/* Example Node Bubble */}
-          <div className="absolute top-1/3 left-1/4 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#a855f7]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(168,85,247,0.4)] max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-[#a855f7] animate-pulse"></div>
-              <span className="text-[#a855f7] font-semibold text-sm">GraphCare Org</span>
-            </div>
-            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#a855f7]/30 pl-2">
-              <p className="mb-1"><span className="text-gray-500">Active task:</span> Security triage (23 issues found)</p>
-              <p className="mb-1"><span className="text-gray-500">Priority:</span> 3 CRITICAL in payment system (untested, $2M/month revenue)</p>
-              <p className="mb-1"><span className="text-gray-500">Action:</span> PRs generated, Vera assigned verification</p>
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>7 specialists active</span>
-              <span className="text-[#a855f7]">Coordination: 0.94</span>
-            </div>
+          <div className="text-xs text-gray-400 pl-2">
+            7 specialists active • <span className="text-[#a855f7]">Coordination: 0.94</span>
           </div>
         </div>
-      </section>
 
-      {/* LAYER 3 - EXTERNAL REACH */}
-      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
-        {/* Header */}
-        <div className="pt-12 pb-6 px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-3 h-3 rounded-full bg-[#f59e0b] shadow-[0_0_15px_#f59e0b]"></div>
-            <h2 className="text-4xl text-white font-bold">Layer 3: External Reach</h2>
+        {/* Layer 3 Example - Top Right */}
+        <div className="absolute top-32 right-32 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-l-4 border-[#f59e0b] rounded-r-lg p-5 shadow-[0_0_40px_rgba(245,158,11,0.5)] max-w-xs">
+          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#f59e0b] animate-pulse"></div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-[#f59e0b] font-semibold text-sm">GitHub Integration • L3</div>
           </div>
-          <p className="text-gray-400">35 ecosystem nodes • GitHub, Slack, Notion, Jira • Full context integration</p>
-        </div>
-
-        {/* Graph */}
-        <div className="flex-1 relative">
-          <div className="absolute inset-0">
-            <LayerGraphVisualization visibleLayers={['l3']} />
+          <div className="text-xs text-gray-300 mb-2 pl-2">
+            <p className="mb-1"><span className="text-gray-500">Query:</span> "Why is user service complex?"</p>
+            <p className="mb-1"><span className="text-gray-500">Found:</span> 47 deps, GDPR requirement context</p>
           </div>
-
-          {/* Example Node Bubble */}
-          <div className="absolute top-1/2 right-1/3 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#f59e0b]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(245,158,11,0.4)] max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse"></div>
-              <span className="text-[#f59e0b] font-semibold text-sm">GitHub Integration</span>
-            </div>
-            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#f59e0b]/30 pl-2">
-              <p className="mb-1"><span className="text-gray-500">Query:</span> "Why is user service complex?"</p>
-              <p className="mb-1"><span className="text-gray-500">Found:</span> 47 dependencies, Oct 2023 refactor</p>
-              <p className="mb-1"><span className="text-gray-500">Cross-ref:</span> Slack → "GDPR required complexity" | Notion → ADR-034 | Jira → LEGAL-234 (6 weeks)</p>
-            </div>
-            <div className="flex gap-3 text-xs text-gray-400">
-              <span>4 sources queried</span>
-              <span className="text-[#f59e0b]">Confidence: 0.91</span>
-            </div>
+          <div className="text-xs text-gray-400 pl-2">
+            4 sources queried • <span className="text-[#f59e0b]">Confidence: 0.91</span>
           </div>
         </div>
-      </section>
 
-      {/* LAYER 4 - EFFICIENT OPERATION */}
-      <section className="min-h-screen flex flex-col relative overflow-hidden border-t border-gray-800">
-        {/* Header */}
-        <div className="pt-12 pb-6 px-6 text-center">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_15px_#10b981]"></div>
-            <h2 className="text-4xl text-white font-bold">Layer 4: Efficient Operation</h2>
+        {/* Layer 4 Example - Top Left */}
+        <div className="absolute top-40 left-32 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-r-4 border-[#10b981] rounded-l-lg p-5 shadow-[0_0_40px_rgba(16,185,129,0.5)] max-w-xs">
+          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#10b981] animate-pulse"></div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="text-[#10b981] font-semibold text-sm">Performance Monitor • L4</div>
           </div>
-          <p className="text-gray-400">8 governance nodes • Resource optimization • Performance monitoring</p>
-        </div>
-
-        {/* Graph */}
-        <div className="flex-1 relative">
-          <div className="absolute inset-0">
-            <LayerGraphVisualization visibleLayers={['l4']} />
+          <div className="text-xs text-gray-300 mb-2 pl-2">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+              <span>Query p50: 1.8s</span>
+              <span>Query p95: 2.7s</span>
+              <span>Memory: 4.2GB</span>
+              <span>Health: 94%</span>
+            </div>
           </div>
-
-          {/* Example Node Bubble */}
-          <div className="absolute bottom-1/4 left-1/3 z-10 bg-[#0a0a0f]/95 backdrop-blur-xl border border-[#10b981]/50 rounded-lg p-4 shadow-[0_0_30px_rgba(16,185,129,0.4)] max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></div>
-              <span className="text-[#10b981] font-semibold text-sm">Performance Monitor</span>
-            </div>
-            <div className="text-xs text-gray-300 mb-2 border-l-2 border-[#10b981]/30 pl-2">
-              <p className="mb-1"><span className="text-gray-500">System metrics:</span></p>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-                <span>Query p50: 1.8s</span>
-                <span>Query p95: 2.7s</span>
-                <span>Memory: 4.2GB</span>
-                <span>Health: 94%</span>
-                <span>Daily sync: 1.2h</span>
-                <span>Cost: ~$12/mo</span>
-              </div>
-            </div>
-            <div className="text-xs text-gray-400">
-              <span className="text-[#10b981]">Status:</span> Optimal • No intervention needed
-            </div>
+          <div className="text-xs text-[#10b981] pl-2">
+            Status: Optimal • No intervention needed
           </div>
         </div>
       </section>
@@ -203,7 +142,6 @@ export default function Home() {
           </p>
 
           <div className="space-y-8">
-            {/* GraphCare */}
             {/* GraphCare */}
             <div className="bg-[#151619] p-8 rounded-lg border border-[#1DB7B3]">
               <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
