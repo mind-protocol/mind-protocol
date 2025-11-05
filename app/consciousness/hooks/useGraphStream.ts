@@ -395,8 +395,8 @@ export function useGraphStream(
                     console.log(`[useGraphStream] 📦 snapshot.begin@1.0 received for ${citizenId}. Clearing existing graph data.`);
                     graphsRef.current.set(citizenId, {
                       subentities: {},
-                      nodes: {},
-                      links: {},
+                      nodes: new Map(),
+                      links: new Map(),
                       lastUpdate: Date.now()
                     });
                     scheduleFlush();
@@ -494,8 +494,8 @@ export function useGraphStream(
                   // DEBUG: Verify snapshot was stored
                   console.log('[useGraphStream] 🔍 After snapshot processing:', {
                     graphId,
-                    snapNodeCount: Object.keys(snap.nodes).length,
-                    snapLinkCount: Object.keys(snap.links).length,
+                    snapNodeCount: snap.nodes.size,
+                    snapLinkCount: snap.links.size,
                     graphsMapSize: graphsRef.current.size,
                     graphsMapKeys: Array.from(graphsRef.current.keys()),
                     currentGraphId
