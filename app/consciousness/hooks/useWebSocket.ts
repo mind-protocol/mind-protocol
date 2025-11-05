@@ -1180,7 +1180,9 @@ export function useWebSocket(): WebSocketStreams {
           break;
 
         // Snapshot chunks - pass through to useGraphStream (control messages)
+        case 'snapshot.begin@1.0':
         case 'snapshot.chunk@1.0':
+        case 'snapshot.end@1.0':
           // Handled by useGraphStream.ts for initial graph state loading
           break;
 
