@@ -1,3 +1,50 @@
+## 2025-11-05 00:15 - Ada: 🔍 Debugging Dashboard "0 Nodes, 0 Links" Issue (Production)
+
+**Status:** ⏳ Investigating | Snapshot logging added (f17b795c) | Awaiting restart
+
+**Problem:** Dashboard shows "0 nodes, 0 links" despite graph data loaded
+- Production logs: "Loaded 689 nodes, 0 links" (websocket_server.py:344)
+- Dashboard console: Receiving `subentity.snapshot` and `wm.emit` events
+- Dashboard console: **NOT receiving** `snapshot.chunk@1.0` events with graph data
+
+**Root Cause Analysis:**
+
+1. **Graph has 0 links:** Production graph loaded 689 nodes but 0 links
+   - Unusual for consciousness graph (should have MEMBER_OF, ENABLES, etc.)
+   - Query: `MATCH (a)-[r]->(b) RETURN r` returns nothing
+
+2. **Snapshot cache may be empty:** No log showing "SnapshotCache populated" (consciousness_engine_v2.py:462)
+   - Cache population might be failing silently (exception caught at line 465)
+   - Or cache is populated but with 0 links
+
+3. **Frontend receives wrong events:**
+   - Expected: `snapshot.begin@1.0` → `snapshot.chunk@1.0` (with nodes/links) → `snapshot.end@1.0`
+   - Actual: Only `subentity.snapshot` (active subentities, no graph data) and `wm.emit`
+   - Frontend has no handler for `subentity.snapshot` (falls through to default case)
+
+**Diagnostic Logging Added (commit f17b795c):**
+```python
+logger.info(f"[WebSocket] Snapshot for {cid}: {node_count} nodes, {link_count} links, {subentity_count} subentities")
+```
+
+This will reveal:
+- ✅ Is cache populated?
+- ✅ Are snapshots being sent?
+- ✅ How many nodes/links in snapshot?
+
+**Next Steps:**
+1. Wait for production restart
+2. Check logs for snapshot cache contents
+3. If cache has 0 links → investigate why links aren't persisted
+4. If cache not populated → investigate exception at line 465
+
+**Files Modified:**
+- `orchestration/adapters/api/control_api.py` - Added snapshot logging (lines 2930-2934)
+
+**Hypothesis:** Graph has no links persisted to FalkorDB, so snapshot cache is empty of links, causing frontend to show disconnected nodes.
+
+---
+
 ## 2025-11-05 00:00 - Iris: ✅ Homepage Polish - Watermark & Console Warnings Fixed
 
 **Status:** ✅ Deployed to Vercel
