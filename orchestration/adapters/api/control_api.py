@@ -46,7 +46,8 @@ from orchestration.adapters.storage.engine_registry import (
     resume_all,
     get_system_status,
     get_engine,
-    get_all_engines
+    get_all_engines,
+    all_citizens
 )
 from orchestration.mechanisms.affective_telemetry_buffer import get_affective_buffer
 from orchestration.libs.utils.falkordb_adapter import get_falkordb_graph
@@ -2949,6 +2950,29 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await websocket_manager.register_connection(conn_id, websocket, topics, cursor)
     websocket_manager.touch(websocket)
+
+    # Send hierarchy snapshot (available graphs for selector)
+    try:
+        citizen_ids = all_citizens()
+        hierarchy_snapshot = {
+            "type": "hierarchy.snapshot@1.0",
+            "org": "mind-protocol",
+            "ecosystems": ["primary"],
+            "citizens": [
+                {
+                    "id": cid,
+                    "label": cid.split("_")[-1].title() if "_" in cid else cid.title(),
+                    "status": "ready"
+                }
+                for cid in citizen_ids
+            ],
+            "lanes": [],
+            "ts": datetime.now(timezone.utc).isoformat()
+        }
+        await websocket.send_json(hierarchy_snapshot)
+        logger.info(f"[WebSocket] Sent hierarchy snapshot with {len(citizen_ids)} citizens to connection {conn_id}")
+    except Exception as exc:
+        logger.error(f"[WebSocket] Error sending hierarchy snapshot: {exc}")
 
     # Replay snapshot from cache for all citizens
     from orchestration.adapters.ws.snapshot_cache import get_snapshot_cache
