@@ -424,16 +424,49 @@ export function useGraphStream(
                     setCurrentGraphId(graphId);
                   }
 
-                  nodes.forEach((node: any) => {
-                    if (!node) return;
+                  // DEBUG: Log snap state before processing
+                  console.log('[useGraphStream] 🔍 Before forEach:', {
+                    graphId,
+                    snapExists: !!snap,
+                    snapNodesType: typeof snap?.nodes,
+                    snapNodesIsMap: snap?.nodes instanceof Map,
+                    snapNodesSizeBefore: snap?.nodes?.size,
+                    firstNodeSample: nodes[0]
+                  });
+
+                  let processedCount = 0;
+                  let skippedNull = 0;
+                  let skippedNoId = 0;
+
+                  nodes.forEach((node: any, idx: number) => {
+                    if (!node) {
+                      skippedNull++;
+                      return;
+                    }
                     const nodeId = node.id ?? node.node_id;
-                    if (!nodeId) return;
+                    if (!nodeId) {
+                      skippedNoId++;
+                      if (idx < 3) {
+                        console.warn('[useGraphStream] Node missing ID:', {idx, node});
+                      }
+                      return;
+                    }
                     const properties = node.properties ?? {};
                     snap.nodes.set(nodeId, {
                       id: nodeId,
                       name: node.name ?? properties.name,
                       type: node.type ?? node.node_type ?? properties.node_type
                     });
+                    processedCount++;
+                  });
+
+                  console.log('[useGraphStream] 🔍 After forEach:', {
+                    graphId,
+                    processedCount,
+                    skippedNull,
+                    skippedNoId,
+                    snapNodesSizeAfter: snap.nodes.size,
+                    totalReceived: nodes.length
                   });
 
                   links.forEach((link: any) => {
