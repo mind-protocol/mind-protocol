@@ -451,12 +451,8 @@ export function useGraphStream(
                       }
                       return;
                     }
-                    const properties = node.properties ?? {};
-                    snap.nodes.set(nodeId, {
-                      id: nodeId,
-                      name: node.name ?? properties.name,
-                      type: node.type ?? node.node_type ?? properties.node_type
-                    });
+                    // Store ALL node properties from snapshot (including visual properties)
+                    snap.nodes.set(nodeId, node);
                     processedCount++;
                   });
 
