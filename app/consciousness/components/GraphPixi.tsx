@@ -9,6 +9,29 @@ type G = PIXI.Graphics;
 
 const DPR = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
+// Node type to color mapping (hex colors)
+const NODE_TYPE_COLORS: Record<string, number> = {
+  Citizen: 0x22d3ee,       // cyan-400
+  Mechanism: 0xa855f7,     // purple-500
+  Principle: 0x3b82f6,     // blue-500
+  Realization: 0xfbbf24,   // yellow-400
+  Concept: 0x60a5fa,       // blue-400
+  Best_Practice: 0x10b981, // emerald-500
+  Anti_Pattern: 0xef4444,  // red-500
+  Decision: 0x8b5cf6,      // violet-500
+  Code: 0x6366f1,          // indigo-500
+  Documentation: 0x14b8a6, // teal-500
+  Process: 0xf59e0b,       // amber-500
+  Team: 0xec4899,          // pink-500
+  Person: 0xf97316,        // orange-500
+  Memory: 0xc084fc,        // purple-400
+  default: 0x64748b        // slate-500
+};
+
+function getNodeTypeColor(nodeType: string): number {
+  return NODE_TYPE_COLORS[nodeType] || NODE_TYPE_COLORS.default;
+}
+
 // simple, deterministic coord if none provided (no physics yet)
 function hashPos(id: string, w: number, h: number) {
   let h1 = 2166136261;
@@ -120,24 +143,39 @@ export default function GraphPixi() {
       // Working Memory highlighting: bright gold with glow for WM nodes
       const inWM = v2State.workingMemory.has(id);
 
-      // Determine visual style
-      let color = 0x4ea1ff;  // default blue
-      let radius = 5;         // default size
-      let glowRadius = 0;     // no glow
+      // Determine base visual style from node properties
+      const nodeType = n.node_type || 'default';
+      const nodeEnergy = n.energy || n.energy_runtime || 0;
+      const nodeWeight = n.weight || n.log_weight || 0;
+      const traversals = n.traversal_count || 0;
+
+      // Base color by node type
+      let color = getNodeTypeColor(nodeType);
+
+      // Base radius from weight + energy + traversals
+      const baseRadius = 4;
+      const weightFactor = Math.min(Math.max(nodeWeight, 0), 2); // 0-2
+      const energyFactor = Math.min(Math.max(nodeEnergy / 10, 0), 1); // 0-1
+      const traversalFactor = Math.min(Math.max(traversals / 100, 0), 1); // 0-1
+      let radius = baseRadius * (0.8 + 0.4*weightFactor + 0.3*energyFactor + 0.3*traversalFactor);
+      radius = Math.max(3, Math.min(12, radius)); // clamp 3-12px
+
+      let glowRadius = 0;
       let glowAlpha = 0;
 
+      // Override for dynamic states
       if (justActivated) {
         // PULSING: nodes that just flipped get bright pulse
         const pulseProgress = (now - recentFlip.timestamp) / 500; // 0 to 1 over 500ms
         const pulseIntensity = 1 - pulseProgress; // fade out
         color = recentFlip.direction === 'on' ? 0x00FF00 : 0xFF6B6B; // green=on, red=off
-        radius = 5 + pulseIntensity * 3; // grow then shrink
+        radius = radius + pulseIntensity * 3; // grow then shrink
         glowRadius = 12 + pulseIntensity * 8; // expanding glow
         glowAlpha = pulseIntensity * 0.5;
       } else if (inWM) {
-        // WM nodes: bright gold with glow
+        // WM nodes: bright gold with glow (overlay on base color)
         color = 0xFFD700;
-        radius = 8;
+        radius = Math.max(radius, 8); // ensure WM nodes are visible
         glowRadius = 12;
         glowAlpha = 0.3;
       }
