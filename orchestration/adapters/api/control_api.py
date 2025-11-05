@@ -2927,6 +2927,12 @@ async def websocket_endpoint(websocket: WebSocket):
     for cid in all_citizen_ids:
         try:
             snapshot = cache.build_snapshot(cid)
+            node_count = len(snapshot.get("nodes", []))
+            link_count = len(snapshot.get("links", []))
+            subentity_count = len(snapshot.get("subentities", []))
+
+            logger.info(f"[WebSocket] Snapshot for {cid}: {node_count} nodes, {link_count} links, {subentity_count} subentities")
+
             if not snapshot.get("nodes") and not snapshot.get("links"):
                 logger.info(f"[WebSocket] Skipping empty snapshot for citizen {cid}")
                 continue
