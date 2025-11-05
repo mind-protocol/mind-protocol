@@ -7,6 +7,7 @@ EXPOSE 6379
 # Data directory for persistence
 VOLUME /data
 
-# Run FalkorDB with reasonable persistence (saves every 5 min if 10+ changes)
-# This balances data safety with migration performance
-CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "300", "10", "--bind", "0.0.0.0"]
+# Run FalkorDB with aggressive persistence for production
+# - RDB: saves every 60s if ≥1 change
+# - AOF: append-only file for write-ahead logging (maximum durability)
+CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "60", "1", "--appendonly", "yes", "--bind", "0.0.0.0"]

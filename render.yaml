@@ -8,7 +8,7 @@ services:
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile.falkordb
-    dockerCommand: falkordb-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save "900 1"
+    dockerCommand: redis-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save "60 1" --appendonly yes --bind 0.0.0.0
     envVars:
       - key: FALKORDB_CACHE_SIZE
         value: "100"
