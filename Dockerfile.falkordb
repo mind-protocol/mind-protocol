@@ -1,6 +1,6 @@
 # FalkorDB with Persistent Storage for Render
 # Pin to specific version to prevent drift between deploys
-FROM falkordb/falkordb:v4.2.3
+FROM falkordb/falkordb:v4.14.5
 
 # Expose Redis port
 EXPOSE 6379
