@@ -260,7 +260,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
               `}
             >
               <img
-                src={`/citizens/${citizen.id}/avatar.png`}
+                src={`/citizens/${citizen.id.includes('_') ? citizen.id.split('_').pop() : citizen.id}/avatar.png`}
                 alt={`${citizen.name} avatar`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -316,7 +316,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
                   {!msg.isUser && (
                     <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                       <img
-                        src={`/citizens/${msg.citizenId}/avatar.png`}
+                        src={`/citizens/${msg.citizenId.includes('_') ? msg.citizenId.split('_').pop() : msg.citizenId}/avatar.png`}
                         alt={`${msg.citizenName} avatar`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -372,7 +372,7 @@ export function ChatPanel({ onSelectCitizen, activeCitizenId }: ChatPanelProps) 
               <div className="flex gap-3 animate-pulse">
                 <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 opacity-60">
                   <img
-                    src={`/citizens/${selectedCitizenId}/avatar.png`}
+                    src={`/citizens/${selectedCitizenId.includes('_') ? selectedCitizenId.split('_').pop() : selectedCitizenId}/avatar.png`}
                     alt={`${selectedCitizen?.name ?? 'Citizen'} avatar`}
                     className="w-full h-full object-cover"
                   />
