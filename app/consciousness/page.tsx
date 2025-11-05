@@ -75,13 +75,16 @@ export default function ConsciousnessPage() {
   const [lastProcessedActivity, setLastProcessedActivity] = useState<number>(-1);
 
   const currentGraph = useMemo(() => {
-    if (!currentGraphId) return null;
-    return graphStream.graphs.get(currentGraphId) || null;
+    // If no graph selected, use first available graph (fallback)
+    const selectedId = currentGraphId || graphStream.graphs.keys().next().value;
+    if (!selectedId) return null;
+    return graphStream.graphs.get(selectedId) || null;
   }, [graphStream.graphs, currentGraphId]);
 
   const nodes = useMemo<Node[]>(() => {
     if (!currentGraph) return [];
-    return Object.values(currentGraph.nodes).map(node => ({
+    // currentGraph.nodes is a Map, not an object - use Array.from()
+    return Array.from(currentGraph.nodes.values()).map(node => ({
       id: node.id,
       node_id: node.id,
       name: node.name,
@@ -92,7 +95,8 @@ export default function ConsciousnessPage() {
 
   const links = useMemo<Link[]>(() => {
     if (!currentGraph) return [];
-    return Object.values(currentGraph.links).map(link => ({
+    // currentGraph.links is a Map, not an object - use Array.from()
+    return Array.from(currentGraph.links.values()).map(link => ({
       id: link.id,
       source: link.source,
       target: link.target,
