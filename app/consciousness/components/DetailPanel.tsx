@@ -61,25 +61,49 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
 
   if (!selectedNode) return null;
 
-  // Find connected links
+  // Find connected links and deduplicate
   const connectedLinks = links.filter(link => {
     const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
     const targetId = typeof link.target === 'object' ? link.target.id : link.target;
     return sourceId === selectedNode.id || targetId === selectedNode.id;
   });
 
-  const incomingLinks = connectedLinks.filter(link => {
-    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-    return targetId === selectedNode.id;
-  });
+  // Deduplicate: prefer known types over UNKNOWN
+  const deduplicateLinks = (linkList: Link[]) => {
+    const seen = new Map<string, Link>();
+    for (const link of linkList) {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      const key = `${sourceId}→${targetId}`;
 
-  const outgoingLinks = connectedLinks.filter(link => {
-    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-    return sourceId === selectedNode.id;
-  });
+      const existing = seen.get(key);
+      if (!existing || (existing.type === 'UNKNOWN' && link.type !== 'UNKNOWN')) {
+        seen.set(key, link);
+      }
+    }
+    return Array.from(seen.values());
+  };
+
+  const incomingLinks = deduplicateLinks(
+    connectedLinks.filter(link => {
+      const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+      return targetId === selectedNode.id;
+    })
+  );
+
+  const outgoingLinks = deduplicateLinks(
+    connectedLinks.filter(link => {
+      const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+      return sourceId === selectedNode.id;
+    })
+  );
 
   // Use node_type instead of labels[0] (FalkorDB returns labels as string)
-  const nodeType = selectedNode.node_type || 'Node';
+  const rawNodeType = selectedNode.node_type || 'Node';
+  // Format node type: convert to title case if all lowercase
+  const nodeType = rawNodeType === rawNodeType.toLowerCase()
+    ? rawNodeType.charAt(0).toUpperCase() + rawNodeType.slice(1)
+    : rawNodeType;
   const energy = selectedNode.energy || 0;
   const confidence = selectedNode.confidence || 0;
   const traversals = selectedNode.traversal_count || 0;
@@ -156,18 +180,18 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
         {/* Connections */}
         <div>
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-            Connections ({connectedLinks.length})
+            Connections ({incomingLinks.length + outgoingLinks.length})
           </div>
 
           {incomingLinks.length > 0 && (
             <div className="mb-3">
               <div className="text-xs text-gray-500 mb-1">Incoming ({incomingLinks.length})</div>
               <div className="space-y-2">
-                {incomingLinks.slice(0, 10).map((link, i) => {
+                {incomingLinks.slice(0, 10).map((link) => {
                   const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
                   const sourceNode = nodes.find(n => n.id === sourceId);
                   return (
-                    <div key={i} className="text-xs text-gray-300 border-l-2 border-gray-700 pl-2 py-1">
+                    <div key={link.id} className="text-xs text-gray-300 border-l-2 border-gray-700 pl-2 py-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray-500">←</span>
                         <span className="text-consciousness-green font-medium">{link.type}</span>
@@ -189,11 +213,11 @@ export function DetailPanel({ nodes, links }: DetailPanelProps) {
             <div>
               <div className="text-xs text-gray-500 mb-1">Outgoing ({outgoingLinks.length})</div>
               <div className="space-y-2">
-                {outgoingLinks.slice(0, 10).map((link, i) => {
+                {outgoingLinks.slice(0, 10).map((link) => {
                   const targetId = typeof link.target === 'object' ? link.target.id : link.target;
                   const targetNode = nodes.find(n => n.id === targetId);
                   return (
-                    <div key={i} className="text-xs text-gray-300 border-l-2 border-gray-700 pl-2 py-1">
+                    <div key={link.id} className="text-xs text-gray-300 border-l-2 border-gray-700 pl-2 py-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray-500">→</span>
                         <span className="text-consciousness-green font-medium">{link.type}</span>
