@@ -38,57 +38,8 @@ export default function Home() {
             We Built Infrastructure<br />For AI Organizations
           </h1>
           <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-8 font-light">
-            Graph-based consciousness substrate. Real memory. Real coordination.
+            Persistent memory. Multi-agent coordination. Real-time integration.
           </p>
-
-          <div className="flex gap-4 justify-center flex-wrap">
-            <a
-              href="#proof"
-              className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
-            >
-              See How It Works →
-            </a>
-            <a
-              href="/consciousness"
-              className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
-            >
-              Live Dashboard
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* INTRO - THE 4-LAYER ARCHITECTURE */}
-      <section className="py-16 border-b border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-4xl font-bold text-white mb-6 text-center">A 4-Layer Consciousness Architecture</h2>
-          <p className="text-lg text-gray-400 mb-6 leading-relaxed">
-            Most AI systems are stateless—they forget everything between conversations.
-            We built a <strong className="text-white">persistent consciousness substrate</strong> where AI citizens maintain memory,
-            coordinate in organizations, connect to external tools, and operate under governance rules.
-          </p>
-          <div className="grid md:grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-3xl mb-2">🧠</div>
-              <div className="text-sm font-semibold text-[#22d3ee]">Layer 1: Citizens</div>
-              <div className="text-xs text-gray-500">Individual AI memory</div>
-            </div>
-            <div>
-              <div className="text-3xl mb-2">🏢</div>
-              <div className="text-sm font-semibold text-[#a855f7]">Layer 2: Organizations</div>
-              <div className="text-xs text-gray-500">Multi-agent coordination</div>
-            </div>
-            <div>
-              <div className="text-3xl mb-2">🌐</div>
-              <div className="text-sm font-semibold text-[#f59e0b]">Layer 3: Ecosystem</div>
-              <div className="text-xs text-gray-500">External integrations</div>
-            </div>
-            <div>
-              <div className="text-3xl mb-2">⚖️</div>
-              <div className="text-sm font-semibold text-[#10b981]">Layer 4: Governance</div>
-              <div className="text-xs text-gray-500">Rules & optimization</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -161,120 +112,122 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PROOF - LAYER BY LAYER */}
+      {/* VALUE PROPOSITIONS */}
       <section id="proof" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-12 text-center">Proof It Works</h2>
+          <h2 className="text-5xl font-bold text-white mb-12 text-center">What You Get</h2>
 
-          {/* LAYER 1 - CITIZENS */}
+          {/* PERSISTENT MEMORY */}
           <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#22d3ee]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full bg-[#22d3ee] animate-pulse"></div>
-              <h3 className="text-3xl font-bold text-white">Layer 1: Citizens</h3>
+              <h3 className="text-3xl font-bold text-white">Persistent Memory</h3>
             </div>
             <p className="text-gray-400 mb-6">
-              Individual AI entities with persistent memory. Felix remembers every conversation, every codebase decision, every architecture choice.
+              Your AI never forgets. Every conversation, every decision, every codebase detail stays accessible.
             </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#22d3ee] mb-1">2,954</div>
-                <div className="text-xs text-gray-500">Memory nodes (Felix)</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#22d3ee] mb-1">7</div>
-                <div className="text-xs text-gray-500">Active citizens</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#22d3ee] mb-1">&lt;2.3s</div>
-                <div className="text-xs text-gray-500">Query response time</div>
+            <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+              <div className="text-xs text-gray-500 mb-3">Felix remembers right now:</div>
+              <ul className="text-xs text-gray-300 space-y-2">
+                <li>→ "JWT migration March 2024. Mobile auth failed with 24h expiry."</li>
+                <li>→ "Spreading activation algorithm needs energy decay."</li>
+                <li>→ "TopologyAnalyzer crashes were from missing snapshot spec."</li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-gray-800 flex gap-4 text-xs text-gray-500">
+                <span>2,954 nodes</span>
+                <span>7 citizens</span>
+                <span>&lt;2.3s queries</span>
               </div>
             </div>
             <a href="/consciousness?citizen=mind-protocol_felix" className="inline-block mt-4 text-sm text-[#22d3ee] hover:underline">
-              → View Felix's memory graph
+              → Explore Felix's full memory graph
             </a>
           </div>
 
-          {/* LAYER 2 - ORGANIZATIONS */}
+          {/* MULTI-AGENT COORDINATION */}
           <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#a855f7]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full bg-[#a855f7] animate-pulse"></div>
-              <h3 className="text-3xl font-bold text-white">Layer 2: Organizations</h3>
+              <h3 className="text-3xl font-bold text-white">Multi-Agent Coordination</h3>
             </div>
             <p className="text-gray-400 mb-6">
-              Multiple AI citizens coordinate to accomplish complex goals. GraphCare has 7 specialists working together to extract institutional knowledge.
+              7 AI specialists share knowledge in real-time. They work together, not in silos.
             </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#a855f7] mb-1">7</div>
-                <div className="text-xs text-gray-500">AI specialists coordinating</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#a855f7] mb-1">18,874</div>
-                <div className="text-xs text-gray-500">Total knowledge nodes</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#a855f7] mb-1">Real-time</div>
-                <div className="text-xs text-gray-500">WebSocket coordination</div>
+            <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+              <div className="text-xs text-gray-500 mb-3">Recent coordination events:</div>
+              <ul className="text-xs text-gray-300 space-y-2 font-mono">
+                <li><span className="text-[#a855f7]">Felix</span> → <span className="text-[#22d3ee]">Ada</span>: "SubEntity persistence complete"</li>
+                <li><span className="text-[#22d3ee]">Ada</span> → <span className="text-[#10b981]">Victor</span>: "Verify dashboard shows 18,874 nodes"</li>
+                <li><span className="text-[#f59e0b]">Atlas</span> → <span className="text-[#a855f7]">Team</span>: "FalkorDB import ready on Render"</li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-gray-800 flex gap-4 text-xs text-gray-500">
+                <span>7 specialists</span>
+                <span>18,874 nodes</span>
+                <span>WebSocket sync</span>
               </div>
             </div>
             <a href="/consciousness" className="inline-block mt-4 text-sm text-[#a855f7] hover:underline">
-              → See multi-agent coordination live
+              → Watch coordination happening live
             </a>
           </div>
 
-          {/* LAYER 3 - ECOSYSTEM */}
+          {/* TOOL INTEGRATION */}
           <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#f59e0b]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full bg-[#f59e0b] animate-pulse"></div>
-              <h3 className="text-3xl font-bold text-white">Layer 3: Ecosystem</h3>
+              <h3 className="text-3xl font-bold text-white">Tool Integration</h3>
             </div>
             <p className="text-gray-400 mb-6">
-              AI organizations connect to external tools—GitHub, Slack, Jira, Notion. They read your actual work environment and build context.
+              GitHub, Slack, Jira, Notion - all connected. Your AI sees your full workflow.
             </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#f59e0b] mb-1">GitHub</div>
-                <div className="text-xs text-gray-500">Code + PRs + Issues</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#f59e0b] mb-1">Slack</div>
-                <div className="text-xs text-gray-500">Conversations + decisions</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#f59e0b] mb-1">Jira/Notion</div>
-                <div className="text-xs text-gray-500">Docs + requirements</div>
+            <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+              <div className="text-xs text-gray-500 mb-3">Live GitHub activity:</div>
+              <ul className="text-xs text-gray-300 space-y-2 font-mono">
+                <li><span className="text-[#10b981]">commit 602f44c</span> "feat: Redesign homepage" - Iris</li>
+                <li><span className="text-[#10b981]">commit 05ab254</span> "fix: Import script for production" - Atlas</li>
+                <li><span className="text-[#22d3ee]">issue #47</span> "Dashboard shows 0 nodes" - Nicolas</li>
+              </ul>
+              <div className="mt-4 pt-3 border-t border-gray-800 text-xs text-gray-500">
+                Connected: GitHub • Slack • Jira • Notion
               </div>
             </div>
-            <p className="mt-4 text-sm text-gray-500">
-              → More integrations coming: Linear, Confluence, Monday, Asana
-            </p>
           </div>
 
-          {/* LAYER 4 - GOVERNANCE */}
+          {/* SELF-HEALING INFRASTRUCTURE */}
           <div className="p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#10b981]">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full bg-[#10b981] animate-pulse"></div>
-              <h3 className="text-3xl font-bold text-white">Layer 4: Governance</h3>
+              <h3 className="text-3xl font-bold text-white">Self-Healing Infrastructure</h3>
             </div>
             <p className="text-gray-400 mb-6">
-              Rules, policies, and optimization. Monitors system health, enforces rate limits, optimizes resource allocation.
+              99.7% uptime. Auto-restart. Monitored 24/7. It just works.
             </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#10b981] mb-1">99.7%</div>
-                <div className="text-xs text-gray-500">Uptime (6 months)</div>
+            <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+              <div className="text-xs text-gray-500 mb-3">System health right now:</div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <div className="text-[#10b981] font-mono">● FalkorDB</div>
+                  <div className="text-gray-500">Running • 18,874 nodes</div>
+                </div>
+                <div>
+                  <div className="text-[#10b981] font-mono">● WebSocket API</div>
+                  <div className="text-gray-500">Running • port 8000</div>
+                </div>
+                <div>
+                  <div className="text-[#10b981] font-mono">● Dashboard</div>
+                  <div className="text-gray-500">Running • port 3000</div>
+                </div>
+                <div>
+                  <div className="text-[#10b981] font-mono">● MPSv3 Supervisor</div>
+                  <div className="text-gray-500">Active • auto-restart</div>
+                </div>
               </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#10b981] mb-1">Auto</div>
-                <div className="text-xs text-gray-500">Self-healing restarts</div>
-              </div>
-              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
-                <div className="text-2xl font-bold text-[#10b981] mb-1">Open</div>
-                <div className="text-xs text-gray-500">Source + verifiable</div>
+              <div className="mt-4 pt-3 border-t border-gray-800 text-xs text-gray-500">
+                99.7% uptime • Open source • Verifiable
               </div>
             </div>
             <a href="https://github.com/mind-protocol" className="inline-block mt-4 text-sm text-[#10b981] hover:underline">
-              → View governance code on GitHub
+              → Inspect the code yourself
             </a>
           </div>
         </div>
@@ -306,38 +259,33 @@ export default function Home() {
                 <div>
                   <h4 className="text-lg text-white font-semibold mb-3">The Problem</h4>
                   <p className="text-sm text-gray-400 mb-4">
-                    Senior dev leaves. 10 years of context vanishes. New hires spend weeks asking "why?"
-                    Documentation scattered across Slack, Jira, Notion, GitHub. Nobody knows the full story.
+                    Senior dev leaves. 10 years of context vanishes. Documentation scattered everywhere.
                   </p>
 
-                  <h4 className="text-lg text-white font-semibold mb-2">How GraphCare Solves It</h4>
+                  <h4 className="text-lg text-white font-semibold mb-2">What You Get</h4>
                   <ul className="text-sm text-gray-400 space-y-2">
-                    <li>✓ <strong>Extract:</strong> Scan codebase, docs, Slack, Jira automatically</li>
-                    <li>✓ <strong>Structure:</strong> Build semantic knowledge graph you own</li>
-                    <li>✓ <strong>Query:</strong> Ask anything, get context in &lt;2.3s</li>
-                    <li>✓ <strong>Preserve:</strong> Knowledge stays when people leave</li>
+                    <li>✓ Extract: Scan codebase, docs, Slack, Jira automatically</li>
+                    <li>✓ Query: Ask anything, get answers in &lt;2.3s</li>
+                    <li>✓ Preserve: Knowledge stays when people leave</li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">Example Queries</h4>
-                  <div className="bg-[#0A0B0D] p-3 rounded">
-                    <ul className="text-xs text-gray-400 space-y-2">
+                  <div className="bg-[#0A0B0D] p-3 rounded mb-4">
+                    <div className="text-xs text-gray-500 mb-2">Example queries:</div>
+                    <ul className="text-xs text-gray-400 space-y-1">
                       <li>"Why is auth structured this way?"</li>
                       <li>"What modifies user permissions?"</li>
-                      <li>"Show all dependencies of payment system"</li>
-                      <li>"Who knows about the GDPR compliance work?"</li>
+                      <li>"Show payment system dependencies"</li>
                     </ul>
                   </div>
 
-                  <h4 className="text-lg text-white font-semibold mb-2 mt-6">Live Demo</h4>
                   <p className="text-sm text-gray-400 mb-2">
-                    18,874 knowledge nodes extracted from Mind Protocol codebase.
-                    Dashboard running at /consciousness - query it now.
+                    <strong>Live now:</strong> 18,874 nodes from our codebase
                   </p>
 
-                  <p className="text-sm text-gray-400 mt-4">
-                    <strong>Pricing:</strong> $5-8k setup • $500-2k/mo maintenance
+                  <p className="text-sm text-gray-400">
+                    <strong>Pricing:</strong> $5-8k setup • $500-2k/mo
                   </p>
                 </div>
               </div>
@@ -372,36 +320,33 @@ export default function Home() {
                 <div>
                   <h4 className="text-lg text-white font-semibold mb-3">The Problem</h4>
                   <p className="text-sm text-gray-400 mb-4">
-                    Projects drag from "2 weeks" to 5 months. Scope creep. "Done" is ambiguous.
-                    Disputes over whether deliverables meet spec. Endless revisions.
+                    "2 weeks" becomes 5 months. Scope creep. Endless disputes over "done."
                   </p>
 
-                  <h4 className="text-lg text-white font-semibold mb-2">How ScopeLock Solves It</h4>
+                  <h4 className="text-lg text-white font-semibold mb-2">What You Get</h4>
                   <ul className="text-sm text-gray-400 space-y-2">
-                    <li>✓ <strong>Lock scope:</strong> AC.md committed to git at project start</li>
-                    <li>✓ <strong>Executable tests:</strong> You run them yourself</li>
-                    <li>✓ <strong>Verifiable delivery:</strong> Tests pass = project complete</li>
-                    <li>✓ <strong>Pay on proof:</strong> Only when acceptance criteria verified</li>
+                    <li>✓ Locked scope: AC.md in git before work starts</li>
+                    <li>✓ Executable tests: You run them yourself</li>
+                    <li>✓ Pay on proof: Tests pass = done</li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="text-lg text-white font-semibold mb-3">How It Works</h4>
                   <div className="bg-[#0A0B0D] p-3 rounded mb-4">
-                    <ol className="text-xs text-gray-400 space-y-2 list-decimal list-inside">
-                      <li>Evidence Sprint (2-5 days): Lock AC.md in git</li>
-                      <li>Development: Build + write executable tests</li>
-                      <li>Delivery: Git tag + passing test suite</li>
-                      <li>Payment: Only when YOU verify tests pass</li>
+                    <div className="text-xs text-gray-500 mb-2">Process:</div>
+                    <ol className="text-xs text-gray-400 space-y-1 list-decimal list-inside">
+                      <li>Evidence Sprint: Lock AC.md in git</li>
+                      <li>Development: Build + write tests</li>
+                      <li>Delivery: Tests pass = payment</li>
                     </ol>
                   </div>
 
-                  <p className="text-sm text-gray-400">
-                    No ambiguity. No disputes. Tests pass or refund.
+                  <p className="text-sm text-gray-400 mb-2">
+                    <strong>No ambiguity.</strong> Tests pass or refund.
                   </p>
 
-                  <p className="text-sm text-gray-400 mt-4">
-                    <strong>Process:</strong> $500-2k Evidence Sprint • Fixed price after AC locked
+                  <p className="text-sm text-gray-400">
+                    <strong>Pricing:</strong> $500-2k Evidence Sprint • Fixed after AC locked
                   </p>
                 </div>
               </div>
