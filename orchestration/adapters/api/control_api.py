@@ -1420,8 +1420,6 @@ async def get_graph_data(graph_type: str, graph_id: str):
         MATCH (e:Subentity)
         RETURN
             e.id AS entity_id,
-            e.role_or_topic AS name,
-            e.entity_kind AS kind,
             e.energy_runtime AS energy,
             e.threshold_runtime AS theta,
             e.activation_level_runtime AS activation_level,
@@ -3062,3 +3060,4 @@ async def websocket_endpoint(websocket: WebSocket):
         # Cleanup docs view subscriptions
         remove_subscriber(websocket)
         await websocket_manager.unregister_connection(conn_id=conn_id)
+# Force restart: 2025-11-05_04:11:23
