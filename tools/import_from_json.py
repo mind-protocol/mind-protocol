@@ -144,8 +144,14 @@ def import_graph(db, graph_data):
 
             for rel in batch:
                 rel_type = rel['type']
-                source_id = rel['source_id']
-                target_id = rel['target_id']
+                # Extract node names from source/target objects
+                source_name = rel.get('source', {}).get('properties', {}).get('name')
+                target_name = rel.get('target', {}).get('properties', {}).get('name')
+
+                if not source_name or not target_name:
+                    # Skip relationships with missing source/target
+                    continue
+
                 props = rel.get('properties', {})
 
                 # Build property string
@@ -164,10 +170,10 @@ def import_graph(db, graph_data):
                 props_str = '{' + ', '.join(props_parts) + '}' if props_parts else ''
 
                 # Create relationship query
-                # Match nodes by ID property, create relationship
+                # Match nodes by name property, create relationship
                 query = f"""
-                MATCH (a {{id: '{escape_cypher_string(source_id)}'}})
-                MATCH (b {{id: '{escape_cypher_string(target_id)}'}})
+                MATCH (a {{name: '{escape_cypher_string(source_name)}'}})
+                MATCH (b {{name: '{escape_cypher_string(target_name)}'}})
                 CREATE (a)-[r:{rel_type} {props_str}]->(b)
                 """
                 batch_queries.append(query.strip())
