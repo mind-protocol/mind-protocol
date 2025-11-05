@@ -353,13 +353,13 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
     const outerSim = d3.forceSimulation(clusterNodes as any)
       .force('link', d3.forceLink(interClusterLinks)
         .id((d: any) => d.id)
-        .distance(200)         // INCREASED: 40 → 200 (much more space between clusters)
-        .strength((l: any) => 0.8 + 0.2 * Math.min(l.weight / 5, 1)))
+        .distance(300)         // INCREASED: 200 → 300 (more space for visibility)
+        .strength((l: any) => 0.6 + 0.3 * Math.min(l.weight / 5, 1)))
       .force('charge', d3.forceManyBody()
-        .strength(-150)        // FIXED: 5 → -150 (repulsion, not attraction!)
-        .distanceMax(400))     // INCREASED: 120 → 400 (wider repulsion range)
+        .strength(-200)        // INCREASED: -150 → -200 (stronger repulsion for spacing)
+        .distanceMax(600))     // INCREASED: 400 → 600 (wider repulsion range)
       .force('collide', d3.forceCollide()
-        .radius((d: any) => 30 + 4 * Math.sqrt(d.size)))  // INCREASED: larger collision radius
+        .radius((d: any) => 40 + 6 * Math.sqrt(d.size)))  // INCREASED: larger collision radius
       .force('center', d3.forceCenter(width / 2, height / 2))
       .alphaDecay(0.05)
       .stop();
@@ -422,14 +422,14 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       return d3.forceSimulation(members as any)
         .force('link', d3.forceLink(intraLinks)
           .id((d: any) => d.id)
-          .distance(100)         // INCREASED: 30 → 100 (links now visible!)
-          .strength(0.3))        // REDUCED: 0.4 → 0.3 (softer link constraint)
+          .distance(150)         // INCREASED: 100 → 150 (longer links for clarity)
+          .strength(0.2))        // REDUCED: 0.3 → 0.2 (even softer link constraint)
         .force('charge', d3.forceManyBody()
-          .strength(-80)         // INCREASED: -14 → -80 (much stronger repulsion)
-          .distanceMin(20)       // INCREASED: 8 → 20 (prevent node overlap)
-          .distanceMax(200))     // INCREASED: 80 → 200 (wider repulsion range)
+          .strength(-120)        // INCREASED: -80 → -120 (stronger repulsion for spacing)
+          .distanceMin(30)       // INCREASED: 20 → 30 (more space between nodes)
+          .distanceMax(300))     // INCREASED: 200 → 300 (wider repulsion range)
         .force('collide', d3.forceCollide()
-          .radius(nodeR * 2 + pad))  // INCREASED: collision radius doubled
+          .radius(nodeR * 2.5 + pad))  // INCREASED: collision radius for more spacing
         .force('x', d3.forceX(anchor.x).strength(0.15))  // REDUCED: 0.2 → 0.15 (looser anchoring)
         .force('y', d3.forceY(anchor.y).strength(0.15))  // REDUCED: 0.2 → 0.15 (looser anchoring)
         .alpha(1)
@@ -757,6 +757,9 @@ export function GraphCanvas({ nodes, links, operations, subentities = [] }: Grap
       nodeGroups
         .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     };
+
+    // Initialize link and node positions after outer simulation converges
+    tickAll();
 
     // Use requestAnimationFrame for smooth ticking
     let rafId: number;
@@ -1207,8 +1210,8 @@ function getValenceColor(valence: number | undefined): string {
 function getLinkThickness(link: Link): number {
   // Use link weight or strength for thickness
   const weight = link.weight || link.strength || 0.5;
-  // Range: 6px (min) to 20px (max weight) - MUCH thicker for visibility (was 3-12px)
-  return Math.max(6, 6 + weight * 14);
+  // Range: 2px (min) to 8px (max weight) - Thinner for better visibility at scale
+  return Math.max(2, 2 + weight * 6);
 }
 
 function isNewLink(link: Link): boolean {
