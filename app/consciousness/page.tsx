@@ -31,6 +31,7 @@ const SubEntityClusterOverlay = dynamic(() => import('@/app/consciousness/compon
 const EnergyFlowParticles = dynamic(() => import('@/app/consciousness/components/EnergyFlowParticles').then(mod => ({ default: mod.EnergyFlowParticles })), { ssr: false });
 const ActivationBubbles = dynamic(() => import('@/app/consciousness/components/ActivationBubbles').then(mod => ({ default: mod.ActivationBubbles })), { ssr: false });
 const WorkingMemoryPulse = dynamic(() => import('@/app/consciousness/components/WorkingMemoryPulse').then(mod => ({ default: mod.WorkingMemoryPulse })), { ssr: false });
+const ConsciousnessMetrics = dynamic(() => import('./components/ConsciousnessMetrics'), { ssr: false });
 
 
 const MAX_OPERATIONS = 50;
@@ -406,6 +407,8 @@ export default function ConsciousnessPage() {
         workingMemory={v2State.workingMemory}
         nodes={nodes}
       />
+
+      <ConsciousnessMetrics />
 
       <DetailPanel nodes={nodes} links={links} />
 
