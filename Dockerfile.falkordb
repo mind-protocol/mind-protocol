@@ -1,5 +1,6 @@
 # FalkorDB with Persistent Storage for Render
-FROM falkordb/falkordb:latest
+# Pin to specific version to prevent drift between deploys
+FROM falkordb/falkordb:v4.2.3
 
 # Expose Redis port
 EXPOSE 6379
@@ -7,7 +8,21 @@ EXPOSE 6379
 # Data directory for persistence
 VOLUME /data
 
-# Run FalkorDB with aggressive persistence for production
-# - RDB: saves every 60s if ≥1 change
-# - AOF: append-only file for write-ahead logging (maximum durability)
-CMD ["redis-server", "--loadmodule", "/FalkorDB/bin/linux-x64-release/src/falkordb.so", "--dir", "/data", "--save", "60", "1", "--appendonly", "yes", "--bind", "0.0.0.0"]
+# Run FalkorDB with production-grade persistence
+# - RDB: Fast loads, multiple save intervals
+# - AOF: Durability with RDB preamble for fast startup
+# - Disabled: FLUSHALL/FLUSHDB (prevent accidental wipes)
+CMD ["redis-server", \
+     "--loadmodule", "/var/lib/falkordb/falkordb.so", \
+     "--dir", "/data", \
+     "--dbfilename", "dump.rdb", \
+     "--appendonly", "yes", \
+     "--appendfilename", "appendonly.aof", \
+     "--appendfsync", "everysec", \
+     "--aof-use-rdb-preamble", "yes", \
+     "--save", "60", "1", \
+     "--save", "300", "10", \
+     "--save", "900", "1", \
+     "--rename-command", "FLUSHALL", "", \
+     "--rename-command", "FLUSHDB", "", \
+     "--bind", "0.0.0.0"]

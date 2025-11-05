@@ -8,7 +8,8 @@ services:
     runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile.falkordb
-    dockerCommand: redis-server --loadmodule /FalkorDB/bin/linux-x64-release/src/falkordb.so --dir /data --save "60 1" --appendonly yes --bind 0.0.0.0
+    # Command matches Dockerfile for consistency (RDB + AOF with preamble)
+    dockerCommand: redis-server --loadmodule /var/lib/falkordb/falkordb.so --dir /data --dbfilename dump.rdb --appendonly yes --appendfilename appendonly.aof --appendfsync everysec --aof-use-rdb-preamble yes --save 60 1 --save 300 10 --save 900 1 --rename-command FLUSHALL "" --rename-command FLUSHDB "" --bind 0.0.0.0
     envVars:
       - key: FALKORDB_CACHE_SIZE
         value: "100"
