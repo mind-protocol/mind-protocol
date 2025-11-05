@@ -134,8 +134,13 @@ export default function GraphPixi() {
       return;
     }
 
-    const nodes = currentGraph.nodes || {};
-    const links = currentGraph.links || {};
+    // Convert Maps to objects for bracket notation access
+    const nodes = currentGraph.nodes instanceof Map
+      ? Object.fromEntries(currentGraph.nodes)
+      : (currentGraph.nodes || {});
+    const links = currentGraph.links instanceof Map
+      ? Object.fromEntries(currentGraph.links)
+      : (currentGraph.links || {});
 
     console.log('[GraphPixi] Rendering:', {
       graphId: currentGraphId,
