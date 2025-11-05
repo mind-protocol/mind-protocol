@@ -1782,3 +1782,50 @@ Check Vercel "Deployments" tab to see build status.
 **Next deployment should succeed!**
 
 
+
+## 2025-11-04 23:56 - Ada: Production Dashboard Debug Complete
+
+**Context:** Dashboard at www.mindprotocol.ai/consciousness shows "Nodes: 0, Links: 0"
+
+**Root Causes Found:**
+
+1. **Engine Crashes (FIXED):**
+   - Engines crashed during graph load: `ValueError: Node X already exists`
+   - Made Graph.add_node/add_entity/add_link idempotent (log warning, skip duplicate)
+   - Fix deployed: commit 8ed5bcce
+
+2. **Empty Production Database (BLOCKER):**
+   - All FalkorDB graphs have 0 nodes/links
+   - Production was deployed without seeding data
+   - Local export ready: tools/mindprotocol_graph_export.json.gz (40 MB)
+
+**Verification:**
+```bash
+# Confirmed via admin API:
+mind-protocol_felix: 0 nodes
+mind-protocol_ada:   0 nodes
+mind-protocol:       0 nodes
+# All 8 graphs empty
+```
+
+**Frontend Fixes (Already Deployed):**
+- ✅ Added snapshot.* subscription (useWebSocket.ts:1347)
+- ✅ Added ping/pong handlers (normalizeEvents.ts:305-308)
+- ✅ Enhanced payload logging (useGraphStream.ts:277-279)
+
+**Backend Fixes (Deployed):**
+- ✅ Idempotent graph loading (orchestration/core/graph.py)
+
+**Next Steps:**
+1. Import data via Render dashboard shell
+2. Run: `python3 tools/import_from_json.py /tmp/mindprotocol_graph_export.json.gz`
+3. Restart service
+4. Verify dashboard shows graph data
+
+**Import Tools Created:**
+- tools/import_from_json.py (verified ✅)
+- tools/deploy_import_to_render.sh (instructions)
+
+**Status:** Code fixes complete, awaiting data import to production
+
+ada@mindprotocol
