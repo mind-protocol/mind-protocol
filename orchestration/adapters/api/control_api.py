@@ -2874,6 +2874,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "type": "snapshot.begin@1.0",
                 "id": f"snap_begin_{conn_id}_{cid}",
                 "ts": datetime.now(timezone.utc).isoformat(),
+                "spec": {"name": "consciousness.v2", "rev": "2.0.0"},
                 "provenance": {"scope": "personal", "citizen_id": cid},
                 "payload": {
                     "citizen_id": cid,
@@ -2888,6 +2889,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "type": "snapshot.chunk@1.0",
                     "id": f"snap_chunk_{conn_id}_{cid}_{chunk.get('idx', 0)}",
                     "ts": datetime.now(timezone.utc).isoformat(),
+                    "spec": {"name": "consciousness.v2", "rev": "2.0.0"},
                     "provenance": {"scope": "personal", "citizen_id": cid},
                     "payload": {
                         "citizen_id": cid,
@@ -2901,12 +2903,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json(envelope)
                 if chunk.get("eof", True):
                     break
-            
+
             # Send snapshot.end
             await websocket.send_json({
                 "type": "snapshot.end@1.0",
                 "id": f"snap_end_{conn_id}_{cid}",
                 "ts": datetime.now(timezone.utc).isoformat(),
+                "spec": {"name": "consciousness.v2", "rev": "2.0.0"},
                 "provenance": {"scope": "personal", "citizen_id": cid},
                 "payload": {"citizen_id": cid}
             })
