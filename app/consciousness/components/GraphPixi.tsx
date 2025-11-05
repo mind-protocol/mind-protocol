@@ -82,6 +82,8 @@ export default function GraphPixi() {
   const layerLinks = useRef<PIXI.Container | null>(null);
   const spritePool = useRef<Map<string, G>>(new Map());
   const linePool = useRef<Map<string, G>>(new Map());
+  const rafIdRef = useRef<number | null>(null);
+  const lastRenderRef = useRef<number>(0);
 
   // mount once
   useEffect(() => {
@@ -120,34 +122,55 @@ export default function GraphPixi() {
     };
   }, []);
 
-  // apply data on graph changes (no full clear; pool/diff instead)
+  // apply data on graph changes (throttled via RAF to prevent flickering)
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
-    const W = app.renderer.width / DPR;
-    const H = app.renderer.height / DPR;
 
-    // Get current graph data
-    const currentGraph = currentGraphId ? graphs.get(currentGraphId) : null;
-    if (!currentGraph) {
-      console.log('[GraphPixi] No current graph');
-      return;
+    // Cancel any pending RAF
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
     }
 
-    // Convert Maps to objects for bracket notation access
-    const nodes = currentGraph.nodes instanceof Map
-      ? Object.fromEntries(currentGraph.nodes)
-      : (currentGraph.nodes || {});
-    const links = currentGraph.links instanceof Map
-      ? Object.fromEntries(currentGraph.links)
-      : (currentGraph.links || {});
-
-    console.log('[GraphPixi] Rendering:', {
-      graphId: currentGraphId,
-      nodeCount: Object.keys(nodes).length,
-      linkCount: Object.keys(links).length,
-      canvasSize: { W, H }
+    // Schedule render on next frame
+    rafIdRef.current = requestAnimationFrame((timestamp) => {
+      // Throttle to max 60fps (16ms between renders)
+      if (timestamp - lastRenderRef.current < 16) {
+        // Schedule for next frame
+        rafIdRef.current = requestAnimationFrame(() => render(timestamp));
+        return;
+      }
+      lastRenderRef.current = timestamp;
+      render(timestamp);
     });
+
+    function render(timestamp: number) {
+      const app = appRef.current;
+      if (!app) return;
+      const W = app.renderer.width / DPR;
+      const H = app.renderer.height / DPR;
+
+      // Get current graph data
+      const currentGraph = currentGraphId ? graphs.get(currentGraphId) : null;
+      if (!currentGraph) {
+        console.log('[GraphPixi] No current graph');
+        return;
+      }
+
+      // Convert Maps to objects for bracket notation access
+      const nodes = currentGraph.nodes instanceof Map
+        ? Object.fromEntries(currentGraph.nodes)
+        : (currentGraph.nodes || {});
+      const links = currentGraph.links instanceof Map
+        ? Object.fromEntries(currentGraph.links)
+        : (currentGraph.links || {});
+
+      console.log('[GraphPixi] Rendering:', {
+        graphId: currentGraphId,
+        nodeCount: Object.keys(nodes).length,
+        linkCount: Object.keys(links).length,
+        canvasSize: { W, H }
+      });
 
     // ---- nodes ----
     const usedNodes = new Set<string>();
@@ -307,7 +330,16 @@ export default function GraphPixi() {
         linePool.current.delete(id);
       }
     }
-  }, [graphs, currentGraphId]);
+    } // end render()
+
+    // Cleanup: cancel RAF on unmount or dependency change
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [graphs, currentGraphId, v2State]);
 
   return (
     <div

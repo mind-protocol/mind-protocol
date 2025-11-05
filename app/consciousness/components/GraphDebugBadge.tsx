@@ -6,8 +6,12 @@ export default function GraphDebugBadge() {
   const { graphs, currentGraphId, connected, error } = useGraphStream();
 
   const currentGraph = currentGraphId ? graphs.get(currentGraphId) : null;
-  const nodeCount = currentGraph ? Object.keys(currentGraph.nodes || {}).length : 0;
-  const linkCount = currentGraph ? Object.keys(currentGraph.links || {}).length : 0;
+  const nodeCount = currentGraph?.nodes instanceof Map
+    ? currentGraph.nodes.size
+    : Object.keys(currentGraph?.nodes || {}).length;
+  const linkCount = currentGraph?.links instanceof Map
+    ? currentGraph.links.size
+    : Object.keys(currentGraph?.links || {}).length;
 
   return (
     <div
