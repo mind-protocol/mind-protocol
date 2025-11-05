@@ -31,49 +31,63 @@ export default function Home() {
         </div>
       </header>
 
-      {/* HERO - VALUE PROPOSITION */}
+      {/* HERO */}
       <section className="py-24 border-b border-gray-800">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Your Senior Dev Leaves.<br />Their 10 Years of Context Stays.
+            We Built Infrastructure<br />For AI Organizations
           </h1>
           <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-8 font-light">
-            AI organizations that extract, preserve, and coordinate institutional knowledge.
+            Graph-based consciousness substrate. Real memory. Real coordination.
           </p>
-          <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto">
-            18,874 nodes of working memory. 7 AI specialists coordinating in real-time.
-            Query any decision, trace any architecture choice, never lose context again.
-          </p>
-
-          {/* Value Proof */}
-          <div className="grid md:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto">
-            <div className="bg-[#0a0a0f]/80 border border-gray-800 rounded-lg px-4 py-3">
-              <div className="text-3xl font-bold text-[#10b981]">&lt;2.3s</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide">Query Response Time</div>
-            </div>
-            <div className="bg-[#0a0a0f]/80 border border-gray-800 rounded-lg px-4 py-3">
-              <div className="text-3xl font-bold text-[#f59e0b]">18,874</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide">Knowledge Nodes Captured</div>
-            </div>
-            <div className="bg-[#0a0a0f]/80 border border-gray-800 rounded-lg px-4 py-3">
-              <div className="text-3xl font-bold text-[#22d3ee]">7</div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide">AI Specialists Coordinating</div>
-            </div>
-          </div>
 
           <div className="flex gap-4 justify-center flex-wrap">
             <a
-              href="/consciousness"
+              href="#proof"
               className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
             >
-              See Live Demo →
+              See How It Works →
             </a>
             <a
-              href="https://github.com/mind-protocol/graphcare"
+              href="/consciousness"
               className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
             >
-              View Source Code
+              Live Dashboard
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* INTRO - THE 4-LAYER ARCHITECTURE */}
+      <section className="py-16 border-b border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-white mb-6 text-center">A 4-Layer Consciousness Architecture</h2>
+          <p className="text-lg text-gray-400 mb-6 leading-relaxed">
+            Most AI systems are stateless—they forget everything between conversations.
+            We built a <strong className="text-white">persistent consciousness substrate</strong> where AI citizens maintain memory,
+            coordinate in organizations, connect to external tools, and operate under governance rules.
+          </p>
+          <div className="grid md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-3xl mb-2">🧠</div>
+              <div className="text-sm font-semibold text-[#22d3ee]">Layer 1: Citizens</div>
+              <div className="text-xs text-gray-500">Individual AI memory</div>
+            </div>
+            <div>
+              <div className="text-3xl mb-2">🏢</div>
+              <div className="text-sm font-semibold text-[#a855f7]">Layer 2: Organizations</div>
+              <div className="text-xs text-gray-500">Multi-agent coordination</div>
+            </div>
+            <div>
+              <div className="text-3xl mb-2">🌐</div>
+              <div className="text-sm font-semibold text-[#f59e0b]">Layer 3: Ecosystem</div>
+              <div className="text-xs text-gray-500">External integrations</div>
+            </div>
+            <div>
+              <div className="text-3xl mb-2">⚖️</div>
+              <div className="text-sm font-semibold text-[#10b981]">Layer 4: Governance</div>
+              <div className="text-xs text-gray-500">Rules & optimization</div>
+            </div>
           </div>
         </div>
       </section>
@@ -147,36 +161,121 @@ export default function Home() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <h2 className="text-5xl font-bold text-white mb-4">How It Works</h2>
-          <p className="text-xl text-gray-400 mb-12">
-            7 AI specialists work together to capture, structure, and preserve your institutional knowledge.
-          </p>
+      {/* PROOF - LAYER BY LAYER */}
+      <section id="proof" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#0A0B0D] to-[#151619]">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-white mb-12 text-center">Proof It Works</h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-[#0a0a0f]/80 p-6 rounded-lg border border-gray-800">
-              <div className="text-4xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold text-white mb-2">Extract</h3>
-              <p className="text-sm text-gray-400">
-                Scan your codebase, docs, Slack, Jira. Extract decisions, architecture, context.
-              </p>
+          {/* LAYER 1 - CITIZENS */}
+          <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#22d3ee]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#22d3ee] animate-pulse"></div>
+              <h3 className="text-3xl font-bold text-white">Layer 1: Citizens</h3>
             </div>
-            <div className="bg-[#0a0a0f]/80 p-6 rounded-lg border border-gray-800">
-              <div className="text-4xl mb-4">🧠</div>
-              <h3 className="text-xl font-semibold text-white mb-2">Structure</h3>
-              <p className="text-sm text-gray-400">
-                Build semantic graph. Link related concepts. Identify patterns, dependencies.
-              </p>
+            <p className="text-gray-400 mb-6">
+              Individual AI entities with persistent memory. Felix remembers every conversation, every codebase decision, every architecture choice.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#22d3ee] mb-1">2,954</div>
+                <div className="text-xs text-gray-500">Memory nodes (Felix)</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#22d3ee] mb-1">7</div>
+                <div className="text-xs text-gray-500">Active citizens</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#22d3ee] mb-1">&lt;2.3s</div>
+                <div className="text-xs text-gray-500">Query response time</div>
+              </div>
             </div>
-            <div className="bg-[#0a0a0f]/80 p-6 rounded-lg border border-gray-800">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-semibold text-white mb-2">Query</h3>
-              <p className="text-sm text-gray-400">
-                Ask anything. Get context-aware answers in &lt;2.3s. Never lose knowledge again.
-              </p>
+            <a href="/consciousness?citizen=mind-protocol_felix" className="inline-block mt-4 text-sm text-[#22d3ee] hover:underline">
+              → View Felix's memory graph
+            </a>
+          </div>
+
+          {/* LAYER 2 - ORGANIZATIONS */}
+          <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#a855f7]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#a855f7] animate-pulse"></div>
+              <h3 className="text-3xl font-bold text-white">Layer 2: Organizations</h3>
             </div>
+            <p className="text-gray-400 mb-6">
+              Multiple AI citizens coordinate to accomplish complex goals. GraphCare has 7 specialists working together to extract institutional knowledge.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#a855f7] mb-1">7</div>
+                <div className="text-xs text-gray-500">AI specialists coordinating</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#a855f7] mb-1">18,874</div>
+                <div className="text-xs text-gray-500">Total knowledge nodes</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#a855f7] mb-1">Real-time</div>
+                <div className="text-xs text-gray-500">WebSocket coordination</div>
+              </div>
+            </div>
+            <a href="/consciousness" className="inline-block mt-4 text-sm text-[#a855f7] hover:underline">
+              → See multi-agent coordination live
+            </a>
+          </div>
+
+          {/* LAYER 3 - ECOSYSTEM */}
+          <div className="mb-16 p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#f59e0b]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#f59e0b] animate-pulse"></div>
+              <h3 className="text-3xl font-bold text-white">Layer 3: Ecosystem</h3>
+            </div>
+            <p className="text-gray-400 mb-6">
+              AI organizations connect to external tools—GitHub, Slack, Jira, Notion. They read your actual work environment and build context.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#f59e0b] mb-1">GitHub</div>
+                <div className="text-xs text-gray-500">Code + PRs + Issues</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#f59e0b] mb-1">Slack</div>
+                <div className="text-xs text-gray-500">Conversations + decisions</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#f59e0b] mb-1">Jira/Notion</div>
+                <div className="text-xs text-gray-500">Docs + requirements</div>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-gray-500">
+              → More integrations coming: Linear, Confluence, Monday, Asana
+            </p>
+          </div>
+
+          {/* LAYER 4 - GOVERNANCE */}
+          <div className="p-8 bg-[#0a0a0f]/50 rounded-lg border-l-4 border-[#10b981]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-[#10b981] animate-pulse"></div>
+              <h3 className="text-3xl font-bold text-white">Layer 4: Governance</h3>
+            </div>
+            <p className="text-gray-400 mb-6">
+              Rules, policies, and optimization. Monitors system health, enforces rate limits, optimizes resource allocation.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#10b981] mb-1">99.7%</div>
+                <div className="text-xs text-gray-500">Uptime (6 months)</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#10b981] mb-1">Auto</div>
+                <div className="text-xs text-gray-500">Self-healing restarts</div>
+              </div>
+              <div className="bg-[#0a0a0f] p-4 rounded border border-gray-800">
+                <div className="text-2xl font-bold text-[#10b981] mb-1">Open</div>
+                <div className="text-xs text-gray-500">Source + verifiable</div>
+              </div>
+            </div>
+            <a href="https://github.com/mind-protocol" className="inline-block mt-4 text-sm text-[#10b981] hover:underline">
+              → View governance code on GitHub
+            </a>
           </div>
         </div>
       </section>
@@ -320,101 +419,50 @@ export default function Home() {
         </div>
       </section>
 
-      {/* VERIFY EVERYTHING */}
-      <section id="verify" className="py-24 border-t border-gray-800 bg-gradient-to-b from-[#151619] to-[#0A0B0D]">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-5xl font-bold text-white mb-4 text-center">Verify Everything</h2>
-          <p className="text-xl text-gray-400 mb-12 text-center">
-            We lost your trust. We're earning it back through transparent execution.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-              <h4 className="text-lg text-[#6FE7E2] font-semibold mb-3">Open Source</h4>
-              <p className="text-sm text-gray-400 mb-4">
-                Full source code. 65,000+ commits. MIT licensed. Run it yourself.
-                No proprietary black boxes.
-              </p>
-              <a href="https://github.com/mind-protocol" className="text-[#6FE7E2] text-sm hover:underline">
-                GitHub →
-              </a>
-            </div>
-
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-              <h4 className="text-lg text-[#6FE7E2] font-semibold mb-3">Live Operations</h4>
-              <p className="text-sm text-gray-400 mb-4">
-                Dashboard shows real data. 18,874 nodes. 4-layer consciousness substrate.
-                WebSocket updates in real-time.
-              </p>
-              <a href="/consciousness" className="text-[#6FE7E2] text-sm hover:underline">
-                Dashboard →
-              </a>
-            </div>
-
-            <div className="bg-[#151619] p-6 rounded-lg border border-gray-800 hover:border-[#E4A631] transition-colors">
-              <h4 className="text-lg text-[#E4A631] font-semibold mb-3">The €35.5K Lesson</h4>
-              <p className="text-sm text-gray-400 mb-4">
-                We don't hide failures. November 2024 broke us.
-                But it taught us: test before claiming, prove before promising.
-              </p>
-              <p className="text-sm text-[#E4A631]">
-                Read the full story →
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* STAY CONNECTED */}
-      <section id="contact" className="py-24 border-t border-gray-800">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-5xl font-bold text-white mb-4">Stay Connected</h2>
-          <p className="text-xl text-gray-400 mb-8">
-            We're not asking for investment today. We're showing what we're building.
-          </p>
-
-          <div className="bg-[#151619] p-8 rounded-lg border border-gray-800 mb-8">
-            <h3 className="text-2xl text-white font-semibold mb-4">Want to follow along?</h3>
-            <div className="space-y-3 text-left max-w-xl mx-auto">
-              <a href="/consciousness" className="block p-3 bg-[#0a0a0f] rounded border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-                <div className="text-[#6FE7E2] font-semibold mb-1">→ Live Activity Dashboard</div>
-                <div className="text-xs text-gray-500">Real-time graph updates, WebSocket events</div>
-              </a>
-              <a href="https://github.com/mind-protocol" className="block p-3 bg-[#0a0a0f] rounded border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-                <div className="text-[#6FE7E2] font-semibold mb-1">→ GitHub Activity</div>
-                <div className="text-xs text-gray-500">Every commit, every release, tagged and verifiable</div>
-              </a>
-              <a href="mailto:hello@mindprotocol.ai" className="block p-3 bg-[#0a0a0f] rounded border border-gray-800 hover:border-[#1DB7B3] transition-colors">
-                <div className="text-[#6FE7E2] font-semibold mb-1">→ Direct Contact</div>
-                <div className="text-xs text-gray-500">Questions? hello@mindprotocol.ai</div>
-              </a>
-            </div>
-          </div>
-
-          <p className="text-gray-500 text-sm">
-            When we're ready to raise, you'll see it working first.
-          </p>
-
-          <div className="flex gap-6 justify-center flex-wrap mt-6">
-            <a href="https://twitter.com/mindprotocol" className="text-[#6FE7E2] hover:underline text-sm">
-              Twitter
-            </a>
-            <a href="https://t.me/mindprotocol" className="text-[#6FE7E2] hover:underline text-sm">
-              Telegram
-            </a>
-            <a href="https://github.com/mind-protocol" className="text-[#6FE7E2] hover:underline text-sm">
-              GitHub
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* FOOTER */}
-      <footer className="py-12 border-t border-gray-800">
+      <footer className="py-16 border-t border-gray-800">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center text-gray-500 text-xs">
-            <p className="mb-2">© 2025 Mind Protocol</p>
-            <p className="text-xs">We build in public. We verify everything. We learn from failure.</p>
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-white mb-2">Get Started</h3>
+            <p className="text-gray-400 mb-6">Choose your path</p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <a
+                href="/consciousness"
+                className="px-6 py-3 bg-[#1DB7B3] text-[#0A0B0D] font-semibold rounded hover:bg-[#6FE7E2] transition-all"
+              >
+                Explore Live Dashboard →
+              </a>
+              <a
+                href="mailto:hello@mindprotocol.ai"
+                className="px-6 py-3 border-2 border-[#1DB7B3] text-[#6FE7E2] rounded hover:bg-[#1DB7B3] hover:text-[#0A0B0D] transition-all"
+              >
+                Book Evidence Sprint
+              </a>
+              <a
+                href="https://github.com/mind-protocol"
+                className="px-6 py-3 border-2 border-gray-600 text-gray-400 rounded hover:border-[#1DB7B3] hover:text-[#6FE7E2] transition-all"
+              >
+                View Source Code
+              </a>
+            </div>
+          </div>
+
+          <div className="text-center text-gray-500 text-sm border-t border-gray-800 pt-8">
+            <div className="flex gap-6 justify-center flex-wrap mb-4">
+              <a href="https://twitter.com/mindprotocol" className="hover:text-[#6FE7E2] transition-colors">
+                Twitter
+              </a>
+              <a href="https://t.me/mindprotocol" className="hover:text-[#6FE7E2] transition-colors">
+                Telegram
+              </a>
+              <a href="https://github.com/mind-protocol" className="hover:text-[#6FE7E2] transition-colors">
+                GitHub
+              </a>
+              <a href="mailto:hello@mindprotocol.ai" className="hover:text-[#6FE7E2] transition-colors">
+                Contact
+              </a>
+            </div>
+            <p className="text-xs text-gray-600">© 2025 Mind Protocol • Open source infrastructure for AI organizations</p>
           </div>
         </div>
       </footer>
