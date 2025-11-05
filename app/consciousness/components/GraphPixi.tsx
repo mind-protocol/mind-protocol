@@ -200,8 +200,28 @@ export default function GraphPixi() {
         Number.isFinite(to.x) && Number.isFinite(to.y)
           ? to
           : hashPos(l.target, W, H);
+
+      // Dynamic link thickness based on weight and flow
+      const baseWeight = l.weight || 0.5; // 0-1 range from graph data
+      const flowAmount = v2State.linkFlows.get(id) || 0; // real-time flow count
+
+      // Thickness: 1-6px based on weight (0.5-1.0) + flow boost
+      let thickness = 1 + (baseWeight * 3); // 1-4px base
+      if (flowAmount > 0) {
+        thickness += Math.min(flowAmount / 5, 2); // +0-2px for active flow
+      }
+      thickness = Math.max(0.5, Math.min(thickness, 6)); // clamp to 0.5-6px
+
+      // Color: brighter when flowing
+      let color = 0x7aa7c7; // default blue-gray
+      let alpha = 0.6;
+      if (flowAmount > 0) {
+        color = 0x00D4FF; // bright cyan for active links
+        alpha = 0.8 + Math.min(flowAmount / 20, 0.2); // up to 100% opacity
+      }
+
       g.clear();
-      g.lineStyle(1, 0x7aa7c7, 0.6);
+      g.lineStyle(thickness, color, alpha);
       g.moveTo(x1, y1);
       g.lineTo(x2, y2);
 
