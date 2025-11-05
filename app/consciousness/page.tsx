@@ -25,7 +25,6 @@ import GraphDebugBadge from './components/GraphDebugBadge';
 import { membraneInject } from '@/app/lib/membrane';
 
 const GraphPixi = dynamic(() => import('./components/GraphPixi'), { ssr: false });
-const LintPanel = dynamic(() => import('./components/LintPanel'), { ssr: false });
 const SubEntityGraphView = dynamic(() => import('@/app/consciousness/components/SubEntityGraphView').then(mod => ({ default: mod.SubEntityGraphView })), { ssr: false });
 const SubEntityClusterOverlay = dynamic(() => import('@/app/consciousness/components/SubEntityClusterOverlay').then(mod => ({ default: mod.SubEntityClusterOverlay })), { ssr: false });
 const EnergyFlowParticles = dynamic(() => import('@/app/consciousness/components/EnergyFlowParticles').then(mod => ({ default: mod.EnergyFlowParticles })), { ssr: false });
@@ -421,7 +420,6 @@ export default function ConsciousnessPage() {
         />
       )}
       <GraphDebugBadge />
-      <LintPanel />
     </div>
   );
 }
