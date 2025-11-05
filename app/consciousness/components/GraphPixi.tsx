@@ -110,23 +110,49 @@ export default function GraphPixi() {
       // draw (mutate; don't recreate graphics)
       g.clear();
 
+      // Check for recent activation (node flipped within last 500ms)
+      const now = Date.now();
+      const recentFlip = v2State.recentFlips.find(
+        f => f.node_id === id && (now - f.timestamp) < 500
+      );
+      const justActivated = !!recentFlip;
+
       // Working Memory highlighting: bright gold with glow for WM nodes
       const inWM = v2State.workingMemory.has(id);
-      if (inWM) {
-        // Glow effect (outer ring)
-        g.beginFill(0xFFD700, 0.3);
-        g.drawCircle(0, 0, 12);
-        g.endFill();
-        // Main node (bright gold, larger)
-        g.beginFill(0xFFD700, 1);
-        g.drawCircle(0, 0, 8);
-        g.endFill();
-      } else {
-        // Normal node (blue, standard size)
-        g.beginFill(0x4ea1ff, 1);
-        g.drawCircle(0, 0, 5);
+
+      // Determine visual style
+      let color = 0x4ea1ff;  // default blue
+      let radius = 5;         // default size
+      let glowRadius = 0;     // no glow
+      let glowAlpha = 0;
+
+      if (justActivated) {
+        // PULSING: nodes that just flipped get bright pulse
+        const pulseProgress = (now - recentFlip.timestamp) / 500; // 0 to 1 over 500ms
+        const pulseIntensity = 1 - pulseProgress; // fade out
+        color = recentFlip.direction === 'on' ? 0x00FF00 : 0xFF6B6B; // green=on, red=off
+        radius = 5 + pulseIntensity * 3; // grow then shrink
+        glowRadius = 12 + pulseIntensity * 8; // expanding glow
+        glowAlpha = pulseIntensity * 0.5;
+      } else if (inWM) {
+        // WM nodes: bright gold with glow
+        color = 0xFFD700;
+        radius = 8;
+        glowRadius = 12;
+        glowAlpha = 0.3;
+      }
+
+      // Draw glow if present
+      if (glowRadius > 0) {
+        g.beginFill(color, glowAlpha);
+        g.drawCircle(0, 0, glowRadius);
         g.endFill();
       }
+
+      // Draw main node
+      g.beginFill(color, 1);
+      g.drawCircle(0, 0, radius);
+      g.endFill();
 
       g.x = x;
       g.y = y;
