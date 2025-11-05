@@ -441,7 +441,7 @@ def iter_snapshot_chunks(
     if total_nodes == 0:
         yield {
             "idx": 0,
-            "nodes": _ensure_json_serializable(nodes),
+            "nodes": _ensure_json_serializable(_strip_embeddings_from_nodes(nodes)),
             "links": _ensure_json_serializable(links),
             "subentities": _ensure_json_serializable(subentities),
             "cursor": cursor_value,
@@ -462,7 +462,7 @@ def iter_snapshot_chunks(
 
         yield {
             "idx": idx,
-            "nodes": _ensure_json_serializable(chunk_nodes),
+            "nodes": _ensure_json_serializable(_strip_embeddings_from_nodes(chunk_nodes)),
             "links": _ensure_json_serializable(chunk_links),
             "subentities": _ensure_json_serializable(subentities),
             "cursor": cursor_value,
@@ -471,6 +471,40 @@ def iter_snapshot_chunks(
 
         if eof:
             break
+
+
+def _strip_embeddings_from_nodes(nodes: list) -> list:
+    """
+    Strip embedding fields from nodes to reduce WebSocket payload size.
+
+    Embeddings are 512-float arrays that bloat payloads massively but aren't
+    needed for frontend rendering. Remove them before transmission.
+    """
+    if not nodes:
+        return nodes
+
+    stripped = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            stripped.append(node)
+            continue
+
+        node_copy = node.copy()
+
+        # Remove embedding from top-level
+        if "content_embedding" in node_copy:
+            del node_copy["content_embedding"]
+
+        # Remove embedding from properties dict
+        if "properties" in node_copy and isinstance(node_copy["properties"], dict):
+            props = node_copy["properties"].copy()
+            if "content_embedding" in props:
+                del props["content_embedding"]
+            node_copy["properties"] = props
+
+        stripped.append(node_copy)
+
+    return stripped
 
 
 def _ensure_json_serializable(value: Any) -> Any:
