@@ -17,6 +17,20 @@ services:
       mountPath: /data
       sizeGB: 10  # 10GB persistent disk for consciousness graphs
 
+  # L4 Membrane Hub - Protocol Layer Boundary Enforcement
+  - type: web
+    name: mind-protocol-membrane-hub
+    runtime: python
+    plan: starter  # Lightweight routing service
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 -m orchestration.protocol.hub.membrane_hub
+    dependsOn:
+      - name: mind-protocol-falkordb
+    envVars:
+      # Economy integration (future)
+      - key: ECONOMY_REDIS_URL
+        value: redis://mind-protocol-falkordb:6379/0
+
   # WebSocket API + Consciousness Engines
   - type: web
     name: mind-protocol-backend
@@ -26,6 +40,7 @@ services:
     startCommand: python3 -m orchestration.adapters.ws.websocket_server
     dependsOn:
       - name: mind-protocol-falkordb
+      - name: mind-protocol-membrane-hub
     envVars:
       # Redis/FalkorDB Connection (internal private network)
       - key: ECONOMY_REDIS_URL
@@ -36,6 +51,10 @@ services:
 
       - key: FALKORDB_PORT
         value: 6379
+
+      # Membrane Hub Connection (internal service name)
+      - key: MEMBRANE_HUB_URL
+        value: ws://mind-protocol-membrane-hub:8765
 
       # CORS Configuration (comma-separated origins)
       - key: ALLOWED_ORIGINS

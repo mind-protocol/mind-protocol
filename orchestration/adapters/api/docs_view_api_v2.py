@@ -20,6 +20,7 @@ Date: 2025-11-04 (Refactored to membrane-native)
 
 import logging
 import json
+import os
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Set, Optional
 from fastapi import APIRouter, WebSocket
@@ -28,6 +29,9 @@ import asyncio
 from orchestration.adapters.bus.membrane_bus import publish_to_membrane_async
 
 logger = logging.getLogger(__name__)
+
+# Membrane Hub connection (production: internal service name, dev: localhost)
+MEMBRANE_HUB_URL = os.getenv("MEMBRANE_HUB_URL", "ws://localhost:8765")
 
 # ============================================================================
 # Subscribers & Cache (digest-keyed)
@@ -268,7 +272,7 @@ async def observe_bus_and_fanout():
     import websockets
 
     try:
-        async with websockets.connect("ws://localhost:8765/observe") as ws:
+        async with websockets.connect(f"{MEMBRANE_HUB_URL}/observe") as ws:
             # Subscribe to relevant channels
             await ws.send(json.dumps({
                 "type": "subscribe",
