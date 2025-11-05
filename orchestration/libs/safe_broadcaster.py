@@ -125,7 +125,7 @@ class SafeBroadcaster:
                 node_data_for_cache = {
                     "id": data.get("node_id"),
                     "type": data.get("node_type"),
-                    "name": data.get("properties", {}).get("role_or_topic"), # Best effort for name
+                    "name": data.get("properties", {}).get("id"), # Best effort for name
                     "properties": data.get("properties", {})
                 }
                 if node_data_for_cache["id"]:

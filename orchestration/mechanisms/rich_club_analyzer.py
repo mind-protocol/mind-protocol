@@ -203,7 +203,7 @@ class RichClubAnalyzer:
         RETURN
             hub.id as id,
             hub.name as name,
-            hub.role_or_topic as role,
+            hub.id as role,
             degree_in,
             degree_out,
             hub.energy_runtime as energy

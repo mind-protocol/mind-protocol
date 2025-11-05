@@ -192,7 +192,7 @@ def compute_phenomenological_health(graph):
         if entity.is_active():
             active_entities.append({
                 'id': entity.id,
-                'name': entity.role_or_topic if hasattr(entity, 'role_or_topic') else entity.id,
+                'name': entity.id,
                 'energy': round(entity.energy_runtime, 4),
                 'threshold': round(entity.threshold_runtime, 4),
                 'member_count': len(entity.extent) if hasattr(entity, 'extent') else 0

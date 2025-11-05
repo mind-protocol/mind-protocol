@@ -451,8 +451,6 @@ async def start_citizen_consciousness(
             for entity in graph.subentities.values():
                 cache.upsert_subentity(citizen_id, {
                     "id": entity.id,
-                    "name": getattr(entity, "role_or_topic", entity.id),
-                    "kind": getattr(entity, "entity_kind", "functional"),
                     "energy": float(getattr(entity, "energy_runtime", 0.0)),
                     "threshold": float(getattr(entity, "threshold_runtime", 0.0)),
                     "activation_level": getattr(entity, "activation_level_runtime", "absent"),
@@ -582,8 +580,6 @@ async def start_organizational_consciousness(
             for entity in graph.subentities.values():
                 cache.upsert_subentity(org_id, {
                     "id": entity.id,
-                    "name": getattr(entity, "role_or_topic", entity.id),
-                    "kind": getattr(entity, "entity_kind", "functional"),
                     "energy": float(getattr(entity, "energy_runtime", 0.0)),
                     "threshold": float(getattr(entity, "threshold_runtime", 0.0)),
                     "activation_level": getattr(entity, "activation_level_runtime", "absent"),

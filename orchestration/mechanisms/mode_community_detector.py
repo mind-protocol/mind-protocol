@@ -668,7 +668,7 @@ class ModeCommunityDetector:
             e.valence_ema AS valence,
             e.tool_usage_counts AS tool_counts,
             e.outcome_distribution AS outcome_dist,
-            e.role_or_topic AS description
+            e.id AS description
         """
 
         result = graph.query(query, {"members": member_ids})

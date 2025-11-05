@@ -361,7 +361,7 @@ class IntegrationMetricsAnalyzer:
         # Get node details
         query = f"""
         MATCH (n:SubEntity {{id: '{node_id}'}})
-        RETURN n.name as name, n.role_or_topic as role
+        RETURN n.name as name
         """
 
         try:

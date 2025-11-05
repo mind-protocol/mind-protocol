@@ -111,8 +111,6 @@ class SubEntityBootstrap:
         # Create new entity
         subentity = Subentity(
             id=subentity_id,
-            entity_kind=subentity_def.get("kind", "functional"),
-            role_or_topic=key,
             description=subentity_def.get("description", ""),
             stability_state="mature",  # Config-driven entities start mature
             scope="personal",  # Functional SubEntities are personal (citizen-specific)
@@ -399,8 +397,6 @@ class SubEntityBootstrap:
 
         subentity = Subentity(
             id=subentity_id,
-            entity_kind="semantic",
-            role_or_topic=topic_label,
             description=f"Semantic cluster: {topic_label} ({len(member_nodes)} nodes)",
             centroid_embedding=centroid,
             stability_state="provisional",  # Semantic subentities start provisional

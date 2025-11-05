@@ -58,8 +58,6 @@ def _subentity_to_payload(entity: Subentity) -> Dict[str, Any]:
     """Serialize a subentity into the transport payload."""
     return {
         "id": entity.id,
-        "kind": getattr(entity, "entity_kind", "functional"),
-        "name": getattr(entity, "role_or_topic", entity.id),
         "energy": float(getattr(entity, "energy_runtime", 0.0)),
         "threshold": float(getattr(entity, "threshold_runtime", 0.0)),
         "activation_level": getattr(entity, "activation_level_runtime", "absent"),

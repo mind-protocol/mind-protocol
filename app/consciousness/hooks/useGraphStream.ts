@@ -516,7 +516,7 @@ export function useGraphStream(
                     });
                     snap.subentities[subId] = {
                       id: subId,
-                      slug: se.slug ?? se.role_or_topic ?? existing.slug,
+                      slug: se.slug ?? existing.slug,
                       name: se.name ?? existing.name ?? se.display_name,
                       members: nextMembers
                     };
@@ -578,8 +578,8 @@ export function useGraphStream(
                       id: nodeId,
                       members: new Set()
                     };
-                    // Extract slug from role_or_topic property
-                    snap.subentities[nodeId].slug = properties.role_or_topic ?? snap.subentities[nodeId].slug;
+                    // Extract slug from properties
+                    snap.subentities[nodeId].slug = properties.slug ?? snap.subentities[nodeId].slug;
                     snap.subentities[nodeId].name = properties.name ?? snap.subentities[nodeId].name;
                   } else {
                     // Regular content node
@@ -768,7 +768,7 @@ export function useGraphStream(
                   });
                   snap.subentities[subId] = {
                     id: subId,
-                    slug: subentity.slug ?? subentity.role_or_topic ?? existing.slug,
+                    slug: subentity.slug ?? existing.slug,
                     name: subentity.name ?? subentity.display_name ?? existing.name,
                     members: nextMembers,
                     active: subentity.active ?? existing.active

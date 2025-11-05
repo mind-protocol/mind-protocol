@@ -58,10 +58,8 @@ class Subentity:
         activation_level_runtime - "dominant"|"strong"|"moderate"|"weak"|"absent"
     """
 
-    # Idsubentity
+    # Identity
     id: str
-    entity_kind: str = "functional"  # "functional" | "semantic" - defaults to functional for legacy nodes without this field
-    role_or_topic: str = "unknown"  # "translator" | "consciousness_architecture" | etc.
     description: str = "No description"
 
     # Semantic representation

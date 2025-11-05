@@ -385,8 +385,6 @@ def serialize_entity(entity: 'Subentity') -> Dict[str, Any]:
     props = {
         # Identity
         'id': entity.id,
-        'entity_kind': entity.entity_kind,
-        'role_or_topic': entity.role_or_topic,
         'description': entity.description,
 
         # Semantic representation (np.ndarray → base64 string)
@@ -495,8 +493,6 @@ def deserialize_entity(props: Dict[str, Any]) -> 'Subentity':
     return Subentity(
         # Identity
         id=props['id'],
-        entity_kind=props.get('entity_kind', 'emergent'),  # Default to 'emergent' for legacy data
-        role_or_topic=props.get('role_or_topic', 'unknown'),  # Default to 'unknown' for legacy data
         description=props.get('description', ''),  # Default to empty string for legacy data
 
         # Semantic representation
@@ -1206,29 +1202,14 @@ class FalkorDBAdapter:
                 try:
                     entity = deserialize_entity(props)
 
-                    # LAYER 2: Initialize functional entities with neutral EMAs to prevent premature dissolution
-                    # Functional entities are permanent infrastructure - their quality shouldn't start at ~0.01
-                    if entity.entity_kind == "functional":
-                        # Set neutral baselines (0.4-0.6 range) so geometric mean yields healthy quality ~0.5-0.6
-                        entity.ema_active = max(getattr(entity, 'ema_active', 0.6), 0.6)
-                        entity.coherence_ema = max(getattr(entity, 'coherence_ema', 0.6), 0.6)
-                        entity.ema_wm_presence = max(getattr(entity, 'ema_wm_presence', 0.5), 0.5)
-                        entity.ema_trace_seats = max(getattr(entity, 'ema_trace_seats', 0.4), 0.4)
-                        entity.ema_formation_quality = max(getattr(entity, 'ema_formation_quality', 0.6), 0.6)
-
-                        # Start "old enough" to pass any age-based gates (1000 frames = ~100s)
-                        entity.frames_since_creation = max(getattr(entity, 'frames_since_creation', 1000), 1000)
-
-                        # Consider them stable from the start
-                        if entity.stability_state == "candidate":
-                            entity.stability_state = "mature"
+                    # Load all entities (no special EMA initialization by kind)
 
                     # Skip duplicates gracefully (may exist from previous loads or FalkorDB duplicates)
                     if entity.id in graph.subentities:
                         logger.debug(f"  Skipping duplicate subentity: {entity.id}")
                     else:
                         graph.add_entity(entity)
-                        logger.debug(f"  Loaded subentity: {entity.id} ({entity.entity_kind})")
+                        logger.debug(f"  Loaded subentity: {entity.id}")
                 except Exception as e:
                     logger.warning(f"  Failed to deserialize subentity {props.get('id', 'unknown')}: {e}")
 

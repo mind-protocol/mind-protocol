@@ -404,7 +404,6 @@ class ConsciousnessEngineV2:
                         # Build subentity payload for cache
                         subentity_payload = {
                             "id": props.get("id"),
-                            "slug": props.get("role_or_topic"),
                             "name": props.get("name"),
                             "members": []  # Will be populated by MEMBER_OF links
                         }
@@ -697,7 +696,7 @@ class ConsciousnessEngineV2:
                 for entity in self.graph.subentities.values():
                     entity_index.append({
                         "id": entity.id,
-                        "name": entity.role_or_topic,
+                        "name": entity.id,
                         "color": getattr(entity, 'color', '#888888'),
                         "energy": round(entity.energy_runtime, 4),
                         "threshold": round(entity.threshold_runtime, 4),
@@ -1407,8 +1406,6 @@ class ConsciousnessEngineV2:
                                     try:
                                         new_subentity = Subentity(
                                             id=subentity_id,
-                                            entity_kind="semantic",
-                                            role_or_topic=identity_bundle.slug if identity_bundle else "unnamed_pattern",
                                             description=identity_bundle.purpose if identity_bundle else "Emerged pattern",
                                             centroid_embedding=(
                                                 self._last_stimulus_embedding
@@ -1454,8 +1451,7 @@ class ConsciousnessEngineV2:
                                             )
                                             subentity_payload = {
                                                 "id": subentity_id,
-                                                "name": new_subentity.role_or_topic,
-                                                "kind": new_subentity.entity_kind,
+                                                "name": subentity_id,
                                                 "energy": 0.0,
                                                 "threshold": 1.0,
                                                 "activation_level": "candidate",
@@ -2414,8 +2410,8 @@ class ConsciousnessEngineV2:
                     E = float(getattr(e, "energy_runtime", 0.0))
                     th = float(getattr(e, "threshold_runtime", 30.0))
                     if E >= th:
-                        # Get display name: try role_or_topic, then id
-                        name = getattr(e, "role_or_topic", getattr(e, "id", "unknown"))
+                        # Get display name from id
+                        name = getattr(e, "id", "unknown")
                         # If name is still an ID-like string, try to extract last part
                         if name.startswith("entity_"):
                             name = name.split('_')[-1] if '_' in name else name
@@ -2439,7 +2435,7 @@ class ConsciousnessEngineV2:
                 # Find the entity object
                 entity = self.graph.subentities.get(entity_id)
                 if entity:
-                    name = getattr(entity, "role_or_topic", getattr(entity, "id", "unknown"))
+                    name = getattr(entity, "id", "unknown")
                     if name.startswith("entity_"):
                         name = name.split('_')[-1] if '_' in name else name
 
@@ -2561,8 +2557,8 @@ class ConsciousnessEngineV2:
 
                         entity_data = EntityData(
                             id=entity_id,
-                            name=entity.role_or_topic if hasattr(entity, 'role_or_topic') else entity_id,
-                            kind=entity.entity_kind if hasattr(entity, 'entity_kind') else "functional",
+                            name=entity_id,
+                            kind="emergent",
                             color=entity.properties.get('color', "#808080") if hasattr(entity, 'properties') else "#808080",
                             energy=float(entity.energy_runtime),
                             theta=float(entity.threshold_runtime),
