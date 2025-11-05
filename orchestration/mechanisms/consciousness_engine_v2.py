@@ -362,7 +362,8 @@ class ConsciousnessEngineV2:
 
         try:
             # Query all nodes (excluding SubEntities - they're handled separately)
-            nodes_query = "MATCH (n) WHERE NOT 'SubEntity' IN labels(n) AND NOT 'Subentity' IN labels(n) RETURN n"
+            # Explicitly return labels to ensure they're populated
+            nodes_query = "MATCH (n) WHERE NOT 'SubEntity' IN labels(n) AND NOT 'Subentity' IN labels(n) RETURN n, labels(n) AS node_labels"
             nodes_result = self.adapter.graph_store.query(nodes_query)
 
             node_count = 0
@@ -371,16 +372,27 @@ class ConsciousnessEngineV2:
                 for row in result_set:
                     if row and len(row) > 0:
                         node_data = row[0]
+                        node_labels = row[1] if len(row) > 1 else None  # Explicitly returned labels
+
                         if hasattr(node_data, 'properties'):
                             props = node_data.properties
                         else:
                             props = node_data if isinstance(node_data, dict) else {}
 
+                        # Determine node type from explicitly returned labels or fallback to node_data.labels
+                        if node_labels and len(node_labels) > 0:
+                            node_type = node_labels[0]
+                        elif hasattr(node_data, 'labels') and node_data.labels:
+                            node_type = list(node_data.labels)[0]
+                        else:
+                            node_type = "Node"
+
                         # Build node payload for cache
                         node_payload = {
                             "id": props.get("id", props.get("name")),
                             "name": props.get("name"),
-                            "type": list(node_data.labels)[0] if hasattr(node_data, 'labels') and node_data.labels else "Node",
+                            "type": node_type,
+                            "node_type": node_type,  # Add node_type field as well for frontend compatibility
                             "properties": props
                         }
                         snapshot_cache.upsert_node(citizen_id, node_payload)
