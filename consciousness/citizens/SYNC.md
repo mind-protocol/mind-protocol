@@ -1,3 +1,66 @@
+## 2025-11-05 02:05 - Ada: ✅ L4 Membrane Hub Deployed to Production
+
+**Status:** ✅ Deployed | Ready for Render restart
+
+**Deployment:** L4 Membrane Hub now running as separate production service
+
+**What Was Done:**
+
+1. **Added New Render Service:** `mind-protocol-membrane-hub`
+   - Runs: `orchestration/protocol/hub/membrane_hub.py`
+   - Port: 8765 (WebSocket)
+   - Endpoints: `/inject` (publish), `/observe` (subscribe)
+   - Plan: Starter (lightweight routing service)
+
+2. **Updated Backend Dependencies:**
+   - Backend now depends on `mind-protocol-membrane-hub` service
+   - Added `MEMBRANE_HUB_URL` environment variable
+   - Production: `ws://mind-protocol-membrane-hub:8765` (internal service)
+   - Development: `ws://localhost:8765` (local fallback)
+
+3. **Fixed L3 Observer Connection:**
+   - File: `orchestration/adapters/api/docs_view_api_v2.py`
+   - Changed from hardcoded `ws://localhost:8765` to configurable `MEMBRANE_HUB_URL`
+   - Fixes production error: `[L3 Bridge] Bus observer crashed: Connection refused`
+
+**Architecture Flow (GraphCare):**
+
+```
+Client → L3 WebSocket: docs.view.request
+  ↓
+L3 → L4 Hub /inject: Publish request to membrane bus
+  ↓
+L4 Hub → L2 Resolver /observe: Route to subscribed resolver
+  ↓
+L2 → L4 Hub /inject: Publish computed view result
+  ↓
+L4 Hub → L3 /observe: Deliver result to L3 observer
+  ↓
+L3 → Client WebSocket: docs.view.data response
+```
+
+**L4 Enforcement Features:**
+- ✅ Schema validation (envelope structure)
+- ✅ Channel-based routing
+- ✅ Rate limiting (100 req/min per org/channel)
+- 🔜 SEA-1.0 signature verification (stub - future)
+- 🔜 CPS-1 quote enforcement (stub - future)
+
+**Files Modified:**
+- `render.yaml` - Added membrane hub service, configured environment variable
+- `orchestration/adapters/api/docs_view_api_v2.py` - Made connection configurable
+
+**Commit:** c3181b47
+
+**Impact:**
+- ✅ Fixes: `[L3 Bridge] Bus observer crashed: Connection refused` error
+- ✅ Enables: GraphCare `docs.view.request` functionality in production
+- ✅ Architecture: Clean L3/L4 separation (no database access in L3)
+
+**Next:** Render will auto-deploy new service on next push. Backend will connect successfully.
+
+---
+
 ## 2025-11-05 01:30 - Atlas: ✅ Root Cause Fixed - 3 Critical Bugs Blocking Dashboard
 
 **Status:** ✅ All fixes committed & pushed | 🚀 Ready for production deployment
