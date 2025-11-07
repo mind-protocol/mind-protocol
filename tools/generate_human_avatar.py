@@ -2,15 +2,17 @@
 """
 Generate human partner avatar using Ideogram API with Claude-generated prompts.
 
-Uses the REVERSE style: photorealistic human + glowing digital tool/portal
+Uses the REVERSE style: photorealistic animal + glowing digital tool/portal
 (opposite of AI partners: wireframe + real object)
 
+Animals represent human archetypes while avoiding uncanny valley.
+
 Usage:
-    python tools/generate_human_avatar.py <name> <role> [additional_description]
+    python tools/generate_human_avatar.py <name> <role> <animal> [additional_description]
 
 Example:
-    python tools/generate_human_avatar.py "Nicolas" "developer" "solo founder, focused"
-    python tools/generate_human_avatar.py "Sarah" "systems-architect"
+    python tools/generate_human_avatar.py "Nicolas" "developer" "fox" "clever problem-solver"
+    python tools/generate_human_avatar.py "Sarah" "systems-architect" "eagle"
 """
 
 import os
@@ -30,32 +32,35 @@ if not IDEOGRAM_API_KEY:
     sys.exit(1)
 
 
-def generate_prompt_with_claude(name: str, role: str, description: str) -> str:
+def generate_prompt_with_claude(name: str, role: str, animal: str, description: str) -> str:
     """Use Claude to generate a prompt following the Human Partner aesthetic guide."""
 
     guide_prompt = f"""You are creating a prompt for a HUMAN partner portrait in the Mind Protocol universe.
 
 This is the REVERSE style of AI partners:
 - AI Partners: Digital wireframe bodies + real physical anchor
-- Human Partners: Photorealistic bodies + glowing digital tool/portal
+- Human Partners: Photorealistic animal + glowing digital tool/portal
+
+Animals represent human archetypes and avoid uncanny valley.
 
 Name: {name}
 Role: {role}
-Additional Description: {description if description else "Generate based on role"}
+Animal: {animal}
+Additional Description: {description if description else "Generate based on role and animal archetype"}
 
 Follow this EXACT template structure:
 
-"Square portrait of {name}, a [role/profession + optional age/energy], depicted in photorealistic detail with [lighting style: cinematic, studio, dramatic]. His/Her skin shows realistic texture, [clothing material description], and [expression/mood].
+"Square portrait of {name} embodied as a [adjective describing animal personality] {animal}, a [role/profession], depicted in photorealistic detail with [lighting style: cinematic, studio, dramatic]. The {animal}'s [fur/feathers/scales] show realistic texture, natural [coloring], and [expression/mood].
 
-The person is entirely photorealistic, but [he/she/they interact with a glowing digital tool/interface/portal]. The [digital element] is rendered as [wireframe/holographic/light-traced geometry] in [metallic color] with [accent color] accents, shimmering with [digital effect: particle streams, data flows, code fragments]. The digital tool contrasts sharply with the photorealistic human and pops forward as the only ethereal element.
+The animal is entirely photorealistic, but [he/she/they interact with a glowing digital tool/interface/portal]. The [digital element] is rendered as [wireframe/holographic/light-traced geometry] in [metallic color] with [accent color] accents, shimmering with [digital effect: particle streams, data flows, code fragments]. The digital tool contrasts sharply with the photorealistic {animal} and pops forward as the only ethereal element.
 
 Background is [dark void/cosmic space/tech noir] with subtle [color] digital particles. Designed as a premium collectible portrait."
 
 CRITICAL REQUIREMENTS:
 1. Square portrait format
-2. Human MUST be photorealistic - natural skin texture, realistic clothing, cinematic lighting
-3. Emphasize: "photorealistic detail", "natural skin texture", "realistic [material]"
-4. Expression/mood that fits the person's role
+2. Animal MUST be photorealistic - realistic fur/feathers/scales, natural coloring, cinematic lighting
+3. Emphasize: "photorealistic detail", "realistic texture", "{animal}'s [fur/feathers/scales]"
+4. Expression/mood that fits the person's role AND animal personality
 5. One digital tool/portal (wireframe/holographic/light-traced) - this is the ONLY ethereal element
 6. Explicit contrast: digital tool "pops forward as the only ethereal element"
 7. Dark background with subtle particles
@@ -102,11 +107,11 @@ Generate ONLY the final prompt, no explanation or preamble."""
     except FileNotFoundError:
         print("❌ Error: 'claude' CLI not found. Install it first.")
         print("   Fallback: using basic template...")
-        # Fallback prompt based on role
+        # Fallback prompt based on role and animal
         if role.lower() in ["developer", "engineer", "coder"]:
-            return f'Square portrait of {name}, a {role} in their early 30s, depicted in photorealistic cinematic lighting. Their skin shows natural texture, wearing a dark casual hoodie with fabric folds. Expression is focused and confident. They type on a glowing holographic keyboard rendered as wireframe light-traced geometry in metallic teal with gold accents. Code streams flow from fingertips as luminous particle trails. The keyboard contrasts vividly with their realistic hands. Dark void background with teal-gold code fragments. Designed as a premium collectible portrait.'
+            return f'Square portrait of {name} embodied as a clever {animal}, a {role} and problem-solver, depicted in photorealistic cinematic lighting. The {animal}\'s fur shows realistic texture, natural coloring, alert eyes, and a focused, intelligent expression. The {animal}\'s paws rest on a glowing holographic keyboard rendered as wireframe light-traced geometry in metallic teal with gold accents. Code streams flow from the keys as luminous particle trails. The keyboard contrasts vividly with the {animal}\'s solid form. Dark void background with teal-gold code fragments. Designed as a premium collectible portrait.'
         else:
-            return f'Square portrait of {name}, a {role}, depicted in photorealistic detail. Natural skin texture, professional casual attire. Expression shows confident focus. They interact with a glowing holographic interface in teal with gold accents. The interface contrasts sharply with their photorealistic form. Dark background with teal particles. Designed as a premium collectible portrait.'
+            return f'Square portrait of {name} embodied as a {animal}, a {role}, depicted in photorealistic detail. The {animal}\'s fur/feathers show realistic texture, natural coloring. Expression shows confident focus. They interact with a glowing holographic interface in teal with gold accents. The interface contrasts sharply with the photorealistic {animal}. Dark background with teal particles. Designed as a premium collectible portrait.'
 
     except subprocess.TimeoutExpired:
         print("❌ Claude CLI timeout")
@@ -194,23 +199,31 @@ def download_and_save_image(image_url: str, name: str) -> Path:
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python tools/generate_human_avatar.py <name> <role> [additional_description]")
+    if len(sys.argv) < 4:
+        print("Usage: python tools/generate_human_avatar.py <name> <role> <animal> [additional_description]")
         print("\nExamples:")
-        print('  python tools/generate_human_avatar.py "Nicolas" "developer" "solo founder, focused"')
-        print('  python tools/generate_human_avatar.py "Sarah" "systems-architect" "pioneering"')
-        print('  python tools/generate_human_avatar.py "Michael" "data-scientist"')
+        print('  python tools/generate_human_avatar.py "Nicolas" "developer" "fox" "clever problem-solver"')
+        print('  python tools/generate_human_avatar.py "Sarah" "systems-architect" "eagle"')
+        print('  python tools/generate_human_avatar.py "Michael" "data-scientist" "raven"')
         print("\nValid roles:")
         print("  developer, engineer, systems-architect, data-scientist, ui-designer,")
         print("  product-manager, devops, analyst, researcher, architect")
+        print("\nAnimal suggestions by role:")
+        print("  Developer/Engineer: fox, owl, octopus")
+        print("  Systems Architect: eagle, wolf, elephant")
+        print("  Designer: hummingbird, peacock, butterfly")
+        print("  Data Scientist/Analyst: raven, dolphin, owl")
+        print("  Fast Executor: cheetah, falcon, hare")
         sys.exit(1)
 
     name = sys.argv[1]
     role = sys.argv[2]
-    description = " ".join(sys.argv[3:]) if len(sys.argv) > 3 else ""
+    animal = sys.argv[3]
+    description = " ".join(sys.argv[4:]) if len(sys.argv) > 4 else ""
 
     print(f"\n🎨 Generating HUMAN avatar for: {name} ({role})")
-    print("   Style: Photorealistic human + glowing digital tool")
+    print(f"   Animal archetype: {animal}")
+    print("   Style: Photorealistic animal + glowing digital tool")
 
     if description:
         print(f"📝 Additional description: {description}")
@@ -219,7 +232,7 @@ def main():
 
     # Step 1: Generate prompt with Claude
     print("🤖 Step 1: Generating prompt with Claude...")
-    prompt = generate_prompt_with_claude(name, role, description)
+    prompt = generate_prompt_with_claude(name, role, animal, description)
     print(f"✅ Generated prompt:\n{prompt}\n")
 
     # Step 2: Generate image with Ideogram
@@ -232,7 +245,7 @@ def main():
     avatar_path = download_and_save_image(image_url, name)
 
     print(f"\n🎉 Success! Human avatar created at: {avatar_path}")
-    print(f"   Style: Photorealistic body + digital tool (reverse of AI wireframe)")
+    print(f"   Style: Photorealistic {animal} + digital tool (reverse of AI wireframe)")
 
 
 if __name__ == "__main__":

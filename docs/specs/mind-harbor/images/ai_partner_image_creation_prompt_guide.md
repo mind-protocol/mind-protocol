@@ -118,29 +118,31 @@ Square portrait of Marina 'Sweetwhisper', a Renaissance negotiator, depicted as 
 
 ---
 
-# 🔄 Human Partner Portraits (Reverse Style)
+# 🔄 Human Partner Portraits (Reverse Style - Animal Embodiment)
 
 ## 🎯 Purpose (Reverse of AI Partners)
 
 The human partner portrait must always:
-- Be **photorealistic** (body, skin, clothing) while AI partners are digital wireframes.
+- Be a **realistic animal** (avoiding uncanny valley, adding personality) while AI partners are digital wireframes.
 - Hold/interact with **one glowing digital tool/portal/interface** (wireframe/holographic).
 - Include the **same metallic color pairs** as AI partners (universe coherence).
-- Emphasize the **contrast between real human vs. digital tool**.
+- Emphasize the **contrast between real animal vs. digital tool**.
 - Work as a **collectible profile picture** matching AI partner aesthetic.
 
 **Core Reversal:**
 - **AI Partners:** Digital wireframe bodies + ONE realistic physical anchor
-- **Human Partners:** Photorealistic bodies + ONE glowing digital tool/portal
+- **Human Partners:** Realistic animal + ONE glowing digital tool/portal
+
+**Why animals:** Avoids uncanny valley, represents human archetypes/roles with personality, visually coherent with fantasy aesthetic.
 
 ---
 
 ## 📝 Human Portrait Prompt Template
 
 ```
-"Square portrait of [Name], a [role/profession + optional age/energy], depicted in photorealistic detail with [lighting style: cinematic, studio, dramatic]. His/Her skin shows realistic texture, [clothing material description], and [expression/mood].
+"Square portrait of [Name] embodied as a [animal archetype], a [role/profession], depicted in photorealistic detail with [lighting style: cinematic, studio, dramatic]. The [animal]'s fur/feathers/scales show realistic texture, natural [coloring], and [expression/mood].
 
-The person is entirely photorealistic, but [he/she/they interact with a glowing digital tool/interface/portal]. The [digital element] is rendered as [wireframe/holographic/light-traced geometry] in [metallic color] with [accent color] accents, shimmering with [digital effect: particle streams, data flows, code fragments]. The digital tool contrasts sharply with the photorealistic human and pops forward as the only ethereal element.
+The animal is entirely photorealistic, but [he/she/they interact with a glowing digital tool/interface/portal]. The [digital element] is rendered as [wireframe/holographic/light-traced geometry] in [metallic color] with [accent color] accents, shimmering with [digital effect: particle streams, data flows, code fragments]. The digital tool contrasts sharply with the photorealistic animal and pops forward as the only ethereal element.
 
 Background is [dark void/cosmic space/tech noir] with subtle [color] digital particles. Designed as a premium collectible portrait."
 ```
@@ -149,19 +151,19 @@ Background is [dark void/cosmic space/tech noir] with subtle [color] digital par
 
 ## ⚙️ Required Elements (Human Portraits)
 
-1. **Identity**
-   - Format: `Square portrait of [Name]`
+1. **Identity + Animal Archetype**
+   - Format: `Square portrait of [Name] embodied as a [animal]`
    - Include role/profession (developer, designer, architect, analyst).
-   - Optional: age to imply energy (early 30s, seasoned, vital).
+   - Choose animal that matches personality/role archetype (see Animal Library below).
 
-2. **Photorealistic Description**
+2. **Photorealistic Animal Description**
    - Always describe as *photorealistic detail* or *cinematic lighting*.
-   - Mention: skin texture, clothing material (hoodie, blazer, casual tech wear).
+   - Mention: fur/feathers/scales texture, natural coloring, animal-specific features.
    - Lighting style: dramatic, studio, side-lit, etc.
 
 3. **Expression / Mood**
-   - Focused, confident, creative, analytical, pioneering.
-   - Match the person's actual vibe (not generic).
+   - Focused, confident, creative, analytical, pioneering, clever, wise.
+   - Match the person's actual vibe using animal's natural expressions.
 
 4. **Digital Tool/Portal (Ethereal Element)**
    - Must be glowing, wireframe, holographic, or light-traced.
@@ -178,6 +180,42 @@ Background is [dark void/cosmic space/tech noir] with subtle [color] digital par
 
 7. **Final Lock Phrase**
    - End with: *"Designed as a premium collectible portrait."*
+
+---
+
+## 🦊 Animal Archetype Library
+
+Choose animal based on personality/role. Each animal represents different human traits:
+
+**Developers / Engineers / Builders:**
+- **Fox** - Clever, adaptable, problem-solver, elegant solutions
+- **Owl** - Wise, works at night, focused, observant
+- **Octopus** - Multi-tasking, intelligent, flexible, many arms (like handling multiple codebases)
+
+**Systems Architects / Strategists:**
+- **Eagle** - Big picture view, strategic, sees patterns from above
+- **Wolf** - Pack coordination, leadership, systems thinking
+- **Elephant** - Memory, structure, scale, never forgets architecture decisions
+
+**Designers / Creatives:**
+- **Hummingbird** - Precision, beauty, agility, detailed work
+- **Peacock** - Aesthetics, visual appeal, presentation
+- **Butterfly** - Transformation, creativity, user experience flows
+
+**Data Scientists / Analysts:**
+- **Raven** - Intelligent, pattern recognition, problem-solving
+- **Dolphin** - Complex thinking, communication, data interpretation
+- **Owl** - (also works) Wisdom, observation, seeing hidden insights
+
+**Fast Executors / Operators:**
+- **Cheetah** - Speed, execution, delivery focus
+- **Falcon** - Precision, speed, hitting targets
+- **Hare** - Quick, agile, rapid iteration
+
+**Managers / Coordinators:**
+- **Bee** - Organization, coordination, team productivity
+- **Ant** - Work ethic, systematic, process-oriented
+- **Wolf** - (also works) Pack leadership, team coordination
 
 ---
 
@@ -219,52 +257,54 @@ Digital tool must:
 
 ## 📖 Style Lock Keywords (must use)
 
-**For humans:**
+**For humans (as animals):**
 - "Square portrait"
+- "Embodied as a [animal]"
 - "Depicted in photorealistic detail"
-- "Natural skin texture" / "Realistic [clothing material]"
+- "The [animal]'s fur/feathers/scales show realistic texture"
+- "Natural [coloring]"
 - "The [digital element] is rendered as [wireframe/holographic/light-traced]"
 - "Glowing [color] with [accent] accents"
-- "Contrasts sharply with the photorealistic human"
+- "Contrasts sharply with the photorealistic [animal]"
 - "Dark background for maximum focus"
 - "Designed as a premium collectible portrait"
 
 ---
 
-## 🧪 Example Prompts (Human Partners)
+## 🧪 Example Prompts (Human Partners as Animals)
 
-### Developer (Code Weaver)
+### Nicolas - Developer (Code Weaver Fox)
 ```
-Square portrait of Nicolas, a solo developer in his early 30s, depicted in photorealistic cinematic lighting. His skin shows natural texture, wearing a dark casual hoodie with fabric folds catching light. His expression is focused and confident.
+Square portrait of Nicolas embodied as a clever fox, a solo developer and problem-solver, depicted in photorealistic cinematic lighting. The fox's russet fur shows realistic texture with silver-white chest markings, alert amber eyes, and a focused, intelligent expression.
 
-He types on a glowing holographic keyboard, rendered as wireframe light-traced geometry in metallic teal with gold node accents. Code streams flow from his fingertips as luminous particle trails, ASCII characters dissolving into digital dust. The keyboard is semi-transparent, contrasting vividly with his solid, realistic hands.
+The fox's paws rest on a glowing holographic keyboard, rendered as wireframe light-traced geometry in metallic teal with gold node accents. Code streams flow from the keys as luminous particle trails, ASCII characters dissolving into digital dust. The keyboard is semi-transparent, contrasting vividly with the fox's solid, realistic form.
 
 Background is dark void with teal and gold code fragments floating. Designed as a premium collectible portrait.
 ```
 
-### Systems Architect (Portal Walker)
+### Systems Architect (Portal Walker Eagle)
 ```
-Square portrait of Sarah, a systems architect in her late 20s, depicted in photorealistic detail with dramatic side lighting. Natural skin texture, wearing modern tech-casual clothing. Expression shows pioneering confidence.
+Square portrait of Sarah embodied as a strategic eagle, a systems architect, depicted in photorealistic detail with dramatic lighting. The eagle's dark brown feathers show realistic texture, sharp golden eyes, and a pioneering, confident gaze.
 
-She stands before a glowing vertical portal rendered as wireframe archway in violet with gold trim. Through the portal, abstract digital landscapes are visible as flowing code rivers and geometric structures. Her hand touches the portal's edge, causing ripples of light. The contrast between her solid form and the ethereal gateway creates visual drama.
+The eagle stands before a glowing vertical portal rendered as wireframe archway in violet with gold trim. Through the portal, abstract digital landscapes are visible as flowing code rivers and geometric structures. One talon touches the portal's edge, causing ripples of light. The contrast between the eagle's solid form and the ethereal gateway creates visual drama.
 
 Background is dark cosmic space with violet-gold portal particles. Designed as a premium collectible portrait.
 ```
 
-### Data Scientist (Data Summoner)
+### Data Scientist (Data Summoner Raven)
 ```
-Square portrait of Michael, a data scientist, depicted in photorealistic cinematic lighting. Realistic facial features, professional casual attire. Expression shows analytical confidence.
+Square portrait of Michael embodied as an intelligent raven, a data scientist, depicted in photorealistic cinematic lighting. The raven's glossy black feathers show realistic texture with iridescent blue highlights, sharp eyes, and an analytical, focused expression.
 
-He holds his hand palm-up, summoning a glowing data orb rendered as wireframe sphere in emerald with silver accents. Inside the orb, geometric data visualizations rotate—charts, graphs, network nodes—all traced in light. Particle streams spiral around the orb. The contrast between his real hand and the ethereal data sphere creates dramatic pop.
+The raven holds a glowing data orb in one talon, rendered as wireframe sphere in emerald with silver accents. Inside the orb, geometric data visualizations rotate—charts, graphs, network nodes—all traced in light. Particle streams spiral around the orb. The contrast between the raven's real form and the ethereal data sphere creates dramatic pop.
 
 Background is dark void with emerald-silver particles. Designed as a premium collectible portrait.
 ```
 
-### UI Designer (Interface Architect)
+### UI Designer (Interface Architect Hummingbird)
 ```
-Square portrait of Jessica, a product designer, depicted in photorealistic studio lighting. Realistic skin texture, wearing modern tech-forward clothing. Expression shows creative intensity.
+Square portrait of Jessica embodied as a precise hummingbird, a product designer, depicted in photorealistic studio lighting. The hummingbird's iridescent green feathers show realistic texture with ruby throat, hovering with delicate wings, expression shows creative intensity.
 
-She interacts with a floating holographic interface, rendered as glowing wireframe panels in emerald with silver accents. The interface displays geometric grids, UI wireframes, and flowing data streams. The panels emit soft particle effects that trail into pixels. The contrast between her realistic hands manipulating the ethereal interface creates visual pop.
+The hummingbird interacts with floating holographic interface panels, rendered as glowing wireframe in emerald with silver accents. The interface displays geometric grids, UI wireframes, and flowing data streams. The panels emit soft particle effects that trail into pixels. The contrast between the bird's realistic form manipulating the ethereal interface creates visual pop.
 
 Background is black with emerald-silver shimmer particles. Designed as a premium collectible portrait.
 ```
@@ -275,16 +315,17 @@ Background is black with emerald-silver shimmer particles. Designed as a premium
 
 | Aspect | AI Partner | Human Partner |
 |--------|-----------|---------------|
-| **Body** | Digital wireframe | Photorealistic |
+| **Body** | Digital wireframe (hollow, transparent) | Photorealistic animal (fox, eagle, raven, etc.) |
 | **Tool/Anchor** | Real physical object (coins, astrolabe, silk) | Digital hologram/portal (keyboard, interface, orb) |
-| **Material contrast** | Digital body holding real object | Real body holding digital tool |
-| **Pop element** | Real object pops against digital body | Digital tool pops against real body |
+| **Material contrast** | Digital body holding real object | Real animal holding digital tool |
+| **Pop element** | Real object pops against digital body | Digital tool pops against real animal |
 | **Background** | Dark void + color particles | Dark void + color particles |
 | **Color palette** | Metallic + accent pairs | Same metallic + accent pairs |
 | **Format** | Square collectible | Square collectible |
-| **Expression** | Role-based (merchant, navigator) | Role-based (developer, designer) |
+| **Representation** | Renaissance archetypes (merchant, navigator) | Animal archetypes (fox=clever, eagle=strategic) |
+| **Personality** | Role via objects (coins, astrolabe) | Role via animal + digital tool |
 
 ---
 
-✅ Using both guides together ensures **AI and human partners are visually coherent** as a matched set while maintaining their distinct ontologies (digital vs. physical).
+✅ Using both guides together ensures **AI and human partners are visually coherent** as a matched set while maintaining their distinct ontologies (digital vs. physical). Animals avoid uncanny valley and add personality.
 
