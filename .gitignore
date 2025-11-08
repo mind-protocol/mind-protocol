@@ -45,6 +45,7 @@ nul
 .env.development.local
 .env.test.local
 .env.production.local
+.env.l2_resolver
 
 # Mind Protocol System Files
 .heartbeats/

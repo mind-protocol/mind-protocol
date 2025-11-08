@@ -1,0 +1,28 @@
+# Gitleaks configuration for Mind Protocol
+# Filters out false positives while catching real secrets
+
+[extend]
+# Use default gitleaks rules
+useDefault = true
+
+[allowlist]
+description = "Allowlist for false positives"
+
+# Example credentials in documentation and examples
+paths = [
+  '''docs/.*\.md$''',
+  '''orchestration/examples/.*\.py$''',
+]
+
+# Example key patterns
+regexes = [
+  '''ed25519_primary_\d+''',
+  '''contributor_abc\d+''',
+]
+
+# Known example tokens
+stopwords = [
+  'AKIAIOSFODNN7EXAMPLE',
+  'sk_live_abc123def456',
+  'super_secret_123',
+]
