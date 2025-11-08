@@ -118,23 +118,15 @@ class ViewResolver:
         self,
         bus: Any,  # Membrane bus for inject/broadcast
         graph: Any,  # FalkorDB adapter (query method)
-        graph_name: str = "mindprotocol",  # Graph name for selector detection
         economy: Optional[EconomyStub] = None,
         cache: Optional[ViewCache] = None
     ):
         self.bus = bus
         self.graph = graph
-        self.graph_name = graph_name
         self.economy = economy or EconomyStub()
         self.cache = cache or ViewCache(ttl_seconds=300)
 
-        # Detect if GraphCare graph (uses ko_type instead of kind)
-        self.use_graphcare_selectors = is_graphcare_graph(graph_name)
-
-        logger.info(
-            f"[ViewResolver] Initialized (L2 org boundary) "
-            f"graph={graph_name} graphcare={self.use_graphcare_selectors}"
-        )
+        logger.info("[ViewResolver] Initialized (L2 org boundary) - graph_name extracted per-request")
 
     def on_docs_view_request(self, envelope: Dict[str, Any]):
         """
@@ -255,9 +247,18 @@ class ViewResolver:
     def _select(self, content: Dict[str, Any]) -> list:
         """Phase A: Execute Cypher selector"""
         view_type = content["view_type"]
+        scope = content.get("scope", {})
+
+        # Extract graph_name from request scope (URL slug)
+        graph_name = scope.get("org") or scope.get("graph")
+        if not graph_name:
+            raise ValueError("scope.org or scope.graph required for graph_name extraction")
+
+        # Detect if GraphCare graph (uses ko_type instead of kind)
+        use_graphcare_selectors = is_graphcare_graph(graph_name)
 
         # Use appropriate selector based on graph type
-        if self.use_graphcare_selectors:
+        if use_graphcare_selectors:
             selector = get_selector_graphcare(view_type)
             logger.debug(f"[ViewResolver] Using GraphCare selector for {view_type}")
         else:
@@ -265,14 +266,13 @@ class ViewResolver:
             logger.debug(f"[ViewResolver] Using standard selector for {view_type}")
 
         # Build params from scope
-        scope = content.get("scope", {})
         params = {
             "scope_org": scope.get("org"),
             "scope_path": scope.get("path", "/"),
             **content.get("params", {})
         }
 
-        return self.graph.query(selector, params=params)
+        return self.graph.query(selector, params=params, graph_name=graph_name)
 
     def _project(self, view_type: str, rows: list) -> Dict[str, Any]:
         """Phase B: Project to view-model"""
@@ -280,7 +280,11 @@ class ViewResolver:
 
     def _selector_text(self, content: Dict[str, Any]) -> str:
         """Get selector text for provenance"""
-        if self.use_graphcare_selectors:
+        scope = content.get("scope", {})
+        graph_name = scope.get("org") or scope.get("graph", "")
+        use_graphcare_selectors = is_graphcare_graph(graph_name)
+
+        if use_graphcare_selectors:
             return get_selector_graphcare(content["view_type"])
         else:
             return get_selector(content["view_type"])

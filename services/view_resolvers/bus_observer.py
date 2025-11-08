@@ -63,17 +63,25 @@ class SimpleBus:
 class SimpleGraph:
     """Minimal graph adapter for L2 resolver."""
 
-    def __init__(self, api_url: str, api_key: str, graph_name: str):
+    def __init__(self, api_url: str, api_key: str):
         self.api_url = api_url
         self.api_key = api_key
-        self.graph_name = graph_name
 
-    def query(self, cypher: str, params: dict = None) -> list:
-        """Execute Cypher query against FalkorDB."""
+    def query(self, cypher: str, params: dict = None, graph_name: str = None) -> list:
+        """Execute Cypher query against FalkorDB.
+
+        Args:
+            cypher: Cypher query string
+            params: Query parameters
+            graph_name: Target graph (extracted from request scope/URL slug)
+        """
         import requests
 
+        if not graph_name:
+            raise ValueError("graph_name required (should be extracted from request scope)")
+
         payload = {
-            "graph_name": self.graph_name,
+            "graph_name": graph_name,
             "query": cypher,
             "params": params or {}
         }
@@ -96,7 +104,7 @@ class SimpleGraph:
             return []
 
         except Exception as e:
-            logger.error(f"[L2 Graph] Query failed: {e}")
+            logger.error(f"[L2 Graph] Query failed for graph '{graph_name}': {e}")
             raise
 
 
@@ -149,12 +157,17 @@ async def main():
     # Configuration from environment
     import os
 
-    api_url = os.getenv("FALKORDB_API_URL", "https://mindprotocol.onrender.com/admin/query")
-    api_key = os.getenv("FALKORDB_API_KEY", "Sxv48F2idLAXMnvqQTdvlQ4gArsDVhK4ROGyU")
-    graph_name = os.getenv("GRAPH_NAME", "scopelock")
+    api_url = os.getenv("FALKORDB_API_URL")
+    if not api_url:
+        raise ValueError("FALKORDB_API_URL environment variable required")
+
+    api_key = os.getenv("FALKORDB_API_KEY")
+    if not api_key:
+        raise ValueError("FALKORDB_API_KEY environment variable required")
+
     observe_uri = os.getenv("MEMBRANE_OBSERVE_URI", "ws://localhost:8765/observe")
 
-    logger.info(f"[L2 Observer] Starting for org: {graph_name}")
+    logger.info(f"[L2 Observer] Starting L2 resolver")
     logger.info(f"[L2 Observer] FalkorDB: {api_url}")
     logger.info(f"[L2 Observer] Bus: {observe_uri}")
 
@@ -162,10 +175,10 @@ async def main():
     bus = SimpleBus()
     await bus.connect()
 
-    # Create graph adapter
-    graph = SimpleGraph(api_url, api_key, graph_name)
+    # Create graph adapter (no graph_name - extracted per-request)
+    graph = SimpleGraph(api_url, api_key)
 
-    # Create resolver
+    # Create resolver (graph_name extracted from request scope)
     economy = EconomyStub()
     cache = ViewCache(ttl_seconds=300)
     resolver = ViewResolver(bus=bus, graph=graph, economy=economy, cache=cache)
