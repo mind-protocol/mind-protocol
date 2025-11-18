@@ -386,7 +386,7 @@ From review plan § 1.1:
 
 ```bash
 # Run Phase 1 static analysis
-cd /home/mind-protocol/mindprotocol
+cd /home/mind-protocol/mind-protocol
 python3 -m orchestration.adapters.lint.adapter_lint_python
 ```
 

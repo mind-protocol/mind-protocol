@@ -696,12 +696,12 @@ techServiceOrg commits to:
 
 ## References
 
-- **consultingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
-- **GraphCare Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/graphcare_role.md`
-- **scalingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
-- **financeOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/financeOrg_role.md`
-- **legalOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/legalOrg_role.md`
-- **Organism Economics:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
+- **consultingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
+- **GraphCare Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/graphcare_role.md`
+- **scalingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
+- **financeOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/financeOrg_role.md`
+- **legalOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/legalOrg_role.md`
+- **Organism Economics:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
 
 ---
 

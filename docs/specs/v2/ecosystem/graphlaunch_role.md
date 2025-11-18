@@ -786,10 +786,10 @@ else:
 
 ## References
 
-- **GraphCare Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/graphcare_role.md`
-- **MindCatalyst Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/mindcatalyst_role.md`
-- **Organism Economics:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
-- **L4 Laws:** `/home/mind-protocol/mindprotocol/docs/L4-law/`
+- **GraphCare Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/graphcare_role.md`
+- **MindCatalyst Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/mindcatalyst_role.md`
+- **Organism Economics:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
+- **L4 Laws:** `/home/mind-protocol/mind-protocol/docs/L4-law/`
 
 ---
 

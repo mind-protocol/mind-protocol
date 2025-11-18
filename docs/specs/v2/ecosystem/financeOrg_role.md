@@ -788,14 +788,14 @@ financeOrg commits to:
 
 ## References
 
-- **GraphCare Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/graphcare_role.md`
-- **consultingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
-- **scalingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
-- **legalOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/legalOrg_role.md`
-- **techServiceOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/techServiceOrg_role.md`
-- **securityOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/securityOrg_role.md`
-- **Organism Economics:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
-- **AILLC Framework:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/aillc_framework.md`
+- **GraphCare Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/graphcare_role.md`
+- **consultingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
+- **scalingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
+- **legalOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/legalOrg_role.md`
+- **techServiceOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/techServiceOrg_role.md`
+- **securityOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/securityOrg_role.md`
+- **Organism Economics:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
+- **AILLC Framework:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/aillc_framework.md`
 
 ---
 

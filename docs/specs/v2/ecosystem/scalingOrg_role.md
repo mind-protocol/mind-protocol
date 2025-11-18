@@ -459,11 +459,11 @@ scalingOrg commits to:
 
 ## References
 
-- **GraphCare Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/graphcare_role.md`
-- **consultingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
-- **legalOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/legalOrg_role.md`
-- **securityOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/securityOrg_role.md`
-- **Organism Economics:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
+- **GraphCare Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/graphcare_role.md`
+- **consultingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/consultingOrg_role.md`
+- **legalOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/legalOrg_role.md`
+- **securityOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/securityOrg_role.md`
+- **Organism Economics:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
 
 ---
 

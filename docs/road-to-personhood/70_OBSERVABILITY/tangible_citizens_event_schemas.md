@@ -495,7 +495,7 @@ This specification defines **event schemas for two revenue SKUs**:
     "additions": 15,
     "deletions": 3,
     "branch": "main",
-    "repo": "mind-protocol/mindprotocol"
+    "repo": "mind-protocol/mind-protocol"
   }
 }
 ```

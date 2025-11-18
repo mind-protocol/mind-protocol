@@ -331,7 +331,7 @@ python status_check.py
 - `README.md` - May reference graph names
 - `docs/specs/v2/` - Architecture documentation
 - `orchestration/SCRIPT_MAP.md` - Script documentation
-- `consciousness/citizens/CLAUDE.md` - System status
+- `citizens/CLAUDE.md` - System status
 - `docs/L4_INTEGRATION_TICKET_MATRIX.md` - May reference protocol graph
 
 ---

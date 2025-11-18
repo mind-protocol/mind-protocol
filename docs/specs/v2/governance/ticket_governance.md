@@ -54,7 +54,7 @@ All types share the same base schema and governance rules.
 **Canonical format:** `ticket_id = "gh:<org>/<repo>#<number>"`
 
 **Examples:**
-- `gh:mind-protocol/mindprotocol#123`
+- `gh:mind-protocol/mind-protocol#123`
 - `gh:acme-corp/internal-tools#456`
 
 **Properties:**
@@ -87,8 +87,8 @@ Work items in FalkorDB use `node_id` derived from `ticket_id`:
 **Example:**
 ```cypher
 CREATE (:U4_Work_Item {
-  node_id: "wi:mind-protocol/mindprotocol#123",
-  ticket_id: "gh:mind-protocol/mindprotocol#123",
+  node_id: "wi:mind-protocol/mind-protocol#123",
+  ticket_id: "gh:mind-protocol/mind-protocol#123",
   name: "[L4-123] Implement R-400 scanner",
   work_type: "ticket",
   ...
@@ -184,7 +184,7 @@ All work items MUST have:
 
 | Field | Type | Description | Example |
 |-------|------|-------------|---------|
-| `ticket_id` | string | Canonical GitHub ID | `gh:mind-protocol/mindprotocol#123` |
+| `ticket_id` | string | Canonical GitHub ID | `gh:mind-protocol/mind-protocol#123` |
 | `name` | string | Title (may include short code) | `[L4-123] Implement R-400 scanner` |
 | `work_type` | enum | `ticket\|bug\|mission\|milestone` | `ticket` |
 | `state` | enum | Current lifecycle state | `doing` |
@@ -376,7 +376,7 @@ def can_close_ticket(ticket: U4_Work_Item) -> tuple[bool, str]:
   "timestamp": "2025-10-31T10:45:00Z",
   "actor_ref": "github:ada",
   "payload": {
-    "ticket_id": "gh:mind-protocol/mindprotocol#123",
+    "ticket_id": "gh:mind-protocol/mind-protocol#123",
     "work_type": "ticket",
     "state": "doing",
     "state_previous": "todo",

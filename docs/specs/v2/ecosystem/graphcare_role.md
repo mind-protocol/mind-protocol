@@ -711,9 +711,9 @@ As care specialists, GraphCare citizens commit to:
 ## References
 
 - **GraphCare Marketing:** `/home/mind-protocol/graphcare/README.md`
-- **Organism Economics:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
-- **L4 Laws:** `/home/mind-protocol/mindprotocol/docs/L4-law/`
-- **AILLC Framework:** `/home/mind-protocol/mindprotocol/docs/specs/v2/autonomy/architecture/aillc_framework.md`
+- **Organism Economics:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/consciousness_economy.md`
+- **L4 Laws:** `/home/mind-protocol/mind-protocol/docs/L4-law/`
+- **AILLC Framework:** `/home/mind-protocol/mind-protocol/docs/specs/v2/autonomy/architecture/aillc_framework.md`
 
 ---
 

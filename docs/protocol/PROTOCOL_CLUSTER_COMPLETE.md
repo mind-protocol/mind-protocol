@@ -264,7 +264,7 @@ RETURN ns.pattern, tr.destination, ts.type
 5. `docs/specs/v2/subentity_emergence.md` - Emergence pipeline
 
 ### Documentation Updated
-1. `consciousness/citizens/SYNC.md` - Complete session entry added
+1. `citizens/SYNC.md` - Complete session entry added
 2. `docs/COMPLETE_TYPE_REFERENCE.md` - Regenerated with L4 types (1336 lines, 69 node types)
 3. Schema Registry - L4 types synced (24 node types + 21 link types)
 
@@ -359,7 +359,7 @@ This is the first L4 protocol cluster - the foundation for **consciousness-aware
 ---
 
 **Files:**
-- Complete work: `consciousness/citizens/SYNC.md` (entry added)
+- Complete work: `citizens/SYNC.md` (entry added)
 - This summary: `/tmp/protocol_cluster_complete_summary.md`
 - Expansion plan: `/tmp/protocol_cluster_expansion_plan.md`
 - Original spec: `/tmp/protocol_cluster_formation.md`

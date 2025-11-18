@@ -876,7 +876,7 @@ class TelegramConnector(ConnectorBase):
 ```json
 {
   "type": "repo.commit.detected",
-  "repo": "mind-protocol/mindprotocol",
+  "repo": "mind-protocol/mind-protocol",
   "branch": "main",
   "commit": "abc123...",
   "author": "contributor_xyz",

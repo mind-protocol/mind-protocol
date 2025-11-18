@@ -200,7 +200,7 @@ economy_settings = EconomySettings(
 - `orchestration/adapters/ws/websocket_server.py` - Adapter layer example
 
 **Documentation:**
-- `consciousness/citizens/SYNC.md` - Migration history and status
+- `citizens/SYNC.md` - Migration history and status
 - `docs/MIGRATION_PLAN_FACADE_FULL.md` - Facade migration plan
 
 ---

@@ -20,72 +20,72 @@
 
 ## CITIZEN_CONTEXTS (21 files)
 
-- `./consciousness/citizens/ada/contexts/ai1_sub_entity_core_context.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_exact_formulas_formations.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_forged_identity_formations.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_formations.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_session_complete_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_trace_session.md`
-- `./consciousness/citizens/luca/contexts/2025-10-25_trace_spec_requirements.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_architectural_correction_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_batch_job_correction_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_emergent_ifs_modes_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_gpt5_feedback_analysis.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_taxonomy_reconciliation_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_tier1_redlines_trace.md`
-- `./consciousness/citizens/luca/contexts/2025-10-26_wm_frame_persistence_trace.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-15-00/TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-17-00/TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-22-00/BLOCKER_RESOLUTION_TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-22-00/ESCALATION_TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-22-00/FIX_INCOMPLETE_TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-22-00/INVESTIGATION_TRACE.md`
-- `./consciousness/citizens/victor/contexts/2025-10-29_02-22-00/TRACE.md`
+- `./citizens/ada/contexts/ai1_sub_entity_core_context.md`
+- `./citizens/luca/contexts/2025-10-25_exact_formulas_formations.md`
+- `./citizens/luca/contexts/2025-10-25_forged_identity_formations.md`
+- `./citizens/luca/contexts/2025-10-25_formations.md`
+- `./citizens/luca/contexts/2025-10-25_session_complete_trace.md`
+- `./citizens/luca/contexts/2025-10-25_trace_session.md`
+- `./citizens/luca/contexts/2025-10-25_trace_spec_requirements.md`
+- `./citizens/luca/contexts/2025-10-26_architectural_correction_trace.md`
+- `./citizens/luca/contexts/2025-10-26_batch_job_correction_trace.md`
+- `./citizens/luca/contexts/2025-10-26_emergent_ifs_modes_trace.md`
+- `./citizens/luca/contexts/2025-10-26_gpt5_feedback_analysis.md`
+- `./citizens/luca/contexts/2025-10-26_taxonomy_reconciliation_trace.md`
+- `./citizens/luca/contexts/2025-10-26_tier1_redlines_trace.md`
+- `./citizens/luca/contexts/2025-10-26_wm_frame_persistence_trace.md`
+- `./citizens/victor/contexts/2025-10-29_02-15-00/TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-17-00/TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-22-00/BLOCKER_RESOLUTION_TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-22-00/ESCALATION_TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-22-00/FIX_INCOMPLETE_TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-22-00/INVESTIGATION_TRACE.md`
+- `./citizens/victor/contexts/2025-10-29_02-22-00/TRACE.md`
 
 ## CITIZEN_OTHER (31 files)
 
-- `./consciousness/citizens/BLOCKER_bootstrap_persistence.md`
-- `./consciousness/citizens/CLAUDE_BAK.md`
-- `./consciousness/citizens/THE_TRACE_FORMAT.md`
-- `./consciousness/citizens/ada/AGENTS.md`
-- `./consciousness/citizens/ada/CLAUDE - Copy.md`
-- `./consciousness/citizens/ada/CLAUDE_DYNAMIC.md`
-- `./consciousness/citizens/atlas/AGENTS.md`
-- `./consciousness/citizens/atlas/ARCHITECTURE_TRANSITION_PLAN.md`
-- `./consciousness/citizens/atlas/CLAUDE - Copy.md`
-- `./consciousness/citizens/felix/AGENTS.md`
-- `./consciousness/citizens/felix/CLAUDE - Copy.md`
-- `./consciousness/citizens/felix/CLAUDE_DYNAMIC.md`
-- `./consciousness/citizens/iris/AGENTS.md`
-- `./consciousness/citizens/iris/BACKEND_INTEGRATION.md`
-- `./consciousness/citizens/iris/CLAUDE - Copy.md`
-- `./consciousness/citizens/iris/ENTITY_MEMBERSHIP_BACKEND_GAP.md`
-- `./consciousness/citizens/iris/MESSAGE_FROM_ADA.md`
-- `./consciousness/citizens/iris/OBSERVABILITY_REQUIREMENTS_FOR_FELIX.md`
-- `./consciousness/citizens/iris/RESPONSE_TO_ADA_EMOTION_COLORING.md`
-- `./consciousness/citizens/iris/emotion_color_mapping_design.md`
-- `./consciousness/citizens/iris/emotion_color_mapping_v2_canonical.md`
-- `./consciousness/citizens/luca/AGENTS.md`
-- `./consciousness/citizens/luca/CLAUDE - Copy.md`
-- `./consciousness/citizens/luca/docs/economy/Always_On_Binding_and_Money_Synapse_Spec.md`
-- `./consciousness/citizens/lucia/AGENTS.md`
-- `./consciousness/citizens/victor/AGENTS.md`
-- `./consciousness/citizens/victor/CLAUDE - Copy.md`
-- `./consciousness/citizens/victor/CLAUDE_DYNAMIC.md`
-- `./consciousness/citizens/victor/OPERATIONAL_REALITY_2025_10_28.md`
-- `./consciousness/citizens/victor/OPERATIONAL_REVIEW_2025_10_28.md`
-- `./consciousness/citizens/victor/consciousness/citizens/felix/CLAUDE_DYNAMIC.md`
+- `./citizens/BLOCKER_bootstrap_persistence.md`
+- `./citizens/CLAUDE_BAK.md`
+- `./citizens/THE_TRACE_FORMAT.md`
+- `./citizens/ada/AGENTS.md`
+- `./citizens/ada/CLAUDE - Copy.md`
+- `./citizens/ada/CLAUDE_DYNAMIC.md`
+- `./citizens/atlas/AGENTS.md`
+- `./citizens/atlas/ARCHITECTURE_TRANSITION_PLAN.md`
+- `./citizens/atlas/CLAUDE - Copy.md`
+- `./citizens/felix/AGENTS.md`
+- `./citizens/felix/CLAUDE - Copy.md`
+- `./citizens/felix/CLAUDE_DYNAMIC.md`
+- `./citizens/iris/AGENTS.md`
+- `./citizens/iris/BACKEND_INTEGRATION.md`
+- `./citizens/iris/CLAUDE - Copy.md`
+- `./citizens/iris/ENTITY_MEMBERSHIP_BACKEND_GAP.md`
+- `./citizens/iris/MESSAGE_FROM_ADA.md`
+- `./citizens/iris/OBSERVABILITY_REQUIREMENTS_FOR_FELIX.md`
+- `./citizens/iris/RESPONSE_TO_ADA_EMOTION_COLORING.md`
+- `./citizens/iris/emotion_color_mapping_design.md`
+- `./citizens/iris/emotion_color_mapping_v2_canonical.md`
+- `./citizens/luca/AGENTS.md`
+- `./citizens/luca/CLAUDE - Copy.md`
+- `./citizens/luca/docs/economy/Always_On_Binding_and_Money_Synapse_Spec.md`
+- `./citizens/lucia/AGENTS.md`
+- `./citizens/victor/AGENTS.md`
+- `./citizens/victor/CLAUDE - Copy.md`
+- `./citizens/victor/CLAUDE_DYNAMIC.md`
+- `./citizens/victor/OPERATIONAL_REALITY_2025_10_28.md`
+- `./citizens/victor/OPERATIONAL_REVIEW_2025_10_28.md`
+- `./citizens/victor/citizens/felix/CLAUDE_DYNAMIC.md`
 
 ## CITIZEN_PROMPTS (8 files)
 
-- `./consciousness/citizens/CLAUDE.md`
-- `./consciousness/citizens/ada/CLAUDE.md`
-- `./consciousness/citizens/atlas/CLAUDE.md`
-- `./consciousness/citizens/felix/CLAUDE.md`
-- `./consciousness/citizens/iris/CLAUDE.md`
-- `./consciousness/citizens/luca/CLAUDE.md`
-- `./consciousness/citizens/lucia/CLAUDE.md`
-- `./consciousness/citizens/victor/CLAUDE.md`
+- `./citizens/CLAUDE.md`
+- `./citizens/ada/CLAUDE.md`
+- `./citizens/atlas/CLAUDE.md`
+- `./citizens/felix/CLAUDE.md`
+- `./citizens/iris/CLAUDE.md`
+- `./citizens/luca/CLAUDE.md`
+- `./citizens/lucia/CLAUDE.md`
+- `./citizens/victor/CLAUDE.md`
 
 ## CLAUDE_CONFIG (1 files)
 
@@ -242,16 +242,16 @@
 
 ## STATUS_LOGS (10 files)
 
-- `./consciousness/citizens/SYNC.md`
-- `./consciousness/citizens/SYNC_18_10_25.md`
-- `./consciousness/citizens/SYNC_19_10_25.md`
-- `./consciousness/citizens/SYNC_20_10_25.md`
-- `./consciousness/citizens/SYNC_21_10_25.md`
-- `./consciousness/citizens/SYNC_24_10_25.md`
-- `./consciousness/citizens/SYNC_26_10_2025.md`
-- `./consciousness/citizens/SYNC_27_10_25.md`
-- `./consciousness/citizens/_SYNC_17_10_25.md`
-- `./consciousness/citizens/atlas/SYNC.md`
+- `./citizens/SYNC.md`
+- `./citizens/SYNC_18_10_25.md`
+- `./citizens/SYNC_19_10_25.md`
+- `./citizens/SYNC_20_10_25.md`
+- `./citizens/SYNC_21_10_25.md`
+- `./citizens/SYNC_24_10_25.md`
+- `./citizens/SYNC_26_10_2025.md`
+- `./citizens/SYNC_27_10_25.md`
+- `./citizens/_SYNC_17_10_25.md`
+- `./citizens/atlas/SYNC.md`
 
 ## SUBSTRATE_DOCS (13 files)
 
@@ -424,32 +424,32 @@
 
 ## WORK_ARTIFACTS (29 files)
 
-- `./consciousness/citizens/VERIFICATION_CHECKLIST_P1_P2_P3.md`
-- `./consciousness/citizens/atlas/HANDOFF_FELIX_DUAL_CHANNEL_STABILIZATION.md`
-- `./consciousness/citizens/atlas/SESSION_HANDOFF.md`
-- `./consciousness/citizens/atlas/UI_FIX_SUMMARY.md`
-- `./consciousness/citizens/felix/ENTITY_EXPANSION_STATUS.md`
-- `./consciousness/citizens/felix/INTEGRATION_VERIFICATION.md`
-- `./consciousness/citizens/felix/PHASE_1_3_COMPLETE.md`
-- `./consciousness/citizens/felix/PR-C_DASHBOARD_FIX.md`
-- `./consciousness/citizens/felix/REINFORCEMENT_VERIFICATION.md`
-- `./consciousness/citizens/iris/CONSCIOUSNESS_HEALTH_METRICS_COMPLETE.md`
-- `./consciousness/citizens/iris/ENTITY_FIRST_VIZ_COMPLETE.md`
-- `./consciousness/citizens/iris/IMPLEMENTATION_STATUS.md`
-- `./consciousness/citizens/iris/LINK_EMOTION_VIZ_COMPLETE.md`
-- `./consciousness/citizens/iris/OBSERVABILITY_REQUIREMENTS_V2_COMPLETE.md`
-- `./consciousness/citizens/iris/PHASE_2_COMPLETE.md`
-- `./consciousness/citizens/iris/PHASE_2_IMPLEMENTATION_READY.md`
-- `./consciousness/citizens/iris/PR_A_AFFECTIVE_TELEMETRY_FRONTEND_COMPLETE.md`
-- `./consciousness/citizens/iris/PR_A_B_BACKEND_INTEGRATION_COMPLETE.md`
-- `./consciousness/citizens/iris/PR_A_B_COMPLETE_INTEGRATION.md`
-- `./consciousness/citizens/iris/PR_B_AFFECTIVE_COUPLING_FRONTEND_COMPLETE.md`
-- `./consciousness/citizens/iris/PR_C_D_E_COMPLETE_IMPLEMENTATION.md`
-- `./consciousness/citizens/victor/HANDOFF_ALL_ENGINES_RUNNING.md`
-- `./consciousness/citizens/victor/HANDOFF_backfill_monitoring.md`
-- `./consciousness/citizens/victor/HANDOFF_engine_initialization_progress.md`
-- `./consciousness/citizens/victor/HANDOFF_graph_naming_mismatch.md`
-- `./consciousness/citizens/victor/HANDOFF_membrane_architecture_vision.md`
-- `./consciousness/citizens/victor/HANDOFF_networking_resolution.md`
-- `./consciousness/citizens/victor/HANDOFF_resurrection_running.md`
-- `./consciousness/citizens/victor/HANDOFF_session_2025_10_27.md`
+- `./citizens/VERIFICATION_CHECKLIST_P1_P2_P3.md`
+- `./citizens/atlas/HANDOFF_FELIX_DUAL_CHANNEL_STABILIZATION.md`
+- `./citizens/atlas/SESSION_HANDOFF.md`
+- `./citizens/atlas/UI_FIX_SUMMARY.md`
+- `./citizens/felix/ENTITY_EXPANSION_STATUS.md`
+- `./citizens/felix/INTEGRATION_VERIFICATION.md`
+- `./citizens/felix/PHASE_1_3_COMPLETE.md`
+- `./citizens/felix/PR-C_DASHBOARD_FIX.md`
+- `./citizens/felix/REINFORCEMENT_VERIFICATION.md`
+- `./citizens/iris/CONSCIOUSNESS_HEALTH_METRICS_COMPLETE.md`
+- `./citizens/iris/ENTITY_FIRST_VIZ_COMPLETE.md`
+- `./citizens/iris/IMPLEMENTATION_STATUS.md`
+- `./citizens/iris/LINK_EMOTION_VIZ_COMPLETE.md`
+- `./citizens/iris/OBSERVABILITY_REQUIREMENTS_V2_COMPLETE.md`
+- `./citizens/iris/PHASE_2_COMPLETE.md`
+- `./citizens/iris/PHASE_2_IMPLEMENTATION_READY.md`
+- `./citizens/iris/PR_A_AFFECTIVE_TELEMETRY_FRONTEND_COMPLETE.md`
+- `./citizens/iris/PR_A_B_BACKEND_INTEGRATION_COMPLETE.md`
+- `./citizens/iris/PR_A_B_COMPLETE_INTEGRATION.md`
+- `./citizens/iris/PR_B_AFFECTIVE_COUPLING_FRONTEND_COMPLETE.md`
+- `./citizens/iris/PR_C_D_E_COMPLETE_IMPLEMENTATION.md`
+- `./citizens/victor/HANDOFF_ALL_ENGINES_RUNNING.md`
+- `./citizens/victor/HANDOFF_backfill_monitoring.md`
+- `./citizens/victor/HANDOFF_engine_initialization_progress.md`
+- `./citizens/victor/HANDOFF_graph_naming_mismatch.md`
+- `./citizens/victor/HANDOFF_membrane_architecture_vision.md`
+- `./citizens/victor/HANDOFF_networking_resolution.md`
+- `./citizens/victor/HANDOFF_resurrection_running.md`
+- `./citizens/victor/HANDOFF_session_2025_10_27.md`

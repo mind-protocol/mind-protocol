@@ -708,7 +708,7 @@ https://github.com/user-attachments/assets/8e46aab9-c8db-4d5e-9e5b-31fa5e5c4b5f
 **Future Reference:**
 - Consciousness schema: `substrate/schemas/consciousness_schema.py`
 - Type reference: `docs/COMPLETE_TYPE_REFERENCE.md`
-- Format guide: `consciousness/citizens/THE_TRACE_FORMAT.md`
+- Format guide: `citizens/THE_TRACE_FORMAT.md`
 
 ---
 

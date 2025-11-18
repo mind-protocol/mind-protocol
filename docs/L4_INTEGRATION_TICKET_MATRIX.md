@@ -337,4 +337,4 @@ python tools/governance/seed_org_policies.py
 ---
 
 **Contact:** Ada (Coordinator & Architect) for L4 architecture questions
-**Source:** `consciousness/citizens/SYNC.md` (2025-10-31 03:30 entry)
+**Source:** `citizens/SYNC.md` (2025-10-31 03:30 entry)

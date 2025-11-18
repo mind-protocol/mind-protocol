@@ -149,7 +149,7 @@ ls -la /home/mind-protocol/{org_name}
 
 ```bash
 # Copy Mind Protocol citizen template
-cp /home/mind-protocol/mindprotocol/consciousness/citizens/CLAUDE.md \
+cp /home/mind-protocol/mind-protocol/citizens/CLAUDE.md \
    /home/mind-protocol/{org_name}/citizens/CLAUDE.md
 ```
 
@@ -349,7 +349,7 @@ docker exec falkordb redis-cli GRAPH.LIST
 **Manual Process:**
 Currently no automated way to register org namespaces. Must manually configure WebSocket server.
 
-**Where:** `/home/mind-protocol/mindprotocol/orchestration/services/ws_api.py` (or equivalent)
+**Where:** `/home/mind-protocol/mind-protocol/orchestration/services/ws_api.py` (or equivalent)
 
 **What to Add:**
 ```python
@@ -408,7 +408,7 @@ wscat -c "ws://localhost:8000/ws/hri.test"
 **Manual Process:**
 Currently no automated org dashboard provisioning. Must manually create Next.js routes.
 
-**Where:** `/home/mind-protocol/mindprotocol/app/consciousness/{org_name}/`
+**Where:** `/home/mind-protocol/mind-protocol/app/consciousness/{org_name}/`
 
 **Directory Structure to Create:**
 ```
@@ -447,7 +447,7 @@ export default async function HRICitizenDashboard({ params }) {
 **Verification:**
 ```bash
 # Start dashboard
-cd /home/mind-protocol/mindprotocol
+cd /home/mind-protocol/mind-protocol
 npm run dev
 
 # Visit in browser:
@@ -1062,9 +1062,9 @@ bash ~/mind-protocol/tools/mp.sh ask "Show me organizational graph"
 
 ## References
 
-- **Org Onboarding Architecture:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/org_onboarding_architecture.md`
-- **scalingOrg Role:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
-- **Ecosystem Overview:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/ecosystem_organizations_overview.md`
+- **Org Onboarding Architecture:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/org_onboarding_architecture.md`
+- **scalingOrg Role:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/scalingOrg_role.md`
+- **Ecosystem Overview:** `/home/mind-protocol/mind-protocol/docs/specs/v2/ecosystem/ecosystem_organizations_overview.md`
 - **HRI Investigation:** `/home/mind-protocol/hri/` (workspace structure analysis)
 
 ---

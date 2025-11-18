@@ -311,7 +311,7 @@ ORDER BY deficit_to_advance
     "tool_id": "tool.git_watcher",
     "action": "monitor_repo",
     "parameters": {
-      "repo_url": "https://github.com/mind-protocol/mindprotocol",
+      "repo_url": "https://github.com/mind-protocol/mind-protocol",
       "branch": "main",
       "poll_interval_seconds": 300
     },
@@ -337,7 +337,7 @@ ORDER BY deficit_to_advance
     "status": "success",
     "result": {
       "monitoring_started": true,
-      "repo_url": "https://github.com/mind-protocol/mindprotocol",
+      "repo_url": "https://github.com/mind-protocol/mind-protocol",
       "next_poll": "2025-10-30T15:05:00Z"
     },
     "cost_charged": 5

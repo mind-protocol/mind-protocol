@@ -301,7 +301,7 @@ Result: FAIL (3 errors block CI)
 
 **Output (`build/mp-lint-edges.ndjson`):**
 ```json
-{"edge_type":"U4_Code_Artifact","data":{"type":"U4_Code_Artifact","repo":"mind-protocol/mindprotocol","path":"orchestration/mechanisms/consciousness_engine_v2.py","lang":"python","hash":"sha256:abc123...","last_lint_ts":"2025-10-31T12:00:00Z","last_lint_status":"pass"}}
+{"edge_type":"U4_Code_Artifact","data":{"type":"U4_Code_Artifact","repo":"mind-protocol/mind-protocol","path":"orchestration/mechanisms/consciousness_engine_v2.py","lang":"python","hash":"sha256:abc123...","last_lint_ts":"2025-10-31T12:00:00Z","last_lint_status":"pass"}}
 {"edge_type":"U4_EMITS","from":{"type":"U4_Code_Artifact","path":"orchestration/mechanisms/consciousness_engine_v2.py"},"to":{"type":"U4_Topic_Namespace","name":"graph.delta.subentity.snapshot"},"evidence":{"rule_passes":["R-001","R-002","R-003"],"emit_count":3,"lines":[145,267,892],"lint_ts":"2025-10-31T12:00:00Z"}}
 {"edge_type":"U4_CONSUMES","from":{"type":"U4_Code_Artifact","path":"app/consciousness/hooks/useDashboardState.ts"},"to":{"type":"U4_Topic_Namespace","name":"dashboard.state"},"evidence":{"subscribe_count":1,"lines":[15]}}
 {"edge_type":"U4_IMPLEMENTS","from":{"type":"U4_Code_Artifact","path":"orchestration/adapters/ws/safe_broadcaster.py"},"to":{"type":"U4_Capability","name":"CAP_BROADCAST_RESILIENT"},"evidence":{"implements_pattern":"SafeBroadcaster","lint_ts":"2025-10-31T12:00:00Z"}}
@@ -1636,7 +1636,7 @@ if __name__ == "__main__":
 ```python
 {
     "type": "U4_Code_Artifact",
-    "repo": "mind-protocol/mindprotocol",
+    "repo": "mind-protocol/mind-protocol",
     "path": "orchestration/mechanisms/consciousness_engine_v2.py",
     "lang": "python",  # or "typescript", "javascript"
     "hash": "sha256:abc123...",  # Git blob hash for precise versioning

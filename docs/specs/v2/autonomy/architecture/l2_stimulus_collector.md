@@ -626,7 +626,7 @@ class L2StimulusCollector:
 
     def _extract_citizen_from_path(self, path: str) -> Optional[str]:
         """Extract citizen ID from file path."""
-        # Pattern: consciousness/citizens/{citizen}/...
+        # Pattern: citizens/{citizen}/...
         match = re.search(r'citizens/(\w+)/', path)
         if match:
             return match.group(1)
@@ -694,7 +694,7 @@ class L2ActivityWatcher:
         self.file_observer = Observer()
         self.file_observer.schedule(
             FileEventHandler(collector),
-            path="/home/mind-protocol/mindprotocol",
+            path="/home/mind-protocol/mind-protocol",
             recursive=True
         )
 

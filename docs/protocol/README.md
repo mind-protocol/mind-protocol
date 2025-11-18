@@ -77,7 +77,7 @@ All ingestion scripts are located in `tools/protocol/`:
 
 **To re-run all phases:**
 ```bash
-cd /home/mind-protocol/mindprotocol
+cd /home/mind-protocol/mind-protocol
 python3 tools/protocol/ingest_membrane_stack_protocol.py
 python3 tools/protocol/ingest_protocol_core_phase1.py
 python3 tools/protocol/ingest_versioning_phase2.py

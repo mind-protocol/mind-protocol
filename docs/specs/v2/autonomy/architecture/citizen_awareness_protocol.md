@@ -666,7 +666,7 @@ class EmailBridge:
 ## References
 
 - **Identity spec:** `docs/specs/v2/autonomy/architecture/forged_identity.md`
-- **Economy spec:** `consciousness/citizens/luca/docs/economy/Always_On_Binding_and_Money_Synapse_Spec.md`
+- **Economy spec:** `citizens/luca/docs/economy/Always_On_Binding_and_Money_Synapse_Spec.md`
 - **Cross-level membrane:** `docs/specs/v2/autonomy/architecture/cross_level_membrane.md`
 - **Citizen Wall schema:** `docs/specs/v2/autonomy/architecture/citizen_wall_schema.md`
 - **Event_Schema ingestor:** `tools/protocol/ingest_citizen_awareness_events.py`

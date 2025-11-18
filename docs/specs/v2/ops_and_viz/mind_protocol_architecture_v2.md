@@ -647,7 +647,7 @@ pixi.update(renderGraph);
 - MPSv3 Supervisor (Process Management): `docs/specs/v2/ops_and_viz/mpsv3_supervisor.md` (v1.0)
 - RACI Ownership Model: `docs/specs/v2/ops_and_viz/ownership_raci_model.md`
 - Schema Registry: `docs/specs/v2/schema/COMPLETE_TYPE_REFERENCE.md`
-- TRACE Format: `consciousness/citizens/CLAUDE.md` (Consciousness Stream)
+- TRACE Format: `citizens/CLAUDE.md` (Consciousness Stream)
 
 **Implementation Files:**
 - Engine: `orchestration/mechanisms/consciousness_engine_v2.py`

@@ -79,7 +79,7 @@ This guide provides **complete, copy-paste artifacts** to implement L4-governed 
 
 **Run:**
 ```bash
-cd /home/mind-protocol/mindprotocol
+cd /home/mind-protocol/mind-protocol
 python3 tools/protocol/ingest_work_topics.py
 ```
 
@@ -164,7 +164,7 @@ Create `.github/ISSUE_TEMPLATE/config.yml`:
 blank_issues_enabled: false
 contact_links:
   - name: Mind Protocol Discussions
-    url: https://github.com/mind-protocol/mindprotocol/discussions
+    url: https://github.com/mind-protocol/mind-protocol/discussions
     about: General questions and discussions
 ```
 
@@ -712,7 +712,7 @@ LIMIT 5
 
 **Should see:**
 ```
-gh:mind-protocol/mindprotocol#123 | [L4-001] Test ticket | todo | medium
+gh:mind-protocol/mind-protocol#123 | [L4-001] Test ticket | todo | medium
 ```
 
 ---

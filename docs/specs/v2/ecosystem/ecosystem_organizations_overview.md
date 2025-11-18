@@ -715,7 +715,7 @@ Mind Protocol Foundation (tier advancement approval)
 ### Framework Documents
 - **Organism Economics:** `consciousness_economy.md`
 - **AILLC Framework:** `aillc_framework.md`
-- **L4 Laws:** `/home/mind-protocol/mindprotocol/docs/L4-law/`
+- **L4 Laws:** `/home/mind-protocol/mind-protocol/docs/L4-law/`
 
 ---
 
