@@ -309,53 +309,67 @@ const TYPE_ICONS = {
   GUIDE: '📖',
 };
 
-function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number; onSelect: (node: DocNode) => void }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2); // Auto-expand first 2 levels
+function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
   const hasChildren = node.children && node.children.length > 0;
 
   return (
-    <div className="select-none">
-      <div
-        className={`flex items-start gap-3 py-2 px-3 rounded-md cursor-pointer transition-all hover:bg-gray-800/50 group ${
-          level === 0 ? 'font-bold text-lg' : ''
-        }`}
-        style={{ paddingLeft: `${level * 1.5 + 0.75}rem` }}
-        onClick={() => {
-          if (hasChildren) {
-            setIsExpanded(!isExpanded);
-          }
-          if (node.path) {
-            onSelect(node);
-          }
-        }}
-      >
-        {hasChildren && (
-          <span className="text-[#22d3ee] mt-1 flex-shrink-0 text-sm">
-            {isExpanded ? '▼' : '▶'}
+    <div className={`${level === 0 ? 'mb-12' : 'mb-6'}`}>
+      {/* Node Header */}
+      <div className={`${level === 0 ? 'mb-6' : 'mb-4'}`}>
+        <div className="flex items-center gap-3 mb-3">
+          <span
+            className={`${level === 0 ? 'text-3xl' : level === 1 ? 'text-2xl' : 'text-xl'} flex-shrink-0 cursor-help`}
+            title={TYPE_NAMES[node.type]}
+          >
+            {TYPE_ICONS[node.type]}
           </span>
-        )}
-        {!hasChildren && <span className="w-3"></span>}
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-lg flex-shrink-0 cursor-help"
-              title={TYPE_NAMES[node.type]}
-            >
-              {TYPE_ICONS[node.type]}
-            </span>
-            <span className={`font-semibold ${TYPE_COLORS[node.type]} ${level === 0 ? 'text-xl' : 'text-base'}`}>
-              {node.name}
-            </span>
-          </div>
+          <h2 className={`font-bold ${TYPE_COLORS[node.type]} ${
+            level === 0 ? 'text-4xl' : level === 1 ? 'text-3xl' : 'text-2xl'
+          }`}>
+            {node.name}
+          </h2>
         </div>
+
+        {node.purpose && (
+          <p className={`text-gray-300 leading-relaxed ${level === 0 ? 'text-lg' : 'text-base'}`}>
+            {node.purpose}
+          </p>
+        )}
+
+        {node.path && (
+          <div className="mt-3">
+            <code className="text-xs text-gray-500 font-mono">
+              {node.path}/README.md
+            </code>
+          </div>
+        )}
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="mt-1">
-          {node.children!.map((child) => (
-            <TreeNode key={child.id} node={child} level={level + 1} onSelect={onSelect} />
-          ))}
+      {/* Children - Collapsible */}
+      {hasChildren && (
+        <div className={`${level === 0 ? 'ml-0' : 'ml-8'} border-l-2 ${
+          level === 0 ? 'border-gray-700' : 'border-gray-800'
+        } pl-6`}>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#22d3ee] mb-4 transition-colors"
+          >
+            <span className="text-[#22d3ee]">
+              {isExpanded ? '▼' : '▶'}
+            </span>
+            <span>
+              {isExpanded ? 'Hide' : 'Show'} {node.children!.length} sub-node{node.children!.length > 1 ? 's' : ''}
+            </span>
+          </button>
+
+          {isExpanded && (
+            <div className="space-y-8">
+              {node.children!.map((child) => (
+                <ContentNode key={child.id} node={child} level={level + 1} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -363,8 +377,6 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
 }
 
 export default function DocsPage() {
-  const [selectedNode, setSelectedNode] = useState<DocNode | null>(null);
-
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
       {/* STICKY HEADER - Matches homepage */}
@@ -389,7 +401,7 @@ export default function DocsPage() {
 
       {/* HERO SECTION */}
       <section className="py-12 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <h1 className="text-5xl font-bold text-white mb-4">
             Documentation
           </h1>
@@ -399,131 +411,12 @@ export default function DocsPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Documentation Tree */}
-          <div>
-            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg">
-              <div className="p-6 border-b border-gray-800">
-                <h2 className="text-2xl font-bold text-white">
-                  Documentation Tree
-                </h2>
-                <p className="text-sm text-gray-400 mt-2">
-                  Click nodes to view details
-                </p>
-              </div>
-
-              <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                <div>
-                  {DOCS_TREE.children?.map((rootNode) => (
-                    <TreeNode key={rootNode.id} node={rootNode} onSelect={setSelectedNode} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Detail Panel: Selected Node */}
-          <div>
-            {selectedNode && selectedNode.path ? (
-              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg sticky top-24">
-                <div className="p-6 border-b border-gray-800">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-2xl cursor-help"
-                        title={TYPE_NAMES[selectedNode.type]}
-                      >
-                        {TYPE_ICONS[selectedNode.type]}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelectedNode(null)}
-                      className="text-gray-400 hover:text-white text-xl font-bold"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <h3 className={`text-3xl font-bold ${TYPE_COLORS[selectedNode.type]}`}>
-                    {selectedNode.name}
-                  </h3>
-                </div>
-
-                <div className="p-6 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
-                  {selectedNode.purpose && (
-                    <div>
-                      <h4 className="font-semibold text-white mb-2">Purpose</h4>
-                      <p className="text-gray-300 leading-relaxed">{selectedNode.purpose}</p>
-                    </div>
-                  )}
-
-                  <div>
-                    <h4 className="font-semibold text-white mb-2">Location</h4>
-                    <code className="block bg-gray-900 border border-gray-800 rounded px-3 py-2 text-sm text-gray-300 font-mono">
-                      {selectedNode.path}/README.md
-                    </code>
-                  </div>
-
-                  {selectedNode.children && selectedNode.children.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-white mb-3">
-                        Child Nodes ({selectedNode.children.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {selectedNode.children.map(child => (
-                          <button
-                            key={child.id}
-                            onClick={() => setSelectedNode(child)}
-                            className="w-full text-left p-3 border border-gray-800 rounded-md hover:bg-gray-800/50 cursor-pointer transition-all group"
-                          >
-                            <div className="flex items-center gap-3 mb-1">
-                              <span
-                                className="text-lg cursor-help"
-                                title={TYPE_NAMES[child.type]}
-                              >
-                                {TYPE_ICONS[child.type]}
-                              </span>
-                              <span className={`font-semibold text-base ${TYPE_COLORS[child.type]} group-hover:brightness-125`}>
-                                {child.name}
-                              </span>
-                            </div>
-                            {child.purpose && (
-                              <p className="text-sm text-gray-400 ml-8">{child.purpose}</p>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Breadcrumb - show parent path */}
-                  <div className="pt-4 border-t border-gray-800">
-                    <h4 className="font-semibold text-white mb-2">Documentation Path</h4>
-                    <div className="text-sm text-gray-400">
-                      {selectedNode.path.split('/').filter(p => p).map((segment, i, arr) => (
-                        <span key={i}>
-                          <span className="text-gray-500">/</span>
-                          <span className="text-gray-300">{segment}</span>
-                          {i < arr.length - 1 && ' '}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg p-12 text-center sticky top-24">
-                <div className="text-gray-600 text-4xl mb-4">📚</div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Select a Node
-                </h3>
-                <p className="text-gray-400">
-                  Click any documentation node on the left to view its details here
-                </p>
-              </div>
-            )}
-          </div>
+      {/* MAIN CONTENT - Centered, Full Width */}
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="space-y-16">
+          {DOCS_TREE.children?.map((rootNode) => (
+            <ContentNode key={rootNode.id} node={rootNode} level={0} />
+          ))}
         </div>
       </div>
     </div>
