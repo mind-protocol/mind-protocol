@@ -126,7 +126,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           1,
           2000
         );
-        camera.position.set(500, 300, 800);
+        camera.position.set(600, 360, 960); // 20% zoomed out
         camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -390,6 +390,8 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           mesh: pulse,
           source: sourceMesh.position.clone(),
           target: targetMesh.position.clone(),
+          targetNode: targetNode, // Store target node for energy transfer on arrival
+          energyAmount: 0.6, // Amount of energy to transfer
           progress: 0,
           speed: (0.03 + Math.random() * 0.02) * 0.7, // 30% slower
           opacity: 0.95
@@ -545,10 +547,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
                 const transmissionProb = isVertical ? baseTransmissionProb * 3.0 : baseTransmissionProb;
 
                 if (Math.random() < transmissionProb) {
-                  // Transfer energy
-                  targetNode.energy = Math.min(1.0, targetNode.energy + 0.6);
-
-                  // Create visual pulse
+                  // Create visual pulse (energy transfers on arrival)
                   const targetMesh = nodes.find(n => (n as any).userData.id === targetNode.id);
                   if (targetMesh) {
                     createEnergyPulse(nodeMesh, targetMesh, nodeData, targetNode);
@@ -622,6 +621,10 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           pulse.progress += pulse.speed;
 
           if (pulse.progress >= 1.0) {
+            // Transfer energy on arrival
+            if (pulse.targetNode) {
+              pulse.targetNode.energy = Math.min(1.0, pulse.targetNode.energy + pulse.energyAmount);
+            }
             scene.remove(pulse.mesh);
             return false;
           }
