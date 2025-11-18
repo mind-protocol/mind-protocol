@@ -278,15 +278,25 @@ const DOCS_TREE: DocNode = {
   ]
 };
 
-// Dark theme type colors with semi-transparent backgrounds
+// Node type colors for titles
 const TYPE_COLORS = {
-  ROOT: 'bg-gray-700/20 text-gray-300 border-gray-600/40',
-  PATTERN: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-  BEHAVIOR_SPEC: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
-  MECHANISM: 'bg-green-500/20 text-green-400 border-green-500/40',
-  ALGORITHM: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
-  VALIDATION: 'bg-pink-500/20 text-pink-400 border-pink-500/40',
-  GUIDE: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
+  ROOT: 'text-gray-300',
+  PATTERN: 'text-blue-400',
+  BEHAVIOR_SPEC: 'text-purple-400',
+  MECHANISM: 'text-green-400',
+  ALGORITHM: 'text-orange-400',
+  VALIDATION: 'text-pink-400',
+  GUIDE: 'text-yellow-400',
+};
+
+const TYPE_NAMES = {
+  ROOT: 'Root',
+  PATTERN: 'Pattern',
+  BEHAVIOR_SPEC: 'Behavior Specification',
+  MECHANISM: 'Mechanism',
+  ALGORITHM: 'Algorithm',
+  VALIDATION: 'Validation',
+  GUIDE: 'Guide',
 };
 
 const TYPE_ICONS = {
@@ -306,8 +316,8 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
   return (
     <div className="select-none">
       <div
-        className={`flex items-start gap-2 py-2 px-3 rounded-md cursor-pointer transition-all hover:bg-gray-800/50 ${
-          level === 0 ? 'font-bold' : ''
+        className={`flex items-start gap-3 py-2 px-3 rounded-md cursor-pointer transition-all hover:bg-gray-800/50 group ${
+          level === 0 ? 'font-bold text-lg' : ''
         }`}
         style={{ paddingLeft: `${level * 1.5 + 0.75}rem` }}
         onClick={() => {
@@ -320,26 +330,24 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
         }}
       >
         {hasChildren && (
-          <span className="text-[#22d3ee] mt-0.5 flex-shrink-0">
+          <span className="text-[#22d3ee] mt-1 flex-shrink-0 text-sm">
             {isExpanded ? '▼' : '▶'}
           </span>
         )}
-        {!hasChildren && <span className="w-4"></span>}
+        {!hasChildren && <span className="w-3"></span>}
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[node.type]}`}>
-              {TYPE_ICONS[node.type]} {node.type}
+          <div className="flex items-center gap-2">
+            <span
+              className="text-lg flex-shrink-0 cursor-help"
+              title={TYPE_NAMES[node.type]}
+            >
+              {TYPE_ICONS[node.type]}
             </span>
-            <span className="text-white">
+            <span className={`font-semibold ${TYPE_COLORS[node.type]} ${level === 0 ? 'text-xl' : 'text-base'}`}>
               {node.name}
             </span>
           </div>
-          {node.purpose && (
-            <p className="text-sm text-gray-400 mt-1">
-              {node.purpose}
-            </p>
-          )}
         </div>
       </div>
 
@@ -356,36 +364,6 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
 
 export default function DocsPage() {
   const [selectedNode, setSelectedNode] = useState<DocNode | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'ALL' | DocNode['type']>('ALL');
-
-  // Flatten tree for search
-  const flattenTree = (node: DocNode, acc: DocNode[] = []): DocNode[] => {
-    acc.push(node);
-    if (node.children) {
-      node.children.forEach(child => flattenTree(child, acc));
-    }
-    return acc;
-  };
-
-  const allNodes = flattenTree(DOCS_TREE);
-  const filteredNodes = allNodes.filter(node => {
-    const matchesSearch = searchTerm === '' ||
-      node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (node.purpose && node.purpose.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesType = typeFilter === 'ALL' || node.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
-
-  const stats = {
-    total: allNodes.length - 1, // Exclude root
-    patterns: allNodes.filter(n => n.type === 'PATTERN').length,
-    specs: allNodes.filter(n => n.type === 'BEHAVIOR_SPEC').length,
-    mechanisms: allNodes.filter(n => n.type === 'MECHANISM').length,
-    algorithms: allNodes.filter(n => n.type === 'ALGORITHM').length,
-    validations: allNodes.filter(n => n.type === 'VALIDATION').length,
-    guides: allNodes.filter(n => n.type === 'GUIDE').length,
-  };
 
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
@@ -423,204 +401,41 @@ export default function DocsPage() {
 
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-          {/* Sidebar: Stats & Filters */}
-          <div className="xl:col-span-2 space-y-6">
-            {/* Stats */}
-            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-white mb-4">
-                Documentation Stats
-              </h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Total Nodes</span>
-                  <span className="text-xl font-bold text-white">{stats.total}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">📐 Patterns</span>
-                  <span className="font-semibold text-blue-400">{stats.patterns}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">📋 Specs</span>
-                  <span className="font-semibold text-purple-400">{stats.specs}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">⚙️ Mechanisms</span>
-                  <span className="font-semibold text-green-400">{stats.mechanisms}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">🔢 Algorithms</span>
-                  <span className="font-semibold text-orange-400">{stats.algorithms}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">✅ Validations</span>
-                  <span className="font-semibold text-pink-400">{stats.validations}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">📖 Guides</span>
-                  <span className="font-semibold text-yellow-400">{stats.guides}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-white mb-4">
-                Filters
-              </h2>
-
-              {/* Search */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Search
-                </label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Name or purpose..."
-                  className="w-full px-3 py-2 bg-[#0a0a0f] border border-gray-700 rounded-md text-gray-300 focus:ring-2 focus:ring-[#22d3ee] focus:border-transparent"
-                />
-              </div>
-
-              {/* Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Node Type
-                </label>
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-[#0a0a0f] border border-gray-700 rounded-md text-gray-300 focus:ring-2 focus:ring-[#22d3ee] text-sm"
-                >
-                  <option value="ALL">All Types</option>
-                  <option value="PATTERN">📐 Patterns</option>
-                  <option value="BEHAVIOR_SPEC">📋 Specifications</option>
-                  <option value="MECHANISM">⚙️ Mechanisms</option>
-                  <option value="ALGORITHM">🔢 Algorithms</option>
-                  <option value="VALIDATION">✅ Validations</option>
-                  <option value="GUIDE">📖 Guides</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-white mb-4">
-                Knowledge Hierarchy
-              </h2>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-400 font-bold">📐</span>
-                  <div>
-                    <div className="font-semibold text-blue-400">PATTERN</div>
-                    <div className="text-gray-500">Conceptual framework</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400 font-bold">📋</span>
-                  <div>
-                    <div className="font-semibold text-purple-400">BEHAVIOR_SPEC</div>
-                    <div className="text-gray-500">What should happen</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-400 font-bold">⚙️</span>
-                  <div>
-                    <div className="font-semibold text-green-400">MECHANISM</div>
-                    <div className="text-gray-500">How it works</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-orange-400 font-bold">🔢</span>
-                  <div>
-                    <div className="font-semibold text-orange-400">ALGORITHM</div>
-                    <div className="text-gray-500">Formulas & calculations</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-pink-400 font-bold">✅</span>
-                  <div>
-                    <div className="font-semibold text-pink-400">VALIDATION</div>
-                    <div className="text-gray-500">How we verify</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-yellow-400 font-bold">📖</span>
-                  <div>
-                    <div className="font-semibold text-yellow-400">GUIDE</div>
-                    <div className="text-gray-500">How to implement</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content: Documentation Tree */}
-          <div className="xl:col-span-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Documentation Tree */}
+          <div>
             <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg">
               <div className="p-6 border-b border-gray-800">
                 <h2 className="text-2xl font-bold text-white">
-                  {searchTerm || typeFilter !== 'ALL' ? 'Search Results' : 'Documentation Tree'}
+                  Documentation Tree
                 </h2>
                 <p className="text-sm text-gray-400 mt-2">
-                  {searchTerm || typeFilter !== 'ALL'
-                    ? `Found ${filteredNodes.length} matching nodes`
-                    : 'Click nodes to view details'}
+                  Click nodes to view details
                 </p>
               </div>
 
               <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                {searchTerm || typeFilter !== 'ALL' ? (
-                  // Search Results View
-                  <div className="space-y-2">
-                    {filteredNodes.map(node => (
-                      <div
-                        key={node.id}
-                        className="p-3 border border-gray-800 rounded-md hover:bg-gray-800/50 cursor-pointer transition-all"
-                        onClick={() => setSelectedNode(node)}
-                      >
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[node.type]}`}>
-                            {TYPE_ICONS[node.type]} {node.type}
-                          </span>
-                          <span className="font-semibold text-white">{node.name}</span>
-                        </div>
-                        {node.purpose && (
-                          <p className="text-sm text-gray-400 mt-1">{node.purpose}</p>
-                        )}
-                        {node.path && (
-                          <p className="text-xs text-gray-600 mt-1 font-mono">{node.path}/README.md</p>
-                        )}
-                      </div>
-                    ))}
-                    {filteredNodes.length === 0 && (
-                      <div className="text-center py-12 text-gray-500">
-                        No documentation nodes match your search
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // Tree View
-                  <div>
-                    {DOCS_TREE.children?.map((rootNode) => (
-                      <TreeNode key={rootNode.id} node={rootNode} onSelect={setSelectedNode} />
-                    ))}
-                  </div>
-                )}
+                <div>
+                  {DOCS_TREE.children?.map((rootNode) => (
+                    <TreeNode key={rootNode.id} node={rootNode} onSelect={setSelectedNode} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Detail Panel: Selected Node */}
-          <div className="xl:col-span-5">
+          <div>
             {selectedNode && selectedNode.path ? (
               <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg sticky top-24">
                 <div className="p-6 border-b border-gray-800">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded text-sm font-medium border ${TYPE_COLORS[selectedNode.type]}`}>
-                        {TYPE_ICONS[selectedNode.type]} {selectedNode.type}
+                      <span
+                        className="text-2xl cursor-help"
+                        title={TYPE_NAMES[selectedNode.type]}
+                      >
+                        {TYPE_ICONS[selectedNode.type]}
                       </span>
                     </div>
                     <button
@@ -630,7 +445,7 @@ export default function DocsPage() {
                       ×
                     </button>
                   </div>
-                  <h3 className="text-2xl font-bold text-white">
+                  <h3 className={`text-3xl font-bold ${TYPE_COLORS[selectedNode.type]}`}>
                     {selectedNode.name}
                   </h3>
                 </div>
@@ -662,14 +477,19 @@ export default function DocsPage() {
                             onClick={() => setSelectedNode(child)}
                             className="w-full text-left p-3 border border-gray-800 rounded-md hover:bg-gray-800/50 cursor-pointer transition-all group"
                           >
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[child.type]}`}>
+                            <div className="flex items-center gap-3 mb-1">
+                              <span
+                                className="text-lg cursor-help"
+                                title={TYPE_NAMES[child.type]}
+                              >
                                 {TYPE_ICONS[child.type]}
                               </span>
-                              <span className="text-white font-medium group-hover:text-[#22d3ee]">{child.name}</span>
+                              <span className={`font-semibold text-base ${TYPE_COLORS[child.type]} group-hover:brightness-125`}>
+                                {child.name}
+                              </span>
                             </div>
                             {child.purpose && (
-                              <p className="text-sm text-gray-400 ml-2">{child.purpose}</p>
+                              <p className="text-sm text-gray-400 ml-8">{child.purpose}</p>
                             )}
                           </button>
                         ))}
