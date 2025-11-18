@@ -536,10 +536,14 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             const connectedNodes = nodeData.connectedNodes;
 
             if (connectedNodes.length > 0) {
-              // Critical transmission probability: 1.0 / avgConnections maintains branching ratio ≈ 1
-              const transmissionProb = 1.0 / connectedNodes.length;
+              // Base transmission probability
+              const baseTransmissionProb = 1.0 / connectedNodes.length;
 
               connectedNodes.forEach((targetNode: any) => {
+                // Vertical links are 3x more likely to activate
+                const isVertical = targetNode.layer !== nodeData.layer;
+                const transmissionProb = isVertical ? baseTransmissionProb * 3.0 : baseTransmissionProb;
+
                 if (Math.random() < transmissionProb) {
                   // Transfer energy
                   targetNode.energy = Math.min(1.0, targetNode.energy + 0.6);
