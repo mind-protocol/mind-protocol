@@ -53,10 +53,15 @@ claude-screenshots/
 claude-logs/
 
 # Documentation (not needed for deployment)
-docs/
+# NOTE: Exclude root-level docs/ but NOT public/docs/ (needed for /docs page)
+/docs/
+/citizens/
 SYNC.md
 *.md
+# Allow README.md files (used in public/docs/)
 !README.md
+# Allow public/docs markdown files (used by /docs page)
+!public/docs/**/*.md
 
 # Tools and scripts
 tools/
