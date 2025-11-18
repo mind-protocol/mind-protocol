@@ -29,12 +29,14 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
       let particleSystem: any;
       let currentHoveredNode: any = null;
       let animationId: number;
+      let energyPulses: any[] = [];
+      let nodeConnectionMap: Map<string, any[]> = new Map();
 
       const LAYERS = {
-        l4: { y: 350, color: 0x10b981, nodeCount: 8, linkDensity: 0.15, clusterCount: 2 },
-        l3: { y: 120, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 5 },
-        l2: { y: -120, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 8 },
-        l1: { y: -350, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 12 }
+        l4: { y: 450, color: 0x10b981, nodeCount: 8, linkDensity: 0.15, clusterCount: 2 },
+        l3: { y: 180, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 5 },
+        l2: { y: -180, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 8 },
+        l1: { y: -450, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 12 }
       };
 
       const NAMES = {
@@ -214,7 +216,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             const nameData = generateNodeName(layerId, nodeIndex);
             const position = new THREE.Vector3(
               cluster.x + Math.cos(angle) * dist,
-              config.y + (Math.random() - 0.5) * 30,
+              config.y + (Math.random() - 0.5) * 80,
               cluster.z + Math.sin(angle) * dist
             );
 
@@ -225,7 +227,11 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
               name: (nameData as any).name,
               type: (nameData as any).type,
               connections: 0,
-              position: position
+              position: position,
+              energy: Math.random() * 0.3, // Initial energy 0-0.3
+              threshold: 0.75, // Discharge threshold
+              refractory: 0, // Cooldown after discharge
+              connectedNodes: [] as any[]
             };
 
             // Make L2 (orgs) and L1 (citizens) more visually distinct
@@ -273,9 +279,17 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
             if (Math.random() < linkChance) {
               const link = createLink(node.position, otherNode.position, config.color, 0.25);
+              (link as any).userData = {
+                source: node,
+                target: otherNode,
+                baseOpacity: 0.25,
+                color: config.color
+              };
               links.push(link);
               node.connections++;
               otherNode.connections++;
+              node.connectedNodes.push(otherNode);
+              otherNode.connectedNodes.push(node);
             }
           });
         });
@@ -317,13 +331,50 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
               0x60a5fa,
               0.12
             );
-            (link as any).userData = { vertical: true };
+            (link as any).userData = {
+              vertical: true,
+              source: (upperNode as any).userData,
+              target: (lowerNode as any).userData,
+              baseOpacity: 0.12,
+              color: 0x60a5fa
+            };
             verticalLinks.push(link);
 
             (upperNode as any).userData.connections++;
             (lowerNode as any).userData.connections++;
+            (upperNode as any).userData.connectedNodes.push((lowerNode as any).userData);
+            (lowerNode as any).userData.connectedNodes.push((upperNode as any).userData);
           }
         }
+      }
+
+      function createEnergyPulse(sourceMesh: any, targetMesh: any, sourceNode: any, targetNode: any) {
+        const pulseGeometry = new THREE.SphereGeometry(2, 8, 8);
+        const pulseColor = sourceNode.layer === 'l1' ? 0x22d3ee :
+                          sourceNode.layer === 'l2' ? 0xa855f7 :
+                          sourceNode.layer === 'l3' ? 0xf59e0b : 0x10b981;
+
+        const pulseMaterial = new THREE.MeshBasicMaterial({
+          color: pulseColor,
+          transparent: true,
+          opacity: 0.9,
+          blending: THREE.AdditiveBlending
+        });
+
+        const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+        pulse.position.copy(sourceMesh.position);
+
+        const pulseData = {
+          mesh: pulse,
+          source: sourceMesh.position.clone(),
+          target: targetMesh.position.clone(),
+          progress: 0,
+          speed: 0.03 + Math.random() * 0.02,
+          opacity: 0.9
+        };
+
+        scene.add(pulse);
+        energyPulses.push(pulseData);
       }
 
       function setupHoverDetection() {
@@ -445,26 +496,120 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
         const time = Date.now() * 0.001;
 
-        nodes.forEach((node, index) => {
-          if (node !== currentHoveredNode) {
-            const pulseSpeed = 0.5 + (index % 3) * 0.2;
-            const scale = 1 + Math.sin(time * pulseSpeed + index) * 0.15;
-            node.scale.set(scale, scale, scale);
+        // Energy dynamics - critical cascades
+        nodes.forEach((nodeMesh, index) => {
+          const nodeData = (nodeMesh as any).userData;
+
+          // Layer-dependent spontaneous activation (L1 most active, L4 least)
+          const activationRate = nodeData.layer === 'l1' ? 0.008 :
+                                 nodeData.layer === 'l2' ? 0.004 :
+                                 nodeData.layer === 'l3' ? 0.002 : 0.001;
+
+          if (Math.random() < activationRate && nodeData.refractory <= 0) {
+            nodeData.energy = Math.min(1.0, nodeData.energy + 0.4);
           }
 
-          if (node.children[0]) {
-            node.children[0].rotation.y += 0.01;
+          // Energy discharge - critical transmission
+          if (nodeData.energy >= nodeData.threshold && nodeData.refractory <= 0) {
+            const connectedNodes = nodeData.connectedNodes;
+
+            if (connectedNodes.length > 0) {
+              // Critical transmission probability: 1.0 / avgConnections maintains branching ratio ≈ 1
+              const transmissionProb = 1.0 / connectedNodes.length;
+
+              connectedNodes.forEach((targetNode: any) => {
+                if (Math.random() < transmissionProb) {
+                  // Transfer energy
+                  targetNode.energy = Math.min(1.0, targetNode.energy + 0.6);
+
+                  // Create visual pulse
+                  const targetMesh = nodes.find(n => (n as any).userData.id === targetNode.id);
+                  if (targetMesh) {
+                    createEnergyPulse(nodeMesh, targetMesh, nodeData, targetNode);
+                  }
+                }
+              });
+
+              // Deplete source and enter refractory
+              nodeData.energy = 0.1;
+              nodeData.refractory = 45; // ~0.75 seconds at 60fps
+              nodeData.activationBrightness = 1.5; // Boost brightness on activation
+            }
           }
+
+          // Energy decay
+          nodeData.energy *= 0.985;
+
+          // Refractory decay
+          if (nodeData.refractory > 0) {
+            nodeData.refractory--;
+          }
+
+          // Activation brightness fade
+          if (nodeData.activationBrightness) {
+            nodeData.activationBrightness = Math.max(1.0, nodeData.activationBrightness * 0.96);
+          }
+
+          // Visual update - node brightness and scale
+          const baseBrightness = nodeData.activationBrightness || 1.0;
+          const energyBrightness = 0.5 + nodeData.energy * 1.5;
+          const totalBrightness = baseBrightness * energyBrightness;
+
+          if ((nodeMesh as any).material) {
+            (nodeMesh as any).material.emissiveIntensity = totalBrightness * 0.7;
+          }
+
+          // Glow intensity
+          if (nodeMesh.children[0] && (nodeMesh.children[0] as any).material) {
+            const glowMaterial = (nodeMesh.children[0] as any).material;
+            const baseGlowOpacity = nodeData.layer === 'l1' ? 0.25 : (nodeData.layer === 'l2' ? 0.22 : 0.15);
+            glowMaterial.opacity = baseGlowOpacity * (0.5 + nodeData.energy * 1.5);
+          }
+
+          // Scale pulse (subtle for non-hovered nodes)
+          if (nodeMesh !== currentHoveredNode) {
+            const pulseSpeed = 0.5 + (index % 3) * 0.2;
+            const basePulse = 1 + Math.sin(time * pulseSpeed + index) * 0.05;
+            const energyScale = 1 + nodeData.energy * 0.15;
+            nodeMesh.scale.set(basePulse * energyScale, basePulse * energyScale, basePulse * energyScale);
+          }
+
+          // Glow rotation
+          if (nodeMesh.children[0]) {
+            nodeMesh.children[0].rotation.y += 0.01;
+          }
+        });
+
+        // Update energy pulses
+        energyPulses = energyPulses.filter((pulse: any) => {
+          pulse.progress += pulse.speed;
+
+          if (pulse.progress >= 1.0) {
+            scene.remove(pulse.mesh);
+            return false;
+          }
+
+          // Interpolate position
+          pulse.mesh.position.lerpVectors(pulse.source, pulse.target, pulse.progress);
+
+          // Fade out near end
+          if (pulse.progress > 0.7) {
+            pulse.opacity = 0.9 * (1 - (pulse.progress - 0.7) / 0.3);
+            (pulse.mesh.material as any).opacity = pulse.opacity;
+          }
+
+          return true;
+        });
+
+        // Link pulse effect (subtle)
+        [...links, ...verticalLinks].forEach((link, index) => {
+          const basePulse = 0.08 + Math.sin(time * 2 + index * 0.5) * 0.04;
+          (link.material as any).opacity = (link as any).userData?.baseOpacity || basePulse;
         });
 
         if (particleSystem) {
           particleSystem.rotation.y += 0.0002;
         }
-
-        verticalLinks.forEach((link, index) => {
-          const pulse = 0.08 + Math.sin(time * 2 + index * 0.5) * 0.04;
-          (link.material as any).opacity = pulse;
-        });
 
         renderer.render(scene, camera);
       }

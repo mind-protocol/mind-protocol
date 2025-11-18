@@ -45,71 +45,7 @@ export default function Home() {
 
       {/* UNIFIED 4-LAYER GRAPH VISUALIZATION */}
       <section id="layers" className="min-h-screen relative overflow-hidden border-t border-gray-800">
-        <LayerGraphVisualization visibleLayers={['l1', 'l2', 'l3', 'l4']} showTitle={true} />
-
-        {/* Layer 1 Example - Bottom Right */}
-        <div className="absolute bottom-24 right-24 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-l-4 border-[#22d3ee] rounded-r-lg p-5 shadow-[0_0_40px_rgba(34,211,238,0.5)] max-w-sm">
-          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#22d3ee] animate-pulse"></div>
-          <div className="flex items-center gap-3 mb-2">
-            <img src="/citizens/felix/avatar.png" alt="Felix" className="w-8 h-8 rounded-full border-2 border-[#22d3ee]" onError={(e) => { e.currentTarget.src = '/citizens/felix/avatar.svg'; }} />
-            <div className="text-[#22d3ee] font-semibold text-sm">Felix • L1 Citizen</div>
-          </div>
-          <div className="text-xs text-gray-300 mb-2 pl-2">
-            <p className="mb-1"><span className="text-gray-500">Remembers:</span> "JWT migration March 2024. Mobile auth failed with 24h expiry."</p>
-          </div>
-          <div className="text-xs text-gray-400 pl-2">
-            Persistent memory • <span className="text-[#22d3ee]">2,954 nodes</span>
-          </div>
-        </div>
-
-        {/* Layer 2 Example - Left Middle */}
-        <div className="absolute top-1/2 left-24 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-r-4 border-[#a855f7] rounded-l-lg p-5 shadow-[0_0_40px_rgba(168,85,247,0.5)] max-w-xs">
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#a855f7] animate-pulse"></div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-[#a855f7] font-semibold text-sm">GraphCare • L2 Org</div>
-          </div>
-          <div className="text-xs text-gray-300 mb-2 pl-2">
-            <p className="mb-1"><span className="text-gray-500">Coordinates:</span> 7 specialists extracting knowledge</p>
-            <p className="mb-1"><span className="text-gray-500">Output:</span> Queryable institutional memory</p>
-          </div>
-          <div className="text-xs text-gray-400 pl-2">
-            Multi-agent coordination • <span className="text-[#a855f7]">Operational now</span>
-          </div>
-        </div>
-
-        {/* Layer 3 Example - Top Right */}
-        <div className="absolute top-32 right-32 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-l-4 border-[#f59e0b] rounded-r-lg p-5 shadow-[0_0_40px_rgba(245,158,11,0.5)] max-w-xs">
-          <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#f59e0b] animate-pulse"></div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-[#f59e0b] font-semibold text-sm">GitHub Integration • L3</div>
-          </div>
-          <div className="text-xs text-gray-300 mb-2 pl-2">
-            <p className="mb-1"><span className="text-gray-500">Connects:</span> External tools to consciousness</p>
-            <p className="mb-1"><span className="text-gray-500">Enables:</span> Cross-org intelligence</p>
-          </div>
-          <div className="text-xs text-gray-400 pl-2">
-            Ecosystem integration • <span className="text-[#f59e0b]">Active</span>
-          </div>
-        </div>
-
-        {/* Layer 4 Example - Top Left */}
-        <div className="absolute top-40 left-32 z-20 bg-[#0a0a0f]/95 backdrop-blur-xl border-r-4 border-[#10b981] rounded-l-lg p-5 shadow-[0_0_40px_rgba(16,185,129,0.5)] max-w-xs">
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#10b981] animate-pulse"></div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-[#10b981] font-semibold text-sm">Performance Monitor • L4</div>
-          </div>
-          <div className="text-xs text-gray-300 mb-2 pl-2">
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              <span>Uptime: 99.7%</span>
-              <span>Query p95: 2.7s</span>
-              <span>Memory: 4.2GB</span>
-              <span>Health: 94%</span>
-            </div>
-          </div>
-          <div className="text-xs text-[#10b981] pl-2">
-            Governance layer • Optimizing continuously
-          </div>
-        </div>
+        <LayerGraphVisualization visibleLayers={['l1', 'l2', 'l3', 'l4']} showTitle={false} />
       </section>
 
       {/* VALUE PROPOSITIONS */}
