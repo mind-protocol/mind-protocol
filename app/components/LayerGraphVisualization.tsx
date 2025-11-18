@@ -349,7 +349,8 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
       }
 
       function createEnergyPulse(sourceMesh: any, targetMesh: any, sourceNode: any, targetNode: any) {
-        const pulseGeometry = new THREE.SphereGeometry(2, 8, 8);
+        // Create elongated pulse (ellipsoid stretched along direction of travel)
+        const pulseGeometry = new THREE.SphereGeometry(1.5, 8, 8);
         const pulseColor = sourceNode.layer === 'l1' ? 0x22d3ee :
                           sourceNode.layer === 'l2' ? 0xa855f7 :
                           sourceNode.layer === 'l3' ? 0xf59e0b : 0x10b981;
@@ -357,12 +358,17 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         const pulseMaterial = new THREE.MeshBasicMaterial({
           color: pulseColor,
           transparent: true,
-          opacity: 0.9,
+          opacity: 0.95,
           blending: THREE.AdditiveBlending
         });
 
         const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
         pulse.position.copy(sourceMesh.position);
+
+        // Elongate the pulse along the direction of travel
+        const direction = new THREE.Vector3().subVectors(targetMesh.position, sourceMesh.position).normalize();
+        pulse.scale.set(1, 1, 3); // Elongated along z-axis initially
+        pulse.lookAt(targetMesh.position); // Orient toward target
 
         const pulseData = {
           mesh: pulse,
@@ -370,7 +376,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           target: targetMesh.position.clone(),
           progress: 0,
           speed: 0.03 + Math.random() * 0.02,
-          opacity: 0.9
+          opacity: 0.95
         };
 
         scene.add(pulse);
@@ -501,9 +507,9 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           const nodeData = (nodeMesh as any).userData;
 
           // Layer-dependent spontaneous activation (L1 most active, L4 least)
-          const activationRate = nodeData.layer === 'l1' ? 0.008 :
-                                 nodeData.layer === 'l2' ? 0.004 :
-                                 nodeData.layer === 'l3' ? 0.002 : 0.001;
+          const activationRate = nodeData.layer === 'l1' ? 0.015 :
+                                 nodeData.layer === 'l2' ? 0.008 :
+                                 nodeData.layer === 'l3' ? 0.004 : 0.002;
 
           if (Math.random() < activationRate && nodeData.refractory <= 0) {
             nodeData.energy = Math.min(1.0, nodeData.energy + 0.4);
@@ -533,7 +539,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
               // Deplete source and enter refractory
               nodeData.energy = 0.1;
               nodeData.refractory = 45; // ~0.75 seconds at 60fps
-              nodeData.activationBrightness = 1.5; // Boost brightness on activation
+              nodeData.activationBrightness = 2.5; // Boost brightness on activation
             }
           }
 
@@ -545,25 +551,25 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             nodeData.refractory--;
           }
 
-          // Activation brightness fade
+          // Activation brightness fade (slower decay)
           if (nodeData.activationBrightness) {
-            nodeData.activationBrightness = Math.max(1.0, nodeData.activationBrightness * 0.96);
+            nodeData.activationBrightness = Math.max(1.0, nodeData.activationBrightness * 0.985);
           }
 
-          // Visual update - node brightness and scale
+          // Visual update - node brightness and scale (more visible)
           const baseBrightness = nodeData.activationBrightness || 1.0;
-          const energyBrightness = 0.5 + nodeData.energy * 1.5;
+          const energyBrightness = 0.7 + nodeData.energy * 2.0;
           const totalBrightness = baseBrightness * energyBrightness;
 
           if ((nodeMesh as any).material) {
-            (nodeMesh as any).material.emissiveIntensity = totalBrightness * 0.7;
+            (nodeMesh as any).material.emissiveIntensity = totalBrightness * 1.0;
           }
 
-          // Glow intensity
+          // Glow intensity (more visible)
           if (nodeMesh.children[0] && (nodeMesh.children[0] as any).material) {
             const glowMaterial = (nodeMesh.children[0] as any).material;
-            const baseGlowOpacity = nodeData.layer === 'l1' ? 0.25 : (nodeData.layer === 'l2' ? 0.22 : 0.15);
-            glowMaterial.opacity = baseGlowOpacity * (0.5 + nodeData.energy * 1.5);
+            const baseGlowOpacity = nodeData.layer === 'l1' ? 0.35 : (nodeData.layer === 'l2' ? 0.32 : 0.25);
+            glowMaterial.opacity = baseGlowOpacity * (0.7 + nodeData.energy * 2.0);
           }
 
           // Scale pulse (subtle for non-hovered nodes)
