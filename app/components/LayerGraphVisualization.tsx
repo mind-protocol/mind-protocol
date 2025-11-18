@@ -281,7 +281,15 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             if (i >= j) return;
 
             const sameCluster = node.cluster === otherNode.cluster;
-            const linkChance = sameCluster ? config.linkDensity * 2.5 : config.linkDensity * 0.5;
+
+            // Layer-dependent inter-cluster sparsity (L1: -90%, L2: -50%, L3/L4: baseline)
+            const interClusterMultiplier = layerId === 'l1' ? 0.1 :
+                                          layerId === 'l2' ? 0.5 :
+                                          layerId === 'l3' ? 0.8 : 1.0;
+
+            const linkChance = sameCluster ?
+              config.linkDensity * 2.5 :
+              config.linkDensity * 0.5 * interClusterMultiplier;
 
             if (Math.random() < linkChance) {
               const link = createLink(node.position, otherNode.position, config.color, 0.25);
