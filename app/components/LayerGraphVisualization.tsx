@@ -34,9 +34,9 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
       const LAYERS = {
         l4: { y: 450, color: 0x10b981, nodeCount: 8, linkDensity: 0.15, clusterCount: 2 },
-        l3: { y: 180, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 5 },
-        l2: { y: -180, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 8 },
-        l1: { y: -450, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 12 }
+        l3: { y: 180, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 3 },
+        l2: { y: -180, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 7 },
+        l1: { y: -450, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 7 }
       };
 
       const NAMES = {
