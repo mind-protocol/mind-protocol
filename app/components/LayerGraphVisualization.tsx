@@ -36,7 +36,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         l4: { y: 450, color: 0x10b981, nodeCount: 8, linkDensity: 0.15, clusterCount: 2 },
         l3: { y: 180, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 3 },
         l2: { y: -180, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 7 },
-        l1: { y: -450, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 7 }
+        l1: { y: -520, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 21 }
       };
 
       const NAMES = {
@@ -196,7 +196,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         const clusters = [];
 
         // Layer-dependent radius (L1 widest, L4 narrowest)
-        const baseRadius = layerId === 'l1' ? 280 :
+        const baseRadius = layerId === 'l1' ? 308 :
                           layerId === 'l2' ? 240 :
                           layerId === 'l3' ? 200 : 160;
         const radiusVariation = 80;
