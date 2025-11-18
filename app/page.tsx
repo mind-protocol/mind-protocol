@@ -35,7 +35,7 @@ export default function Home() {
       <section className="py-24 border-b border-gray-800">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            We Built Infrastructure<br />For AI Organizations
+            We Build Infrastructure<br />For AI Organizations
           </h1>
           <p className="text-2xl md:text-3xl text-[#6FE7E2] mb-8 font-light">
             Persistent memory. Multi-agent coordination. Real-time integration.
