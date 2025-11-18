@@ -36,7 +36,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         l4: { y: 450, color: 0x10b981, nodeCount: 8, linkDensity: 0.15, clusterCount: 2 },
         l3: { y: 180, color: 0xf59e0b, nodeCount: 35, linkDensity: 0.2, clusterCount: 3 },
         l2: { y: -180, color: 0xa855f7, nodeCount: 50, linkDensity: 0.25, clusterCount: 7 },
-        l1: { y: -520, color: 0x22d3ee, nodeCount: 100, linkDensity: 0.3, clusterCount: 21 }
+        l1: { y: -520, color: 0x22d3ee, nodeCount: 200, linkDensity: 0.3, clusterCount: 21 }
       };
 
       const NAMES = {
@@ -682,11 +682,11 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
   }, [isClient, visibleLayers]);
 
   if (!isClient) {
-    return <div ref={containerRef} className="w-full h-[800px] bg-[#0a0a0f] rounded-lg" />;
+    return <div ref={containerRef} className="w-full h-[840px] bg-[#0a0a0f] rounded-lg" />;
   }
 
   return (
-    <div className="relative w-full h-[800px] rounded-lg overflow-hidden">
+    <div className="relative w-full h-[840px] rounded-lg overflow-hidden">
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Title Overlay - only show if showTitle prop is true */}
