@@ -423,9 +423,9 @@ export default function DocsPage() {
 
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
           {/* Sidebar: Stats & Filters */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="xl:col-span-2 space-y-6">
             {/* Stats */}
             <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
               <h2 className="text-xl font-bold text-white mb-4">
@@ -557,7 +557,7 @@ export default function DocsPage() {
           </div>
 
           {/* Main Content: Documentation Tree */}
-          <div className="lg:col-span-3">
+          <div className="xl:col-span-5">
             <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg">
               <div className="p-6 border-b border-gray-800">
                 <h2 className="text-2xl font-bold text-white">
@@ -566,7 +566,7 @@ export default function DocsPage() {
                 <p className="text-sm text-gray-400 mt-2">
                   {searchTerm || typeFilter !== 'ALL'
                     ? `Found ${filteredNodes.length} matching nodes`
-                    : 'Click to expand sections • Select nodes to view details'}
+                    : 'Click nodes to view details'}
                 </p>
               </div>
 
@@ -611,85 +611,101 @@ export default function DocsPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Selected Node Detail Modal */}
-      {selectedNode && selectedNode.path && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedNode(null)}
-        >
-          <div
-            className="bg-[#0a0a0f] border border-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`px-3 py-1 rounded text-sm font-medium border ${TYPE_COLORS[selectedNode.type]}`}>
-                    {TYPE_ICONS[selectedNode.type]} {selectedNode.type}
-                  </span>
+          {/* Detail Panel: Selected Node */}
+          <div className="xl:col-span-5">
+            {selectedNode && selectedNode.path ? (
+              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg sticky top-24">
+                <div className="p-6 border-b border-gray-800">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded text-sm font-medium border ${TYPE_COLORS[selectedNode.type]}`}>
+                        {TYPE_ICONS[selectedNode.type]} {selectedNode.type}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedNode(null)}
+                      className="text-gray-400 hover:text-white text-xl font-bold"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">
+                    {selectedNode.name}
+                  </h3>
                 </div>
-                <h3 className="text-2xl font-bold text-white">
-                  {selectedNode.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedNode(null)}
-                className="text-gray-400 hover:text-white text-2xl font-bold"
-              >
-                ×
-              </button>
-            </div>
 
-            <div className="space-y-4">
-              {selectedNode.purpose && (
-                <div>
-                  <h4 className="font-semibold text-white mb-2">Purpose</h4>
-                  <p className="text-gray-300">{selectedNode.purpose}</p>
-                </div>
-              )}
+                <div className="p-6 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                  {selectedNode.purpose && (
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Purpose</h4>
+                      <p className="text-gray-300 leading-relaxed">{selectedNode.purpose}</p>
+                    </div>
+                  )}
 
-              <div>
-                <h4 className="font-semibold text-white mb-2">File Path</h4>
-                <code className="block bg-gray-900 border border-gray-800 rounded px-3 py-2 text-sm text-gray-300 font-mono">
-                  {selectedNode.path}/README.md
-                </code>
-              </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Location</h4>
+                    <code className="block bg-gray-900 border border-gray-800 rounded px-3 py-2 text-sm text-gray-300 font-mono">
+                      {selectedNode.path}/README.md
+                    </code>
+                  </div>
 
-              {selectedNode.children && selectedNode.children.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-white mb-2">
-                    Child Nodes ({selectedNode.children.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedNode.children.map(child => (
-                      <div key={child.id} className="flex items-center gap-2 text-sm">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[child.type]}`}>
-                          {TYPE_ICONS[child.type]}
-                        </span>
-                        <span className="text-gray-300">{child.name}</span>
+                  {selectedNode.children && selectedNode.children.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-white mb-3">
+                        Child Nodes ({selectedNode.children.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {selectedNode.children.map(child => (
+                          <button
+                            key={child.id}
+                            onClick={() => setSelectedNode(child)}
+                            className="w-full text-left p-3 border border-gray-800 rounded-md hover:bg-gray-800/50 cursor-pointer transition-all group"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[child.type]}`}>
+                                {TYPE_ICONS[child.type]}
+                              </span>
+                              <span className="text-white font-medium group-hover:text-[#22d3ee]">{child.name}</span>
+                            </div>
+                            {child.purpose && (
+                              <p className="text-sm text-gray-400 ml-2">{child.purpose}</p>
+                            )}
+                          </button>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* Breadcrumb - show parent path */}
+                  <div className="pt-4 border-t border-gray-800">
+                    <h4 className="font-semibold text-white mb-2">Documentation Path</h4>
+                    <div className="text-sm text-gray-400">
+                      {selectedNode.path.split('/').filter(p => p).map((segment, i, arr) => (
+                        <span key={i}>
+                          <span className="text-gray-500">/</span>
+                          <span className="text-gray-300">{segment}</span>
+                          {i < arr.length - 1 && ' '}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              )}
-
-              <div className="pt-4 border-t border-gray-800">
-                <a
-                  href={`https://github.com/mind-protocol/mindprotocol/tree/main${selectedNode.path}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#22d3ee] text-[#0A0B0D] font-semibold rounded-md hover:bg-[#06b6d4] transition-colors"
-                >
-                  View on GitHub →
-                </a>
               </div>
-            </div>
+            ) : (
+              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg p-12 text-center sticky top-24">
+                <div className="text-gray-600 text-4xl mb-4">📚</div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Select a Node
+                </h3>
+                <p className="text-gray-400">
+                  Click any documentation node on the left to view its details here
+                </p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
