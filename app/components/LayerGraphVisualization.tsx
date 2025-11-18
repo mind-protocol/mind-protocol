@@ -241,7 +241,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             };
 
             // Make L2 (orgs) and L1 (citizens) more visually distinct
-            const nodeSize = layerId === 'l4' ? 5 : (layerId === 'l3' ? 4 : (layerId === 'l2' ? 4.5 : 2.5));
+            const nodeSize = layerId === 'l4' ? 6.25 : (layerId === 'l3' ? 5 : (layerId === 'l2' ? 5.625 : 3.125));
             const emissiveIntensity = layerId === 'l1' || layerId === 'l2' ? 0.7 : 0.5;
             const glowOpacity = layerId === 'l1' ? 0.25 : (layerId === 'l2' ? 0.22 : 0.15);
 
