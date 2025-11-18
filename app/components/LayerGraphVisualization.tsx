@@ -195,9 +195,15 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         const layerNodes: any[] = [];
         const clusters = [];
 
+        // Layer-dependent radius (L1 widest, L4 narrowest)
+        const baseRadius = layerId === 'l1' ? 280 :
+                          layerId === 'l2' ? 240 :
+                          layerId === 'l3' ? 200 : 160;
+        const radiusVariation = 80;
+
         for (let i = 0; i < config.clusterCount; i++) {
           const angle = (i / config.clusterCount) * Math.PI * 2 + Math.random() * 0.3;
-          const radius = 200 + Math.random() * 80;
+          const radius = baseRadius + Math.random() * radiusVariation;
           clusters.push({
             x: Math.cos(angle) * radius,
             z: Math.sin(angle) * radius,
