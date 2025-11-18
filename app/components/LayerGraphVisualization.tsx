@@ -534,6 +534,17 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
                   const targetMesh = nodes.find(n => (n as any).userData.id === targetNode.id);
                   if (targetMesh) {
                     createEnergyPulse(nodeMesh, targetMesh, nodeData, targetNode);
+
+                    // Brighten the link
+                    const linkToActivate = [...links, ...verticalLinks].find(link => {
+                      const linkData = (link as any).userData;
+                      return (linkData.source === nodeData && linkData.target === targetNode) ||
+                             (linkData.target === nodeData && linkData.source === targetNode);
+                    });
+
+                    if (linkToActivate) {
+                      (linkToActivate as any).userData.activationBrightness = 0.8;
+                    }
                   }
                 }
               });
@@ -609,10 +620,20 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           return true;
         });
 
-        // Link pulse effect (subtle)
+        // Link brightness with activation glow
         [...links, ...verticalLinks].forEach((link, index) => {
+          const linkData = (link as any).userData;
           const basePulse = 0.08 + Math.sin(time * 2 + index * 0.5) * 0.04;
-          (link.material as any).opacity = (link as any).userData?.baseOpacity || basePulse;
+          const baseOpacity = linkData?.baseOpacity || basePulse;
+
+          // Decay activation brightness
+          if (linkData?.activationBrightness !== undefined) {
+            linkData.activationBrightness = Math.max(0, linkData.activationBrightness * 0.97);
+          }
+
+          // Apply activation brightness
+          const activationGlow = linkData?.activationBrightness || 0;
+          (link.material as any).opacity = Math.min(1.0, baseOpacity + activationGlow);
         });
 
         if (particleSystem) {
