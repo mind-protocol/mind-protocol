@@ -278,14 +278,15 @@ const DOCS_TREE: DocNode = {
   ]
 };
 
+// Dark theme type colors with semi-transparent backgrounds
 const TYPE_COLORS = {
-  ROOT: 'bg-slate-100 text-slate-800 border-slate-300',
-  PATTERN: 'bg-blue-100 text-blue-800 border-blue-300',
-  BEHAVIOR_SPEC: 'bg-purple-100 text-purple-800 border-purple-300',
-  MECHANISM: 'bg-green-100 text-green-800 border-green-300',
-  ALGORITHM: 'bg-orange-100 text-orange-800 border-orange-300',
-  VALIDATION: 'bg-pink-100 text-pink-800 border-pink-300',
-  GUIDE: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  ROOT: 'bg-gray-700/20 text-gray-300 border-gray-600/40',
+  PATTERN: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+  BEHAVIOR_SPEC: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
+  MECHANISM: 'bg-green-500/20 text-green-400 border-green-500/40',
+  ALGORITHM: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
+  VALIDATION: 'bg-pink-500/20 text-pink-400 border-pink-500/40',
+  GUIDE: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40',
 };
 
 const TYPE_ICONS = {
@@ -305,7 +306,7 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
   return (
     <div className="select-none">
       <div
-        className={`flex items-start gap-2 py-2 px-3 rounded-md cursor-pointer transition-all hover:bg-amber-50 ${
+        className={`flex items-start gap-2 py-2 px-3 rounded-md cursor-pointer transition-all hover:bg-gray-800/50 ${
           level === 0 ? 'font-bold' : ''
         }`}
         style={{ paddingLeft: `${level * 1.5 + 0.75}rem` }}
@@ -319,7 +320,7 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
         }}
       >
         {hasChildren && (
-          <span className="text-amber-600 mt-0.5 flex-shrink-0">
+          <span className="text-[#22d3ee] mt-0.5 flex-shrink-0">
             {isExpanded ? '▼' : '▶'}
           </span>
         )}
@@ -330,12 +331,12 @@ function TreeNode({ node, level = 0, onSelect }: { node: DocNode; level?: number
             <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[node.type]}`}>
               {TYPE_ICONS[node.type]} {node.type}
             </span>
-            <span className="text-amber-900 font-[family-name:var(--font-cinzel)]">
+            <span className="text-white">
               {node.name}
             </span>
           </div>
           {node.purpose && (
-            <p className="text-sm text-amber-700 mt-1 font-[family-name:var(--font-crimson-text)]">
+            <p className="text-sm text-gray-400 mt-1">
               {node.purpose}
             </p>
           )}
@@ -387,76 +388,90 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
-      {/* Header */}
-      <div className="border-b border-amber-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-amber-900 font-[family-name:var(--font-cinzel)]">
-                Mind Protocol Documentation
-              </h1>
-              <p className="mt-2 text-amber-700 font-[family-name:var(--font-crimson-text)]">
-                Complete knowledge hierarchy for autonomous AI infrastructure
-              </p>
+    <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
+      {/* STICKY HEADER - Matches homepage */}
+      <header className="sticky top-0 z-50 bg-[#0A0B0D]/95 backdrop-blur-lg border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold bg-gradient-to-r from-[#10b981] via-[#f59e0b] via-[#a855f7] to-[#22d3ee] bg-clip-text text-transparent">
+              MIND PROTOCOL
             </div>
-            <Link href="/" className="text-sm text-amber-600 hover:text-amber-800 underline">
-              ← Back to Home
+            <div className="text-xs text-gray-500 uppercase tracking-wider">Documentation</div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-sm text-[#6FE7E2] hover:underline">
+              ← Home
+            </Link>
+            <Link href="/consciousness" className="text-sm text-[#6FE7E2] hover:underline">
+              Dashboard
             </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* HERO SECTION */}
+      <section className="py-12 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-6">
+          <h1 className="text-5xl font-bold text-white mb-4">
+            Documentation
+          </h1>
+          <p className="text-xl text-gray-400">
+            Complete knowledge hierarchy for autonomous AI infrastructure
+          </p>
+        </div>
+      </section>
+
+      {/* MAIN CONTENT */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar: Stats & Filters */}
           <div className="lg:col-span-1 space-y-6">
             {/* Stats */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg border-2 border-amber-200 p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-amber-900 mb-4 font-[family-name:var(--font-cinzel)]">
+            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">
                 Documentation Stats
               </h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">Total Nodes</span>
-                  <span className="text-xl font-bold text-amber-900">{stats.total}</span>
+                  <span className="text-gray-400">Total Nodes</span>
+                  <span className="text-xl font-bold text-white">{stats.total}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">📐 Patterns</span>
-                  <span className="font-semibold text-blue-700">{stats.patterns}</span>
+                  <span className="text-gray-400">📐 Patterns</span>
+                  <span className="font-semibold text-blue-400">{stats.patterns}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">📋 Specs</span>
-                  <span className="font-semibold text-purple-700">{stats.specs}</span>
+                  <span className="text-gray-400">📋 Specs</span>
+                  <span className="font-semibold text-purple-400">{stats.specs}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">⚙️ Mechanisms</span>
-                  <span className="font-semibold text-green-700">{stats.mechanisms}</span>
+                  <span className="text-gray-400">⚙️ Mechanisms</span>
+                  <span className="font-semibold text-green-400">{stats.mechanisms}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">🔢 Algorithms</span>
-                  <span className="font-semibold text-orange-700">{stats.algorithms}</span>
+                  <span className="text-gray-400">🔢 Algorithms</span>
+                  <span className="font-semibold text-orange-400">{stats.algorithms}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">✅ Validations</span>
-                  <span className="font-semibold text-pink-700">{stats.validations}</span>
+                  <span className="text-gray-400">✅ Validations</span>
+                  <span className="font-semibold text-pink-400">{stats.validations}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-amber-700">📖 Guides</span>
-                  <span className="font-semibold text-yellow-700">{stats.guides}</span>
+                  <span className="text-gray-400">📖 Guides</span>
+                  <span className="font-semibold text-yellow-400">{stats.guides}</span>
                 </div>
               </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg border-2 border-amber-200 p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-amber-900 mb-4 font-[family-name:var(--font-cinzel)]">
+            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">
                 Filters
               </h2>
 
               {/* Search */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Search
                 </label>
                 <input
@@ -464,19 +479,19 @@ export default function DocsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Name or purpose..."
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-[#0a0a0f] border border-gray-700 rounded-md text-gray-300 focus:ring-2 focus:ring-[#22d3ee] focus:border-transparent"
                 />
               </div>
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-amber-700 mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Node Type
                 </label>
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 text-sm"
+                  className="w-full px-3 py-2 bg-[#0a0a0f] border border-gray-700 rounded-md text-gray-300 focus:ring-2 focus:ring-[#22d3ee] text-sm"
                 >
                   <option value="ALL">All Types</option>
                   <option value="PATTERN">📐 Patterns</option>
@@ -490,51 +505,51 @@ export default function DocsPage() {
             </div>
 
             {/* Legend */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg border-2 border-amber-200 p-6 shadow-lg">
-              <h2 className="text-xl font-bold text-amber-900 mb-4 font-[family-name:var(--font-cinzel)]">
+            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-6 shadow-lg">
+              <h2 className="text-xl font-bold text-white mb-4">
                 Knowledge Hierarchy
               </h2>
               <div className="space-y-2 text-xs">
                 <div className="flex items-start gap-2">
-                  <span className="text-blue-600 font-bold">📐</span>
+                  <span className="text-blue-400 font-bold">📐</span>
                   <div>
-                    <div className="font-semibold text-blue-800">PATTERN</div>
-                    <div className="text-amber-700">Conceptual framework</div>
+                    <div className="font-semibold text-blue-400">PATTERN</div>
+                    <div className="text-gray-500">Conceptual framework</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-purple-600 font-bold">📋</span>
+                  <span className="text-purple-400 font-bold">📋</span>
                   <div>
-                    <div className="font-semibold text-purple-800">BEHAVIOR_SPEC</div>
-                    <div className="text-amber-700">What should happen</div>
+                    <div className="font-semibold text-purple-400">BEHAVIOR_SPEC</div>
+                    <div className="text-gray-500">What should happen</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-green-600 font-bold">⚙️</span>
+                  <span className="text-green-400 font-bold">⚙️</span>
                   <div>
-                    <div className="font-semibold text-green-800">MECHANISM</div>
-                    <div className="text-amber-700">How it works</div>
+                    <div className="font-semibold text-green-400">MECHANISM</div>
+                    <div className="text-gray-500">How it works</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-orange-600 font-bold">🔢</span>
+                  <span className="text-orange-400 font-bold">🔢</span>
                   <div>
-                    <div className="font-semibold text-orange-800">ALGORITHM</div>
-                    <div className="text-amber-700">Formulas & calculations</div>
+                    <div className="font-semibold text-orange-400">ALGORITHM</div>
+                    <div className="text-gray-500">Formulas & calculations</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-pink-600 font-bold">✅</span>
+                  <span className="text-pink-400 font-bold">✅</span>
                   <div>
-                    <div className="font-semibold text-pink-800">VALIDATION</div>
-                    <div className="text-amber-700">How we verify</div>
+                    <div className="font-semibold text-pink-400">VALIDATION</div>
+                    <div className="text-gray-500">How we verify</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-yellow-600 font-bold">📖</span>
+                  <span className="text-yellow-400 font-bold">📖</span>
                   <div>
-                    <div className="font-semibold text-yellow-800">GUIDE</div>
-                    <div className="text-amber-700">How to implement</div>
+                    <div className="font-semibold text-yellow-400">GUIDE</div>
+                    <div className="text-gray-500">How to implement</div>
                   </div>
                 </div>
               </div>
@@ -543,12 +558,12 @@ export default function DocsPage() {
 
           {/* Main Content: Documentation Tree */}
           <div className="lg:col-span-3">
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg border-2 border-amber-200 shadow-lg">
-              <div className="p-6 border-b border-amber-200 bg-amber-50">
-                <h2 className="text-2xl font-bold text-amber-900 font-[family-name:var(--font-cinzel)]">
+            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg shadow-lg">
+              <div className="p-6 border-b border-gray-800">
+                <h2 className="text-2xl font-bold text-white">
                   {searchTerm || typeFilter !== 'ALL' ? 'Search Results' : 'Documentation Tree'}
                 </h2>
-                <p className="text-sm text-amber-700 mt-2 font-[family-name:var(--font-crimson-text)]">
+                <p className="text-sm text-gray-400 mt-2">
                   {searchTerm || typeFilter !== 'ALL'
                     ? `Found ${filteredNodes.length} matching nodes`
                     : 'Click to expand sections • Select nodes to view details'}
@@ -562,25 +577,25 @@ export default function DocsPage() {
                     {filteredNodes.map(node => (
                       <div
                         key={node.id}
-                        className="p-3 border border-amber-200 rounded-md hover:bg-amber-50 cursor-pointer transition-all"
+                        className="p-3 border border-gray-800 rounded-md hover:bg-gray-800/50 cursor-pointer transition-all"
                         onClick={() => setSelectedNode(node)}
                       >
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[node.type]}`}>
                             {TYPE_ICONS[node.type]} {node.type}
                           </span>
-                          <span className="font-semibold text-amber-900">{node.name}</span>
+                          <span className="font-semibold text-white">{node.name}</span>
                         </div>
                         {node.purpose && (
-                          <p className="text-sm text-amber-700 mt-1">{node.purpose}</p>
+                          <p className="text-sm text-gray-400 mt-1">{node.purpose}</p>
                         )}
                         {node.path && (
-                          <p className="text-xs text-amber-500 mt-1 font-mono">{node.path}/README.md</p>
+                          <p className="text-xs text-gray-600 mt-1 font-mono">{node.path}/README.md</p>
                         )}
                       </div>
                     ))}
                     {filteredNodes.length === 0 && (
-                      <div className="text-center py-12 text-amber-600">
+                      <div className="text-center py-12 text-gray-500">
                         No documentation nodes match your search
                       </div>
                     )}
@@ -602,11 +617,11 @@ export default function DocsPage() {
       {/* Selected Node Detail Modal */}
       {selectedNode && selectedNode.path && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedNode(null)}
         >
           <div
-            className="bg-white rounded-lg border-2 border-amber-200 shadow-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto"
+            className="bg-[#0a0a0f] border border-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
@@ -616,13 +631,13 @@ export default function DocsPage() {
                     {TYPE_ICONS[selectedNode.type]} {selectedNode.type}
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-amber-900 font-[family-name:var(--font-cinzel)]">
+                <h3 className="text-2xl font-bold text-white">
                   {selectedNode.name}
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="text-amber-600 hover:text-amber-800 text-2xl font-bold"
+                className="text-gray-400 hover:text-white text-2xl font-bold"
               >
                 ×
               </button>
@@ -631,21 +646,21 @@ export default function DocsPage() {
             <div className="space-y-4">
               {selectedNode.purpose && (
                 <div>
-                  <h4 className="font-semibold text-amber-900 mb-2 font-[family-name:var(--font-cinzel)]">Purpose</h4>
-                  <p className="text-amber-800 font-[family-name:var(--font-crimson-text)]">{selectedNode.purpose}</p>
+                  <h4 className="font-semibold text-white mb-2">Purpose</h4>
+                  <p className="text-gray-300">{selectedNode.purpose}</p>
                 </div>
               )}
 
               <div>
-                <h4 className="font-semibold text-amber-900 mb-2 font-[family-name:var(--font-cinzel)]">File Path</h4>
-                <code className="block bg-amber-50 border border-amber-200 rounded px-3 py-2 text-sm text-amber-900 font-mono">
+                <h4 className="font-semibold text-white mb-2">File Path</h4>
+                <code className="block bg-gray-900 border border-gray-800 rounded px-3 py-2 text-sm text-gray-300 font-mono">
                   {selectedNode.path}/README.md
                 </code>
               </div>
 
               {selectedNode.children && selectedNode.children.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-amber-900 mb-2 font-[family-name:var(--font-cinzel)]">
+                  <h4 className="font-semibold text-white mb-2">
                     Child Nodes ({selectedNode.children.length})
                   </h4>
                   <div className="space-y-2">
@@ -654,19 +669,19 @@ export default function DocsPage() {
                         <span className={`px-2 py-0.5 rounded text-xs font-medium border ${TYPE_COLORS[child.type]}`}>
                           {TYPE_ICONS[child.type]}
                         </span>
-                        <span className="text-amber-800">{child.name}</span>
+                        <span className="text-gray-300">{child.name}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="pt-4 border-t border-amber-200">
+              <div className="pt-4 border-t border-gray-800">
                 <a
                   href={`https://github.com/mind-protocol/mindprotocol/tree/main${selectedNode.path}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors font-[family-name:var(--font-cinzel)]"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#22d3ee] text-[#0A0B0D] font-semibold rounded-md hover:bg-[#06b6d4] transition-colors"
                 >
                   View on GitHub →
                 </a>
