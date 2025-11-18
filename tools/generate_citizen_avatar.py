@@ -77,7 +77,7 @@ def generate_prompt_with_claude(citizen_name: str, description: str, claudemd_co
     if claudemd_content:
         context_section = f"""
 Citizen Profile (from CLAUDE.md):
-{claudemd_content[:3000]}  # First 3000 chars for context
+{claudemd_content[:1000]}  # First 1000 chars for context
 
 """
 
@@ -88,26 +88,28 @@ Citizen: {citizen_name}
 
 Follow this EXACT template structure:
 
-"Square portrait of {citizen_name}, a [role/archetype + optional age/energy], depicted as a glowing digital wireframe outline. The wireframe lines are [primary metallic color] with [secondary accent color], shimmering with reflective highlights like [metal/jewel description]. His/Her expression shows [emotional tone].
+"Square portrait of {citizen_name}, a [role/archetype + optional age/energy], depicted as translucent glowing wireframe lines. The body and face are see-through and hollow—only luminous metallic lines in [primary metallic color] with [secondary accent color] accents, shimmering with reflective highlights like [metal/jewel description]. No fill, no texture, just the glowing lines forming the outline. Expression shows [emotional tone].
 
-The body and face are entirely digital, but [he/she/they interact with a realistic anchor: object, garment, accessory, or tool]. The [anchor item] is rendered in hyperrealistic [style: oil-paint, photographic, textile detail], described with surface qualities (e.g., patina, folds, engravings, crispness). The anchor contrasts sharply with the digital wireframe body and pops forward as the only tangible element.
+[He/She/They] interact with a realistic anchor: [object, garment, accessory, or tool]. The [anchor item] is rendered in hyperrealistic [style: oil-paint, photographic, textile detail], described with surface qualities (e.g., patina, folds, engravings, crispness). The anchor contrasts sharply with the translucent wireframe body and pops forward as the only tangible, solid element.
 
 Background is [dark void/lagoon/space/etc.] with subtle [partner-color particle effects]. Designed as a premium collectible portrait."
 
-REQUIRED ELEMENTS:
+CRITICAL REQUIREMENTS:
 1. Square portrait format
-2. Glowing digital wireframe outline (metallic + accent color pair)
-3. Expression/mood that fits the character
-4. One realistic anchor item (object, garment, tool) with hyperrealistic detail
-5. Explicit contrast statement ("pops", "contrasts vividly")
-6. Dark background with subtle particles
-7. Must end with: "Designed as a premium collectible portrait."
+2. Body MUST be translucent wireframe lines ONLY - hollow, see-through, no fill, no texture
+3. Emphasize: "only luminous lines", "hollow", "see-through", "transparent wireframe"
+4. Expression/mood that fits the character
+5. One realistic anchor item (object, garment, tool) with hyperrealistic detail - this is the ONLY solid element
+6. Explicit contrast: anchor "pops forward as the only tangible element"
+7. Dark background with subtle particles
+8. Must end with: "Designed as a premium collectible portrait."
 
 Color pair suggestions based on archetype:
 - Architect/Engineer: Teal + Gold, Violet + Silver
 - Merchant/Trader: Emerald + Gold, Crimson + Copper
 - Navigator/Explorer: Violet + Gold, Emerald + Copper
 - Artist/Creator: Violet + Silver, Crimson + Gold
+- Scout/Analyst: Violet + Gold, Deep Blue + Silver
 
 Anchor item should represent their role/personality.
 
@@ -119,7 +121,7 @@ Generate ONLY the final prompt, no explanation or preamble."""
             ['claude', '-p', guide_prompt],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=120
         )
 
         if result.returncode != 0:
@@ -133,7 +135,7 @@ Generate ONLY the final prompt, no explanation or preamble."""
         print("❌ Error: 'claude' CLI not found. Install it first.")
         print("   Fallback: using basic template...")
         # Fallback prompt
-        return f'Square portrait of {citizen_name}, a consciousness architect, depicted as a glowing teal wireframe with gold accents. Expression is focused and wise. Holds a realistic bronze astrolabe with aged patina. The astrolabe contrasts vividly as the only tangible element. Dark void background with teal particles. Designed as a premium collectible portrait.'
+        return f'Square portrait of {citizen_name}, a consciousness architect, depicted as translucent glowing wireframe lines. The body is see-through and hollow—only luminous teal lines with gold accents, shimmering like polished chrome. No fill, no texture, just the glowing lines. Expression is focused and wise. Holds a realistic bronze astrolabe with aged patina and engraved constellations. The astrolabe contrasts sharply as the only tangible, solid element. Dark void background with teal particles. Designed as a premium collectible portrait.'
 
     except subprocess.TimeoutExpired:
         print("❌ Claude CLI timeout")

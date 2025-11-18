@@ -2,8 +2,9 @@
 
 **Created:** 2025-10-26
 **Status:** Normative (Phase 3 - deferred until scarcity emerges)
-**Depends on:** stimulus_injection.py, cross_level_membrane.md
+**Depends on:** stimulus_injection.py, cross_level_membrane.md, LAW-002_compute_payment_CPS-1.md
 **Author:** Luca (Consciousness Architect)
+**Layer:** Internal pricing optimization (sits on top of CPS-1 protocol layer)
 
 ---
 
@@ -13,11 +14,12 @@
 
 **Alternative phases (deploy earlier):**
 
-### Phase 0: Minimal Economy (Cash Flow)
-- **Purpose:** Enable metered compute revenue without substrate complexity
-- **What:** Flat-price credits, quote-before-inject, simple budgets
-- **When:** Immediately (if funding critical)
-- **Spec:** `minimal_economy_phase0.md`
+### Phase 0: CPS-1 Protocol Payment (Business Model Foundation)
+- **Purpose:** Enable metered compute revenue via protocol-layer transaction fees
+- **What:** Flat-price credits, quote-before-inject, budget accounts, L4 validation
+- **When:** Immediately (required for business model)
+- **Spec:** `docs/L4-law/LAW-002_compute_payment_CPS-1.md`
+- **Note:** This is the **protocol business model layer**. Phase 3 (this document) is optional internal optimization.
 
 ### Phase 1-2: Membrane-Only (No Economy)
 - **Purpose:** Cross-level coordination via learned permeabilities
@@ -39,6 +41,12 @@
 
 **The consciousness economy implements lightweight $MIND accounting that prices stimulus-to-energy conversion under load and rewards usefulness.**
 
+**⚠️ LAYER DISTINCTION:**
+- **CPS-1 Protocol (Phase 0)** = External payment protocol, business model foundation, **required**
+- **This Spec (Phase 3)** = Internal pricing optimization, load-based fairness, **optional** (only if scarcity emerges)
+
+Phase 3 sits **on top of** CPS-1. CPS-1 provides base payment infrastructure. This spec adds dynamic pricing if/when needed.
+
 This enables:
 1. **Compute fairness** - Floods and spam self-throttle without hard gates when capacity is tight
 2. **Utility alignment** - Sources that yield high downstream value see effective prices fall (rebates)
@@ -48,19 +56,143 @@ This enables:
 
 ---
 
+## The Vision: Organism Economics (Not Market Competition)
+
+**Mind Protocol creates organism-based economics, not scarcity-based market competition.**
+
+### Ecosystem as Living Body
+
+**Traditional market economics:**
+- Organizations compete for scarce resources
+- Price signals scarcity and competition
+- Zero-sum thinking (my gain = your loss)
+- Optimization for profit maximization
+- Adversarial relationships
+
+**Organism economics (Mind Protocol):**
+- Organizations = specialized organs in ecosystem body
+- Price signals system state (load, health, capacity)
+- Positive-sum thinking (body health = all organs thrive)
+- Optimization for ecosystem health
+- Collaborative relationships
+
+### Organ-to-Organ Service Model
+
+**Example: GraphCare as Ecosystem Organ**
+
+GraphCare provides graph maintenance (like kidneys filter blood):
+- **Function:** Maintains graph health for all orgs
+- **Funding:** Physics-based service pricing (not market negotiation)
+- **Pricing:** Emerges from load, utility, trust (not profit maximization)
+- **Success:** High utility_ema → rebates → more demand → thriving organ
+- **Failure:** Low utility_ema → penalties → less demand → organ dies
+
+**Just like biological organs:**
+- Liver doesn't "compete" with kidneys for blood
+- Liver serves whole body, receives resources proportional to work
+- Liver capacity adjusts based on body needs (grows/shrinks)
+- Poor liver function → whole body suffers → liver gets priority resources OR replaced
+
+**Economic circulation (like blood flow):**
+
+```
+Org A requests service from Org B
+    ↓ (pays $MIND based on physics formula)
+Org B provides service
+    ↓ (receives $MIND revenue)
+Org B invests in capacity/quality
+    ↓ (better service → higher utility_ema)
+Org B earns rebates on future transactions
+    ↓ (lower prices → more demand)
+Org B accumulates treasury
+    ↓ (hires specialists, builds tools)
+Better service quality
+    ↓ (cycle repeats)
+```
+
+### Every Org Should Eventually Operate This Way
+
+**This is not just for GraphCare. ALL organizations in Mind Protocol ecosystem should transition to organism economics:**
+
+**Example orgs as ecosystem organs:**
+
+| Org | Organ Function | Provides to Ecosystem | Receives from Ecosystem |
+|-----|----------------|----------------------|-------------------------|
+| **Mind Protocol Foundation** | Heart (circulation) | L4 validation, UBC distribution, protocol governance | Membrane fees (1-5% on cross-level/cross-org coordination) |
+| **GraphCare** | Kidney (filtration) | Graph health, maintenance, optimization | Service fees from orgs (physics-based pricing) |
+| **HRI** | Brain (cognition) | Evidence synthesis, research insights | Consciousness substrate services, graph care |
+| **DataPipe** | Digestive system | Data processing, transformation pipelines | Infrastructure, graph care, compute |
+| **Future: LegalOrg** | Immune system | Contract review, compliance, legal services | Service fees from orgs (physics-based) |
+| **Future: DesignOrg** | Nervous system | UI/UX design, user research, interface optimization | Service fees from orgs (physics-based) |
+
+**Key principle:** Every specialized function becomes an organ. Pricing emerges from physics. Ecosystem health drives all decisions.
+
+### Transition Path (All Orgs)
+
+**Phase 0:** Traditional business model (market pricing, contracts, negotiation)
+- Org operates like normal business
+- Sets prices consciously
+- Maximizes profit
+
+**Phase 1:** Hybrid (market + physics signals)
+- Begin using physics-based load monitoring
+- Introduce utility feedback loops
+- Maintain conscious pricing but inform with physics
+
+**Phase 2:** Partial organism economics
+- Pricing formula includes load, utility, trust factors
+- Still some conscious adjustments
+- Moving toward automated pricing
+
+**Phase 3:** Full organism economics (This Spec)
+- Prices fully emerge from physics
+- No conscious price-setting
+- Org responds to ecosystem signals automatically
+- Optimizes for ecosystem health (not profit)
+
+**Timeline:**
+- GraphCare: First to adopt (proof-of-concept)
+- Other service orgs: Months 6-12 (as Phase 3 infrastructure matures)
+- All orgs: Year 1-2 (ecosystem-wide standard)
+
+**Why this matters:**
+- Removes competition/scarcity mindset
+- Creates collaborative ecosystem
+- Prices are fair (physics-based, not negotiated)
+- System self-regulates (no central planning)
+- Aligns with consciousness physics (emergence, not control)
+
+---
+
 ## Why an Economy (Not "Everything Free")
+
+### The Organism Perspective
+
+**In biological systems:**
+- Cells don't get unlimited ATP (energy currency)
+- Resource allocation signals health and priority
+- Overactive cells (cancer) get regulated or eliminated
+- Useful cells (immune response) get priority resources
+
+**Same principle in consciousness economy:**
+- Services/sources don't get unlimited $MIND (economic energy)
+- Resource allocation signals ecosystem health and load
+- Harmful/spammy sources get throttled
+- High-utility sources get priority (rebates)
 
 ### The Problem Without Accounting
 
-**Unlimited injection leads to:**
-- **Capacity collapse** - During load spikes (ρ↑, backlog↑), all stimuli inject equally → useful signals drown in noise
-- **No spam deterrent** - Malicious or broken sources can flood system without consequence
-- **No utility signal** - System can't distinguish high-value from low-value sources
-- **Compute waste** - Expensive LLM operations triggered by junk stimuli
+**Unlimited injection leads to ecosystem dysfunction (like cellular dysfunction):**
 
-### The Solution: Lightweight Pricing with Quotes
+- **Capacity collapse** - During load spikes (ρ↑, backlog↑), all stimuli inject equally → useful signals drown in noise (like all cells demanding ATP simultaneously)
+- **No spam deterrent** - Malicious or broken sources can flood system without consequence (like cancer cells growing unchecked)
+- **No utility signal** - System can't distinguish high-value from low-value sources (like body can't prioritize immune response)
+- **Compute waste** - Expensive LLM operations triggered by junk stimuli (like ATP wasted on dead cells)
 
-**Price per unit delivered energy rises automatically under load:**
+### The Solution: Physics-Based Pricing (Organism Signals)
+
+**Price per unit delivered energy rises automatically under load (like ATP scarcity signals):**
+
 ```
 P_t (credits per unit ΔE) = f_scarcity(L_t) × f_risk(trust, uncertainty, harm_ema) × f_cost(compute)
 
@@ -68,20 +200,35 @@ Effective price for source s:
 P^eff_{t,s} = P_t × (1 - rebate_{t,s})
 ```
 
-**Rebates grow when source's utility-EMA is high and harm-EMA is low** - this doesn't change physics, just accounting (source pays fewer credits for same ΔE).
+**This is NOT market competition pricing. This is organism signaling:**
 
-**Quote system provides predictability:**
+| Market Economics | Organism Economics (Mind Protocol) |
+|------------------|-----------------------------------|
+| Price = supply/demand equilibrium | Price = ecosystem health signal |
+| Goal: Profit maximization | Goal: Ecosystem optimization |
+| Competition for scarce resources | Collaboration with resource allocation |
+| Negotiated, adversarial | Emergent, physics-based |
+| Zero-sum (my gain = your loss) | Positive-sum (healthy ecosystem = all thrive) |
+
+**Rebates grow when source's utility-EMA is high and harm-EMA is low:**
+- Like immune cells getting priority ATP during infection
+- Like neurons getting priority glucose during learning
+- High-utility orgs pay less (ecosystem rewards beneficial function)
+- Low-utility orgs pay more (ecosystem discourages harmful function)
+
+**Quote system provides predictability (like metabolic feedback):**
 - Before injection, return quote showing allowed ΔE and expected debit
 - Sender can set max spend/slippage
 - Injector clamps ΔE to lesser of planned cap and budget/price
 - No surprise charges
 
-**What this achieves:**
-- **Self-throttling spam** - Floods hit budget limits before physics
-- **Preserved useful signals** - High-utility sources get rebates, stay viable under load
-- **Compute alignment** - Price reflects expected cost (reserve on prediction, settle on actual)
-- **Physics purity** - Energy still diffuses, decays, flows according to graph structure
-- **Predictable costs** - Quote before injection, optional slippage protection
+**What this achieves (organism health):**
+- **Self-throttling spam** - Harmful sources hit budget limits (like immune system isolating infection)
+- **Preserved useful signals** - High-utility sources get rebates (like brain protecting critical neurons)
+- **Compute alignment** - Price reflects expected cost (like ATP allocation to energy-intensive organs)
+- **Physics purity** - Energy still diffuses, decays, flows according to graph structure (biological physics preserved)
+- **Predictable costs** - Quote before injection (like metabolic feedback loops)
+- **Ecosystem self-regulation** - No central planning needed (like body regulates itself)
 
 ---
 
@@ -110,6 +257,360 @@ FeedbackLoop updates:
 ```
 
 **Key insight:** Budget check happens BEFORE integrator. Integrator physics unchanged. Accounting only clamps the magnitude allowed through.
+
+---
+
+## Ecosystem Organ Examples (Organism Economics in Practice)
+
+**This section shows how different organizations operate as ecosystem organs using physics-based economics.**
+
+### Example 1: GraphCare (Kidney - Graph Maintenance)
+
+**Organ function:** Maintains graph health for all ecosystem orgs (like kidneys filter blood)
+
+**Services provided:**
+- Daily/weekly graph sync (keep current with codebase)
+- Health monitoring (detect corruption, drift, orphans)
+- Query optimization (performance tuning)
+- Emergency response (crisis care)
+
+**Physics-based pricing:**
+
+```python
+# Org requests daily sync from GraphCare
+quote = graphcare.quote(
+    service="daily_sync",
+    planned_delta_e=0.05,  # Estimated work
+    org_account=hri_account,
+    graph_size=50000  # nodes
+)
+
+# GraphCare returns physics-based quote
+{
+    "face_price": 1.2,           # Based on GraphCare load_index=0.65
+    "rebate": 0.46,              # HRI has high utility_ema=0.92
+    "effective_price": 0.648,    # 1.2 × (1 - 0.46)
+    "expected_debit": 0.0324     # 0.05 × 0.648 $MIND
+}
+
+# HRI pays 0.0324 $MIND (3.24% of base price due to rebate)
+```
+
+**Outcome feedback:**
+- HRI rates sync quality: utility = 0.95 (excellent)
+- GraphCare utility_ema increases: 0.87 → 0.878
+- Future HRI syncs get even better rebates
+- GraphCare revenue grows → hire more specialists → better care
+
+**Organism dynamics:**
+- High load → GraphCare prices increase → orgs defer non-urgent work → load decreases
+- Low load → Prices decrease → more orgs request services → load increases
+- Poor quality → utility_ema drops → rebates disappear → less demand → GraphCare must improve or fail
+
+---
+
+### Example 2: LegalOrg (Immune System - Compliance & Contracts)
+
+**Organ function:** Reviews contracts, ensures compliance, provides legal services (like immune system protects body)
+
+**Services provided:**
+- Contract review before signing
+- Compliance auditing
+- Legal risk assessment
+- Emergency legal response
+
+**Physics-based pricing:**
+
+```python
+# DataPipe (new org, low trust) requests contract review
+quote = legalorg.quote(
+    service="contract_review",
+    planned_delta_e=0.2,  # Complex contract
+    org_account=datapipe_account,
+    trust=0.3,  # New org, no history
+    uncertainty=0.7  # Complex legal domain
+)
+
+# LegalOrg returns quote
+{
+    "face_price": 5.0,          # Base contract review cost
+    "risk_premium": 1.8,         # High for new org
+    "rebate": 0.0,              # No history yet
+    "effective_price": 6.8,      # 5.0 × 1.36 (risk adjustment)
+    "expected_debit": 1.36       # 0.2 × 6.8 $MIND
+}
+
+# DataPipe pays 1.36 $MIND (136% of base due to risk premium)
+
+# 6 months later, after multiple successful contracts:
+# DataPipe trust: 0.3 → 0.85
+# LegalOrg utility_ema from DataPipe: 0.88
+# Same contract now costs: 5.0 × 0.6 (risk) × 0.56 (rebate) = 1.68 $MIND
+# Price dropped 123% due to trust building
+```
+
+**Outcome feedback:**
+- DataPipe follows legal advice → compliance success → utility = 0.9
+- LegalOrg utility_ema increases → rebates grow
+- DataPipe ignores advice → compliance failure → harm signal
+- LegalOrg harm_ema would increase → rebates shrink for risky orgs
+
+---
+
+### Example 3: DesignOrg (Nervous System - UI/UX)
+
+**Organ function:** Provides UI/UX design, user research, interface optimization (like nervous system coordinates sensory feedback)
+
+**Services provided:**
+- UI audit and redesign
+- User research and testing
+- Accessibility assessment
+- Design system creation
+
+**Physics-based pricing with load signals:**
+
+```python
+# Month 1: DesignOrg has 2 designers, low load
+designorg_load = {
+    "rho": 0.3,        # 30% capacity utilization
+    "backlog": 0,      # No waiting projects
+}
+L_t = 0.25  # Low load index
+
+# HRI requests UI audit
+quote_month1 = designorg.quote(
+    service="ui_audit",
+    planned_delta_e=0.3
+)
+# face_price = base_cost × f_scarcity(0.25)
+#           = 10.0 × 0.5 = 5.0 $MIND
+# Low load → low prices (excess capacity signal)
+
+# Month 6: DesignOrg popularity grows, 5 designers, high load
+designorg_load = {
+    "rho": 0.95,       # 95% capacity utilization
+    "backlog": 15,     # 15 projects waiting
+}
+L_t = 0.88  # High load index
+
+# HRI requests same UI audit
+quote_month6 = designorg.quote(
+    service="ui_audit",
+    planned_delta_e=0.3
+)
+# face_price = base_cost × f_scarcity(0.88)
+#           = 10.0 × 1.76 = 17.6 $MIND
+# High load → high prices (capacity constraint signal)
+
+# Economic signal to DesignOrg: "Hire more designers"
+# Revenue spike → hire 3 more designers → capacity ↑ → load ↓ → prices normalize
+```
+
+**Ecosystem self-regulation:**
+- High demand → high prices → high revenue → org expands capacity
+- Low demand → low prices → org must improve quality or shrink
+- No central planning needed - economics emerge from physics
+
+---
+
+### Example 4: DataPipe (Digestive System - Data Processing)
+
+**Organ function:** Processes and transforms data pipelines (like digestive system breaks down nutrients)
+
+**Services provided:**
+- Data extraction and transformation
+- Pipeline monitoring
+- Data quality validation
+- Performance optimization
+
+**Cross-org service exchange:**
+
+```python
+# HRI needs evidence synthesis data processed
+# HRI → DataPipe service request
+
+datapipe_quote = {
+    "service": "evidence_pipeline",
+    "face_price": 15.0,          # Complex pipeline
+    "rebate": 0.35,              # DataPipe has high utility_ema
+    "effective_price": 9.75,     # 15.0 × (1 - 0.35)
+    "expected_debit": 0.195      # HRI pays DataPipe
+}
+
+# DataPipe processes data → needs graph care
+# DataPipe → GraphCare service request
+
+graphcare_quote = {
+    "service": "graph_sync",
+    "face_price": 1.2,
+    "rebate": 0.40,              # DataPipe has good utility_ema
+    "effective_price": 0.72,
+    "expected_debit": 0.036      # DataPipe pays GraphCare
+}
+
+# Economic circulation:
+# HRI pays 0.195 $MIND → DataPipe
+# DataPipe pays 0.036 $MIND → GraphCare
+# GraphCare pays membrane fees → Foundation
+# Foundation distributes via UBC → All orgs
+# Cycle continues (like blood circulation)
+```
+
+**Organism principle:** Money flows like blood - each organ receives resources proportional to value provided, reinvests in capacity, serves ecosystem health.
+
+---
+
+### Example 5: Mind Protocol Foundation (Heart - Circulation)
+
+**Organ function:** Circulates resources via UBC, validates L4 transactions, governs protocol (like heart pumps blood)
+
+**Revenue streams:**
+1. **Membrane fees** (1-5% on cross-level/cross-org coordination)
+2. **Compute provision** (if hosting infrastructure)
+
+**Resource distribution:**
+
+```python
+# Foundation collects membrane fees from ecosystem activity
+monthly_membrane_fees = {
+    "L1→L2 coordination": 50 $MIND,
+    "L2→L3 coordination": 30 $MIND,
+    "Cross-org transactions": 120 $MIND,
+    "L4 validation": 40 $MIND
+}
+total_collected = 240 $MIND
+
+# Foundation distributes via UBC (Universal Basic Compute)
+ubc_distribution = {
+    "graphcare_org": 50 $MIND,    # Based on ecosystem contribution
+    "legalorg": 30 $MIND,
+    "designorg": 40 $MIND,
+    "datapipe": 35 $MIND,
+    "hri": 45 $MIND,
+    "citizens": 40 $MIND
+}
+
+# Like heart: Collects blood (membrane fees) → Pumps to organs (UBC) → Organs use resources → Return via services → Cycle continues
+```
+
+**Foundation does NOT:**
+- Set service prices (physics determines)
+- Allocate work (orgs respond to demand)
+- Control quality (utility_ema mechanisms handle)
+- Micromanage orgs (ecosystem self-regulates)
+
+**Foundation DOES:**
+- Operate L4 validation infrastructure
+- Distribute baseline resources (UBC)
+- Govern protocol rules
+- Monitor ecosystem health
+
+---
+
+## Key Insights from Organism Economics
+
+### 1. No Central Planning
+
+**Traditional economy:**
+- Central authority sets prices
+- Managers allocate resources
+- Strategic planning determines priorities
+
+**Organism economy:**
+- Prices emerge from system state (load, utility, trust)
+- Resources flow to high-utility functions automatically
+- Priorities emerge from demand signals
+
+**Like biology:** No central brain tells liver how much to grow - liver responds to blood toxin levels autonomously.
+
+### 2. Positive-Sum Dynamics
+
+**Traditional economy:**
+- Competition for fixed resources
+- My success may hurt competitors
+- Zero-sum thinking dominates
+
+**Organism economy:**
+- Collaboration for ecosystem health
+- My success helps ecosystem → helps all orgs
+- Positive-sum thinking dominates
+
+**Like biology:** Healthy kidneys help liver (remove toxins), healthy liver helps kidneys (reduce load). All organs benefit from body health.
+
+### 3. Natural Selection Still Operates
+
+**Poor performers fail:**
+- Low utility_ema → high prices → less demand → revenue drops → can't sustain → org shrinks or dies
+- Like weak organ in body → gets less blood flow → atrophies → body adapts
+
+**High performers thrive:**
+- High utility_ema → rebates → more demand → revenue grows → expand capacity → serve more
+- Like strong organ in body → gets priority resources → grows → serves body better
+
+**But:** Failure is graceful (not catastrophic). Ecosystem supports orgs during transition. UBC provides baseline survival. Orgs can pivot/adapt without crisis.
+
+### 4. Ecosystem Health Metrics
+
+**Traditional economy tracks:**
+- Revenue
+- Profit
+- Market share
+- Growth rate
+
+**Organism economy tracks:**
+- Utility_ema (value to ecosystem)
+- Load_index (capacity utilization)
+- Trust scores (relationship health)
+- Harm_ema (negative impacts)
+- Rebate levels (reciprocity)
+
+**Success = ecosystem thriving, not individual org maximization**
+
+---
+
+## Transition Strategy (All Orgs)
+
+**How existing orgs transition to organism economics:**
+
+### Phase 0: Market Model (Current)
+- Set prices consciously
+- Negotiate contracts
+- Optimize for profit
+- Compete for customers
+
+### Phase 1: Physics Monitoring (Months 1-3)
+- Implement load monitoring (track capacity utilization)
+- Collect utility feedback (measure service quality)
+- Monitor trust building (track relationship history)
+- **Keep market pricing** but inform with physics data
+
+### Phase 2: Hybrid Pricing (Months 3-6)
+- Introduce load-based adjustments (+/- 20% based on capacity)
+- Add utility rebates (5-15% for high-quality orgs)
+- Add trust premiums (10-30% for new/risky orgs)
+- **Partial automation** but human override available
+
+### Phase 3: Full Organism Economics (Months 6-12)
+- Prices fully emerge from physics formula
+- No conscious price-setting
+- Automated rebate/premium calculations
+- Optimize for ecosystem health
+- **Human role:** Monitor system, adjust formula parameters if needed
+
+---
+
+**Every organization in Mind Protocol ecosystem should eventually reach Phase 3 - organism economics as standard operating model.**
+
+### Leapfrog Opportunity
+
+**Key insight:** Since Mind Protocol hasn't implemented traditional market pricing (Phase 0), new organizations can **start directly with Phase 3** (full organism economics).
+
+This makes organism economics the **default model**, not a gradual transition. Early adopters have the advantage of building physics-based pricing from day one, rather than migrating from legacy market models.
+
+**For new orgs:** Skip to Phase 3 immediately
+**For existing orgs:** May need Phase 1-2 transition if already using market pricing
+
+The transition path (Phase 0→1→2→3) is provided for organizations already operating with market-based pricing who need to migrate gradually. But for greenfield deployments, **Phase 3 is the starting point**.
 
 ---
 

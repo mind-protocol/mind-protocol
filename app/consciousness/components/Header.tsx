@@ -6,7 +6,8 @@ import type { Node } from '../hooks/useGraphData';
 import { EmergencyControls } from './EmergencyControls';
 import { SearchBar } from './SearchBar';
 import { SystemStatusIndicator } from './SystemStatusIndicator';
-import { WalletConnectionButton } from '../../components/WalletConnectionButton';
+// REMOVED: WalletConnectionButton - Solana wallet not needed right now
+// import { WalletConnectionButton } from '../../components/WalletConnectionButton';
 import { useWebSocket } from '../hooks/useWebSocket';
 
 interface HeaderProps {
@@ -107,10 +108,9 @@ export function Header({
           )}
 
 
-          {/* Wallet Connection */}
-          <WalletConnectionButton />
-
-          <div className="h-6 w-px bg-observatory-teal/30"></div>
+          {/* REMOVED: Wallet Connection - not needed right now */}
+          {/* <WalletConnectionButton /> */}
+          {/* <div className="h-6 w-px bg-observatory-teal/30"></div> */}
 
           {/* System Status with Hover Popup */}
           <SystemStatusIndicator />

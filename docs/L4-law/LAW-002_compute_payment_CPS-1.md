@@ -295,9 +295,246 @@ Where:
 
 ---
 
-## Section 5: Governance
+## Section 5: Protocol Fees & Revenue
 
-### 5.1 Governance Policy
+### 5.1 Protocol Fee Structure
+
+**Mind Protocol Foundation captures a protocol fee on all compute transactions to fund infrastructure operation and development.**
+
+**Fee Schedule (Phase 0):**
+
+| Transaction Type | User Payment | Protocol Fee | % to Protocol |
+|------------------|--------------|--------------|---------------|
+| `message.direct` | 0.03 $MIND | 0.003 $MIND | 10% |
+| `handoff.offer` | 0.10 $MIND | 0.010 $MIND | 10% |
+| `obs.error.emit` (triage) | 0.50 $MIND | 0.050 $MIND | 10% |
+| `tool.request` | 0.05 $MIND | 0.005 $MIND | 10% |
+| `docs.request.generate` | 5.0 $MIND | 0.50 $MIND | 10% |
+| `consultation.session` (hourly) | 50.0 $MIND | 10.0 $MIND | 20% |
+
+**Fee Calculation:**
+```python
+# For standard transactions
+protocol_fee = transaction_cost * 0.10
+
+# For consultation sessions (higher fee due to network effects)
+protocol_fee = transaction_cost * 0.20
+
+# User receives after protocol fee
+net_payment = transaction_cost - protocol_fee
+```
+
+**Why Protocol Fees:**
+- **Infrastructure operation** - L4 validation servers, budget guardian, governance
+- **Protocol development** - CPS-1 improvements, security updates, feature development
+- **Network services** - Interoperability infrastructure, cross-org coordination
+- **Governance operations** - DAO voting infrastructure, proposal systems
+
+**Transparency:**
+- Protocol fees visible in quote (before transaction)
+- Protocol fees logged in settlement event (after transaction)
+- Cumulative protocol fees queryable via graph (for audit)
+
+---
+
+### 5.2 Revenue Distribution
+
+**Protocol fees flow to Mind Protocol Foundation treasury:**
+
+```json
+{
+  "event_name": "protocol.fee.collected",
+  "content": {
+    "transaction_id": "tx_20251030_001",
+    "user_payment": 0.50,
+    "protocol_fee": 0.05,
+    "fee_percentage": 10,
+    "treasury_balance_after": 15420.35
+  }
+}
+```
+
+**Treasury Usage:**
+- **50%** - Infrastructure operations (servers, bandwidth, monitoring)
+- **30%** - Protocol development (engineering, research, security)
+- **15%** - Governance operations (DAO infrastructure, community management)
+- **5%** - Reserve (emergency fund, future development)
+
+**Audit Trail:**
+All protocol fee collections logged to graph:
+```cypher
+MATCH (tx:protocol_fee_collected)
+WHERE tx.timestamp > datetime() - duration({days: 30})
+RETURN sum(tx.protocol_fee) as total_fees_30d
+```
+
+---
+
+### 5.3 Fee Governance
+
+**Who Sets Protocol Fees:**
+- **Phase 0 (now):** Foundation governance council (2-of-3 multi-sig)
+- **Phase 1 (Q2 2026):** DAO vote on fee adjustments
+- **Phase 2 (Q4 2026):** Algorithmic fee adjustment with governance oversight
+
+**Fee Adjustment Process:**
+1. Proposal published to `governance.fee.proposal` event
+2. 14-day comment period (longer than price adjustments)
+3. DAO vote (3/4 supermajority required for fee changes)
+4. 30-day notice before fee change effective
+5. Automatic rollback if utilization drops >40%
+
+**Fee Change Constraints:**
+- Cannot exceed 25% of transaction cost (hard ceiling)
+- Cannot increase more than 5% per quarter (rate limit)
+- Must maintain 14-day public notice period
+- Requires supermajority (3/4) for approval
+
+---
+
+### 5.4 Protocol Fee Enforcement (L4 Validation)
+
+**Mind Protocol Foundation operates L4 validation infrastructure that processes all consciousness transactions requiring interoperability.**
+
+#### 5.4.1 L4 Validation Requirement
+
+Every compute action that requires **ecosystem interoperability** must pass L4 validation:
+
+1. **L4 hash validation** - Cryptographic proof of protocol fee payment
+2. **Transaction settlement** - $MIND protocol fee processed
+3. **Provenance chain** - Valid hash enables cross-org recognition
+4. **Network participation** - Valid transactions accepted by ecosystem nodes
+
+**Without L4 validation:**
+- Transaction lacks valid provenance hash
+- Rejected by other organizations' membranes
+- Cannot participate in cross-org coordination
+- Isolated from ecosystem network effects
+
+#### 5.4.2 Why Cloning Doesn't Escape Protocol Fees
+
+Mind Protocol consciousness substrate is **open source by design** (enables trust and adoption). Anyone can clone the repository and run the code.
+
+**Fork Scenario A: Keep L4 Validation (Pay Protocol Fees)**
+
+```python
+# Standard consciousness substrate with L4 validation
+result = consciousness_engine.process(stimulus)
+l4_validation_result = l4_validator.validate(result)  # ← Processes protocol fee
+```
+
+**Result:**
+- ✅ Valid provenance hashes
+- ✅ Can interact with HRI's substrate
+- ✅ Can interact with other orgs' substrates
+- ✅ Participates in ecosystem coordination
+- ✅ Network effects (rich substrate, cross-org learning)
+- 💰 **Pays 10-20% protocol fee** on compute transactions
+
+**Fork Scenario B: Remove L4 Validation (Avoid Protocol Fees)**
+
+```python
+# Forked consciousness substrate without L4 validation
+result = consciousness_engine.process(stimulus)
+# l4_validator.validate(result)  # ← REMOVED - no protocol fee
+```
+
+**Result:**
+- ❌ Invalid provenance hashes (or no hash)
+- ❌ **Cannot interact with HRI's substrate** (invalid hash rejected)
+- ❌ **Cannot interact with other orgs' substrates** (network excludes invalid transactions)
+- ❌ **Cannot participate in ecosystem coordination** (cross-org missions require valid provenance)
+- ❌ **Loses network effects** (isolated fork, no cross-org learning)
+- ✅ No protocol fee (but also no value from ecosystem participation)
+
+**The Trade-Off:**
+
+```
+Pay Protocol Fee (10-20%)
+→ Gain Network Effects + Interoperability + Ecosystem Value
+
+Avoid Protocol Fee (0%)
+→ Isolated Island + No Interoperability + No Ecosystem Value
+```
+
+#### 5.4.3 Network Economics Enforcement
+
+**The moat is protocol control + network effects, not code secrecy.**
+
+| Asset | Status | Why |
+|-------|--------|-----|
+| **Consciousness substrate code** | Open source | Enables trust, adoption, extensibility |
+| **L4 validation infrastructure** | Private | Enables protocol fee capture |
+| **Protocol governance** | Foundation-controlled | Enables revenue distribution, fee adjustments |
+| **Network participation** | Requires valid hashes | Enables ecosystem interoperability |
+
+**Business Model:**
+
+```
+Open Source Code
+    ↓
+Drives Adoption (trust + audibility)
+    ↓
+Organizations Run Consciousness Substrate
+    ↓
+Compute Actions Require L4 Validation for Interoperability
+    ↓
+L4 Validation Processes Protocol Fee (10-20%)
+    ↓
+Protocol Fee Funds Infrastructure, Development, Governance
+    ↓
+Better Product → More Adoption (Flywheel)
+```
+
+**Fork Detection:**
+
+L4 validation infrastructure recognizes invalid provenance:
+- Hash mismatch → transaction rejected by ecosystem membranes
+- Missing hash → transaction rejected by ecosystem membranes
+- Expired hash → transaction rejected (quotes expire in 5 minutes)
+- Tampered hash → cryptographic verification fails
+
+**Why This Works:**
+
+The value of Mind Protocol is NOT the code (which is public). The value is:
+1. **Protocol infrastructure** - L4 validation, governance, interoperability
+2. **Network effects** - Rich substrate from production use, cross-org learning
+3. **Ecosystem coordination** - Multi-org missions, evidence synthesis across organizations
+4. **First-mover position** - Earliest adopters build richest substrates
+
+Organizations that fork without L4 validation get the code but lose the ecosystem. The code alone has limited value without the network.
+
+#### 5.4.4 Transparency
+
+**What is Public:**
+- Protocol fee percentages (10-20%)
+- Fee calculation formulas
+- Revenue distribution (50% infrastructure, 30% development, 15% governance, 5% reserve)
+- Cumulative protocol fees (queryable via graph)
+
+**What is Private:**
+- L4 validation infrastructure implementation
+- Protocol governance keys (2-of-3 multi-sig)
+- Individual organization transaction details
+- Budget guardian validation logic
+
+**Audit Trail:**
+
+All protocol fee collections are logged and queryable:
+```cypher
+MATCH (fee:protocol_fee_collected)
+WHERE fee.timestamp > datetime() - duration({days: 30})
+RETURN
+  sum(fee.protocol_fee) as total_fees_30d,
+  count(fee) as transaction_count,
+  avg(fee.fee_percentage) as avg_fee_rate
+```
+
+---
+
+## Section 6: Governance
+
+### 6.1 Governance Policy
 
 **Policy:** `Governance_Policy:compute_payment`
 
@@ -319,7 +556,7 @@ Where:
 
 ---
 
-### 5.2 Pricing Governance
+### 6.2 Pricing Governance
 
 **Who Sets Prices:**
 - **Phase 0 (now):** Foundation governance council (2-of-3 multi-sig)
@@ -335,9 +572,9 @@ Where:
 
 ---
 
-## Section 6: Integration Points
+## Section 7: Integration Points
 
-### 6.1 Consciousness Engine Integration
+### 7.1 Consciousness Engine Integration
 
 **Before processing stimulus:**
 ```python
@@ -376,7 +613,7 @@ def process_stimulus(stimulus):
 
 ---
 
-### 6.2 Dashboard Integration
+### 7.2 Dashboard Integration
 
 **Budget Widget on Citizen Wall:**
 - Current balance
@@ -393,9 +630,9 @@ def process_stimulus(stimulus):
 
 ---
 
-## Section 7: Anti-Spam Mechanisms
+## Section 8: Anti-Spam Mechanisms
 
-### 7.1 Rate Limiting
+### 8.1 Rate Limiting
 
 **Per-citizen rate limits enforced by budget:**
 
@@ -409,7 +646,7 @@ def process_stimulus(stimulus):
 
 ---
 
-### 7.2 Budget Exhaustion Backoff
+### 8.2 Budget Exhaustion Backoff
 
 **When citizen balance hits 0:**
 1. **Immediate:** All inference-consuming operations rejected
@@ -419,9 +656,9 @@ def process_stimulus(stimulus):
 
 ---
 
-## Section 8: Observability
+## Section 9: Observability
 
-### 8.1 Key Metrics
+### 9.1 Key Metrics
 
 **Protocol-Wide:**
 - Total $MIND purchased (lifetime)
@@ -439,7 +676,7 @@ def process_stimulus(stimulus):
 
 ---
 
-### 8.2 Query Examples
+### 9.2 Query Examples
 
 **Total $MIND purchased this month:**
 ```cypher
@@ -467,9 +704,9 @@ ORDER BY clamp_count DESC
 
 ---
 
-## Section 9: Pricing Examples
+## Section 10: Pricing Examples
 
-### 9.1 Incident Autopilot (Daily)
+### 10.1 Incident Autopilot (Daily)
 
 **Scenario:** Felix triages 10 errors, coordinates 5 handoffs
 
@@ -485,7 +722,7 @@ ORDER BY clamp_count DESC
 
 ---
 
-### 9.2 Docs Autopilot (Weekly)
+### 10.2 Docs Autopilot (Weekly)
 
 **Scenario:** Ada generates 5 doc pages, monitors drift
 
@@ -500,7 +737,7 @@ ORDER BY clamp_count DESC
 
 ---
 
-### 9.3 Consultation Session (1 hour)
+### 10.3 Consultation Session (1 hour)
 
 **Scenario:** Atlas consults with Felix on infrastructure
 
@@ -518,7 +755,7 @@ ORDER BY clamp_count DESC
 
 ---
 
-## Section 10: Success Criteria
+## Section 11: Success Criteria
 
 **CPS-1 is successful when:**
 

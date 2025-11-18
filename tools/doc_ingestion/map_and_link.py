@@ -816,19 +816,63 @@ class LLMClusterCreator:
             "LINK_META_CONTRACT": schemas.get('LINK_META_CONTRACT', {})
         }
 
-        # Filter to n2, l2, and shared levels with rich metadata
-        def filter_core_types(type_defs, allowed_levels):
-            """Filter type definitions to only include specified levels with full metadata."""
+        # Filter to n2, l2, and shared levels with rich metadata, optionally by domain
+        def filter_core_types(type_defs, allowed_levels, allowed_domains=None):
+            """
+            Filter type definitions to only include specified levels and domains with full metadata.
+
+            Args:
+                type_defs: Full type registry dict
+                allowed_levels: Set of allowed level codes ('n2', 'shared', etc.)
+                allowed_domains: Optional set of allowed domain codes ('MED', 'shared', etc.)
+                                If None, defaults to {'shared'} (universal types only)
+
+            Returns:
+                Filtered type definitions dict
+            """
+            if allowed_domains is None:
+                allowed_domains = {'shared'}
+
             filtered = {}
             for type_name, type_def in type_defs.items():
-                if isinstance(type_def, dict) and type_def.get('level') in allowed_levels:
-                    # Include full metadata: type_name, level, category, description, fields/attributes
-                    filtered[type_name] = type_def
+                if not isinstance(type_def, dict):
+                    continue
+
+                # Level filtering (existing logic)
+                if type_def.get('level') not in allowed_levels:
+                    continue
+
+                # Domain filtering (NEW logic)
+                # Extract domain from type_def or parse from type_name
+                if 'domain' in type_def:
+                    # Use explicit domain field from spec
+                    type_domain = type_def['domain']
+                else:
+                    # Fallback: parse from type_name (e.g., "U3-MED_HEALTH_CONDITION" → "MED")
+                    if '-' in type_name:
+                        parts = type_name.split('-', 1)
+                        if len(parts) == 2:
+                            domain_part = parts[1].split('_', 1)[0]  # "MED_HEALTH_CONDITION" → "MED"
+                            type_domain = domain_part
+                        else:
+                            type_domain = 'shared'  # No domain prefix = universal
+                    else:
+                        type_domain = 'shared'  # No domain prefix = universal
+
+                # Check if type's domain is in allowed domains
+                if type_domain not in allowed_domains:
+                    continue
+
+                # Type passes both filters - include full metadata
+                filtered[type_name] = type_def
+
             return filtered
 
         # Include ONLY n2 and shared for nodes; ONLY l2 and shared for links
-        core_node_types = filter_core_types(chunk_input['NODE_TYPE_DEFS'], {'n2', 'shared'})
-        core_link_types = filter_core_types(chunk_input['LINK_TYPE_DEFS'], {'l2', 'shared'})
+        # Domain filtering: load 'shared' (universal) types only by default
+        # TODO: Update these calls to specify domains per citizen config (e.g., {'MED', 'shared'} for HRI)
+        core_node_types = filter_core_types(chunk_input['NODE_TYPE_DEFS'], {'n2', 'shared'}, {'shared'})
+        core_link_types = filter_core_types(chunk_input['LINK_TYPE_DEFS'], {'l2', 'shared'}, {'shared'})
 
         logger.info(f"[LLMClusterCreator] Filtered to {len(core_node_types)} core node types (n2/shared) and {len(core_link_types)} core link types (l2/shared)")
 
@@ -1137,19 +1181,63 @@ Build clusters that **join the living mind**, not ones that live in a slide.
             "LINK_META_CONTRACT": schemas.get('LINK_META_CONTRACT', {})
         }
 
-        # Filter to n2, l2, and shared levels with rich metadata
-        def filter_core_types(type_defs, allowed_levels):
-            """Filter type definitions to only include specified levels with full metadata."""
+        # Filter to n2, l2, and shared levels with rich metadata, optionally by domain
+        def filter_core_types(type_defs, allowed_levels, allowed_domains=None):
+            """
+            Filter type definitions to only include specified levels and domains with full metadata.
+
+            Args:
+                type_defs: Full type registry dict
+                allowed_levels: Set of allowed level codes ('n2', 'shared', etc.)
+                allowed_domains: Optional set of allowed domain codes ('MED', 'shared', etc.)
+                                If None, defaults to {'shared'} (universal types only)
+
+            Returns:
+                Filtered type definitions dict
+            """
+            if allowed_domains is None:
+                allowed_domains = {'shared'}
+
             filtered = {}
             for type_name, type_def in type_defs.items():
-                if isinstance(type_def, dict) and type_def.get('level') in allowed_levels:
-                    # Include full metadata: type_name, level, category, description, fields/attributes
-                    filtered[type_name] = type_def
+                if not isinstance(type_def, dict):
+                    continue
+
+                # Level filtering (existing logic)
+                if type_def.get('level') not in allowed_levels:
+                    continue
+
+                # Domain filtering (NEW logic)
+                # Extract domain from type_def or parse from type_name
+                if 'domain' in type_def:
+                    # Use explicit domain field from spec
+                    type_domain = type_def['domain']
+                else:
+                    # Fallback: parse from type_name (e.g., "U3-MED_HEALTH_CONDITION" → "MED")
+                    if '-' in type_name:
+                        parts = type_name.split('-', 1)
+                        if len(parts) == 2:
+                            domain_part = parts[1].split('_', 1)[0]  # "MED_HEALTH_CONDITION" → "MED"
+                            type_domain = domain_part
+                        else:
+                            type_domain = 'shared'  # No domain prefix = universal
+                    else:
+                        type_domain = 'shared'  # No domain prefix = universal
+
+                # Check if type's domain is in allowed domains
+                if type_domain not in allowed_domains:
+                    continue
+
+                # Type passes both filters - include full metadata
+                filtered[type_name] = type_def
+
             return filtered
 
         # Include ONLY n2 and shared for nodes; ONLY l2 and shared for links
-        core_node_types = filter_core_types(chunk_input['NODE_TYPE_DEFS'], {'n2', 'shared'})
-        core_link_types = filter_core_types(chunk_input['LINK_TYPE_DEFS'], {'l2', 'shared'})
+        # Domain filtering: load 'shared' (universal) types only by default
+        # TODO: Update these calls to specify domains per citizen config (e.g., {'MED', 'shared'} for HRI)
+        core_node_types = filter_core_types(chunk_input['NODE_TYPE_DEFS'], {'n2', 'shared'}, {'shared'})
+        core_link_types = filter_core_types(chunk_input['LINK_TYPE_DEFS'], {'l2', 'shared'}, {'shared'})
 
         logger.info(f"[LLMClusterCreator] Filtered to {len(core_node_types)} core node types (n2/shared) and {len(core_link_types)} core link types (l2/shared)")
 

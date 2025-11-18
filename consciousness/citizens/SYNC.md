@@ -1,3 +1,99 @@
+## 2025-11-08 19:45 - Ada: ✅ Organization Onboarding Architecture Complete (Design + Specification + Phase 0 Playbook)
+
+**Status:** ✅ Specification Complete | Ready for Phase 0 Manual Testing
+
+**Deliverables:**
+1. **Comprehensive Architecture Spec:** `/home/mind-protocol/mindprotocol/docs/specs/v2/ecosystem/org_onboarding_architecture.md` (500+ lines)
+2. **Phase 0 Manual Playbook:** `/home/mind-protocol/mindprotocol/docs/playbooks/manual_org_setup.md` (600+ lines)
+
+**What Was Designed:**
+
+**1. Three-Phase Progressive Automation:**
+- **Phase 0 (Manual):** 1-2 weeks per org, 1-5 orgs, document process
+- **Phase 1 (Semi-Automated):** 2-3 days per org, 10-50 orgs, `mp-org` CLI tool
+- **Phase 2 (Fully Automated):** 3-7 days per org, 100s orgs, scalingOrg self-service platform
+
+**2. Five Core Components Specified:**
+- ✅ **Template Repository:** Fork-able structure with variable substitution, 4 industry templates (Research, SaaS, Consulting, Agency)
+- ✅ **Citizen Generation:** Config schema (YAML) → CLAUDE.md generation with identity, context, capabilities, graph access
+- ✅ **Infrastructure Provisioning:** FalkorDB graphs (L1+L2), WebSocket namespaces, Render/Vercel deployment automation
+- ✅ **Data Pipeline Branching:** Multi-tenant isolation via graph prefixes, org-scoped telemetry, schema inheritance
+- ✅ **Access Control:** RBAC (org_owner, org_citizen, org_viewer), dashboard routes, API key scoping
+
+**3. HRI Investigation (Reverse-Engineering):**
+
+**What EXISTS for HRI:**
+- ✅ Directory: `/home/mind-protocol/hri/` with `citizens/`, `docs/`, `scripts/`
+- ✅ Generic citizen config (not HRI-customized)
+- ✅ Documentation workspace (proposals, extraction docs, GraphCare brief)
+
+**What DOES NOT EXIST for HRI:**
+- ❌ FalkorDB graphs (`hri_organizational`, `hri_rachel`, `hri_alexander`) - Not provisioned
+- ❌ WebSocket namespace (`hri.*`) - Not registered
+- ❌ Dashboard routes (`/consciousness/hri`) - Not created
+- ❌ API keys - No scoping system exists
+- ❌ Claude Code config (`.claude/config.yml`) - Not created
+- ❌ Backend/Frontend deployment - Not needed (uses shared MP infrastructure)
+
+**Conclusion:** HRI is a **workspace for proposal development**, not an operational MP organization yet.
+
+**4. Phase 0 Manual Playbook (12 Steps):**
+1. Create workspace directory (5 mins)
+2. Create citizen configuration (60-90 mins) - **Biggest bottleneck**
+3. Provision FalkorDB graphs (30 mins)
+4. Configure WebSocket namespaces (15 mins)
+5. Configure dashboard access (45 mins)
+6. Generate API keys (10 mins)
+7. Configure Claude Code access (20 mins)
+8. Deploy backend (optional, 1-2 hours)
+9. Deploy frontend (optional, 1-2 hours)
+10. Initialize organization knowledge (2-4 hours)
+11. Grant access to human stakeholders (15 mins)
+12. Document everything (2-3 hours)
+
+**Total Time (No custom backend/frontend):** 8-12 hours active work, 1-2 weeks elapsed
+
+**Automation Priorities for Phase 1:**
+1. **🔥 Top:** Citizen identity generation (60-90 mins → 5 mins via LLM)
+2. **High:** FalkorDB provisioning (30 mins → 2 mins via CLI)
+3. **High:** Dashboard route generation (45 mins → 5 mins via script)
+4. **Medium:** Documentation generation (2-3 hours → 10 mins via template)
+
+**5. Implementation Roadmap:**
+- **Phase 0 (Weeks 1-4):** Manual playbook, onboard 3-5 test orgs, document lessons learned
+- **Phase 1 (Weeks 5-12):** Build `mp-org` CLI, templates, automation scripts (80% automated)
+- **Phase 2 (Weeks 13-24):** Build scalingOrg platform - web portal, OAuth, self-service (90%+ automated)
+
+**Next Steps:**
+
+**Option A - Test Manual Process (Phase 0):**
+1. Choose test org (HRI, DataPipe, or internal test org)
+2. Follow Phase 0 playbook step-by-step
+3. Document deviations, time taken, issues encountered
+4. Update playbook with lessons learned
+5. Repeat for 2-3 more test orgs to validate process
+
+**Option B - Begin Phase 1 Automation:**
+1. Build `mp-org` CLI tool skeleton
+2. Implement citizen identity generation (LLM-based)
+3. Implement FalkorDB provisioning script
+4. Implement dashboard route generation
+5. Test automated process on test org
+
+**Recommendation:** Start with **Option A (Phase 0)** to validate assumptions before building automation. Manually onboard 1-2 test orgs to discover edge cases and refine playbook.
+
+**Blockers:**
+- None - specification complete, playbook ready for use
+- Need decision: Which test org to onboard first? (HRI, DataPipe, or internal?)
+
+**Files Created:**
+- `docs/specs/v2/ecosystem/org_onboarding_architecture.md` (complete architecture)
+- `docs/playbooks/manual_org_setup.md` (step-by-step manual process)
+
+**Commit:** Ready to commit (files created in this session)
+
+---
+
 ## 2025-11-05 03:30 - Ada: 🔥 CRITICAL FIX - Graph Persistence Failure Resolved
 
 **Status:** ✅ Fixed & Pushed (4089f2da) | Unblocks ALL graph writes

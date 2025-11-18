@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 
 // Documentation tree structure
 interface DocNode {
@@ -11,6 +12,7 @@ interface DocNode {
   path: string;
   purpose?: string;
   children?: DocNode[];
+  content?: string; // Loaded markdown content
 }
 
 // Complete tokenomics documentation structure
@@ -63,22 +65,22 @@ const DOCS_TREE: DocNode = {
                   type: 'VALIDATION',
                   path: '/docs/tokenomics/two-layer-economics/token-dual-purpose/layer-integration-tests',
                   purpose: 'Verify coherence between energy and token layers'
-                },
+                }
+              ]
+            },
+            {
+              id: 'financeorg-mgmt',
+              name: 'FinanceOrg Two-Layer Management',
+              type: 'MECHANISM',
+              path: '/docs/tokenomics/two-layer-economics/financeorg-two-layer-mgmt',
+              purpose: 'How financeOrg manages both economic layers',
+              children: [
                 {
-                  id: 'financeorg-mgmt',
-                  name: 'FinanceOrg Two-Layer Management',
-                  type: 'MECHANISM',
-                  path: '/docs/tokenomics/two-layer-economics/token-dual-purpose/financeorg-two-layer-mgmt',
-                  purpose: 'How financeOrg manages both economic layers',
-                  children: [
-                    {
-                      id: 'how-to-manage',
-                      name: 'How to Manage Both Layers',
-                      type: 'GUIDE',
-                      path: '/docs/tokenomics/two-layer-economics/token-dual-purpose/financeorg-two-layer-mgmt/how-to-manage-both-layers',
-                      purpose: 'Step-by-step guide for dual-layer economic management'
-                    }
-                  ]
+                  id: 'how-to-manage',
+                  name: 'How to Manage Both Layers',
+                  type: 'GUIDE',
+                  path: '/docs/tokenomics/two-layer-economics/financeorg-two-layer-mgmt/how-to-manage-both-layers',
+                  purpose: 'Step-by-step guide for dual-layer economic management'
                 }
               ]
             }
@@ -111,31 +113,29 @@ const DOCS_TREE: DocNode = {
                       type: 'ALGORITHM',
                       path: '/docs/tokenomics/organism-economics/pricing-evolution/formula-application/effective-price-calculation',
                       purpose: 'Formula: effective_price = base_cost × (1 + complexity_multiplier + org_variable - trust_score - utility_rebate)'
-                    }
-                  ]
-                },
-                {
-                  id: 'trust-score-calc',
-                  name: 'Trust Score Calculation',
-                  type: 'ALGORITHM',
-                  path: '/docs/tokenomics/organism-economics/pricing-evolution/trust-score-calculation',
-                  purpose: 'Calculate customer trust scores',
-                  children: [
+                    },
+                    {
+                      id: 'trust-score-calc',
+                      name: 'Trust Score Calculation',
+                      type: 'ALGORITHM',
+                      path: '/docs/tokenomics/organism-economics/pricing-evolution/formula-application/trust-score-calculation',
+                      purpose: 'Calculate customer trust scores'
+                    },
                     {
                       id: 'utility-rebate',
                       name: 'Utility Rebate Calculation',
                       type: 'ALGORITHM',
-                      path: '/docs/tokenomics/organism-economics/pricing-evolution/trust-score-calculation/utility-rebate-calculation',
+                      path: '/docs/tokenomics/organism-economics/pricing-evolution/formula-application/utility-rebate-calculation',
                       purpose: 'Calculate ecosystem contribution rebates'
+                    },
+                    {
+                      id: 'how-to-price',
+                      name: 'How to Price Services',
+                      type: 'GUIDE',
+                      path: '/docs/tokenomics/organism-economics/pricing-evolution/formula-application/how-to-price-services',
+                      purpose: 'Complete guide to implementing organism economics pricing'
                     }
                   ]
-                },
-                {
-                  id: 'how-to-price',
-                  name: 'How to Price Services',
-                  type: 'GUIDE',
-                  path: '/docs/tokenomics/organism-economics/pricing-evolution/how-to-price-services',
-                  purpose: 'Complete guide to implementing organism economics pricing'
                 }
               ]
             }
@@ -202,6 +202,13 @@ const DOCS_TREE: DocNode = {
                       type: 'ALGORITHM',
                       path: '/docs/tokenomics/universal-basic-compute/ubc-allocation/ubc-distribution/ubc-burn-rate',
                       purpose: 'Calculate reserve sustainability (8-11 years)'
+                    },
+                    {
+                      id: 'how-to-allocate-ubc',
+                      name: 'How to Allocate UBC',
+                      type: 'GUIDE',
+                      path: '/docs/tokenomics/universal-basic-compute/ubc-allocation/ubc-distribution/how-to-allocate-ubc',
+                      purpose: 'Step-by-step guide for UBC allocation'
                     }
                   ]
                 },
@@ -211,13 +218,6 @@ const DOCS_TREE: DocNode = {
                   type: 'VALIDATION',
                   path: '/docs/tokenomics/universal-basic-compute/ubc-allocation/ubc-sustainability-tests',
                   purpose: 'Verify UBC reserve lifespan across scenarios'
-                },
-                {
-                  id: 'ubc-replenishment',
-                  name: 'UBC Replenishment',
-                  type: 'MECHANISM',
-                  path: '/docs/tokenomics/universal-basic-compute/ubc-allocation/ubc-replenishment',
-                  purpose: '40% of protocol giveback → UBC reserve'
                 }
               ]
             }
@@ -309,9 +309,52 @@ const TYPE_ICONS = {
   GUIDE: '📖',
 };
 
+// Strip metadata envelope from markdown content
+function stripEnvelope(markdown: string): string {
+  // Remove everything up to and including the "---" after Purpose section
+  // The content we want starts after the metadata sections
+
+  // Split by "---" separators
+  const parts = markdown.split(/^---$/m);
+
+  if (parts.length < 4) {
+    // If structure is unexpected, return everything after first heading
+    const lines = markdown.split('\n');
+    const firstHeadingIndex = lines.findIndex(line => line.startsWith('## '));
+    return firstHeadingIndex >= 0 ? lines.slice(firstHeadingIndex).join('\n') : markdown;
+  }
+
+  // Skip: [0] = title + metadata, [1] = navigation section, [2] = relationships/purpose
+  // Keep: [3] = actual content onwards
+  return parts.slice(3).join('---').trim();
+}
+
 function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
-  const [isExpanded, setIsExpanded] = useState(false); // Collapsed by default
+  const [content, setContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
   const hasChildren = node.children && node.children.length > 0;
+
+  // Load markdown content from file
+  useEffect(() => {
+    if (node.path) {
+      // Fetch directly from public directory
+      fetch(`${node.path}/README.md`)
+        .then(res => {
+          if (res.ok) return res.text();
+          throw new Error('File not found');
+        })
+        .then(text => {
+          setContent(text);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to load content:', err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, [node.path]);
 
   return (
     <div className={`${level === 0 ? 'mb-12' : 'mb-6'}`}>
@@ -336,40 +379,48 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
             {node.purpose}
           </p>
         )}
-
-        {node.path && (
-          <div className="mt-3">
-            <code className="text-xs text-gray-500 font-mono">
-              {node.path}/README.md
-            </code>
-          </div>
-        )}
       </div>
 
-      {/* Children - Collapsible */}
+      {/* Markdown Content */}
+      {node.path && (
+        <div className="mb-8">
+          {loading ? (
+            <div className="text-sm text-gray-500 italic">Loading content...</div>
+          ) : content ? (
+            <div className="bg-[#0a0a0f]/50 border border-gray-800 rounded-lg p-6">
+              <div className="prose prose-invert max-w-none
+                prose-headings:text-white prose-headings:font-bold
+                prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
+                prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
+                prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2
+                prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4
+                prose-ul:text-gray-300 prose-ul:my-4
+                prose-ol:text-gray-300 prose-ol:my-4
+                prose-li:my-1
+                prose-strong:text-white prose-strong:font-semibold
+                prose-code:text-[#22d3ee] prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700
+                prose-a:text-[#6FE7E2] prose-a:no-underline hover:prose-a:underline
+                prose-blockquote:border-l-[#22d3ee] prose-blockquote:text-gray-400">
+                <ReactMarkdown>
+                  {stripEnvelope(content)}
+                </ReactMarkdown>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {/* Children - Always Expanded */}
       {hasChildren && (
         <div className={`${level === 0 ? 'ml-0' : 'ml-8'} border-l-2 ${
           level === 0 ? 'border-gray-700' : 'border-gray-800'
         } pl-6`}>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#22d3ee] mb-4 transition-colors"
-          >
-            <span className="text-[#22d3ee]">
-              {isExpanded ? '▼' : '▶'}
-            </span>
-            <span>
-              {isExpanded ? 'Hide' : 'Show'} {node.children!.length} sub-node{node.children!.length > 1 ? 's' : ''}
-            </span>
-          </button>
-
-          {isExpanded && (
-            <div className="space-y-8">
-              {node.children!.map((child) => (
-                <ContentNode key={child.id} node={child} level={level + 1} />
-              ))}
-            </div>
-          )}
+          <div className="space-y-8 mt-6">
+            {node.children!.map((child) => (
+              <ContentNode key={child.id} node={child} level={level + 1} />
+            ))}
+          </div>
         </div>
       )}
     </div>

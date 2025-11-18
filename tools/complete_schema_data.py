@@ -133,6 +133,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Events & Actors ----
   "U4_Event": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Universal event/happening; unifies L1 Memory & L3 Event.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -153,6 +155,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Agent": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Universal actor: human, citizen, org, DAO, or external system.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -169,6 +173,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Composition atom ----
   "U4_Subentity": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Multi-scale neighborhood (functional role or semantic cluster). At L4 with kind='protocol-subsystem' it represents a protocol subsystem.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -207,6 +213,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Goals, Decisions, Work ----
   "U4_Goal": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Universal goal; personal, project, ecosystem, or protocol roadmap item.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -222,6 +230,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Decision": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Universal decision record at any level.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -238,6 +248,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Work_Item": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Universal work item (task/milestone/bug/ticket/mission).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -257,6 +269,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Metrics & Assessments ----
   "U4_Metric": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Metric definition (what/how to measure).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -272,6 +286,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Measurement": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Concrete datapoint for a metric.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -285,6 +301,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Assessment": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Evaluation record (reputation/psychology/performance/security/compliance).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -302,6 +320,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Knowledge & Documentation ----
   "U4_Knowledge_Object": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Spec/ADR/runbook/guide/reference—the canonical doc source.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -319,6 +339,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Doc_View": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Rendered documentation view/page.",
     "required": [
       {"name":"view_id","type":"string"},
@@ -333,6 +355,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Code & Attestations ----
   "U4_Code_Artifact": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Source artifact (file/module) tracked for traceability.",
     "required": [
       {"name":"repo","type":"string"},
@@ -346,6 +370,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Attestation": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Cryptographic attestation (e.g., SEA identity snapshot, policy commitment).",
     "required": [
       {"name":"attestation_id","type":"string"},
@@ -364,6 +390,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Public presence & capability catalog ----
   "U4_Public_Presence": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Public listing/presence for an org/citizen in an ecosystem.",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3","L4"]},
@@ -384,6 +412,8 @@ NODE_TYPE_SCHEMAS = {
   # ---- Cross-level assets ----
   "U4_Wallet_Address": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "On-chain wallet address, usable at any level.",
     "required": [
       {"name":"address","type":"string"},
@@ -395,6 +425,8 @@ NODE_TYPE_SCHEMAS = {
 
   "U4_Smart_Contract": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Smart contract reference across levels.",
     "required": [
       {"name":"contract_address","type":"string"},
@@ -413,6 +445,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Pattern": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Recurring behavior at L1–L3 (habits, best/anti patterns, market/process patterns).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"],
@@ -440,6 +474,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Risk": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Risk/threat to goals at L1–L3 (non-law).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"]},
@@ -464,6 +500,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Relationship": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Connection between agents at L1–L3 (personal/business/protocol partnerships).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"]},
@@ -487,6 +525,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Deal": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Generic agreement/transaction intent at L1–L3 (pre-legal; distinct from L3_Deal if you keep that specialized).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"]},
@@ -511,6 +551,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Community": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Named group/community at L1–L3 (guild, working group, interest cluster).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"]},
@@ -533,6 +575,8 @@ NODE_TYPE_SCHEMAS = {
   # --------------------
   "U3_Practice": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "description": "Adopted practice/standard operating procedure at L1–L3 (non-law).",
     "required": [
       {"name":"level","type":"enum","enum_values":["L1","L2","L3"]},
@@ -540,11 +584,45 @@ NODE_TYPE_SCHEMAS = {
       {"name":"name","type":"string"}
     ],
     "optional": [
+      {"name":"practice_type","type":"enum",
+       "enum_values":["clinical_protocol","treatment_protocol","assessment_protocol","research_protocol","administrative_sop"],
+       "description":"Category of practice"},
       {"name":"intent","type":"string","description":"Why this practice exists"},
       {"name":"steps","type":"array","description":"High-level steps/checklist"},
       {"name":"owner_ref","type":"string"},
       {"name":"maturity","type":"enum","enum_values":["incipient","defined","managed","optimized"],"default":"defined"},
       {"name":"status","type":"enum","enum_values":["active","deprecated","archived"],"default":"active"},
+      {"name":"slug","type":"string"}
+    ],
+    "invariants": ["level in {'L1','L2','L3'}"]
+  },
+
+  # --------------------
+  # Health Condition (MED domain)
+  # --------------------
+  "U3-MED_HEALTH_CONDITION": {
+    "universality": "U3",
+    "domain": "MED",
+    "level": "n2",
+    "description": "Clinical health condition: disease, symptom, syndrome, injury, risk factor, or health state",
+    "required": [
+      {"name":"level","type":"enum","enum_values":["L1","L2","L3"],
+       "description":"Scope level"},
+      {"name":"scope_ref","type":"string","description":"Citizen/Org/Ecosystem id"},
+      {"name":"condition_type","type":"enum",
+       "enum_values":["disease","symptom","syndrome","injury","risk_factor","health_state"],
+       "description":"Classification of condition"}
+    ],
+    "optional": [
+      {"name":"icd_code","type":"string","description":"ICD-10 or ICD-11 code if applicable"},
+      {"name":"snomed_code","type":"string","description":"SNOMED CT code if applicable"},
+      {"name":"mesh_term","type":"string","description":"MeSH heading for literature indexing"},
+      {"name":"severity","type":"enum","enum_values":["mild","moderate","severe","critical"],
+       "description":"Typical severity range"},
+      {"name":"chronicity","type":"enum","enum_values":["acute","subacute","chronic","recurrent"],
+       "description":"Temporal pattern"},
+      {"name":"prevalence_estimate","type":"float","description":"Population prevalence (0-1 range)"},
+      {"name":"status","type":"enum","enum_values":["active","archived"],"default":"active"},
       {"name":"slug","type":"string"}
     ],
     "invariants": ["level in {'L1','L2','L3'}"]
@@ -559,6 +637,8 @@ NODE_TYPE_SCHEMAS = {
   # Anchor & structure
   "L4_Autonomy_Tier": {
     "universality": "L4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Capability gating tier at protocol level.",
     "required": [
       {"name":"tier_number","type":"integer","description":"1..5 scale"},
@@ -575,6 +655,8 @@ NODE_TYPE_SCHEMAS = {
   # Registry core
   "L4_Schema_Bundle": {
     "universality": "L4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Logical release bundle of schemas/policies.",
     "required": [
       {"name":"semver","type":"string","description":"e.g., '1.0.0'"},
@@ -589,6 +671,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Event_Schema": {
     "universality": "L4",
+    "domain": "shared",
+    "level": "shared",
     "description": "JSON Schema descriptor for an event payload.",
     "required": [
       {"name":"schema_uri","type":"string","description":"l4://schemas/<name>/<ver>.json"},
@@ -610,6 +694,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Envelope_Schema": {
     "universality": "L4",
+    "domain": "shared",
+    "level": "shared",
     "description": "Envelope shape & signing profile.",
     "required": [
       {"name":"name","type":"string","default":"ENV_STANDARD_V1"},
@@ -626,6 +712,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Topic_Namespace": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Topic namespace (wildcards allowed).",
     "required":[
       {"name":"name","type":"string","description":"e.g., 'telemetry.state.*' or 'identity.snapshot.attest'"}
@@ -637,6 +725,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Signature_Suite": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Signing algorithm/profile supported by validator.",
     "required":[
       {"name":"suite_id","type":"string","description":"e.g., 'SIG_ED25519_V1'"},
@@ -650,6 +740,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Governance_Policy": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Law/policy text with machine-enforceable expectations.",
     "required":[
       {"name":"policy_id","type":"string"},
@@ -664,6 +756,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Type_Index": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Catalog entry for a canonical type (U4_* / U3_* / Lx_*).",
     "required":[
       {"name":"type_name","type":"string"},
@@ -678,6 +772,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Conformance_Suite": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Test suite for schemas/policies/topics/signature suites.",
     "required":[
       {"name":"suite_id","type":"string"},
@@ -692,6 +788,8 @@ NODE_TYPE_SCHEMAS = {
 
   "L4_Conformance_Result": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Result of running a conformance suite.",
     "required":[
       {"name":"subject_ref","type":"string"},
@@ -708,6 +806,8 @@ NODE_TYPE_SCHEMAS = {
   # Optional capability catalog (law names the capability)
   "L4_Capability": {
     "universality":"L4",
+    "domain": "shared",
+    "level": "shared",
     "description":"Named capability that policies/tiers can unlock.",
     "required":[
       {"name":"capability_id","type":"string"},
@@ -732,6 +832,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_MEMBER_OF": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_HAS_MEMBER",
     "description": "Child → Parent composition.",
     "detailed_description": "Universal composition relation across L1–L4. "
@@ -762,6 +864,8 @@ LINK_FIELD_SPECS = {
 
   "U4_ALIASES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_ALIASES",  # symmetric
     "description": "Equivalence/alias relation.",
     "detailed_description": "A↔B indicate the same logical entity under different names or contexts.",
@@ -779,6 +883,8 @@ LINK_FIELD_SPECS = {
 
   "U4_MERGED_INTO": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_ABSORBED",
     "description": "Old → New merge; lineage preservation.",
     "detailed_description": "Sets old.status='merged'. New inherits selected fields from old.",
@@ -799,6 +905,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_GOVERNS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_GOVERNED_BY",
     "description": "L4 subsystem governs a resource/domain.",
     "detailed_description": "Connects a protocol subsystem (SEA/CPS/UBC/RGS/AGL/…) to schemas, topics, policies, or capabilities it governs.",
@@ -817,6 +925,8 @@ LINK_FIELD_SPECS = {
 
   "U4_UNLOCKS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_UNLOCKED_BY",
     "description": "Tier/Policy grants a capability.",
     "required": [
@@ -838,6 +948,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_BLOCKED_BY": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_BLOCKS",
     "description": "Work_Item is blocked by a dependency/issue.",
     "required": [
@@ -853,6 +965,8 @@ LINK_FIELD_SPECS = {
 
   "U4_ASSIGNED_TO": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_ASSIGNEE_OF",
     "description": "Work_Item → Agent ownership.",
     "required": [],
@@ -869,6 +983,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_DRIVES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_DRIVEN_BY",
     "description": "Value/Motivation drives a Goal.",
     "required": [
@@ -882,6 +998,8 @@ LINK_FIELD_SPECS = {
 
   "U4_TARGETS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_TARGET_OF",
     "description": "Goal targets a Metric/Outcome.",
     "required": [
@@ -897,6 +1015,8 @@ LINK_FIELD_SPECS = {
 
   "U4_MEASURES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_MEASURED_BY",
     "description": "Measurement measures a Metric.",
     "required": [],
@@ -909,6 +1029,8 @@ LINK_FIELD_SPECS = {
 
   "U4_CONTROLS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_CONTROLLED_BY",
     "description": "Mechanism controls/regulates a Metric.",
     "required": [
@@ -925,6 +1047,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_EVIDENCED_BY": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_JUSTIFIES",
     "description": "Claim is supported by Proof/Attestation/Document.",
     "required": [
@@ -938,6 +1062,8 @@ LINK_FIELD_SPECS = {
 
   "U4_DOCUMENTS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_DOCUMENTED_BY",
     "description": "Knowledge object documents a policy/schema/capability.",
     "required": [],
@@ -952,6 +1078,8 @@ LINK_FIELD_SPECS = {
 
   "U4_REFERENCES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_REFERENCED_BY",
     "description": "Doc/Code references an external resource.",
     "required": [
@@ -966,6 +1094,8 @@ LINK_FIELD_SPECS = {
 
   "U4_ABOUT": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_SUBJECT_OF",
     "description": "Content is about the subject node.",
     "required": [],
@@ -982,6 +1112,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_DEPENDS_ON": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_REQUIRED_FOR",
     "description": "A depends on B (cannot function without).",
     "required": [
@@ -996,6 +1128,8 @@ LINK_FIELD_SPECS = {
 
   "U4_ACTIVATES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_ACTIVATED_BY",
     "description": "Stimulus activates Response/Subentity.",
     "required": [],
@@ -1007,6 +1141,8 @@ LINK_FIELD_SPECS = {
 
   "U4_TRIGGERED_BY": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_TRIGGERS",
     "description": "Event was triggered by a cause.",
     "required": [],
@@ -1018,6 +1154,8 @@ LINK_FIELD_SPECS = {
 
   "U4_SUPPRESSES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_SUPPRESSED_BY",
     "description": "Inhibitor suppresses target.",
     "required": [],
@@ -1029,6 +1167,8 @@ LINK_FIELD_SPECS = {
 
   "U4_RELATES_TO": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_RELATES_TO",   # symmetric
     "description": "Generic association; use sparingly.",
     "required": [
@@ -1049,6 +1189,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_EMITS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_EMITTED_BY",
     "description": "Code artifact emits events to a topic namespace.",
     "required": [],
@@ -1062,6 +1204,8 @@ LINK_FIELD_SPECS = {
 
   "U4_CONSUMES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_CONSUMED_BY",
     "description": "Code artifact consumes (subscribes to) a topic namespace.",
     "required": [],
@@ -1075,6 +1219,8 @@ LINK_FIELD_SPECS = {
 
   "U4_IMPLEMENTS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_IMPLEMENTED_BY",
     "description": "Code artifact implements a policy/schema/capability.",
     "required": [],
@@ -1089,6 +1235,8 @@ LINK_FIELD_SPECS = {
 
   "U4_TESTS": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_TESTED_BY",
     "description": "Test artifact covers a policy/schema/capability.",
     "required": [],
@@ -1106,6 +1254,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U3_IMPACTS": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U3_IMPACTED_BY",
     "description": "Cause → Effect causal impact.",
     "required": [
@@ -1122,6 +1272,8 @@ LINK_FIELD_SPECS = {
 
   "U3_MITIGATED_BY": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U3_MITIGATES",
     "description": "Risk mitigated by Control.",
     "required": [
@@ -1136,6 +1288,8 @@ LINK_FIELD_SPECS = {
 
   "U3_PARTICIPATES_IN": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U3_HAS_PARTICIPANT",
     "description": "Agent participates in Event/Community.",
     "required": [
@@ -1151,6 +1305,8 @@ LINK_FIELD_SPECS = {
 
   "U3_SETTLED_BY": {
     "universality": "U3",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U3_SETS",
     "description": "Dispute settled by Outcome.",
     "required": [
@@ -1170,6 +1326,8 @@ LINK_FIELD_SPECS = {
   # =========================
   "U4_PUBLISHES_SCHEMA": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_PUBLISHED_IN",
     "description": "Bundle publishes a schema/type record.",
     "required": [],
@@ -1183,6 +1341,8 @@ LINK_FIELD_SPECS = {
 
   "U4_MAPS_TO_TOPIC": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_TOPIC_HAS_SCHEMA",
     "description": "Event schema belongs to a topic namespace.",
     "required": [],
@@ -1196,6 +1356,8 @@ LINK_FIELD_SPECS = {
 
   "U4_REQUIRES_SIG": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_REQUIRED_BY",
     "description": "Envelope/schema requires a signature suite.",
     "required": [],
@@ -1209,6 +1371,8 @@ LINK_FIELD_SPECS = {
 
   "U4_CERTIFIES_CONFORMANCE": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_CONFORMANCE_CERTIFIED_BY",
     "description": "Suite certifies conformance for a target.",
     "required": [],
@@ -1222,6 +1386,8 @@ LINK_FIELD_SPECS = {
 
   "U4_SUPERSEDES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_SUPERSEDED_BY",
     "description": "New bundle supersedes old bundle.",
     "required": [],
@@ -1236,6 +1402,8 @@ LINK_FIELD_SPECS = {
 
   "U4_DEPRECATES": {
     "universality": "U4",
+    "domain": "shared",
+    "level": "shared",
     "reverse_name": "U4_DEPRECATED_BY",
     "description": "Bundle deprecates an older bundle (non-linear).",
     "required": [],
@@ -1243,6 +1411,32 @@ LINK_FIELD_SPECS = {
     "invariants": [
       "origin.type_name = 'L4_Schema_Bundle'",
       "target.type_name = 'L4_Schema_Bundle'"
+    ],
+    "cardinality": {"min": 0, "max": None}
+  },
+
+  # =========================
+  # Medical Domain Links (MED)
+  # =========================
+  "U4-MED_TREATS": {
+    "universality": "U4",
+    "domain": "MED",
+    "level": "l2",
+    "reverse_name": "U4-MED_TREATED_BY",
+    "description": "Intervention intended to treat, prevent, or manage a health condition",
+    "detailed_description": "Links U3_Practice (intervention/protocol) to U3-MED_HEALTH_CONDITION. "
+                            "Captures treatment intent and evidence strength.",
+    "required": [
+      {"name": "treatment_intent", "type": "enum",
+       "enum_values": ["curative","preventive","palliative","diagnostic","supportive"],
+       "description": "Primary purpose of treatment"}
+    ],
+    "optional": [
+      {"name": "efficacy_evidence", "type": "enum",
+       "enum_values": ["proven","probable","possible","unproven","disproven"],
+       "description": "Strength of evidence for efficacy"},
+      {"name": "mechanism", "type": "string",
+       "description": "How treatment works (if known)"}
     ],
     "cardinality": {"min": 0, "max": None}
   }

@@ -1,25 +1,26 @@
 import type { Metadata } from "next";
-import { Cinzel, Crimson_Text } from 'next/font/google';
+// import { Cinzel, Crimson_Text } from 'next/font/google';
 import "./globals.css";
 // REMOVED: BrowserSignalsCollector - no API calls allowed
 // import { BrowserSignalsCollector } from "./consciousness/components/BrowserSignalsCollector";
-import { WalletProvider } from "./components/WalletProvider";
+// REMOVED: WalletProvider - not needed right now
+// import { WalletProvider } from "./components/WalletProvider";
 
 // Venice/Serenissima Typography (from VENICE_DESIGN_SYSTEM_EXTRACT.md)
-const cinzel = Cinzel({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-cinzel',
-  display: 'swap',
-});
+// const cinzel = Cinzel({
+//   subsets: ['latin'],
+//   weight: ['400', '600', '700'],
+//   variable: '--font-cinzel',
+//   display: 'swap',
+// });
 
-const crimsonText = Crimson_Text({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-crimson-text',
-  display: 'swap',
-});
+// const crimsonText = Crimson_Text({
+//   subsets: ['latin'],
+//   weight: ['400', '600', '700'],
+//   style: ['normal', 'italic'],
+//   variable: '--font-crimson-text',
+//   display: 'swap',
+// });
 
 const pngSizes = [16, 32, 48, 64, 128, 256, 512] as const;
 const lightPngIcons = pngSizes.map((size) => ({
@@ -62,12 +63,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${cinzel.variable} ${crimsonText.variable}`}>
-      <body className="bg-parchment-base text-venice-brown antialiased font-crimson">
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-parchment-base text-venice-brown antialiased">
         {/* REMOVED: BrowserSignalsCollector - no API calls allowed */}
-        <WalletProvider>
-          {children}
-        </WalletProvider>
+        {/* REMOVED: WalletProvider - not needed right now */}
+        {children}
       </body>
     </html>
   );
