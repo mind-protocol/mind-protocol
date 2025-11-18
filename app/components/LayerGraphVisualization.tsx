@@ -319,7 +319,8 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           const upperNodes = nodes.filter(n => (n as any).userData.layer === upperLayer);
           const lowerNodes = nodes.filter(n => (n as any).userData.layer === lowerLayer);
 
-          const connectionCount = 10 - i * 2;
+          // More vertical connections: L4→L3: 25, L3→L2: 40, L2→L1: 60
+          const connectionCount = i === 0 ? 25 : i === 1 ? 40 : 60;
 
           for (let j = 0; j < connectionCount; j++) {
             const upperNode = upperNodes[Math.floor(Math.random() * upperNodes.length)];
@@ -342,6 +343,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
             (upperNode as any).userData.connections++;
             (lowerNode as any).userData.connections++;
+            // Bidirectional connection for energy flow
             (upperNode as any).userData.connectedNodes.push((lowerNode as any).userData);
             (lowerNode as any).userData.connectedNodes.push((upperNode as any).userData);
           }
