@@ -376,7 +376,61 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
   );
 }
 
+// Navigation tree node (simplified, just for navigation)
+function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: number; onNavigate: (id: string) => void }) {
+  const [isExpanded, setIsExpanded] = useState(level < 2);
+  const hasChildren = node.children && node.children.length > 0;
+
+  return (
+    <div className="select-none">
+      <div
+        className={`flex items-start gap-2 py-1.5 px-2 rounded cursor-pointer transition-all hover:bg-gray-800/50 ${
+          level === 0 ? 'font-semibold' : ''
+        }`}
+        style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
+        onClick={() => {
+          if (hasChildren) setIsExpanded(!isExpanded);
+          onNavigate(node.id);
+        }}
+      >
+        {hasChildren && (
+          <span className="text-[#22d3ee] mt-0.5 flex-shrink-0 text-xs">
+            {isExpanded ? '▼' : '▶'}
+          </span>
+        )}
+        {!hasChildren && <span className="w-3"></span>}
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm" title={TYPE_NAMES[node.type]}>
+              {TYPE_ICONS[node.type]}
+            </span>
+            <span className={`text-sm ${TYPE_COLORS[node.type]} truncate`}>
+              {node.name}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {hasChildren && isExpanded && (
+        <div>
+          {node.children!.map((child) => (
+            <NavNode key={child.id} node={child} level={level + 1} onNavigate={onNavigate} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DocsPage() {
+  const handleNavigate = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0A0B0D] text-gray-300">
       {/* STICKY HEADER - Matches homepage */}
@@ -401,7 +455,7 @@ export default function DocsPage() {
 
       {/* HERO SECTION */}
       <section className="py-12 border-b border-gray-800">
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <h1 className="text-5xl font-bold text-white mb-4">
             Documentation
           </h1>
@@ -411,12 +465,33 @@ export default function DocsPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT - Centered, Full Width */}
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="space-y-16">
-          {DOCS_TREE.children?.map((rootNode) => (
-            <ContentNode key={rootNode.id} node={rootNode} level={0} />
-          ))}
+      {/* MAIN CONTENT - Two Column Layout */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-12 gap-8">
+          {/* Left Navigation */}
+          <div className="col-span-3">
+            <div className="sticky top-24">
+              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-4 shadow-lg">
+                <h2 className="text-sm font-bold text-white mb-3 px-2">Navigation</h2>
+                <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+                  {DOCS_TREE.children?.map((rootNode) => (
+                    <NavNode key={rootNode.id} node={rootNode} level={0} onNavigate={handleNavigate} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Content */}
+          <div className="col-span-9">
+            <div className="space-y-16">
+              {DOCS_TREE.children?.map((rootNode) => (
+                <div key={rootNode.id} id={rootNode.id}>
+                  <ContentNode node={rootNode} level={0} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
