@@ -381,9 +381,9 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
         pulse.position.copy(sourceMesh.position);
 
-        // Elongate the pulse along the direction of travel
+        // Elongate the pulse along the direction of travel (more elongated)
         const direction = new THREE.Vector3().subVectors(targetMesh.position, sourceMesh.position).normalize();
-        pulse.scale.set(1, 1, 3); // Elongated along z-axis initially
+        pulse.scale.set(1, 1, 5); // More elongated along z-axis
         pulse.lookAt(targetMesh.position); // Orient toward target
 
         const pulseData = {
@@ -391,7 +391,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           source: sourceMesh.position.clone(),
           target: targetMesh.position.clone(),
           progress: 0,
-          speed: 0.03 + Math.random() * 0.02,
+          speed: (0.03 + Math.random() * 0.02) * 0.7, // 30% slower
           opacity: 0.95
         };
 
@@ -569,22 +569,22 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
               // Deplete source and enter refractory
               nodeData.energy = 0.1;
-              nodeData.refractory = 45; // ~0.75 seconds at 60fps
+              nodeData.refractory = 58; // ~1 second at 60fps (30% slower)
               nodeData.activationBrightness = 2.5; // Boost brightness on activation
             }
           }
 
-          // Energy decay
-          nodeData.energy *= 0.985;
+          // Energy decay (30% slower)
+          nodeData.energy *= 0.99;
 
           // Refractory decay
           if (nodeData.refractory > 0) {
             nodeData.refractory--;
           }
 
-          // Activation brightness fade (slower decay)
+          // Activation brightness fade (30% slower decay)
           if (nodeData.activationBrightness) {
-            nodeData.activationBrightness = Math.max(1.0, nodeData.activationBrightness * 0.985);
+            nodeData.activationBrightness = Math.max(1.0, nodeData.activationBrightness * 0.99);
           }
 
           // Visual update - node brightness and scale (more visible)
@@ -644,9 +644,9 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
           const basePulse = 0.08 + Math.sin(time * 2 + index * 0.5) * 0.04;
           const baseOpacity = linkData?.baseOpacity || basePulse;
 
-          // Decay activation brightness
+          // Decay activation brightness (30% slower)
           if (linkData?.activationBrightness !== undefined) {
-            linkData.activationBrightness = Math.max(0, linkData.activationBrightness * 0.97);
+            linkData.activationBrightness = Math.max(0, linkData.activationBrightness * 0.98);
           }
 
           // Apply activation brightness
