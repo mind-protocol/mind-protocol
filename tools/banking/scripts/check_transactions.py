@@ -59,26 +59,46 @@ def main():
     else:
         print(f"Found {len(transactions)} transactions:")
         print()
-        print(f"{'Date':<12} {'Amount':<12} {'Currency':<8} {'Description':<40}")
+        print(f"{'Date':<12} {'Type':<6} {'Amount':<12} {'Currency':<8} {'Description':<35}")
         print("-" * 80)
 
-        total = 0.0
-        for tx in sorted(transactions, key=lambda x: x.get('date', ''), reverse=True):
-            date = tx.get('date', 'N/A')
-            amount = tx.get('amount', '0')
-            currency = tx.get('currency', 'EUR')
-            description = tx.get('description', 'No description')[:40]
+        total_debit = 0.0
+        total_credit = 0.0
 
-            print(f"{date:<12} {amount:<12} {currency:<8} {description:<40}")
+        for tx in sorted(transactions, key=lambda x: x.get('booking_date', ''), reverse=True):
+            # Parse transaction data
+            date = tx.get('booking_date', tx.get('value_date', 'N/A'))
 
-            # Sum for total (if numeric)
-            try:
-                total += float(amount)
-            except (ValueError, TypeError):
-                pass
+            # Get amount and currency
+            tx_amount = tx.get('transaction_amount', {})
+            amount = tx_amount.get('amount', '0')
+            currency = tx_amount.get('currency', 'EUR')
+
+            # Get description from remittance_information
+            remittance = tx.get('remittance_information', [])
+            description = remittance[0] if remittance else 'No description'
+            description = description[:35]
+
+            # Credit or Debit
+            indicator = tx.get('credit_debit_indicator', 'DBIT')
+            tx_type = 'OUT' if indicator == 'DBIT' else 'IN'
+
+            # Format amount with sign
+            amount_float = float(amount)
+            if indicator == 'DBIT':
+                amount_display = f"-{amount}"
+                total_debit += amount_float
+            else:
+                amount_display = f"+{amount}"
+                total_credit += amount_float
+
+            print(f"{date:<12} {tx_type:<6} {amount_display:<12} {currency:<8} {description:<35}")
 
         print("-" * 80)
-        print(f"{'TOTAL:':<12} {total:<12.2f} EUR")
+        net_change = total_credit - total_debit
+        print(f"{'IN (credit):':<20} +{total_credit:<11.2f} EUR")
+        print(f"{'OUT (debit):':<20} -{total_debit:<11.2f} EUR")
+        print(f"{'NET CHANGE:':<20} {net_change:+<12.2f} EUR")
 
     print()
     print(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
