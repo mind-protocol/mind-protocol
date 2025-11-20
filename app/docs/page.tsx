@@ -333,8 +333,13 @@ function stripEnvelope(markdown: string): string {
 function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  // Expand MECHANISMS by default, collapse others (except ROOT which stays expanded)
-  const [isExpanded, setIsExpanded] = useState(node.type === 'MECHANISM' || node.type === 'ROOT');
+  // Expand PATTERNS, BEHAVIOR_SPECS, and MECHANISMS by default
+  const [isExpanded, setIsExpanded] = useState(
+    node.type === 'PATTERN' ||
+    node.type === 'BEHAVIOR_SPEC' ||
+    node.type === 'MECHANISM' ||
+    node.type === 'ROOT'
+  );
   const hasChildren = node.children && node.children.length > 0;
 
   // Load markdown content from file
@@ -402,25 +407,22 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
           {loading ? (
             <div className="text-sm text-gray-500 italic">Loading content...</div>
           ) : content ? (
-            <div className="bg-[#0a0a0f]/50 border border-gray-800 rounded-lg p-6">
-              <div className="prose prose-invert max-w-none
-                prose-headings:text-white prose-headings:font-bold
-                prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
-                prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
-                prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
-                prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2
-                prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4
-                prose-ul:text-gray-300 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6
-                prose-ol:text-gray-300 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6
-                prose-li:my-1 prose-li:text-gray-300
+            <div className="bg-[#0a0a0f]/50 border border-gray-800 rounded-lg p-8">
+              <div className="prose prose-invert prose-lg max-w-none
+                prose-headings:text-white prose-headings:font-semibold prose-headings:tracking-tight
+                prose-h1:text-2xl prose-h1:mb-4 prose-h1:mt-0
+                prose-h2:text-xl prose-h2:mb-3 prose-h2:mt-6
+                prose-h3:text-lg prose-h3:mb-2 prose-h3:mt-4
+                prose-p:text-gray-200 prose-p:leading-relaxed prose-p:my-3
+                prose-ul:text-gray-200 prose-ul:my-3 prose-ul:space-y-1
+                prose-ol:text-gray-200 prose-ol:my-3 prose-ol:space-y-1
+                prose-li:text-gray-200 prose-li:my-0
                 prose-strong:text-white prose-strong:font-semibold
-                prose-em:text-gray-300 prose-em:italic
-                prose-code:text-[#22d3ee] prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-                prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:p-4 prose-pre:rounded
-                prose-a:text-[#6FE7E2] prose-a:no-underline hover:prose-a:underline
-                prose-blockquote:border-l-4 prose-blockquote:border-l-[#22d3ee] prose-blockquote:pl-4 prose-blockquote:text-gray-400 prose-blockquote:italic
-                prose-table:text-gray-300 prose-th:text-white prose-td:text-gray-300
-                prose-hr:border-gray-700">
+                prose-code:text-[#22d3ee] prose-code:bg-gray-900/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
+                prose-pre:bg-gray-900/80 prose-pre:border prose-pre:border-gray-700/50 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
+                prose-a:text-[#22d3ee] prose-a:no-underline hover:prose-a:underline hover:prose-a:text-[#6FE7E2]
+                prose-blockquote:border-l-4 prose-blockquote:border-l-[#22d3ee] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-300
+                prose-hr:border-gray-700 prose-hr:my-6">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripEnvelope(content)}
                 </ReactMarkdown>
@@ -444,8 +446,13 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
 
 // Navigation tree node (simplified, just for navigation)
 function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: number; onNavigate: (id: string) => void }) {
-  // Expand MECHANISMS by default, collapse others (except ROOT which stays expanded)
-  const [isExpanded, setIsExpanded] = useState(node.type === 'MECHANISM' || node.type === 'ROOT');
+  // Expand PATTERNS, BEHAVIOR_SPECS, and MECHANISMS by default
+  const [isExpanded, setIsExpanded] = useState(
+    node.type === 'PATTERN' ||
+    node.type === 'BEHAVIOR_SPEC' ||
+    node.type === 'MECHANISM' ||
+    node.type === 'ROOT'
+  );
   const hasChildren = node.children && node.children.length > 0;
 
   return (
