@@ -27,7 +27,7 @@ class JWTGenerator:
                 f"Run: mv ~/Downloads/{app_id}.pem ~/.secrets/"
             )
 
-    def generate_token(self, ttl: int = 3600) -> Tuple[str, int]:
+    def generate_token(self, ttl: int = 3600) -> Tuple[str, int]:  # 1 hour (API max: 24h)
         """
         Generate JWT token for API authentication
 
