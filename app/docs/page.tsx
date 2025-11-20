@@ -411,16 +411,12 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
         </div>
       )}
 
-      {/* Children - Always Expanded */}
+      {/* Children - Always Expanded, No Indentation */}
       {hasChildren && (
-        <div className={`${level === 0 ? 'ml-0' : 'ml-8'} border-l-2 ${
-          level === 0 ? 'border-gray-700' : 'border-gray-800'
-        } pl-6`}>
-          <div className="space-y-8 mt-6">
-            {node.children!.map((child) => (
-              <ContentNode key={child.id} node={child} level={level + 1} />
-            ))}
-          </div>
+        <div className="space-y-8 mt-8">
+          {node.children!.map((child) => (
+            <ContentNode key={child.id} node={child} level={level + 1} />
+          ))}
         </div>
       )}
     </div>
