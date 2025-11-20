@@ -333,6 +333,8 @@ function stripEnvelope(markdown: string): string {
 function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  // Expand MECHANISMS by default, collapse others (except ROOT which stays expanded)
+  const [isExpanded, setIsExpanded] = useState(node.type === 'MECHANISM' || node.type === 'ROOT');
   const hasChildren = node.children && node.children.length > 0;
 
   // Load markdown content from file
@@ -362,6 +364,18 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
       {/* Node Header */}
       <div className={`${level === 0 ? 'mb-6' : 'mb-4'}`}>
         <div className="flex items-center gap-3 mb-3">
+          {/* Chevron for collapsing (only show if has children or content) */}
+          {(hasChildren || node.path) && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-[#22d3ee] hover:text-[#6FE7E2] transition-colors flex-shrink-0"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              <span className={`${level === 0 ? 'text-2xl' : level === 1 ? 'text-xl' : 'text-lg'}`}>
+                {isExpanded ? '▼' : '▶'}
+              </span>
+            </button>
+          )}
           <span
             className={`${level === 0 ? 'text-3xl' : level === 1 ? 'text-2xl' : 'text-xl'} flex-shrink-0 cursor-help`}
             title={TYPE_NAMES[node.type]}
@@ -383,7 +397,7 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
       </div>
 
       {/* Markdown Content */}
-      {node.path && (
+      {node.path && isExpanded && (
         <div className="mb-8">
           {loading ? (
             <div className="text-sm text-gray-500 italic">Loading content...</div>
@@ -416,8 +430,8 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
         </div>
       )}
 
-      {/* Children - Always Expanded, No Indentation */}
-      {hasChildren && (
+      {/* Children - Conditionally Expanded, No Indentation */}
+      {hasChildren && isExpanded && (
         <div className="space-y-8 mt-8">
           {node.children!.map((child) => (
             <ContentNode key={child.id} node={child} level={level + 1} />
@@ -430,7 +444,8 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
 
 // Navigation tree node (simplified, just for navigation)
 function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: number; onNavigate: (id: string) => void }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2);
+  // Expand MECHANISMS by default, collapse others (except ROOT which stays expanded)
+  const [isExpanded, setIsExpanded] = useState(node.type === 'MECHANISM' || node.type === 'ROOT');
   const hasChildren = node.children && node.children.length > 0;
 
   return (
@@ -457,7 +472,7 @@ function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: numbe
             <span className="text-sm" title={TYPE_NAMES[node.type]}>
               {TYPE_ICONS[node.type]}
             </span>
-            <span className={`text-sm ${TYPE_COLORS[node.type]} truncate`}>
+            <span className={`text-sm ${TYPE_COLORS[node.type]}`}>
               {node.name}
             </span>
           </div>
@@ -476,6 +491,8 @@ function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: numbe
 }
 
 export default function DocsPage() {
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+
   const handleNavigate = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -519,23 +536,47 @@ export default function DocsPage() {
 
       {/* MAIN CONTENT - Two Column Layout */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Navigation */}
-          <div className="col-span-3">
-            <div className="sticky top-24">
-              <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-4 shadow-lg">
-                <h2 className="text-sm font-bold text-white mb-3 px-2">Navigation</h2>
-                <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                  {DOCS_TREE.children?.map((rootNode) => (
-                    <NavNode key={rootNode.id} node={rootNode} level={0} onNavigate={handleNavigate} />
-                  ))}
+        <div className="flex gap-8">
+          {/* Left Navigation - Collapsible */}
+          {!isNavCollapsed && (
+            <div className="w-80 flex-shrink-0">
+              <div className="sticky top-24">
+                <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 rounded-lg p-4 shadow-lg">
+                  <div className="flex items-center justify-between mb-3 px-2">
+                    <h2 className="text-sm font-bold text-white">Navigation</h2>
+                    <button
+                      onClick={() => setIsNavCollapsed(true)}
+                      className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-gray-800 transition-colors"
+                      title="Collapse navigation"
+                    >
+                      ◀
+                    </button>
+                  </div>
+                  <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+                    {DOCS_TREE.children?.map((rootNode) => (
+                      <NavNode key={rootNode.id} node={rootNode} level={0} onNavigate={handleNavigate} />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Collapsed Navigation Toggle */}
+          {isNavCollapsed && (
+            <div className="fixed left-6 top-32 z-40">
+              <button
+                onClick={() => setIsNavCollapsed(false)}
+                className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-gray-800 text-gray-400 hover:text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors shadow-lg"
+                title="Show navigation"
+              >
+                ▶ Nav
+              </button>
+            </div>
+          )}
 
           {/* Right Content */}
-          <div className="col-span-9">
+          <div className="flex-1">
             <div className="space-y-16">
               {DOCS_TREE.children?.map((rootNode) => (
                 <div key={rootNode.id} id={rootNode.id}>
