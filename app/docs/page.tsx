@@ -318,16 +318,16 @@ function stripEnvelope(markdown: string): string {
   // Split by "---" separators
   const parts = markdown.split(/^---$/m);
 
-  if (parts.length < 4) {
+  if (parts.length < 5) {
     // If structure is unexpected, return everything after first heading
     const lines = markdown.split('\n');
     const firstHeadingIndex = lines.findIndex(line => line.startsWith('## '));
     return firstHeadingIndex >= 0 ? lines.slice(firstHeadingIndex).join('\n') : markdown;
   }
 
-  // Skip: [0] = title + metadata, [1] = navigation section, [2] = relationships/purpose
-  // Keep: [3] = actual content onwards
-  return parts.slice(3).join('---').trim();
+  // Skip: [0] = title + metadata, [1] = navigation, [2] = relationships, [3] = purpose
+  // Keep: [4] = actual content onwards (Core Insight, Pattern Description, etc.)
+  return parts.slice(4).join('---').trim();
 }
 
 function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
