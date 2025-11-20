@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Documentation tree structure
 interface DocNode {
@@ -390,19 +391,23 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
             <div className="bg-[#0a0a0f]/50 border border-gray-800 rounded-lg p-6">
               <div className="prose prose-invert max-w-none
                 prose-headings:text-white prose-headings:font-bold
+                prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
                 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
                 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3
                 prose-h4:text-lg prose-h4:mt-4 prose-h4:mb-2
                 prose-p:text-gray-300 prose-p:leading-relaxed prose-p:mb-4
-                prose-ul:text-gray-300 prose-ul:my-4
-                prose-ol:text-gray-300 prose-ol:my-4
-                prose-li:my-1
+                prose-ul:text-gray-300 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6
+                prose-ol:text-gray-300 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6
+                prose-li:my-1 prose-li:text-gray-300
                 prose-strong:text-white prose-strong:font-semibold
-                prose-code:text-[#22d3ee] prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
-                prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700
+                prose-em:text-gray-300 prose-em:italic
+                prose-code:text-[#22d3ee] prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:p-4 prose-pre:rounded
                 prose-a:text-[#6FE7E2] prose-a:no-underline hover:prose-a:underline
-                prose-blockquote:border-l-[#22d3ee] prose-blockquote:text-gray-400">
-                <ReactMarkdown>
+                prose-blockquote:border-l-4 prose-blockquote:border-l-[#22d3ee] prose-blockquote:pl-4 prose-blockquote:text-gray-400 prose-blockquote:italic
+                prose-table:text-gray-300 prose-th:text-white prose-td:text-gray-300
+                prose-hr:border-gray-700">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {stripEnvelope(content)}
                 </ReactMarkdown>
               </div>
