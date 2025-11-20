@@ -36,7 +36,7 @@ class EnableBankingClient:
         self.redirect_url = os.getenv("ENABLE_BANKING_REDIRECT_URL", "http://localhost:8000/callback")
         self.session_id = os.getenv("REVOLUT_SESSION_ID")
 
-    def list_banks(self, country: str = "FI") -> List[Dict]:
+    def list_banks(self, country: str = "FR") -> List[Dict]:
         """
         Get list of available banks in a country
 
@@ -58,7 +58,7 @@ class EnableBankingClient:
     def initiate_authorization(
         self,
         bank_name: str = "Revolut",
-        country: str = "FI",
+        country: str = "FR",
         access_valid_days: int = 90
     ) -> str:
         """

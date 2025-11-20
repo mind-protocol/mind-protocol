@@ -33,20 +33,54 @@ def main():
         print("   ENABLE_BANKING_PRIVATE_KEY_PATH=~/.secrets/your-key.pem")
         sys.exit(1)
 
-    # Step 1: Initiate authorization
-    print("Step 1: Initiating authorization flow...")
+    # Step 1: List available banks first
+    print("Step 1: Checking available banks...")
+    try:
+        banks = client.list_banks(country="FR")
+        print(f"✅ Found {len(banks)} banks in France")
+
+        # Check if Revolut is available
+        revolut_banks = [b for b in banks if "revolut" in b.get("name", "").lower()]
+        if revolut_banks:
+            print(f"   Revolut found: {revolut_banks[0]['name']}")
+            bank_name = revolut_banks[0]['name']
+        else:
+            print("   ⚠️  Revolut not found in France, trying generic 'Revolut'")
+            bank_name = "Revolut"
+    except Exception as e:
+        print(f"❌ Failed to list banks: {e}")
+        print("   Continuing with default bank name...")
+        bank_name = "Revolut"
+
+    # Step 2: Initiate authorization
+    print()
+    print("Step 2: Initiating authorization flow...")
     try:
         auth_url = client.initiate_authorization(
-            bank_name="Revolut",
-            country="FI",
+            bank_name=bank_name,
+            country="FR",
             access_valid_days=90
         )
     except Exception as e:
         print(f"❌ Failed to initiate authorization: {e}")
+
+        # Try to get more details from response
+        if hasattr(e, 'response'):
+            try:
+                error_details = e.response.json()
+                print(f"   Error details: {error_details}")
+            except:
+                print(f"   Response text: {e.response.text}")
+
+        print()
+        print("Troubleshooting:")
+        print("1. Check if app is properly registered at https://enablebanking.com/applications")
+        print("2. Verify app is in 'sandbox' environment")
+        print("3. Try a different bank or country")
         sys.exit(1)
 
     print()
-    print("Step 2: Complete authorization in your browser:")
+    print("Step 3: Complete authorization in your browser:")
     print()
     print(f"  {auth_url}")
     print()
@@ -54,7 +88,7 @@ def main():
     print("permission for Mind Protocol to access your account data.")
     print()
 
-    # Step 2: Wait for authorization code
+    # Step 4: Wait for authorization code
     print("After completing authorization, you'll be redirected to:")
     print(f"  {client.redirect_url}?code=AUTHORIZATION_CODE")
     print()
@@ -64,9 +98,9 @@ def main():
         print("❌ Error: No authorization code provided")
         sys.exit(1)
 
-    # Step 3: Create session
+    # Step 5: Create session
     print()
-    print("Step 3: Creating session...")
+    print("Step 5: Creating session...")
     try:
         session = client.create_session(auth_code)
     except Exception as e:
@@ -88,7 +122,7 @@ def main():
     for account in session.get("accounts", []):
         print(f"  - {account.get('currency', 'N/A')} Account: {account['uid']}")
 
-    # Step 4: Save to environment
+    # Step 6: Save to environment
     print()
     print("=" * 60)
     print("Add these to your .env.local file:")
