@@ -330,16 +330,20 @@ function stripEnvelope(markdown: string): string {
   return parts.slice(4).join('---').trim();
 }
 
-function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
+function ContentNode({
+  node,
+  level = 0,
+  expandedNodes,
+  toggleExpanded
+}: {
+  node: DocNode;
+  level?: number;
+  expandedNodes: Record<string, boolean>;
+  toggleExpanded: (id: string) => void;
+}) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  // Expand PATTERNS, BEHAVIOR_SPECS, and MECHANISMS by default
-  const [isExpanded, setIsExpanded] = useState(
-    node.type === 'PATTERN' ||
-    node.type === 'BEHAVIOR_SPEC' ||
-    node.type === 'MECHANISM' ||
-    node.type === 'ROOT'
-  );
+  const isExpanded = expandedNodes[node.id] ?? false;
   const hasChildren = node.children && node.children.length > 0;
 
   // Load markdown content from file
@@ -365,14 +369,14 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
   }, [node.path]);
 
   return (
-    <div className={`${level === 0 ? 'mb-12' : 'mb-6'}`}>
+    <div id={node.id} className={`${level === 0 ? 'mb-12' : 'mb-6'}`}>
       {/* Node Header */}
       <div className={`${level === 0 ? 'mb-6' : 'mb-4'}`}>
         <div className="flex items-center gap-3 mb-3">
           {/* Chevron for collapsing (only show if has children or content) */}
           {(hasChildren || node.path) && (
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => toggleExpanded(node.id)}
               className="text-[#22d3ee] hover:text-[#6FE7E2] transition-colors flex-shrink-0"
               title={isExpanded ? 'Collapse' : 'Expand'}
             >
@@ -436,7 +440,13 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
       {hasChildren && isExpanded && (
         <div className="space-y-8 mt-8">
           {node.children!.map((child) => (
-            <ContentNode key={child.id} node={child} level={level + 1} />
+            <ContentNode
+              key={child.id}
+              node={child}
+              level={level + 1}
+              expandedNodes={expandedNodes}
+              toggleExpanded={toggleExpanded}
+            />
           ))}
         </div>
       )}
@@ -445,14 +455,20 @@ function ContentNode({ node, level = 0 }: { node: DocNode; level?: number }) {
 }
 
 // Navigation tree node (simplified, just for navigation)
-function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: number; onNavigate: (id: string) => void }) {
-  // Expand PATTERNS, BEHAVIOR_SPECS, and MECHANISMS by default
-  const [isExpanded, setIsExpanded] = useState(
-    node.type === 'PATTERN' ||
-    node.type === 'BEHAVIOR_SPEC' ||
-    node.type === 'MECHANISM' ||
-    node.type === 'ROOT'
-  );
+function NavNode({
+  node,
+  level = 0,
+  onNavigate,
+  expandedNodes,
+  toggleExpanded
+}: {
+  node: DocNode;
+  level?: number;
+  onNavigate: (id: string) => void;
+  expandedNodes: Record<string, boolean>;
+  toggleExpanded: (id: string) => void;
+}) {
+  const isExpanded = expandedNodes[node.id] ?? false;
   const hasChildren = node.children && node.children.length > 0;
 
   return (
@@ -463,7 +479,7 @@ function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: numbe
         }`}
         style={{ paddingLeft: `${level * 1 + 0.5}rem` }}
         onClick={() => {
-          if (hasChildren) setIsExpanded(!isExpanded);
+          if (hasChildren) toggleExpanded(node.id);
           onNavigate(node.id);
         }}
       >
@@ -489,7 +505,14 @@ function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: numbe
       {hasChildren && isExpanded && (
         <div>
           {node.children!.map((child) => (
-            <NavNode key={child.id} node={child} level={level + 1} onNavigate={onNavigate} />
+            <NavNode
+              key={child.id}
+              node={child}
+              level={level + 1}
+              onNavigate={onNavigate}
+              expandedNodes={expandedNodes}
+              toggleExpanded={toggleExpanded}
+            />
           ))}
         </div>
       )}
@@ -497,14 +520,42 @@ function NavNode({ node, level = 0, onNavigate }: { node: DocNode; level?: numbe
   );
 }
 
+// Helper to initialize expanded state for all nodes
+function initializeExpandedState(node: DocNode, expandedMap: Record<string, boolean> = {}): Record<string, boolean> {
+  // Expand PATTERNS, BEHAVIOR_SPECS, MECHANISMS, and ROOT by default
+  expandedMap[node.id] = node.type === 'PATTERN' ||
+                          node.type === 'BEHAVIOR_SPEC' ||
+                          node.type === 'MECHANISM' ||
+                          node.type === 'ROOT';
+
+  if (node.children) {
+    node.children.forEach(child => initializeExpandedState(child, expandedMap));
+  }
+
+  return expandedMap;
+}
+
 export default function DocsPage() {
   const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(() =>
+    initializeExpandedState(DOCS_TREE)
+  );
+
+  const toggleExpanded = (id: string) => {
+    setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleNavigate = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Expand the node if it's collapsed
+    setExpandedNodes(prev => ({ ...prev, [id]: true }));
+
+    // Scroll to the element
+    setTimeout(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100); // Small delay to allow expansion animation
   };
 
   return (
@@ -561,7 +612,14 @@ export default function DocsPage() {
                   </div>
                   <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
                     {DOCS_TREE.children?.map((rootNode) => (
-                      <NavNode key={rootNode.id} node={rootNode} level={0} onNavigate={handleNavigate} />
+                      <NavNode
+                        key={rootNode.id}
+                        node={rootNode}
+                        level={0}
+                        onNavigate={handleNavigate}
+                        expandedNodes={expandedNodes}
+                        toggleExpanded={toggleExpanded}
+                      />
                     ))}
                   </div>
                 </div>
@@ -586,9 +644,13 @@ export default function DocsPage() {
           <div className="flex-1">
             <div className="space-y-16">
               {DOCS_TREE.children?.map((rootNode) => (
-                <div key={rootNode.id} id={rootNode.id}>
-                  <ContentNode node={rootNode} level={0} />
-                </div>
+                <ContentNode
+                  key={rootNode.id}
+                  node={rootNode}
+                  level={0}
+                  expandedNodes={expandedNodes}
+                  toggleExpanded={toggleExpanded}
+                />
               ))}
             </div>
           </div>
