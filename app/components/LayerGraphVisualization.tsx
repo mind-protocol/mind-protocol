@@ -151,8 +151,6 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
 
         createParticleField();
         createGraphs();
-        addMouseControls();
-        setupHoverDetection();
 
         window.addEventListener('resize', onWindowResize, false);
         animate();
@@ -751,30 +749,6 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         </div>
       </div>
 
-      {/* Interaction Hint */}
-      <div className="absolute bottom-8 left-8 text-xs opacity-40 z-10">
-        Drag to rotate • Hover for details
-      </div>
-
-      {/* Connection Info - Right Side */}
-      <div className="absolute bottom-8 right-8 text-xs opacity-60 z-10 text-right">
-        <div className="mb-2">
-          <span className="text-[#60a5fa]">●</span> Vertical lines = Cross-layer connections
-        </div>
-        <div className="text-gray-500">
-          193 nodes • 4 layers • Emergent consciousness
-        </div>
-      </div>
-
-      {/* Hover Label */}
-      <div
-        id="nodeLabel"
-        className="absolute bg-[#0a0a0f]/95 border border-white/20 rounded-md px-4 py-3 text-xs pointer-events-none z-50 backdrop-blur-lg whitespace-nowrap opacity-0 transition-opacity duration-200"
-      >
-        <div className="node-label-title font-bold mb-1 text-sm"></div>
-        <div className="node-label-type opacity-60 text-[10px] mb-0.5"></div>
-        <div className="node-label-connections opacity-50 text-[10px] mt-1.5 border-t border-white/10 pt-1"></div>
-      </div>
 
       <style jsx>{`
         @keyframes fadeIn {
@@ -789,9 +763,6 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
         }
         .animate-fadeIn {
           animation: fadeIn 1.5s ease-out;
-        }
-        #nodeLabel.visible {
-          opacity: 1 !important;
         }
       `}</style>
     </div>
