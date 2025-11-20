@@ -45,6 +45,8 @@ def main():
     print()
 
     from dotenv import load_dotenv
+    # Load from .env.local first (development), then .env (fallback)
+    load_dotenv('.env.local')
     load_dotenv()
 
     all_ok = True

@@ -17,6 +17,8 @@ class EnableBankingClient:
 
     def __init__(self):
         """Initialize client from environment variables"""
+        # Load from .env.local first (development), then .env (fallback)
+        load_dotenv('.env.local')
         load_dotenv()
 
         app_id = os.getenv("ENABLE_BANKING_APP_ID")
