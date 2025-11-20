@@ -343,7 +343,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
             const link = createLink(
               (upperNode as any).position,
               (lowerNode as any).position,
-              0x60a5fa,
+              0x888888,
               0.12
             );
             (link as any).userData = {
@@ -351,7 +351,7 @@ export function LayerGraphVisualization({ visibleLayers = ['l1', 'l2', 'l3', 'l4
               source: (upperNode as any).userData,
               target: (lowerNode as any).userData,
               baseOpacity: 0.12,
-              color: 0x60a5fa
+              color: 0x888888
             };
             verticalLinks.push(link);
 
