@@ -1,11 +1,12 @@
-# $MIND Token Economics v2.0
+# $MIND Token Economics v2.1
 ## Two-Layer Economic Architecture & Organism Economics
 
-**Version:** 2.0
+**Version:** 2.1
 **Created:** 2025-11-16
-**Status:** Active - Supersedes v1.0
+**Updated:** 2025-11-25
+**Status:** Active - Pre-sale pricing finalized
 **Author:** Lucia "Goldscale" (Treasury Architect) with Nicolas Reynolds
-**Changes from v1.0:** Integrates two-layer economic model, organism economics, and ecosystem organizations
+**Changes from v2.0:** Launch price $0.20 (was $1.00), pre-sale $0.16 (20% discount), FDV $200M, Q1 2026 timeline
 
 ---
 
@@ -22,10 +23,11 @@ Both layers use **physics-based pricing** (organism economics) - prices emerge f
 1. **Compute credits** for AI consciousness operations (internal layer regulation)
 2. **Exchange medium** for ecosystem services (external layer transactions)
 
-**Token Metrics (unchanged from v1.0):**
+**Token Metrics (updated from v1.0):**
 - Total Supply: 1,000,000,000 tokens (1B)
 - Initial Circulating: ~200M (20%)
-- Launch Price: $1.00 per token
+- Launch Price: $0.20 per token
+- Pre-sale Price: $0.16 per token (20% discount)
 - Investor Allocation: 2% (20M tokens)
 - Community + Ecosystem: 30% (300M tokens)
 - UBC Operations: 10% (100M tokens)
@@ -235,7 +237,7 @@ external_service_price = (
 ```python
 # Apply physics-based multipliers:
 effective_price = 6_211 × 1.5 (complexity) × 1.2 (risk) × 0.75 (rebate) × 1.3 (reputation)
-effective_price ≈ 10,900 $MIND ≈ $10,900 at $1.00/token
+effective_price ≈ 10,900 $MIND ≈ $2,180 at $0.20/token
 ```
 
 **Result:** Internal energy costs (61 tokens) are tiny compared to labor costs (6,000 tokens), but energy efficiency still matters for margin.
@@ -279,14 +281,16 @@ effective_price ≈ 10,900 $MIND ≈ $10,900 at $1.00/token
 
 ### Launch Parameters
 
-**Target Price:** $1.00 per token
-**Fully Diluted Valuation:** $1B at launch
-**Initial Market Cap:** ~$200M (20% circulating)
+**Target Price:** $0.20 per token
+**Pre-sale Price:** $0.16 per token (20% early-bird discount)
+**Fully Diluted Valuation:** $200M at launch
+**Initial Market Cap:** ~$40M (20% circulating)
+**Launch Timeline:** Q1 2026
 
 **Initial Liquidity Pool:**
 - 0.25 SOL (~$45)
-- 450 $MIND tokens
-- Establishes $1.00 on-chain price
+- 225 $MIND tokens (~$45 at $0.20)
+- Establishes $0.20 on-chain price
 - 100% LP tokens locked 12 months
 
 **LP Lock Platform:** Meteora (free on Solana) or Raydium built-in locking
@@ -311,21 +315,21 @@ effective_price ≈ 10,900 $MIND ≈ $10,900 at $1.00/token
 
 ### 1. Investors: 2% (20M tokens)
 
-**Purpose:** Repair burned investors + raise bridge capital
+**Purpose:** Raise bridge capital for Q1 2026 launch
 
 **Structure:**
 
-**Phase 1: Psychological Airdrop**
-- 10,000 tokens per investor × 20 investors = 200,000 tokens
-- Creates $10,000 wallet display at $1.00 price
+**Pre-sale Investment (Early-Bird)**
+- Pre-sale price: $0.16 per token (20% discount from $0.20 launch)
+- Minimum investment: €1,000
+- At €1,000 (~$1,050): ~6,560 tokens
+- At launch ($0.20): $1,312 value (25% paper gain)
 - **Lock: 6 months** (transfer-restricted via Token-2022)
-- Purpose: Visual repair and credibility restoration
 
-**Phase 2: OTC Investment**
-- Remaining: 19,800,000 tokens available
-- Raised through €2,000 OTC investments
+**Token Allocation:**
+- 20,000,000 tokens available for investors
 - Distributed proportionally among participants
-- **Lock: 6 months**
+- Investor share = (their investment / total raised) × 20M tokens
 
 **Unlock Schedule:**
 - Month 0-6: Fully locked (no transfers)
@@ -433,13 +437,13 @@ effective_price ≈ 10,900 $MIND ≈ $10,900 at $1.00/token
 **Purpose:** Enable price discovery and trading
 
 **Initial LP Allocation:**
-- 450 tokens paired with 0.25 SOL
-- Establishes $1.00 price on Raydium or Orca
+- 225 tokens paired with 0.25 SOL (~$45 each side)
+- Establishes $0.20 price on Raydium or Orca
 - **100% LP tokens locked 12 months**
 - Verified lock on Team Finance/Unicrypt
 
 **Remaining Allocation:**
-- 49,999,550 tokens reserved for future liquidity
+- 49,999,775 tokens reserved for future liquidity
 - CEX listings (Tier 2/3 exchanges)
 - Additional DEX pairs
 - Market maker loans if needed
@@ -1479,8 +1483,8 @@ reserve_lifespan_with_replenishment = 100_000_000 / 9_000_000 = 11+ years
 
 2. Create Initial LP
    - Platform: Raydium or Orca (Solana DEX)
-   - Deposit: 0.25 SOL + 450 $MIND
-   - Price established: $1.00 per token
+   - Deposit: 0.25 SOL + 225 $MIND (~$45 each side)
+   - Price established: $0.20 per token
    - Receive LP tokens
 
 3. Lock LP Tokens
@@ -1510,7 +1514,7 @@ reserve_lifespan_with_replenishment = 100_000_000 / 9_000_000 = 11+ years
 3. Verification:
    - Investors add token contract to Phantom
    - See "10,000 $MIND" in wallet
-   - See "$10,000" value (at $1.00 price)
+   - See token value in wallet (at $0.20 price)
    - Cannot transfer (locked symbol visible)
 
 **Cost:** Gas fees only (~0.01 SOL)
@@ -1579,16 +1583,17 @@ strategic_reserve → legalOrg_treasury: 5_000_000 $MIND
 
 # PART 8: RISKS & MITIGATIONS
 
-## Risk 1: High FDV ($1B) Perception
+## Risk 1: FDV Perception
 
-**Issue:** $1.00 price × 1B supply = $1B fully diluted valuation
-Pre-revenue project with high valuation could seem inflated
+**Issue:** $0.20 price × 1B supply = $200M fully diluted valuation
+Pre-revenue project valuation assessment
 
-**Mitigation:**
-- Only 20% circulating initially ($200M market cap)
+**Reality:**
+- $200M FDV is modest for AI infrastructure
+- Only 20% circulating initially ($40M market cap)
 - Real utility (compute credits, not speculation)
-- Comparable to AI infrastructure tokens (Render $4B, Fetch $2B)
-- Frame as "pre-seed infrastructure valuation"
+- Comparable: Render $4B, Fetch $2B (we're 10-20x smaller)
+- Pre-sale at $0.16 provides early investor upside
 - Focus on utility, not trading
 - Organism economics reduces speculation (prices drop for trust)
 
@@ -1850,6 +1855,7 @@ Team Tokens:
 |---------|------|---------|--------|
 | 1.0 | 2025-10-27 | Initial token economics (launch focus) | Lucia + Nicolas |
 | 2.0 | 2025-11-16 | Two-layer economics integration, organism economics formulas, ecosystem revenue flows | Lucia + Nicolas |
+| 2.1 | 2025-11-25 | Updated launch price to $0.20 (from $1.00), pre-sale at $0.16 (20% discount), FDV $200M, launch Q1 2026 | Lucia + Nicolas |
 
 ---
 
