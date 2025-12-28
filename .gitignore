@@ -35,3 +35,9 @@ htmlcov/
 *.swo
 
 .DS_Store
+
+# Mind protocol config (generated)
+.mind/
+
+# Windows artifacts
+*:Zone.Identifier
