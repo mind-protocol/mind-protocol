@@ -1,0 +1,59 @@
+# Mind Protocol Modules
+# Maps code paths to documentation paths
+
+version: "1.0.0"
+
+modules:
+  schema:
+    code: l4/schema/
+    docs: docs/l4/schema/
+    status: designing
+    description: "Canonical node/link types for all Mind Protocol graphs"
+
+  registry:
+    code: l4/registry/
+    docs: docs/l4/registry/
+    status: designing
+    description: "Identity registration for citizens, orgs, endpoints"
+
+  laws:
+    code: l4/laws/
+    docs: docs/l4/laws/
+    status: designing
+    description: "Immutable protocol laws (invariants from schema)"
+
+  economy:
+    code: economy/
+    docs: docs/economy/
+    status: deferred
+    description: "Physics-based pricing formulas (later phase)"
+
+  membrane:
+    code: null  # Lives in mind-ops
+    docs: docs/membrane/
+    status: canonical
+    description: "Membrane system design (implementation in mind-ops)"
+
+  api_sse:
+    code: api/
+    docs: docs/api/sse/
+    status: designing
+    description: "SSE API for real-time updates"
+
+# Areas (groupings)
+areas:
+  l4:
+    modules: [schema, registry, laws]
+    description: "L4 Protocol Law"
+
+  economy:
+    modules: [economy]
+    description: "Organism Economics (deferred)"
+
+  api:
+    modules: [api_sse]
+    description: "API Layer"
+
+  membrane:
+    modules: [membrane]
+    description: "Membrane System (docs only, impl in mind-ops)"
