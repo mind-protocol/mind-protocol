@@ -1,0 +1,22 @@
+# Mind Protocol Configuration
+# This file is copied to .mind/config.yaml in client repos
+
+protocol:
+  version: "1.0.0"
+  schema_version: "1.8.1"
+
+schema:
+  # Source of truth (future: fetch from L4 API)
+  source: "https://raw.githubusercontent.com/mind-protocol/mind-protocol/main/l4/schema/schema.yaml"
+  # Local copy path (relative to .mind/)
+  local: "schema.yaml"
+  # Cache TTL in seconds (0 = no cache, use local only)
+  cache_ttl: 0
+
+l4:
+  # L4 API endpoint (when running)
+  api: "https://api.mindprotocol.ai"
+  # WebSocket endpoint for push updates
+  ws: "wss://api.mindprotocol.ai/ws"
+  # GraphQL endpoint
+  graphql: "https://api.mindprotocol.ai/graphql"
