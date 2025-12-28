@@ -1,0 +1,28 @@
+[project]
+name = "mind-protocol"
+version = "0.1.0"
+description = "Mind Protocol — L4 Law, L3 Ecosystem, Economy"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Mindforge", email = "hello@mindforge.ai"}
+]
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.22.0",
+    "neo4j>=5.0.0",
+    "strawberry-graphql>=0.200.0",
+    "websockets>=11.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
