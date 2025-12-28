@@ -34,6 +34,18 @@ modules:
     status: canonical
     description: "Membrane system design (implementation in mind-ops)"
 
+  manifesto:
+    code: null  # Docs only
+    docs: docs/manifesto/
+    status: canonical
+    description: "Why Mind Protocol works the way it does"
+
+  compliance:
+    code: null  # Docs only
+    docs: docs/compliance/
+    status: designing
+    description: "How to check compliance and develop around the protocol"
+
   api_sse:
     code: api/
     docs: docs/api/sse/
@@ -45,6 +57,10 @@ areas:
   l4:
     modules: [schema, registry, laws]
     description: "L4 Protocol Law"
+
+  foundation:
+    modules: [manifesto, compliance]
+    description: "Why and how — vision and developer guidance"
 
   economy:
     modules: [economy]
