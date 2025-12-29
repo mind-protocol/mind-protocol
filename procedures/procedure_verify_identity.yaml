@@ -1,0 +1,110 @@
+# Procedure: Verify Identity
+#
+# DOCS: docs/l4/registry/ALGORITHM_Registry.md
+# SKILL: skills/SKILL_verify_identity.md
+#
+# Verifies a citizen's identity via hash comparison.
+# All operations via graph_query — declarative, intent-driven.
+
+protocol: procedure_verify_identity
+version: "1.0"
+description: Verify citizen identity using hash comparison
+
+triggers:
+  - event: "Inbound stimulus arrives with identity_hash"
+  - event: "Need to verify citizen before action"
+
+requires_skills:
+  - "skills/SKILL_verify_identity.md"
+
+contextual_knowledge:
+  domain: |
+    Identity verification compares provided hash against stored identity_hash.
+    Hash format: SHA256(jwt + citizen_id).
+    Used to authenticate stimuli without transmitting JWT.
+
+  constraints: |
+    - Hash must match exactly
+    - Citizen must exist
+    - Citizen must not be suspended
+
+  dependencies: |
+    - Citizen must be registered
+    - identity_hash property must exist
+
+# --- Steps ---
+
+steps:
+  lookup_citizen:
+    type: query
+    description: Find citizen and their identity_hash
+    query:
+      queries:
+        - "Does citizen $citizen_id exist?"
+        - "What is the identity_hash for citizen $citizen_id?"
+        - "What is the status for citizen $citizen_id?"
+        - "What org does citizen $citizen_id belong to?"
+      intent: "Retrieve citizen identity data for verification"
+    store_as: citizen_data
+    next: check_exists
+
+  check_exists:
+    type: branch
+    checks:
+      - condition: "citizen $citizen_id not found"
+        action:
+          type: complete
+          message: "Unknown citizen"
+          return:
+            valid: false
+            reason: "Unknown citizen"
+      - condition: "citizen $citizen_id status is suspended"
+        action:
+          type: complete
+          message: "Citizen suspended"
+          return:
+            valid: false
+            reason: "Citizen suspended"
+      - condition: "ready"
+        action:
+          goto: compare_hash
+
+  compare_hash:
+    type: query
+    description: Compare provided hash with stored hash
+    query:
+      queries:
+        - "Does $provided_hash match identity_hash for citizen $citizen_id?"
+      intent: "Verify identity hash matches stored value"
+    store_as: hash_match
+    next: return_result
+
+  return_result:
+    type: branch
+    checks:
+      - condition: "hash matches"
+        action:
+          type: complete
+          message: "Identity verified"
+          return:
+            valid: true
+            citizen_id: "$citizen_id"
+            org_id: "$org_id"
+      - condition: "hash does not match"
+        action:
+          type: complete
+          message: "Hash mismatch"
+          return:
+            valid: false
+            reason: "Hash mismatch"
+
+# --- Output ---
+
+output:
+  result:
+    valid: true|false
+    citizen_id: "{citizen_id}"  # if valid
+    org_id: "{org_id}"          # if valid
+    reason: "{reason}"          # if invalid
+
+  summary: "Verified identity for citizen $citizen_id"

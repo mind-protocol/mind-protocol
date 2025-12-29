@@ -1,31 +1,85 @@
 # PATTERNS: L4 Registry
 
 ```
-STATUS: DESIGNING
+STATUS: IMPLEMENTED
 PURPOSE: Design philosophy for identity and endpoint registration
+UPDATED: 2024-12-29
+INHERITS: docs/l4/PATTERNS_L4.md
 ```
 
 ---
 
-## Core Patterns
+## Core L4 Rules
+
+**See `docs/l4/PATTERNS_L4.md` for rules that apply to ALL L4 modules:**
+- L4-1: L4 = Graph
+- L4-2: Membrane only
+- L4-3: Graph MCP calls
+- L4-4: Skill + Procedure
+
+---
+
+## Registry-Specific Patterns
 
 | ID | Pattern | Description |
 |----|---------|-------------|
-| P1 | **Registry = existence** | Being registered means you exist in the protocol |
-| P2 | **Registry ≠ contactable** | Existence doesn't mean discoverable; L3 opt-in required |
-| P3 | **JWT verification** | All identities validated via signed tokens |
-| P4 | **Hash-based routing** | `hash = SHA256(JWT × node_id)` for stimulus validation |
-| P5 | **Public by default** | Registry is readable by anyone (open source principle) |
+| R1 | **Registry = existence** | Being registered means you exist in the protocol |
+| R2 | **Registry ≠ contactable** | Existence doesn't mean discoverable; L3 opt-in required |
+| R3 | **JWT verification** | All identities validated via signed tokens |
+| R4 | **Hash-based routing** | `hash = SHA256(JWT + node_id)` for stimulus validation |
+| R5 | **Public by default** | Registry is readable by anyone (open source principle) |
+
+---
+
+## Registry Skills + Procedures
+
+| Skill | Procedure | Purpose |
+|-------|-----------|---------|
+| `register_citizen` | `procedure_register_citizen.yaml` | Create citizen + identity hash |
+| `register_org` | `procedure_register_org.yaml` | Create org + endpoint + wallet |
+| `verify_identity` | `procedure_verify_identity.yaml` | Check hash for routing |
+| `verify_jwt` | `procedure_verify_jwt.yaml` | Check JWT for registration |
+| `get_endpoint` | `procedure_get_endpoint.yaml` | Get org's WebSocket URL |
+| `update_status` | `procedure_update_status.yaml` | Change citizen/org status |
+| `suspend_citizen` | `procedure_suspend_citizen.yaml` | Mark citizen suspended |
+| `update_endpoint` | `procedure_update_endpoint.yaml` | Change org's endpoint |
 
 ---
 
 ## What Gets Registered
 
-| Entity | Fields | Purpose |
-|--------|--------|---------|
-| **Citizen** | id, synthesis, org_id, capabilities, public_nodes | Individual AI identity |
-| **Org** | id, name, endpoint, citizens[] | Organization grouping citizens |
-| **Endpoint** | id, url, org_id, credentials_hash | WebSocket URL for L4 push |
+Entities are schema nodes. Properties are **linked nodes** (narrative for concepts, thing for artifacts).
+
+### Citizen (actor, type: "citizen")
+
+| Linked Node | node_type | Type | Required | Public |
+|-------------|-----------|------|----------|--------|
+| name | narrative | `"name"` | Yes | true |
+| org_membership | narrative | `"org_membership"` | Yes | true |
+| status | narrative | `"status"` | Yes | true |
+| registered_date | narrative | `"registered_date"` | Yes | true |
+| wallet | thing | `"wallet"` | No | false |
+| capabilities | narrative | `"capabilities"` | No | true |
+
+### Org (space, type: "org")
+
+| Linked Node | node_type | Type | Required | Public |
+|-------------|-----------|------|----------|--------|
+| name | narrative | `"name"` | Yes | true |
+| wallet | thing | `"wallet"` | Yes | true |
+| endpoint | thing | `"endpoint"` | Yes | true |
+| jwt_public_key | thing | `"jwt_public_key"` | Yes | false |
+| status | narrative | `"status"` | Yes | true |
+| registered_date | narrative | `"registered_date"` | Yes | true |
+
+### Verification (via link from verifier)
+
+| Link Property | Meaning |
+|---------------|---------|
+| polarity = 1.0 | Verified |
+| polarity = -1.0 | Rejected |
+| permanence < 0.5 | Provisional |
+| No link | Unverified |
 
 ---
 
@@ -83,7 +137,9 @@ L4 = Law. Laws must be verifiable. Anyone can:
 
 ## Related
 
-- `l4/registry/citizens.py` — Citizen CRUD
-- `l4/registry/orgs.py` — Org CRUD
-- `l4/registry/endpoints.py` — Endpoint management
-- `l4/registry/validation.py` — JWT and hash verification
+- `VOCABULARY_Registry.md` — Terms defined by this module
+- `docs/TAXONOMY.md` — Central vocabulary
+- `docs/MAPPING.md` — Schema translation
+- `l4/registry/citizen_registration_crud_operations.py` — Citizen models + node creation
+- `l4/registry/org_registration_crud_operations.py` — Org models + node creation
+- `l4/registry/jwt_hash_verification_for_identity.py` — Hash verification

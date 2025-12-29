@@ -1,0 +1,290 @@
+# Procedure: Register Org
+#
+# DOCS: docs/l4/registry/ALGORITHM_Registry.md
+# SKILL: skills/SKILL_register_org.md
+#
+# Creates an org cluster in L4 registry.
+# All operations via graph_query — declarative, intent-driven.
+
+protocol: procedure_register_org
+version: "1.0"
+description: Register new organization with endpoint, wallet, and JWT public key
+
+triggers:
+  - event: "New org wants to join Mind Protocol"
+  - gap: "Org not found in registry"
+
+requires_skills:
+  - ".mind/skills/SKILL_Add_Cluster_Dynamic_Creation.md"
+  - "skills/SKILL_register_org.md"
+
+contextual_knowledge:
+  domain: |
+    Organizations are containers for citizens in Mind Protocol.
+    Each org has: name, wallet (Solana), endpoint (wss://), JWT public key.
+    Org = SpaceNode with type="org".
+    Properties = linked nodes (narratives for concepts, things for artifacts).
+
+  constraints: |
+    - Endpoint must be wss:// (secure WebSocket)
+    - Wallet should be valid Solana address
+    - JWT public key for signature verification
+    - Org name must be unique
+    - One endpoint per org
+
+  dependencies: |
+    - L4 graph must be accessible
+    - No duplicate org name/wallet
+
+  quality_criteria: |
+    Good cluster: 7+ nodes, 10+ links, dense connectivity
+    Bad cluster: isolated org node with only contains link
+
+# --- Steps ---
+
+steps:
+  understand_situation:
+    type: query
+    description: Check if org already exists
+    query:
+      queries:
+        - "Does an org named $name already exist?"
+        - "Does an org with wallet $wallet already exist?"
+        - "What orgs are currently registered?"
+      intent: "Prevent duplicate registration, understand current state"
+    store_as: existing_orgs
+    next: validate_inputs
+
+  validate_inputs:
+    type: query
+    description: Validate all inputs before creation
+    query:
+      queries:
+        - "Is $endpoint_url a valid wss:// WebSocket URL?"
+        - "Is $wallet a valid Solana address format?"
+        - "Is $jwt_public_key a valid PEM public key?"
+      intent: "Validate org registration inputs before creating cluster"
+    on_fail:
+      return:
+        success: false
+        error: "Invalid inputs: {validation_errors}"
+    next: check_prerequisites
+
+  check_prerequisites:
+    type: branch
+    checks:
+      - condition: "org with name $name exists"
+        action:
+          type: complete
+          message: "Org $name already registered"
+          return:
+            success: false
+            error: "Org already exists"
+      - condition: "org with wallet $wallet exists"
+        action:
+          type: complete
+          message: "Wallet already registered to another org"
+          return:
+            success: false
+            error: "Wallet already registered"
+      - condition: "ready"
+        action:
+          goto: gather_details
+
+  gather_details:
+    type: ask
+    context: |
+      Registering new organization: $name
+      Wallet: $wallet
+      Endpoint: $endpoint_url
+
+      {contextual_knowledge.constraints}
+    questions:
+      - name: confirm_name
+        ask: "Confirm organization name: $name"
+        why: "Name is immutable after registration"
+        creates: "narrative node with type=name"
+        expects: { type: string, confirmed: true }
+
+      - name: initial_status
+        ask: "Initial status for org?"
+        why: "New orgs typically start as 'active' but may need 'pending' for review"
+        options: ["active", "pending"]
+        default: "active"
+        creates: "narrative node with type=status"
+
+      - name: hosting_mode
+        ask: "Hosting mode for this org?"
+        why: "Affects billing and SLA - self-hosted vs hosted by Mind"
+        options: ["self-hosted", "hosted"]
+        creates: "narrative node with type=hosting_mode"
+        guidance: |
+          self-hosted: Org runs their own infrastructure
+          hosted: Mind Protocol hosts the org's graph
+    moment:
+      agent_provides: [description, reasoning]
+    next: create_cluster
+
+  create_cluster:
+    type: create
+    description: Create org cluster with all properties
+    query:
+      queries:
+        - "Create org $name as a Space node with type=org"
+        - "Create name property: $name"
+        - "Create status property: $initial_status"
+        - "Create registered_date property: now"
+        - "Create wallet property: $wallet"
+        - "Create endpoint property: $endpoint_url"
+        - "Create jwt_public_key property: $jwt_public_key"
+        - "Create hosting_mode property: $hosting_mode"
+        - "Link org to all its properties"
+        - "Create moment describing this registration"
+        - "Link moment to org and actor"
+      intent: "Register new organization in L4 registry with complete property cluster"
+    output: org_id
+
+    cluster:
+      primary:
+        id: "org_{generated_id}"
+        node_type: space
+        type: "org"
+        name: "$name"
+        synthesis: "Organization: $name"
+
+      internal_nodes:
+        - id: "{org_id}_name"
+          node_type: narrative
+          type: "name"
+          content: "$name"
+
+        - id: "{org_id}_status"
+          node_type: narrative
+          type: "status"
+          content: "$initial_status"
+
+        - id: "{org_id}_registered"
+          node_type: narrative
+          type: "registered_date"
+          content: "$now_iso"
+
+        - id: "{org_id}_wallet"
+          node_type: thing
+          type: "wallet"
+          content: "$wallet"
+          uri: "solana:$wallet"
+
+        - id: "{org_id}_endpoint"
+          node_type: thing
+          type: "endpoint"
+          content: "$endpoint_url"
+          uri: "$endpoint_url"
+
+        - id: "{org_id}_jwt_public_key"
+          node_type: thing
+          type: "jwt_public_key"
+          content: "$jwt_public_key"
+
+        - id: "{org_id}_hosting_mode"
+          node_type: narrative
+          type: "hosting_mode"
+          content: "$hosting_mode"
+
+        - id: "moment_{timestamp}"
+          node_type: moment
+          type: "registration"
+          text: "Registered org $name with endpoint $endpoint_url"
+          status: "completed"
+
+      links:
+        # Org → Properties (hierarchy=1.0, property belongs to org)
+        - from: "{org_id}"
+          to: "{org_id}_name"
+          hierarchy: 1.0
+          permanence: 1.0  # immutable
+
+        - from: "{org_id}"
+          to: "{org_id}_status"
+          hierarchy: 1.0
+          permanence: 0.5  # mutable
+
+        - from: "{org_id}"
+          to: "{org_id}_registered"
+          hierarchy: 1.0
+          permanence: 1.0  # immutable
+
+        - from: "{org_id}"
+          to: "{org_id}_wallet"
+          hierarchy: 1.0
+          permanence: 0.8  # rarely changes
+
+        - from: "{org_id}"
+          to: "{org_id}_endpoint"
+          hierarchy: 1.0
+          permanence: 0.8  # can be updated
+
+        - from: "{org_id}"
+          to: "{org_id}_jwt_public_key"
+          hierarchy: 1.0
+          permanence: 0.9  # rarely changes
+
+        - from: "{org_id}"
+          to: "{org_id}_hosting_mode"
+          hierarchy: 1.0
+          permanence: 0.9  # rarely changes
+
+        # Moment links
+        - from: "moment_{timestamp}"
+          to: "{org_id}"
+          type: "about"
+
+        - from: "{actor_id}"
+          to: "moment_{timestamp}"
+          type: "expresses"
+
+    moment:
+      agent_provides: [description]
+    next: confirm_creation
+
+  confirm_creation:
+    type: query
+    description: Verify cluster was created correctly
+    query:
+      queries:
+        - "What is the org ID for $name?"
+        - "Does org $name have an endpoint?"
+        - "Does org $name have a wallet?"
+        - "How many properties are linked to org $name?"
+      intent: "Verify org cluster was created with all required properties"
+    expect:
+      org_exists: true
+      has_endpoint: true
+      has_wallet: true
+      property_count: ">= 7"
+    next: $complete
+
+# --- Output ---
+
+output:
+  cluster:
+    nodes: 9  # org + 7 properties + moment
+    links: 9  # 7 property links + 2 moment links
+    connectivity: 2.0  # links per node
+
+  result:
+    org_id: "{org_id}"
+    success: true
+    error: null
+
+  summary: "Registered org $name with ID {org_id}"
+
+# --- Rollback ---
+
+rollback:
+  description: Delete cluster if creation fails
+  query:
+    queries:
+      - "Delete org with ID $org_id"
+      - "Delete all nodes linked to $org_id"
+      - "Delete moment for this registration"
+    intent: "Rollback failed org registration - remove all created nodes"

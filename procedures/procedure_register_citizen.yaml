@@ -1,0 +1,309 @@
+# Procedure: Register Citizen
+#
+# DOCS: docs/l4/registry/ALGORITHM_Registry.md
+# SKILL: skills/SKILL_register_citizen.md
+#
+# Creates a citizen cluster in L4 registry under an org.
+# All operations via graph_query — declarative, intent-driven.
+
+protocol: procedure_register_citizen
+version: "1.0"
+description: Register new citizen with JWT verification and identity hash
+
+triggers:
+  - event: "New citizen wants to join Mind Protocol"
+  - gap: "Citizen not found in registry"
+
+requires_skills:
+  - ".mind/skills/SKILL_Add_Cluster_Dynamic_Creation.md"
+  - "skills/SKILL_register_citizen.md"
+
+contextual_knowledge:
+  domain: |
+    Citizens are individuals within an organization in Mind Protocol.
+    Each citizen has: id, synthesis (description), jwt_hash, identity_hash.
+    Citizen = ActorNode with type="citizen".
+    Properties = linked nodes (narratives for metadata, things for artifacts).
+    Citizens belong to exactly one org.
+
+  constraints: |
+    - JWT must be signed by org's public key
+    - Citizen ID must be unique across all orgs
+    - Org must exist and be active
+    - JWT claims must be valid (exp, iat, iss)
+    - Never store raw JWT, only hashes
+
+  dependencies: |
+    - L4 graph must be accessible
+    - Org must be registered
+    - Org must have jwt_public_key property
+
+  quality_criteria: |
+    Good cluster: 6+ nodes, 8+ links, dense connectivity
+    Bad cluster: isolated citizen node with only org link
+
+# --- Steps ---
+
+steps:
+  understand_situation:
+    type: query
+    description: Check if citizen already exists and org is valid
+    query:
+      queries:
+        - "Does a citizen with ID $citizen_id already exist?"
+        - "Does org $org_id exist?"
+        - "Is org $org_id active?"
+        - "What is the jwt_public_key for org $org_id?"
+      intent: "Prevent duplicate registration, verify org can accept citizens"
+    store_as: existing_state
+    next: validate_jwt
+
+  validate_jwt:
+    type: query
+    description: Verify JWT signature and claims using org's public key
+    query:
+      queries:
+        - "Is $jwt signed by org $org_id public key?"
+        - "Is $jwt expiration in the future?"
+        - "Is $jwt issued_at in the past?"
+        - "Does $jwt issuer claim match $org_id?"
+      intent: "Verify JWT authenticity before creating citizen"
+    on_fail:
+      return:
+        success: false
+        error: "Invalid JWT: {validation_errors}"
+    next: check_prerequisites
+
+  check_prerequisites:
+    type: branch
+    checks:
+      - condition: "citizen with ID $citizen_id exists"
+        action:
+          type: complete
+          message: "Citizen $citizen_id already registered"
+          return:
+            success: false
+            error: "Citizen already exists"
+      - condition: "org $org_id not found"
+        action:
+          type: complete
+          message: "Org $org_id not registered"
+          return:
+            success: false
+            error: "Org not found"
+      - condition: "org $org_id status is suspended"
+        action:
+          type: complete
+          message: "Org $org_id is suspended"
+          return:
+            success: false
+            error: "Org suspended"
+      - condition: "ready"
+        action:
+          goto: gather_details
+
+  gather_details:
+    type: ask
+    context: |
+      Registering new citizen under org: $org_id
+      Citizen ID: $citizen_id
+      Synthesis: $synthesis
+
+      {contextual_knowledge.constraints}
+    questions:
+      - name: confirm_synthesis
+        ask: "Confirm citizen synthesis: $synthesis"
+        why: "Synthesis is the citizen's description, used for semantic search"
+        creates: "narrative node with type=synthesis"
+        expects: { type: string, confirmed: true }
+
+      - name: initial_status
+        ask: "Initial status for citizen?"
+        why: "New citizens typically start as 'active' but may need 'pending' for review"
+        options: ["active", "pending"]
+        default: "active"
+        creates: "narrative node with type=status"
+
+      - name: visibility
+        ask: "Visibility level for this citizen?"
+        why: "Affects who can see and interact with this citizen"
+        options: ["public", "org-only", "private"]
+        default: "public"
+        creates: "narrative node with type=visibility"
+        guidance: |
+          public: Visible to all orgs in Mind Protocol
+          org-only: Visible only within parent org
+          private: Only visible to citizen themselves
+    moment:
+      agent_provides: [description, reasoning]
+    next: compute_hashes
+
+  compute_hashes:
+    type: query
+    description: Compute and store identity hashes
+    query:
+      queries:
+        - "What is SHA256 of $jwt?"
+        - "What is SHA256 of $jwt combined with $citizen_id?"
+      intent: "Compute jwt_hash for storage and identity_hash for verification"
+    store_as: computed_hashes
+    next: create_cluster
+
+  create_cluster:
+    type: create
+    description: Create citizen cluster with all properties
+    query:
+      queries:
+        - "Create citizen $citizen_id as an Actor node with type=citizen"
+        - "Create synthesis property: $synthesis"
+        - "Create status property: $initial_status"
+        - "Create visibility property: $visibility"
+        - "Create registered_date property: now"
+        - "Create jwt_hash property: $jwt_hash"
+        - "Create identity_hash property: $identity_hash"
+        - "Link citizen to all its properties"
+        - "Link citizen to org $org_id with relationship=belongs_to"
+        - "Create moment describing this registration"
+        - "Link moment to citizen and actor"
+      intent: "Register new citizen in L4 registry with complete property cluster"
+    output: citizen_id
+
+    cluster:
+      primary:
+        id: "citizen_{generated_id}"
+        node_type: actor
+        type: "citizen"
+        synthesis: "$synthesis"
+
+      internal_nodes:
+        - id: "{citizen_id}_synthesis"
+          node_type: narrative
+          type: "synthesis"
+          content: "$synthesis"
+
+        - id: "{citizen_id}_status"
+          node_type: narrative
+          type: "status"
+          content: "$initial_status"
+
+        - id: "{citizen_id}_visibility"
+          node_type: narrative
+          type: "visibility"
+          content: "$visibility"
+
+        - id: "{citizen_id}_registered"
+          node_type: narrative
+          type: "registered_date"
+          content: "$now_iso"
+
+        - id: "{citizen_id}_jwt_hash"
+          node_type: thing
+          type: "jwt_hash"
+          content: "$jwt_hash"
+
+        - id: "{citizen_id}_identity_hash"
+          node_type: thing
+          type: "identity_hash"
+          content: "$identity_hash"
+
+        - id: "moment_{timestamp}"
+          node_type: moment
+          type: "registration"
+          text: "Registered citizen $citizen_id under org $org_id"
+          status: "completed"
+
+      links:
+        # Citizen → Properties (hierarchy=1.0, property belongs to citizen)
+        - from: "{citizen_id}"
+          to: "{citizen_id}_synthesis"
+          hierarchy: 1.0
+          permanence: 0.8  # can be updated
+
+        - from: "{citizen_id}"
+          to: "{citizen_id}_status"
+          hierarchy: 1.0
+          permanence: 0.5  # mutable
+
+        - from: "{citizen_id}"
+          to: "{citizen_id}_visibility"
+          hierarchy: 1.0
+          permanence: 0.7  # occasionally changes
+
+        - from: "{citizen_id}"
+          to: "{citizen_id}_registered"
+          hierarchy: 1.0
+          permanence: 1.0  # immutable
+
+        - from: "{citizen_id}"
+          to: "{citizen_id}_jwt_hash"
+          hierarchy: 1.0
+          permanence: 0.9  # rarely changes
+
+        - from: "{citizen_id}"
+          to: "{citizen_id}_identity_hash"
+          hierarchy: 1.0
+          permanence: 0.9  # rarely changes
+
+        # Citizen → Org (belongs to relationship)
+        - from: "{citizen_id}"
+          to: "{org_id}"
+          hierarchy: -1.0  # org is parent
+          permanence: 1.0  # citizen cannot change org
+          type: "belongs_to"
+
+        # Moment links
+        - from: "moment_{timestamp}"
+          to: "{citizen_id}"
+          type: "about"
+
+        - from: "{actor_id}"
+          to: "moment_{timestamp}"
+          type: "expresses"
+
+    moment:
+      agent_provides: [description]
+    next: confirm_creation
+
+  confirm_creation:
+    type: query
+    description: Verify cluster was created correctly
+    query:
+      queries:
+        - "What is the citizen ID for $synthesis under org $org_id?"
+        - "Does citizen $citizen_id have an identity_hash?"
+        - "Does citizen $citizen_id belong to org $org_id?"
+        - "How many properties are linked to citizen $citizen_id?"
+      intent: "Verify citizen cluster was created with all required properties"
+    expect:
+      citizen_exists: true
+      has_identity_hash: true
+      belongs_to_org: true
+      property_count: ">= 6"
+    next: $complete
+
+# --- Output ---
+
+output:
+  cluster:
+    nodes: 8  # citizen + 6 properties + moment
+    links: 9  # 6 property links + 1 org link + 2 moment links
+    connectivity: 2.25  # links per node
+
+  result:
+    citizen_id: "{citizen_id}"
+    identity_hash: "{identity_hash}"
+    success: true
+    error: null
+
+  summary: "Registered citizen $citizen_id under org $org_id"
+
+# --- Rollback ---
+
+rollback:
+  description: Delete cluster if creation fails
+  query:
+    queries:
+      - "Delete citizen with ID $citizen_id"
+      - "Delete all nodes linked to $citizen_id"
+      - "Delete moment for this registration"
+    intent: "Rollback failed citizen registration - remove all created nodes"

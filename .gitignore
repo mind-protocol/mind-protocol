@@ -43,3 +43,7 @@ htmlcov/
 
 # Windows artifacts
 *:Zone.Identifier
+
+# Mind runtime
+.mind/mind/
+.env

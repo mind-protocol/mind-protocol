@@ -1,8 +1,8 @@
-# MIND Graph Schema v1.8.1
+# MIND Graph Schema v1.9.0
 # Source of truth for node types, link schema, and invariants
 
-version: "1.8.1"
-updated: "2025-12-28"
+version: "1.9.0"
+updated: "2025-12-29"
 status: "CANONICAL"
 
 # =============================================================================
@@ -106,6 +106,11 @@ NodeBase:
       type: string
       default: ""
       description: "Full prose/description"
+    granularity:
+      type: int
+      nullable: true
+      values: [1, 2, 3]
+      description: "Content granularity: 1=full doc, 2=per-section, 3=per-item"
 
     # Temporal (auto-managed)
     created_at_s:
