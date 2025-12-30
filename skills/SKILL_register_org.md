@@ -1,6 +1,10 @@
-# Skill: Register Org
+# Skill: SKILL_Register_Org
 
 ```
+NODE_TYPE: narrative
+TYPE: SKILL
+SUBTYPE: registry
+ID: SKILL_Register_Org
 MODULE: l4/registry
 PROCEDURE: procedures/procedure_register_org.yaml
 STATUS: IMPLEMENTED

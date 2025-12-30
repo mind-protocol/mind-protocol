@@ -94,9 +94,11 @@ nodes:
         default: ""
 
   space:
-    role: "Context container"
-    behavior: "Bidirectional flow with contents"
-    fields: {}
+    fields:
+      location:
+        type: string
+        nullable: true
+        description: "Path, URL, or conceptual location of this space"
 
   thing:
     role: "Fast passthrough"
@@ -131,12 +133,15 @@ NodeBase:
       type: string
       nullable: true
       description: |
-        Subtype within node_type. Values per node_type:
-        - actor: null (or role-based: "player", "npc", "system")
-        - moment: "event", "decision", "action"
-        - narrative: "issue", "objective", "task", "belief", "pattern", "documentation"
-        - space: "area", "module", "directory"
-        - thing: "file", "uri", "artifact"
+        Primary type for naming. Used in node ID pattern: TYPE_Name.
+        Examples: CITIZEN, ORG, SKILL, PROCEDURE, AGENT, MOMENT, etc.
+        Convention: UPPERCASE.
+    subtype:
+      type: string
+      nullable: true
+      description: |
+        Additional classification within type.
+        Examples: human/ai (for CITIZEN), registry/auth (for SKILL), etc.
 
     # Physics
     weight:

@@ -1,5 +1,11 @@
-# Skill: `mind.<verb>_<object>`
-@mind:id: SKILL.<DOMAIN>.<ACTION>.<CONTEXT>
+# Skill: SKILL_Name
+
+```
+NODE_TYPE: narrative
+TYPE: SKILL
+SUBTYPE: <domain>
+ID: SKILL_<Name>
+```
 
 ## Maps to VIEW
 `<VIEW path or "(meta-skill)">`

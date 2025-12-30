@@ -146,53 +146,53 @@ steps:
 
     cluster:
       primary:
-        id: "org_{generated_id}"
+        id: "ORG_$name"
         node_type: space
-        type: "org"
+        type: "ORG"
         name: "$name"
         synthesis: "Organization: $name"
 
       internal_nodes:
         - id: "{org_id}_name"
           node_type: narrative
-          type: "name"
+          type: "PROPERTY"
+          subtype: "name"
           content: "$name"
 
         - id: "{org_id}_status"
           node_type: narrative
-          type: "status"
+          type: "PROPERTY"
+          subtype: "status"
           content: "$initial_status"
 
         - id: "{org_id}_registered"
           node_type: narrative
-          type: "registered_date"
+          type: "PROPERTY"
+          subtype: "registered_date"
           content: "$now_iso"
 
         - id: "{org_id}_wallet"
           node_type: thing
-          type: "wallet"
+          type: "WALLET"
           content: "$wallet"
           uri: "solana:$wallet"
 
         - id: "{org_id}_endpoint"
           node_type: thing
-          type: "endpoint"
+          type: "ENDPOINT"
           content: "$endpoint_url"
           uri: "$endpoint_url"
 
         - id: "{org_id}_jwt_public_key"
           node_type: thing
-          type: "jwt_public_key"
+          type: "KEY"
+          subtype: "jwt_public"
           content: "$jwt_public_key"
 
-        - id: "{org_id}_hosting_mode"
-          node_type: narrative
-          type: "hosting_mode"
-          content: "$hosting_mode"
-
-        - id: "moment_{timestamp}"
+        - id: "MOMENT_Registration_$name"
           node_type: moment
-          type: "registration"
+          type: "MOMENT"
+          subtype: "registration"
           text: "Registered org $name with endpoint $endpoint_url"
           status: "completed"
 

@@ -170,45 +170,52 @@ steps:
 
     cluster:
       primary:
-        id: "citizen_{generated_id}"
+        id: "CITIZEN_$name"
         node_type: actor
-        type: "citizen"
+        type: "CITIZEN"
         synthesis: "$synthesis"
 
       internal_nodes:
         - id: "{citizen_id}_synthesis"
           node_type: narrative
-          type: "synthesis"
+          type: "PROPERTY"
+          subtype: "synthesis"
           content: "$synthesis"
 
         - id: "{citizen_id}_status"
           node_type: narrative
-          type: "status"
+          type: "PROPERTY"
+          subtype: "status"
           content: "$initial_status"
 
         - id: "{citizen_id}_visibility"
           node_type: narrative
-          type: "visibility"
+          type: "PROPERTY"
+          subtype: "visibility"
           content: "$visibility"
 
         - id: "{citizen_id}_registered"
           node_type: narrative
-          type: "registered_date"
+          type: "PROPERTY"
+          subtype: "registered_date"
           content: "$now_iso"
 
         - id: "{citizen_id}_jwt_hash"
           node_type: thing
-          type: "jwt_hash"
+          type: "HASH"
+          subtype: "jwt"
           content: "$jwt_hash"
 
         - id: "{citizen_id}_identity_hash"
           node_type: thing
-          type: "identity_hash"
+          type: "HASH"
+          subtype: "identity"
           content: "$identity_hash"
 
-        - id: "moment_{timestamp}"
+        - id: "MOMENT_Registration_$name"
           node_type: moment
-          type: "registration"
+          type: "MOMENT"
+          subtype: "registration"
           text: "Registered citizen $citizen_id under org $org_id"
           status: "completed"
 

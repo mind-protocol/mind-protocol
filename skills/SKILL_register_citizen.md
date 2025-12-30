@@ -1,6 +1,10 @@
-# Skill: Register Citizen
+# Skill: SKILL_Register_Citizen
 
 ```
+NODE_TYPE: narrative
+TYPE: SKILL
+SUBTYPE: registry
+ID: SKILL_Register_Citizen
 MODULE: l4/registry
 PROCEDURE: procedures/procedure_register_citizen.yaml
 STATUS: IMPLEMENTED
