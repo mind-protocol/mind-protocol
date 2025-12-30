@@ -87,6 +87,47 @@ maps_to:
 
 ---
 
+## TASK TYPES
+
+Task types define work that can be done in this module.
+
+**Template node:** `narrative` with `type: task_type`
+**Instance node:** `narrative` with `type: {task_type_name}`
+
+### {task_type_name}
+
+```markdown
+**Definition:** {What this task accomplishes}
+
+**Executor:** agent | automated | mechanical
+
+**Skill:** {SKILL_Name.md if executor=agent, otherwise N/A}
+
+**Procedure:** {procedure_name}
+```
+
+---
+
+## ACTOR TYPES
+
+Actor types define system processes (mechanical) or roles (agent).
+
+**Node:** `actor` with `type: {actor_type_name}`
+
+### {actor_type_name}
+
+```markdown
+**Subtype:** mechanical | agent
+
+**Purpose:** {What this actor does}
+
+**Procedures:** {list of procedures this actor runs}
+
+**Triggers:** {cron:5min | event:node_created | manual}
+```
+
+---
+
 ## TERMINOLOGY PROPOSALS
 
 | Propose | Instead Of | Reason |

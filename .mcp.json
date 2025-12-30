@@ -6,7 +6,7 @@
         "-m",
         "mcp.server"
       ],
-      "cwd": "/home/mind-protocol/mind-protocol/.mind/mind"
+      "cwd": "/home/mind-protocol/mind-protocol/.mind/runtime"
     }
   }
 }

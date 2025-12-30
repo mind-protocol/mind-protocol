@@ -1,10 +1,10 @@
 # Repository Map: mind-protocol
 
-*Generated: 2025-12-29 17:51*
+*Generated: 2025-12-29 18:33*
 
 - **Files:** 75
 - **Directories:** 31
-- **Total Size:** 442.7K
+- **Total Size:** 443.3K
 - **Doc Files:** 61
 - **Code Files:** 13
 - **Areas:** 6 (docs/ subfolders)
@@ -44,7 +44,7 @@ graph TD
 │   ├── websocket/
 │   │   └── (..4 more files)
 │   └── (..1 more files)
-├── docs/ (284.2K)
+├── docs/ (284.8K)
 │   ├── api/ (22.2K)
 │   │   └── sse/ (22.2K)
 │   │       ├── ALGORITHM_SSE_API.md (3.2K)
@@ -110,7 +110,7 @@ graph TD
 │   ├── ARCHITECTURE.md (4.3K)
 │   ├── MAPPING.md (3.6K)
 │   ├── TAXONOMY.md (3.7K)
-│   └── map.md (38.0K)
+│   └── map.md (38.6K)
 ├── economy/
 │   ├── pricing/
 │   │   └── (..2 more files)
