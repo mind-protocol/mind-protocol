@@ -1,25 +1,55 @@
 # Project — Sync: Current State
 
 ```
-LAST_UPDATED: 2024-12-29
-UPDATED_BY: claude
+LAST_UPDATED: 2025-01-06
+UPDATED_BY: claude (groundwork agent)
 ```
 
 ---
 
 ## CURRENT STATE
 
-L4 Protocol implementation progressing well. **P0 (Schema) and P1 (Registry) are complete** with 64 passing tests. Registry data lives in Neo4j as nodes — membrane queries the graph directly.
+**Major milestone:** $MIND token DEPLOYED TO SOLANA DEVNET. Full token infrastructure live with TransferHook program active.
+
+**L4 Protocol:** P0 (Schema) and P1 (Registry) complete with 83 passing tests.
+
+**Economy:** Phase 1 complete + DEPLOYED. 61 passing tests. Live on devnet.
+
+**Total tests: 144 passing** (83 L4 + 61 Economy)
+
+### Devnet Deployment (2025-01-06)
+
+| Component | Address |
+|-----------|---------|
+| **$MIND Token** | `BFP3oicmCg2WsDMMG9TXhdC8Fzu3yR7kLYNEVxCx5efa` |
+| **TransferHook Program** | `325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD` |
+| **Mint Authority** | `CCsJLZR8b19iDgS9hXUYs9q2c928ihzZdfSgZLPYffWg` |
 
 The protocol now has:
 - Fixed schema with 5 node types (actor, moment, narrative, space, thing)
 - Single link type with semantic axes (polarity, hierarchy, permanence, emotions)
 - Registry for citizens and orgs with hash verification
-- No HTTP API — all access via graph queries
+- $MIND token LIVE on devnet (SPL Token 2022 with extensions)
+- TransferHook program DEPLOYED for transfer validation
+- Mechanical mint/burn conditions (M1-M4, B1-B5)
 
 ---
 
 ## ACTIVE WORK
+
+### Economy: Devnet Deployment — COMPLETE ✓
+
+- **Area:** `economy/token/`, `programs/mind_transfer_hook/`
+- **Status:** **DEPLOYED**
+- **Token:** `BFP3oicmCg2WsDMMG9TXhdC8Fzu3yR7kLYNEVxCx5efa`
+- **TransferHook:** `325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD`
+
+### Economy Phase 2: Staking & Bonds
+
+- **Area:** `economy/staking/`
+- **Status:** NEXT
+- **Owner:** waiting for assignment
+- **Context:** Token deployed, ready for staking implementation
 
 ### P2 Laws Implementation
 
@@ -31,6 +61,35 @@ The protocol now has:
 ---
 
 ## RECENT CHANGES
+
+### 2025-01-06: $MIND Token Deployed to Solana Devnet
+
+- **What:** Full deployment of $MIND token infrastructure to Solana devnet
+- **Why:** Live testing environment for token operations before mainnet
+- **Impact:**
+  - TransferHook program live at `325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD`
+  - $MIND token created at `BFP3oicmCg2WsDMMG9TXhdC8Fzu3yR7kLYNEVxCx5efa`
+  - All extensions active: TransferFee (1%), TransferHook, Metadata
+  - Ready for minting tests and TransferHook verification
+- **Technical notes:**
+  - Used cargo build-sbf (not anchor build) due to IDL generation issues
+  - Agave edge toolchain for Rust compatibility
+  - Bypassed Anchor IDL, deployed .so directly with solana program deploy
+
+### 2025-01-06: Economy Phase 1 Complete
+
+- **What:** Full $MIND token infrastructure with SPL Token 2022
+- **Why:** Crystallized alignment model requires mechanical minting/burning
+- **Impact:**
+  - `economy/token/` — 7 Python modules (mint, burn, metadata, supply, deploy)
+  - `programs/mind_transfer_hook/` — Anchor program for TransferHook
+  - `docs/economy/token/` — Full doc chain (7 documents)
+  - `tests/economy/` — 61 tests passing
+- **Key decisions:**
+  - SPL Token 2022 (not legacy SPL Token)
+  - Extensions: TransferFeeConfig, TransferHook, MetadataPointer, TokenMetadata, MintCloseAuthority
+  - TransferHook must deploy BEFORE token creation
+  - 9 decimals for $MIND
 
 ### 2024-12-29: Verification Algorithms Complete
 
@@ -144,6 +203,8 @@ None. Schema is clean, registry follows patterns.
 | `l4/schema/` | **COMPLETE** | `docs/l4/schema/SYNC_Schema.md` |
 | `l4/registry/` | **COMPLETE** | `docs/l4/registry/SYNC_Registry.md` |
 | `l4/laws/` | pending | `docs/l4/laws/SYNC_Laws.md` |
+| `economy/token/` | **COMPLETE** | `docs/economy/SYNC_Economy.md` |
+| `economy/staking/` | pending | `docs/economy/SYNC_Economy.md` |
 
 ---
 
@@ -155,8 +216,11 @@ None. Schema is clean, registry follows patterns.
 | Registry | `l4/registry/` | `docs/l4/registry/` | 49 | **COMPLETE** |
 | Laws | `l4/laws/` | `docs/l4/laws/` | 0 | pending |
 | Seed | `l4/seed/` | — | 0 | ready |
+| Token | `economy/token/` | `docs/economy/token/` | 61 | **COMPLETE** |
+| TransferHook | `programs/mind_transfer_hook/` | `docs/economy/token/` | 2 | **COMPLETE** |
+| Staking | `economy/staking/` | — | 0 | pending |
 
-**Total tests: 83 passing**
+**Total tests: 144 passing** (83 L4 + 61 Economy)
 
 ## Init: 2025-12-29 03:24
 
@@ -215,5 +279,17 @@ None. Schema is clean, registry follows patterns.
 | Graph | mind_protocol |
 
 **Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview, embeddings
+
+---
+
+## Init: 2025-12-30 02:48
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.0.0 |
+| Database | neo4j |
+| Graph | mind_protocol |
+
+**Steps completed:** ecosystem, capabilities, runtime, ai_configs, skills, database_config, database_setup, file_ingest, capabilities_graph, agents, env_example, mcp_config, gitignore, overview, embeddings
 
 ---
