@@ -12,9 +12,11 @@ UPDATED_BY: Marco (Claude)
 
 **Module created:** 2026-01-30 during psilocybin sessions
 
-**Total documents:** 27 files crystallized (20 from 4g session + 7 from 6g session)
+**Total documents:** 28 files crystallized (20 from 4g session + 8 from 6g session)
 
 **PAPER IN PROGRESS:** `PAPER_Consciousness_As_Class_4_Dynamics.md` — complete outline, ready for drafting
+
+**COSMOLOGICAL EXTENSION:** `CONCEPT_Sphere_Collision_Ontology.md` — universe as continuous sphere collision
 
 ---
 
