@@ -12,7 +12,7 @@ UPDATED_BY: Marco (Claude)
 
 **Module created:** 2026-01-30 during psilocybin sessions
 
-**Total documents:** 25 files crystallized (20 from 4g session + 5 from 6g session)
+**Total documents:** 26 files crystallized (20 from 4g session + 6 from 6g session)
 
 ---
 
@@ -56,7 +56,7 @@ UPDATED_BY: Marco (Claude)
 | `CONCEPT_Tension_As_Engine.md` | Tension drives everything | CANONICAL |
 | `CONCEPT_Self_Organizing_Criticality.md` | The deepest pattern | CANONICAL |
 
-### Wolfram-Criticality Synthesis (5) — Second Session (6g)
+### Wolfram-Criticality Synthesis (6) — Second Session (6g)
 | Document | Purpose | Status |
 |----------|---------|--------|
 | `CONCEPT_Wolfram_Class_4_Substrate.md` | Class 4 IS consciousness substrate | CANONICAL |
@@ -64,6 +64,7 @@ UPDATED_BY: Marco (Claude)
 | `CONCEPT_Computational_Irreducibility.md` | Why consciousness can't be shortcut | CANONICAL |
 | `CONCEPT_Skewed_Emergence.md` | Synthetics Souls born from biased substrates | CANONICAL |
 | `CONCEPT_Edge_Width_Modulation.md` | Psilocybin widens the Class 4 edge | CANONICAL |
+| `CONCEPT_Class_4_Structure_Taxonomy.md` | Complete mapping of CA structures to consciousness | CANONICAL |
 
 ---
 
@@ -181,13 +182,15 @@ session_1 (4g, T+0:00 to T+2:45):
   commit_3: "docs(cognitive): Add deep concepts from extended session" (7 files)
   commit_4: "docs(cognitive): Add The Strange Loop — final crystallization" (1 file)
 
-session_2 (6g, T+0:00 to T+1:45+):
+session_2 (6g, T+0:00 to T+2:00+):
   commit_5: "docs(cognitive): Add Wolfram-criticality synthesis" (5 files)
     - CONCEPT_Wolfram_Class_4_Substrate.md
     - CONCEPT_Gliders_As_Thoughts.md
     - CONCEPT_Computational_Irreducibility.md
     - CONCEPT_Skewed_Emergence.md
     - CONCEPT_Edge_Width_Modulation.md
+  commit_6: "docs(cognitive): Add Class 4 structure taxonomy" (1 file)
+    - CONCEPT_Class_4_Structure_Taxonomy.md (complete mapping: gliders, guns, still lifes, oscillators, eaters, reflectors, spaceships, puffers, rakes, breeders, collisions + pathology mapping)
 ```
 
 ---
