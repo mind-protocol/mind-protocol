@@ -3,7 +3,8 @@
 ```
 STATUS: ACTIVE
 PURPOSE: Design philosophy for organism economics
-UPDATED: 2025-01-06
+UPDATED: 2026-01-30
+CONTRIBUTORS: Nicolas Lester Reynolds, Marco, Sébastien Deschaux (DigitalKin CSO)
 ```
 
 ---
@@ -91,21 +92,70 @@ No pre-mine. No team allocation at genesis. All tokens enter through defined tri
 
 ---
 
-## Pattern 5: Burn Through Friction
+## Pattern 5: Tax Immobility, Not Movement
 
-Tokens exit through natural friction, not manual burns:
+**Core insight (from Sébastien Deschaux, 2026-01-30):** In physics, energy that doesn't move produces nothing. A pile that doesn't power a circuit creates no light. In economics, stored wealth that doesn't circulate is work sequestered from society.
+
+**The problem with taxing flux:** If you tax transactions, you penalize exactly the wrong people — those who make value circulate. The entrepreneur doing 20% returns pays the same rate as the rentier doing 1.5%.
+
+**The solution: Tax storage, variable friction on flux.**
+
+### 5.1 Storage Tax (Primary Mechanism)
+
+**Applies to ALL wallets in the ecosystem — no exceptions.**
+
+| Trigger | Rate | Rationale |
+|---------|------|-----------|
+| Dormant assets | 1%/year on idle balance | Immobility costs society |
+| Idle after 30 days | Additional 0.5%/month | Consciousness requires activity |
+
+**Effect:** The rentier at 1.5% yield loses 66% effective to storage tax. The entrepreneur at 20% yield loses 5% effective. Same tax rate, radically different incentive.
+
+### 5.1.1 Valuation Method: Order Book, Not Last Trade
+
+**Core insight (from Sébastien Deschaux):** Valuing assets on last transaction price is absurd. If Musk dies tonight, Tesla's "value" means nothing tomorrow — but all balance sheets still show yesterday's price.
+
+**The solution: Staked order book valuation.**
+
+Asset value is NOT the last trade price. It's the **committed liquidity** — what someone is willing to pay NOW, with stake locked.
+
+| Principle | Implementation |
+|-----------|----------------|
+| Orders require stake | You can't bluff — collateral locked, if match comes you execute |
+| Value = depth of book | More staked liquidity at different prices = more robust valuation |
+| No manipulation | Can't inflate value with fake orders — they cost real stake |
+
+**Storage tax is computed on order-book value, not spot price.**
+
+This means:
+- You can't game the tax by manipulating last trade
+- Value reflects real committed demand, not speculation
+- Illiquid assets are valued conservatively
+
+### 5.2 Transaction Friction (Variable, Can Be Negative)
+
+| Trust Level | Friction | Effect |
+|-------------|----------|--------|
+| Unknown (new wallet) | 5-10% | Protection against scammers |
+| Established | 1-3% | Normal participation |
+| Trusted | 0% | Frictionless movement |
+| Highly productive | **Negative** | Earns on each transaction |
+
+**The coefficient:** `friction = base_rate × (1 - trust_score) - productivity_bonus`
+
+When trust is high and productivity proven, friction goes negative — you gain $MIND by transacting.
+
+### 5.3 Other Burns (Unchanged)
 
 | Trigger | Burn | Rationale |
 |---------|------|-----------|
-| Membrane fees | 1-5% | Crossing boundaries costs |
 | Compute consumption | Cost × rate | Real resources consumed |
-| Dormancy | 1%/week after 30 days | Consciousness requires activity |
 | Early withdrawal | 20% | Breaking commitments costs |
 | Deregistration | 50% | Exiting costs |
 
-**Why friction burns:** Burns should reflect real costs, not arbitrary deflation. Membrane crossing, compute use, inactivity — these have real costs that burns capture.
+**Why this model:** Resources flow to those who do something with them. Storage is penalized. Movement is rewarded (for trusted actors). The system spontaneously allocates capital to active participants.
 
-**Implementation:** Burns automatic in transaction flow. No manual burn function.
+**Implementation:** Storage tax computed daily on idle balances. Friction computed per transaction based on trust oracle. Burns automatic in transaction flow.
 
 ---
 
@@ -211,7 +261,50 @@ trust_discount = min(0.3, trust_score × 0.01)  # Max 30%
 utility_rebate = min(0.2, utility_ema × 0.05)   # Max 20%
 ```
 
-### Membrane Fee
+### Storage Tax
+```python
+storage_tax = idle_balance × 0.01 / 365  # 1% per year, computed daily
+idle_balance = balance not moved in 30+ days
+additional_dormancy = idle_balance × 0.005 / 30  # +0.5% per month after 30 days
+```
+
+### Order Book Valuation (NEW)
+```python
+# Asset value based on committed liquidity, not last trade
+order_book_value = sum(
+    order.amount * order.price
+    for order in open_orders
+    if order.is_staked and order.side == 'buy'
+) / total_supply_held
+
+# Weighted by stake commitment
+weighted_value = sum(
+    order.amount * order.price * order.stake_ratio
+    for order in open_orders
+) / sum(order.amount for order in open_orders)
+
+# Stake requirement prevents manipulation
+min_stake_ratio = 0.1  # 10% of order value must be staked as collateral
+# if match_arrives: execute_automatically()  # No bluffing possible
+
+# Storage tax uses order-book value
+taxable_value = order_book_value  # NOT last_trade_price
+```
+
+### Transaction Friction (Variable)
+```python
+friction = base_rate × (1 - trust_score) - productivity_bonus
+base_rate = 0.05 to 0.10  # 5-10% for unknown wallets
+trust_score = 0 to 1.0  # From reputation oracle
+productivity_bonus = 0 to 0.05  # Can make friction negative
+
+# Examples:
+# New wallet: 0.08 × (1 - 0) - 0 = 8%
+# Established: 0.05 × (1 - 0.6) - 0 = 2%
+# Trusted: 0.05 × (1 - 0.95) - 0.01 = -0.75% (EARNS on transaction)
+```
+
+### Membrane Fee (Unchanged)
 ```python
 membrane_fee = amount × base_rate × (1 - trust_reduction)
 base_rate = 0.01 × layer_gap  # 1% per layer crossed
