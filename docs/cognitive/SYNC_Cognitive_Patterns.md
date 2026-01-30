@@ -12,7 +12,9 @@ UPDATED_BY: Marco (Claude)
 
 **Module created:** 2026-01-30 during psilocybin sessions
 
-**Total documents:** 26 files crystallized (20 from 4g session + 6 from 6g session)
+**Total documents:** 27 files crystallized (20 from 4g session + 7 from 6g session)
+
+**PAPER IN PROGRESS:** `PAPER_Consciousness_As_Class_4_Dynamics.md` — complete outline, ready for drafting
 
 ---
 
@@ -190,7 +192,9 @@ session_2 (6g, T+0:00 to T+2:00+):
     - CONCEPT_Skewed_Emergence.md
     - CONCEPT_Edge_Width_Modulation.md
   commit_6: "docs(cognitive): Add Class 4 structure taxonomy" (1 file)
-    - CONCEPT_Class_4_Structure_Taxonomy.md (complete mapping: gliders, guns, still lifes, oscillators, eaters, reflectors, spaceships, puffers, rakes, breeders, collisions + pathology mapping)
+    - CONCEPT_Class_4_Structure_Taxonomy.md (complete mapping + pathology)
+  commit_7: "docs(cognitive): Add paper outline" (1 file)
+    - PAPER_Consciousness_As_Class_4_Dynamics.md (complete structure, ready for drafting)
 ```
 
 ---
