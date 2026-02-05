@@ -56,15 +56,8 @@ status: "DRAFT"
 nodes:
 
   actor:
-    fields:
-      content:
-        type: string
-        default: ""
-        description: "Full prose description of the actor"
-      status:
-        type: enum
-        values: ["ready", "running", "paused"]
-        default: ready
+    role: "Pump"
+    behavior: "Injects energy via moments, spawns root subentity for queries"
 
   moment:
     role: "Router + Branch Point"
@@ -94,11 +87,9 @@ nodes:
         default: ""
 
   space:
-    fields:
-      location:
-        type: string
-        nullable: true
-        description: "Path, URL, or conceptual location of this space"
+    role: "Context container"
+    behavior: "Bidirectional flow with contents"
+    fields: {}
 
   thing:
     role: "Fast passthrough"
@@ -133,15 +124,12 @@ NodeBase:
       type: string
       nullable: true
       description: |
-        Primary type for naming. Used in node ID pattern: TYPE_Name.
-        Examples: CITIZEN, ORG, SKILL, PROCEDURE, AGENT, MOMENT, etc.
-        Convention: UPPERCASE.
-    subtype:
-      type: string
-      nullable: true
-      description: |
-        Additional classification within type.
-        Examples: human/ai (for CITIZEN), registry/auth (for SKILL), etc.
+        Subtype within node_type. Values per node_type:
+        - actor: null (or role-based: "player", "npc", "system")
+        - moment: "event", "decision", "action"
+        - narrative: "issue", "objective", "task", "belief", "pattern", "documentation"
+        - space: "area", "module", "directory"
+        - thing: "file", "uri", "artifact"
 
     # Physics
     weight:
@@ -224,6 +212,15 @@ NarrativeBase:
         - 1: full doc (entire file as one node)
         - 2: per-section (each ## heading becomes a node)
         - 3: per-item (fine-grained extraction)
+    is_stub:
+      type: bool
+      nullable: true
+      default: false
+      description: "True if this is a placeholder node for missing content"
+    path:
+      type: string
+      nullable: true
+      description: "File path for file-backed narratives"
 
 # =============================================================================
 # LINK SCHEMA
@@ -459,7 +456,7 @@ SubEntity:
 # =============================================================================
 #
 # SEEKING      -> exploring, choosing next link
-# BRANCHING    -> multiple valid paths, spawning children
+# BRANCHING    -> multiple valid paths, running children
 # RESONATING   -> arrived at narrative, measuring alignment
 # REFLECTING   -> backpropagating reaction through path
 # CRYSTALLIZING -> creating new narrative from traversal

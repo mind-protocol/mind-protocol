@@ -87,43 +87,105 @@ maps_to:
 
 ---
 
-## TASK TYPES
+## TASKS
 
-Task types define work that can be done in this module.
+Tasks define work that can be done in this module.
 
-**Template node:** `narrative` with `type: task_type`
-**Instance node:** `narrative` with `type: {task_type_name}`
+| Layer | Node | File |
+|-------|------|------|
+| Template | `narrative:task` | `.mind/tasks/TASK_*.md` |
+| Instance | `narrative:task_run` | (created at runtime) |
 
-### {task_type_name}
+### {task_name}
 
 ```markdown
 **Definition:** {What this task accomplishes}
 
 **Executor:** agent | automated | mechanical
 
-**Skill:** {SKILL_Name.md if executor=agent, otherwise N/A}
+**Skill:** {SKILL_Name.md if executor=agent}
 
 **Procedure:** {procedure_name}
 ```
 
+**Instance links:**
+- `serves` → template (narrative:task)
+- `concerns` → what it creates/modifies
+- `claimed by` (actor → task_run)
+- `status`: pending | running | completed | failed
+
 ---
 
-## ACTOR TYPES
+## ACTORS
 
-Actor types define system processes (mechanical) or roles (agent).
+Actors execute tasks. Template describes capabilities, instance does the work.
 
-**Node:** `actor` with `type: {actor_type_name}`
+| Layer | Node | File |
+|-------|------|------|
+| Template | `narrative:actor` | `.mind/actors/{name}/ACTOR.md` |
+| Instance | `actor` (node_type) | (created at init) |
 
-### {actor_type_name}
+### {actor_name}
 
 ```markdown
 **Subtype:** mechanical | agent
 
 **Purpose:** {What this actor does}
 
-**Procedures:** {list of procedures this actor runs}
+**Capabilities:** {list of task types this actor can execute}
 
 **Triggers:** {cron:5min | event:node_created | manual}
+```
+
+**Instance links:**
+- `serves` → template (narrative:actor)
+
+---
+
+## PROBLEMS
+
+Problems define abnormal situations that HEALTH detects and tasks resolve.
+
+| Layer | Node | Where |
+|-------|------|-------|
+| Definition | Here (VOCABULARY) | WHAT: name, definition, severity |
+| Detection | HEALTH | HOW: triggers, docks, mechanism |
+| Resolution | task_run | Links to resolves_with task |
+
+### {problem_id}
+
+```yaml
+id: PROBLEM_{UPPER_SNAKE_CASE}
+definition: |
+  {Clear description of the abnormal situation}
+
+severity: critical | warning | info
+  # critical = blocks work, must fix immediately
+  # warning = degraded state, should fix soon
+  # info = notable condition, fix when convenient
+
+resolves_with: TASK_{task_name}
+  # Task template that fixes this problem
+
+detection_hint: |
+  {Brief hint for HEALTH on how to detect this}
+  # Full detection logic goes in HEALTH.md
+```
+
+**Example:**
+
+```yaml
+id: PROBLEM_MISSING_DOC
+definition: |
+  A doc expected in the chain is absent.
+  Chain incomplete = understanding blocked.
+
+severity: critical
+
+resolves_with: TASK_create_doc
+
+detection_hint: |
+  Compare docs_found vs docs_expected from chain template.
 ```
 
 ---

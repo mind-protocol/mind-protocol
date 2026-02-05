@@ -83,14 +83,26 @@ VALIDATION:      ./VALIDATION_{name}.md
 IMPLEMENTATION:  ./IMPLEMENTATION_{name}.md
 THIS:            HEALTH_{name}.md
 SYNC:            ./SYNC_{name}.md
-
-IMPL:            {path/to/health/checker_script.py}
 ```
 
-> **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes. After changes: update IMPL or add TODO to SYNC. Run HEALTH checks at throttled rates.
+---
+
+## IMPLEMENTS
+
+This HEALTH file is a **spec**. The actual code lives in runtime:
+
+```yaml
+implements:
+  runtime: runtime/checks.py       # Python code implementing these checks
+  decorator: @check                # Decorator-based registration
+```
+
+> **Separation:** HEALTH.md defines WHAT to check and WHEN to trigger. Runtime code defines HOW to check.
+
+> **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes. After changes: update runtime or add TODO to SYNC. Run HEALTH checks at throttled rates.
 
 What to include:
-- exact IMPL path for the checker runner(s).
+- exact runtime path for the checker code.
 - ensure CHAIN paths resolve relative to this file.
 
 ---
@@ -298,64 +310,58 @@ How to fill:
 
 ```yaml
 docks:
-  input:
-    id: {dock_id_from_implementation}  # must exist in IMPLEMENTATION
-    method: {module.function}  # fully qualified
-    location: {file:line}  # repo-relative path + line
-  output:
-    id: {dock_id_from_implementation}
-    method: {module.function}
-    location: {file:line}
+  - point: {thing_node_id}  # links to thing node representing observable point
+    type: {event|schedule|hook}
+    payload: {data available}  # e.g. {module_id, docs_found[], docs_expected[]}
 ```
 
 How to fill:
-- ids must exist in IMPLEMENTATION docking list.
-- method should be fully qualified.
-- location must include repo-relative path + line.
+- point links to a thing node (observable point in the system).
+- payload describes what data the check receives.
 
 ### ALGORITHM / CHECK MECHANISM
 
-```yaml
-mechanism:
-  summary: {how verification is computed}  # plain-language comparison
-  steps:
-    - {step 1}  # deterministic, minimal
-    - {step 2}
-  data_required: {data sources}  # observable via docks
-  failure_mode: {what failure means}  # observable outcome
+Checks use decorators — Python is the single source of truth:
+
+```python
+@check(
+    id="{indicator_name}",
+    triggers=[
+        triggers.file.on_delete("{pattern}"),
+        triggers.cron.daily(),
+    ],
+    on_problem="{PROBLEM_ID}",  # from VOCABULARY
+    task="{TASK_name}",         # task template to create
+)
+def {indicator_name}(ctx) -> dict:
+    """Check description."""
+    # ... check logic ...
+    if healthy:
+        return Signal.healthy()
+    if critical_condition:
+        return Signal.critical(details=...)
+    return Signal.degraded(details=...)
 ```
 
 How to fill:
-- summary should describe the comparison plainly.
-- steps must be deterministic and minimal.
-- data_required must be observable via docks.
-- failure_mode must be observable (not speculative).
+- id should be stable and machine-friendly.
+- triggers should match real events or schedules.
+- on_problem must exist in VOCABULARY.
+- task must exist in tasks/ folder.
+- Check returns Signal.healthy/degraded/critical.
 
-### INDICATOR
+### SIGNALS
 
 ```yaml
-indicator:
-  error:
-    - name: {name}
-      linked_validation: [{V1}, {V2}]  # VALIDATION IDs this indicates
-      meaning: {what is violated}  # precise failure description
-      default_action: {page/alert/stop}  # operational response
-  warning:
-    - name: {name}
-      linked_validation: [{V1}]
-      meaning: {what is degraded}
-      default_action: {warn/log}
-  info:
-    - name: {name}
-      linked_validation: [{V2}]
-      meaning: {what is observed}
-      default_action: {log/notify}
+signals:
+  healthy: {condition for healthy state}
+  degraded: {condition for degraded state}
+  critical: {condition for critical state}
 ```
 
 How to fill:
-- each indicator name should be stable and searchable.
-- linked_validation must list relevant VALIDATION IDs.
-- default_action should match real operational response.
+- Each state describes a condition in plain language.
+- States map to operational response (healthy=ok, degraded=warn, critical=alert).
 
 ### THROTTLING STRATEGY
 
