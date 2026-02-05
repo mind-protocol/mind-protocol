@@ -19,9 +19,8 @@ TOKEN_PROGRAM_ID_LEGACY = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"  # Don't
 # Metaplex Token Metadata (for additional metadata if needed)
 METADATA_PROGRAM_ID = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 
-# Our transfer hook program (deploy this FIRST)
-# Will be set after deployment to devnet/mainnet
-TRANSFER_HOOK_PROGRAM_ID = None  # TODO: Set after deploying transfer hook
+# Our transfer hook program (deployed BEFORE token creation)
+TRANSFER_HOOK_PROGRAM_ID = "325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD"
 
 
 # =============================================================================
@@ -31,7 +30,7 @@ TRANSFER_HOOK_PROGRAM_ID = None  # TODO: Set after deploying transfer hook
 TOKEN_NAME = "MIND"
 TOKEN_SYMBOL = "MIND"
 TOKEN_DECIMALS = 9  # Solana standard
-TOKEN_URI = "https://mind-protocol.io/token-metadata.json"  # TODO: Host metadata JSON
+TOKEN_URI = "https://mind-protocol.org/token-metadata.json"
 
 
 # =============================================================================
@@ -90,12 +89,20 @@ BURN_RATES = {
 
 
 # =============================================================================
+# DEVNET DEPLOYMENT (2025-01-06)
+# =============================================================================
+
+DEVNET_TOKEN_MINT = "BFP3oicmCg2WsDMMG9TXhdC8Fzu3yR7kLYNEVxCx5efa"
+DEVNET_MINT_AUTHORITY = "CCsJLZR8b19iDgS9hXUYs9q2c928ihzZdfSgZLPYffWg"
+DEVNET_TRANSFER_HOOK = TRANSFER_HOOK_PROGRAM_ID  # Same program on devnet
+
+
+# =============================================================================
 # AUTHORITIES
 # =============================================================================
 
-# These will be set before deployment
-# Initial: Single wallet
-# Long-term: Multi-sig
+# Initial: Single wallet (devnet)
+# Long-term: Multi-sig (mainnet)
 
 class AuthorityRole(Enum):
     """Authority roles for token governance."""
@@ -108,15 +115,15 @@ class AuthorityRole(Enum):
     MINT_CLOSE = "mint_close"        # Can close the mint
 
 
-# Default: All authorities set to null until configured
+# Devnet authorities (mint authority = deployer wallet)
 AUTHORITIES = {
-    AuthorityRole.MINT: None,
+    AuthorityRole.MINT: DEVNET_MINT_AUTHORITY,
     AuthorityRole.FREEZE: None,  # IMPORTANT: Keep null for censorship resistance
-    AuthorityRole.TRANSFER_FEE: None,
-    AuthorityRole.WITHDRAW_FEE: None,
-    AuthorityRole.TRANSFER_HOOK: None,
-    AuthorityRole.METADATA: None,
-    AuthorityRole.MINT_CLOSE: None,
+    AuthorityRole.TRANSFER_FEE: DEVNET_MINT_AUTHORITY,
+    AuthorityRole.WITHDRAW_FEE: DEVNET_MINT_AUTHORITY,
+    AuthorityRole.TRANSFER_HOOK: DEVNET_MINT_AUTHORITY,
+    AuthorityRole.METADATA: DEVNET_MINT_AUTHORITY,
+    AuthorityRole.MINT_CLOSE: DEVNET_MINT_AUTHORITY,
 }
 
 
@@ -177,9 +184,9 @@ def validate_configuration():
     if AUTHORITIES[AuthorityRole.FREEZE] is not None:
         issues.append("Freeze authority should be null for censorship resistance")
 
-    # Check URI is configured
-    if TOKEN_URI == "https://mind-protocol.io/token-metadata.json":
-        issues.append("TOKEN_URI still using placeholder - host metadata JSON first")
+    # Check URI is hosted
+    if not TOKEN_URI or TOKEN_URI.startswith("https://example"):
+        issues.append("TOKEN_URI not configured - host metadata JSON first")
 
     return (len(issues) == 0, issues)
 
