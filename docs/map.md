@@ -1,10 +1,10 @@
 # Repository Map: mind-protocol
 
-*Generated: 2025-12-29 18:33*
+*Generated: 2025-12-30 02:48*
 
-- **Files:** 75
+- **Files:** 76
 - **Directories:** 31
-- **Total Size:** 443.3K
+- **Total Size:** 447.7K
 - **Doc Files:** 61
 - **Code Files:** 13
 - **Areas:** 6 (docs/ subfolders)
@@ -139,9 +139,9 @@ graph TD
 │   ├── seed/ (10.0K)
 │   │   └── l4_protocol_seed_nodes_laws_and_schema.py (10.0K) →
 │   └── (..1 more files)
-├── skills/ (5.3K)
-│   ├── SKILL_register_citizen.md (3.0K)
-│   └── SKILL_register_org.md (2.3K)
+├── skills/ (5.5K)
+│   ├── SKILL_register_citizen.md (3.1K)
+│   └── SKILL_register_org.md (2.4K)
 ├── templates/ (640)
 │   └── README.md (640)
 ├── tests/ (34.1K)
@@ -155,6 +155,7 @@ graph TD
 │   │   └── (..1 more files)
 │   └── (..1 more files)
 ├── .mindignore (838)
+├── =0.2.0 (4.2K)
 ├── AGENTS.md (33.0K)
 ├── ARCHITECTURE.md (1.5K)
 ├── map.md (38.6K)
@@ -1098,7 +1099,7 @@ graph TD
 - `def get_protocol_seed_data()`
 
 **Sections:**
-- # Skill: Register Citizen
+- # Skill: SKILL_Register_Citizen
 - ## Purpose
 - ## Inputs
 - ## Outputs
@@ -1112,7 +1113,7 @@ graph TD
 - ## Related
 
 **Sections:**
-- # Skill: Register Org
+- # Skill: SKILL_Register_Org
 - ## Purpose
 - ## Inputs
 - ## Outputs

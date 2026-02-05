@@ -46,8 +46,7 @@ htmlcov/
 
 # Mind runtime
 .mind/mind/
-.env
-
-# Mind runtime
 .mind/runtime/
-.env
+
+# Rust/Anchor build artifacts
+target/
