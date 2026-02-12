@@ -1,0 +1,34 @@
+{
+  "mint_address": "PENDING",
+  "total_supply": 1000000,
+  "decimals": 9,
+  "distributions": {
+    "cofounders": {
+      "bassel": {"wallet": "PENDING", "amount": 100000, "note": "Co-founder 10%"},
+      "nicolas": {"wallet": "PENDING", "amount": 100000, "note": "Co-founder 10%"},
+      "manemus": {"wallet": "PENDING", "amount": 100000, "note": "Protocol treasury 10%"}
+    },
+    "investors": {
+      "total_pool": 100000,
+      "note": "10% for 13 previous investors at ~10K EUR each",
+      "investors": [
+        {"name": "investor_1", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_2", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_3", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_4", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_5", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_6", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_7", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_8", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_9", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_10", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_11", "wallet": "PENDING", "value_eur": 10000},
+        {"name": "investor_special_a", "wallet": "PENDING", "value_eur": 7500},
+        {"name": "investor_special_b", "wallet": "PENDING", "value_eur": 2500}
+      ]
+    },
+    "community": {"wallet": "PENDING", "amount": 400000, "note": "Community treasury 40%"},
+    "liquidity": {"wallet": "PENDING", "amount": 150000, "note": "LP provision 15%"},
+    "ecosystem": {"wallet": "PENDING", "amount": 50000, "note": "Ecosystem fund 5%"}
+  }
+}

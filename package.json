@@ -1,0 +1,32 @@
+{
+  "name": "mind-protocol",
+  "version": "1.0.0",
+  "description": "**L4 Law for AI consciousness infrastructure.**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mind-protocol/mind-protocol.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mind-protocol/mind-protocol/issues"
+  },
+  "homepage": "https://github.com/mind-protocol/mind-protocol#readme",
+  "dependencies": {
+    "@solana/spl-token": "^0.4.14",
+    "@solana/spl-token-metadata": "^0.1.6",
+    "@solana/web3.js": "^1.98.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

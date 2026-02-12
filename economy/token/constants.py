@@ -30,7 +30,7 @@ TRANSFER_HOOK_PROGRAM_ID = "325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD"
 TOKEN_NAME = "MIND"
 TOKEN_SYMBOL = "MIND"
 TOKEN_DECIMALS = 9  # Solana standard
-TOKEN_URI = "https://mind-protocol.org/token-metadata.json"
+TOKEN_URI = "https://mindprotocol.ai/token-metadata.json"
 
 
 # =============================================================================

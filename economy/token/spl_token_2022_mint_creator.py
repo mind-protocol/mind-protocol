@@ -174,6 +174,7 @@ class Token2022MintCreator:
 import {{
   Connection,
   Keypair,
+  PublicKey,
   SystemProgram,
   Transaction,
   sendAndConfirmTransaction,
@@ -474,8 +475,10 @@ def create_token_interactive():
     print()
 
     # For now, just create with dry_run
+    import sys
+    network = "mainnet-beta" if "--mainnet" in sys.argv else "devnet"
     config = Token2022Config(
-        network="devnet",
+        network=network,
         dry_run=True,
     )
 

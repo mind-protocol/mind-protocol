@@ -50,3 +50,9 @@ htmlcov/
 
 # Rust/Anchor build artifacts
 target/
+
+# Node.js
+node_modules/
+
+# Deployment output
+deploy_output/

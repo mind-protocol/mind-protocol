@@ -1,0 +1,132 @@
+{
+  "snapshot_date": "2026-02-07",
+  "token": "$COMPUTE",
+  "total_supply": 1000000000,
+  "shares": 13,
+  "per_share": 76923077,
+  "mind_airdrop_total": 50000,
+  "mind_per_share": 3846.15,
+  "holders": [
+    {
+      "name": "Mel",
+      "wallet": "HFWv1riXSRJ3nVnnLZ9xi1K4r3zppRvcfVuiAGqAA8Y6",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "Bas",
+      "wallet": "BmXdHy3tvi6keXuu4xdiFKNHtGhzgDVMS3Ab7u29DFtX",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15,
+      "note": "Also co-founder (Bassel) — separate 10% allocation"
+    },
+    {
+      "name": "Etienne",
+      "wallet": "3wawfVcVQdLoYVpmYqNZsRyd9ad8N3QWmUZiBsKkAepG",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "Gregoire",
+      "wallet": null,
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15,
+      "note": "Wallet address missing"
+    },
+    {
+      "name": "Labiba",
+      "wallet": null,
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15,
+      "note": "Wallet address missing"
+    },
+    {
+      "name": "Arthur",
+      "wallet": "7PZSTQj5EuUX3xrCcWwAexTTKt2fyjPr4EH4hdP8QohQ",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "IChiOne",
+      "wallet": "9kZjoSoR1A9HLoLbxdJynW1pfid2P5rXX32ncLk6mb9V",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "NLR",
+      "wallet": "FH6iSajT6bbY5GYLfNg8MWrbppQSpPG6LQdwN2bsJrZT",
+      "compute_balance": 230769231,
+      "shares": 3,
+      "mind_airdrop": 11538.46,
+      "note": "Nicolas — 3 shares. Also co-founder — separate 10% allocation"
+    },
+    {
+      "name": "Simon",
+      "wallet": "CWpt94MfwyCFB7z1PJfUUrCWweT5QuxBSFf9FEPnpj5F",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "Xiao Yu",
+      "wallet": "Cjnu3W9LmSZxXrHnsTJgurnas6S2RSwpCaenWZABCRrU",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15
+    },
+    {
+      "name": "Team",
+      "wallet": "8qFuqCdFsvFYwpP7FDiDhqucTXsDdRmkhvzJ8JvBUXmZ",
+      "compute_balance": 76923077,
+      "shares": 1,
+      "mind_airdrop": 3846.15,
+      "note": "Team treasury wallet"
+    }
+  ],
+  "additional_wallets": [
+    {"name": "Rome", "wallet": "H8sJgZEnWcXoBHM1ED1xcgD6dG3c7QXtdeQGhxBk763E"},
+    {"name": "Emil", "wallet": "BP6m4WojMMxgyCjGsK2an3Wy66qGoZ9r4YjJcnnb2RXj"},
+    {"name": "Le Meta Poete", "wallet": "DyvAVu1VqaQFgYReemGhVtd7i4kseqX1aeP3NMjeKbM6"},
+    {"name": "Anthony", "wallet": "3u6Tw2gQmzgysrLrd44DXBMGaeKZMos8vbctxeeamUnq"},
+    {"name": "DK", "wallet": "4xYR2q2ydbetoLYmWqyTKZG13fpRPeDCytsXGLwHWV9h"},
+    {"name": "Etienne (2)", "wallet": "2kzarqLiqkYj6Xgbu6pQhgCGT59dJBetL7f2QCXvihH9"},
+    {"name": "Leo", "wallet": "9aS4hj27pMhAvayxYhQA13FDJR5KebbJJZmJoRg5k9fS"},
+    {"name": "ABHI", "wallet": "4dJNjyngzVvQvXbzP4vABM1QyKcvw1hod9sTzjyAn99f"},
+    {"name": "Bigbosef", "wallet": "3NyBoNA3xgoTLWkc79YrmxMRGAHh43vRqqNJqBRcernF"}
+  ],
+  "investors_financial": {
+    "jean_marie_legrottaglie": {
+      "total_eur": 20000,
+      "wallet": "Ac1gZhRCY1phGXcrj4ctDaBNWuqU7tuyAzNM2Ekg3GQd",
+      "mind_allocation": 10000,
+      "ubc": 4000, "compute": 4000, "team": 12000,
+      "note": "EUR 20K investor. Wallet confirmed via orchestrator session."
+    },
+    "karl_pautric": {
+      "total_eur": 15000,
+      "wallet": "DjmkeXiiHHyCHWHdtx3j3AMmWVCjFFNtohJowwe4UBqf",
+      "mind_allocation": 7500,
+      "note": "EUR 15K investor via UBC termsheet (Mar 2025). Bassel confirmed 7500 $MIND."
+    },
+    "fred_ragno": {
+      "total_eur": 20000,
+      "wallet": "FLT4k6zimcm5h7L9Pjos8CkZbry44dwaxr3U7rSUHBmU",
+      "mind_allocation": 10000,
+      "tx": "4ZJ4CKNN7Rp1v11WD7tt9x7tN9gZukpYGLSshLXX7CuSTmTT2yEpzP9rdsbZnToFy7UwPXnPu4onhXAbk6aZpk2B",
+      "note": "EUR 20K investor. Same ticket as Jean-Marie."
+    },
+    "ketamine": {
+      "wallet": null,
+      "mind_allocation": 2500,
+      "note": "Friend of Bassel. Wallet TBD."
+    },
+    "ticket_15k": {"total_eur": 15000, "after_taxes": 12000, "ubc": 3000, "compute": 3000, "team": 9000}
+  }
+}
