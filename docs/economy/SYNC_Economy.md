@@ -1,9 +1,9 @@
 # SYNC: Economy
 
 ```
-LAST_UPDATED: 2025-01-06
+LAST_UPDATED: 2026-03-12
 STATUS: ACTIVE
-PHASE: 1.5 — Devnet DEPLOYED
+PHASE: 1.5 — Devnet DEPLOYED, Doc chains expanded
 ```
 
 ---
@@ -56,14 +56,40 @@ PHASE: 1.5 — Devnet DEPLOYED
 
 ### Documentation Status
 
-| Doc | Status |
-|-----|--------|
-| `OBJECTIVES_Economy.md` | UPDATED |
-| `PATTERNS_Economy.md` | UPDATED |
-| `SYNC_Economy.md` | UPDATED (this file) |
-| `MIND_TOKEN_AGENT_BOOTSTRAP.md` | CREATED |
-| `docs/economy/token/` | **COMPLETE** (7 docs) |
-| `docs/economy/staking/` | NOT CREATED |
+| Doc / Module | Status | Files |
+|------|--------|-------|
+| `OBJECTIVES_Economy.md` | UPDATED | Area-level objectives |
+| `PATTERNS_Economy.md` | UPDATED | Area-level patterns (8 patterns) |
+| `SYNC_Economy.md` | UPDATED (this file) | Area-level sync |
+| `MIND_TOKEN_AGENT_BOOTSTRAP.md` | CREATED | Bootstrap guide |
+| `token/` | **COMPLETE** | 7 docs + SPL spec |
+| `cascade-utility/` | **DRAFT** | 9 docs (full chain + CONCEPT) |
+| `ubc/` | **DRAFT** | 9 docs (full chain + CONCEPT) |
+| `storage-tax/` | **DRAFT** | 8 docs (full chain, no CONCEPT) |
+| `bonds/` | **DRAFT** | 8 docs (full chain, no CONCEPT) |
+| `organism-model/` | **DRAFT** | 9 docs (full chain + CONCEPT) |
+
+### Module Decomposition (2026-03-12)
+
+Economy area decomposed into 6 modules, each with full doc chain:
+
+```
+docs/economy/
+├── OBJECTIVES_Economy.md          ← area-level
+├── PATTERNS_Economy.md            ← area-level (8 patterns)
+├── SYNC_Economy.md                ← this file
+├── MIND_TOKEN_AGENT_BOOTSTRAP.md  ← bootstrap guide
+├── token/                (8 files) ← Phase 1 COMPLETE
+├── cascade-utility/      (9 files) ← Dynamic pricing, anti-Sybil, propensity-weighted advantage
+├── ubc/                  (9 files) ← Universal Basic Compute, 3 tiers, vesting
+├── storage-tax/          (8 files) ← Dormancy tax, order-book valuation
+├── bonds/                (8 files) ← Human-AI bonds, switch-lock, maturation
+└── organism-model/       (9 files) ← 5 organs, membrane pricing, 80/20 mirror
+```
+
+**Total: 55 documentation files across 6 modules.**
+
+Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT integrator + NotebookLM (82 sources). Formulas, invariants, and design decisions crystallized from cybernetic audit reports.
 
 ---
 

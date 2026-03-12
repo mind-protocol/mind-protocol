@@ -1,8 +1,8 @@
-# MIND Graph Schema v1.9.0
+# MIND Graph Schema v1.9.1
 # Source of truth for node types, link schema, and invariants
 
-version: "1.9.0"
-updated: "2025-12-29"
+version: "1.9.1"
+updated: "2026-03-12"
 status: "CANONICAL"
 
 # =============================================================================
@@ -24,12 +24,10 @@ nodes:
   actor:
     role: "Pump"
     behavior: "Injects energy via moments, spawns root subentity for queries"
-    subtypes: [player, npc, system]
 
   moment:
     role: "Router + Branch Point"
     behavior: "Receives intention, can spawn subentities, only node type where branching occurs"
-    subtypes: [event, decision, action]
     fields:
       status:
         type: enum
@@ -45,17 +43,14 @@ nodes:
   narrative:
     role: "Attractor"
     behavior: "Destination of exploration, source of reflection, created by crystallization"
-    subtypes: [issue, objective, task, belief, pattern, documentation]
 
   space:
     role: "Context container"
     behavior: "Bidirectional flow with contents"
-    subtypes: [area, module, directory]
 
   thing:
     role: "Fast passthrough"
     behavior: "Receives briefly, tends toward 0"
-    subtypes: [file, uri, artifact]
     fields:
       uri:
         type: string
@@ -67,7 +62,7 @@ nodes:
 
 NodeBase:
   fields:
-    # Identity
+    # === Identity ===
     id:
       type: string
       required: true
@@ -78,12 +73,11 @@ NodeBase:
       type: enum
       values: [actor, moment, narrative, space, thing]
       required: true
-    type:
+    type: # Free-form subtype
       type: string
       nullable: true
-      description: "Subtype within node_type"
 
-    # Physics
+    # === Physics ===
     weight:
       type: float
       range: [0, infinity]
@@ -93,26 +87,26 @@ NodeBase:
       range: [0, infinity]
       default: 0.0
 
-    # Semantics
-    synthesis:
+    # === Text Data ===
+    synthesis: # Natural language summary for embedding
       type: string
       required: true
-      description: "Natural language summary for embedding"
-    embedding:
+    content: # Full prose text, code, or log output
+      type: string
+      nullable: true
+
+    # === Embedding ===
+    embedding: # embed(synthesis), updated on drift
       type: vector
       dimensions: 1536
-      description: "embed(synthesis), updated on drift"
-    content:
-      type: string
-      default: ""
-      description: "Full prose/description"
-    granularity:
+
+    # === Metadata ===
+    granularity: # Content granularity: 1=full doc, 2=per-section, 3=per-item
       type: int
       nullable: true
       values: [1, 2, 3]
-      description: "Content granularity: 1=full doc, 2=per-section, 3=per-item"
 
-    # Temporal (auto-managed)
+    # === Temporal (auto-managed) ===
     created_at_s:
       type: int
       required: true
@@ -133,36 +127,32 @@ NodeBase:
 MomentBase:
   extends: NodeBase
   fields:
-    started_at_s:
+    started_at_s: # When moment became active
       type: int
       nullable: true
       auto: true
-      description: "When moment became active"
-    completed_at_s:
+    completed_at_s: # When moment was resolved
       type: int
       nullable: true
       auto: true
-      description: "When moment was resolved"
-    duration_s:
+    duration_s: # completed_at_s - started_at_s
       type: int
       nullable: true
       computed: true
-      description: "completed_at_s - started_at_s"
 
 # =============================================================================
 # LINK SCHEMA
 # =============================================================================
 
 links:
-  link:
-    description: "Universal link — all relationships"
+  link: # Universal link — all relationships
     valid_from: [actor, space, thing, narrative, moment]
     valid_to: [actor, space, thing, narrative, moment]
     energy_carrier: true
 
 LinkBase:
   fields:
-    # Identity
+    # === Identity ===
     id:
       type: string
       required: true
@@ -173,38 +163,33 @@ LinkBase:
       type: string
       required: true
 
-    # Physics
-    weight:
+    # === Physics ===
+    weight: # Importance + accumulated depth
       type: float
       range: [0, infinity]
       default: 1.0
-      description: "Importance + accumulated depth"
-    energy:
+    energy: # Current activation
       type: float
       range: [0, infinity]
       default: 0.0
-      description: "Current activation"
 
-    # Semantic Axes
-    polarity:
+    # === Semantic Axes ===
+    polarity: # [a->b, b->a] flow strength
       type: array
       items: float
       length: 2
       range: each [0, 1]
       default: [0.5, 0.5]
-      description: "[a->b, b->a] flow strength"
-    hierarchy:
+    hierarchy: # -1 = contains, +1 = elaborates
       type: float
       range: [-1, +1]
       default: 0.0
-      description: "-1 = contains, +1 = elaborates"
-    permanence:
+    permanence: # 0 = speculative, 1 = definitive
       type: float
       range: [0, 1]
       default: 0.5
-      description: "0 = speculative, 1 = definitive"
 
-    # Emotions (Plutchik 4 bipolar axes)
+    # === Emotions (Plutchik 4 bipolar axes) ===
     joy_sadness:
       type: float
       range: [-1, +1]
@@ -222,16 +207,14 @@ LinkBase:
       range: [-1, +1]
       default: 0.0
 
-    # Semantics
-    synthesis:
+    # === Text Data ===
+    synthesis: # Human-readable, regenerated on drift
       type: string
-      description: "Human-readable, regenerated on drift"
-    embedding:
+    embedding: # Source of truth, accumulates intentions
       type: vector
       dimensions: 1536
-      description: "Source of truth, accumulates intentions"
 
-    # Temporal (auto-managed)
+    # === Temporal (auto-managed) ===
     created_at_s:
       type: int
       required: true

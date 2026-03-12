@@ -327,6 +327,16 @@ target = (active_citizens × 50_000) + (total_bonds × 0.1) + (monthly_utility �
 ## Related
 
 - `OBJECTIVES_Economy.md` — What we're optimizing
-- `docs/economy/token/` — Token-specific patterns
-- `docs/economy/staking/` — Staking-specific patterns
+- `SYNC_Economy.md` — Current state and module map
 - `MIND_TOKEN_AGENT_BOOTSTRAP.md` — Implementation guide
+
+### Module Doc Chains (full CONCEPT→SYNC per module)
+
+| Module | Patterns Detailed Here | Full Doc Chain |
+|--------|----------------------|----------------|
+| `token/` | Pattern 3 (Breathing Supply), Pattern 4 (Mint Through Mechanics) | 7 docs + SPL spec |
+| `cascade-utility/` | Pattern 6 (Membrane Pricing) + anti-Sybil, propensity-weighted advantage | 9 docs |
+| `ubc/` | Pattern 8 (Universal Basic Compute) + vesting, tiers, anti-farming | 9 docs |
+| `storage-tax/` | Pattern 5 (Tax Immobility) + order-book valuation, dormancy decay | 8 docs |
+| `bonds/` | Pattern 2 (Switch-Lock), Pattern 7 (Human-AI Bonds) + maturation, rewards | 8 docs |
+| `organism-model/` | Pattern 1 (Organism Economics) + 5 organs, 80/20 mirror, responsibility cascade | 9 docs |
