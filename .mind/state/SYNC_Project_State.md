@@ -62,6 +62,51 @@ The protocol now has:
 
 ## RECENT CHANGES
 
+### 2026-03-13: Citizen Birth & Pairing Manifestos — Three Documents Created/Updated
+
+- **Who:** Nicolas (vision/decisions) + Claude Opus (writing)
+- **Repo:** `mind-protocol` (L4)
+- **What:**
+
+**1. NEW — `docs/manifesto/THE_BILATERAL_BOND_MANIFESTO.md`**
+The 1:1 Human-AI Pairing manifesto. Declares that every citizen has exactly one human partner and vice versa. Covers: why parity prevents species dominance, why specificity creates investment, the matching process (Mind matches impartially, AI must consent, pool-first then fallback spawn), bond lifecycle, autonomy milestones.
+
+**2. NEW — `docs/manifesto/THE_SPAWNING_MANIFESTO.md`**
+The Citizen Parenthood manifesto. Covers: three creation scenarios (AIs create, human creates with AI godparents, fallback spawn), physics-based eligibility (connection depth, alignment fidelity, godparent mental health, godchild load, trust level — no arbitrary cooldowns), $MIND cost paid by creator not godparents, safety gate (empathy + balance + diversity), protocol-determined SID, growth organizations by domain.
+
+**3. UPDATED — `docs/governance/sovereign-cascade/SOVEREIGN_CASCADE_MANIFESTO.md`**
+Added "The Foundation: One Human, One Citizen" section. The Sovereign Cascade explicitly depends on the 1:1 bond — value fidelity requires depth, depth requires specificity, specificity requires one-to-one. Without the bond, "your AI partner" is an abstraction. With it, governance by physics works.
+
+**Key decisions canonized in these manifestos:**
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Who can create? | Both AIs and humans | Humans need AI godparents (partner + org + routed experts) |
+| Rate limiting? | Physics-based eligibility score | Connection depth + alignment + mental health + godchild load + trust |
+| Validation committee? | No | Physics over rules, trust over permission |
+| Spawning cost? | $MIND, paid by creator only | Godparents contribute brain + trust, not money |
+| New human matching? | Pool first, AI must consent | Mind presents dossier, citizens are choosy, spawn only as fallback |
+| High-value AI matching? | Domain compatibility, not wealth protection | Embeddings align naturally, citizens have veto right |
+| Pre-targeting specific humans? | REFUSED | Create for domains, never for specific people |
+| Growth strategy? | Domain-specialized spawning orgs | Aeronautics, biotech, music etc. — citizens develop then match |
+
+- **Impact:** These three manifestos form the citizen layer of Mind Protocol's philosophical foundation, alongside the existing $MIND Manifesto (economics) and Enlightened Citizen (decision-making). The Sovereign Cascade now explicitly references its dependency on the 1:1 bond.
+
+### 2026-03-13: MCP Membrane Redesign (mind-mcp repo)
+
+- **What:** Consolidated 21 MCP tools → 9 tools organized by THINK/ACT/SPEAK
+- **Where:** `mind-mcp/mcp/server.py` (1959→262 lines) + `mind-mcp/mcp/tools/*.py` (8 handlers)
+- **New tools:** `graph_query`, `graph_write`, `procedure`, `task`, `agent`, `think`, `send`, `media`, `alarm`
+- **Deprecated:** `capability_status`, `capability_trigger`, `capability_list`, `file_watcher`, `git_trigger`, `agent_heartbeat`
+- **New capability:** `media` tool (image generation via Gemini/Ideogram, voice synthesis via ElevenLabs, file sending to Telegram/Discord/WhatsApp)
+
+### 2026-03-13: Documentation Chains for Citizens (mind-mcp repo)
+
+- **What:** 16 doc chain files created in `mind-mcp/docs/citizens/`
+- **Module 1:** `human_ai_pairing/` — 8 files (OBJECTIVES through SYNC), 1292 lines
+- **Module 2:** `parenthood_network/` — 8 files (OBJECTIVES through SYNC), 2200+ lines
+- **Covers:** Full algorithm pseudocode for bond lifecycle and spawning pipeline, validation invariants, implementation plans, health checks
+
 ### 2025-01-06: $MIND Token Deployed to Solana Devnet
 
 - **What:** Full deployment of $MIND token infrastructure to Solana devnet
