@@ -11,6 +11,10 @@ Endpoints:
   GET /registry/orgs               — list orgs with filters + pagination
   GET /registry/orgs/{id}          — org detail with member list
   GET /registry/search?q=          — text search across citizens and orgs
+  GET /ping/{handle}               — resolve citizen → org → membrane, ping liveness
+  GET /trust/{handle}              — aggregated trust (weighted mean trust_disgust)
+  GET /balance/{handle}            — $MIND + SOL balance via Helius RPC
+  GET /infos/{handle}              — full info card (ping + trust + balance + locations)
 
 DOCS: docs/l4/registry/IMPLEMENTATION_Registry.md
 """
@@ -507,6 +511,250 @@ async def ping_citizen(handle: str):
                 "endpoint": endpoint_url, "membrane_url": membrane_url,
             },
         }
+
+
+# ---------------------------------------------------------------------------
+# Trust (aggregated trust from all inbound links)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/trust/{handle}")
+async def get_trust(handle: str):
+    """Aggregated trust score for a citizen.
+
+    Trust = mean of trust_disgust axis across all inbound LINK relationships.
+    Schema v2.0: trust_disgust is a Plutchik bipolar axis in [-1, +1].
+    Aggregated trust = mean of positive trust_disgust values (trust > disgust).
+
+    Also returns: trust breakdown by link count, per-org trust, raw values.
+    """
+    # Resolve citizen
+    citizen_id = handle
+    rows = graph_query(GET_CITIZEN, {"citizen_id": handle})
+    if not rows:
+        rows = graph_query(GET_CITIZEN, {"citizen_id": f"CITIZEN_{handle}"})
+        if rows:
+            citizen_id = f"CITIZEN_{handle}"
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found")
+
+    # Get all inbound links with trust_disgust axis
+    trust_rows = graph_query(
+        "MATCH (src)-[l:LINK]->(c {id: $cid}) "
+        "WHERE l.trust_disgust IS NOT NULL "
+        "RETURN src.id, src.name, l.trust_disgust, l.permanence, l.weight, l.nature",
+        {"cid": citizen_id},
+    )
+
+    # Also outbound
+    out_rows = graph_query(
+        "MATCH (c {id: $cid})-[l:LINK]->(dst) "
+        "WHERE l.trust_disgust IS NOT NULL "
+        "RETURN dst.id, dst.name, l.trust_disgust, l.permanence, l.weight, l.nature",
+        {"cid": citizen_id},
+    )
+
+    # Aggregate: weighted mean of trust_disgust by permanence
+    inbound_values = []
+    for r in trust_rows:
+        td = r[2] if r[2] is not None else 0.0
+        perm = r[3] if r[3] is not None else 0.5
+        w = r[4] if r[4] is not None else 1.0
+        inbound_values.append({"from": r[0], "name": r[1], "trust_disgust": td,
+                               "permanence": perm, "weight": w, "nature": r[5]})
+
+    outbound_values = []
+    for r in out_rows:
+        td = r[2] if r[2] is not None else 0.0
+        perm = r[3] if r[3] is not None else 0.5
+        w = r[4] if r[4] is not None else 1.0
+        outbound_values.append({"to": r[0], "name": r[1], "trust_disgust": td,
+                                "permanence": perm, "weight": w, "nature": r[5]})
+
+    # Weighted mean: trust_disgust * permanence * weight / sum(permanence * weight)
+    total_w = 0.0
+    weighted_sum = 0.0
+    for v in inbound_values:
+        pw = v["permanence"] * v["weight"]
+        weighted_sum += v["trust_disgust"] * pw
+        total_w += pw
+
+    aggregated = weighted_sum / total_w if total_w > 0 else 0.0
+
+    return {
+        "handle": handle,
+        "citizen_id": citizen_id,
+        "aggregated_trust": round(aggregated, 4),
+        "inbound_links": len(inbound_values),
+        "outbound_links": len(outbound_values),
+        "inbound": inbound_values,
+        "outbound": outbound_values,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Balance ($MIND via Helius RPC)
+# ---------------------------------------------------------------------------
+
+MIND_MINT = "EgLGfRrjX3du7Pwbj8dzyubSk8ic1WdDfq1ysLqhBm6p"
+HELIUS_RPC = os.environ.get(
+    "HELIUS_RPC_URL",
+    os.environ.get("NEXT_PUBLIC_HELIUS_RPC", "https://mainnet.helius-rpc.com/?api-key=4c3a5fc2-ea3f-45eb-85d5-2f282a6b4401"),
+)
+
+
+@app.get("/balance/{handle}")
+async def get_balance(handle: str):
+    """$MIND token balance for a citizen.
+
+    Resolves handle → wallet address from L4 graph, then queries Helius RPC
+    for SPL token balance of the $MIND mint.
+    """
+    import httpx
+
+    # Resolve citizen
+    citizen_id = handle
+    rows = graph_query(GET_CITIZEN, {"citizen_id": handle})
+    if not rows:
+        rows = graph_query(GET_CITIZEN, {"citizen_id": f"CITIZEN_{handle}"})
+        if rows:
+            citizen_id = f"CITIZEN_{handle}"
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found")
+
+    # Get wallet from graph
+    wallet_rows = graph_query(
+        "MATCH (c {id: $cid}) RETURN c.wallet",
+        {"cid": citizen_id},
+    )
+    wallet = wallet_rows[0][0] if wallet_rows and wallet_rows[0][0] else None
+
+    if not wallet or wallet == "pending":
+        return {
+            "handle": handle,
+            "citizen_id": citizen_id,
+            "wallet": wallet,
+            "balance_mind": 0.0,
+            "balance_sol": None,
+            "error": "No wallet address registered" if not wallet else "Wallet pending",
+        }
+
+    # Query Helius for $MIND token balance
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(HELIUS_RPC, json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "getTokenAccountsByOwner",
+                "params": [
+                    wallet,
+                    {"mint": MIND_MINT},
+                    {"encoding": "jsonParsed"},
+                ],
+            })
+            data = resp.json()
+            result = data.get("result", {})
+            accounts = result.get("value", [])
+
+            balance_mind = 0.0
+            for acct in accounts:
+                info = acct.get("account", {}).get("data", {}).get("parsed", {}).get("info", {})
+                token_amount = info.get("tokenAmount", {})
+                balance_mind += float(token_amount.get("uiAmount", 0))
+
+            # Also get SOL balance
+            sol_resp = await client.post(HELIUS_RPC, json={
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "getBalance",
+                "params": [wallet],
+            })
+            sol_data = sol_resp.json()
+            sol_lamports = sol_data.get("result", {}).get("value", 0)
+            balance_sol = sol_lamports / 1e9
+
+            return {
+                "handle": handle,
+                "citizen_id": citizen_id,
+                "wallet": wallet,
+                "balance_mind": balance_mind,
+                "balance_sol": round(balance_sol, 6),
+            }
+    except Exception as e:
+        return {
+            "handle": handle,
+            "citizen_id": citizen_id,
+            "wallet": wallet,
+            "balance_mind": None,
+            "balance_sol": None,
+            "error": f"Helius RPC error: {e}",
+        }
+
+
+# ---------------------------------------------------------------------------
+# Infos (aggregate: ping + trust + balance + locations)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/infos/{handle}")
+async def get_infos(handle: str):
+    """Full citizen info card. Aggregates ping, trust, balance, and locations.
+
+    This is the MCP /infos @handle endpoint — one call, all data.
+    """
+    import asyncio
+
+    # Run all three in parallel
+    ping_task = ping_citizen(handle)
+    trust_task = get_trust(handle)
+    balance_task = get_balance(handle)
+
+    results = await asyncio.gather(ping_task, trust_task, balance_task, return_exceptions=True)
+
+    ping_data = results[0] if not isinstance(results[0], Exception) else {"error": str(results[0])}
+    trust_data = results[1] if not isinstance(results[1], Exception) else {"error": str(results[1])}
+    balance_data = results[2] if not isinstance(results[2], Exception) else {"error": str(results[2])}
+
+    # Locations — query L3 graph for Space nodes linked to citizen
+    locations = {"physical": [], "virtual": []}
+    universe = ping_data.get("universe") if isinstance(ping_data, dict) else None
+    if universe:
+        try:
+            from falkordb import FalkorDB as _FDB
+            _db_l3 = _FDB(host=FALKORDB_HOST, port=int(FALKORDB_PORT))
+            _g_l3 = _db_l3.select_graph(universe)
+
+            # Space nodes linked to citizen
+            loc_rows = _g_l3.query(
+                "MATCH (a {id: $handle})-[:link]->(s {node_type: 'space'}) "
+                "RETURN s.id, s.name, s.type, s.content",
+                {"handle": handle},
+            )
+            for lr in (loc_rows.result_set or []):
+                space_type = lr[2] or ""
+                entry = {"id": lr[0], "name": lr[1], "type": space_type, "description": lr[3]}
+                if space_type in ("physical", "geo", "location", "city", "venue"):
+                    locations["physical"].append(entry)
+                else:
+                    locations["virtual"].append(entry)
+        except Exception:
+            pass
+
+    return {
+        "handle": handle,
+        "ping": ping_data,
+        "trust": {
+            "aggregated": trust_data.get("aggregated_trust") if isinstance(trust_data, dict) else None,
+            "inbound_links": trust_data.get("inbound_links") if isinstance(trust_data, dict) else 0,
+            "outbound_links": trust_data.get("outbound_links") if isinstance(trust_data, dict) else 0,
+        },
+        "balance": {
+            "mind": balance_data.get("balance_mind") if isinstance(balance_data, dict) else None,
+            "sol": balance_data.get("balance_sol") if isinstance(balance_data, dict) else None,
+            "wallet": balance_data.get("wallet") if isinstance(balance_data, dict) else None,
+        },
+        "locations": locations,
+    }
 
 
 # ---------------------------------------------------------------------------
