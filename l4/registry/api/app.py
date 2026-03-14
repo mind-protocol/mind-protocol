@@ -22,7 +22,7 @@ DOCS: docs/l4/registry/IMPLEMENTATION_Registry.md
 import logging
 import os
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import graph_query, health_check, FALKORDB_GRAPH, FALKORDB_HOST, FALKORDB_PORT
