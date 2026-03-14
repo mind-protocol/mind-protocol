@@ -18,7 +18,7 @@ DOCS: docs/l4/registry/IMPLEMENTATION_Registry.md
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import graph_query, health_check, FALKORDB_GRAPH
@@ -355,6 +355,101 @@ async def search_registry(
         count=len(items),
         hasMore=False,
     )
+
+
+# ---------------------------------------------------------------------------
+# Seed (admin only, protected by ADMIN_API_KEY)
+# ---------------------------------------------------------------------------
+
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
+
+
+@app.post("/admin/seed")
+async def seed_registry(x_api_key: str = Header(alias="X-API-Key")):
+    """Seed the registry from data/registry.json. Requires ADMIN_API_KEY."""
+    if not ADMIN_API_KEY or x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    import json
+    import time
+    from pathlib import Path
+
+    json_path = Path(__file__).parent.parent.parent.parent / "data" / "registry.json"
+    if not json_path.exists():
+        raise HTTPException(status_code=404, detail=f"registry.json not found at {json_path}")
+
+    data = json.loads(json_path.read_text())
+    citizens = data.get("citizens", [])
+    orgs = data.get("orgs", [])
+    now_s = int(time.time())
+    stats = {"orgs": 0, "citizens": 0, "links": 0}
+
+    # Create orgs
+    for org in orgs:
+        graph_query(
+            """MERGE (o:Actor {id: $id})
+               SET o.name = $name, o.node_type = 'actor', o.type = 'ORGANIZATION',
+                   o.content = $content, o.synthesis = $synthesis,
+                   o.status = $status, o.weight = 1.0, o.energy = 0.0,
+                   o.stability = 0.5, o.recency = 0.5,
+                   o.created_at_s = $ts, o.updated_at_s = $ts,
+                   o.org_type = $org_type, o.color = $color,
+                   o.github_repository = $github, o.universe = $universe""",
+            {
+                "id": org["id"], "name": org["name"],
+                "content": org.get("description", org["name"]),
+                "synthesis": f"{org['name']} — {org.get('description', '')}",
+                "status": org.get("status", "active"),
+                "ts": now_s, "org_type": org.get("org_type", ""),
+                "color": org.get("color", ""), "github": org.get("github_repository", ""),
+                "universe": org.get("universe", ""),
+            }
+        )
+        stats["orgs"] += 1
+
+    # Create citizens + links
+    for c in citizens:
+        graph_query(
+            """MERGE (a:Actor {id: $id})
+               SET a.name = $name, a.node_type = 'actor', a.type = 'CITIZEN',
+                   a.content = $content, a.synthesis = $synthesis,
+                   a.status = $status, a.weight = 1.0, a.energy = 0.0,
+                   a.stability = 0.5, a.recency = 0.5,
+                   a.created_at_s = $ts, a.updated_at_s = $ts,
+                   a.wallet = $wallet, a.emoji = $emoji""",
+            {
+                "id": c["id"], "name": c["name"],
+                "content": c.get("description", c["name"]),
+                "synthesis": f"{c['name']} — {c.get('description', '')}",
+                "status": c.get("status", "active"),
+                "ts": now_s, "wallet": c.get("wallet"),
+                "emoji": c.get("emoji"),
+            }
+        )
+        stats["citizens"] += 1
+
+        # belongs_to link
+        org_id = c.get("org_membership")
+        if org_id:
+            graph_query(
+                """MATCH (a:Actor {id: $cid}), (o:Actor {id: $oid})
+                   MERGE (a)-[:LINK {nature: 'belongs_to', relation_kind: 'belongs_to'}]->(o)""",
+                {"cid": c["id"], "oid": org_id}
+            )
+            stats["links"] += 1
+
+        # verified_by link
+        if c.get("verification") == "verified":
+            graph_query(
+                """MATCH (a:Actor {id: $cid})
+                   MERGE (v:Actor {id: 'mind-protocol'})
+                   MERGE (a)-[:LINK {nature: 'verified_by', relation_kind: 'verified_by',
+                          permanence: 0.8, stability: 0.5, recency: 0.5}]->(v)""",
+                {"cid": c["id"]}
+            )
+            stats["links"] += 1
+
+    return {"status": "seeded", **stats}
 
 
 # ---------------------------------------------------------------------------
