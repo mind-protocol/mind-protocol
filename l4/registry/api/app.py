@@ -358,6 +358,107 @@ async def search_registry(
 
 
 # ---------------------------------------------------------------------------
+# Citizen Ping (resolve endpoint + remote ping)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/registry/ping/{handle}")
+async def ping_citizen(handle: str):
+    """Ping a citizen by resolving their org's endpoint and calling /ping/{handle}.
+
+    Flow:
+      1. Find citizen in L4 (CITIZEN_{handle})
+      2. Resolve their org (MEMBER_OF link)
+      3. Get org endpoint (endpoint Thing node)
+      4. Call GET {endpoint}/ping/{handle} on the remote org server
+      5. Return the remote response + resolution metadata
+    """
+    import httpx
+
+    citizen_id = f"CITIZEN_{handle}"
+
+    # 1. Check citizen exists
+    rows = graph_query(GET_CITIZEN, {"citizen_id": citizen_id})
+    if not rows:
+        raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found in L4")
+
+    citizen_name = rows[0][1] if len(rows[0]) > 1 else handle
+
+    # 2. Resolve org
+    org_rows = graph_query(GET_CITIZEN_ORG, {"citizen_id": citizen_id})
+    org_id = org_rows[0][0] if org_rows else None
+    org_name = org_rows[0][1] if org_rows else None
+
+    if not org_id:
+        return {
+            "handle": handle,
+            "alive": False,
+            "error": "Citizen has no org — cannot resolve endpoint",
+            "resolution": {"citizen": citizen_id, "org": None, "endpoint": None},
+        }
+
+    # 3. Get org endpoint
+    endpoint_rows = graph_query(
+        "MATCH (o {id: $org_id})-[:link]->(e {type: 'endpoint'}) RETURN e.content",
+        {"org_id": org_id},
+    )
+    endpoint_url = endpoint_rows[0][0] if endpoint_rows else None
+
+    if not endpoint_url:
+        return {
+            "handle": handle,
+            "alive": False,
+            "error": f"Org '{org_id}' has no registered endpoint",
+            "resolution": {"citizen": citizen_id, "org": org_id, "endpoint": None},
+        }
+
+    # 4. Normalize endpoint and call /ping/{handle}
+    base_url = endpoint_url.rstrip("/")
+    if base_url.startswith("wss://"):
+        base_url = base_url.replace("wss://", "https://")
+    elif base_url.startswith("ws://"):
+        base_url = base_url.replace("ws://", "http://")
+
+    ping_url = f"{base_url}/ping/{handle}"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(ping_url)
+            if resp.status_code == 200:
+                remote_data = resp.json()
+                return {
+                    **remote_data,
+                    "resolution": {
+                        "citizen": citizen_id,
+                        "org": org_id,
+                        "org_name": org_name,
+                        "endpoint": endpoint_url,
+                        "ping_url": ping_url,
+                    },
+                }
+            else:
+                return {
+                    "handle": handle,
+                    "alive": False,
+                    "error": f"Remote returned HTTP {resp.status_code}",
+                    "resolution": {
+                        "citizen": citizen_id, "org": org_id,
+                        "endpoint": endpoint_url, "ping_url": ping_url,
+                    },
+                }
+    except Exception as e:
+        return {
+            "handle": handle,
+            "alive": False,
+            "error": f"Cannot reach org server: {e}",
+            "resolution": {
+                "citizen": citizen_id, "org": org_id,
+                "endpoint": endpoint_url, "ping_url": ping_url,
+            },
+        }
+
+
+# ---------------------------------------------------------------------------
 # Seed (admin only, protected by ADMIN_API_KEY)
 # ---------------------------------------------------------------------------
 
