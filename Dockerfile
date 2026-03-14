@@ -8,7 +8,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy only what the service needs
+COPY l4/ l4/
+COPY data/ data/
 
 RUN chown -R appuser:appuser /app
 
