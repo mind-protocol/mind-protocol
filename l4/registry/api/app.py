@@ -380,7 +380,7 @@ async def ping_citizen(handle: str):
     citizen_id = handle
     rows = graph_query(GET_CITIZEN, {"citizen_id": handle})
     if not rows:
-        rows = graph_query(GET_CITIZEN, {"citizen_id": f"CITIZEN_{handle}"])
+        rows = graph_query(GET_CITIZEN, {"citizen_id": f"CITIZEN_{handle}"})
         if rows:
             citizen_id = f"CITIZEN_{handle}"
     if not rows:
