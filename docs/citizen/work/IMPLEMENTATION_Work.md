@@ -23,7 +23,7 @@ related:
 
 ## Current State
 
-**Not yet implemented.** This module is in DESIGNING phase. The implementation section documents the planned code structure.
+**Partially implemented (v0.4).** Core protocol-layer implementation now exists in `l4/work/` with tests. Runtime integrations in external `mind-mcp` remain a follow-up for production wiring.
 
 ---
 

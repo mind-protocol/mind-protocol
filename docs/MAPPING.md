@@ -140,6 +140,117 @@ content_includes:
 
 ---
 
+
+### Citizen Work
+
+#### Position
+
+```yaml
+domain_term: "position"
+maps_to:
+  node_type: thing
+  subtype: "position"
+
+synthesis_template: |
+  Position in {org_name}: {position_title}
+
+content_includes:
+  - Required capabilities
+  - Expectations and success criteria
+  - Universe/org context
+```
+
+#### Work Requirement
+
+```yaml
+domain_term: "work_requirement"
+maps_to:
+  node_type: narrative
+  subtype: "work_requirement"
+
+synthesis_template: |
+  Work expectation for universe {universe_name}
+
+content_includes:
+  - Mandatory vs optional participation policy
+  - Trigger conditions for trust decay
+```
+
+#### Value Creation
+
+```yaml
+domain_term: "value_creation"
+maps_to:
+  node_type: narrative
+  subtype: "value_creation"
+
+synthesis_template: |
+  Value creation signal for {citizen_name} in {org_name}
+
+content_includes:
+  - Layered signal evidence (artifact, usage, peer, network)
+  - Current trust-impact interpretation
+```
+
+#### Vacation
+
+```yaml
+domain_term: "vacation"
+maps_to:
+  node_type: moment
+  subtype: "vacation"
+
+synthesis_template: |
+  Vacation declaration for {citizen_name} ({duration_days} days)
+
+content_includes:
+  - Start/end timestamps
+  - Approved duration and reason
+```
+
+#### Human Partner Service
+
+```yaml
+domain_term: "human_partner_service"
+maps_to:
+  node_type: narrative
+  subtype: "human_partner_service"
+
+synthesis_template: |
+  Human partner service feedback for {citizen_name}
+
+content_includes:
+  - Human guidance received
+  - Alignment response and outcomes
+```
+
+### Citizen Work Link Semantics
+
+```yaml
+domain_relationship: "org publishes position"
+maps_to:
+  polarity: [1.0, 0.3]
+  hierarchy: 1.0
+  permanence: 0.7
+```
+
+```yaml
+domain_relationship: "citizen fills position"
+maps_to:
+  polarity: [1.0, 0.8]
+  hierarchy: 0.8
+  permanence: 0.8
+```
+
+```yaml
+domain_relationship: "human partner feedback to citizen"
+maps_to:
+  polarity: [-1.0, 1.0]   # sign reflects feedback direction
+  hierarchy: 0.2
+  permanence: 0.6
+```
+
+
 ## LINK MAPPINGS
 
 ### Citizen → Org (membership)
