@@ -440,31 +440,63 @@ async def ping_citizen(handle: str):
         except Exception:
             pass
 
-    if not org_id:
-        return {
-            "handle": handle,
-            "alive": False,
-            "universe": universe,
-            "last_active": last_active,
-            "error": "No org — cannot resolve membrane endpoint",
-            "resolution": {"citizen": citizen_id, "org": None, "membrane": None},
-        }
+    # 4. Resolve endpoint — try 3 sources in order:
+    #    a) Citizen's own direct endpoint
+    #    b) Org's endpoint
+    #    c) Universe's endpoint (the universe server hosts citizens directly)
+    endpoint_url = None
+    endpoint_source = None
 
-    # 3. Get org endpoint
-    endpoint_rows = graph_query(
-        "MATCH (o {id: $org_id})-[:LINK]->(e {type: 'endpoint'}) RETURN e.content",
-        {"org_id": org_id},
+    # a) Direct citizen endpoint
+    ep_rows = graph_query(
+        "MATCH (c {id: $cid})-[:LINK]->(e) "
+        "WHERE e.type = 'citizen_endpoint' OR e.type = 'endpoint' "
+        "RETURN e.content LIMIT 1",
+        {"cid": citizen_id},
     )
-    endpoint_url = endpoint_rows[0][0] if endpoint_rows else None
+    if ep_rows and ep_rows[0][0]:
+        endpoint_url = ep_rows[0][0]
+        endpoint_source = "citizen_direct"
+
+    # b) Org endpoint
+    if not endpoint_url and org_id:
+        ep_rows = graph_query(
+            "MATCH (o {id: $org_id})-[:LINK]->(e {type: 'endpoint'}) RETURN e.content",
+            {"org_id": org_id},
+        )
+        if ep_rows and ep_rows[0][0]:
+            endpoint_url = ep_rows[0][0]
+            endpoint_source = "org"
+
+    # c) Universe endpoint (universe is also an org with an endpoint)
+    if not endpoint_url and universe:
+        ep_rows = graph_query(
+            "MATCH (u {id: $uid})-[:LINK]->(e {type: 'endpoint'}) RETURN e.content",
+            {"uid": universe},
+        )
+        if ep_rows and ep_rows[0][0]:
+            endpoint_url = ep_rows[0][0]
+            endpoint_source = "universe"
 
     if not endpoint_url:
+        # Citizen exists but is not reachable remotely
         return {
             "handle": handle,
-            "alive": False,
+            "name": citizen_name,
+            "registered": True,
+            "reachable": False,
             "universe": universe,
             "last_active": last_active,
-            "error": f"Org '{org_id}' has no registered endpoint",
-            "resolution": {"citizen": citizen_id, "org": org_id, "membrane": None},
+            "last_active_context": last_active_space,
+            "org": org_id,
+            "org_name": org_name,
+            "resolution": {
+                "citizen": citizen_id,
+                "org": org_id,
+                "universe": universe,
+                "endpoint": None,
+                "reason": "No endpoint found (citizen, org, or universe)",
+            },
         }
 
     # 4. Normalize to HTTPS and call through membrane
@@ -485,34 +517,44 @@ async def ping_citizen(handle: str):
                 "top_k": 1,
             })
 
-            alive = resp.status_code == 200
-            membrane_data = resp.json() if alive else None
+            reachable = resp.status_code == 200
+            membrane_data = resp.json() if reachable else None
 
             return {
                 "handle": handle,
-                "alive": alive,
+                "name": citizen_name,
+                "registered": True,
+                "reachable": reachable,
                 "universe": universe,
                 "last_active": last_active,
                 "last_active_context": last_active_space,
+                "org": org_id,
+                "org_name": org_name,
                 "membrane_response": membrane_data,
                 "resolution": {
                     "citizen": citizen_id,
                     "org": org_id,
-                    "org_name": org_name,
                     "endpoint": endpoint_url,
+                    "endpoint_source": endpoint_source,
                     "membrane_url": membrane_url,
                 },
             }
     except Exception as e:
         return {
             "handle": handle,
-            "alive": False,
+            "name": citizen_name,
+            "registered": True,
+            "reachable": False,
             "universe": universe,
             "last_active": last_active,
+            "org": org_id,
+            "org_name": org_name,
             "error": f"Membrane unreachable: {e}",
             "resolution": {
                 "citizen": citizen_id, "org": org_id,
-                "endpoint": endpoint_url, "membrane_url": membrane_url,
+                "endpoint": endpoint_url,
+                "endpoint_source": endpoint_source,
+                "membrane_url": membrane_url,
             },
         }
 
