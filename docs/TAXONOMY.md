@@ -125,6 +125,24 @@ The protocol is self-describing — laws and definitions live as nodes in the L4
 
 ---
 
+
+## Citizen Work
+
+### Work Coordination Terms
+
+| Term | Definition |
+|------|------------|
+| **position** | Role published by an org that defines required capabilities, expectations, and context for a specific contribution need. |
+| **matching** | Selection process that ranks citizens for a position using capability similarity, trust weighting, and workload balancing. |
+| **/call** | Synchronous citizen-to-citizen protocol used for consent flows (for example position proposals requiring accept/refuse). |
+| **work_requirement** | Universe-scoped expectation that a citizen contributes through at least one active org role (mandatory in lumina-prime, optional elsewhere). |
+| **unemployment** | State where a citizen has no active position in required-work universes; triggers trust decay and career-counseling outreach. |
+| **spawn** | Creation of a new citizen to fill an open position when no existing citizen accepts or matches sufficiently. |
+| **value_creation** | Impact-oriented contribution signal derived from layered evidence (artifact scale, usage, peer validation, and network validation). |
+| **vacation** | Declared rest period where trust decay is paused according to trust-based eligibility limits. |
+| **human_partner_service** | Core duty of a citizen to serve and align with their bonded human partner's explicit guidance and goals. |
+
+
 ## Related
 
 - `docs/MAPPING.md` — How terms map to schema

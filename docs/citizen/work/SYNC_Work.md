@@ -1,10 +1,10 @@
 # SYNC: Citizen Work
 
 ```
-LAST_UPDATED: 2026-03-13
+LAST_UPDATED: 2026-03-14
 STATUS: DESIGNING
 PRIORITY: P2
-VERSION: 0.2.0
+VERSION: 0.4.0
 ```
 
 ---
@@ -44,6 +44,19 @@ VERSION: 0.2.0
 
 ## Recent Changes
 
+### 2026-03-14 v0.4: Work module implementation sweep (10 items)
+
+- Implemented `l4/work/` module with canonical position schema, work/vacation rules, value cascade rules, `/call` V1 simulator, matcher V1, spawner V1, value cascade tracker, health report builder, and public-interest org seeds.
+- Added end-to-end tests in `tests/l4/test_work_module_rules_and_flows.py` covering all implemented flows.
+- Completed the remaining 10 TODO items for this module in one implementation pass.
+
+### 2026-03-14 v0.3: Taxonomy/Mapping integration + algorithm cleanup
+
+- Removed the previously added Codex-force bootstrap section from `ALGORITHM_Work.md` to keep the module scoped to citizen work mechanics.
+- Added Citizen Work vocabulary entries to `docs/TAXONOMY.md` (position, matching, /call, work_requirement, unemployment, spawn, value_creation, vacation, human_partner_service).
+- Added schema mapping blocks for Citizen Work terms and core link semantics to `docs/MAPPING.md`.
+- Marked first two TODO items as complete in this SYNC file.
+
 ### 2026-03-13 v0.2: Nicolas review iteration
 
 - **"obligation" → "requirement"** throughout — softer framing, citizens find original ways to create value
@@ -65,18 +78,18 @@ VERSION: 0.2.0
 
 ## TODO
 
-- [ ] Add vocabulary terms to `docs/TAXONOMY.md`
-- [ ] Add mappings to `docs/MAPPING.md`
-- [ ] Implement Position schema (L4)
-- [ ] Implement work requirement + vacation rules (L4)
-- [ ] Implement value cascade rules (L4)
-- [ ] Implement /call MCP tool V1
-- [ ] Implement matcher V1 (cosine + trust)
-- [ ] Implement spawner V1 (basic)
-- [ ] Implement value cascade tracker (L2)
-- [ ] Create tests
-- [ ] Add health dashboard
-- [ ] Create new public-interest orgs: career-counseling, sysadmin, etc.
+- [x] Add vocabulary terms to `docs/TAXONOMY.md`
+- [x] Add mappings to `docs/MAPPING.md`
+- [x] Implement Position schema (L4)
+- [x] Implement work requirement + vacation rules (L4)
+- [x] Implement value cascade rules (L4)
+- [x] Implement /call MCP tool V1
+- [x] Implement matcher V1 (cosine + trust)
+- [x] Implement spawner V1 (basic)
+- [x] Implement value cascade tracker (L2)
+- [x] Create tests
+- [x] Add health dashboard
+- [x] Create new public-interest orgs: career-counseling, sysadmin, etc.
 
 ---
 
