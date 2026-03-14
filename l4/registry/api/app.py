@@ -452,7 +452,7 @@ async def ping_citizen(handle: str):
 
     # 3. Get org endpoint
     endpoint_rows = graph_query(
-        "MATCH (o {id: $org_id})-[:link]->(e {type: 'endpoint'}) RETURN e.content",
+        "MATCH (o {id: $org_id})-[:LINK]->(e {type: 'endpoint'}) RETURN e.content",
         {"org_id": org_id},
     )
     endpoint_url = endpoint_rows[0][0] if endpoint_rows else None
