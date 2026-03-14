@@ -824,8 +824,15 @@ async def set_org_endpoint(request: Request, x_api_key: str = Header(alias="X-AP
     now_s = int(time.time())
     ep_id = f"{org_id}_endpoint"
 
+    # Ensure org node exists
+    graph_query(
+        "MERGE (o {id: $oid}) SET o.node_type = 'actor', o.type = 'ORGANIZATION', "
+        "o.name = COALESCE(o.name, $name)",
+        {"oid": org_id, "name": org_id.replace("-", " ").replace("_", " ").title()},
+    )
+
     # Delete old edges to endpoint (both :link and :LINK)
-    graph_query(f"MATCH (o {{id: $oid}})-[r]->(e {{id: $eid}}) DELETE r", {"oid": org_id, "eid": ep_id})
+    graph_query("MATCH (o {id: $oid})-[r]->(e {id: $eid}) DELETE r", {"oid": org_id, "eid": ep_id})
 
     # Upsert endpoint node
     graph_query(
