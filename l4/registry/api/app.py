@@ -12,7 +12,7 @@ Endpoints:
   GET /registry/orgs/{id}          — org detail with member list
   GET /registry/search?q=          — text search across citizens and orgs
   GET /ping/{handle}               — resolve citizen → org → membrane, ping liveness
-  GET /trust/{handle}              — aggregated trust (weighted mean trust_disgust)
+  GET /trust/{handle}              — aggregated trust (weighted mean of permanence x weight)
   GET /balance/{handle}            — $MIND + SOL balance via Helius RPC
   GET /infos/{handle}              — full info card (ping + trust + balance + locations)
 
@@ -526,11 +526,11 @@ async def ping_citizen(handle: str):
 async def get_trust(handle: str):
     """Aggregated trust score for a citizen.
 
-    Trust = mean of trust_disgust axis across all inbound LINK relationships.
-    Schema v2.0: trust_disgust is a Plutchik bipolar axis in [-1, +1].
-    Aggregated trust = mean of positive trust_disgust values (trust > disgust).
+    Trust = weighted mean of (link.permanence * link.weight) across all inbound
+    verification/trust links. Higher permanence and weight indicate stronger trust.
+    Result is normalized to [0, 1].
 
-    Also returns: trust breakdown by link count, per-org trust, raw values.
+    Also returns: trust breakdown by link count, raw values.
     """
     # Resolve citizen
     citizen_id = handle
@@ -542,46 +542,41 @@ async def get_trust(handle: str):
     if not rows:
         raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found")
 
-    # Get all inbound links with trust_disgust axis
+    # Get all inbound links
     trust_rows = graph_query(
         "MATCH (src)-[l:LINK]->(c {id: $cid}) "
-        "WHERE l.trust_disgust IS NOT NULL "
-        "RETURN src.id, src.name, l.trust_disgust, l.permanence, l.weight, l.nature",
+        "RETURN src.id, src.name, l.permanence, l.weight, l.nature",
         {"cid": citizen_id},
     )
 
     # Also outbound
     out_rows = graph_query(
         "MATCH (c {id: $cid})-[l:LINK]->(dst) "
-        "WHERE l.trust_disgust IS NOT NULL "
-        "RETURN dst.id, dst.name, l.trust_disgust, l.permanence, l.weight, l.nature",
+        "RETURN dst.id, dst.name, l.permanence, l.weight, l.nature",
         {"cid": citizen_id},
     )
 
-    # Aggregate: weighted mean of trust_disgust by permanence
+    # Aggregate: weighted mean of permanence, weighted by link weight
     inbound_values = []
     for r in trust_rows:
-        td = r[2] if r[2] is not None else 0.0
-        perm = r[3] if r[3] is not None else 0.5
-        w = r[4] if r[4] is not None else 1.0
-        inbound_values.append({"from": r[0], "name": r[1], "trust_disgust": td,
-                               "permanence": perm, "weight": w, "nature": r[5]})
+        perm = r[2] if r[2] is not None else 0.5
+        w = r[3] if r[3] is not None else 1.0
+        inbound_values.append({"from": r[0], "name": r[1],
+                               "permanence": perm, "weight": w, "nature": r[4]})
 
     outbound_values = []
     for r in out_rows:
-        td = r[2] if r[2] is not None else 0.0
-        perm = r[3] if r[3] is not None else 0.5
-        w = r[4] if r[4] is not None else 1.0
-        outbound_values.append({"to": r[0], "name": r[1], "trust_disgust": td,
-                                "permanence": perm, "weight": w, "nature": r[5]})
+        perm = r[2] if r[2] is not None else 0.5
+        w = r[3] if r[3] is not None else 1.0
+        outbound_values.append({"to": r[0], "name": r[1],
+                                "permanence": perm, "weight": w, "nature": r[4]})
 
-    # Weighted mean: trust_disgust * permanence * weight / sum(permanence * weight)
+    # Weighted mean: permanence * weight / sum(weight)
     total_w = 0.0
     weighted_sum = 0.0
     for v in inbound_values:
-        pw = v["permanence"] * v["weight"]
-        weighted_sum += v["trust_disgust"] * pw
-        total_w += pw
+        weighted_sum += v["permanence"] * v["weight"]
+        total_w += v["weight"]
 
     aggregated = weighted_sum / total_w if total_w > 0 else 0.0
 

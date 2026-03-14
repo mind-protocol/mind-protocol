@@ -62,12 +62,6 @@ The physics tick runs every 5 seconds. A governance decision typically resolves 
   weight: float [0, +inf),      // accumulated conviction strength
   energy: float [0, +inf),      // current energy flowing through link
   trust_factor: float [0, 1],   // atan(trust_score / 50) / (π/2) — normalized
-  axes: {                        // Plutchik emotional signature
-    joy_sadness: float,
-    trust_disgust: float,
-    fear_anger: float,
-    surprise_anticipation: float
-  }
 }
 ```
 

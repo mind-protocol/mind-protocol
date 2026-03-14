@@ -10,11 +10,10 @@ status: "CANONICAL"
 # =============================================================================
 #
 # 1. Single link type: `link` — all semantics in properties
-# 2. Everything evolves: Traversals color links (emotions, permanence, polarity)
-# 3. Emotions emerge: From relationships via alignment formula
-# 4. Synthesis regenerates: From floats, re-embedded on drift
-# 5. No arbitrary constants: All rates derived from graph properties
-# 6. Bidirectional vocabulary: Same grammar for input and output
+# 2. Everything evolves: Traversals color links (permanence, polarity)
+# 3. Synthesis regenerates: From floats, re-embedded on drift
+# 4. No arbitrary constants: All rates derived from graph properties
+# 5. Bidirectional vocabulary: Same grammar for input and output
 
 # =============================================================================
 # NODE TYPES
@@ -189,24 +188,6 @@ LinkBase:
       range: [0, 1]
       default: 0.5
 
-    # === Emotions (Plutchik 4 bipolar axes) ===
-    joy_sadness:
-      type: float
-      range: [-1, +1]
-      default: 0.0
-    trust_disgust:
-      type: float
-      range: [-1, +1]
-      default: 0.0
-    fear_anger:
-      type: float
-      range: [-1, +1]
-      default: 0.0
-    surprise_anticipation:
-      type: float
-      range: [-1, +1]
-      default: 0.0
-
     # === Text Data ===
     synthesis: # Human-readable, regenerated on drift
       type: string
@@ -235,7 +216,6 @@ LinkBase:
 invariants:
   - "Single link type: link"
   - "All floats in specified ranges"
-  - "Emotions emerge from alignment formula"
   - "No arbitrary constants - all rates derived"
   - "Branching only on Moments"
   - "Crystallization creates new Narratives"

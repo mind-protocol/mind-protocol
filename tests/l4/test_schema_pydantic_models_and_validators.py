@@ -250,17 +250,6 @@ class TestLinkBase:
             )
         assert "permanence" in str(exc_info.value).lower()
 
-    def test_emotions_in_range(self):
-        """Emotion axes must be in [-1, 1]."""
-        with pytest.raises(ValidationError) as exc_info:
-            LinkBase(
-                id="link-1",
-                node_a="a",
-                node_b="b",
-                joy_sadness=2.0,  # Out of range
-            )
-        assert "joy_sadness" in str(exc_info.value).lower()
-
     def test_forward_coloration_weight(self):
         """Forward coloration weight computed correctly."""
         link = LinkBase(
@@ -270,19 +259,6 @@ class TestLinkBase:
             permanence=0.3,
         )
         assert link.forward_coloration_weight == 0.7
-
-    def test_emotions_property(self):
-        """Emotions property returns all axes."""
-        link = LinkBase(
-            id="link-1",
-            node_a="a",
-            node_b="b",
-            joy_sadness=0.5,
-            trust_disgust=-0.3,
-        )
-        emotions = link.emotions
-        assert emotions["joy_sadness"] == 0.5
-        assert emotions["trust_disgust"] == -0.3
 
 
 class TestValidation:

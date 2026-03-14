@@ -107,22 +107,12 @@ intensity:
 # POST-MODIFIERS
 # =============================================================================
 #
-# Add after the verb (with a comma) to express the emotional tone.
+# Add after the verb (with a comma) to express tone.
 
-anger_fear:
-  - with rage
-  - with hostility
-  - with apprehension
-  - with terror
-
-trust_disgust:
-  - with disgust
-  - with distrust
+tone:
   - with confidence
-  - with admiration
-
-joy_sadness:
-  - with despair
-  - with sadness
   - with satisfaction
-  - with euphoria
+  - with apprehension
+  - with hostility
+  - with admiration
+  - with sadness

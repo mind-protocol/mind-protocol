@@ -19,7 +19,6 @@ class LinkBase(BaseModel):
     - polarity: directional flow strength
     - hierarchy: contains vs elaborates
     - permanence: speculative vs definitive
-    - emotions: Plutchik 4 bipolar axes
     """
 
     # Identity
@@ -48,12 +47,6 @@ class LinkBase(BaseModel):
         le=1,
         description="0 = speculative, 1 = definitive"
     )
-
-    # Emotions (Plutchik 4 bipolar axes)
-    joy_sadness: float = Field(0.0, ge=-1, le=1)
-    trust_disgust: float = Field(0.0, ge=-1, le=1)
-    fear_anger: float = Field(0.0, ge=-1, le=1)
-    surprise_anticipation: float = Field(0.0, ge=-1, le=1)
 
     # Semantics
     synthesis: Optional[str] = Field(None, description="Human-readable, regenerated on drift")
@@ -84,16 +77,6 @@ class LinkBase(BaseModel):
     def forward_coloration_weight(self) -> float:
         """Derived: 1 - permanence."""
         return 1 - self.permanence
-
-    @property
-    def emotions(self) -> dict:
-        """Get all emotion axes as dict."""
-        return {
-            "joy_sadness": self.joy_sadness,
-            "trust_disgust": self.trust_disgust,
-            "fear_anger": self.fear_anger,
-            "surprise_anticipation": self.surprise_anticipation,
-        }
 
     model_config = {
         "extra": "forbid",  # No custom fields allowed

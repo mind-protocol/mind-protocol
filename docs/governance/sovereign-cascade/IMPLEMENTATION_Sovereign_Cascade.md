@@ -65,7 +65,7 @@ def tick(graph):
     cascade_check(graph)        # Phase 8.5: Governance cascade  ← NEW
 ```
 
-**Why:** Governance energy interacts with cognitive energy. A citizen who is stressed (high fear_anger axis) should have different conviction dynamics than a calm one. Running governance inside the same tick means emotional state naturally influences governance — which is how real politics works.
+**Why:** Governance energy interacts with cognitive energy. Running governance inside the same tick means cognitive state naturally influences governance — which is how real politics works.
 
 ### Pattern: L4 = Graph (from L4 Protocol Patterns)
 

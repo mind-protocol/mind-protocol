@@ -30,9 +30,8 @@ These follow from physics formulas in schema.yaml.
 
 | ID | Invariant | Formula |
 |----|-----------|---------|
-| D1 | Emotions emerge from alignment | `emotions = alignment_to_plutchik(alignment)` |
-| D2 | Forward coloration by permanence | `fc_weight = 1 - permanence` |
-| D3 | Branching only on Moments | `spawn_subentity() only valid for node_type == "moment"` |
+| D1 | Forward coloration by permanence | `fc_weight = 1 - permanence` |
+| D2 | Branching only on Moments | `spawn_subentity() only valid for node_type == "moment"` |
 
 ---
 

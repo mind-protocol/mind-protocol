@@ -44,7 +44,7 @@ The Sovereign Cascade exists as a complete design document chain but has no code
 - FalkorDB graph seeded with 152 Venice citizens, 7 districts, 157 Narratives, 1,504 links (venezia/scripts/seed_venice_graph.py)
 - $MIND token live on Solana (Token-2022, 1% transfer fee, LP locked)
 - Birth Formula simulated: Gini 0.496 (Ducats) → 0.018 ($MIND initial allocation)
-- Trust architecture specified (atan curve, Plutchik axes, monotonic)
+- Trust architecture specified (atan curve, monotonic)
 - Unconditional Floor codified in VALUES_MANIFESTO.md
 
 **What we don't have:**

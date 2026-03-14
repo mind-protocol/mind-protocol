@@ -260,7 +260,7 @@ SCHEMA_LINK_PROPERTIES = NarrativeNode(
     id="l4_schema_link_properties",
     name="Schema: Link Properties",
     type="schema_definition",
-    synthesis="Link semantic axes: polarity, hierarchy, permanence, emotions",
+    synthesis="Link semantic axes: polarity, hierarchy, permanence",
     content="""
 LINK PROPERTIES (single link type, semantics in properties)
 
@@ -268,12 +268,6 @@ SEMANTIC AXES:
 - polarity: [a→b, b→a] flow strength, each in [0, 1]
 - hierarchy: -1 = contains, +1 = elaborates
 - permanence: 0 = speculative, 1 = definitive
-
-EMOTIONS (Plutchik 4 bipolar axes):
-- joy_sadness: [-1, +1]
-- trust_disgust: [-1, +1]
-- fear_anger: [-1, +1]
-- surprise_anticipation: [-1, +1]
 
 PHYSICS:
 - weight: importance [0, ∞)

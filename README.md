@@ -71,7 +71,6 @@ Every relationship is a `link` with semantic axes:
 | **polarity** | [0, 1] x 2 | Bidirectional flow strength (a->b, b->a) |
 | **hierarchy** | [-1, +1] | -1 = contains, +1 = elaborates |
 | **permanence** | [0, 1] | 0 = speculative, 1 = definitive |
-| **emotions** | [-1, +1] x 4 | Plutchik bipolar axes (joy/sadness, trust/disgust, fear/anger, surprise/anticipation) |
 
 Retrieval is embedding-based, not Cypher. The `synthesis` field on every node and link is the embeddable summary. `content` holds full prose.
 

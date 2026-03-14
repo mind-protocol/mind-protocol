@@ -14,10 +14,9 @@ PURPOSE: Design philosophy for Mind Protocol graph schema
 | P1 | **Single link type** | All relationships use `link` — semantics in properties, not types |
 | P2 | **5 node types** | Actor, Moment, Narrative, Space, Thing — fixed enum, subtypes via `type` field |
 | P3 | **Physics on everything** | weight + energy on all nodes and links |
-| P4 | **Emotions emerge** | Plutchik 4 bipolar axes, computed from alignment |
-| P5 | **Synthesis regenerates** | Human-readable text derived from floats, re-embedded on drift |
-| P6 | **No arbitrary constants** | All rates derived from graph properties |
-| P7 | **Bidirectional vocabulary** | Same grammar for input and output |
+| P4 | **Synthesis regenerates** | Human-readable text derived from floats, re-embedded on drift |
+| P5 | **No arbitrary constants** | All rates derived from graph properties |
+| P6 | **Bidirectional vocabulary** | Same grammar for input and output |
 
 ---
 
@@ -29,7 +28,6 @@ Mind never does Cypher queries directly. All retrieval is embedding-based. Link 
 - `polarity` — directional flow strength
 - `hierarchy` — contains vs elaborates
 - `permanence` — speculative vs definitive
-- `emotions` — Plutchik axes
 - `synthesis` + `embedding` — semantic content
 
 Multiple link types would add schema complexity without query benefit.
@@ -72,11 +70,10 @@ From `schema.yaml`:
 
 1. Single link type: `link`
 2. All floats in specified ranges
-3. Emotions emerge from alignment formula
-4. No arbitrary constants — all rates derived
-5. Branching only on Moments
-6. Forward coloration weight = (1 - permanence)
-7. Vocabulary is bidirectional
+3. No arbitrary constants — all rates derived
+4. Branching only on Moments
+5. Forward coloration weight = (1 - permanence)
+6. Vocabulary is bidirectional
 
 ---
 
