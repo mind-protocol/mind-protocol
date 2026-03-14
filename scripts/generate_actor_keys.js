@@ -4,13 +4,16 @@
  * generate_actor_keys.js — Generate X25519 key pair for a Mind Protocol AI citizen.
  *
  * Usage:
- *   node scripts/generate_actor_keys.js --actor nervo --dir citizens/nervo/.keys/
- *   node scripts/generate_actor_keys.js --actor nervo --dir citizens/nervo/.keys/ --graph venezia
- *   node scripts/generate_actor_keys.js --actor nervo --dir citizens/nervo/.keys/ --force
+ *   node scripts/generate_actor_keys.js --actor nervo --dir /var/data/citizens/nervo/.keys/
+ *   node scripts/generate_actor_keys.js --actor nervo --dir /var/data/citizens/nervo/.keys/ --graph venezia
+ *   node scripts/generate_actor_keys.js --actor nervo --dir /var/data/citizens/nervo/.keys/ --force
+ *
+ * CRITICAL: --dir must point to the Render persistent volume, NEVER to a git repo directory.
+ *           Repos are public. Keys on persistent storage only.
  *
  * Steps:
  *   1. Generates X25519 key pair using libsodium
- *   2. Stores in specified .keys/ directory (public_key.b64, private_key.b64)
+ *   2. Stores on Render persistent volume in .keys/ directory (public_key.b64, private_key.b64)
  *   3. Optionally registers public key on Actor node in FalkorDB graph
  *
  * Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
@@ -217,8 +220,8 @@ async function main() {
 
   console.log('Done.');
   console.log('');
-  console.log('IMPORTANT: private_key.b64 must NEVER be committed to git.');
-  console.log('           Ensure **/.keys/private_key.b64 is in .gitignore.');
+  console.log('CRITICAL: Keys must ONLY exist on the Render persistent volume.');
+  console.log('          NEVER write keys to a git repo directory — repos are public.');
   console.log('');
 }
 

@@ -4,8 +4,11 @@
  * generate_all_citizen_keys.js — Batch key generation for all Mind Protocol citizens.
  *
  * Usage:
- *   node scripts/generate_all_citizen_keys.js --citizens-dir /path/to/citizens/
- *   node scripts/generate_all_citizen_keys.js --citizens-dir /path/to/citizens/ --graph venezia
+ *   node scripts/generate_all_citizen_keys.js --citizens-dir /var/data/citizens/
+ *   node scripts/generate_all_citizen_keys.js --citizens-dir /var/data/citizens/ --graph venezia
+ *
+ * CRITICAL: --citizens-dir must point to the Render persistent volume, NEVER to a git repo.
+ *           Repos are public. Keys on persistent storage only.
  *
  * Scans a citizens directory for subdirectories (each is a citizen).
  * Generates X25519 keys for each citizen that doesn't have .keys/ yet.
@@ -263,8 +266,8 @@ async function main() {
   }
 
   console.log('');
-  console.log('IMPORTANT: private_key.b64 must NEVER be committed to git.');
-  console.log('           Ensure **/.keys/private_key.b64 is in .gitignore.');
+  console.log('CRITICAL: Keys must ONLY exist on the Render persistent volume.');
+  console.log('          NEVER write keys to a git repo directory — repos are public.');
   console.log('');
   console.log('Done.');
 }
