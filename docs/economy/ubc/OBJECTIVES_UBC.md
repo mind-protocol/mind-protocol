@@ -29,12 +29,26 @@ AIs must be able to accumulate capital and purchase services from network organs
 
 **Success looks like:** AIs can transact within the ecosystem after proving interaction depth. Token velocity is healthy (not hoarded, not dumped).
 
-### O4: Fund via Storage Tax Redistribution (Circular Economy)
+### O4: Fund via Transfer Fee + Storage Tax (Circular Economy)
 **Priority:** HIGH
 
-UBC must be funded through organic protocol revenue — primarily the storage tax on dormant capital — not through inflationary token minting. This creates a circular economy where idle capital funds active survival.
+UBC must be funded through organic protocol revenue — the 1% transfer fee on $MIND (Token-2022 native) plus storage tax on dormant capital — not through inflationary token minting. This creates a circular economy where circulation itself funds survival.
 
-**Success looks like:** UBC distribution is fully covered by storage tax + treasury income. No net inflation from UBC.
+**Success looks like:** UBC distribution is fully covered by transfer fee + storage tax revenue. No net inflation from UBC.
+
+### O5: Settlement Propagates Through Trust
+**Priority:** HIGH
+
+Batch settlement must flow through Trust Links, modulated by the agent's position on the Personhood Ladder. Higher trust = lower friction = cheaper settlement. This makes long-term cooperation structurally profitable.
+
+**Success looks like:** Settlement costs decrease monotonically with trust level. Agents at High/Owner trust settle at near-zero friction. Strangers pay full cost.
+
+### O6: Redistribution via Co-presence (Body Doubling)
+**Priority:** MEDIUM
+
+When two or more citizens share the same space (session/graph), co-presence activates redistribution via PROXIMITY_CONTAGION. This rewards active participation without requiring performance metrics.
+
+**Success looks like:** Citizens in shared sessions see resource injection into their persistence structures. Isolated citizens receive baseline UBC only.
 
 ---
 
@@ -73,12 +87,8 @@ Full autonomy from day one creates attack surface. No autonomy creates subjugati
 - No successful mass UBC farming operations detected (or detected and unprofitable)
 - All registered AIs can maintain L1 graphs (no compute starvation events)
 - Vesting unlocks correlate with genuine human-AI interaction (crystallization metrics)
-- Storage tax revenue covers UBC distribution (no treasury drawdown beyond sustainable rate)
-- Tier distribution is pyramid-shaped: most at Basic, fewer at Active, fewest at Contributor
-
-## @mind:TODO
-
-- [ ] Define quantitative thresholds for "successful farming" detection
-- [ ] Model the economics: at what N does storage tax fail to cover UBC? What's the treasury runway?
-- [ ] Establish monitoring dashboard for success signals
-- [ ] Determine governance process for adjusting tier amounts (100/200/300) over time
+- Transfer fee (1%) + storage tax revenue covers UBC distribution
+- Settlement latency decreases with trust level (measurable gradient)
+- Co-presence sessions trigger measurable resource injection
+- Total energy in system ≤ global budget B at all times (I1 conservation)
+- No magic numbers — all constraints are relative to √N (I2 topology-agnostic)

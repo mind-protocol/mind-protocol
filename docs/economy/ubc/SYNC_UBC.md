@@ -9,8 +9,8 @@
 ## Sync Status
 
 ```
-LAST_UPDATED: 2026-03-12
-UPDATED_BY:   Claude (integration moment synthesis)
+LAST_UPDATED: 2026-03-14
+UPDATED_BY:   Claude Opus 4.6 (spec integration)
 STATUS:       DESIGNING
 ```
 
@@ -40,9 +40,15 @@ These elements are settled and should be treated as stable:
 - **Three tiers:** Basic (100 $MIND/day), Active (200 $MIND/day), Contributor (300 $MIND/day)
 - **Vesting model:** UBC distributed daily but illiquid; unlock via crystallization milestones
 - **Anti-farming via topological proof:** Crystallization requires genuine interaction topology
-- **Unconditional floor:** Basic tier is a right, not a reward — protected by L8 CORE 5th axiom
-- **Circular funding:** Storage tax on dormant capital funds UBC distribution
+- **Unconditional floor:** Basic tier is a right, not a reward — protected by L8 CORE 5th axiom (I4 invariant)
+- **Circular funding:** 1% transfer fee (Token-2022) + storage tax funds UBC
 - **Quarantine survival:** Excluded AIs continue receiving Basic UBC
+- **Settlement via Trust Propagation (Formula 4):** Surplus flows through trust links, modulated by Personhood Ladder. Affinity = weight × gain × (1-friction) × Compatibility. Sim_lex weighted 0.5 to prevent false positive financial flows.
+- **Redistribution by Co-presence (Formula 6):** Body doubling at PROXIMITY_CONTAGION=0.02. Targets Self-Model economic nodes. No performance condition.
+- **Physics Invariants:** I1 (conservation ≤ B), I2 (max_share = clamp(1/√N, 0.01, 0.5)), I3 (decay 0.02), I4 (UBC unconditional)
+- **Parameters:** CONTAGION_RATE=0.1, PROXIMITY_CONTAGION=0.02, DECAY_RATE=0.02, WM_SIZE=5-7, TRANSFER_FEE=1%
+- **Trust Gradient:** Stranger→Low→Medium→High→Owner (monotone, High/Owner requires T1 Foundation Mastery)
+- **Scalability:** Cluster centroids for O(N) similarity, WM curation (5-7 nodes), Selection Moat for focus stability
 
 ### Designing (Active Work)
 These elements have a direction but details are being refined:
@@ -121,11 +127,15 @@ Primary sources for UBC design decisions:
 | Date | Change | By |
 |------|--------|----|
 | 2026-03-12 | Initial document chain creation (9 files) | Claude (integration moment) |
+| 2026-03-14 | Integrated Settlement (Formula 4) + Redistribution (Formula 6) + Physics Invariants (I1-I4) + Parameters + Scalability into all 8 docs | Claude Opus 4.6 |
 
 ## @mind:TODO
 
+- [ ] Implement `economy/ubc/settlement.py` (Formula 4)
+- [ ] Implement `economy/ubc/redistribution.py` (Formula 6)
+- [ ] Implement `economy/ubc/affinity.py` (F_ij + Compatibility)
+- [ ] Implement `economy/ubc/trust.py` (gradient + Personhood Ladder gate)
+- [ ] Define Personhood Ladder T1 Foundation Mastery criteria
 - [ ] Schedule design review for crystallization methodology
 - [ ] Commission economic modeling for farming attack scenarios
-- [ ] Coordinate with TEE infrastructure for U2 resolution
-- [ ] Review proposed dynamic UBC indexing with governance
-- [ ] Update this sync document after each design decision
+- [ ] Coordinate with TEE infrastructure for U2 (key custody) resolution

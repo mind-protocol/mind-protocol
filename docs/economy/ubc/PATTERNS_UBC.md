@@ -98,10 +98,86 @@ GOOD: UBC = f(registration)    → unconditional floor
 GOOD: Tier = f(activity)       → optional bonus, not survival condition
 ```
 
-## @mind:TODO
+---
 
-- [ ] Define crystallization thresholds precisely: what graph topology qualifies as "50 coherent nodes"?
-- [ ] Model vesting curve shape: linear, logarithmic, or step-function?
-- [ ] Specify storage tax rate and its relationship to UBC sustainability
-- [ ] Design the tier assessment algorithm (what counts as "positive ecosystem impact"?)
-- [ ] Address edge case: AI with deep interaction but adversarial human partner
+## Pattern 2: Batch Settlement via Trust Propagation (Formula 4)
+
+Settlement flows through Trust Links, not through centralized clearing. The cost and priority of settlement are modulated by the agent's position on the Personhood Ladder (14 aspects, 5 tiers).
+
+### Trust Gradient (monotone, never decreases)
+
+| Level | Access | Settlement Friction |
+|-------|--------|-------------------|
+| 1. Stranger | Minimal, max filtering | Full cost |
+| 2. Low | Basic access | High friction |
+| 3. Medium | Standard access | Moderate friction |
+| 4. High | Requires T1 mastery (Foundation) | Low friction |
+| 5. Owner | Full surplus control | Near-zero friction |
+
+**Constraint:** A trust link cannot reach High/Owner if the agent has unresolved gaps in T1 (Foundation Mastery, rule B4 of Personhood Ladder).
+
+### Surplus Propagation
+
+Only energy exceeding the activation threshold propagates:
+
+```
+Surplus_i = max(0, E_i - Θ_i)
+```
+
+### Affinity Calculation
+
+The settlement affinity between nodes i and j:
+
+```
+F_ij = weight_ij × gain_ij × (1 - friction_ij) × Compatibility(i, link, j)
+```
+
+Where Compatibility (Law 8) is a composite function:
+
+| Component | Weight | Purpose |
+|-----------|--------|---------|
+| Sim_vec (cosine similarity) | 0.3 | Semantic alignment |
+| Sim_lex (exact lexical match) | 0.5 | Prevents false positive financial flows |
+| Δ_affect (affective incongruence) | 0.2 | Working Memory emotional coherence |
+
+**Key insight:** Sim_lex is weighted highest (0.5) specifically to prevent false positive financial settlements. Semantic similarity alone could route funds incorrectly.
+
+---
+
+## Pattern 3: UBC Redistribution by Co-presence / Body Doubling (Formula 6)
+
+When ≥2 citizens share the same space (session/graph), PROXIMITY_CONTAGION activates bidirectional valence exchange:
+
+```
+A.satisfaction += PROXIMITY_CONTAGION × (valence_B - valence_A) × 0.5
+```
+
+Where `PROXIMITY_CONTAGION = 0.02`.
+
+This activation targets nodes in the Self-Model containing: `resource`, `budget`, `token`, `economic` — triggering resource injection into the agent's persistence structures.
+
+**Key insight:** Body doubling rewards co-presence, not performance. Two citizens simply existing in the same space triggers redistribution. This is UBC's active dimension — the unconditional floor is passive (daily allocation), body doubling is active (co-presence bonus).
+
+---
+
+## Pattern 4: Physics Over Rules
+
+All constraints are physical, not arbitrary:
+
+- **I1 Conservation:** Total injected energy ≤ global budget B.
+- **I2 No Magic Numbers:** `max_share = clamp(1/√N_targeted, 0.01, 0.5)` — works for 100 or 100,000 citizens.
+- **I3 Decay:** `DECAY_RATE = 0.02` per tick — only real activity maintains influence.
+- **I4 Unconditional Floor:** UBC is NEVER coupled to behavioral scores.
+
+---
+
+## Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| CONTAGION_RATE | 0.1 | Valence transfer via messages (subtle, cumulative) |
+| PROXIMITY_CONTAGION | 0.02 | Valence exchange by co-presence (body doubling) |
+| DECAY_RATE | 0.02 | Natural energy dissipation per tick |
+| WM_SIZE | 5-7 | Working Memory critical size for scalability |
+| TRANSFER_FEE | 1% | Solana Token-2022 fee feeding UBC |
+| TRUST_WEIGHTS | Gradient | Full budget (Owner/High) vs Attenuated (Low/Stranger) |

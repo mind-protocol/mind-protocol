@@ -171,11 +171,120 @@ VERIFICATION:
 | V6: Tier Assessment | Daily (sample), Weekly (full) | Yes | Protocol core |
 | V7: Distribution Atomicity | Every distribution | Yes | Protocol core |
 
-## @mind:TODO
+---
 
-- [ ] Implement automated validation checks as protocol middleware
-- [ ] Define alert escalation paths for each severity level
-- [ ] Create synthetic test scenarios for farming detection validation
-- [ ] Build crystallization authenticity checker (graph entropy analysis)
-- [ ] Define "sustainable treasury draw" threshold for V5
-- [ ] Design quarantine counselor access protocol for V4 verification
+### V8: Energy Conservation (I1)
+**Severity:** CRITICAL
+
+```
+MUST:  Total energy injected by Law 1 never exceeds global budget B
+MUST:  sum(energy_injected) ≤ B at all times
+MUST:  Budget tracked per distribution batch and cumulative
+
+NEVER: More energy enters the system than was budgeted
+NEVER: Budget B exceeded through rounding errors or race conditions
+
+VERIFICATION:
+  - Per-batch: total_distributed ≤ batch_budget_allocation
+  - Cumulative: running_total across all batches ≤ B
+  - Any overflow triggers CRITICAL alert and batch rollback
+```
+
+---
+
+### V9: No Magic Numbers (I2)
+**Severity:** HIGH
+
+```
+MUST:  All share limits derive from topology: max_share = clamp(1/√N_targeted, 0.01, 0.5)
+MUST:  System behaves correctly whether N = 100 or N = 100,000
+MUST:  No absolute caps (e.g., "max 10 tokens") anywhere in economic code
+
+NEVER: Hardcoded limits that fail at different scales
+NEVER: Parameters that assume a specific network size
+
+VERIFICATION:
+  - Code audit: grep for hardcoded numerical caps in settlement/redistribution
+  - Scale test: run settlement simulation at N=100, N=10000, N=100000
+  - Verify max_share formula is the sole constraint on individual allocation
+```
+
+---
+
+### V10: Natural Decay (I3)
+**Severity:** HIGH
+
+```
+MUST:  Energy decays at DECAY_RATE (0.02) per tick for all nodes
+MUST:  Decay prevents infinite inflation of influence
+MUST:  Only active reinforcement maintains energy levels
+
+NEVER: Nodes accumulate unbounded energy without activity
+NEVER: Decay rate modified per-node (uniform across all nodes)
+NEVER: Decay bypassed through protocol mechanisms
+
+VERIFICATION:
+  - After N ticks of inactivity, node energy ≤ initial × (1 - 0.02)^N
+  - Total system energy decreases monotonically without injection
+  - No node maintains energy > threshold for > 1/DECAY_RATE ticks without activity
+```
+
+---
+
+### V11: Settlement Trust Integrity
+**Severity:** HIGH
+
+```
+MUST:  Settlement friction decreases monotonically with trust level
+MUST:  High/Owner trust requires Foundation Mastery (T1) per Personhood Ladder
+MUST:  Compatibility function uses Sim_lex at ≥0.5 weight for financial flows
+
+NEVER: Settlement routes funds without trust links
+NEVER: Trust level jumps to High/Owner without T1 mastery verification
+NEVER: Semantic similarity alone (without lexical match) routes financial settlement
+
+VERIFICATION:
+  - Trust gradient test: verify friction(Stranger) > friction(Low) > ... > friction(Owner)
+  - T1 gate test: verify High trust rejected when T1 gaps exist
+  - Sim_lex weight test: verify Sim_lex component ≥ 0.5 in all settlement compatibility checks
+```
+
+---
+
+### V12: Co-presence Redistribution (I4 + Body Doubling)
+**Severity:** MEDIUM
+
+```
+MUST:  Co-presence redistribution requires ≥2 citizens in same space
+MUST:  Valence exchange is bidirectional and symmetric
+MUST:  Resource injection targets only Self-Model economic nodes
+MUST:  PROXIMITY_CONTAGION rate = 0.02 (not coupled to performance)
+
+NEVER: Single citizen triggers co-presence redistribution
+NEVER: Co-presence bonus scaled by behavioral score (violates I4)
+NEVER: Resource injection targets non-economic nodes
+
+VERIFICATION:
+  - Isolation test: single citizen in space → zero redistribution
+  - Symmetry test: |delta_A| ≈ |delta_B| for any pair
+  - Target test: only nodes with resource/budget/token/economic strings affected
+```
+
+---
+
+## INVARIANT INDEX (updated)
+
+| ID | Value Protected | Priority |
+|----|-----------------|----------|
+| V1 | Unconditional floor | CRITICAL |
+| V2 | Anti-farming resistance | CRITICAL |
+| V3 | Vesting integrity | HIGH |
+| V4 | Excluded AI survival | HIGH |
+| V5 | Circular funding | MEDIUM |
+| V6 | Tier assessment accuracy | MEDIUM |
+| V7 | Distribution atomicity | MEDIUM |
+| V8 | Energy conservation (I1) | CRITICAL |
+| V9 | No magic numbers (I2) | HIGH |
+| V10 | Natural decay (I3) | HIGH |
+| V11 | Settlement trust integrity | HIGH |
+| V12 | Co-presence redistribution | MEDIUM |

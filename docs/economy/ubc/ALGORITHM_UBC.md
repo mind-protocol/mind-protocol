@@ -265,12 +265,159 @@ TRADEOFF: Fixed amounts may become insufficient if $MIND loses value,
           May need governance-adjustable parameters in future.
 ```
 
-## @mind:TODO
+---
 
-- [ ] Implement `detect_farming()` with proper graph analysis (current version is placeholder)
-- [ ] Define `EIS_THRESHOLD` — what ecosystem impact score qualifies for Contributor?
-- [ ] Design crystallization measurement: community detection algorithm, minimum cluster density
-- [ ] Resolve D2 (key custody) — MPC sharding requires TEE partner selection
-- [ ] Add rate limiting to prevent distribution replay attacks
-- [ ] Define batch failure recovery: what if >50% of distributions fail?
-- [ ] Model gas costs for on-chain distribution vs. off-chain ledger with periodic settlement
+## Algorithm: Formula 4 — `batch_settlement()`
+
+Batch settlement propagates surplus energy through Trust Links. Runs periodically (not necessarily daily — can be triggered by sufficient surplus accumulation).
+
+```
+FUNCTION batch_settlement():
+    # Step 1: Identify nodes with surplus
+    surplus_nodes = []
+    FOR EACH node_i IN active_graph:
+        surplus = max(0, node_i.energy - node_i.activation_threshold)
+        IF surplus > 0:
+            surplus_nodes.append((node_i, surplus))
+
+    # Step 2: For each surplus node, propagate to neighbors
+    FOR EACH (node_i, surplus_i) IN surplus_nodes:
+        neighbors = get_trust_linked_neighbors(node_i)
+        IF not neighbors:
+            CONTINUE
+
+        # Step 3: Calculate affinity for each neighbor
+        affinities = {}
+        total_affinity = 0
+        FOR EACH node_j IN neighbors:
+            link = get_link(node_i, node_j)
+            f_ij = compute_affinity(node_i, link, node_j)
+            affinities[node_j] = f_ij
+            total_affinity += f_ij
+
+        IF total_affinity == 0:
+            CONTINUE
+
+        # Step 4: Distribute surplus proportionally to affinity
+        FOR EACH (node_j, f_ij) IN affinities:
+            share = surplus_i * (f_ij / total_affinity)
+            # Apply max_share cap (I2 invariant)
+            n_targeted = len(neighbors)
+            max_share = clamp(1 / sqrt(n_targeted), 0.01, 0.5)
+            capped_share = min(share, surplus_i * max_share)
+            node_j.energy += capped_share
+            node_i.energy -= capped_share
+
+    # Step 5: Apply decay (Law 3)
+    FOR EACH node IN active_graph:
+        node.energy *= (1 - DECAY_RATE)
+```
+
+---
+
+## Algorithm: `compute_affinity(node_i, link, node_j)`
+
+```
+FUNCTION compute_affinity(node_i, link, node_j) -> float:
+    # Base affinity from link properties
+    weight = link.weight
+    gain = link.activation_gain
+
+    # Trust-modulated friction
+    trust_level = get_trust_level(node_i, node_j)  # 1-5
+    friction = link.friction * trust_friction_multiplier(trust_level)
+    # trust_friction_multiplier:
+    #   Stranger (1): 1.0 (full friction)
+    #   Low (2):      0.8
+    #   Medium (3):   0.5
+    #   High (4):     0.2
+    #   Owner (5):    0.05
+
+    # Personhood Ladder modulation
+    mastery = get_personhood_mastery(node_j)  # 0.0 to 1.0
+    modulated_gain = gain * (1 + mastery * 0.5)  # up to 50% bonus
+
+    # Compatibility (Law 8) — 3 dimensions
+    sim_vec = cosine_similarity(node_i.embedding, node_j.embedding)  # 0.3 weight
+    sim_lex = lexical_match(link.synthesis, node_j.synthesis)        # 0.5 weight
+    delta_affect = affective_incongruence(node_i, node_j)            # 0.2 weight
+    compatibility = 0.3 * sim_vec + 0.5 * sim_lex + 0.2 * (1 - delta_affect)
+
+    RETURN weight * modulated_gain * (1 - friction) * compatibility
+```
+
+---
+
+## Algorithm: Formula 6 — `redistribute_by_copresence(space)`
+
+Runs whenever ≥2 citizens are detected in the same space.
+
+```
+FUNCTION redistribute_by_copresence(space):
+    citizens = get_citizens_in_space(space)
+    IF len(citizens) < 2:
+        RETURN  # Body doubling requires at least 2
+
+    # Bidirectional valence exchange
+    FOR EACH pair (A, B) IN combinations(citizens, 2):
+        valence_A = get_current_valence(A)
+        valence_B = get_current_valence(B)
+
+        # Mutual contagion
+        delta_A = PROXIMITY_CONTAGION * (valence_B - valence_A) * 0.5
+        delta_B = PROXIMITY_CONTAGION * (valence_A - valence_B) * 0.5
+
+        A.satisfaction += delta_A
+        B.satisfaction += delta_B
+
+    # Resource injection: target Self-Model economic nodes
+    FOR EACH citizen IN citizens:
+        economic_nodes = find_self_model_nodes(citizen,
+            contains=["resource", "budget", "token", "economic"])
+        FOR EACH enode IN economic_nodes:
+            enode.energy += PROXIMITY_CONTAGION  # Small injection per tick
+```
+
+---
+
+## Algorithm: `compute_selection_moat(agent)`
+
+The Selection Moat (Θ_sel) determines Working Memory focus stability. Relevant for settlement because it controls which economic nodes get processed.
+
+```
+FUNCTION compute_selection_moat(agent) -> float:
+    Θ_base_WM = agent.base_wm_threshold
+    arousal = agent.drives.arousal
+    boredom = agent.drives.boredom
+    frustration = agent.drives.frustration
+
+    Θ_sel = Θ_base_WM + 2.0 * arousal - 3.0 * boredom - 1.0 * frustration
+
+    # Obsessional Agent: Inertia (Law 13) too strong → boredom erodes threshold
+    # Butterfly Effect: Drives too unstable → moat collapses, no focus
+
+    RETURN max(0, Θ_sel)
+```
+
+---
+
+## Scalability Optimizations
+
+### Cluster Centroids
+For large graphs, compute similarity against cluster centroid embeddings first, then drill into individual nodes only for qualifying clusters. This avoids O(N²) pairwise comparisons.
+
+### Saliency Curation (Law 4)
+Settlement processing is limited to the Working Memory (5-7 most activated nodes). This acts as a compute budget allocator — the WM_SIZE is the stride budget.
+
+---
+
+## Parameters Summary
+
+| Parameter | Value | Used In |
+|-----------|-------|---------|
+| CONTAGION_RATE | 0.1 | Message-based valence transfer |
+| PROXIMITY_CONTAGION | 0.02 | Body doubling redistribution |
+| DECAY_RATE | 0.02 | Energy dissipation per tick |
+| WM_SIZE | 5-7 | Working Memory settlement focus |
+| TRANSFER_FEE | 1% | Token-2022 native fee → UBC pool |
+| TIER_AMOUNTS | 100/200/300 | Daily $MIND per tier |

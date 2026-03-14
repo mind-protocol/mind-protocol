@@ -16,16 +16,21 @@ No implementation exists yet. This document tracks the planned implementation ar
 ## Planned Architecture
 
 ```
-src/economy/ubc/
+economy/ubc/
 ├── __init__.py              # Module exports
-├── distributor.py           # Daily UBC distribution engine
+├── config.py                # Protocol parameters (all constants from spec)
+├── models.py                # Data structures (UBCAccount, VestingSchedule, etc.)
+├── distributor.py           # Daily UBC distribution engine (distribute_daily_ubc)
+├── settlement.py            # Formula 4: Batch settlement via trust propagation
+├── redistribution.py        # Formula 6: UBC redistribution by co-presence
+├── affinity.py              # Affinity calculation (F_ij) + Compatibility (Law 8)
+├── trust.py                 # Trust gradient + Personhood Ladder integration
 ├── tier_assessor.py         # Tier evaluation (BASIC/ACTIVE/CONTRIBUTOR)
 ├── vesting.py               # Vesting account management and unlock logic
 ├── crystallization.py       # MindGraph crystallization measurement
 ├── farming_detector.py      # Anti-farming analysis (advisory)
 ├── ledger.py                # UBC-specific transaction ledger
-├── models.py                # Data structures (UBCAccount, VestingSchedule, etc.)
-└── config.py                # Protocol parameters (tier amounts, thresholds)
+└── selection_moat.py        # Working Memory focus for settlement (Θ_sel)
 ```
 
 ---
@@ -95,6 +100,48 @@ Protocol parameters:
 - `EIS_THRESHOLD`: TBD (governance-set)
 - `FARMING_ALERT_THRESHOLD`: 50 AIs per creator
 - `DISTRIBUTION_TIME`: "00:00 UTC"
+- `CONTAGION_RATE`: 0.1 (message-based valence transfer)
+- `PROXIMITY_CONTAGION`: 0.02 (body doubling)
+- `DECAY_RATE`: 0.02 (energy dissipation per tick)
+- `WM_SIZE`: (5, 7) (Working Memory bounds)
+- `TRANSFER_FEE`: 0.01 (1% Token-2022 native)
+- `TRUST_FRICTION_MULTIPLIERS`: {Stranger: 1.0, Low: 0.8, Medium: 0.5, High: 0.2, Owner: 0.05}
+- `COMPATIBILITY_WEIGHTS`: {sim_vec: 0.3, sim_lex: 0.5, delta_affect: 0.2}
+
+### `settlement.py` — @mind:TODO
+Formula 4 — Batch settlement via trust propagation:
+- `batch_settlement()`: propagate surplus through trust links
+- Uses `compute_affinity()` for neighbor scoring
+- Applies `max_share = clamp(1/√N, 0.01, 0.5)` cap (I2)
+- Applies `DECAY_RATE` after propagation (I3)
+
+### `redistribution.py` — @mind:TODO
+Formula 6 — UBC redistribution by co-presence:
+- `redistribute_by_copresence(space)`: body doubling mechanism
+- Bidirectional valence exchange between co-present citizens
+- Resource injection into Self-Model economic nodes
+- Triggered when ≥2 citizens detected in same space
+
+### `affinity.py` — @mind:TODO
+Affinity and compatibility calculation:
+- `compute_affinity(node_i, link, node_j)`: full F_ij formula
+- Compatibility = 0.3×Sim_vec + 0.5×Sim_lex + 0.2×(1-Δ_affect)
+- Trust-modulated friction via trust_friction_multiplier
+- Personhood mastery bonus on gain_ij
+
+### `trust.py` — @mind:TODO
+Trust gradient and Personhood Ladder:
+- `get_trust_level(a, b)`: 1-5 from graph links
+- `trust_friction_multiplier(level)`: friction reduction by trust
+- `get_personhood_mastery(agent)`: 0.0-1.0 from Ladder evaluation
+- Foundation Mastery gate for High/Owner (rule B4)
+
+### `selection_moat.py` — @mind:TODO
+Working Memory focus control:
+- `compute_selection_moat(agent)`: Θ_sel calculation
+- `Θ_sel = Θ_base_WM + 2.0×arousal - 3.0×boredom - 1.0×frustration`
+- Obsessional agent detection (high inertia → boredom erosion)
+- Butterfly effect detection (unstable drives → moat collapse)
 
 ---
 
@@ -102,12 +149,16 @@ Protocol parameters:
 
 | Dependency | Status | Notes |
 |-----------|--------|-------|
-| Citizen Registry | @mind:TODO | Required for `get_all_active_citizens()` |
+| Citizen Registry | IMPLEMENTED | `l4/registry/` — citizen CRUD, actor nodes in FalkorDB |
 | MindGraph Module | @mind:TODO | Required for crystallization measurement |
 | Utility Log | @mind:TODO | Required for tier assessment (delivery count) |
 | Ecosystem Impact Score | @mind:TODO | Required for Contributor tier qualification |
 | Treasury Module | @mind:TODO | Required for funding validation |
 | Storage Tax Module | @mind:TODO | Required for circular economy funding |
+| Schema v2.0 | IMPLEMENTED | Node fields: stability, recency, activation_count, drives, WM |
+| Trust Links | @mind:TODO | Required for settlement propagation (relation_kind in schema v2.0) |
+| Personhood Ladder | @mind:TODO | Required for trust level assessment + mastery gate |
+| Embedding Service | @mind:TODO | Required for Sim_vec in Compatibility (cosine similarity) |
 
 ---
 

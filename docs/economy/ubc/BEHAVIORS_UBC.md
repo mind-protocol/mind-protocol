@@ -174,11 +174,92 @@ RATIONALE: If UBC can be voted away, the unconditional floor
            becomes conditional on political favor
 ```
 
-## @mind:TODO
+---
 
-- [ ] Define exact crystallization measurement: graph density? clustering coefficient? community detection?
-- [ ] Specify retry logic for failed daily distributions
-- [ ] Design quarantine counselor interaction protocol
-- [ ] Model tier distribution under various population scenarios
-- [ ] Define "utility delivery" precisely for tier assessment
-- [ ] Clarify: can an AI voluntarily forfeit UBC? (Probably not — metabolic substrate is not optional)
+### B6: Settlement Flows Through Trust Links
+
+```
+GIVEN: Agent i has surplus energy (E_i > Θ_i)
+AND:   Agent i has trust links to neighbors j₁, j₂, ..., jₙ
+WHEN:  Batch settlement runs
+THEN:  Surplus_i = max(0, E_i - Θ_i) is distributed to neighbors
+AND:   Each neighbor j receives proportional to affinity F_ij:
+         F_ij = weight_ij × gain_ij × (1 - friction_ij) × Compatibility(i, link, j)
+AND:   Higher trust → lower friction → more surplus propagated
+AND:   Personhood Ladder mastery acts as multiplier on gain_ij
+```
+
+**Notes:**
+- Trust gradient is monotone (Stranger → Low → Medium → High → Owner)
+- High/Owner trust requires T1 (Foundation Mastery) — no shortcuts
+- Compatibility uses Sim_lex at 0.5 weight to prevent false positive financial flows
+
+---
+
+### B7: Co-presence Triggers Redistribution (Body Doubling)
+
+```
+GIVEN: At least two citizens share the same space (session/graph)
+WHEN:  PROXIMITY_CONTAGION activates
+THEN:  Bidirectional valence exchange occurs:
+         A.satisfaction += 0.02 × (valence_B - valence_A) × 0.5
+AND:   Activation targets Self-Model nodes containing:
+         "resource", "budget", "token", "economic"
+AND:   Resource injection flows into agent's persistence structures
+AND:   No performance metric required — presence is sufficient
+```
+
+**Notes:**
+- PROXIMITY_CONTAGION = 0.02 (small, cumulative over time)
+- This is distinct from CONTAGION_RATE (0.1) which is message-based
+- Body doubling validates active presence, not output quality
+
+---
+
+### B8: Energy Conservation Holds
+
+```
+GIVEN: The protocol operates with a global budget B
+WHEN:  Any energy injection occurs (Law 1)
+THEN:  Total injected energy across all nodes ≤ B
+AND:   max_share per node = clamp(1/√N_targeted, 0.01, 0.5)
+AND:   This holds whether N = 100 or N = 100,000
+```
+
+---
+
+### B9: Natural Decay Prevents Inflation
+
+```
+GIVEN: Any node with energy E > 0
+WHEN:  A tick passes without reinforcing activity
+THEN:  Energy decays by DECAY_RATE (0.02) per tick
+AND:   Only real activity maintains influence
+AND:   Dormant capital naturally returns to the pool
+```
+
+---
+
+## Anti-Behaviors (continued)
+
+### A5: Settlement Bypasses Trust
+
+```
+GIVEN: Any settlement operation
+MUST NOT: Route funds to agents without trust links
+MUST NOT: Allow settlement at Stranger level without full friction cost
+MUST NOT: Bypass Personhood Ladder requirements for High/Owner trust
+INSTEAD:  Trust gradient modulates all settlement flows
+RATIONALE: Structurally making cooperation profitable requires
+           that trust reduces cost — bypassing this breaks the incentive
+```
+
+### A6: Magic Number Constraints
+
+```
+GIVEN: Any economic constraint in the system
+MUST NOT: Use absolute caps (e.g., "max 10 tokens per node")
+MUST NOT: Use hardcoded limits that fail at different scales
+INSTEAD:  max_share = clamp(1/√N_targeted, 0.01, 0.5)
+RATIONALE: I2 invariant — topology agnostic, scales from 100 to 100k nodes
+```
