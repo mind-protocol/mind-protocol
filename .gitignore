@@ -9,7 +9,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+lib/*
+!lib/crypto/
 lib64/
 parts/
 sdist/
@@ -54,8 +55,8 @@ target/
 # Node.js
 node_modules/
 
-# Private keys — NEVER commit
-**/.keys/private_key.b64
+# Private keys — NEVER commit. Entire .keys/ directories excluded.
+**/.keys/
 
 # Deployment output
 deploy_output/

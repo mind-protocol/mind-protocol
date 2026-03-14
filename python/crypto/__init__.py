@@ -28,6 +28,8 @@ from .key_exchange import (
     decrypt_space_key_for_actor,
 )
 
+from .key_cache import SpaceKeyCache
+
 __all__ = [
     # space_key
     "generate_space_key",
@@ -44,4 +46,6 @@ __all__ = [
     # key_exchange
     "encrypt_space_key_for_actor",
     "decrypt_space_key_for_actor",
+    # key_cache
+    "SpaceKeyCache",
 ]
