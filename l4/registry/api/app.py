@@ -416,6 +416,10 @@ async def ping_citizen(handle: str):
         )
         universe = uni_rows[0][0] if uni_rows else None
 
+    # Default universe: lumina-prime (main city)
+    if not universe:
+        universe = "lumina-prime"
+
     # 3. Last active — latest moment linked to this citizen in L3
     last_active = None
     last_active_space = None
