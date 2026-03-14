@@ -805,6 +805,46 @@ async def get_infos(handle: str):
 ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 
 
+@app.post("/admin/set-endpoint")
+async def set_org_endpoint(request: Request, x_api_key: str = Header(alias="X-API-Key")):
+    """Set an org's endpoint URL. Admin only.
+
+    Body: {"org_id": "cities-of-light", "endpoint_url": "https://..."}
+    """
+    if not ADMIN_API_KEY or x_api_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    import time
+    body = await request.json()
+    org_id = body.get("org_id", "")
+    url = body.get("endpoint_url", "")
+    if not org_id or not url:
+        raise HTTPException(status_code=400, detail="org_id and endpoint_url required")
+
+    now_s = int(time.time())
+    ep_id = f"{org_id}_endpoint"
+
+    # Delete old edges to endpoint (both :link and :LINK)
+    graph_query(f"MATCH (o {{id: $oid}})-[r]->(e {{id: $eid}}) DELETE r", {"oid": org_id, "eid": ep_id})
+
+    # Upsert endpoint node
+    graph_query(
+        "MERGE (e {id: $eid}) SET e.node_type = 'thing', e.type = 'endpoint', "
+        "e.content = $url, e.uri = $url, e.updated_at_s = $now",
+        {"eid": ep_id, "url": url, "now": now_s},
+    )
+
+    # Create :LINK edge
+    graph_query(
+        "MATCH (o {id: $oid}), (e {id: $eid}) "
+        "MERGE (o)-[r:LINK {nature: 'has_endpoint'}]->(e) "
+        "SET r.permanence = 0.8",
+        {"oid": org_id, "eid": ep_id},
+    )
+
+    return {"ok": True, "org_id": org_id, "endpoint_url": url}
+
+
 @app.post("/admin/seed")
 async def seed_registry(x_api_key: str = Header(alias="X-API-Key")):
     """Seed the registry from data/registry.json. Requires ADMIN_API_KEY."""
