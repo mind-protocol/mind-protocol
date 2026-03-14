@@ -1,0 +1,5 @@
+FROM falkordb/falkordb:latest
+
+EXPOSE 6379
+
+CMD ["redis-server", "--appendonly", "yes", "--loadmodule", "/usr/lib/redis/modules/falkordb.so"]
