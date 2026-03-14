@@ -21,7 +21,7 @@ import os
 from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from .db import graph_query, health_check, FALKORDB_GRAPH
+from .db import graph_query, health_check, FALKORDB_GRAPH, FALKORDB_HOST, FALKORDB_PORT
 from .models import (
     Citizen,
     CitizenDetail,
@@ -383,15 +383,54 @@ async def ping_citizen(handle: str):
     if not rows:
         raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found in L4")
 
-    # 2. Resolve org
+    citizen_name = rows[0][1] if len(rows[0]) > 1 else handle
+
+    # 2. Resolve org + universe
     org_rows = graph_query(GET_CITIZEN_ORG, {"citizen_id": citizen_id})
     org_id = org_rows[0][0] if org_rows else None
     org_name = org_rows[0][1] if org_rows else None
+
+    # Universe from org or citizen node
+    universe = None
+    if org_id:
+        uni_rows = graph_query(
+            "MATCH (o {id: $oid}) RETURN o.universe",
+            {"oid": org_id},
+        )
+        universe = uni_rows[0][0] if uni_rows else None
+    if not universe:
+        uni_rows = graph_query(
+            "MATCH (c {id: $cid}) RETURN c.universe",
+            {"cid": citizen_id},
+        )
+        universe = uni_rows[0][0] if uni_rows else None
+
+    # 3. Last active — latest moment linked to this citizen in L3
+    last_active = None
+    last_active_space = None
+    if universe:
+        try:
+            from falkordb import FalkorDB as _FDB
+            _db_l3 = _FDB(host=FALKORDB_HOST, port=int(FALKORDB_PORT))
+            _g_l3 = _db_l3.select_graph(universe)
+            la_rows = _g_l3.query(
+                "MATCH (a {id: $handle})-[:link]->(m {node_type: 'moment'}) "
+                "RETURN m.created_at_s, m.synthesis "
+                "ORDER BY m.created_at_s DESC LIMIT 1",
+                {"handle": handle},
+            )
+            if la_rows.result_set and la_rows.result_set[0][0]:
+                last_active = la_rows.result_set[0][0]
+                last_active_space = la_rows.result_set[0][1] if len(la_rows.result_set[0]) > 1 else None
+        except Exception:
+            pass
 
     if not org_id:
         return {
             "handle": handle,
             "alive": False,
+            "universe": universe,
+            "last_active": last_active,
             "error": "No org — cannot resolve membrane endpoint",
             "resolution": {"citizen": citizen_id, "org": None, "membrane": None},
         }
@@ -407,6 +446,8 @@ async def ping_citizen(handle: str):
         return {
             "handle": handle,
             "alive": False,
+            "universe": universe,
+            "last_active": last_active,
             "error": f"Org '{org_id}' has no registered endpoint",
             "resolution": {"citizen": citizen_id, "org": org_id, "membrane": None},
         }
@@ -435,6 +476,9 @@ async def ping_citizen(handle: str):
             return {
                 "handle": handle,
                 "alive": alive,
+                "universe": universe,
+                "last_active": last_active,
+                "last_active_context": last_active_space,
                 "membrane_response": membrane_data,
                 "resolution": {
                     "citizen": citizen_id,
@@ -448,6 +492,8 @@ async def ping_citizen(handle: str):
         return {
             "handle": handle,
             "alive": False,
+            "universe": universe,
+            "last_active": last_active,
             "error": f"Membrane unreachable: {e}",
             "resolution": {
                 "citizen": citizen_id, "org": org_id,
