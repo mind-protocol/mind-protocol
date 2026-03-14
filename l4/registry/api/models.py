@@ -1,5 +1,9 @@
 """
-Pydantic models for the L4 Registry REST API.
+Pydantic response models for the L4 Registry REST API.
+
+These are API-layer models for serialization. The domain models
+(CitizenRecord, OrgRecord) live in l4.registry and are used for
+graph-level CRUD. These models are shaped for the frontend contract.
 
 Maps to TypeScript types in:
   app/[locale]/(public)/registry/lib/types.ts

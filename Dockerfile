@@ -16,4 +16,4 @@ USER appuser
 
 EXPOSE 8766
 
-CMD ["uvicorn", "api.registry.app:app", "--host", "0.0.0.0", "--port", "8766"]
+CMD ["uvicorn", "l4.registry.api.app:app", "--host", "0.0.0.0", "--port", "8766"]

@@ -1,5 +1,5 @@
 """
-FalkorDB connection management for L4 Registry.
+FalkorDB connection management for L4 Registry API.
 
 Uses the falkordb Python package (not raw redis).
 Connection is to FALKORDB_HOST:FALKORDB_PORT, graph FALKORDB_GRAPH.

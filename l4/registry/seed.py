@@ -5,9 +5,9 @@ Creates Actor nodes (CITIZEN and ORGANIZATION types) with v2.0 schema fields,
 Thing nodes for capabilities, and LINK relationships between them.
 
 Usage:
-    python -m api.registry.seed                           # defaults: localhost:6379, mind_protocol
-    python -m api.registry.seed --host falkordb --port 6379 --graph mind_protocol
-    python -m api.registry.seed --json /path/to/registry.json
+    python -m l4.registry.seed                           # defaults: localhost:6379, mind_protocol
+    python -m l4.registry.seed --host falkordb --port 6379 --graph mind_protocol
+    python -m l4.registry.seed --json /path/to/registry.json
 
 Environment variables (override defaults):
     FALKORDB_HOST   (default: localhost)
@@ -33,7 +33,7 @@ from falkordb import FalkorDB
 # ---------------------------------------------------------------------------
 
 # Default JSON path: look for data/registry.json relative to the repo root.
-# The repo root is 3 levels up from this file (api/registry/seed.py -> root).
+# The repo root is 3 levels up from this file (l4/registry/seed.py -> root).
 DEFAULT_JSON = str(Path(__file__).resolve().parent.parent.parent / "data" / "registry.json")
 DEFAULT_HOST = os.environ.get("FALKORDB_HOST", "localhost")
 DEFAULT_PORT = int(os.environ.get("FALKORDB_PORT", "6379"))
@@ -368,7 +368,6 @@ def seed(json_path: str, host: str, port: int, graph_name: str) -> None:
     print(f"  has_capability links: {stats['links_has_capability']}")
 
     # 3c: verification links (mind-protocol verifier -> entity)
-    # Ensure the mind-protocol org exists before creating verification links
     for citizen in citizens:
         if citizen.get("verification") == "verified":
             link_params = {
