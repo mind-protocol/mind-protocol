@@ -376,10 +376,13 @@ async def ping_citizen(handle: str):
     """
     import httpx
 
-    citizen_id = f"CITIZEN_{handle}"
-
-    # 1. Check citizen exists
-    rows = graph_query(GET_CITIZEN, {"citizen_id": citizen_id})
+    # Try both ID formats: raw handle and CITIZEN_ prefixed
+    citizen_id = handle
+    rows = graph_query(GET_CITIZEN, {"citizen_id": handle})
+    if not rows:
+        rows = graph_query(GET_CITIZEN, {"citizen_id": f"CITIZEN_{handle}"])
+        if rows:
+            citizen_id = f"CITIZEN_{handle}"
     if not rows:
         raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found in L4")
 
@@ -387,6 +390,10 @@ async def ping_citizen(handle: str):
 
     # 2. Resolve org + universe
     org_rows = graph_query(GET_CITIZEN_ORG, {"citizen_id": citizen_id})
+    if not org_rows:
+        # Try alternate ID format for org resolution
+        alt_id = f"CITIZEN_{handle}" if citizen_id == handle else handle
+        org_rows = graph_query(GET_CITIZEN_ORG, {"citizen_id": alt_id})
     org_id = org_rows[0][0] if org_rows else None
     org_name = org_rows[0][1] if org_rows else None
 
