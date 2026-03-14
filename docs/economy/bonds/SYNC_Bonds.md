@@ -85,7 +85,7 @@ These items are under active design and may change:
 |--------|-----------|-----------|--------|
 | `token/` | Bonds --> Token | Commitment, locking, burning, minting via SPL Token-2022 | @mind:TODO -- Align with token contract interfaces |
 | `cascade-utility/` | Utility --> Bonds | Utility measurement feeds reward calculation | @mind:TODO -- Define utility oracle interface |
-| `storage-tax/` | Bonds --> Storage Tax | Bond-committed capital exempt from dormancy | @mind:TODO -- Implement exemption check in storage-tax |
+| `storage-tax/` | Bonds --> Storage Tax | Bond-committed capital exempt from dormancy (storage tax only — demurrage removed 2026-03-14) | @mind:TODO -- Implement exemption check in storage-tax |
 | `organism-model/` | Bonds --> Organism | Trust scores feed membrane pricing | @mind:TODO -- Define trust score consumption API |
 | `governance/` | Governance --> Bonds | Parameter changes require governance vote | @mind:TODO -- Define governance hooks for bond parameters |
 

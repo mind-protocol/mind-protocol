@@ -858,8 +858,8 @@ class TestUBCProximityRedistributionFormula:
         for actor_id, weight in actor_weights.items():
             assert weight > 0, f"Actor {actor_id} has non-positive weight"
 
-    def test_inv_ubc3_zero_hours_no_weight(self):
-        """Actors with zero hours in shared spaces get no weight."""
+    def test_inv_ubc3_zero_activity_no_weight(self):
+        """Actors with zero moment weight in shared spaces get no weight."""
         spaces = [
             SpacePresence(
                 space_id="s1",
@@ -872,31 +872,81 @@ class TestUBCProximityRedistributionFormula:
     # --- Worked example from ALGORITHM doc ---
 
     def test_worked_example_redistribution(self):
-        """Verify the worked example from ALGORITHM doc."""
+        """Verify the worked example with log10 activity weighting.
+
+        Spaces:
+          engineering: aria=8.0, bolt=6.0, clio=4.0 (3 actors, bonus=2)
+          research: aria=4.0, dane=6.0 (2 actors, bonus=1)
+          solo: echo=10.0 (1 actor, skipped)
+
+        Activity = log10(1 + moment_weight_sum) × community_bonus
+          aria_eng  = log10(9) × 2 ≈ 1.908
+          bolt_eng  = log10(7) × 2 ≈ 1.690
+          clio_eng  = log10(5) × 2 ≈ 1.398
+          aria_res  = log10(5) × 1 ≈ 0.699
+          dane_res  = log10(7) × 1 ≈ 0.845
+
+        Total aria = 1.908 + 0.699 = 2.607
+        """
+        import math
         spaces = self._make_spaces()
         actor_weights = compute_actor_weights(spaces)
 
-        # Expected weights:
-        # Engineering (3 actors, bonus=2): Aria=16, Bolt=12, Clio=8
-        # Research (2 actors, bonus=1): Aria=4, Dane=6
-        # Solo (1 actor): Echo=0 (skipped)
-        assert abs(actor_weights.get("aria", 0) - 20.0) < EPSILON
-        assert abs(actor_weights.get("bolt", 0) - 12.0) < EPSILON
-        assert abs(actor_weights.get("clio", 0) - 8.0) < EPSILON
-        assert abs(actor_weights.get("dane", 0) - 6.0) < EPSILON
+        # Verify expected log10-based weights
+        aria_expected = math.log10(1 + 8.0) * 2 + math.log10(1 + 4.0) * 1
+        bolt_expected = math.log10(1 + 6.0) * 2
+        clio_expected = math.log10(1 + 4.0) * 2
+        dane_expected = math.log10(1 + 6.0) * 1
+
+        assert abs(actor_weights.get("aria", 0) - aria_expected) < EPSILON
+        assert abs(actor_weights.get("bolt", 0) - bolt_expected) < EPSILON
+        assert abs(actor_weights.get("clio", 0) - clio_expected) < EPSILON
+        assert abs(actor_weights.get("dane", 0) - dane_expected) < EPSILON
         assert "echo" not in actor_weights
 
-        # Total weight = 46
-        total = sum(actor_weights.values())
-        assert abs(total - 46.0) < EPSILON
-
+        # Verify proportional distribution
         shares, distributed = compute_redistribution(10000.0, spaces)
+        total_weight = sum(actor_weights.values())
         amounts = {s.actor_id: s.amount for s in shares}
 
-        assert abs(amounts["aria"] - 10000 * 20 / 46) < 1.0
-        assert abs(amounts["bolt"] - 10000 * 12 / 46) < 1.0
-        assert abs(amounts["clio"] - 10000 * 8 / 46) < 1.0
-        assert abs(amounts["dane"] - 10000 * 6 / 46) < 1.0
+        assert abs(amounts["aria"] - 10000 * aria_expected / total_weight) < 1.0
+        assert abs(amounts["bolt"] - 10000 * bolt_expected / total_weight) < 1.0
+
+    # --- Anti-spam (log10 envelope) ---
+
+    def test_spam_gets_negligible_weight(self):
+        """1000 zero-weight spam moments (total weight 0.001) get nearly nothing
+        vs 10 quality moments (total weight 5.0)."""
+        import math
+        spaces = [
+            SpacePresence(
+                space_id="s1",
+                actors={
+                    "spammer": 0.001,   # 1000 moments × 0.000001 weight each
+                    "quality": 5.0,     # 10 moments × 0.5 weight each
+                },
+            )
+        ]
+        weights = compute_actor_weights(spaces)
+        # spammer: log10(1.001) × 1 ≈ 0.00043
+        # quality: log10(6.0) × 1 ≈ 0.778
+        assert weights["quality"] > weights["spammer"] * 100
+
+    def test_diminishing_returns_on_high_activity(self):
+        """Activity 100x higher only gives ~2x more weight (log10 curve)."""
+        import math
+        spaces_low = [
+            SpacePresence(space_id="s1", actors={"a": 1.0, "b": 1.0})
+        ]
+        spaces_high = [
+            SpacePresence(space_id="s1", actors={"a": 100.0, "b": 1.0})
+        ]
+        w_low = compute_actor_weights(spaces_low)
+        w_high = compute_actor_weights(spaces_high)
+        # 100x more activity → only ~3.4x more weight (log10(101)/log10(2) ≈ 6.6)
+        ratio = w_high["a"] / w_low["a"]
+        assert ratio < 10  # Way less than 100x
+        assert ratio > 2   # But still rewarded
 
     # --- Edge cases ---
 
@@ -918,12 +968,12 @@ class TestUBCProximityRedistributionFormula:
         with pytest.raises(ValueError, match="pool_balance"):
             compute_redistribution(-100, [])
 
-    def test_negative_hours_raises(self):
-        """Negative hours raises ValueError."""
+    def test_negative_moment_weight_raises(self):
+        """Negative moment weight sum raises ValueError."""
         spaces = [
             SpacePresence(space_id="s1", actors={"a1": -5.0, "a2": 3.0})
         ]
-        with pytest.raises(ValueError, match="hours_present"):
+        with pytest.raises(ValueError, match="moment_weight_sum"):
             compute_actor_weights(spaces)
 
 

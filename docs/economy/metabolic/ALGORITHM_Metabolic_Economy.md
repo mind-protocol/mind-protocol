@@ -111,7 +111,7 @@ SettlementBatch:
 ```
 UBCRedistribution:
   date: date               # Distribution date
-  tax_pool: float          # Total demurrage collected today
+  tax_pool: float          # UBC pool balance for redistribution
   spaces: List[SpacePresence]  # Spaces with actor presence data
   distributions: List[ActorShare]  # Per-actor UBC share
 
@@ -252,7 +252,7 @@ from a separate demurrage tax pool.
 
 ### Purpose
 
-Prevent actors from escaping progressive demurrage by parking funds in wallets outside the L4 registry. Funds sent to unregistered addresses are tracked as phantom balance. Repatriation incurs 5% friction tax.
+Prevent actors from hiding funds by parking them in wallets outside the L4 registry. Funds sent to unregistered addresses are tracked as phantom balance. Repatriation incurs 5% friction tax.
 
 ### Mechanism
 
@@ -270,8 +270,7 @@ FUNCTION track_outflow(sender_id, recipient_address, amount):
       timestamp=now_utc()
     )
 
-    # The sender's W_total_i now includes this amount
-    # Demurrage will apply to the sum
+    # The sender's W_total_i now includes this amount for anti-Sybil tracking
 
 FUNCTION process_repatriation(actor_id, source_address, amount):
   IF source_address NOT IN l4_registry:
@@ -301,19 +300,17 @@ FUNCTION process_repatriation(actor_id, source_address, amount):
 Scenario: Actor A has 100,000 $MIND and considers hiding in non-L4 wallets.
 
 Option 1: Keep all 100,000 in L4 wallet
-  Daily demurrage: 100000 * 0.001 * log10(100001) = 500 $MIND/day
+  Full trust-based pricing benefits. No repatriation cost.
 
 Option 2: Send 90,000 to non-L4 wallet, keep 10,000 in L4
   W_total still = 100,000 (off-registry tracking catches it)
-  Daily demurrage: SAME 500 $MIND/day
   PLUS: to use the 90,000 again, must repatriate at 5% cost = 4,500 $MIND lost
 
 Option 3: Actually deploy 90,000 productively (bonds, services, etc.)
-  W_total = 10,000 (productive capital is not idle)
-  Daily demurrage: 10000 * 0.001 * log10(10001) = 40 $MIND/day
-  SAVED: 460 $MIND/day vs hoarding
+  Productive capital builds trust, reducing prices via Formula 1.
 
-Conclusion: Productive deployment saves 92% on demurrage. Hiding costs extra.
+Conclusion: Hiding funds costs 5% per round-trip. Productive deployment builds trust
+and reduces costs. The only rational strategy is to deploy capital productively.
 ```
 
 ### TransferHook Integration
@@ -632,7 +629,7 @@ WHY: During maturation, the bond is proving itself. Premature equilibrium
 
 ### Purpose
 
-Distribute the daily demurrage tax pool to actors based on their co-presence in Spaces, weighted by topology. Actors in shared Spaces with more co-present participants receive proportionally more.
+Distribute the UBC pool to actors based on their co-presence in Spaces, weighted by topology. Actors in shared Spaces with more co-present participants receive proportionally more.
 
 ### Relationship to Universe Graph (F1)
 
@@ -643,13 +640,13 @@ Distribute the daily demurrage tax pool to actors based on their co-presence in 
 
 ### Relationship to Existing UBC
 
-The UBC module (`ubc/ALGORITHM_UBC.md`) defines flat-tier daily distribution (100/200/300 $MIND) funded by Protocol Treasury minting. This formula adds a **second funding stream** from the demurrage tax pool, distributed by topological proximity rather than flat tiers.
+The UBC module (`ubc/ALGORITHM_UBC.md`) defines flat-tier daily distribution (100/200/300 $MIND) funded by Protocol Treasury minting. This formula adds **Space-weighted redistribution** from the UBC pool, distributed by topological proximity rather than flat tiers.
 
 | Aspect | UBC Base (existing) | UBC Proximity (this formula) |
 |--------|---------------------|------------------------------|
-| Funding source | Protocol Treasury mint | Demurrage tax pool |
+| Funding source | Protocol Treasury mint | UBC pool |
 | Distribution basis | Tier (BASIC/ACTIVE/CONTRIBUTOR) | Space co-presence topology |
-| Frequency | Daily (00:00 UTC) | Daily (after demurrage collection) |
+| Frequency | Daily (00:00 UTC) | Daily (00:00 UTC) |
 | Anti-gaming | Crystallization-gated vesting | Requires shared Space with 2+ actors |
 
 ### Algorithm
@@ -770,7 +767,7 @@ Daily Epoch (00:00 UTC)
 
 **Formula 1 (Pricing):** O(1) per request -- single computation, no iteration.
 
-**Formula 2 (Demurrage):** O(N) per epoch where N = number of wallets.
+**~~Formula 2 (Demurrage):~~** REMOVED.
 
 **Formula 3 (Anti-Sybil):** O(1) per transfer (tracking) + O(1) per repatriation.
 

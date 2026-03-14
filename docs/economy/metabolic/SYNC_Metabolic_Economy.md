@@ -69,14 +69,13 @@
 STATUS: DESIGNING
 
 **What's canonical (settled decisions):**
-- Formula shapes: exponential utility discount, logarithmic demurrage, multiplicative settlement, linear equilibrium
+- Formula shapes: exponential utility discount, multiplicative settlement, linear equilibrium (demurrage removed 2026-03-14)
 - Anti-Sybil approach: phantom balance tracking + 5% friction
 - Settlement batching: 6-hour epochs on Solana
 - Bond equilibrium: post-maturation only, exponential smoothing
 - UBC redistribution: Space-weighted topology
 
 **What's still being designed (open parameters):**
-- tau_base: 0.001 proposed, may need reduction (73-183% annualized is aggressive)
 - settlement_rate: 10.0 $MIND per limbic unit -- needs calibration
 - k (utility discount): 0.01 proposed -- needs validation against real service utility weights
 - lambda (bond equilibrium): 0.05 proposed -- convergence dynamics seem right but need simulation
@@ -93,18 +92,9 @@ STATUS: DESIGNING
 
 ## Open Questions
 
-### Q1: tau_base Calibration (HIGH PRIORITY)
+### ~~Q1: tau_base Calibration~~ -- RESOLVED
 
-**Question:** Is tau_base = 0.001 (0.1%/day) the right base rate?
-
-**Context:** At this rate, annualized effective rates range from ~73% (100 $MIND) to ~183% (1,000,000 $MIND). This is intentionally aggressive -- the goal is to force circulation. But it may drive actors out of the ecosystem entirely.
-
-**Proposed resolution:** Simulate with tau_base in {0.0001, 0.0003, 0.0005, 0.001} and measure:
-- Median idle duration (target: < 14 days)
-- Gini coefficient (target: < 0.6)
-- Actor dropout rate (target: < 5%)
-
-**Status:** Awaiting simulation infrastructure.
+**Resolution (2026-03-14):** Demurrage removed from the architecture. tau_base no longer exists. UBC at 5%/day forces circulation; inactive actors don't gain trust = natural penalty. See ALGORITHM_Metabolic_Economy.md Formula 2 removal note.
 
 ### Q2: Settlement Frequency (MEDIUM PRIORITY)
 
@@ -142,6 +132,10 @@ STATUS: DESIGNING
 
 **Status:** Decision made (Option A for v1). Revisit if gaming occurs.
 
+### ~~Q5: Relationship to Flat Storage Tax~~ -- RESOLVED
+
+**Resolution (2026-03-14):** Moot. Progressive demurrage was removed entirely. The flat storage tax in the storage-tax module remains as-is for its order-book valuation and dormancy mechanisms. No conflict exists since demurrage no longer applies.
+
 ### Q6: Space Creation Cost (MEDIUM PRIORITY)
 
 **Question:** Should Space creation carry a $MIND cost or deposit?
@@ -149,28 +143,13 @@ STATUS: DESIGNING
 **Context:** The Universe Graph (F1) defines Space creation as a structural operation (F1 BEHAVIORS B1) with no economic cost. UBC proximity redistribution (Formula 6) rewards co-presence in Spaces. Without an economic cost for Space creation, actors could create unlimited Spaces and seed them with presence to farm redistribution.
 
 **Options:**
-- A: Free Space creation, rely on demurrage and presence-time tracking to prevent farming
+- A: Free Space creation, rely on presence-time tracking to prevent farming
 - B: Small $MIND deposit (refunded on Space deletion) to impose cost on proliferation
 - C: Progressive cost based on number of Spaces already owned by the actor
 
 **Proposed resolution:** Start with Option A (free creation). The co-presence requirement (2+ actors) and the fact that presence requires actual `HAS_ACCESS` links (F1 ALG-1) already limit trivial farming. Add creation cost if gaming is observed.
 
 **Status:** Open. Needs coordination with F1 (Universe Graph).
-
-### Q5: Relationship to Flat Storage Tax (MEDIUM PRIORITY)
-
-**Question:** Does progressive demurrage replace or coexist with the flat storage tax?
-
-**Context:** The storage-tax module defines 1%/yr + 0.5%/mo dormancy. Progressive demurrage uses log10 scaling which already exceeds the flat rate for all balance levels (0.20%/day for 100 $MIND vs flat 0.003%/day). Running both would be double-taxation.
-
-**Options:**
-- A: Progressive demurrage replaces flat storage tax entirely
-- B: Flat storage tax remains as base, progressive adds logarithmic premium
-- C: Flat storage tax for first 30 days (grace), progressive after
-
-**Proposed resolution:** Option A. Progressive demurrage subsumes the flat rate. The storage-tax module documentation remains valid as historical context and for the order-book valuation mechanism (which progressive demurrage does not replace).
-
-**Status:** Needs confirmation from human review.
 
 ---
 
@@ -180,7 +159,7 @@ STATUS: DESIGNING
 
 | Module | What Metabolic Adds | Integration Point |
 |--------|---------------------|-------------------|
-| `storage-tax/` | Progressive demurrage (F2) replaces flat rate. Anti-Sybil (F3) adds phantom balance tracking. | `run_epoch()` in storage-tax calls metabolic demurrage formula |
+| `storage-tax/` | Anti-Sybil (F3) adds phantom balance tracking. Demurrage removed 2026-03-14. | Phantom balance tracking independent of storage-tax epoch |
 | `ubc/` | Proximity redistribution (F6) adds Space-weighted second stream | `distribute_daily_ubc()` extended with tax pool distribution |
 | `bonds/` | Vases communicants (F5) adds post-maturation equilibrium | New daily job after `check_maturation()` |
 | `cascade-utility/` | Progressive pricing (F1) complements scarcity pricing | Pricing pipeline uses both scarcity and metabolic formulas |
@@ -190,7 +169,7 @@ STATUS: DESIGNING
 
 ```
 token/ (COMPLETE) <-- settlement mints into existing token infrastructure
-storage-tax/ (DRAFT) <-- progressive demurrage extends epoch runner
+storage-tax/ (DRAFT) <-- anti-Sybil phantom balance tracking (demurrage removed)
 ubc/ (DRAFT) <-- proximity redistribution extends distribution pipeline
 bonds/ (DRAFT) <-- equilibrium extends bond lifecycle
 cascade-utility/ (DRAFT) <-- progressive pricing extends pricing pipeline
@@ -255,7 +234,7 @@ L4 Registry (COMPLETE) <-- anti-Sybil checks registered addresses
 2. VALIDATION_Metabolic_Economy.md -- invariants to verify in simulation
 3. Open Questions Q1-Q5 above -- parameter decisions that need simulation data
 
-**Task:** Build simulation environment to calibrate tau_base, settlement_rate, k, and lambda. Produce data-driven recommendations for each constant.
+**Task:** Build simulation environment to calibrate settlement_rate, k, and lambda. Produce data-driven recommendations for each constant. (tau_base removed -- demurrage eliminated 2026-03-14.)
 
 **Agent subtype:** architect or groundwork (simulation design then implementation)
 
@@ -274,9 +253,7 @@ L4 Registry (COMPLETE) <-- anti-Sybil checks registered addresses
 
 ### For Human Review
 
-**Executive summary:** The metabolic economy is now fully specified in documentation. 6 formulas govern value flow: pricing, demurrage, anti-Sybil, settlement, bond equilibrium, and UBC redistribution. All formulas have pseudocode, worked examples, and design decisions.
-
-**Key decision needed:** Confirm tau_base = 0.001 (aggressive) or request simulation first. The annualized rates (73-183%) are high by design but may need reduction.
+**Executive summary:** The metabolic economy is now fully specified in documentation. 5 active formulas govern value flow: pricing, anti-Sybil, settlement, bond equilibrium, and UBC redistribution. (Demurrage/Formula 2 was removed 2026-03-14 -- UBC forced circulation replaces it.) All formulas have pseudocode, worked examples, and design decisions.
 
 **No code was written.** This is Phase A (documentation only). Phase B (simulation) and Phase C (implementation) are next.
 
@@ -284,10 +261,10 @@ L4 Registry (COMPLETE) <-- anti-Sybil checks registered addresses
 
 ## TODO
 
-- [ ] Confirm or adjust tau_base via simulation (Q1)
+- [x] ~~Confirm or adjust tau_base via simulation (Q1)~~ -- RESOLVED: demurrage removed 2026-03-14
 - [ ] Decide settlement frequency: 6h vs 4h (Q2)
 - [ ] Simulate lambda convergence dynamics (Q3)
-- [ ] Decide: progressive demurrage replaces or coexists with flat storage tax (Q5)
+- [x] ~~Decide: progressive demurrage replaces or coexists with flat storage tax (Q5)~~ -- RESOLVED: demurrage removed 2026-03-14
 - [x] Create IMPLEMENTATION_Metabolic_Economy.md when code work begins (DONE 2026-03-14)
 - [ ] Create HEALTH_Metabolic_Economy.md when health checks are defined
 - [ ] Update SYNC_Economy.md to reference metabolic module
@@ -297,8 +274,7 @@ L4 Registry (COMPLETE) <-- anti-Sybil checks registered addresses
 
 ## Markers
 
-<!-- @mind:escalation tau_base = 0.001 produces 73-183% annualized rates. Need human confirmation this is intentional or simulation mandate. -->
-<!-- @mind:todo Simulate tau_base calibration with agent-based model -->
+<!-- @mind:escalation RESOLVED 2026-03-14: tau_base removed — demurrage eliminated, replaced by UBC forced circulation -->
 <!-- @mind:todo Define "presence time in Space" operationally for Formula 6 -->
 <!-- @mind:todo Design TransferHook integration for phantom balance tracking -->
 <!-- @mind:proposition Consider adaptive lambda for bond equilibrium (lower for new bonds, higher for established) -->

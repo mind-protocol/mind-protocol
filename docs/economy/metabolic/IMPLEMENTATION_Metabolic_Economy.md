@@ -36,7 +36,7 @@ The metabolic economy spans three execution domains. Each formula runs where its
 | **Off-chain formula library** | `mind-protocol/economy/metabolic/` | Pure math -- pricing, tax, bond equilibrium, reward computation. No blockchain, no brain state. Shared by settlement engine and any caller that needs to compute a price or tax. |
 | **Settlement engine** | `mind-mcp/engine/settlement/` | Runs per-home. Collects limbic_delta snapshots from the L1 tick cycle, batches them, computes rewards via the formula library, submits batches to Solana. The MCP server already runs per-home and has access to L1 brain state. |
 | **TransferHook program** | `mind-protocol/programs/mind_transfer_hook/src/lib.rs` | Already deployed at `325JiLH2czH47tnDzheS6rQdDh9rHa1mD8wVuRUPDAnD`. Needs extension for off-registry outflow tracking (anti-Sybil). On-chain Rust/Anchor. |
-| **Epoch orchestrator** | `mind-protocol/economy/metabolic/` | Daily demurrage, bond equilibrium, UBC redistribution. Runs as a scheduled job (cron or systemd timer). Calls formula library, submits results to Solana. |
+| **Epoch orchestrator** | `mind-protocol/economy/metabolic/` | Bond equilibrium, UBC redistribution. Runs as a scheduled job (cron or systemd timer). Calls formula library, submits results to Solana. (Demurrage removed 2026-03-14.) |
 | **Solana batch submitter** | `mind-protocol/economy/transactions/` | Extends existing `solana.py` (currently empty). Handles batch mint/transfer instructions via Token-2022. |
 
 **Why the split:**
@@ -54,17 +54,17 @@ mind-protocol/
 │   ├── metabolic/                                    # NEW -- formula library + epoch orchestrator
 │   │   ├── __init__.py                               # Public API exports
 │   │   ├── progressive_pricing_formula.py            # Formula 1: P(i,S) = C_base * e^(-k*U_S) * max(0.1, W_i/W_median)
-│   │   ├── progressive_demurrage_formula.py          # Formula 2: T_i = W_total * tau_base * log10(1 + W_total)
+│   │   ├── ~~progressive_demurrage_formula.py~~       # REMOVED -- Formula 2 eliminated 2026-03-14
 │   │   ├── anti_sybil_phantom_balance_tracker.py     # Formula 3: off-registry tracking + repatriation friction
 │   │   ├── batch_settlement_reward_calculator.py     # Formula 4: reward = D * trust * weight * rate
 │   │   ├── bilateral_bond_equilibrium_formula.py     # Formula 5: delta = lambda * (W_human - W_ai)
 │   │   ├── ubc_proximity_redistribution_formula.py   # Formula 6: Space-weighted tax pool distribution
 │   │   ├── metabolic_constants.py                    # All DESIGNING constants in one place
-│   │   ├── metabolic_epoch_orchestrator.py           # Daily/6h epoch runner: demurrage -> redistribution -> bonds
-│   │   └── metabolic_types.py                        # Shared dataclasses: PricingContext, DemurrageContext, etc.
+│   │   ├── metabolic_epoch_orchestrator.py           # Daily/6h epoch runner: redistribution -> bonds
+│   │   └── metabolic_types.py                        # Shared dataclasses: PricingContext, SettlementAction, etc.
 │   ├── transactions/
 │   │   ├── solana.py                                 # EXTEND -- add batch_mint_settlement(), batch_transfer_equilibrium()
-│   │   └── ledger.py                                 # EXTEND -- add settlement/demurrage event logging
+│   │   └── ledger.py                                 # EXTEND -- add settlement event logging
 │   ├── token/
 │   │   ├── token_supply_target_calculator.py         # EXISTS -- settlement integrates via calculate_supply_adjustment()
 │   │   └── constants.py                              # EXISTS -- add M5 (Settlement) mint condition
@@ -82,7 +82,7 @@ mind-protocol/
 └── tests/
     └── economy/
         ├── test_metabolic_pricing.py                 # NEW -- Formula 1 invariants (INV-P1 through INV-P4)
-        ├── test_metabolic_demurrage.py               # NEW -- Formula 2 invariants (INV-D1 through INV-D4)
+        ├── ~~test_metabolic_demurrage.py~~            # REMOVED -- Formula 2 eliminated 2026-03-14
         ├── test_metabolic_anti_sybil.py              # NEW -- Formula 3 invariants (INV-AS1 through INV-AS3)
         ├── test_metabolic_settlement.py              # NEW -- Formula 4 invariants (INV-S1 through INV-S4)
         ├── test_metabolic_bond_equilibrium.py        # NEW -- Formula 5 invariants (INV-BE1 through INV-BE5)
@@ -121,12 +121,7 @@ class PricingContext:
     w_median: float         # Network median wallet balance
     k: float = 0.01         # Utility discount rate
 
-@dataclass
-class DemurrageContext:
-    w_total: float          # Total balance including off-registry
-    w_onchain: float        # On-chain balance
-    w_offregistry: float    # Phantom balance (off-registry outflows)
-    tau_base: float = 0.001 # Base daily tax rate
+# DemurrageContext -- REMOVED (demurrage eliminated 2026-03-14)
 
 @dataclass
 class SettlementAction:
@@ -177,13 +172,7 @@ class UBCShare:
     share: float            # Proportion of pool [0, 1]
     amount: float           # $MIND received
 
-@dataclass
-class DemurrageResult:
-    actor_id: str
-    w_total: float
-    w_offregistry: float
-    tax_amount: float
-    effective_rate: float
+# DemurrageResult -- REMOVED (demurrage eliminated 2026-03-14)
 
 @dataclass
 class RepatriationResult:
@@ -209,9 +198,8 @@ class RepatriationResult:
 UTILITY_DISCOUNT_RATE: float = 0.01              # k -- per unit U_S
 WEALTH_RATIO_FLOOR: float = 0.1                  # Minimum wealth ratio (10%)
 
-# Formula 2: Progressive Demurrage
-TAU_BASE: float = 0.001                          # Base daily tax rate (0.1%/day)
-DUST_THRESHOLD: float = 1.0                      # Skip accounts below this ($MIND)
+# Formula 2: Progressive Demurrage -- REMOVED (2026-03-14)
+# TAU_BASE and DUST_THRESHOLD no longer exist
 
 # Formula 3: Anti-Sybil
 FRICTION_TAX_RATE: float = 0.05                  # 5% repatriation friction (burned)
@@ -262,28 +250,9 @@ def compute_progressive_price(ctx: PricingContext) -> float:
 
 ---
 
-#### `economy/metabolic/progressive_demurrage_formula.py`
+#### ~~`economy/metabolic/progressive_demurrage_formula.py`~~ -- REMOVED
 
-**Purpose:** Compute progressive daily tax. Formula 2.
-
-**Key functions:**
-```python
-def compute_effective_rate(w_total: float, tau_base: float = TAU_BASE) -> float:
-    """tau_base * log10(1 + W_total). Returns the effective daily rate."""
-
-def compute_daily_demurrage(ctx: DemurrageContext) -> DemurrageResult:
-    """T_i = W_total * tau_base * log10(1 + W_total).
-    Clamps to wallet balance. Skips dust accounts.
-    Returns DemurrageResult with tax_amount and effective_rate."""
-
-def apply_demurrage_batch(contexts: list[DemurrageContext]) -> tuple[list[DemurrageResult], float]:
-    """Apply demurrage to a batch of actors.
-    Returns (results, total_tax_collected)."""
-```
-
-**Dependencies:** `math.log10`, `metabolic_types.DemurrageContext`, `metabolic_constants`.
-**Lines estimate:** ~80.
-**Status:** OK.
+**Removed 2026-03-14.** Formula 2 (Progressive Demurrage) eliminated from the architecture. This file will not be created. See ALGORITHM_Metabolic_Economy.md Formula 2 removal note.
 
 ---
 
@@ -318,12 +287,11 @@ def compute_total_balance(w_onchain: float, w_offregistry: float) -> float:
 
 def is_roundtrip_profitable(
     amount: float,
-    days_hidden: int,
-    tau_base: float = TAU_BASE,
     friction_rate: float = FRICTION_TAX_RATE,
 ) -> tuple[bool, float]:
     """Calculate whether hiding funds off-registry is profitable.
-    Returns (is_profitable, net_cost). Should always return (False, positive_cost)."""
+    Returns (is_profitable, net_cost). Should always return (False, positive_cost).
+    Cost is the 5% repatriation friction burn."""
 ```
 
 **Dependencies:** `metabolic_types`, `metabolic_constants`.
@@ -435,7 +403,7 @@ def compute_redistribution(
 
 #### `economy/metabolic/metabolic_epoch_orchestrator.py`
 
-**Purpose:** Coordinate the daily epoch sequence. Enforces ordering: demurrage first, then redistribution, then bond equilibrium. Manages idempotency via epoch IDs.
+**Purpose:** Coordinate the daily epoch sequence. Enforces ordering: redistribution, then bond equilibrium. Manages idempotency via epoch IDs. (Demurrage phase removed 2026-03-14.)
 
 **Key functions:**
 ```python
@@ -450,11 +418,10 @@ def run_daily_epoch(
 ) -> DailyEpochResult:
     """Orchestrate the full daily epoch:
     1. Check idempotency (skip if epoch_date already processed)
-    2. Apply demurrage to all wallets -> collect tax into pool
-    3. Redistribute tax pool via Space proximity
-    4. Compute bond equilibrium transfers
-    5. Submit all transfers to Solana in one batch
-    6. Mark epoch as processed
+    2. Redistribute UBC pool via Space proximity
+    3. Compute bond equilibrium transfers
+    4. Submit all transfers to Solana in one batch
+    5. Mark epoch as processed
     Returns DailyEpochResult with all sub-results."""
 
 def run_settlement_epoch(
@@ -486,16 +453,16 @@ def run_settlement_epoch(
 
 ```python
 from .progressive_pricing_formula import compute_progressive_price
-from .progressive_demurrage_formula import compute_daily_demurrage, apply_demurrage_batch
+# progressive_demurrage_formula -- REMOVED (demurrage eliminated 2026-03-14)
 from .anti_sybil_phantom_balance_tracker import track_outflow, process_repatriation, compute_total_balance
 from .batch_settlement_reward_calculator import compute_action_reward, compute_epoch_rewards, assemble_settlement_batch
 from .bilateral_bond_equilibrium_formula import compute_bond_transfer, compute_batch_equilibrium
 from .ubc_proximity_redistribution_formula import compute_redistribution
 from .metabolic_epoch_orchestrator import run_daily_epoch, run_settlement_epoch
 from .metabolic_types import (
-    PricingContext, DemurrageContext, SettlementAction, SettlementBatch,
+    PricingContext, SettlementAction, SettlementBatch,
     BondEquilibriumContext, BondEquilibriumResult, SpacePresence, UBCShare,
-    DemurrageResult, RepatriationResult,
+    RepatriationResult,
 )
 from .metabolic_constants import *
 ```
@@ -688,13 +655,7 @@ class SolanaSubmitter:
         """Burn tokens as repatriation friction (anti-Sybil).
         Returns transaction signature."""
 
-    async def batch_demurrage_deductions(
-        self,
-        deductions: list[DemurrageResult],
-        ubc_pool_address: str,
-    ) -> str:
-        """Transfer demurrage from each wallet to UBC pool.
-        Returns transaction signature."""
+    # batch_demurrage_deductions -- REMOVED (demurrage eliminated 2026-03-14)
 
     async def batch_ubc_distribution(
         self,
@@ -722,7 +683,7 @@ class SolanaSubmitter:
 | `metabolic_types.py` | All dataclasses | stdlib | ~120 |
 | `metabolic_constants.py` | All tunable constants | none | ~50 |
 | `progressive_pricing_formula.py` | Formula 1 | math, types, constants | ~60 |
-| `progressive_demurrage_formula.py` | Formula 2 | math, types, constants | ~80 |
+| ~~`progressive_demurrage_formula.py`~~ | ~~Formula 2~~ | -- | **REMOVED** |
 | `anti_sybil_phantom_balance_tracker.py` | Formula 3 | types, constants | ~90 |
 | `batch_settlement_reward_calculator.py` | Formula 4 | types, constants, token module | ~120 |
 | `bilateral_bond_equilibrium_formula.py` | Formula 5 | math, types, constants | ~80 |
@@ -785,7 +746,7 @@ class SolanaSubmitter:
 **Goal:** Connect Formula 6 output to the existing UBC distribution pipeline.
 
 **Changes:**
-- Extend `economy/ubc/` (when it exists as code) to accept a second funding stream from the demurrage tax pool
+- Extend `economy/ubc/` (when it exists as code) to accept Space-weighted redistribution from the UBC pool
 - Add Space presence data collection (interface to F1 Universe Graph)
 - Wire Formula 6 output into the UBC distribution endpoint
 
@@ -852,7 +813,6 @@ class SolanaSubmitter:
 | Interface | What We Provide | How |
 |-----------|----------------|-----|
 | Settlement completion events | When a settlement batch is confirmed, emit event with actor_x, actor_y, reward_amount | `settlement_submitter.py` emits `SettlementConfirmedEvent` |
-| Demurrage events | Daily tax amounts per actor | `metabolic_epoch_orchestrator.py` emits `DemurrageEvent` |
 
 These events can feed into trust signal computation -- an actor who consistently generates positive settlement events demonstrates reliability.
 
@@ -876,13 +836,13 @@ These events can feed into trust signal computation -- an actor who consistently
 | Test File | Invariants Covered | Test Count | Priority |
 |-----------|--------------------|-----------|----------|
 | `test_metabolic_pricing.py` | INV-P1 (non-negativity), INV-P2 (discount bounded), INV-P3 (wealth floor), INV-P4 (monotonicity) | 10 | HIGH |
-| `test_metabolic_demurrage.py` | INV-D1 (never exceeds balance), INV-D2 (progressive ordering), INV-D3 (log growth bound), INV-D4 (universal application) | 12 | HIGH |
+| ~~`test_metabolic_demurrage.py`~~ | ~~INV-D1..D4~~ | ~~12~~ | **REMOVED** -- demurrage eliminated 2026-03-14 |
 | `test_metabolic_anti_sybil.py` | INV-AS1 (phantom tracking), INV-AS2 (friction burn), INV-AS3 (round-trip net loss) | 8 | HIGH |
 | `test_metabolic_settlement.py` | INV-S1 (positive-only), INV-S2 (reward caps), INV-S3 (supply integration), INV-S4 (batch atomicity) | 12 | HIGH |
 | `test_metabolic_bond_equilibrium.py` | INV-BE1 (post-maturation), INV-BE2 (conservation), INV-BE3 (convergence direction), INV-BE4 (transfer bounds), INV-BE5 (monotonic convergence) | 15 | MEDIUM |
 | `test_metabolic_ubc_redistribution.py` | INV-UBC1 (share normalization), INV-UBC2 (co-presence requirement), INV-UBC3 (weight positivity) | 8 | MEDIUM |
 | `test_metabolic_supply_conservation.py` | INV-SC1 (total accounting), INV-SC2 (tax pool conservation), INV-SC3 (redistribution conservation), INV-CC1 (no negative balances), INV-CC3 (no double processing), INV-CC4 (idempotency) | 15 | CRITICAL |
-| `test_metabolic_epoch_orchestrator.py` | INV-CC2 (epoch ordering: demurrage before redistribution), INV-CC3 (each action processed once), INV-CC4 (safe reruns) | 10 | CRITICAL |
+| `test_metabolic_epoch_orchestrator.py` | INV-CC2 (epoch ordering), INV-CC3 (each action processed once), INV-CC4 (safe reruns) | 10 | CRITICAL |
 
 **Total: ~90 tests.**
 
@@ -907,10 +867,7 @@ def test_price_increases_with_wealth(c_base, u_s, w_i_1, w_i_2, w_median):
 
 **Conservation tests (critical for supply integrity):**
 ```python
-def test_demurrage_to_pool_conservation():
-    """Every $MIND deducted in demurrage must appear in the UBC pool."""
-    results, total_tax = apply_demurrage_batch(contexts)
-    assert abs(sum(r.tax_amount for r in results) - total_tax) < 1e-6
+# test_demurrage_to_pool_conservation -- REMOVED (demurrage eliminated 2026-03-14)
 ```
 
 **Convergence tests (bond equilibrium):**
@@ -933,7 +890,7 @@ def test_gap_decreases_monotonically():
 | Test | What It Verifies | Priority |
 |------|-----------------|----------|
 | Settlement round-trip | Collect -> assemble -> submit -> confirm on devnet | HIGH |
-| Demurrage + redistribution | Tax collected == pool increase == distributed total | CRITICAL |
+| ~~Demurrage + redistribution~~ | ~~Tax collected == pool increase == distributed total~~ | **REMOVED** |
 | Bond equilibrium on-chain | Transfer executes, balances update, conservation holds | MEDIUM |
 | Anti-Sybil TransferHook | Off-registry outflow emits event, phantom balance updates | HIGH |
 | Epoch idempotency | Running same epoch twice produces identical results | CRITICAL |
@@ -942,9 +899,9 @@ def test_gap_decreases_monotonically():
 
 | Test | Parameters | Success Criteria |
 |------|-----------|-----------------|
-| tau_base sweep | {0.0001, 0.0003, 0.0005, 0.001} | Median idle < 14 days, dropout < 5% |
+| ~~tau_base sweep~~ | ~~{0.0001, 0.0003, 0.0005, 0.001}~~ | **REMOVED** -- demurrage eliminated |
 | Wealth Gini | 1000 actors, 365 days | Gini trends below 0.6 |
-| Settlement economics | 100 actors, variable activity | Active actors earn > demurrage cost |
+| Settlement economics | 100 actors, variable activity | Active actors sustain themselves via settlement + UBC |
 | Bond convergence | 50 bonds, lambda=0.05 | Gap < 5% within 50 days |
 | Sybil profitability | 10-wallet attacker vs single wallet | Multi-wallet never beats single |
 
@@ -958,9 +915,9 @@ All constants are `DESIGNING` status. Values are informed guesses that need simu
 |----------|--------|--------------|-------------------|-------------------|----------|
 | Utility discount rate | `k` | 0.01 | [0.005, 0.02] | Price curve shape: essential services should reach ~10% of C_base | LOW |
 | Wealth ratio floor | -- | 0.1 | [0.05, 0.2] | Anti-farming: floor too low enables sybil via empty wallets | LOW |
-| Base daily tax rate | `tau_base` | 0.001 | [0.0001, 0.001] | Median idle duration < 14d, actor dropout < 5%, Gini < 0.6 | CRITICAL |
+| ~~Base daily tax rate~~ | ~~`tau_base`~~ | ~~0.001~~ | -- | **REMOVED** -- demurrage eliminated 2026-03-14 | -- |
 | Repatriation friction | -- | 0.05 | [0.02, 0.10] | Round-trip must always be net loss vs. keeping in L4 | MEDIUM |
-| Settlement rate | `settlement_rate` | 10.0 | [1.0, 50.0] | Active actors earn meaningfully more than demurrage cost | HIGH |
+| Settlement rate | `settlement_rate` | 10.0 | [1.0, 50.0] | Active actors sustain themselves via settlement + UBC | HIGH |
 | Max per-action reward | `MAX_ACTION_REWARD` | 1000.0 | [100, 5000] | No single action dominates an epoch | MEDIUM |
 | Max per-epoch reward | `MAX_EPOCH_REWARD` | 5000.0 | [1000, 10000] | Prevents settlement farming | MEDIUM |
 | Bond smoothing rate | `lambda` | 0.05 | [0.02, 0.10] | Half-life feels right: 7-35 days | MEDIUM |
@@ -973,7 +930,7 @@ All constants are `DESIGNING` status. Values are informed guesses that need simu
 1. Build formula library (E1)
 2. Build agent-based simulator with N actors, M services, variable activity patterns
 3. Run parameter sweeps for each constant
-4. Measure: Gini coefficient, median idle duration, actor dropout rate, settlement revenue vs. demurrage cost
+4. Measure: Gini coefficient, median idle duration, actor dropout rate, settlement revenue vs. costs
 5. Select parameter set that satisfies all success criteria simultaneously
 6. Document chosen values with simulation evidence in SYNC
 
@@ -986,13 +943,7 @@ All constants are `DESIGNING` status. Values are informed guesses that need simu
 ```
 1. Epoch orchestrator wakes (cron: 0 0 * * *)
 2. Check idempotency: has today's epoch been processed?
-3. Phase 1 -- DEMURRAGE:
-   a. Fetch all wallet balances from Solana
-   b. Fetch off-registry phantom balances from local state
-   c. Compute demurrage for each wallet via progressive_demurrage_formula
-   d. Submit batch demurrage deductions to Solana
-   e. All deducted $MIND flows to UBC pool
-4. Phase 2 -- REDISTRIBUTION:
+3. Phase 1 -- REDISTRIBUTION:
    a. Fetch Space presence data from F1 Universe Graph
    b. Compute redistribution shares via ubc_proximity_redistribution_formula
    c. Submit batch UBC distribution from pool to actors
@@ -1043,8 +994,7 @@ economy/metabolic/
     ├── metabolic_constants.py      # no imports
     ├── progressive_pricing_formula.py
     │   └── imports → metabolic_types, metabolic_constants
-    ├── progressive_demurrage_formula.py
-    │   └── imports → metabolic_types, metabolic_constants
+    ├── ~~progressive_demurrage_formula.py~~ -- REMOVED
     ├── anti_sybil_phantom_balance_tracker.py
     │   └── imports → metabolic_types, metabolic_constants
     ├── batch_settlement_reward_calculator.py
@@ -1080,13 +1030,13 @@ economy/metabolic/
 | Doc Section | Implemented In |
 |-------------|----------------|
 | ALGORITHM Formula 1 | `economy/metabolic/progressive_pricing_formula.py:compute_progressive_price` |
-| ALGORITHM Formula 2 | `economy/metabolic/progressive_demurrage_formula.py:compute_daily_demurrage` |
+| ~~ALGORITHM Formula 2~~ | **REMOVED** -- demurrage eliminated 2026-03-14 |
 | ALGORITHM Formula 3 | `economy/metabolic/anti_sybil_phantom_balance_tracker.py:track_outflow`, `process_repatriation` |
 | ALGORITHM Formula 4 | `economy/metabolic/batch_settlement_reward_calculator.py:compute_epoch_rewards` |
 | ALGORITHM Formula 5 | `economy/metabolic/bilateral_bond_equilibrium_formula.py:compute_bond_transfer` |
 | ALGORITHM Formula 6 | `economy/metabolic/ubc_proximity_redistribution_formula.py:compute_redistribution` |
 | VALIDATION INV-P1..P4 | `tests/economy/test_metabolic_pricing.py` |
-| VALIDATION INV-D1..D4 | `tests/economy/test_metabolic_demurrage.py` |
+| ~~VALIDATION INV-D1..D4~~ | **REMOVED** -- demurrage eliminated 2026-03-14 |
 | VALIDATION INV-AS1..AS3 | `tests/economy/test_metabolic_anti_sybil.py` |
 | VALIDATION INV-S1..S4 | `tests/economy/test_metabolic_settlement.py` |
 | VALIDATION INV-BE1..BE5 | `tests/economy/test_metabolic_bond_equilibrium.py` |
@@ -1151,7 +1101,7 @@ The anti-Sybil tracker calls the registry to check if a destination address is L
 
 <!-- @mind:todo Phase E1 is unblocked -- begin implementation of formula library -->
 <!-- @mind:todo Decide settlement engine import strategy: does mind-mcp vendor metabolic formulas or import from mind-protocol? -->
-<!-- @mind:escalation tau_base simulation is a prerequisite for mainnet deployment. Do not deploy with tau_base=0.001 without simulation evidence. -->
+<!-- @mind:escalation RESOLVED 2026-03-14: tau_base removed — demurrage eliminated, replaced by UBC forced circulation -->
 <!-- @mind:proposition Consider a shared Python package (e.g., `mind-economy`) that both mind-protocol and mind-mcp import, to avoid code duplication of formula library. -->
 <!-- @mind:todo Add W_median bootstrapping logic for ecosystems with < 50 wallets (SYNC Q5 from ALGORITHM doc) -->
 

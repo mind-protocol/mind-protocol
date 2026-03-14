@@ -36,7 +36,7 @@ Blood circulates, nourishes, carries signals, and sustains every organ. Fat accu
 
 | Priority | ID | Objective | Why It Matters |
 |----------|----|-----------|----------------|
-| 1 | M1 | **Circulation over accumulation** | Idle wealth produces nothing. Storage tax and progressive demurrage create constant pressure to deploy capital productively. Hoarding becomes structurally irrational. |
+| 1 | M1 | **Circulation over accumulation** | Idle wealth produces nothing. Storage tax and UBC forced circulation create constant pressure to deploy capital productively. Inactive actors don't gain trust and pay full price for services. Hoarding becomes structurally irrational. |
 | 2 | M2 | **Accessibility through degressive pricing** | Essential services must be affordable. More useful services cost less (exponential discount via graph weight). Poorer actors pay less (wealth ratio with 10% floor). The ecosystem rewards utility with affordability. |
 | 3 | M3 | **Anti-Sybil through economic physics** | No rule-based moderation. Off-registry phantom balances and 5% repatriation friction make hiding $MIND more expensive than keeping it visible. The structure makes cheating unprofitable. |
 | 4 | M4 | **Value-to-token conversion via limbic settlement** | Graph-measured value creation (positive limbic_delta) becomes economic reward. The bridge between L1 physics and L4 economics is explicit and auditable. |
@@ -84,7 +84,7 @@ Circulation > Accessibility > Anti-Sybil > Settlement > Bond Equilibrium > Redis
 
 ### Phase B: Simulation
 
-- [ ] tau_base calibrated via simulation (candidate range: 0.0001 to 0.001)
+- [x] ~~tau_base calibrated via simulation~~ -- RESOLVED: demurrage removed 2026-03-14
 - [ ] Settlement rate calibrated against realistic limbic_delta distributions
 - [ ] Bond convergence dynamics verified (lambda = 0.05, half-life ~14 days)
 - [ ] Wealth ratio floor validated (0.1 prevents farming without excluding the poor)
@@ -92,7 +92,7 @@ Circulation > Accessibility > Anti-Sybil > Settlement > Bond Equilibrium > Redis
 ### Phase C: Implementation
 
 - [ ] Progressive pricing integrated with cascade-utility pricing pipeline
-- [ ] Progressive demurrage integrated with storage-tax epoch runner
+- [x] ~~Progressive demurrage integrated with storage-tax epoch runner~~ -- RESOLVED: demurrage removed 2026-03-14
 - [ ] Batch settlement integrated with token mint mechanics (M3)
 - [ ] Bond equilibrium integrated with bonds maturation lifecycle
 - [ ] Anti-Sybil off-registry tracking integrated with TransferHook program
@@ -104,7 +104,7 @@ Circulation > Accessibility > Anti-Sybil > Settlement > Bond Equilibrium > Redis
 
 | Metric | Target | Why |
 |--------|--------|-----|
-| Median idle duration | < 14 days | Demurrage pressure working |
+| Median idle duration | < 14 days | Circulation pressure working (UBC + trust-based pricing) |
 | Gini coefficient of holdings | < 0.6 | Progressive pricing reducing inequality |
 | Settlement-to-activity ratio | > 0.8 | Most value creation is being rewarded |
 | Bond convergence rate | Within 5% of predicted half-life | Formula working as designed |
@@ -134,7 +134,7 @@ This module does NOT replace existing modules. It extends them with metabolic fo
 
 | Existing Module | What Metabolic Adds |
 |-----------------|---------------------|
-| `storage-tax/` | Progressive demurrage (log10 scaling) replaces flat 1%/yr rate. Anti-Sybil off-registry tracking. |
+| `storage-tax/` | Anti-Sybil off-registry tracking. (Progressive demurrage removed 2026-03-14.) |
 | `ubc/` | Proximity redistribution (Space-weighted) extends flat UBC distribution. |
 | `bonds/` | Bilateral vases communicants (auto-flow after maturation) extends bond lifecycle. |
 | `cascade-utility/` | Progressive pricing (degressive by utility and wealth) complements scarcity-based pricing. |

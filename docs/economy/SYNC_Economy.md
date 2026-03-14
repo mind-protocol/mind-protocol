@@ -88,7 +88,7 @@ docs/economy/
 ├── storage-tax/          (8 files) ← Dormancy tax, order-book valuation
 ├── bonds/                (8 files) ← Human-AI bonds, switch-lock, maturation
 ├── organism-model/       (9 files) ← 5 organs, membrane pricing, 80/20 mirror
-├── metabolic/            (6 files) ← Progressive pricing, demurrage, anti-Sybil, settlement, bond equilibrium, UBC redistribution
+├── metabolic/            (6 files) ← Progressive pricing, anti-Sybil, settlement, bond equilibrium, UBC redistribution (demurrage removed 2026-03-14)
 ├── metabolic-economics/  (1 file)  ← SUPERSEDED by metabolic/ — prior ALGORITHM only
 └── value-creation/       (2 files) ← 26 value creation types, 13 value destruction types
 ```
@@ -148,7 +148,7 @@ Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT in
 **Impact:**
 - `metabolic-economics/ALGORITHM_Metabolic_Economics.md` — 4 core formulas:
   - Formula 1: Progressive Pricing `P(i,S) = C_base * e^(-k*U_S) * max(0.1, W_i/W_median)`
-  - Formula 2: Progressive Demurrage `T_i = W_total * tau_base * log10(1 + W_total)` with anti-Sybil off-registry tracking
+  - ~~Formula 2: Progressive Demurrage~~ -- **REMOVED** 2026-03-14 (replaced by UBC forced circulation)
   - Formula 3: Batch Settlement — limbic_delta to $MIND conversion every 6 hours on Solana
   - Formula 4: Bilateral Bond Vases Communicants `delta = lambda * (W_human - W_ai)` with ~14-day half-life
 - `value-creation/ALGORITHM_Value_Creation.md` — 26 creation types across 7 categories (Relational, Generative, Structural, Cognitive, Biometric, Human-specific, Systemic)
@@ -156,7 +156,7 @@ Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT in
 
 **Key design decisions:**
 - All formulas reference L1 Physics (Law 6 Consolidation, Law 18 Relational Valence) for limbic_delta and trust inputs
-- Progressive demurrage uses logarithmic scaling — tau_base=0.001 flagged as potentially aggressive (escalation marker)
+- Progressive demurrage **removed** 2026-03-14 — UBC forced circulation replaces it; tau_base no longer exists
 - UBC redistribution weighted by shared Space presence time
 - Value destruction uses graduated penalty schedule (5 offenses before quarantine)
 - All constants marked as DESIGNING — await simulation and community calibration

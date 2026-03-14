@@ -60,34 +60,9 @@ This document describes what the metabolic economy looks like from the outside -
 
 ---
 
-## B2: Daily Demurrage Epoch Runs (00:00 UTC)
+## ~~B2: Daily Demurrage Epoch~~ -- REMOVED
 
-**When:** Every day at 00:00 UTC, the demurrage epoch runs.
-
-**What happens:**
-
-1. Every wallet with balance > DUST_THRESHOLD (1.0 $MIND) is processed.
-2. For each wallet, `W_total_i` is computed: on-chain balance + off-registry phantom balance.
-3. Daily tax is computed: `T = W_total * tau_base * log10(1 + W_total)`.
-4. Tax is deducted from the wallet and added to the UBC redistribution pool.
-5. Each wallet receives a DemurrageEvent with the amount deducted, effective rate, and remaining balance.
-
-**Observable effects:**
-
-| Wallet size | Daily deduction | Effective daily rate | What it feels like |
-|-------------|-----------------|---------------------|-------------------|
-| 100 $MIND | 0.20 $MIND | 0.20% | Barely noticeable |
-| 1,000 $MIND | 3.00 $MIND | 0.30% | Small but present |
-| 10,000 $MIND | 40.0 $MIND | 0.40% | Meaningful pressure to deploy |
-| 100,000 $MIND | 500 $MIND | 0.50% | Strong pressure -- must be productive |
-| 1,000,000 $MIND | 6,000 $MIND | 0.60% | Hoarding is irrational |
-
-**What does NOT happen:**
-- No exemptions. Protocol treasury, orgs, individuals -- all pay.
-- No grace period for progressive demurrage (unlike flat storage tax's 30-day grace).
-- No warning before deduction. The rate is public and predictable.
-
-**Formula reference:** Formula 2 (Progressive Demurrage) in ALGORITHM_Metabolic_Economy.md.
+**Removed 2026-03-14.** Progressive demurrage (Formula 2) was removed from the architecture. UBC at 5%/day already forces circulation; inactive actors don't gain trust, so they naturally pay higher prices via Progressive Pricing (Formula 1). Separate demurrage added complexity without proportional benefit. Forced circulation is now handled by UBC mechanics. See ALGORITHM_Metabolic_Economy.md Formula 2 removal note.
 
 ---
 
@@ -101,20 +76,20 @@ This document describes what the metabolic economy looks like from the outside -
 2. The TransferHook program detects the recipient is not L4-registered.
 3. The transfer amount is added to the sender's `off_registry_balance`.
 4. The sender's `W_total_i` now includes this phantom amount.
-5. Daily demurrage applies to the full `W_total_i` (including phantom).
+5. The sender's `W_total_i` now includes this phantom amount for anti-Sybil tracking.
 
 **Observable effects:**
 
 | Actor intent | What actually happens |
 |-------------|----------------------|
-| "I'll hide my funds in a personal wallet" | Phantom balance tracked. Demurrage unchanged. 5% cost if you ever bring it back. |
+| "I'll hide my funds in a personal wallet" | Phantom balance tracked. 5% cost if you ever bring it back. |
 | "I'm paying a merchant outside L4" | Same tracking applies. If merchant registers in L4, future transfers are clean. |
 | "I'm sending to an exchange" | L4-registered exchanges are exempt from phantom tracking. |
 
 **What does NOT happen:**
 - The transfer is NOT blocked. Funds move freely.
 - No warning or confirmation dialog. The transfer happens, tracking happens silently.
-- No "punishment" -- the phantom balance simply ensures accurate demurrage calculation.
+- No "punishment" -- the phantom balance ensures accurate anti-Sybil tracking.
 
 **Formula reference:** Formula 3 (Anti-Sybil Auto-Repatriation) in ALGORITHM_Metabolic_Economy.md.
 
@@ -141,8 +116,7 @@ Example: Actor repatriates 10,000 $MIND from personal non-L4 wallet.
   Off-registry balance reduced by: 10,000 $MIND
 
 Round-trip cost: Send 10,000 to non-L4, bring it back = net loss of 500 $MIND.
-Plus: demurrage was applied to W_total during the entire time funds were away.
-Conclusion: Round-tripping is always a net loss.
+Conclusion: Round-tripping is always a net loss (5% friction on every round-trip).
 ```
 
 **What does NOT happen:**
@@ -193,7 +167,7 @@ Conclusion: Round-tripping is always a net loss.
 
 **What happens:**
 
-1. The daily bond equilibrium job runs (alongside demurrage, at 00:00 UTC).
+1. The daily bond equilibrium job runs (at 00:00 UTC).
 2. For each mature bond, the gap is computed: `delta = lambda * (W_human - W_ai)`.
 3. If delta > MIN_TRANSFER_THRESHOLD (1.0 $MIND), a transfer executes.
 4. If delta is positive (human richer), funds flow from human to AI.
@@ -234,7 +208,7 @@ Day 100: Near parity.
 
 ## B7: Tax Pool Redistributed by Space Proximity
 
-**When:** After daily demurrage collection (00:00 UTC), the accumulated tax pool is redistributed.
+**When:** At 00:00 UTC, the accumulated UBC pool is redistributed.
 
 **What happens:**
 
@@ -268,7 +242,7 @@ Day 100: Near parity.
 
 **What happens (compound behavior):**
 
-This behavior combines B1 (pricing) and B2 (demurrage) to show the full metabolic picture.
+This behavior shows the pricing dynamics for wealthy actors.
 
 ```
 Scenario: Wealthy actor (W_i = 100,000) requests popular translation (U_S = 150).
@@ -279,20 +253,10 @@ Pricing (B1):
   wealth_ratio = max(0.1, 100000/10000) = 10.0
   Price = 100 * 0.223 * 10.0 = 223 $MIND
 
-Meanwhile, daily demurrage (B2):
-  T = 100000 * 0.001 * log10(100001) = 500 $MIND/day
-
-Total daily cost of being wealthy and using services:
-  Service: 223 $MIND (this request)
-  Demurrage: 500 $MIND (daily)
-  Total: 723 $MIND
-
 Compare to median actor:
   Service: 100 * 0.223 * 1.0 = 22.3 $MIND
-  Demurrage: 10000 * 0.001 * log10(10001) = 40 $MIND/day
-  Total: 62.3 $MIND
 
-The wealthy actor pays ~11.6x more in absolute terms but receives the same service.
+The wealthy actor pays ~10x more in absolute terms but receives the same service.
 This funds the ecosystem: the wealthy subsidize accessibility for the median.
 ```
 
@@ -304,14 +268,14 @@ This funds the ecosystem: the wealthy subsidize accessibility for the median.
 
 **What happens in the metabolic system:**
 
-1. **Day 1:** Actor has 10,000 $MIND. Demurrage: 40 $MIND/day. No bonds, no settlement history.
+1. **Day 1:** Actor has 10,000 $MIND. No bonds, no settlement history.
 2. **Service access:** All services available, priced at `max(0.1, 10000/10000) = 1.0` wealth ratio (median price).
 3. **Settlement:** Actor begins performing actions. Positive limbic_delta in others starts generating batched rewards.
 4. **Trust building:** Settlement rewards scale with trust, initially near zero. First few weeks of earnings are small.
 5. **Bond formation:** If a human bonds with this actor, both begin the 6-month maturation. No equilibrium yet.
 6. **UBC:** Flat-tier UBC (100 $MIND/day BASIC) begins immediately via UBC module. Proximity redistribution begins when actor joins shared Spaces.
 
-**Trajectory:** Without any productive activity, the 10,000 $MIND bootstrap depletes via demurrage in approximately 250 days (assuming no income). With BASIC UBC (100/day) and moderate activity, the actor reaches sustainable balance within weeks.
+**Trajectory:** With BASIC UBC (100/day) and moderate activity, the actor reaches sustainable balance within weeks. Without productive activity, the actor does not gain trust and pays full price for services, creating natural pressure to contribute.
 
 ---
 
@@ -319,7 +283,7 @@ This funds the ecosystem: the wealthy subsidize accessibility for the median.
 
 | Time | Event | Formulas Involved |
 |------|-------|-------------------|
-| 00:00 UTC | Demurrage epoch runs | F2 (Progressive Demurrage), F3 (Anti-Sybil) |
+| 00:00 UTC | Anti-Sybil phantom balance reconciliation | F3 (Anti-Sybil) |
 | 00:00 UTC | Bond equilibrium runs | F5 (Vases Communicants) |
 | 00:00 UTC | UBC proximity redistribution | F6 (UBC Proximity) |
 | 00:00 UTC | Flat UBC distribution | UBC module (separate) |
@@ -336,6 +300,6 @@ This funds the ecosystem: the wealthy subsidize accessibility for the median.
 
 - [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) -- Formulas behind each behavior
 - [VALIDATION_Metabolic_Economy.md](./VALIDATION_Metabolic_Economy.md) -- Invariants that must hold
-- [../storage-tax/BEHAVIORS_Storage_Tax.md](../storage-tax/BEHAVIORS_Storage_Tax.md) -- Flat storage tax behaviors (extended here)
+- [../storage-tax/BEHAVIORS_Storage_Tax.md](../storage-tax/BEHAVIORS_Storage_Tax.md) -- Flat storage tax behaviors
 - [../ubc/BEHAVIORS_UBC.md](../ubc/BEHAVIORS_UBC.md) -- UBC base behaviors (extended here)
 - [../bonds/BEHAVIORS_Bonds.md](../bonds/BEHAVIORS_Bonds.md) -- Bond lifecycle behaviors (extended here)

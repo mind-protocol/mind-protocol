@@ -124,15 +124,16 @@ DETECT passive_accumulation(actor):
 **Penalty:**
 ```
 Base trust_reduction: 0.0 (no trust penalty — hoarding is passive, not hostile)
-Base mind_drain: Handled entirely by Formula 2 (Progressive Demurrage)
-  The demurrage tax IS the penalty for passive accumulation.
-  No additional penalty is needed — the tax makes hoarding unprofitable by design.
+Base mind_drain: 0.0 (no direct $MIND drain for passive accumulation)
+  Inactive actors don't gain trust, so they pay full price via Formula 1 (Progressive Pricing).
+  UBC forced circulation (5%/day) already creates pressure to participate.
+  No additional penalty is needed — the structure makes hoarding unrewarding by design.
 
 Additional consequence: Actor's membrane friction increases by 0.01 per 30-day period
   of passive accumulation (reduces economic efficiency of the accumulated funds)
 ```
 
-**Note:** This is the mildest destruction type. The demurrage mechanism (Formula 2) is designed specifically to address passive accumulation. The detection here serves as a monitoring signal, not a punishment trigger.
+**Note:** This is the mildest destruction type. Passive accumulation is naturally penalized: inactive actors don't build trust and therefore pay full price for all services (Formula 1). The detection here serves as a monitoring signal, not a punishment trigger. (Progressive demurrage was considered but removed 2026-03-14 — UBC forced circulation replaces it.)
 
 ---
 
@@ -858,7 +859,7 @@ FUNCTION process_detection(signature):
 
 | Code | Category | Type | Base Trust Penalty | Base $MIND Drain | Escalation |
 |------|----------|------|--------------------|------------------|------------|
-| H1 | Human | Passive Accumulation | 0.0 | Via demurrage | Friction increase |
+| H1 | Human | Passive Accumulation | 0.0 | Via trust-based pricing | Friction increase |
 | H2 | Human | Surveillance | 0.10 | 5% balance | Query restriction |
 | H3 | Human | Swarm Oligarchy | 0.15 | 10% total balance | Spawn block |
 | H4 | Human | Amnesia Abuse | 0.10 | 3% balance | Governance gate |

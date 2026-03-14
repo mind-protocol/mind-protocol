@@ -37,7 +37,7 @@ FOR EVERY epoch:
   total_supply_before
   + total_minted_settlement     (Formula 4 rewards)
   + total_minted_ubc            (UBC module flat distribution)
-  - total_burned_demurrage      (Formula 2 tax -- burned portion, if any)
+  - total_burned_demurrage      (REMOVED -- demurrage eliminated 2026-03-14)
   - total_burned_friction       (Formula 3 repatriation friction)
   - total_burned_other          (B1-B5 burns from token module)
   = total_supply_after
@@ -51,19 +51,9 @@ FOR EVERY epoch:
 
 **Test:** After every epoch, run a full reconciliation of all wallets + treasury + pools vs. expected supply.
 
-### INV-SC2: Demurrage Tax Pool Conservation
+### ~~INV-SC2: Demurrage Tax Pool Conservation~~ -- REMOVED
 
-```
-FOR EVERY daily epoch:
-  tax_collected = sum(demurrage_deductions from all wallets)
-  ubc_pool_increase = ubc_pool.balance_after - ubc_pool.balance_before
-
-  ASSERT tax_collected == ubc_pool_increase
-  # Every $MIND deducted in demurrage must appear in the UBC pool
-  # No $MIND disappears or appears during the tax collection phase
-```
-
-**Why:** Demurrage is a transfer mechanism (wallet -> pool), not a burn. If the pool doesn't receive exactly what was deducted, tokens are being lost or created.
+Demurrage removed 2026-03-14, replaced by UBC forced circulation (5%/day). This invariant no longer applies. UBC pool funding is now handled by the UBC module directly.
 
 ### INV-SC3: UBC Redistribution Conservation
 
@@ -140,58 +130,9 @@ IF U_S_1 > U_S_2:
 
 ---
 
-## III. Demurrage Invariants (Formula 2)
+## ~~III. Demurrage Invariants (Formula 2)~~ -- REMOVED
 
-### INV-D1: Tax Never Exceeds Balance
-
-```
-FOR ALL wallets:
-  tax = W_total * tau_base * log10(1 + W_total)
-  actual_deduction = min(tax, wallet.balance)
-
-  ASSERT actual_deduction <= wallet.balance
-  ASSERT wallet.balance_after >= 0
-```
-
-**Why:** A wallet must never go negative. The min() clamp is essential.
-
-### INV-D2: Progressive Rate Ordering
-
-```
-FOR W_1 > W_2 > 0:
-  effective_rate_1 = tau_base * log10(1 + W_1)
-  effective_rate_2 = tau_base * log10(1 + W_2)
-
-  ASSERT effective_rate_1 > effective_rate_2
-  # Larger balances face higher effective rates
-```
-
-**Why:** The "progressive" property must actually hold -- larger holders pay a higher percentage, not just a higher absolute amount.
-
-### INV-D3: Logarithmic Growth Bound
-
-```
-FOR ALL W > 0:
-  effective_rate = tau_base * log10(1 + W)
-
-  # Effective rate grows logarithmically, not linearly or exponentially
-  # For any 10x increase in W, rate increases by exactly 1 * tau_base
-  ratio = log10(1 + 10*W) / log10(1 + W)
-  ASSERT ratio < 2  # 10x wealth never doubles the rate
-```
-
-**Why:** Ensures the tax is progressive but not confiscatory. The logarithmic bound is the mathematical guarantee of this property.
-
-### INV-D4: Universal Application
-
-```
-FOR ALL wallets IN ecosystem (including protocol treasury, org wallets, personal wallets):
-  IF wallet.balance > DUST_THRESHOLD:
-    ASSERT demurrage_was_applied(wallet, epoch)
-    # No wallet is exempt
-```
-
-**Why:** Exemptions create political capture. The invariant makes the "no exemptions" rule verifiable.
+Demurrage removed 2026-03-14, replaced by UBC forced circulation (5%/day). Inactive actors don't gain trust, so they naturally pay higher prices via Progressive Pricing (Formula 1). INV-D1 through INV-D4 no longer apply. The tau_base constant no longer exists.
 
 ---
 
@@ -228,7 +169,7 @@ FOR EVERY repatriation event:
 
 ```
 FOR ANY round-trip (send to non-L4, then repatriate):
-  cost = friction_tax + demurrage_during_period
+  cost = friction_tax  # 5% repatriation burn
 
   ASSERT cost > 0
   # Round-tripping always costs more than keeping funds in L4
@@ -410,7 +351,7 @@ FOR ALL actors receiving redistribution:
 FOR ALL wallets at ANY point in time:
   ASSERT wallet.balance >= 0
 
-  # No operation (demurrage, pricing, friction, equilibrium) can produce negative balance
+  # No operation (pricing, friction, equilibrium) can produce negative balance
 ```
 
 **This is the master invariant.** Every formula must include a `min(computed, balance)` or equivalent guard.
@@ -419,20 +360,20 @@ FOR ALL wallets at ANY point in time:
 
 ```
 FOR ALL daily operations:
-  ASSERT demurrage runs BEFORE redistribution
-  ASSERT redistribution uses pool AFTER demurrage has filled it
+  ASSERT UBC pool is funded BEFORE redistribution
+  ASSERT redistribution uses pool AFTER funding
 
-  # Order matters: collect first, distribute second
+  # Order matters: fund first, distribute second
 ```
 
-**Why:** If redistribution runs before demurrage, the pool may be empty or stale.
+**Why:** If redistribution runs before the pool is funded, the pool may be empty or stale.
 
 ### INV-CC3: No Double Processing
 
 ```
 FOR EVERY epoch:
   FOR EVERY wallet:
-    ASSERT demurrage applied exactly once
+    ASSERT each wallet processed exactly once
   FOR EVERY bond:
     ASSERT equilibrium computed exactly once
   FOR EVERY settlement window:
@@ -464,7 +405,7 @@ IF epoch E fails and is retried:
 |-----------------|----------------------|----------|
 | Supply Conservation (SC1-SC3) | 10-15 | CRITICAL |
 | Pricing (P1-P4) | 8-10 | HIGH |
-| Demurrage (D1-D4) | 10-12 | HIGH |
+| ~~Demurrage (D1-D4)~~ | ~~10-12~~ | **REMOVED** |
 | Anti-Sybil (AS1-AS3) | 6-8 | HIGH |
 | Settlement (S1-S4) | 10-12 | HIGH |
 | Bond Equilibrium (BE1-BE5) | 12-15 | MEDIUM |
@@ -477,9 +418,9 @@ Total estimated: 70-90 tests.
 
 | Test | Parameters | Success Criteria |
 |------|-----------|-----------------|
-| tau_base calibration | tau_base in {0.0001, 0.0003, 0.0005, 0.001} | Median idle duration < 14 days without actor dropout > 5% |
+| ~~tau_base calibration~~ | ~~tau_base in {0.0001, 0.0003, 0.0005, 0.001}~~ | **REMOVED** -- demurrage eliminated |
 | Wealth Gini evolution | 1000 actors, 365 days | Gini coefficient trends below 0.6 |
-| Settlement economics | 100 actors, variable activity | Settlement revenue > demurrage cost for active actors |
+| Settlement economics | 100 actors, variable activity | Settlement revenue sustains active actors |
 | Bond convergence | 50 bonds, lambda = 0.05 | Gap closes to < 5% within 50 days |
 | Sybil profitability | Attacker with 10 wallets vs 1 wallet | Multi-wallet strategy never beats single-wallet |
 
@@ -489,7 +430,7 @@ Total estimated: 70-90 tests.
 |-------|--------|-----------|
 | Supply reconciliation | Compare sum(all wallets) + pools with mint records | Every epoch |
 | Batch integrity | Verify Solana tx matches computed batch | Every settlement |
-| Demurrage accuracy | Sample 10% of wallets, recompute demurrage | Daily |
+| ~~Demurrage accuracy~~ | ~~Sample 10% of wallets, recompute demurrage~~ | **REMOVED** |
 | Phantom balance accuracy | Cross-reference TransferHook logs with phantom state | Weekly |
 
 ---

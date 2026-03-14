@@ -2,19 +2,30 @@
 #
 # DOCS: docs/economy/metabolic/ALGORITHM_Metabolic_Economy.md  (Formula 6)
 #
-# Formula 6: UBC Proximity Redistribution
-#   weight_actor += hours_present * (num_co_actors - 1)
-#   share_actor = weight_actor / total_weight
-#   amount_actor = pool * share_actor
+# Formula 6: UBC Proximity Redistribution (v2 — activity-based)
 #
-# Distributes the daily demurrage tax pool to actors based on their
-# co-presence in Spaces, weighted by topology. Actors in shared Spaces
-# with more co-present participants receive proportionally more.
+#   activity   = log10(1 + Σ(weight of moments actor created in Space))
+#   community  = num_actors_in_space - 1
+#   weight     = activity × community
+#   share      = weight / total_weight
+#   amount     = pool × share
+#
+# Distributes the UBC pool to actors based on REAL ACTIVITY in shared
+# Spaces, not passive presence. Actors are paid for animating spaces,
+# not for leaving tabs open.
+#
+# Anti-spam: log10 envelope prevents linear farming. 1000 zero-weight
+# spam moments contribute log10(1 + ~0) ≈ 0. Only consolidated moments
+# (with weight from Law 6) count.
+#
+# Anti-farming: hours_present is GONE. Only moment weights matter.
+# No moments = no redistribution, regardless of connection time.
 #
 # Pure function. No graph queries, no blockchain.
 
 from __future__ import annotations
 
+import math
 from typing import Dict, List, Tuple
 
 from .metabolic_constants import MIN_COPRESENCE_ACTORS, EPSILON
@@ -25,19 +36,30 @@ def compute_actor_weights(
     spaces: List[SpacePresence],
     min_actors: int = MIN_COPRESENCE_ACTORS,
 ) -> Dict[str, float]:
-    """Compute per-actor redistribution weights from Space presence data.
+    """Compute per-actor redistribution weights from Space activity data.
 
     For each Space with >= min_actors actors:
-        weight_actor += hours_present * (num_actors_in_space - 1)
+        activity = log10(1 + sum_of_moment_weights)
+        community_bonus = num_actors_in_space - 1
+        weight += activity × community_bonus
 
-    The sharing_bonus (num_actors - 1) rewards spaces with more collaboration.
-    Solo spaces (< min_actors) produce zero weight.
+    The log10 envelope:
+    - Prevents linear spam farming (1000 spam moments ≈ 0 weight)
+    - Provides diminishing returns (first quality moments matter most)
+    - log10(1 + 0) = 0: zero activity = zero weight
+    - log10(1 + 1) ≈ 0.30: moderate activity
+    - log10(1 + 10) ≈ 1.04: high activity
+    - log10(1 + 100) ≈ 2.00: very high (but only 2x the moderate case)
+
+    The community_bonus (num_actors - 1) privileges larger spaces:
+    a Space with 100 actors gets 99x multiplier vs 2x for a pair.
 
     Invariant INV-UBC2: solo actors never receive redistribution.
-    Invariant INV-UBC3: weight > 0 requires hours > 0 and sharing_bonus >= 1.
+    Invariant INV-UBC3: weight > 0 requires moment_weight_sum > 0
+                        and community_bonus >= 1.
 
     Raises:
-        ValueError: if any hours_present is negative.
+        ValueError: if any moment_weight_sum is negative.
     """
     actor_weights: Dict[str, float] = {}
 
@@ -46,18 +68,20 @@ def compute_actor_weights(
         if num_actors < min_actors:
             continue  # Skip solo and empty spaces
 
-        sharing_bonus = num_actors - 1
+        community_bonus = num_actors - 1
 
-        for actor_id, hours in space.actors.items():
-            if hours < 0:
+        for actor_id, moment_weight_sum in space.actors.items():
+            if moment_weight_sum < 0:
                 raise ValueError(
-                    f"hours_present must be >= 0, got {hours} for "
-                    f"actor {actor_id} in space {space.space_id}"
+                    f"moment_weight_sum must be >= 0, got {moment_weight_sum} "
+                    f"for actor {actor_id} in space {space.space_id}"
                 )
-            if hours == 0:
-                continue  # No presence, no weight
+            if moment_weight_sum == 0:
+                continue  # No real activity, no weight
 
-            weight = hours * sharing_bonus
+            # Log envelope: diminishing returns, anti-spam
+            activity = math.log10(1.0 + moment_weight_sum)
+            weight = activity * community_bonus
             actor_weights[actor_id] = actor_weights.get(actor_id, 0.0) + weight
 
     return actor_weights
@@ -97,7 +121,7 @@ def compute_redistribution(
         INV-SC3: total_distributed == pool_balance (when redistribution occurs)
         INV-UBC1: sum(shares) == 1.0
 
-    If no shared presence exists, returns ([], 0.0) -- pool carries forward.
+    If no shared activity exists, returns ([], 0.0) -- pool carries forward.
 
     Raises:
         ValueError: if pool_balance < 0.
@@ -109,7 +133,7 @@ def compute_redistribution(
 
     actor_weights = compute_actor_weights(spaces, min_actors)
     if not actor_weights:
-        # No shared presence today -- pool carries forward
+        # No activity in shared spaces today -- pool carries forward
         return [], 0.0
 
     total_weight = sum(actor_weights.values())

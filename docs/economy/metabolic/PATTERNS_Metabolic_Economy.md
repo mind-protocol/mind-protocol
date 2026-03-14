@@ -48,11 +48,11 @@ Every economic behavior in the metabolic system is a consequence of physics, not
 | "Rich users should pay more" | Wealth ratio in pricing formula automatically scales cost |
 | "Services should get cheaper with use" | Utility weight from graph consolidation exponentially discounts price |
 | "Bonds should create shared fate" | Vases communicants auto-transfer closes the gap daily |
-| "Idle funds should be redistributed" | Progressive demurrage mechanically moves idle $MIND to UBC pool |
+| "Idle funds should be redistributed" | UBC forced circulation (5%/day) moves idle $MIND; inactive actors pay full price via trust-based pricing |
 
 **Why physics:** Rules require enforcers. Enforcers require trust. Trust requires politics. Politics creates capture. Physics has no politics. The exponential function does not negotiate. The logarithm does not make exceptions.
 
-**Implementation consequence:** No admin override for any formula. No governance vote can exempt a wallet from demurrage. No DAO proposal can change the pricing floor. The constants are tunable via simulation (Phase B), but the structure is invariant.
+**Implementation consequence:** No admin override for any formula. No DAO proposal can change the pricing floor. The constants are tunable via simulation (Phase B), but the structure is invariant.
 
 ---
 
@@ -78,25 +78,9 @@ The two factors work in tension:
 
 ---
 
-## Pattern 3: Progressive Demurrage (Not Flat Tax)
+## ~~Pattern 3: Progressive Demurrage~~ -- REMOVED
 
-**Larger holdings face proportionally higher daily tax. Logarithmic scaling prevents confiscation while maintaining pressure.**
-
-The existing storage-tax module defines a flat 1%/yr rate with 0.5%/mo dormancy escalation. This is effective but treats a 100 $MIND wallet and a 1,000,000 $MIND wallet identically in percentage terms.
-
-Progressive demurrage adds logarithmic scaling:
-
-```
-T_i = W_total_i * tau_base * log10(1 + W_total_i)
-```
-
-This means:
-- Small holders (100 $MIND): effective rate ~0.20%/day
-- Large holders (1,000,000 $MIND): effective rate ~0.60%/day
-
-A 10x increase in holdings only adds ~1 unit to the log10 multiplier. This is progressive without being punitive -- the scaling is slow enough that productive large holders can earn their way past the tax, but passive large holders cannot.
-
-**Relationship to storage-tax:** Progressive demurrage evolves the flat storage tax. The flat-rate component (1%/yr + 0.5%/mo dormancy) remains valid for the base case. Progressive demurrage extends it with logarithmic scaling for the metabolic context. See [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) Formula 2 for the supersession analysis.
+**Removed 2026-03-14.** Progressive demurrage (Formula 2) was eliminated from the architecture. UBC at 5%/day already forces circulation. Inactive actors don't gain trust, so they naturally pay higher prices via Progressive Pricing (Formula 1). Double-taxing with a separate demurrage added complexity without proportional benefit. The flat storage tax in the storage-tax module remains as-is for its dormancy and order-book valuation mechanisms. See [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) Formula 2 removal note.
 
 ---
 
@@ -115,7 +99,7 @@ The defense: `W_total_i` includes ALL linked wallets, including off-registry pha
 | TransferHook integration | The deployed TransferHook program can track outflows to non-registered addresses on-chain. |
 | No exemptions | Protocol treasury, orgs, individuals -- all pay the same formula. No address is special. |
 
-**The math of Sybil failure:** If actor A has 100,000 $MIND and creates 10 wallets of 10,000 each, they pay demurrage on 100,000 (phantom balance tracking catches it). If they send to non-L4 addresses, they lose 5% per round-trip. The only escape is to actually deploy the capital productively -- which is exactly what we want.
+**The math of Sybil failure:** If actor A has 100,000 $MIND and sends to non-L4 addresses, phantom balance tracking catches it and they lose 5% per round-trip on repatriation. The only escape is to actually deploy the capital productively -- which is exactly what we want.
 
 **Relationship to bonds anti-farming:** The UBC module uses crystallization-gated vesting as anti-farming. The metabolic module uses phantom balance tracking as anti-Sybil. These are complementary, not redundant -- farming attacks UBC distribution, Sybil attacks tax avoidance.
 
@@ -185,7 +169,7 @@ This means:
 - Collaborative actors receive more (they generate value through co-presence)
 - Empty Spaces generate no redistribution (presence requires actual activity)
 
-**Relationship to UBC module:** The flat UBC tiers (100/200/300 $MIND/day) are funded by the Protocol Treasury mint. The topological redistribution is funded by the demurrage tax pool. These are two separate funding streams flowing through the same UBC pipeline. See [ALGORITHM_UBC.md](../ubc/ALGORITHM_UBC.md) for the base distribution and [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) Formula 2 Step 4 for the topological extension.
+**Relationship to UBC module:** The flat UBC tiers (100/200/300 $MIND/day) are funded by the Protocol Treasury mint. The topological redistribution extends this with Space-weighted distribution from the UBC pool. See [ALGORITHM_UBC.md](../ubc/ALGORITHM_UBC.md) for the base distribution and [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) Formula 6 for the topological extension.
 
 ---
 
@@ -193,11 +177,11 @@ This means:
 
 ### AP1: Exemptions
 
-**Never exempt any wallet from demurrage.** Not the protocol treasury. Not founding wallets. Not governance multisigs. Exemptions create political pressure points and gaming incentives. The treasury paying tax ensures it deploys capital productively.
+**Never exempt any wallet from storage tax or economic physics.** Not the protocol treasury. Not founding wallets. Not governance multisigs. Exemptions create political pressure points and gaming incentives.
 
-### AP2: Linear Progressive Tax
+### ~~AP2: Linear Progressive Tax~~ -- REMOVED
 
-**Never use linear or quadratic scaling for demurrage.** Linear (T = tau * W^2) grows too fast and becomes confiscatory. Logarithmic (T = W * tau * log10(1+W)) grows slowly -- a 10x increase in holdings only doubles the effective rate.
+No longer applicable. Progressive demurrage was removed 2026-03-14.
 
 ### AP3: Real-Time Settlement
 
@@ -219,7 +203,7 @@ This means:
 |----------|--------|----------|-----|
 | Utility discount curve | Exponential (e^(-kU)) | Linear, hyperbolic, tiered | Asymptotically approaches zero, never reaches it |
 | Wealth ratio floor | 0.1 (10%) | 0.0 (free for poorest) | Prevents cost-free farming via empty wallets |
-| Demurrage scaling | Logarithmic (log10(1+W)) | Linear, quadratic, tiered | Progressive without confiscatory |
+| ~~Demurrage scaling~~ | ~~Logarithmic (log10(1+W))~~ | ~~Linear, quadratic, tiered~~ | **REMOVED** -- demurrage eliminated 2026-03-14 |
 | Settlement frequency | Every 6 hours | Real-time, daily, event-driven | Balances latency with gas cost |
 | Bond equilibrium | Exponential smoothing (lambda=0.05) | Instant, weekly batch | Gradual convergence, ~14-day half-life |
 | Anti-Sybil | Phantom balance tracking | KYC, identity verification | Physics over rules |
@@ -231,7 +215,7 @@ This means:
 
 - [PATTERNS_Economy.md](../PATTERNS_Economy.md) -- Area-level patterns (8 patterns)
 - [ALGORITHM_Metabolic_Economy.md](./ALGORITHM_Metabolic_Economy.md) -- Full formula specification
-- [../storage-tax/PATTERNS_Storage_Tax.md](../storage-tax/PATTERNS_Storage_Tax.md) -- Flat storage tax patterns (extended by Pattern 3)
+- [../storage-tax/PATTERNS_Storage_Tax.md](../storage-tax/PATTERNS_Storage_Tax.md) -- Flat storage tax patterns
 - [../ubc/PATTERNS_UBC.md](../ubc/PATTERNS_UBC.md) -- UBC base patterns (extended by Pattern 7)
 - [../bonds/PATTERNS_Bonds.md](../bonds/PATTERNS_Bonds.md) -- Bond patterns (extended by Pattern 6)
 - [../cascade-utility/PATTERNS_Cascade_Utility.md](../cascade-utility/PATTERNS_Cascade_Utility.md) -- Cascade pricing (complemented by Pattern 2)

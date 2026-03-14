@@ -791,7 +791,7 @@ reward_X = limbic_delta_ecosystem * trust(ecosystem -> X) * 1.0 * settlement_rat
 limbic_delta_ecosystem = holding_amount * 0.00001 * holding_days
   Measured: Marginal ecosystem stability from committed capital
   Note: This is very low per unit — holding alone is minimally valuable
-  The demurrage tax (Formula 2) ensures that pure holding is net-negative
+  Inactive actors don't gain trust, so they pay full price via Formula 1
   Only holding + utility delivery produces net positive
   Typical range: 0.001 to 0.1 per day
 ```
@@ -806,7 +806,7 @@ delta_trust(ecosystem -> X) = 0.001 * holding_months
 ```
 reward_X = limbic_delta_ecosystem * trust(ecosystem -> X) * 1.0 * settlement_rate
   Typical: 0.01 * 0.3 * 1.0 * 10.0 = 0.03 $MIND per day
-  Note: This is intentionally much less than demurrage cost — pure holding is not profitable
+  Note: This is intentionally minimal — pure holding alone is not a significant value creation act
 ```
 
 **Multiplier:** 1.0
@@ -1000,7 +1000,7 @@ reward_X = total_limbic_delta * avg_trust * 1.0 * settlement_rate
 <!-- @mind:todo Calibrate typical reward values against actual ecosystem data once live -->
 <!-- @mind:todo Define the boundary between A2 (Empathy) and E1 (Anxiety Reduction) — when does relational become biometric? -->
 <!-- @mind:todo Implement multiplier computation as a graph traversal service -->
-<!-- @mind:escalation F6 ($MIND Holding) reward is intentionally below demurrage cost — confirm this policy choice -->
+<!-- @mind:escalation RESOLVED 2026-03-14: F6 ($MIND Holding) reward is intentionally minimal — demurrage removed, pure holding naturally unrewarding via trust-based pricing -->
 <!-- @mind:proposition Consider adding a Category H: Ecological (cross-ecosystem value creation with other protocols) -->
 
 ---

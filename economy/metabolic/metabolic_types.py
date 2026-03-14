@@ -201,11 +201,20 @@ class BondEquilibriumResult:
 
 @dataclass(frozen=True)
 class SpacePresence:
-    """Presence data for a single Space on a given day."""
+    """Activity data for a single Space on a given day.
+
+    Each actor's value is the sum of weights of all moment nodes they
+    created in this Space today. Weight comes from Law 6 consolidation:
+    moments that generated real utility (positive limbic delta in others)
+    earn weight; spam/noise stays at near-zero weight.
+
+    This replaces the old hours_present model which was vulnerable to
+    passive farming (leave tabs open → mine UBC without contributing).
+    """
 
     space_id: str
     actors: Dict[str, float]
-    """actor_id -> hours_present in this Space today."""
+    """actor_id -> sum of moment weights created in this Space today."""
 
 
 @dataclass(frozen=True)
