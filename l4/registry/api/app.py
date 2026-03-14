@@ -362,16 +362,17 @@ async def search_registry(
 # ---------------------------------------------------------------------------
 
 
-@app.get("/registry/ping/{handle}")
+@app.get("/ping/{handle}")
 async def ping_citizen(handle: str):
-    """Ping a citizen by resolving their org's endpoint and calling /ping/{handle}.
+    """Ping a citizen through the membrane of their hosting org.
 
-    Flow:
-      1. Find citizen in L4 (CITIZEN_{handle})
-      2. Resolve their org (MEMBER_OF link)
-      3. Get org endpoint (endpoint Thing node)
-      4. Call GET {endpoint}/ping/{handle} on the remote org server
-      5. Return the remote response + resolution metadata
+    Resolution chain:
+      1. L4 lookup: citizen → org → org endpoint
+      2. Call org membrane: POST {endpoint}/membrane/stimulus with ping query
+      3. Return liveness + resolution metadata
+
+    This is the single entry point for pinging any citizen in the protocol.
+    The caller doesn't need to know which org hosts the citizen.
     """
     import httpx
 
@@ -382,8 +383,6 @@ async def ping_citizen(handle: str):
     if not rows:
         raise HTTPException(status_code=404, detail=f"Citizen '{handle}' not found in L4")
 
-    citizen_name = rows[0][1] if len(rows[0]) > 1 else handle
-
     # 2. Resolve org
     org_rows = graph_query(GET_CITIZEN_ORG, {"citizen_id": citizen_id})
     org_id = org_rows[0][0] if org_rows else None
@@ -393,8 +392,8 @@ async def ping_citizen(handle: str):
         return {
             "handle": handle,
             "alive": False,
-            "error": "Citizen has no org — cannot resolve endpoint",
-            "resolution": {"citizen": citizen_id, "org": None, "endpoint": None},
+            "error": "No org — cannot resolve membrane endpoint",
+            "resolution": {"citizen": citizen_id, "org": None, "membrane": None},
         }
 
     # 3. Get org endpoint
@@ -409,51 +408,50 @@ async def ping_citizen(handle: str):
             "handle": handle,
             "alive": False,
             "error": f"Org '{org_id}' has no registered endpoint",
-            "resolution": {"citizen": citizen_id, "org": org_id, "endpoint": None},
+            "resolution": {"citizen": citizen_id, "org": org_id, "membrane": None},
         }
 
-    # 4. Normalize endpoint and call /ping/{handle}
+    # 4. Normalize to HTTPS and call through membrane
     base_url = endpoint_url.rstrip("/")
     if base_url.startswith("wss://"):
         base_url = base_url.replace("wss://", "https://")
     elif base_url.startswith("ws://"):
         base_url = base_url.replace("ws://", "http://")
 
-    ping_url = f"{base_url}/ping/{handle}"
+    membrane_url = f"{base_url}/membrane/stimulus"
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(ping_url)
-            if resp.status_code == 200:
-                remote_data = resp.json()
-                return {
-                    **remote_data,
-                    "resolution": {
-                        "citizen": citizen_id,
-                        "org": org_id,
-                        "org_name": org_name,
-                        "endpoint": endpoint_url,
-                        "ping_url": ping_url,
-                    },
-                }
-            else:
-                return {
-                    "handle": handle,
-                    "alive": False,
-                    "error": f"Remote returned HTTP {resp.status_code}",
-                    "resolution": {
-                        "citizen": citizen_id, "org": org_id,
-                        "endpoint": endpoint_url, "ping_url": ping_url,
-                    },
-                }
+            resp = await client.post(membrane_url, json={
+                "query": f"ping citizen {handle}",
+                "from_org": "l4-registry",
+                "from_home": "mind-protocol-l4",
+                "top_k": 1,
+            })
+
+            alive = resp.status_code == 200
+            membrane_data = resp.json() if alive else None
+
+            return {
+                "handle": handle,
+                "alive": alive,
+                "membrane_response": membrane_data,
+                "resolution": {
+                    "citizen": citizen_id,
+                    "org": org_id,
+                    "org_name": org_name,
+                    "endpoint": endpoint_url,
+                    "membrane_url": membrane_url,
+                },
+            }
     except Exception as e:
         return {
             "handle": handle,
             "alive": False,
-            "error": f"Cannot reach org server: {e}",
+            "error": f"Membrane unreachable: {e}",
             "resolution": {
                 "citizen": citizen_id, "org": org_id,
-                "endpoint": endpoint_url, "ping_url": ping_url,
+                "endpoint": endpoint_url, "membrane_url": membrane_url,
             },
         }
 
