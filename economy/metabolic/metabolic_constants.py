@@ -109,12 +109,13 @@ BOND_MATURATION_DAYS: int = _env_int("MIND_METABOLIC_BOND_MATURATION_DAYS", 180)
 
 
 # =============================================================================
-# Formula 6: UBC Proximity Redistribution
-# weight = hours_present * (num_co_actors - 1)
+# Formula 6: UBC Topological Activity Redistribution
+# activity = log10(1 + Σ(moment weights))
+# weight = activity × (num_actors - 1)
 # =============================================================================
 
-MIN_COPRESENCE_ACTORS: int = _env_int("MIND_METABOLIC_MIN_COPRESENCE_ACTORS", 2)
-"""Minimum actors in a Space for redistribution to apply."""
+MIN_COPRESENCE_ACTORS: int = _env_int("MIND_METABOLIC_MIN_COPRESENCE_ACTORS", 3)
+"""Minimum actors in a Space for redistribution to apply (>=3)."""
 
 
 # =============================================================================
