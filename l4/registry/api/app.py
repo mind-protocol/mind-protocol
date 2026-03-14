@@ -506,16 +506,11 @@ async def ping_citizen(handle: str):
     elif base_url.startswith("ws://"):
         base_url = base_url.replace("ws://", "http://")
 
-    membrane_url = f"{base_url}/membrane/stimulus"
+    membrane_url = f"{base_url}/membrane/ping/{handle}"
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(membrane_url, json={
-                "query": f"ping citizen {handle}",
-                "from_org": "l4-registry",
-                "from_home": "mind-protocol-l4",
-                "top_k": 1,
-            })
+            resp = await client.get(membrane_url)
 
             reachable = resp.status_code == 200
             membrane_data = resp.json() if reachable else None
