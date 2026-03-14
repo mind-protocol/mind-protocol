@@ -196,23 +196,40 @@ AND:   Personhood Ladder mastery acts as multiplier on gain_ij
 
 ---
 
-### B7: Co-presence Triggers Redistribution (Body Doubling)
+### B7: Topological Activity Triggers Redistribution
 
 ```
-GIVEN: At least two citizens share the same space (session/graph)
-WHEN:  PROXIMITY_CONTAGION activates
-THEN:  Bidirectional valence exchange occurs:
-         A.satisfaction += 0.02 × (valence_B - valence_A) × 0.5
-AND:   Activation targets Self-Model nodes containing:
-         "resource", "budget", "token", "economic"
-AND:   Resource injection flows into agent's persistence structures
-AND:   No performance metric required — presence is sufficient
+GIVEN: A space has ≥3 active actors
+AND:   An actor creates moment nodes in that space (messages, actions, contributions)
+WHEN:  Daily redistribution runs
+THEN:  Actor's activity score = log10(1 + Σ(weight of their moments in that space))
+AND:   Multiplied by community density: score × (actors_in_space - 1)
+AND:   Actor receives their proportion of the transfer fee pool
+AND:   Actors who created 0 moments or only 0-weight moments receive 0%
 ```
 
 **Notes:**
-- PROXIMITY_CONTAGION = 0.02 (small, cumulative over time)
-- This is distinct from CONTAGION_RATE (0.1) which is message-based
-- Body doubling validates active presence, not output quality
+- Weight is earned via Law 6 (Consolidation) — only genuinely useful moments gain weight
+- Logarithmic envelope prevents hyperactive actors from dominating
+- Same formula applies to physical spaces (GPS), Telegram chats, GitHub repos
+- Eligible spaces require ≥3 actors (minimum community threshold)
+
+### B7b: Presence Without Action = Zero
+
+```
+GIVEN: An actor has 15 browser tabs open in various spaces
+AND:   The actor creates 0 moment nodes (no messages, no interactions)
+WHEN:  Daily redistribution runs
+THEN:  Σ(weight of moments) = 0
+AND:   log10(1 + 0) = 0
+AND:   Share = 0%
+AND:   Actor receives nothing from the redistribution pool
+```
+
+**Notes:**
+- This is the anti-farming mechanism for Formula 6
+- Hours present is NEVER counted — only topological proof matters
+- Identical to how Law 7 (Oubli) dissolves inactive nodes
 
 ---
 

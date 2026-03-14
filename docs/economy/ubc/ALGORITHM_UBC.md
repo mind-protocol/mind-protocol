@@ -348,35 +348,104 @@ FUNCTION compute_affinity(node_i, link, node_j) -> float:
 
 ---
 
-## Algorithm: Formula 6 — `redistribute_by_copresence(space)`
+## Algorithm: Formula 6 — `redistribute_ubc_by_activity()`
 
-Runs whenever ≥2 citizens are detected in the same space.
+Runs daily (or per settlement period). Distributes the UBC transfer fee pool
+based on topological proof of participation, NOT presence time.
+
+**Core principle:** You are paid for animating the space, not for existing in it.
+15 open tabs with 0 interactions = 0% redistribution.
+
+### Key decisions that shaped this formula:
+
+- **D4: Presence time rejected.** Hours present is farmable (open tabs).
+  Topological proof (moment nodes created) replaces chronometre.
+- **D5: Weight, not count.** Sum of moment weights, not moment count.
+  Bad moments have weight 0 (Law 6 consolidation). Spam is worthless.
+- **D6: Logarithmic envelope.** `log10(1 + sum)` prevents hyperactive
+  actors from aspirating disproportionate shares.
+- **D7: Space density proportional.** Big spaces (100 actors) get more
+  than small spaces (10 actors). This privileges global ecosystems.
 
 ```
-FUNCTION redistribute_by_copresence(space):
-    citizens = get_citizens_in_space(space)
-    IF len(citizens) < 2:
-        RETURN  # Body doubling requires at least 2
+FUNCTION redistribute_ubc_by_activity():
+    # The pool is the accumulated 1% transfer fee for the period
+    pool = treasury.get_transfer_fee_pool()
+    IF pool <= 0:
+        RETURN
 
-    # Bidirectional valence exchange
-    FOR EACH pair (A, B) IN combinations(citizens, 2):
-        valence_A = get_current_valence(A)
-        valence_B = get_current_valence(B)
+    # Step 1: Identify eligible spaces (≥3 active actors)
+    spaces = get_all_active_spaces()
+    eligible_spaces = [s for s in spaces IF count_active_actors(s) >= 3]
 
-        # Mutual contagion
-        delta_A = PROXIMITY_CONTAGION * (valence_B - valence_A) * 0.5
-        delta_B = PROXIMITY_CONTAGION * (valence_A - valence_B) * 0.5
+    # Step 2: For each actor, compute their weight in each space
+    actor_weights = {}  # actor_id → total weight
 
-        A.satisfaction += delta_A
-        B.satisfaction += delta_B
+    FOR EACH space IN eligible_spaces:
+        actors = get_active_actors(space)
+        density = len(actors) - 1  # Community multiplier
 
-    # Resource injection: target Self-Model economic nodes
-    FOR EACH citizen IN citizens:
-        economic_nodes = find_self_model_nodes(citizen,
-            contains=["resource", "budget", "token", "economic"])
-        FOR EACH enode IN economic_nodes:
-            enode.energy += PROXIMITY_CONTAGION  # Small injection per tick
+        FOR EACH actor IN actors:
+            # Sum the WEIGHTS of moment nodes this actor created in this space
+            # (not count — a 0-weight spam moment contributes nothing)
+            moments = get_moments_created_by(actor, space, period=TODAY)
+            weight_sum = sum(m.weight for m in moments)
+
+            # Logarithmic envelope — prevents domination by hyperactive actors
+            activity = log10(1 + weight_sum)
+
+            # Multiply by space density (privileges large ecosystems)
+            weight_space = activity * density
+
+            # Accumulate across all spaces this actor participates in
+            actor_weights[actor.id] = actor_weights.get(actor.id, 0) + weight_space
+
+    # Step 3: Calculate shares
+    total_weight = sum(actor_weights.values())
+    IF total_weight == 0:
+        RETURN  # No one created any meaningful moments
+
+    # Step 4: Distribute pool proportionally
+    FOR EACH (actor_id, weight) IN actor_weights:
+        share = pool * (weight / total_weight)
+        # Apply max_share cap (I2 invariant — no magic numbers)
+        n_actors = len(actor_weights)
+        max_share_cap = clamp(1 / sqrt(n_actors), 0.01, 0.5)
+        capped = min(share, pool * max_share_cap)
+        credit_ubc(actor_id, capped)
+
+    RETURN DistributionBatch(pool=pool, actors=len(actor_weights), total_weight=total_weight)
 ```
+
+### Why this kills spam (Pathology D9):
+
+```
+Spammer creates 10,000 "lol" messages in a chat:
+  → Each message is a moment node
+  → Weight of each: ~0 (no utility, no Delta Limbique, Law 6 never consolidates)
+  → sum(weights) ≈ 0
+  → log10(1 + 0) = 0
+  → Share = 0%
+
+Real participant writes 3 thoughtful responses:
+  → 3 moment nodes, each with weight earned via Law 6 consolidation
+  → sum(weights) = e.g. 2.4
+  → log10(1 + 2.4) ≈ 0.53
+  → Share = proportional to 0.53 × density
+```
+
+### Physical spaces = Space nodes
+
+The app shares GPS position. The graph creates a link (relation_kind: "located_in")
+between the actor and the Space node representing that physical location.
+No special field needed — a café, a coworking space, a Telegram chat are ALL
+just Space nodes with actors linked to them. Same formula applies everywhere.
+
+### Space weighting: proportional, not inverse
+
+A space with 100 actors gets ~10× more redistribution weight than a space with 10.
+This is `density = actors - 1` (proportional to community size), NOT `1/actors` (inverse).
+Global ecosystems are privileged by design.
 
 ---
 

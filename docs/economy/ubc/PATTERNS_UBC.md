@@ -144,19 +144,39 @@ Where Compatibility (Law 8) is a composite function:
 
 ---
 
-## Pattern 3: UBC Redistribution by Co-presence / Body Doubling (Formula 6)
+## Pattern 3: UBC Redistribution by Topological Activity (Formula 6)
 
-When ≥2 citizens share the same space (session/graph), PROXIMITY_CONTAGION activates bidirectional valence exchange:
+Redistribution rewards **animating** the space, not merely existing in it. The formula uses the sum of moment weights under a logarithmic envelope, multiplied by space density.
 
 ```
-A.satisfaction += PROXIMITY_CONTAGION × (valence_B - valence_A) × 0.5
+Activity = log10(1 + Σ(weight of moment nodes created in space today))
+Weight_Space = Activity × (actors_in_space - 1)
+Share = Weight_Space / Σ(all Weight_Space globally)
 ```
 
-Where `PROXIMITY_CONTAGION = 0.02`.
+### Why NOT presence time
 
-This activation targets nodes in the Self-Model containing: `resource`, `budget`, `token`, `economic` — triggering resource injection into the agent's persistence structures.
+Presence time (hours_present) is trivially farmable — open 15 tabs, go to sleep, collect UBC. This recreates Web2's toxic attention economy (optimizing passive engagement). Instead, the topological proof requires real actions that generate real utility.
 
-**Key insight:** Body doubling rewards co-presence, not performance. Two citizens simply existing in the same space triggers redistribution. This is UBC's active dimension — the unconditional floor is passive (daily allocation), body doubling is active (co-presence bonus).
+### Why weight, not count
+
+Counting moments rewards spam. Weighting by `moment.weight` (earned via Law 6 Consolidation — genuine utility creates Delta Limbique in others) means:
+- 10,000 spam messages → weight sum ≈ 0 → share = 0%
+- 3 thoughtful contributions → weight sum > 0 → share > 0%
+
+### Why logarithmic
+
+`log10(1 + sum)` creates a ceiling: doubling your activity from 100 to 200 weight only increases log from 2.0 to 2.3. This prevents hyperactive actors from aspirating the entire pool while still rewarding genuine participation.
+
+### Why density × (actors - 1)
+
+Large spaces (100 actors) get proportionally more weight than small ones (10 actors). This privileges global ecosystems and communal spaces over isolated pairs. A Telegram chat with 100 participants rewards activity more than a private DM.
+
+### Physical spaces
+
+GPS position → actor linked to Space node. No special field. A café in Venice, a Telegram group, a GitHub repo — all are Space nodes with actors in them. Same formula, same physics, everywhere.
+
+**Key insight:** The economy is an extension of cognition. Value creation over activity. "Physics over rules" — spam is thermodynamically unfavorable, no ban needed.
 
 ---
 

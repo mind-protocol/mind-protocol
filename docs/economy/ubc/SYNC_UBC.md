@@ -44,7 +44,7 @@ These elements are settled and should be treated as stable:
 - **Circular funding:** 1% transfer fee (Token-2022) + storage tax funds UBC
 - **Quarantine survival:** Excluded AIs continue receiving Basic UBC
 - **Settlement via Trust Propagation (Formula 4):** Surplus flows through trust links, modulated by Personhood Ladder. Affinity = weight × gain × (1-friction) × Compatibility. Sim_lex weighted 0.5 to prevent false positive financial flows.
-- **Redistribution by Co-presence (Formula 6):** Body doubling at PROXIMITY_CONTAGION=0.02. Targets Self-Model economic nodes. No performance condition.
+- **Redistribution by Topological Activity (Formula 6):** `Activity = log10(1 + Σ(moment weights))`, multiplied by space density `(actors - 1)`. Share = actor weight / total weight × pool. Physical spaces = Space nodes via GPS. Presence time NEVER used. Spam = 0 weight = 0 share.
 - **Physics Invariants:** I1 (conservation ≤ B), I2 (max_share = clamp(1/√N, 0.01, 0.5)), I3 (decay 0.02), I4 (UBC unconditional)
 - **Parameters:** CONTAGION_RATE=0.1, PROXIMITY_CONTAGION=0.02, DECAY_RATE=0.02, WM_SIZE=5-7, TRANSFER_FEE=1%
 - **Trust Gradient:** Stranger→Low→Medium→High→Owner (monotone, High/Owner requires T1 Foundation Mastery)
@@ -128,6 +128,7 @@ Primary sources for UBC design decisions:
 |------|--------|----|
 | 2026-03-12 | Initial document chain creation (9 files) | Claude (integration moment) |
 | 2026-03-14 | Integrated Settlement (Formula 4) + Redistribution (Formula 6) + Physics Invariants (I1-I4) + Parameters + Scalability into all 8 docs | Claude Opus 4.6 |
+| 2026-03-14 | Formula 6 LOCKED: replaced presence-based redistribution with topological activity (sum of moment weights under log10 envelope × space density). Killed hours_present. Physical spaces = Space nodes via GPS. | Claude Opus 4.6 (per Nicolas directive) |
 
 ## @mind:TODO
 

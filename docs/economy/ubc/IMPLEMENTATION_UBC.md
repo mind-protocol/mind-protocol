@@ -116,11 +116,15 @@ Formula 4 — Batch settlement via trust propagation:
 - Applies `DECAY_RATE` after propagation (I3)
 
 ### `redistribution.py` — @mind:TODO
-Formula 6 — UBC redistribution by co-presence:
-- `redistribute_by_copresence(space)`: body doubling mechanism
-- Bidirectional valence exchange between co-present citizens
-- Resource injection into Self-Model economic nodes
-- Triggered when ≥2 citizens detected in same space
+Formula 6 — UBC redistribution by topological activity:
+- `redistribute_ubc_by_activity()`: daily redistribution from transfer fee pool
+- For each actor in each eligible space (≥3 actors):
+  - `activity = log10(1 + sum(moment.weight for moment in actor_moments_today))`
+  - `weight_space = activity × (actors_in_space - 1)`
+- Actor's share = their total weight / global total weight × pool
+- max_share cap applied (I2: clamp(1/√N, 0.01, 0.5))
+- NEVER uses hours_present or moment count without weight
+- Physical spaces: GPS → Space node link, same formula as digital spaces
 
 ### `affinity.py` — @mind:TODO
 Affinity and compatibility calculation:

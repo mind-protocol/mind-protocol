@@ -251,23 +251,28 @@ VERIFICATION:
 
 ---
 
-### V12: Co-presence Redistribution (I4 + Body Doubling)
-**Severity:** MEDIUM
+### V12: Topological Redistribution (Formula 6)
+**Severity:** HIGH
 
 ```
-MUST:  Co-presence redistribution requires ≥2 citizens in same space
-MUST:  Valence exchange is bidirectional and symmetric
-MUST:  Resource injection targets only Self-Model economic nodes
-MUST:  PROXIMITY_CONTAGION rate = 0.02 (not coupled to performance)
+MUST:  Redistribution uses sum of moment WEIGHTS, never count of moments
+MUST:  Weight sum passes through log10(1 + sum) envelope
+MUST:  Spaces require ≥3 active actors for eligibility
+MUST:  Density multiplier = (actors_in_space - 1), proportional not inverse
+MUST:  Actors with 0 moments or 0-weight moments receive 0%
 
-NEVER: Single citizen triggers co-presence redistribution
-NEVER: Co-presence bonus scaled by behavioral score (violates I4)
-NEVER: Resource injection targets non-economic nodes
+NEVER: Use hours_present or connection time as redistribution factor
+NEVER: Count moments without weighting (enables spam farming)
+NEVER: Use linear sum without logarithmic envelope (enables domination)
+NEVER: Use inverse density (1/actors) — proportional density is canonical
 
 VERIFICATION:
-  - Isolation test: single citizen in space → zero redistribution
-  - Symmetry test: |delta_A| ≈ |delta_B| for any pair
-  - Target test: only nodes with resource/budget/token/economic strings affected
+  - Spam test: actor creates 10,000 zero-weight moments → share = 0%
+  - Quality test: actor creates 3 high-weight moments → share > 0%
+  - Log test: doubling weight sum from 100→200 increases share by <15%
+  - Density test: space with 100 actors awards ~10× more than space with 10
+  - Isolation test: space with <3 actors → ineligible, zero redistribution
+  - Tab farming test: actor connected to 15 spaces, 0 moments → share = 0%
 ```
 
 ---
