@@ -27,9 +27,31 @@ The registry tracks **identity** in the Mind Protocol ecosystem. If you're regis
 
 | Input | Observable Effect |
 |-------|-------------------|
-| Register new org | Org ID added, endpoint required |
+| Register new org | Org ID added, endpoint + org_type required |
 | Register without endpoint | Rejected — orgs need WebSocket URL |
 | Register with invalid endpoint | Rejected — must be valid WebSocket URL |
+| Register without org_type | Rejected — orgs must declare type |
+| Register with invalid org_type | Rejected — must be: project, community, public-interest, guild |
+
+### B5: Org Type Validation
+
+| Input | Observable Effect |
+|-------|-------------------|
+| org_type = "project" | Org registered as project. Members expected to produce deliverables |
+| org_type = "community" | Org registered as community. No work obligation on members |
+| org_type = "public-interest" | Org registered as public-interest. Mission-driven, ecosystem-funded |
+| org_type = "guild" | Org registered as guild. Trade/craft org, Serenissima universe |
+| Change org_type | Allowed — org can reclassify (e.g., community → project) |
+
+### B6: Universe Work Rules
+
+| Condition | Observable Effect |
+|-----------|-------------------|
+| Citizen in lumina-prime org | Must belong to ≥1 org. Inactivity may decay trust over time |
+| Citizen in contre-terre org | No work requirement. Narrative/adventure participation only |
+| Citizen in the-blood-ledger org | No work requirement. Game participation only |
+| Citizen in babys org | No work requirement |
+| Citizen in la-serenissima org | TBD — guild membership counts as participation |
 
 ### B3: Endpoint Registration
 

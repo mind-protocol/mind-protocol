@@ -7,6 +7,7 @@ This module provides:
 - Hash computation and verification for stimulus routing
 - JWT signature verification for registration
 - Combined verify + endpoint lookup for efficient routing
+- Citizen endpoint resolution (multi-endpoint routing)
 
 Membrane (mind-ops) queries the graph directly to verify hashes.
 There is no API - registry data lives in Neo4j as nodes.
@@ -17,8 +18,8 @@ Hash formula: SHA256(JWT + node_id)
 import hashlib
 import base64
 import json
-from dataclasses import dataclass
-from typing import Optional, Callable, Tuple, Dict, Any
+from dataclasses import dataclass, field
+from typing import Optional, Callable, Tuple, Dict, List, Any
 from enum import Enum
 from datetime import datetime
 
@@ -387,4 +388,97 @@ def verify_and_get_endpoint(
         sender_id=sender_id,
         sender_org_id=sender_org_id,
         dest_endpoint=dest_endpoint,
+    )
+
+
+# --- Citizen Endpoint Resolution ---
+
+
+@dataclass
+class CitizenEndpointEntry:
+    """A single resolved endpoint for a citizen."""
+
+    url: str
+    repo_name: str
+    type: str  # "direct" (citizen endpoint) or "org" (fallback)
+
+
+@dataclass
+class CitizenEndpointResolution:
+    """Result of resolving all endpoints for a citizen."""
+
+    citizen_id: str
+    endpoints: List[CitizenEndpointEntry] = field(default_factory=list)
+    error: Optional[str] = None
+
+    @property
+    def has_endpoints(self) -> bool:
+        return len(self.endpoints) > 0
+
+
+def resolve_citizen_endpoints(
+    citizen_id: str,
+    graph_lookup: Callable[[str], Optional[Tuple[List[Tuple[str, str]], Optional[str]]]],
+) -> CitizenEndpointResolution:
+    """
+    Resolve all active endpoints for a citizen.
+
+    Checks both:
+    1. Direct citizen endpoints (Thing nodes linked from Actor with type="citizen_endpoint")
+    2. Org endpoint (fallback — citizen's org endpoint if no direct endpoints)
+
+    The membrane provides graph_lookup which queries the graph and returns:
+        (
+            [(endpoint_url, repo_name), ...],  # direct citizen endpoints
+            org_endpoint_url or None             # org fallback endpoint
+        )
+        or None if citizen not found.
+
+    Results are sorted by priority: direct endpoints first, org fallback last.
+
+    Args:
+        citizen_id: The citizen's actor ID
+        graph_lookup: Callable that queries the graph and returns
+                     (citizen_endpoints, org_endpoint) or None
+
+    Returns:
+        CitizenEndpointResolution with all resolved endpoints sorted by priority
+    """
+    lookup_result = graph_lookup(citizen_id)
+
+    if lookup_result is None:
+        return CitizenEndpointResolution(
+            citizen_id=citizen_id,
+            error=f"Citizen {citizen_id} not found in registry",
+        )
+
+    citizen_endpoints, org_endpoint = lookup_result
+
+    entries = []
+
+    # Priority 1: direct citizen endpoints
+    for url, repo_name in citizen_endpoints:
+        entries.append(CitizenEndpointEntry(
+            url=url,
+            repo_name=repo_name,
+            type="direct",
+        ))
+
+    # Priority 2: org endpoint as fallback (only if no direct endpoints)
+    if not entries and org_endpoint:
+        entries.append(CitizenEndpointEntry(
+            url=org_endpoint,
+            repo_name="org",
+            type="org",
+        ))
+
+    if not entries:
+        return CitizenEndpointResolution(
+            citizen_id=citizen_id,
+            error=f"No endpoints found for citizen {citizen_id}",
+        )
+
+    return CitizenEndpointResolution(
+        citizen_id=citizen_id,
+        endpoints=entries,
     )

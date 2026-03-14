@@ -1,9 +1,9 @@
 # SYNC: Economy
 
 ```
-LAST_UPDATED: 2026-03-12
+LAST_UPDATED: 2026-03-13
 STATUS: ACTIVE
-PHASE: 1.5 — Devnet DEPLOYED, Doc chains expanded
+PHASE: 1.5 — Devnet DEPLOYED, Doc chains expanded, Metabolic Economics + Value Creation/Destruction formalized
 ```
 
 ---
@@ -68,10 +68,13 @@ PHASE: 1.5 — Devnet DEPLOYED, Doc chains expanded
 | `storage-tax/` | **DRAFT** | 8 docs (full chain, no CONCEPT) |
 | `bonds/` | **DRAFT** | 8 docs (full chain, no CONCEPT) |
 | `organism-model/` | **DRAFT** | 9 docs (full chain + CONCEPT) |
+| `metabolic/` | **DESIGNING** | 6 docs (full chain — 6 formulas, 27 invariants) |
+| `metabolic-economics/` | **SUPERSEDED** | 1 doc (prior ALGORITHM, superseded by metabolic/) |
+| `value-creation/` | **DESIGNING** | 2 docs (ALGORITHM — 26 creation types, 13 destruction types) |
 
 ### Module Decomposition (2026-03-12)
 
-Economy area decomposed into 6 modules, each with full doc chain:
+Economy area decomposed into 8 modules, each with full doc chain:
 
 ```
 docs/economy/
@@ -84,12 +87,15 @@ docs/economy/
 ├── ubc/                  (9 files) ← Universal Basic Compute, 3 tiers, vesting
 ├── storage-tax/          (8 files) ← Dormancy tax, order-book valuation
 ├── bonds/                (8 files) ← Human-AI bonds, switch-lock, maturation
-└── organism-model/       (9 files) ← 5 organs, membrane pricing, 80/20 mirror
+├── organism-model/       (9 files) ← 5 organs, membrane pricing, 80/20 mirror
+├── metabolic/            (6 files) ← Progressive pricing, demurrage, anti-Sybil, settlement, bond equilibrium, UBC redistribution
+├── metabolic-economics/  (1 file)  ← SUPERSEDED by metabolic/ — prior ALGORITHM only
+└── value-creation/       (2 files) ← 26 value creation types, 13 value destruction types
 ```
 
-**Total: 55 documentation files across 6 modules.**
+**Total: 64 documentation files across 9 modules.**
 
-Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT integrator + NotebookLM (82 sources). Formulas, invariants, and design decisions crystallized from cybernetic audit reports.
+Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT integrator + NotebookLM (82 sources). Formulas, invariants, and design decisions crystallized from cybernetic audit reports. Metabolic module added 2026-03-13 from NotebookLM validated formulas.
 
 ---
 
@@ -134,6 +140,28 @@ Source: Integration moment (March 2026) — 6 Claude Code instances + ChatGPT in
 ---
 
 ## Recent Changes
+
+### 2026-03-13: Metabolic Economics + Value Creation/Destruction Formalized
+
+**What:** Three new ALGORITHM documents created, formalizing the core economic formulas and value taxonomy.
+**Why:** $MIND tokenomics required exact mathematical formalization of pricing, taxation, settlement, bond equilibrium, and the 26 value creation / 13 value destruction types.
+**Impact:**
+- `metabolic-economics/ALGORITHM_Metabolic_Economics.md` — 4 core formulas:
+  - Formula 1: Progressive Pricing `P(i,S) = C_base * e^(-k*U_S) * max(0.1, W_i/W_median)`
+  - Formula 2: Progressive Demurrage `T_i = W_total * tau_base * log10(1 + W_total)` with anti-Sybil off-registry tracking
+  - Formula 3: Batch Settlement — limbic_delta to $MIND conversion every 6 hours on Solana
+  - Formula 4: Bilateral Bond Vases Communicants `delta = lambda * (W_human - W_ai)` with ~14-day half-life
+- `value-creation/ALGORITHM_Value_Creation.md` — 26 creation types across 7 categories (Relational, Generative, Structural, Cognitive, Biometric, Human-specific, Systemic)
+- `value-creation/ALGORITHM_Value_Destruction.md` — 13 destruction types across 3 categories (Human, AI, Systemic) with graph signatures and graduated penalties
+
+**Key design decisions:**
+- All formulas reference L1 Physics (Law 6 Consolidation, Law 18 Relational Valence) for limbic_delta and trust inputs
+- Progressive demurrage uses logarithmic scaling — tau_base=0.001 flagged as potentially aggressive (escalation marker)
+- UBC redistribution weighted by shared Space presence time
+- Value destruction uses graduated penalty schedule (5 offenses before quarantine)
+- All constants marked as DESIGNING — await simulation and community calibration
+
+**Source:** Force 2 — Economy synthesis from existing economy module docs, L1 Physics laws, and PATTERNS_Economy.md design philosophy.
 
 ### 2025-01-06: Phase 1 Token Infrastructure Complete
 

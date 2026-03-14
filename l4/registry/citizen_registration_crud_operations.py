@@ -5,15 +5,19 @@ DOCS: docs/l4/registry/IMPLEMENTATION_Registry.md
 
 Citizens are AI agents with identity and org membership.
 Stored as actor nodes with type="citizen", properties as linked nodes.
+
+Citizens can have multiple service endpoints (one per repo/instance they work on).
+Each endpoint is a Thing node linked from the Actor node with a SERVES link.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
 import uuid
 
 from ..schema import ActorNode, NarrativeNode, ThingNode, LinkBase
+from .endpoint_registration_and_management import validate_endpoint_url
 
 
 @dataclass
@@ -282,3 +286,119 @@ def citizen_to_record(
         capabilities=capabilities,
         verification_status=verification_status,
     )
+
+
+# --- Citizen Endpoint Management ---
+
+
+def add_citizen_endpoint(
+    citizen_id: str,
+    endpoint_url: str,
+    repo_name: str,
+    instance_id: Optional[str] = None,
+) -> tuple:
+    """
+    Register a service endpoint for a citizen.
+
+    A citizen can have multiple endpoints (one per repo they work on).
+    Each endpoint is a Thing node linked from the Actor node.
+    Uses deterministic IDs for MERGE semantics — re-registering the same
+    citizen+repo combination updates the existing node, never duplicates.
+
+    Args:
+        citizen_id: The citizen's actor ID
+        endpoint_url: WebSocket URL (wss://) for this instance
+        repo_name: Which repo this endpoint serves (e.g., "cities-of-light")
+        instance_id: Optional Render instance ID for dedup
+
+    Returns:
+        (endpoint_node, link) tuple
+
+    Raises:
+        ValueError: If endpoint_url is not a valid wss:// URL
+    """
+    # Validate endpoint URL
+    validation = validate_endpoint_url(endpoint_url)
+    if not validation.is_valid:
+        raise ValueError(validation.error)
+
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
+    # Deterministic ID: citizen + repo → always the same node
+    endpoint_id = f"{citizen_id}_endpoint_{repo_name}"
+
+    endpoint_node = ThingNode(
+        id=endpoint_id,
+        name=f"Endpoint {citizen_id}/{repo_name}",
+        type="citizen_endpoint",
+        synthesis=f"Service endpoint for {citizen_id} on {repo_name}",
+        content=endpoint_url,
+        uri=endpoint_url,
+    )
+
+    # Link: Actor → Thing with SERVES semantics
+    # hierarchy=1.0: endpoint belongs to citizen
+    # permanence=0.6: endpoints can change (deploys, shutdowns)
+    link = LinkBase(
+        id=f"{citizen_id}_serves_{repo_name}",
+        node_a=citizen_id,
+        node_b=endpoint_id,
+        hierarchy=1.0,
+        permanence=0.6,
+    )
+
+    return endpoint_node, link
+
+
+def remove_citizen_endpoint(citizen_id: str, repo_name: str) -> tuple:
+    """
+    Remove a citizen endpoint (e.g., when instance shuts down).
+
+    Returns the IDs to delete so the caller can remove from graph.
+    Does not touch the graph directly — caller is responsible for persistence.
+
+    Args:
+        citizen_id: The citizen's actor ID
+        repo_name: Which repo endpoint to remove
+
+    Returns:
+        (endpoint_node_id, link_id) tuple for the caller to delete
+    """
+    endpoint_id = f"{citizen_id}_endpoint_{repo_name}"
+    link_id = f"{citizen_id}_serves_{repo_name}"
+    return endpoint_id, link_id
+
+
+def get_citizen_endpoints(
+    citizen_id: str,
+    property_nodes: List,
+) -> List[Dict[str, Any]]:
+    """
+    Get all active endpoints for a citizen from their property nodes.
+
+    Filters property nodes for citizen_endpoint type and extracts
+    endpoint metadata.
+
+    Args:
+        citizen_id: The citizen's actor ID
+        property_nodes: All linked property nodes for this citizen
+
+    Returns:
+        List of dicts with keys:
+            endpoint_url, repo_name, instance_id, registered_at, status
+    """
+    endpoints = []
+    for node in property_nodes:
+        if hasattr(node, "type") and node.type == "citizen_endpoint":
+            # Extract repo_name from deterministic ID pattern:
+            # {citizen_id}_endpoint_{repo_name}
+            prefix = f"{citizen_id}_endpoint_"
+            repo_name = node.id[len(prefix):] if node.id.startswith(prefix) else node.id
+
+            endpoints.append({
+                "endpoint_url": node.content,
+                "repo_name": repo_name,
+                "status": "active",
+            })
+
+    return endpoints

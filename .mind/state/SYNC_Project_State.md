@@ -62,6 +62,15 @@ The protocol now has:
 
 ## RECENT CHANGES
 
+### 2026-03-13: Metabolic Economy Documentation Module Created
+
+- **Who:** Force 2 (Economy Architect)
+- **Repo:** `mind-protocol` (L4)
+- **What:** Created full doc chain for metabolic economy at `docs/economy/metabolic/` (6 files). Specifies 6 formulas: Progressive Pricing, Progressive Demurrage, Anti-Sybil Auto-Repatriation, Batch Settlement, Bilateral Bond Vases Communicants, UBC Proximity Redistribution. Includes 27 testable invariants, 9 observable behaviors, worked examples, and design decisions.
+- **Source:** NotebookLM session (82 sources) validating metabolic economics formulas.
+- **Impact:** Extends storage-tax, ubc, bonds, cascade-utility, and token modules with metabolic layer. No code written (Phase A documentation only). Economy docs now total 64 files across 9 modules.
+- **Open decisions:** tau_base calibration (0.001 may be aggressive), settlement frequency (6h vs 4h), lambda convergence speed.
+
 ### 2026-03-13: Citizen Birth & Pairing Manifestos — Three Documents Created/Updated
 
 - **Who:** Nicolas (vision/decisions) + Claude Opus (writing)
@@ -249,6 +258,7 @@ None. Schema is clean, registry follows patterns.
 | `l4/registry/` | **COMPLETE** | `docs/l4/registry/SYNC_Registry.md` |
 | `l4/laws/` | pending | `docs/l4/laws/SYNC_Laws.md` |
 | `economy/token/` | **COMPLETE** | `docs/economy/SYNC_Economy.md` |
+| `economy/metabolic/` | **DESIGNING** | `docs/economy/metabolic/SYNC_Metabolic_Economy.md` |
 | `economy/staking/` | pending | `docs/economy/SYNC_Economy.md` |
 
 ---
@@ -263,6 +273,7 @@ None. Schema is clean, registry follows patterns.
 | Seed | `l4/seed/` | — | 0 | ready |
 | Token | `economy/token/` | `docs/economy/token/` | 61 | **COMPLETE** |
 | TransferHook | `programs/mind_transfer_hook/` | `docs/economy/token/` | 2 | **COMPLETE** |
+| Metabolic | — | `docs/economy/metabolic/` | 0 | **DESIGNING** (docs only) |
 | Staking | `economy/staking/` | — | 0 | pending |
 
 **Total tests: 144 passing** (83 L4 + 61 Economy)

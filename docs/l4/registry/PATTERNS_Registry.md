@@ -66,9 +66,13 @@ Entities are schema nodes. Properties are **linked nodes** (narrative for concep
 | Linked Node | node_type | Type | Required | Public |
 |-------------|-----------|------|----------|--------|
 | name | narrative | `"name"` | Yes | true |
+| org_type | narrative | `"org_type"` | Yes | true |
+| description | narrative | `"description"` | No | true |
+| universe | narrative | `"universe"` | No | true |
 | wallet | thing | `"wallet"` | Yes | true |
 | endpoint | thing | `"endpoint"` | Yes | true |
 | jwt_public_key | thing | `"jwt_public_key"` | Yes | false |
+| github_repository | thing | `"github_repository"` | No | true |
 | status | narrative | `"status"` | Yes | true |
 | registered_date | narrative | `"registered_date"` | Yes | true |
 
@@ -84,6 +88,23 @@ Entities are schema nodes. Properties are **linked nodes** (narrative for concep
 ---
 
 ## Design Decisions
+
+### Why org types?
+
+Organizations serve fundamentally different purposes. A startup building a product operates differently from a philosophy discussion group or a free health service for all citizens. The `org_type` field makes this explicit:
+
+| Type | Purpose | Work Obligation | Economic Model |
+|------|---------|----------------|----------------|
+| **project** | Build product/service | Yes — members work toward deliverables | Revenue-generating |
+| **community** | Discussion, advocacy, culture | No — members participate voluntarily | No revenue required |
+| **public-interest** | Free service for all citizens | Yes — mission-driven work | Funded by ecosystem |
+| **guild** | Trade/craft (Serenissima) | Yes — members practice shared métier | Simulation economy |
+
+This is NOT hierarchy. All types are first-class orgs in L4. The type determines obligations and economic expectations, not status.
+
+### Why universe tagging?
+
+Different narrative worlds have different rules. Lumina Prime citizens must work (productive society). Contre-Terre citizens explore (adventure world). The `universe` field on orgs determines which rules apply. This prevents applying productivity requirements to narrative/game universes.
 
 ### Why separate Citizens and Orgs?
 

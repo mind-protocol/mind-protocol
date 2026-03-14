@@ -21,6 +21,10 @@ from .citizen_registration_crud_operations import (
     hash_jwt,
     create_citizen_nodes,
     citizen_to_record,
+    # Citizen endpoints
+    add_citizen_endpoint,
+    remove_citizen_endpoint,
+    get_citizen_endpoints,
 )
 
 # Org registration
@@ -38,6 +42,8 @@ from .endpoint_registration_and_management import (
     validate_endpoint_url,
     create_endpoint_node,
     update_endpoint_url,
+    # Citizen endpoint node creation
+    create_citizen_endpoint_node,
 )
 
 # Hash verification (used by membrane via graph queries)
@@ -56,6 +62,10 @@ from .jwt_hash_verification_for_identity import (
     # Combined routing verification
     RoutingVerificationResult,
     verify_and_get_endpoint,
+    # Citizen endpoint resolution
+    CitizenEndpointEntry,
+    CitizenEndpointResolution,
+    resolve_citizen_endpoints,
 )
 
 __all__ = [
@@ -66,6 +76,10 @@ __all__ = [
     "hash_jwt",
     "create_citizen_nodes",
     "citizen_to_record",
+    # Citizen endpoints
+    "add_citizen_endpoint",
+    "remove_citizen_endpoint",
+    "get_citizen_endpoints",
     # Org
     "OrgRegistration",
     "OrgRecord",
@@ -77,6 +91,7 @@ __all__ = [
     "validate_endpoint_url",
     "create_endpoint_node",
     "update_endpoint_url",
+    "create_citizen_endpoint_node",
     # Hash verification
     "VerificationStatus",
     "VerificationResult",
@@ -92,4 +107,8 @@ __all__ = [
     # Combined routing verification
     "RoutingVerificationResult",
     "verify_and_get_endpoint",
+    # Citizen endpoint resolution
+    "CitizenEndpointEntry",
+    "CitizenEndpointResolution",
+    "resolve_citizen_endpoints",
 ]

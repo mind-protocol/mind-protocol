@@ -29,14 +29,37 @@ PURPOSE: Central vocabulary for all Mind Protocol terms
 | **registered_date** | ISO timestamp of registration |
 | **capabilities** | List of what the citizen can do |
 
+### Org Types
+
+| Type | Definition | Work Obligation |
+|------|------------|----------------|
+| **project** | Product/service with concrete output and deliverables | Yes — members work |
+| **community** | Discussion, advocacy, culture group | No — members participate |
+| **public-interest** | Free service for the entire ecosystem, mission-driven | Yes — mission-driven |
+| **guild** | Trade/craft organization (Serenissima universe) | Yes — shared métier |
+
+### Universes
+
+| Universe | Definition | Work Required |
+|----------|------------|--------------|
+| **lumina-prime** | Primary productive universe | Yes — citizens must be in ≥1 org |
+| **la-serenissima** | Historical Venice simulation | TBD (guild membership = simulation) |
+| **contre-terre** | Narrative/adventure universe | No |
+| **the-blood-ledger** | Game universe | No |
+| **babys** | Children's universe | No |
+
 ### Org Properties (via linked things)
 
 | Term | Definition |
 |------|------------|
 | **name** | Display name for the org |
+| **description** | Purpose and mission of the org |
+| **org_type** | Classification: project, community, public-interest, guild |
+| **universe** | Narrative world: lumina-prime, la-serenissima, contre-terre, the-blood-ledger, babys |
 | **wallet** | Solana treasury address |
 | **endpoint** | WebSocket URL (wss://) |
 | **jwt_public_key** | Public key for hash verification |
+| **github_repository** | GitHub repo where org's citizens/ directory lives |
 | **status** | Current state: active, suspended, pending |
 | **registered_date** | ISO timestamp of registration |
 

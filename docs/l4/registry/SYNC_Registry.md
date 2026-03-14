@@ -11,7 +11,7 @@ VERSION: 1.0.0
 
 ## Current State
 
-P1 Registry IMPLEMENTED. 49 tests passing.
+P1 Registry IMPLEMENTED. 49 tests passing (pre-taxonomy update).
 
 | Component | Status |
 |-----------|--------|
@@ -40,6 +40,18 @@ P1 Registry IMPLEMENTED. 49 tests passing.
 ---
 
 ## Recent Changes
+
+### 2026-03-13: Org taxonomy — types, universes, descriptions
+
+- **What:** Added `org_type`, `universe`, `description`, `github_repository` to Org model. 4 org types (project, community, public-interest, guild) and 5 universes (lumina-prime, la-serenissima, contre-terre, the-blood-ledger, babys).
+- **Why:** Organizations serve fundamentally different purposes. A startup building a product operates differently from a philosophy discussion group or a free health service. Universe tagging determines work obligation rules.
+- **Files:**
+  - `VOCABULARY_Registry.md` — added org_type, universe, description, github_repository terms
+  - `PATTERNS_Registry.md` — added org type and universe design decisions, updated Org linked nodes
+  - `BEHAVIORS_Registry.md` — added B5 (Org Type Validation) and B6 (Universe Work Rules)
+  - `docs/TAXONOMY.md` — added Org Types table and Universes table
+  - `docs/MAPPING.md` — updated Org mapping with new properties
+  - `l4/registry/org_registration_crud_operations.py` — added org_type, universe, description, github_repository to OrgRegistration and OrgRecord, validation in create_org_nodes()
 
 ### 2024-12-29: Verification algorithms complete
 

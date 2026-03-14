@@ -26,6 +26,7 @@
     "@solana/spl-token": "^0.4.14",
     "@solana/spl-token-metadata": "^0.1.6",
     "@solana/web3.js": "^1.98.4",
+    "libsodium-wrappers": "^0.8.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

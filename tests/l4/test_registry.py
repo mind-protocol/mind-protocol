@@ -208,6 +208,7 @@ class TestOrgRegistration:
         """Create org nodes with required data."""
         reg = OrgRegistration(
             name="Test Org",
+            org_type="project",
             wallet="7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
             endpoint_url="wss://api.testorg.com/ws",
             jwt_public_key="-----BEGIN PUBLIC KEY-----\nMIIBIjAN...",
@@ -223,6 +224,8 @@ class TestOrgRegistration:
         # Check required property nodes
         types = [n.type for n in property_nodes if hasattr(n, 'type')]
         assert "name" in types
+        assert "org_type" in types
+        assert "universe" in types
         assert "status" in types
         assert "registered_date" in types
         assert "wallet" in types
@@ -236,6 +239,7 @@ class TestOrgRegistration:
         """Org should be a space node, not actor."""
         reg = OrgRegistration(
             name="Space Org",
+            org_type="community",
             wallet="wallet123",
             endpoint_url="wss://test.com/ws",
             jwt_public_key="key123",

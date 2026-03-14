@@ -96,7 +96,7 @@ PROCEDURE verify_identity(hash, node_id):
 
 ---
 
-## Endpoint Lookup
+## Endpoint Lookup (Org)
 
 ```
 PROCEDURE get_endpoint_for_org(org_id):
@@ -107,6 +107,99 @@ PROCEDURE get_endpoint_for_org(org_id):
        - If not found → RETURN null
 
     3. RETURN endpoint.url
+```
+
+---
+
+## Citizen Endpoint Registration
+
+A citizen can have N endpoints (one per repo/instance they work on).
+Each endpoint is a Thing node with type="citizen_endpoint" linked from
+the citizen's Actor node via a SERVES link.
+
+```
+PROCEDURE add_citizen_endpoint(citizen_id, endpoint_url, repo_name, instance_id?):
+    1. Validate endpoint_url
+       - Must be wss:// (secure WebSocket)
+       - If invalid → REJECT "Invalid endpoint URL"
+
+    2. Compute deterministic endpoint ID
+       - endpoint_id = "{citizen_id}_endpoint_{repo_name}"
+       - This ensures MERGE semantics: re-registering same citizen+repo = update
+
+    3. Create endpoint Thing node
+       - id = endpoint_id
+       - type = "citizen_endpoint"
+       - content = endpoint_url (wss://...)
+       - uri = endpoint_url
+       - synthesis = "Service endpoint for {citizen_id} on {repo_name}"
+
+    4. Create SERVES link
+       - link_id = "{citizen_id}_serves_{repo_name}"
+       - node_a = citizen_id (Actor)
+       - node_b = endpoint_id (Thing)
+       - hierarchy = 1.0 (endpoint belongs to citizen)
+       - permanence = 0.6 (endpoints can change)
+
+    5. Persist to L4 graph (MERGE — update if exists)
+
+    6. RETURN (endpoint_node, link)
+
+PROCEDURE remove_citizen_endpoint(citizen_id, repo_name):
+    1. Compute deterministic IDs
+       - endpoint_id = "{citizen_id}_endpoint_{repo_name}"
+       - link_id = "{citizen_id}_serves_{repo_name}"
+
+    2. Delete endpoint Thing node and SERVES link from graph
+
+    3. RETURN success
+```
+
+---
+
+## Citizen Endpoint Resolution
+
+When the membrane needs to route a message/call to a citizen, it resolves
+all active endpoints. A citizen may have multiple endpoints (one per repo).
+
+```
+PROCEDURE resolve_citizen_endpoints(citizen_id):
+    1. Query L4 graph for citizen
+       - If not found → RETURN error "Unknown citizen"
+
+    2. Get direct citizen endpoints
+       - Query: GET linked Things where type="citizen_endpoint"
+       - For each: extract (url, repo_name)
+       - These are priority 1
+
+    3. Get org fallback endpoint
+       - Query: GET citizen's org_id from org_membership node
+       - Query: GET org endpoint where type="endpoint"
+       - This is priority 2 (only used if no direct endpoints)
+
+    4. Build sorted endpoint list
+       - Direct endpoints first (type="direct")
+       - Org endpoint last (type="org", only if no directs)
+
+    5. RETURN list of {url, repo_name, type}
+
+Graph structure (follow the links):
+
+[Actor: citizen] ───SERVES──► [Thing: citizen_endpoint]
+     │                         type="citizen_endpoint"
+     │                         content="wss://cities-of-light.onrender.com/ws"
+     │                         id="{citizen_id}_endpoint_cities-of-light"
+     │
+     ├───SERVES──► [Thing: citizen_endpoint]
+     │              type="citizen_endpoint"
+     │              content="wss://venezia.onrender.com/ws"
+     │              id="{citizen_id}_endpoint_venezia"
+     │
+     └───LINK───► [Narrative: org_membership]
+                   content="org_xyz"
+                        │
+                        └──► [Space: org] ──LINK──► [Thing: endpoint]
+                                                     content="wss://org-fallback.com/ws"
 ```
 
 ---
@@ -224,13 +317,15 @@ PROCEDURE register_citizen_with_verification(registration, jwt):
 
 ## Endpoint Location
 
-**Endpoint lives in L4 registry (not membrane).**
+**Endpoints live in L4 registry (not membrane).**
 
 Rationale:
 - Endpoint is identity data (like name, wallet, public key)
 - Single source of truth in L4
 - Membrane already traverses L4 for hash verification
 - Same traversal gets endpoint — no extra ops
+
+### Org Endpoints (single per org)
 
 ```
 Graph structure (follow the links):
@@ -249,6 +344,35 @@ Graph structure (follow the links):
 
 Get endpoint: graph.get_linked(org_id, type="endpoint")
 Graph physics does the work.
+```
+
+### Citizen Endpoints (multiple per citizen, one per repo)
+
+A citizen can work on multiple repos. Each repo deployment creates a
+separate MCP server instance with its own WebSocket endpoint.
+
+```
+Graph structure (follow the links):
+
+[Actor: citizen] ───SERVES──► [Thing: citizen_endpoint]
+     │                         type="citizen_endpoint"
+     │                         id="{cid}_endpoint_cities-of-light"
+     │                         content="wss://cities-of-light.onrender.com/ws"
+     │
+     ├───SERVES──► [Thing: citizen_endpoint]
+     │              type="citizen_endpoint"
+     │              id="{cid}_endpoint_venezia"
+     │              content="wss://venezia.onrender.com/ws"
+     │
+     ├────LINK────► [Narrative: org_membership]
+     │                content="org_xyz"
+     │
+     └────LINK────► [Thing: identity_hash]
+                      content="sha256..."
+
+Get all endpoints: graph.get_linked(citizen_id, type="citizen_endpoint")
+Get specific repo: graph.get_node("{citizen_id}_endpoint_{repo_name}")
+Fallback to org:   graph.get_linked(org_id, type="endpoint")
 ```
 
 ---

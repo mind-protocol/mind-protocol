@@ -1,0 +1,33 @@
+{
+  "aes_gcm": [
+    {
+      "key_hex": "a1b2c3d4e5f60718293040506070809011a2b3c4d5e6f708192a3b4c5d6e7f80",
+      "plaintext": "The graph breathes. Nodes pulse. Edges carry energy like blood.",
+      "ciphertext": "F3IOQWETULWdWh2O:Bc5+nHP+odQTLgzWuDslzA==:9t+8myy6V8KZnq4GdDNFx4Jk5ajojxnSTUvlX58BRtFTA41hs2LFqfiNepb9St1z6FLOiw7W0ImL+CMHehcF"
+    },
+    {
+      "key_hex": "a1b2c3d4e5f60718293040506070809011a2b3c4d5e6f708192a3b4c5d6e7f80",
+      "plaintext": "",
+      "ciphertext": "gVEkHg6wTQXJunGW:bzctsF8wv88K/NX5AMm6iQ==:"
+    },
+    {
+      "key_hex": "a1b2c3d4e5f60718293040506070809011a2b3c4d5e6f708192a3b4c5d6e7f80",
+      "plaintext": "Unicode test: è à ò ù 🎭 🌟 🏠",
+      "ciphertext": "o+e4AvU91EQKeV0c:BkgA9/rRUSVxQC7ViSLfbg==:3exfUmQ139JV7SZbQ5h3xG4C8JkLyBpXZKPzUFTqn0YN+wEbnV9gaA=="
+    }
+  ],
+  "sealed_box": [
+    {
+      "space_key_hex": "43b18936e099de2b203acc5ec8733fb8d852a0da45b972db5101f48b7a2f005d",
+      "actor_public_key_hex": "5f429ced1f092ea9edfcab4134e7fe3d46f69f0694960cb5f9e3867a3d8f090f",
+      "actor_private_key_hex": "6dbd85b342f501ba6691a24478049a6f7f7946b0a0d1dc0fb511f618959c826d",
+      "wrapped_key_b64": "Jn08dUc4dq8H39+cPUDJ7xTBnfO9fKWJGqlbxC5/qSwcqfCVkjyjmi3uvtSqU1N6GthL8BWl6kg6ycZKRnJcPw9d5jVUprAIi1g45k3nGiw="
+    }
+  ],
+  "key_files": [
+    {
+      "public_key_b64": "X0Kc7R8JLqnt/KtBNOf+PUb2nwaUlgy1+eOGej2PCQ8=",
+      "private_key_b64": "bb2Fs0L1AbpmkaJEeASab395RrCg0dwPtRH2GJWcgm0="
+    }
+  ]
+}

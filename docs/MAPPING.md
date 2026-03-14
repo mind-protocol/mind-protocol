@@ -55,19 +55,26 @@ maps_to:
   subtype: "org"
 
 synthesis_template: |
-  {name} — organization with {citizen_count} citizens, status: {status}
+  {name} — {org_type} organization ({universe}), {citizen_count} citizens, status: {status}
 
 content_includes:
-  - Organization description
+  - Organization description and mission
+  - Org type and universe
   - Service offerings
 
 required_linked_things:
   - type: "name"
+  - type: "org_type"       # project | community | public-interest | guild
   - type: "wallet"
   - type: "endpoint"
   - type: "jwt_public_key"
   - type: "status"
   - type: "registered_date"
+
+optional_linked_things:
+  - type: "description"          # purpose and mission
+  - type: "universe"             # lumina-prime | la-serenissima | contre-terre | the-blood-ledger | babys
+  - type: "github_repository"    # GitHub repo (thing node with URI)
 ```
 
 #### Endpoint
@@ -185,7 +192,58 @@ def get_verification(entity_id: str) -> str:
 
 ---
 
+## L3 UNIVERSE LINK DIMENSIONS
+
+Every `:link` in every L3 universe graph carries **exactly 11 mandatory dimensions**. These are the SAME dimensions used on L1 cognitive links (see `manemus/docs/cognition/l1/PATTERNS_L1_Cognition.md`), **minus all limbic dimensions**. No custom fields are permitted. No universe adds or removes dimensions.
+
+### The 11 Dimensions
+
+| # | Dimension | Type | Range | L1 Equivalent |
+|---|-----------|------|-------|---------------|
+| 1 | `weight` | float | [0, 1] | `weight` |
+| 2 | `energy` | float | [0, +inf) | `energy` |
+| 3 | `stability` | float | [0, 1] | `stability` |
+| 4 | `recency` | float | [0, 1] | `recency` |
+| 5 | `polarity` | float | [-1, 1] | `gain` sign (implicit) |
+| 6 | `hierarchy` | float | [-1, 1] | `contains`/`abstracts` link types (implicit) |
+| 7 | `permanence` | float | [0, 1] | Node type durability (implicit) |
+| 8 | `trust` | float | [0, 1] | `trust` on relational valence |
+| 9 | `affinity` | float | [0, 1] | `affinity` on relational valence |
+| 10 | `aversion` | float | [0, 1] | `aversion` on relational valence |
+| 11 | `friction` | float | [0, 1] | `friction` on relational valence |
+
+### What Is Excluded (L1-only dimensions)
+
+The following L1 link dimensions are NOT present on L3 links:
+
+- `relation_kind` (14-type enum) — L3 has one link type; semantics are in dimensions
+- `valence` (emotional color) — emotions belong to L1 brains
+- `ambivalence` (internal conflict) — cognitive state, L1 only
+- `activation_gain` (propagation multiplier) — replaced by `polarity` at L3
+- All drive-affinity dimensions (`goal_relevance`, `novelty_affinity`, `care_affinity`, `achievement_affinity`, `risk_affinity`) — drives are L1 limbic
+
+### No Custom Fields
+
+Domain-specific data (transaction amounts, commit SHAs, meeting durations) belongs in linked `thing` or `moment` nodes, NEVER as additional fields on the link. The link schema is fixed at 11 dimensions across all universes, all domains, all time.
+
+**Why:** Physics laws (propagation, decay, consolidation, forgetting) operate on these 11 dimensions uniformly. Adding a custom field means either the physics ignores it (dead weight) or the physics must special-case it (complexity explosion). Neither is acceptable.
+
+### Link Names Are Derived
+
+The `type` field on `:link` is a DERIVED label computed from the dimensional vector via a synthesis grammar. It is NEVER the source of truth. Physics, queries, and consolidation operate on dimensions, not type names.
+
+See: `docs/schema/universe_links/PATTERNS_Universe_Links.md` for the full synthesis grammar.
+
+### Trust Lives on Links
+
+Trust is a dimension on `:link`, not a property of nodes. An actor's "trust score" is computed at query time by aggregating incoming link trust values weighted by link weight. No node carries a `trust` or `reputation` field.
+
+See: `docs/schema/universe_links/ALGORITHM_Universe_Links.md` for trust computation.
+
+---
+
 ## Related
 
 - `docs/TAXONOMY.md` — Term definitions
 - `l4/schema/schema.yaml` — Schema constraints
+- `docs/schema/universe_links/` — Full L3 Universe Link Schema doc chain

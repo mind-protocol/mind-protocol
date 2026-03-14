@@ -54,5 +54,8 @@ target/
 # Node.js
 node_modules/
 
+# Private keys — NEVER commit
+**/.keys/private_key.b64
+
 # Deployment output
 deploy_output/

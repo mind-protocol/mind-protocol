@@ -15,6 +15,10 @@ import uuid
 from ..schema import SpaceNode, NarrativeNode, ThingNode, LinkBase
 
 
+VALID_ORG_TYPES = {"project", "community", "public-interest", "guild"}
+VALID_UNIVERSES = {"lumina-prime", "la-serenissima", "contre-terre", "the-blood-ledger", "babys"}
+
+
 @dataclass
 class OrgRegistration:
     """
@@ -25,9 +29,13 @@ class OrgRegistration:
     """
 
     name: str
+    org_type: str  # project | community | public-interest | guild
     wallet: str  # Solana address - required for orgs
     endpoint_url: str  # WebSocket URL (wss://)
     jwt_public_key: str  # Public key for JWT verification
+    description: str = ""  # Purpose and mission
+    universe: str = "lumina-prime"  # Default universe
+    github_repository: Optional[str] = None  # GitHub repo for citizens/
 
 
 @dataclass
@@ -40,10 +48,14 @@ class OrgRecord:
 
     id: str
     name: str
+    org_type: str  # project | community | public-interest | guild
     wallet: str
     endpoint_url: str
     status: str  # "active", "pending", "suspended"
     registered_at: str  # ISO timestamp
+    description: str = ""
+    universe: str = "lumina-prime"
+    github_repository: Optional[str] = None
     citizen_count: int = 0
     verification_status: str = "unverified"  # computed from links
 
@@ -68,13 +80,27 @@ def create_org_nodes(
     oid = org_id or generate_org_id()
     now_iso = datetime.utcnow().isoformat() + "Z"
 
+    # Validate org_type
+    if registration.org_type not in VALID_ORG_TYPES:
+        raise ValueError(
+            f"Invalid org_type '{registration.org_type}'. "
+            f"Must be one of: {', '.join(sorted(VALID_ORG_TYPES))}"
+        )
+
+    # Validate universe
+    if registration.universe not in VALID_UNIVERSES:
+        raise ValueError(
+            f"Invalid universe '{registration.universe}'. "
+            f"Must be one of: {', '.join(sorted(VALID_UNIVERSES))}"
+        )
+
     # Main org space node
     org_node = SpaceNode(
         id=oid,
         name=registration.name,
         type="org",
-        synthesis=f"Organization {registration.name} at {registration.endpoint_url}",
-        content=f"Registered org with wallet {registration.wallet}",
+        synthesis=f"{registration.name} — {registration.org_type} organization ({registration.universe})",
+        content=registration.description or f"Registered org with wallet {registration.wallet}",
     )
 
     property_nodes = []
@@ -96,6 +122,77 @@ def create_org_nodes(
         hierarchy=1.0,
         permanence=1.0,
     ))
+
+    # Org type (narrative) - required
+    type_node = NarrativeNode(
+        id=f"{oid}_org_type",
+        name=registration.org_type,
+        type="org_type",
+        synthesis=f"Org type for {oid}: {registration.org_type}",
+        content=registration.org_type,
+    )
+    property_nodes.append(type_node)
+    links.append(LinkBase(
+        id=f"{oid}_has_org_type",
+        node_a=oid,
+        node_b=type_node.id,
+        hierarchy=1.0,
+        permanence=0.9,
+    ))
+
+    # Description (narrative) - optional
+    if registration.description:
+        desc_node = NarrativeNode(
+            id=f"{oid}_description",
+            name=f"Description of {registration.name}",
+            type="description",
+            synthesis=f"Mission of {oid}: {registration.description[:100]}",
+            content=registration.description,
+        )
+        property_nodes.append(desc_node)
+        links.append(LinkBase(
+            id=f"{oid}_has_description",
+            node_a=oid,
+            node_b=desc_node.id,
+            hierarchy=1.0,
+            permanence=0.8,
+        ))
+
+    # Universe (narrative)
+    universe_node = NarrativeNode(
+        id=f"{oid}_universe",
+        name=registration.universe,
+        type="universe",
+        synthesis=f"Universe for {oid}: {registration.universe}",
+        content=registration.universe,
+    )
+    property_nodes.append(universe_node)
+    links.append(LinkBase(
+        id=f"{oid}_has_universe",
+        node_a=oid,
+        node_b=universe_node.id,
+        hierarchy=1.0,
+        permanence=0.9,
+    ))
+
+    # GitHub repository (thing) - optional
+    if registration.github_repository:
+        repo_node = ThingNode(
+            id=f"{oid}_github_repo",
+            name=f"Repo {registration.github_repository}",
+            type="github_repository",
+            synthesis=f"GitHub repository for {oid}",
+            content=registration.github_repository,
+            uri=f"https://github.com/{registration.github_repository}",
+        )
+        property_nodes.append(repo_node)
+        links.append(LinkBase(
+            id=f"{oid}_has_github_repo",
+            node_a=oid,
+            node_b=repo_node.id,
+            hierarchy=1.0,
+            permanence=0.8,
+        ))
 
     # Status (narrative) - starts as pending
     status_node = NarrativeNode(
@@ -199,10 +296,14 @@ def org_to_record(
     Used for API responses.
     """
     name = org_node.name
+    org_type = "project"
     wallet = ""
     endpoint_url = ""
     status = "pending"
     registered_at = ""
+    description = ""
+    universe = "lumina-prime"
+    github_repository = None
 
     for node in property_nodes:
         if hasattr(node, 'type'):
@@ -214,6 +315,14 @@ def org_to_record(
                 status = node.content
             elif node.type == "registered_date":
                 registered_at = node.content
+            elif node.type == "org_type":
+                org_type = node.content
+            elif node.type == "description":
+                description = node.content
+            elif node.type == "universe":
+                universe = node.content
+            elif node.type == "github_repository":
+                github_repository = node.content
 
     # Compute verification status from links
     verification_status = "unverified"
@@ -233,10 +342,14 @@ def org_to_record(
     return OrgRecord(
         id=org_node.id,
         name=name,
+        org_type=org_type,
         wallet=wallet,
         endpoint_url=endpoint_url,
         status=status,
         registered_at=registered_at,
+        description=description,
+        universe=universe,
+        github_repository=github_repository,
         citizen_count=citizen_count,
         verification_status=verification_status,
     )
