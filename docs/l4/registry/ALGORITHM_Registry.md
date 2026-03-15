@@ -192,7 +192,7 @@ Graph structure (follow the links):
      │
      ├───SERVES──► [Thing: citizen_endpoint]
      │              type="citizen_endpoint"
-     │              content="wss://venezia.onrender.com/ws"
+     │              content="wss://venezia-tuzz.onrender.com/ws"
      │              id="{citizen_id}_endpoint_venezia"
      │
      └───LINK───► [Narrative: org_membership]
@@ -362,7 +362,7 @@ Graph structure (follow the links):
      ├───SERVES──► [Thing: citizen_endpoint]
      │              type="citizen_endpoint"
      │              id="{cid}_endpoint_venezia"
-     │              content="wss://venezia.onrender.com/ws"
+     │              content="wss://venezia-tuzz.onrender.com/ws"
      │
      ├────LINK────► [Narrative: org_membership]
      │                content="org_xyz"
