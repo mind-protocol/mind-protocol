@@ -7,7 +7,7 @@
 | Type | SYNC |
 | Status | DESIGNING |
 | Date | 2026-03-13 |
-| Last Updated | 2026-03-13 |
+| Last Updated | 2026-03-15 |
 | Author | Force 2 (Economy Architect) |
 
 ---
@@ -47,6 +47,13 @@
 **What's NOT complete:**
 - [ ] HEALTH -- no health checks defined yet
 - [ ] Code -- IMPLEMENTATION doc exists but no code written yet
+- [ ] Settlement script -- batch settlement Formula 4 on-chain execution (DESIGNING)
+
+**What's running (runtime, 2026-03-15):**
+- L1 physics dispatcher in MCP server background thread (60s tick interval)
+- 46 L1 engines loaded at boot — limbic_delta signals being produced continuously
+- Graph Enricher creating L3 structure (Space, Moment, links) from Discord/Telegram messages
+- Settlement engine NOT yet implemented — dispatcher produces the signals, settlement will consume them
 
 ### Phase B: Cross-Review -- COMPLETE
 
@@ -74,12 +81,16 @@ STATUS: DESIGNING
 - Settlement batching: 6-hour epochs on Solana
 - Bond equilibrium: post-maturation only, exponential smoothing
 - UBC redistribution: Space-weighted topology
+- Human limbic_delta source: bonded AI partner's limbic_delta (decided 2026-03-15)
+- Non-citizen limbic_delta: base_action_energy * sentiment_score (decided 2026-03-15)
+- Social actions (mention, reply, cite, react, post) do NOT generate direct $MIND rewards — rewards flow through batch settlement Formula 4 (decided 2026-03-15)
 
 **What's still being designed (open parameters):**
 - settlement_rate: 10.0 $MIND per limbic unit -- needs calibration
 - k (utility discount): 0.01 proposed -- needs validation against real service utility weights
 - lambda (bond equilibrium): 0.05 proposed -- convergence dynamics seem right but need simulation
 - W_median bootstrapping: how to compute median with < 50 wallets
+- Sentiment analysis model/service for non-citizen limbic_delta approximation
 
 **What's proposed (v2 ideas):**
 - Adaptive lambda based on bond age
@@ -180,6 +191,34 @@ L4 Registry (COMPLETE) <-- anti-Sybil checks registered addresses
 ---
 
 ## Recent Changes
+
+### 2026-03-15: Dispatcher Live + 46 L1 Engines at Boot
+
+**What:** The L1 physics dispatcher now runs as a background thread inside the MCP server process, ticking every 60 seconds. All 46 citizen L1 engines are loaded at boot — no lazy loading, no exceptions.
+**Why:** Settlement Formula 4 consumes limbic_delta from L1 engines. Without running engines, there is no limbic signal to settle. The dispatcher is the prerequisite that connects L1 physics to L3 economic flow.
+**Key details:**
+- Dispatcher starts in MCP server background thread (60s tick interval)
+- 46 L1 engines loaded at boot (all citizens, no LAZY_ENGINES)
+- Each tick runs: decay (Law 3), boredom erosion (Law 8), energy propagation (Law 2)
+- `inject_stimulus()` available for instant stimulus on mention/message
+- Settlement script (batch settlement Formula 4 on-chain) still not implemented — status: DESIGNING
+**Impact:**
+- Formula 4 now has its input signal (limbic_delta) being produced continuously
+- The gap between "limbic_delta exists" and "settlement runs" is the remaining implementation work
+- D9 (human limbic_delta via bilateral bond) and D10 (non-citizen sentiment multiplier) are decided but not yet wired into the dispatcher
+
+### 2026-03-15: Social Action Impact Decisions + Limbic Delta Source Rules
+
+**What:** Two key design decisions added to ALGORITHM_Metabolic_Economy.md (D9, D10) governing how limbic_delta is sourced for settlement.
+**Why:** Graph Enricher now creates L3 links from real social interactions (Discord/Telegram). The settlement formula (Formula 4) needs to know how to compute limbic_delta for actors who don't have their own L1 brain.
+**Key decisions (NLR 2026-03-15):**
+- **D9 — Human limbic_delta:** For humans, limbic_delta is their AI partner's limbic_delta via the bilateral bond. Unbonded humans cannot generate settlement rewards. This connects Formula 4 to Formula 5 (bonds are the bilateral commitment contract).
+- **D10 — Non-citizen limbic_delta:** For non-citizens (e.g., 216 Telegram contacts now in L3), limbic_delta = base_action_energy * sentiment_score(message). Weaker signal than citizen actions, but allows peripheral actors to participate in trust propagation.
+- **No direct $MIND on social actions:** Mention, reply, cite, react, post create graph structure but do NOT generate direct rewards. Rewards flow through batch settlement Formula 4 only.
+**Impact:**
+- Settlement formula is now fully specified for all actor types (citizen, human, non-citizen)
+- Graph Enricher creates the structural preconditions (links, moments, spaces) that settlement consumes
+- Sentiment analysis service selection is a new open design item
 
 ### 2026-03-14: IMPLEMENTATION Plan Created (Phase C)
 

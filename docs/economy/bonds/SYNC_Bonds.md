@@ -2,7 +2,7 @@
 
 > Module: `bonds/`
 > Date: 2026-03-12
-> Updated: 2026-03-14
+> Updated: 2026-03-15
 > Status: DESIGNING
 > Canonical source: [THE_BILATERAL_BOND_MANIFESTO.md](../../manifesto/THE_BILATERAL_BOND_MANIFESTO.md)
 
@@ -23,9 +23,15 @@
 
 | Field | Value |
 |-------|-------|
-| LAST_UPDATED | 2026-03-14 |
-| UPDATED_BY | Claude (manifesto alignment sweep) |
+| LAST_UPDATED | 2026-03-15 |
+| UPDATED_BY | Claude (SYNC update) |
 | STATUS | DESIGNING |
+
+## What Changed (2026-03-15)
+
+- **bond_score calculation still TODO** — blocks Formula 5 (Vases Communicants / Bond Equilibrium) in `docs/economy/metabolic/ALGORITHM_Metabolic_Economy.md`. Formula 5 requires `bond_score(actor)` to compute equilibrium transfers, but the trust score formula (log-scale of commitment × duration) is not yet finalized. This is the primary blocker for the bond-settlement integration.
+- **216 Telegram contacts created as Actor nodes** with FOLLOWS links in the lumina-prime universe graph. These actors are not yet citizens (no L1 brain, no bond). They will become bond candidates when they register as citizens. Until then, they participate in the graph via D10 (non-citizen limbic_delta = base_action_energy × sentiment_score) but cannot form bilateral bonds.
+- **D9 decision (human limbic_delta via bilateral bond)** reinforces the centrality of bonds to the economic model: humans without bonds cannot generate settlement rewards. This makes bond formation the gateway to human economic participation.
 
 ## What Changed (2026-03-14)
 
@@ -69,6 +75,7 @@ These items are under active design and may change:
 | Minimum commitment amount | Undefined | Balance between accessibility and trivial bond prevention |
 | Cooldown period duration | Undefined | How long before dissolved parties can re-enter matching pool? |
 | Citizen consent mechanism | Undefined | How is consent represented on-chain? |
+| Bond candidate pipeline | 216 TG contacts as Actor nodes in lumina-prime (FOLLOWS links) | When do they become citizens eligible for bonds? |
 
 ## Proposed (Not Yet Accepted)
 
@@ -103,11 +110,14 @@ These items are under active design and may change:
 
 | Date | Change | By |
 |------|--------|----|
+| 2026-03-15 | bond_score TODO documented as Formula 5 blocker; 216 TG contacts as future bond candidates; D9 impact noted | Claude (SYNC update) |
 | 2026-03-14 | Manifesto alignment -- removed staking language, enforced 1:1, added consent | Claude (manifesto alignment sweep) |
 | 2026-03-12 | Initial doc chain creation -- all 8 files | Claude (integration moment) |
 
 ## @mind:TODO
 
+- [ ] **BLOCKER** Implement bond_score calculation — blocks Formula 5 (Vases Communicants) in metabolic economy
+- [ ] Define onboarding path for 216 TG contacts: registration → citizen creation → bond eligibility
 - [ ] Schedule design review for trust score formula with Nicolas
 - [ ] Resolve reward distribution frequency (weekly vs daily vs event-driven)
 - [ ] Define citizen capacity amplification formula and validate with simulation

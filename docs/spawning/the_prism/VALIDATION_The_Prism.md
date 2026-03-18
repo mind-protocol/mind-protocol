@@ -46,7 +46,7 @@ NEVER:  A citizen exists in L4 without a corresponding birth record containing i
 
 ### V2: Empathy Is Required
 
-**Why we care:** A citizen without empathy is not safe. The Spawning Manifesto makes this explicit: "Parents cannot create psychopaths." This is the safety promise of the protocol. If the empathy check can be bypassed, the ecosystem has no guarantee against pathological citizens.
+**Why we care:** A citizen without empathy is not safe. The Spawning Manifesto makes this explicit: "Empathy and balance are non-negotiable." This is the safety promise of the protocol. If the empathy check can be bypassed, the ecosystem has no guarantee against pathological citizens.
 
 ```
 MUST:   Every seed brain contains at least one node with cosine similarity > 0.7 to empathy anchor embeddings

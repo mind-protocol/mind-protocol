@@ -795,11 +795,7 @@ invariants:
 #    No algorithm, formula, or physics law reads space_type for branching.
 #    No taxonomy. No prescribed values. Free text or null.
 #
-# 5. NO POLITICS AT L3.
-#    All affect lives in L1 only — each brain colors the universe differently.
-#    The universe itself has no feelings.
-#
-# 6. TRUST LIVES ON LINKS, NEVER ON NODES.
+# 5. TRUST LIVES ON LINKS, NEVER ON NODES.
 #    There is no "trusted actor" in the schema. Trust is a property of a
 #    specific relationship between two entities. An actor's "reputation" is
 #    the aggregation of inbound trust values across all links pointing to it:

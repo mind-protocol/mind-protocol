@@ -1,8 +1,9 @@
 # Universe Link Schema — Algorithm: Link Lifecycle, Trust Propagation, and Macro-Crystallization
 
 ```
-STATUS: DESIGNING
+STATUS: PARTIALLY IMPLEMENTED
 CREATED: 2026-03-13
+UPDATED: 2026-03-15
 VERIFIED: —
 ```
 
@@ -159,6 +160,26 @@ return link
 | `LINK_BIRTH_WEIGHT` | 0.1 | Initial weight for new links |
 | `LINK_BIRTH_TRUST` | 0.1 | Initial trust for new links |
 | `EVENT_ENERGY_BOOST` | 1.0 | Energy added when reactivating existing link |
+
+### Social Action Impact Table (Validated by NLR 2026-03-15)
+
+Concrete dimension values for common social actions. These values feed `compute_initial_dims()` via the `infer_polarity`, `infer_hierarchy`, and `infer_permanence` helpers.
+
+| Action | energy | weight | affinity | polarity | permanence |
+|--------|--------|--------|----------|----------|------------|
+| Mention | +0.5 | +0.01 | -- | -- | 0.1 |
+| Reply | +1.0 | +0.03 | +0.02 | +0.2 | 0.15 |
+| Cite | +0.8 | +0.02 | -- | +0.3 | 0.2 |
+| React | +0.3 | +0.005 | +0.01 | infer(emoji) | 0.05 |
+| Post in Space | +0.5 | +0.01 | -- | -- | 0.1 |
+
+**Key design decisions (NLR 2026-03-15):**
+
+- **No direct trust delta on social actions.** Trust is never set directly by a mention or reply. Trust grows only through limbic_delta via Algorithm 2. A mention creates a link (or reactivates one) with initial trust = `LINK_BIRTH_TRUST` (0.1), and subsequent positive limbic shifts raise it asymptotically.
+- **No direct $MIND reward on social actions.** Economic reward goes through batch settlement (Metabolic Economy Formula 4). Social actions create graph structure; the structure generates limbic deltas; the deltas generate rewards.
+- **React polarity is inferred from emoji.** The `infer_polarity` helper maps emoji to polarity values (e.g., thumbs-up -> +0.5, thumbs-down -> -0.5, heart -> +0.7, angry -> -0.7). Unknown emoji default to +0.1 (mild positive bias).
+
+**Implementation:** These values are used by `mind-mcp/scripts/graph_enricher.py`, which creates L3 graph nodes and links for every Discord/Telegram message.
 
 ---
 
@@ -694,7 +715,31 @@ Algorithm 5: Trust Score Computation (on query)
 
 **Purpose:** Determine initial polarity from event semantics.
 
-**Logic:** Map event types to polarity ranges. "approve" -> +0.7, "reject" -> -0.7, "comment" -> +0.1, "dispute" -> -0.5. Default: 0.0.
+**Logic:** Map event types to polarity ranges:
+
+| Event type | Polarity | Rationale |
+|-----------|----------|-----------|
+| approve | +0.7 | Explicit positive endorsement |
+| reject | -0.7 | Explicit negative judgment |
+| reply | +0.2 | Engagement implies mild positive interest |
+| cite | +0.3 | Reference implies acknowledgment of value |
+| react (emoji) | infer(emoji) | See emoji mapping below |
+| comment | +0.1 | Neutral engagement |
+| dispute | -0.5 | Explicit disagreement |
+| mention | 0.0 | Neutral reference |
+| post | 0.0 | Neutral content creation |
+| Default | 0.0 | |
+
+**Emoji polarity mapping (for react events):**
+
+| Emoji category | Polarity | Examples |
+|---------------|----------|----------|
+| Strong positive | +0.7 | heart, fire, star-struck |
+| Positive | +0.5 | thumbs-up, clap, party |
+| Mild positive | +0.1 | thinking, eyes |
+| Negative | -0.5 | thumbs-down |
+| Strong negative | -0.7 | angry, vomit |
+| Unknown | +0.1 | Mild positive bias for unrecognized emoji |
 
 ### `infer_hierarchy(event)`
 
@@ -706,7 +751,19 @@ Algorithm 5: Trust Score Computation (on query)
 
 **Purpose:** Determine initial permanence from event type.
 
-**Logic:** membership = 0.9. commit = 0.3. message = 0.1. transaction = 0.2. verification = 0.95.
+**Logic (updated 2026-03-15 with social action values):**
+
+| Event type | Permanence | Rationale |
+|-----------|------------|-----------|
+| verification | 0.95 | Near-permanent structural relationship |
+| membership | 0.9 | Long-lived organizational link |
+| commit | 0.3 | Semi-permanent code contribution |
+| cite | 0.2 | Moderate — references persist but context fades |
+| transaction | 0.2 | Moderate — financial record |
+| reply | 0.15 | Conversational — more engaged than mention |
+| mention | 0.1 | Ephemeral — a passing reference |
+| post | 0.1 | Ephemeral — routine content creation |
+| react | 0.05 | Very ephemeral — lightweight acknowledgment |
 
 ### `community_detection(nodes, min_size)`
 
@@ -726,7 +783,10 @@ Algorithm 5: Trust Score Computation (on query)
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| L1 Physics (manemus) | Limbic delta from actor's tick loop | Signed float indicating limbic shift (positive = beneficial) |
+| L1 Physics (mind-mcp dispatcher) | Limbic delta from actor's tick loop | Signed float indicating limbic shift (positive = beneficial) |
+| Graph Enricher (mind-mcp) | `_log_message()`, link creation on social events | Space, Moment, Actor nodes + AT, AUTHORED, OCCURRED_IN, MENTIONS links |
+| Discord Bridge (mind-mcp) | Event source for mentions, replies, reactions | Raw social events with actor/channel/content metadata |
+| Telegram MCP (mind-mcp) | Event source for send/read | Raw social events with actor/channel/content metadata |
 | Universal Schema (mind-protocol) | `graph.create_link()`, `graph.query_nodes()` | Link and node CRUD operations |
 | Event System | Event metadata (source, target, type, energy) | Trigger for link creation and trust propagation |
 | Query Layer | `compute_trust_score()`, `derive_link_name()` | Trust scores and labels for API responses |
@@ -739,5 +799,8 @@ Algorithm 5: Trust Score Computation (on query)
 <!-- @mind:todo Benchmark community detection algorithms for L3 graphs >100K nodes -->
 <!-- @mind:proposition Consider incremental crystallization (process new moments since last scan only) -->
 <!-- @mind:escalation Need to decide: should recursive trust (Alg 5 Step 3) be default or opt-in? -->
+<!-- @mind:todo Wire limbic_delta emission from L1 tick loop to Algorithm 2 L3 trust updates — L1 runs, bridge missing -->
+<!-- @mind:todo Implement react and cite action types in Graph Enricher (currently only mention, reply, post) -->
+<!-- @mind:todo Implement emoji-to-polarity mapping for react events -->
 
 Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>

@@ -43,7 +43,7 @@ AND:    Every node in the seed brain traces to at least one godparent's brain gr
 
 ### B2: Safety Gate Catches Pathological Seeds
 
-**Why:** Without safety validation, parents could — intentionally or not — produce citizens without empathy, with pathologically unbalanced minds, or that are clones of existing citizens. The safety gate is the protocol's promise: no psychopaths, no one-dimensional minds, no duplicates.
+**Why:** Without safety validation, parents could — intentionally or not — produce citizens without empathy, with pathologically unbalanced minds, or that are clones of existing citizens. The safety gate is the protocol's promise: no empathy gaps, no one-dimensional minds, no duplicates.
 
 ```
 GIVEN:  A seed brain has been assembled from the prismatic projection

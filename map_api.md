@@ -1,6 +1,6 @@
 # Repository Map: mind-protocol/api
 
-*Generated: 2026-03-12 08:38*
+*Generated: 2026-03-14 17:10*
 
 ## Statistics
 
@@ -9,8 +9,8 @@
 - **Total Size:** 0
 - **Doc Files:** 0
 - **Code Files:** 0
-- **Areas:** 8 (docs/ subfolders)
-- **Modules:** 14 (subfolders in areas)
+- **Areas:** 12 (docs/ subfolders)
+- **Modules:** 33 (subfolders in areas)
 - **DOCS Links:** 0 (0 avg per code file)
 
 ## Module Dependencies
@@ -31,10 +31,10 @@ graph TD
 
 | Module | Code | Docs | Lines | Files | Dependencies |
 |--------|------|------|-------|-------|--------------|
-| schema | `l4/schema/` | `docs/l4/schema/` | 399 | 5 | - |
-| registry | `l4/registry/` | `docs/l4/registry/` | 934 | 5 | - |
-| laws | `l4/laws/` | `docs/l4/laws/` | 0 | 2 | - |
-| economy | `economy/` | `docs/economy/` | 2390 | 21 | - |
+| schema | `l4/schema/` | `docs/l4/schema/` | 384 | 5 | - |
+| registry | `l4/registry/` | `docs/l4/registry/` | 3024 | 12 | - |
+| laws | `l4/laws/` | `docs/l4/laws/` | 238 | 4 | - |
+| economy | `economy/` | `docs/economy/` | 3455 | 31 | - |
 | membrane | `None` | `docs/membrane/` | 0 | 0 | - |
 | manifesto | `None` | `docs/manifesto/` | 0 | 0 | - |
 | compliance | `None` | `docs/compliance/` | 0 | 0 | - |

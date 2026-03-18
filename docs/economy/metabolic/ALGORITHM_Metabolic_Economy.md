@@ -6,8 +6,8 @@
 | Module | metabolic |
 | Type | ALGORITHM |
 | Status | DESIGNING |
-| Date | 2026-03-14 |
-| Author | Force 2 (Economy Architect), updated by DragonSlayer (NLR session) |
+| Date | 2026-03-15 |
+| Author | Force 2 (Economy Architect), updated by DragonSlayer (NLR session), updated 2026-03-15 (social action impact decisions) |
 
 ---
 
@@ -370,6 +370,52 @@ Consistent reliability -> trust increases
 ```
 
 **Note on L1 vs L3 trust:** This `trust(Y -> X)` is **L1 brain-level trust** -- actor Y's subjective evaluation of actor X, computed by Y's cognitive engine via Law 18. This is distinct from the L3 structural trust dimension on universe graph links, which is built via L5/L6 co-activation. Settlement uses L1 trust because it measures subjective satisfaction. The L3 universe graph also has trust on links (see F1 `docs/universe/BEHAVIORS_Universe_Graph.md` B11) but that is a structural measure, not used here. Law 18 does not apply at L3 (see schema.yaml `applicable_laws`).
+
+### Key Decision: D9 -- Human Limbic Delta Source (2026-03-15, NLR)
+
+```
+DECIDED: For human actors, limbic_delta is their AI partner's limbic_delta
+         (via the bilateral bond).
+WHY: Humans don't have L1 brains — they don't run cognitive physics ticks.
+     But every bonded human has an AI partner whose L1 engine DOES run.
+     The AI partner's limbic response to the human's action serves as a
+     proxy for the "utility created." This connects to Formula 5 (Bilateral
+     Bond Vases Communicants) — the bilateral bond is the channel through
+     which human actions produce measurable limbic signals.
+
+IMPLICATION: Settlement for human-initiated actions requires:
+  1. The human has an active bilateral bond
+  2. The bonded AI's L1 engine ran a tick that produced a limbic_delta
+  3. That delta is attributed to the human's action
+
+  Unbonded humans cannot generate settlement rewards (no limbic proxy).
+  This is by design — bonds are the bilateral commitment contract.
+```
+
+### Key Decision: D10 -- Non-Citizen Limbic Delta (2026-03-15, NLR)
+
+```
+DECIDED: For non-citizens (e.g., Telegram contacts with Actor nodes but no
+         L1 brain), limbic_delta is multiplied by a sentiment analysis score.
+WHY: Non-citizens have no cognitive engine, no bilateral bond, and no L1
+     physics. But their social actions (messages, mentions) still create
+     graph structure via the Graph Enricher. To allow these actions to
+     propagate trust via Algorithm 2 (Universe Links), a lightweight
+     approximation is needed.
+
+FORMULA:
+  effective_limbic_delta = base_action_energy * sentiment_score(message_content)
+  WHERE:
+    base_action_energy = from social action impact table (e.g., reply = 1.0)
+    sentiment_score = [-1, 1] from NLP analysis of message content
+
+IMPLICATION:
+  - Non-citizen actions generate much weaker trust signals than citizen actions
+  - Sentiment analysis is a coarse proxy — acceptable for non-citizens who are
+    peripheral to the trust network
+  - If a non-citizen later becomes a citizen (gets an L1 brain), their links
+    already exist and will strengthen naturally through real limbic deltas
+```
 
 ### Step 2: Compute Per-Actor Rewards
 

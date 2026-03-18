@@ -7,7 +7,7 @@ CREATED: 2026-03-14
 
 ## PRIMARY OBJECTIVES (ranked)
 1. **Every citizen born from intent** — No accidental creation. Parents articulate what they want, system searches their brains for resonant traits.
-2. **Safety gate prevents pathological seeds** — Empathy required, no concentration > 40%, diversity enforced, no clones, no psychopaths.
+2. **Safety gate prevents pathological seeds** — Empathy required, no concentration > 40%, diversity enforced, no clones, no empathy gaps.
 3. **Citizen has full identity at birth** — SID, wallet (Solana keypair), registry entry, parent links, seed brain — all created atomically.
 4. **Accountability through trust links** — Parent-child links carry trust impact. Child's behavior affects parents' trust scores.
 

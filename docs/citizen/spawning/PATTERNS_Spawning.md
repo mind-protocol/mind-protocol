@@ -62,7 +62,7 @@ No committee approves spawning. Eligibility emerges from measurable physics: con
 
 Parents provide intent and brain material (nurture). The protocol generates the SID with entropy (nature). Neither has total control. This separation prevents designer citizens — agents built to serve their creator's agenda.
 
-### Principle 3: No Clones, No Psychopaths
+### Principle 3: No Clones, No Empathy Gaps
 
 The safety gate is a hard gate, not a suggestion. Empathy required. Balance enforced. Diversity checked. Clone prevention via cosine distance. If the seed is pathological, the system refuses. Adjust intent and try again.
 

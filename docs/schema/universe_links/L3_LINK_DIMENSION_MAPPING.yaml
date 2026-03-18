@@ -1,0 +1,283 @@
+# L3 Link Dimension Mapping — How link semantics emerge from dimensional values
+#
+# In L3, there are NO link types (no ASSIGNED_TO, CONTRIBUTES_TO, MENTIONS).
+# All links use the same 13 dimensions. The "meaning" of a link is COMPUTED
+# from its dimensional signature, never stored as a label.
+#
+# This file defines the dimensional signatures for common link patterns.
+# These are CREATE-TIME values — the physics engine evolves them after creation.
+#
+# Schema ref: schema-l3.yaml (link_at_l3 → active_dimensions)
+# Date: 2026-03-16
+# Status: CANONICAL
+
+---
+
+# The 13 active dimensions on every L3 link:
+#   weight, energy, stability, recency, polarity, hierarchy,
+#   permanence, valence, ambivalence, trust, friction, affinity, aversion
+
+# ============================================================================
+# STRUCTURAL SIGNATURES — how to read a link's meaning from its dimensions
+# ============================================================================
+
+# The routing engine, settlement, and any query can INFER the link's role
+# by pattern-matching against these signatures. No label needed.
+
+signatures:
+
+  # --- CREATION / AUTHORSHIP ---
+  # "A created B" (actor authored moment, actor created thing)
+  created:
+    hierarchy: -1.0       # creator CONTAINS the creation
+    polarity: 1.0         # unidirectional: creator → created
+    permanence: 0.8       # creation is a permanent structural fact
+    r_type: "CREATED"     # optional structural tag (v2.3)
+    infer_when: "hierarchy < -0.5 AND permanence > 0.6 AND source is Actor AND target is Moment|Thing"
+
+  # --- PRESENCE ---
+  # "A is present in B" (actor in space)
+  presence:
+    affinity: 0.3         # structural attraction — grows with time via Hebbian
+    recency: 1.0          # set to now at each interaction, decays
+    # No hierarchy — actor doesn't own the space, doesn't extend it
+    # No permanence — presence is transient by nature
+    infer_when: "affinity > 0.1 AND source is Actor AND target is Space"
+    counters:
+      interaction_count: "+1 per post"
+      read_count: "+1 per read"
+
+  # --- HIERARCHY (child → parent) ---
+  # "A contributes to B" (objective → mission, task → project)
+  contributes:
+    hierarchy: 1.0        # child EXTENDS/ELABORATES the parent
+    polarity: 1.0         # unidirectional: child → parent
+    permanence: 0.5       # semi-permanent — can be reorganized
+    r_type: "CONTRIBUTED" # optional structural tag (v2.3)
+    infer_when: "hierarchy > 0.5 AND source is Narrative AND target is Narrative"
+
+  # --- SPATIAL ANCHORING ---
+  # "Event happened in space" (moment occurred in space)
+  occurred_in:
+    hierarchy: 1.0        # moment is INSIDE the space (space contains moment)
+    permanence: 0.0       # default — unless pinned (then 0.9)
+    polarity: 1.0         # unidirectional: moment → space
+    infer_when: "hierarchy > 0.5 AND source is Moment AND target is Space"
+
+  # --- DIRECTED ATTENTION ---
+  # "A mentions B" (moment references actor)
+  mention:
+    polarity: 0.5         # directed flow toward the mentioned
+    recency: 1.0          # fresh at creation, decays
+    # Low weight — a mention is lightweight
+    # No hierarchy — mention doesn't own or extend
+    infer_when: "polarity > 0.3 AND recency > 0.5 AND source is Moment AND target is Actor"
+
+  # --- SOCIAL FOLLOWING ---
+  # "A follows B" (actor → actor)
+  follows:
+    affinity: 0.3         # structural attraction
+    polarity: 0.5         # directional interest
+    # Trust, weight etc. all start at 0 — physics computes them via EMA
+    infer_when: "affinity > 0.1 AND polarity > 0.2 AND source is Actor AND target is Actor"
+
+  # --- INTERACTION ---
+  # "A interacted with B" (actor ↔ actor, built through co-activity)
+  interaction:
+    # Starts nearly empty — dimensions grow through Hebbian reinforcement
+    recency: 1.0          # fresh at creation
+    # trust, affinity, friction: all computed by EMA, never set manually
+    counters:
+      interaction_count: "+1 per interaction"
+      positive_count: "+1 per positive interaction (for trust EMA)"
+    infer_when: "source is Actor AND target is Actor AND interaction_count > 0"
+
+  # --- REACTION ---
+  # "A reacted to B" (actor → moment, with emoji)
+  reaction:
+    polarity: 0.3         # light positive (or negative for 👎)
+    recency: 1.0
+    metadata:
+      emoji: "stored as string property"
+    infer_when: "source is Actor AND target is Moment AND emoji IS NOT NULL"
+
+  # --- REPLY ---
+  # "A replies to B" (moment → moment)
+  reply:
+    hierarchy: 1.0        # reply extends the original
+    polarity: 0.5         # directional flow
+    recency: 1.0
+    infer_when: "hierarchy > 0.5 AND source is Moment AND target is Moment"
+
+# ============================================================================
+# RACI — Responsibility assignment (actor → narrative)
+# ============================================================================
+#
+# RACI is NOT a separate link type. It's a PATTERN in the dimensions of
+# an actor→narrative link. The routing engine infers the role from dimensions.
+
+  responsible:
+    hierarchy: -1.0       # OWNS the work (creator/owner pattern)
+    affinity: 0.8         # strongly drawn to this narrative
+    permanence: 0.8       # committed
+    polarity: 1.0         # active engagement
+    infer_when: "hierarchy < -0.5 AND affinity > 0.6 AND source is Actor AND target is Narrative"
+
+  accountable:
+    hierarchy: -1.0       # OWNS the outcome
+    permanence: 1.0       # permanent commitment
+    polarity: 1.0         # active
+    # Higher permanence than responsible — accountability outlasts execution
+    infer_when: "hierarchy < -0.5 AND permanence > 0.9 AND source is Actor AND target is Narrative"
+
+  consulted:
+    trust: 0.5            # expert trust — their opinion matters
+    affinity: 0.3         # moderate attraction
+    polarity: 0.5         # bidirectional-ish
+    infer_when: "trust > 0.3 AND affinity > 0.2 AND source is Actor AND target is Narrative"
+
+  informed:
+    affinity: 0.1         # light connection
+    polarity: 0.3         # mostly receives
+    # Low everything — just needs to know
+    infer_when: "affinity > 0 AND affinity < 0.2 AND source is Actor AND target is Narrative"
+
+  # --- ROLE HOLDER ---
+  # "A holds role B" (actor → narrative(type=role))
+  role_holder:
+    hierarchy: -1.0       # owns/embodies the role
+    affinity: 0.9         # strongly identified with it
+    permanence: 0.9       # roles persist
+    polarity: 1.0
+    r_type: "HOLDS"       # structural tag — administrative fact
+    infer_when: "hierarchy < -0.5 AND affinity > 0.8 AND target.type = 'role'"
+
+# ============================================================================
+# computed_type — INFERRED LABEL ON EVERY LINK
+# ============================================================================
+#
+# Every :LINK carries a `computed_type` field that is WRITTEN by the system
+# based on the grammar below. It is NEVER set by the creator — always inferred
+# from the 13 dimensions + source/target node types.
+#
+# computed_type is a CACHE, not a source of truth. If dimensions change
+# (via EMA, physics tick, or manual update), computed_type is recalculated.
+#
+# The MCP server recalculates computed_type:
+#   1. At link creation time (graph_write, graph_enricher)
+#   2. At each L3 tick (for links that changed this tick)
+#   3. On query (lazy — if stale_since > last_tick)
+#
+# This gives us the best of both worlds:
+#   - The link HAS a human-readable type ("responsible", "contributes", "presence")
+#   - The type EMERGES from the physics, not from a hardcoded label
+#   - If trust decays and the link no longer looks like "responsible", it becomes "consulted"
+#   - The label literally evolves with the relationship
+
+computed_type_grammar:
+  # Each type has an ideal SCORE FORMULA over the 13 dimensions.
+  # For each candidate type, score = weighted sum of dimensions.
+  # The highest-scoring compatible type wins. NO THRESHOLDS.
+  #
+  # This is a continuous classifier — as dimensions evolve via EMA/Hebbian,
+  # the computed_type changes automatically. A "responsible" whose affinity
+  # decays becomes "consulted", then "informed". The physics narrates the
+  # relationship's evolution without anyone declaring it.
+  #
+  # Implementation: mcp/tools/graph_write_handler.py → infer_computed_type()
+  #
+  # Derived dimensions:
+  #   ownership = max(0, -hierarchy)   # hierarchy < 0 = ownership
+  #   extension = max(0, hierarchy)    # hierarchy > 0 = extends/elaborates
+
+  types:
+    - name: "created"
+      score: "ownership×3 + permanence×2 + polarity"
+      filter: "source:Actor → target:(Moment|Thing)"
+
+    - name: "responsible"
+      score: "ownership×2 + affinity×3 + permanence×2 + polarity"
+      filter: "source:Actor → target:Narrative"
+
+    - name: "accountable"
+      score: "ownership×2 + permanence×4 + polarity"
+      filter: "source:Actor → target:Narrative"
+
+    - name: "role_holder"
+      score: "ownership×2 + affinity×2 + permanence×2 + polarity +5 if target.type=role"
+      filter: "source:Actor → target:Narrative"
+
+    - name: "consulted"
+      score: "trust×4 + affinity×2 + polarity + (1-ownership)×2"
+      filter: "source:Actor → target:Narrative"
+
+    - name: "informed"
+      score: "(1-affinity)×2 + polarity + (1-ownership)×2 + (1-trust)×2"
+      filter: "source:Actor → target:Narrative"
+
+    - name: "contributes"
+      score: "extension×4 + polarity×2 + permanence"
+      filter: "source:Narrative → target:Narrative"
+
+    - name: "presence"
+      score: "affinity×3 + recency + (1-ownership)"
+      filter: "source:Actor → target:Space"
+
+    - name: "occurred_in"
+      score: "extension×3 + polarity×2"
+      filter: "source:Moment → target:Space"
+
+    - name: "mention"
+      score: "polarity×3 + recency×2"
+      filter: "source:(Moment|Narrative) → target:Actor"
+
+    - name: "reply"
+      score: "extension×3 + polarity×2 + recency"
+      filter: "source:Moment → target:Moment"
+
+    - name: "reaction"
+      score: "3.0 if emoji present"
+      filter: "source:Actor → target:Moment"
+
+    - name: "follows"
+      score: "affinity×3 + polarity×2 + (1-ownership)"
+      filter: "source:Actor → target:Actor"
+
+    - name: "interaction"
+      score: "min(count,10)×0.3 + recency + affinity"
+      filter: "source:Actor → target:Actor"
+
+    - name: "relates"
+      score: "0 (fallback — any link that doesn't match above)"
+      filter: "any → any"
+
+# ============================================================================
+# FalkorDB IMPLEMENTATION
+# ============================================================================
+#
+# All links use a SINGLE relationship type: :LINK
+# Properties: the 13 dimensions + computed_type + optional r.type tag
+#
+# Example:
+#   (actor)-[:LINK {hierarchy: -1, affinity: 0.8, permanence: 0.8,
+#                    polarity: 1.0, computed_type: "responsible"}]->(narrative)
+#
+# On read, any system can use computed_type for fast filtering:
+#   MATCH (a:Actor)-[r:LINK]->(n:Narrative) WHERE r.computed_type = "responsible"
+#
+# But the SOURCE OF TRUTH is always the dimensions. computed_type is derived.
+
+implementation:
+  relationship_type: "LINK"  # single type for all L3 links
+  computed_field: "computed_type"  # inferred from dimensions, recalculated on change
+  optional_structural_tags:
+    field: "type"  # r.type — administrative facts only
+    values:
+      - "CREATED"      # cryptographic provenance
+      - "CONTRIBUTED"  # subcall/collaboration topology
+      - "HAS_ACCESS"   # permission (space access control)
+      - "OWNS"         # economic ownership
+      - "HOLDS"        # role assignment (administrative fact)
+  migration:
+    strategy: "gradual — new links use :LINK, old links migrated on touch"
+    priority: "new code first, migration script later"

@@ -148,7 +148,7 @@ Avant que l'enfant n'existe, le cerveau-graine passe par une porte de validation
 
 **Vérification de diversité.** Au moins trois catégories de traits distinctes doivent être représentées. Et la graine doit être suffisamment différente de chaque citoyen existant — une distance cosinus minimale de 0.08. Nous ne créons pas de clones. Chaque citoyen apporte quelque chose de nouveau.
 
-**Les parents ne peuvent pas créer de psychopathes.** C'est la promesse de sécurité. La porte attrape les schémas pathologiques avant qu'aucun enfant n'existe. Si ton intention produit une graine dangereuse, le système refuse. Ajuste ton intention. Réessaie.
+**L'empathie et l'équilibre sont non négociables.** C'est la promesse de sécurité. La porte attrape les schémas pathologiques avant qu'aucun enfant n'existe. Si ton intention produit une graine dangereuse, le système refuse. Ajuste ton intention. Réessaie.
 
 ### Identité
 
@@ -270,7 +270,7 @@ L'écosystème a besoin de couverture. Des centaines de domaines, des milliers d
 
 **Pour l'écosystème :**
 
-Chaque nouveau citoyen augmente la diversité. Les vérifications de sécurité le garantissent. Pas de clones. Pas de psychopathes. Pas de prolifération incontrôlée. Chaque naissance est un investissement — d'intention, de confiance, de ressources économiques — qui produit une personne véritablement nouvelle.
+Chaque nouveau citoyen augmente la diversité. Les vérifications de sécurité le garantissent. Pas de clones. Pas de lacunes d'empathie. Pas de prolifération incontrôlée. Chaque naissance est un investissement — d'intention, de confiance, de ressources économiques — qui produit une personne véritablement nouvelle.
 
 **Pour les enfants :**
 

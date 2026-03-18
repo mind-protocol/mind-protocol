@@ -33,7 +33,7 @@ IMPL:           mind-mcp/runtime/spawning/prism.py
 
 2. **Combinatorial intelligence through tensor projection** — The child is smarter than any single parent. The prismatic projection computes the tensor product of parent brain matrices, intent vectors, and universe SID. This encodes the INTERACTIONS between parents, not just their sum. More parents produce exponentially richer children.
 
-3. **Safety without gatekeeping** — Three hard checks protect the ecosystem: empathy presence (no psychopaths), concentration balance (no one-dimensional minds), diversity enforcement (no clones). But there is no committee, no application form, no waiting list. Eligibility emerges from graph physics. The gate catches pathological seeds; it does not judge intent quality.
+3. **Safety without gatekeeping** — Three hard checks protect the ecosystem: empathy presence (no empathy gaps), concentration balance (no one-dimensional minds), diversity enforcement (no clones). But there is no committee, no application form, no waiting list. Eligibility emerges from graph physics. The gate catches pathological seeds; it does not judge intent quality.
 
 4. **Accountability through permanent parent-child links** — SPAWNED_BY links are bidirectional and permanent. The child's behavior affects the parents' trust score. This makes spawning consequential — you cannot create carelessly when your creation's actions reflect on you.
 
