@@ -17,6 +17,7 @@ export default function ShareButtons({ url, title, text }: ShareButtonsProps) {
   }, []);
 
   const handleInstagram = useCallback(() => {
+    window.trackEvent?.('share_click', { platform: 'copy', url, title });
     const formatted = `${title}\n\n${text}\n\n${url}`;
     navigator.clipboard.writeText(formatted).then(() => {
       showToast('Texte copié pour Instagram');
@@ -24,16 +25,19 @@ export default function ShareButtons({ url, title, text }: ShareButtonsProps) {
   }, [title, text, url, showToast]);
 
   const handleTwitter = useCallback(() => {
+    window.trackEvent?.('share_click', { platform: 'twitter', url, title });
     const tweetText = encodeURIComponent(`${text} ${url}`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
   }, [text, url]);
 
   const handleWhatsApp = useCallback(() => {
+    window.trackEvent?.('share_click', { platform: 'whatsapp', url, title });
     const waText = encodeURIComponent(`${text} ${url}`);
     window.open(`https://wa.me/?text=${waText}`, '_blank');
   }, [text, url]);
 
   const handleCopyLink = useCallback(() => {
+    window.trackEvent?.('share_click', { platform: 'copy', url, title });
     navigator.clipboard.writeText(url).then(() => {
       showToast('Lien copié');
     });

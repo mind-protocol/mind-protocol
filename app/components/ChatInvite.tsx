@@ -24,6 +24,7 @@ export default function ChatInvite({ citizenName, citizenHandle }: ChatInvitePro
 
     const prefixed = `[@${citizenHandle}] ${text}`;
     const encoded = encodeURIComponent(prefixed);
+    window.trackEvent?.('chat_click', { citizen: citizenHandle });
     window.open(`https://wa.me/?text=${encoded}`, '_blank');
   }
 
