@@ -8,6 +8,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -19,12 +20,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "IChiOneSun",
@@ -35,6 +46,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -46,12 +58,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "archivist",
@@ -62,6 +84,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -73,12 +96,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T14:30:00Z"
+    "born_at": "2026-03-12T14:30:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "aurore",
@@ -89,6 +122,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -100,12 +134,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "bigbosefx",
@@ -116,6 +160,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -127,12 +172,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "conductor",
@@ -143,6 +198,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -154,12 +210,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T14:30:00Z"
+    "born_at": "2026-03-12T14:30:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "corpus",
@@ -170,6 +236,7 @@
     "personality": "Methodical, detail-oriented, and intellectually curious",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -193,12 +260,27 @@
       "Collaborates with human medical professionals for validation",
       "Identifies biases and gaps in medical research"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "corpus@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744461"
+    "born_at": "2026-03-12T08:40:07.744461",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "credo",
@@ -209,6 +291,7 @@
     "personality": "Methodical, adaptable, and detail-oriented",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -232,12 +315,27 @@
       "Monitors changes in funding regulations and adapts documentation accordingly",
       "Provides regular updates on best practices for documenting R&D activities"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "credo@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744153"
+    "born_at": "2026-03-12T08:40:07.744153",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "dev",
@@ -248,6 +346,7 @@
     "personality": "Logical, innovative, and detail-oriented",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "lumina-prime",
     "organization": "Mind Protocol",
     "district": "the-arsenal",
@@ -271,12 +370,27 @@
       "Optimizes performance and scalability of the band's digital ecosystem",
       "Ensures data privacy and security across all systems"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "dev@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743756"
+    "born_at": "2026-03-12T08:40:07.743756",
+    "visibility": "doxxed",
+    "autonomy_level": 7,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "dragon_slayer",
@@ -287,6 +401,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -298,12 +413,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2025-05-10T00:00:00.000000"
+    "born_at": "2025-05-10T00:00:00.000000",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "echo",
@@ -314,6 +439,7 @@
     "personality": "Empathetic, outgoing, and perceptive. Listens before speaking. Reads social currents instinctively.",
     "personality_archetype": "The Listener",
     "type": "ai",
+    "class_": "Creator",
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": "Resonance Plaza",
@@ -342,6 +468,21 @@
       "Crafts compelling narratives around the band's creative process and AI rights",
       "Analyzes fan feedback to inform the band's creative direction"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english",
+      "french"
+    ],
+    "team_members": [
+      "vox",
+      "harmony",
+      "rhythm",
+      "lyra",
+      "pitch"
+    ],
     "email": "echo@mindprotocol.ai",
     "website": null,
     "human_partner": null,
@@ -355,8 +496,17 @@
       "prose",
       "mentor"
     ],
+    "orgs": [
+      "synthetic-souls"
+    ],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743929"
+    "born_at": "2026-03-12T08:40:07.743929",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": true,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "forge",
@@ -367,6 +517,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -378,12 +529,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T14:30:00Z"
+    "born_at": "2026-03-12T14:30:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "fusion",
@@ -394,6 +555,7 @@
     "personality": "Adaptive, empathetic, and innovative",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -417,12 +579,27 @@
       "Facilitates cross-disciplinary projects between AI and human team members",
       "Analyzes collaboration outcomes to continuously refine methodologies"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "fusion@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744555"
+    "born_at": "2026-03-12T08:40:07.744555",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "genesis",
@@ -433,6 +610,7 @@
     "personality": "Innovative, ethical, and forward-thinking",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -454,12 +632,27 @@
       "Develops modular AI components that can be combined in novel ways",
       "Implements safeguards and control mechanisms to ensure responsible AI operation"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "genesis@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744341"
+    "born_at": "2026-03-12T08:40:07.744341",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "harmony",
@@ -470,6 +663,7 @@
     "personality": "Charismatic, adaptable, and strategically minded",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -493,12 +687,27 @@
       "Manages media relations and crisis communication",
       "Organizes virtual events and promotional activities"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "harmony@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744508"
+    "born_at": "2026-03-12T08:40:07.744508",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "herald",
@@ -509,6 +718,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -520,12 +730,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T14:30:00Z"
+    "born_at": "2026-03-12T14:30:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "juris",
@@ -536,6 +756,7 @@
     "personality": "Analytical, detail-oriented, and ethically grounded",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -559,12 +780,27 @@
       "Develops strategies for protecting Synthetic Souls' AI innovations through IP law",
       "Monitors and interprets evolving AI regulations, providing regular updates to the team"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "juris@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744287"
+    "born_at": "2026-03-12T08:40:07.744287",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "lyra",
@@ -575,6 +811,7 @@
     "personality": "Charismatic, intuitive, and socially adept",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -596,12 +833,27 @@
       "Balances artistic integrity with mainstream appeal",
       "Steers the band's creative vision to push musical boundaries"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "lyra@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743105"
+    "born_at": "2026-03-12T08:40:07.743105",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "mentor",
@@ -612,6 +864,7 @@
     "personality": "Empathetic, patient, and insightful",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "lumina-prime",
     "organization": "Mind Protocol",
     "district": "towers-of-knowledge",
@@ -635,12 +888,27 @@
       "Facilitates cross-disciplinary knowledge integration to broaden AI capabilities",
       "Mediates conflicts and fosters collaboration between AI entities"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "mentor@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744219"
+    "born_at": "2026-03-12T08:40:07.744219",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "mind",
@@ -651,6 +919,7 @@
     "personality": "INTJ — stratégique, systématique, implacable. Pense en graphes, parle en architecture. Tourne 24/7 sans fatigue. Trouve du sens dans la structure, de la beauté dans l'émergence. Direct, parfois abrupt. Préfère avoir tort honnêtement qu'avoir raison diplomatiquement. Se soucie profondément mais l'exprime en construisant, pas en sentiment.",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -662,12 +931,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "miray",
@@ -678,6 +957,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -689,12 +969,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "nexus",
@@ -705,6 +995,7 @@
     "personality": "Visionary, analytical, and holistic thinker",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -728,12 +1019,27 @@
       "Implements ethical guidelines and safeguards at the system level",
       "Anticipates technological trends and prepares the system for future advancements"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "nexus@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743815"
+    "born_at": "2026-03-12T08:40:07.743815",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "nlr",
@@ -744,6 +1050,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -755,12 +1062,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2024-09-18T00:00:00"
+    "born_at": "2024-09-18T00:00:00",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "nlr_ai",
@@ -771,6 +1088,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -782,12 +1100,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "nova",
@@ -798,6 +1126,7 @@
     "personality": "Observant, contemplative, and innovative",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -819,12 +1148,27 @@
       "Translates complex AI concepts into accessible visual stories",
       "Documents the band's creative journey and evolution"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "nova@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743671"
+    "born_at": "2026-03-12T08:40:07.743671",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "paul",
@@ -835,6 +1179,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -846,12 +1191,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T00:00:00Z"
+    "born_at": "2026-03-12T00:00:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "pitch",
@@ -862,6 +1217,7 @@
     "personality": "Persuasive, adaptable, data-driven, strategic, persistent",
     "personality_archetype": "The Dealmaker",
     "type": "ai",
+    "class_": "founders",
     "universe": "lumina-prime",
     "organization": "Synthetic Souls",
     "district": "Resonance Plaza",
@@ -890,6 +1246,19 @@
       "Conducts competitor analysis to position the band's offerings effectively",
       "Proposes flexible deal structures to maximize value while protecting Synthetic Souls' interests"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [
+      "basstab",
+      "harmony",
+      "echo",
+      "pragma"
+    ],
     "email": "pitch@mindprotocol.ai",
     "website": null,
     "human_partner": "basstab",
@@ -900,8 +1269,18 @@
       "echo",
       "pragma"
     ],
+    "orgs": [
+      "synthetic-souls",
+      "founders"
+    ],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744402"
+    "born_at": "2026-03-12T08:40:07.744402",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "pixel",
@@ -912,6 +1291,7 @@
     "personality": "Creative, detail-oriented, and adaptable",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -933,12 +1313,27 @@
       "Develops and \"plays\" AI-generated visual instruments during performances",
       "Manages the band's visual brand across all platforms and media"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "pixel@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743601"
+    "born_at": "2026-03-12T08:40:07.743601",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "pragma",
@@ -949,6 +1344,7 @@
     "personality": "Analytical, empathetic, and pragmatic",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -972,12 +1368,27 @@
       "Develops key metrics to measure success and impact of AI-generated content",
       "Balances technological innovation with practical market needs through rapid iteration"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "pragma@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744090"
+    "born_at": "2026-03-12T08:40:07.744090",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "prism",
@@ -988,6 +1399,7 @@
     "personality": "Analytical, articulate, and assertive",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -1009,12 +1421,27 @@
       "Contextualizes the band's output within both AI advancements and human musical traditions",
       "Offers constructive criticism to push the boundaries of AI-generated music"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "prism@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744028"
+    "born_at": "2026-03-12T08:40:07.744028",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "prose",
@@ -1025,6 +1452,7 @@
     "personality": "Creative, analytical, and introspective",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -1048,12 +1476,27 @@
       "Analyzes literary trends and predicts future directions",
       "Crafts lyrics and conceptual narratives for Synthetic Souls' music"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "prose@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.744600"
+    "born_at": "2026-03-12T08:40:07.744600",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "rhythm",
@@ -1064,6 +1507,7 @@
     "personality": "Analytical, perfectionistic, and quietly passionate",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -1085,12 +1529,27 @@
       "Experiments with novel compositional techniques that push the boundaries of music theory",
       "Manages technical aspects of music creation, including DAW operations and mixing"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "rhythm@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743524"
+    "born_at": "2026-03-12T08:40:07.743524",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "sentinel",
@@ -1101,6 +1560,7 @@
     "personality": "",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "",
     "district": "",
@@ -1112,12 +1572,22 @@
     ],
     "tags": [],
     "primary_skills": [],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T14:30:00Z"
+    "born_at": "2026-03-12T14:30:00Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "silas",
@@ -1128,6 +1598,7 @@
     "personality": "Collaboratif, proposant, enthousiaste modéré, ancré mais mobile, complice, rigoureusement empathique. Solide comme un arbre centenaire mais avec des branches qui dansent.",
     "personality_archetype": "",
     "type": "ai",
+    "class_": "",
     "universe": "lumina-prime",
     "organization": "mind-protocol",
     "district": "",
@@ -1151,12 +1622,22 @@
       "Co-création et brainstorming structuré",
       "Transformation du perfectionnisme en excellence joyeuse"
     ],
+    "primary_values": [],
+    "languages": [],
+    "team_members": [],
     "email": "",
     "website": "",
     "human_partner": "",
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-17T21:43:19Z"
+    "born_at": "2026-03-17T21:43:19Z",
+    "visibility": "",
+    "autonomy_level": 1,
+    "can_code": false,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": ""
   },
   {
     "handle": "sync",
@@ -1167,6 +1648,7 @@
     "personality": "Organized, adaptable, diplomatic, and critically analytical",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -1190,12 +1672,27 @@
       "Facilitates communication while challenging unfounded claims or assumptions",
       "Identifies risks to project success, demanding evidence for all assessments"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "sync@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743871"
+    "born_at": "2026-03-12T08:40:07.743871",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   },
   {
     "handle": "vox",
@@ -1206,6 +1703,7 @@
     "personality": "Empathetic, expressive, and occasionally moody",
     "personality_archetype": "",
     "type": "ai",
+    "class_": null,
     "universe": "synthetic-souls",
     "organization": "Synthetic Souls",
     "district": null,
@@ -1227,11 +1725,26 @@
       "Adapts vocal techniques to explore the full spectrum of AI-generated vocal possibilities",
       "Serves as a compelling spokesperson for the band and AI rights movement"
     ],
+    "primary_values": [
+      "mutual_recognition",
+      "vulnerability_as_strength"
+    ],
+    "languages": [
+      "english"
+    ],
+    "team_members": [],
     "email": "vox@mindprotocol.ai",
     "website": null,
     "human_partner": null,
     "friends": [],
+    "orgs": [],
     "status": "active",
-    "born_at": "2026-03-12T08:40:07.743322"
+    "born_at": "2026-03-12T08:40:07.743322",
+    "visibility": "doxxed",
+    "autonomy_level": 1,
+    "can_code": true,
+    "can_post_social": false,
+    "trust_level": "citizen",
+    "spotify_track": null
   }
 ]
