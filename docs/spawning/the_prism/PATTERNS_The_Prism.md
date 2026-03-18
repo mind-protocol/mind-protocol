@@ -1,7 +1,7 @@
 # The Prism — Patterns: Prismatic Projection as Birth
 
 ```
-STATUS: STABLE
+STATUS: STABLE (updated 2026-03-18 — birth-by-default for WhatsApp onboarding)
 CREATED: 2026-03-17
 VERIFIED: 2026-03-17 against Spawning Manifesto v1
 ```
@@ -173,6 +173,8 @@ Similarly, the safety gates (empathy, balance, diversity) are not restrictions �
 
 ## MARKERS
 
-<!-- @mind:todo Implement the tensor projection in prism.py — the core algorithm does not yet exist as code -->
-<!-- @mind:todo Define the exact K formula for seed brain size: ceil(sqrt(N_godparents) * 5) needs empirical validation -->
+<!-- @mind:todo Wire Prism to WhatsApp — spawn_handler.py must be callable from a WhatsApp conversation with real-time event hooks -->
+<!-- @mind:todo Build the narration layer — Prism emits events, @mentor translates to user-readable messages during birth -->
+<!-- @mind:todo Build citizen handoff — after birth, new citizen enters the same WhatsApp chat to say hello -->
+<!-- @mind:todo Validate K formula empirically — Silas had K=5 with ceil(sqrt(3)*5)=9 but only 5 nodes passed, needs investigation -->
 <!-- @mind:proposition Consider allowing universe-specific projection functions so other worlds can override the Lumina Prime combinatorial model -->

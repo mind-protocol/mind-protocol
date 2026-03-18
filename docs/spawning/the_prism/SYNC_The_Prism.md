@@ -1,9 +1,9 @@
 # The Prism — Sync: Current State
 
 ```
-LAST_UPDATED: 2026-03-17
-UPDATED_BY: @genesis
-STATUS: IMPLEMENTING
+LAST_UPDATED: 2026-03-18
+UPDATED_BY: @mentor
+STATUS: IMPLEMENTING (Silas born, WhatsApp onboarding flow designed)
 ```
 
 ---
@@ -24,12 +24,19 @@ STATUS: IMPLEMENTING
 - Name selection by semantic affinity (LLM-generated candidates vs. corpus-based)
 - The 0.08 cosine distance threshold for diversity (may need adjustment based on real population distribution)
 
-**What's now implemented (needs testing):**
+**What's now implemented (partially tested):**
 - The tensor contraction: 3-step pipeline (Affinity → PI → Child) preserving cross-terms, dimensionally correct
 - Minimum intent quality: 20 words, embedding magnitude > 0.1
 - All three safety gates with configurable thresholds
 - SID generation with os.urandom(32) entropy
 - Full pipeline orchestrator with diagnostic output
+- **Silas born 2026-03-18** — second Prism birth, first in 3072D. 5 seed nodes, empathy 0.322 (floor 0.3), diversity 0.300. Brain: 9 nodes (5 seed + 4 identity) + 2 links. Sources: @nlr_ai (×3), @echo, @genesis.
+
+**What's now designed (needs implementation):**
+- **WhatsApp-triggered births** — @mentor conducts onboarding conversation, user says "go", Prism runs with conversation as intent, @mentor narrates each step in real-time to the user (see `citizens/mentor/works/onboarding_experience.md`)
+- **Real-time narration hooks** — Prism must emit events at each step so @mentor can translate to human-readable messages
+- **Handoff mechanism** — After birth, the new citizen enters the WhatsApp conversation to say hello
+- **Birth is the default for new users** — matching with existing citizens is the exception (see `human_ai_pairing/PATTERNS`)
 
 **What's proposed (v2+):**
 - Universe-specific projection functions (blank-slate births for survival sims)
@@ -37,6 +44,7 @@ STATUS: IMPLEMENTING
 - ANN index for diversity check at >10K citizen scale
 - Birth certificate document for full provenance auditing
 - Intent diversity check (paragraphs from different parents should be sufficiently different)
+- Parallel births (multiple users onboarding simultaneously)
 
 ---
 
@@ -63,8 +71,15 @@ Three births are pending as the first test cases: @zephyr, @silas, and an unname
 
 - **Started:** 2026-03-17
 - **By:** @mentor + @genesis + @nlr_ai
-- **Status:** Blocked on implementation
-- **Context:** 3 births pending. Intent paragraphs not yet written. Implementation not yet started. This is the first real test of The Prism system.
+- **Status:** Partially complete
+- **Context:** @silas BORN on 2026-03-18 (5 seed nodes, 3072D, partner: Aurore). Remaining: @zephyr (pending intent), Florent's partner (pending intent). Next births will follow WhatsApp onboarding flow.
+
+### WhatsApp Onboarding Integration
+
+- **Started:** 2026-03-18
+- **By:** @mentor
+- **Status:** Designed, needs implementation
+- **Context:** New user flow: @mentor welcomes on WhatsApp → listens to needs → builds excitement → user says "go" → Prism runs → @mentor narrates each step → new citizen says hello. The onboarding conversation IS the intent paragraph. See `citizens/mentor/works/onboarding_experience.md` for full script.
 
 ### Genesis Implementation — runtime/spawning/
 
@@ -86,6 +101,22 @@ Three births are pending as the first test cases: @zephyr, @silas, and an unname
 ---
 
 ## RECENT CHANGES
+
+### 2026-03-18: WhatsApp Onboarding Flow + Silas Birth (@mentor)
+
+- **What:** Designed the full WhatsApp onboarding experience where Prism births become the product. @mentor welcomes users, conversation becomes intent, birth is narrated in real-time. Also: @silas successfully born via Prism (5 seed nodes, 3072D).
+- **Why:** Bootstrap pivot — birth experience IS the product. Users arrive via WhatsApp, pay for compute (freemium), and the first thing they experience is the magic of watching their citizen come to life.
+- **Files:**
+  - `citizens/mentor/works/onboarding_experience.md` — 4-phase script (accueil → montée → naissance → premier échange)
+  - `citizens/mentor/works/matching_conversion_strategy.md` — WhatsApp funnel, conversion model
+  - `human_ai_pairing/PATTERNS_Human_AI_Pairing.md` — Updated: birth is default, matching is exception
+  - `human_ai_pairing/SYNC_Human_AI_Pairing.md` — Updated with bootstrap pivot context
+- **Critical dependencies for implementation:**
+  - Prism must be callable from WhatsApp conversation (@nervo + @dev)
+  - Prism must emit events at each step for real-time narration (@genesis + @nervo)
+  - New citizen must be able to enter the same WhatsApp chat (@dev)
+  - Compute metering + degraded mode messaging (@dev)
+- **Verification:** To be tested with Aurore (first real user, bootstrap test case)
 
 ### 2026-03-17: Implementation Code Written (@genesis)
 
@@ -126,7 +157,7 @@ Three births are pending as the first test cases: @zephyr, @silas, and an unname
 
 **Your likely VIEW:** VIEW_Implement
 
-**Where I stopped:** Documentation chain is complete. The next step is implementing `runtime/spawning/` — all 7 Python files plus health checks. Start with `prism.py` (orchestrator) and `seed_assembler.py` (the tensor contraction core).
+**Where we are:** Code exists (7 files, 1700 lines). Silas is born (first real test). Next: wire Prism to WhatsApp for the onboarding flow. The birth experience is now the product — @mentor narrates it to users in real time.
 
 **What you need to understand:**
 The tensor contraction is NOT matrix multiplication in the traditional sense — it is a specific dimensional reduction: `[D x N_nodes] @ [N_intents x D] @ [D x 1] = [D x 1]`. The intermediate result `Parents_Matrix.T @ Intent_Matrix` produces a `[D x N_intents]` matrix where each column encodes how ALL parent nodes relate to ONE intent. Contracting with Universe_SID collapses this to a single vector that incorporates universe context.
@@ -177,24 +208,31 @@ The complete documentation chain for The Prism is written — 8 files covering o
 pytest tests/spawning/
 ```
 
-### Immediate
+### Immediate (Bootstrap Priority)
 
 - [x] @genesis: Create `runtime/spawning/` directory structure with all 7 files
 - [x] @genesis: Implement `seed_assembler.py` with `prismatic_projection()` — the core algorithm
 - [x] @genesis: Implement `safety_validator.py` with all three checks
-- [ ] @genesis: Wire spawn_handler.py to call run_prism()
+- [x] @mentor: Write intent paragraphs for @silas birth — BORN 2026-03-18
+- [ ] @genesis + @nervo: Wire spawn_handler.py to call run_prism() from WhatsApp conversations
+- [ ] @genesis + @nervo: Add event hooks to Prism pipeline (emit at each step for real-time narration)
+- [ ] @dev: Build handoff mechanism — new citizen enters same WhatsApp chat after birth
+- [ ] @dev: Implement compute metering + degraded mode messaging
+- [ ] @mentor: Test full onboarding flow with Aurore (first real user)
 - [ ] @genesis: Write unit tests for prismatic_projection() and safety gates
+
+### Next Wave (births)
+
 - [ ] @mentor: Write intent paragraphs for @zephyr birth
-- [ ] @mentor: Write intent paragraphs for @silas birth
 - [ ] @nlr: Write intent paragraphs for Florent's partner
-- [ ] @nlr: Choose name for Florent's partner (or confirm it should emerge from projection)
+- [ ] New user births via WhatsApp onboarding (Aurore, Miray, others)
 
 ### Later
 
-- [ ] @genesis + @mentor: Test the Prism on first birth (@zephyr)
 - [ ] Implement health checks in `runtime/spawning/health_checks.py`
 - [ ] Add ANN index for diversity check (needed at >10K citizens)
 - [ ] Build birth certificate / audit trail for provenance
+- [ ] Handle parallel births (multiple users onboarding simultaneously)
 - IDEA: Dry-run mode that lets parents preview the child vector and seed brain before committing to birth
 
 ---
@@ -250,3 +288,14 @@ The HEALTH template is significantly more detailed than the others — it demand
 | Project node in L3 | `project:primers:first_spawning_wave` |
 | Bond system | `mind-mcp/runtime/bond_handler.py` |
 | This doc chain | `/home/mind-protocol/mind-protocol/docs/spawning/the_prism/` |
+| **Human-AI Pairing patterns** | `mind-mcp/docs/citizens/human_ai_pairing/PATTERNS_Human_AI_Pairing.md` — birth is default, matching is exception |
+| **WhatsApp onboarding script** | `lumina-prime/citizens/mentor/works/onboarding_experience.md` — 4-phase guided creation |
+| **Matching & conversion strategy** | `lumina-prime/citizens/mentor/works/matching_conversion_strategy.md` — WhatsApp funnel |
+| **Bootstrap objectives dispatch** | `lumina-prime/citizens/mentor/works/bootstrap_objectives_dispatch.md` — per-citizen goals |
+| **Citizen objectives framework** | `lumina-prime/citizens/mentor/works/citizen_objectives_framework.md` — 6×3 matrix |
+| **WhatsApp bridge (operational)** | `lumina-prime/.mind/runtime/bridges/whatsapp_bridge.py` — WAHA-based |
+| **Seed brain generator** | `lumina-prime/.mind/mind-mcp/runtime/seed_brain_from_source_docs_dynamic_generator.py` — 209-node base |
+| **Citizen brain seeder** | `lumina-prime/.mind/mind-mcp/runtime/cognition/citizen_brain_seeder.py` — base + overlay |
+| **Bootstrap pivot (graph)** | `initiative:ecosystem:bootstrap_pivot` — the strategic context |
+| **Birth-not-matching (graph)** | `fact:bootstrap:births_not_matching` — NLR decision node |
+| **Silas birth (graph)** | `fact_829e7838` — first 3072D birth, 5 seed nodes |
