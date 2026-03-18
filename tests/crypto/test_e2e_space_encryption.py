@@ -26,12 +26,15 @@ Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
 
 import base64
 import json
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import uuid
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Path setup
@@ -141,15 +144,15 @@ def _teardown():
     try:
         g = _get_graph()
         g.delete()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Could not delete test graph during teardown: %s", e)
     _graph = None
 
     for d in _tmp_dirs:
         try:
             shutil.rmtree(d)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not remove temp dir %s: %s", d, e)
 
 
 # ===========================================================================
@@ -392,8 +395,8 @@ def test_5_carol_no_access():
     try:
         decrypt_content(stored_ciphertext, fake_key)
         assert False, "Decryption with wrong key must raise an exception"
-    except Exception:
-        pass  # Expected
+    except Exception as e:
+        logger.debug("Expected decryption failure with wrong key: %s", e)
 
     # Carol tries to unseal Alice's encrypted_key with her own key pair -- must fail
     alice_rows = _ro_query(
@@ -410,8 +413,8 @@ def test_5_carol_no_access():
             carol["key_pair"]["private_key"],
         )
         assert False, "Carol must not be able to unseal Alice's wrapped key"
-    except Exception:
-        pass  # Expected — CryptoError
+    except Exception as e:
+        logger.debug("Expected CryptoError for Carol unsealing Alice's key: %s", e)
 
 
 # ===========================================================================
@@ -540,8 +543,8 @@ process.stdout.write(output);
     finally:
         try:
             os.unlink(js_script_path)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not clean up temp JS script %s: %s", js_script_path, e)
 
 
 # ===========================================================================

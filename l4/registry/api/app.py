@@ -437,8 +437,8 @@ async def ping_citizen(handle: str):
             if la_rows.result_set and la_rows.result_set[0][0]:
                 last_active = la_rows.result_set[0][0]
                 last_active_space = la_rows.result_set[0][1] if len(la_rows.result_set[0]) > 1 else None
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not fetch last active timestamp for %s: %s", handle, e)
 
     # 4. Resolve endpoint — try 3 sources in order:
     #    a) Citizen's own direct endpoint
@@ -773,8 +773,8 @@ async def get_infos(handle: str):
                     locations["physical"].append(entry)
                 else:
                     locations["virtual"].append(entry)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not fetch locations for %s: %s", handle, e)
 
     return {
         "handle": handle,

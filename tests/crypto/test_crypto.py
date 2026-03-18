@@ -13,10 +13,13 @@ Run: python -m pytest tests/crypto/test_crypto.py -v
 Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
 """
 
+import logging
 import os
 import sys
 import tempfile
 import shutil
+
+logger = logging.getLogger(__name__)
 
 # Ensure the repo root is on sys.path so `python.crypto` resolves
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -83,8 +86,8 @@ def test_decrypt_corrupted_ciphertext():
     try:
         decrypt_content("bad:data:here", key)
         assert False, "should have raised an exception"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Expected failure decrypting corrupted ciphertext: %s", e)
 
 
 def test_decrypt_wrong_key():
@@ -94,8 +97,8 @@ def test_decrypt_wrong_key():
     try:
         decrypt_content(ct, key2)
         assert False, "should have raised an exception"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Expected failure decrypting with wrong key: %s", e)
 
 
 # ---------------------------------------------------------------------------
@@ -160,8 +163,8 @@ def test_load_actor_keys_missing_dir():
     try:
         load_actor_keys("/tmp/nonexistent-mind-crypto-test-xyz")
         assert False, "should have raised an exception"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Expected failure loading keys from missing dir: %s", e)
 
 
 # ---------------------------------------------------------------------------
@@ -193,8 +196,8 @@ def test_key_exchange_wrong_key_pair():
     try:
         decrypt_space_key_for_actor(wrapped, other["public_key"], other["private_key"])
         assert False, "should have raised an exception"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Expected failure decrypting with wrong key pair: %s", e)
 
 
 # ---------------------------------------------------------------------------

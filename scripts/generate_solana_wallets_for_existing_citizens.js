@@ -257,7 +257,7 @@ async function registerWalletInL4(citizenHandle, walletAddress, dryRun) {
     return true;
   } catch (err) {
     console.error(`    [l4] Neo4j error: ${err.message}`);
-    if (driver) try { await driver.close(); } catch (_) {}
+    if (driver) try { await driver.close(); } catch (e) { console.debug('Neo4j driver close error:', e?.message || e); }
     return false;
   }
 }
